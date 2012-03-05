@@ -11,7 +11,7 @@ from totalimpact.core import app, login_manager
 # do account / auth stuff
 @login_manager.user_loader
 def load_account_for_login_manager(userid):
-    out = totalimpact.dao.Account.get(userid)
+    out = totalimpact.dao.User.get(userid)
     return out
 
 @app.context_processor
@@ -24,13 +24,13 @@ def standard_authentication():
     """Check remote_user on a per-request basis."""
     remote_user = request.headers.get('REMOTE_USER', '')
     if remote_user:
-        user = totalimpact.dao.Account.get(remote_user)
+        user = totalimpact.dao.User.get(remote_user)
         if user:
             login_user(user, remember=False)
     elif 'api_key' in request.values:
-        res = totalimpact.dao.Account.query(q='api_key:"' + request.values['api_key'] + '"')['hits']['hits']
+        res = totalimpact.dao.User.query(q='api_key:"' + request.values['api_key'] + '"')['hits']['hits']
         if len(res) == 1:
-            user = totalimpact.dao.Account.get(res[0]['_source']['id'])
+            user = totalimpact.dao.User.get(res[0]['_source']['id'])
             if user:
                 login_user(user, remember=False)
 

@@ -35,8 +35,11 @@ class DomainObject(UserDict.IterableUserDict):
 class Item(DomainObject):
     __type__ = 'item'
     
-class Account(DomainObject, UserMixin):
-    __type__ = 'account'
+class Collection(DomainObject):
+    __type__ = 'collection'
+
+class User(DomainObject, UserMixin):
+    __type__ = 'user'
 
     def set_password(self, password):
         self.data['password'] = generate_password_hash(password)
