@@ -11,7 +11,7 @@ class DomainObject(UserDict.IterableUserDict):
     __type__ = None
 
     def __init__(self, **kwargs):
-        pass
+        self.data = dict(kwargs)
         
     @property
     def id(self):
