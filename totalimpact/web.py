@@ -81,7 +81,7 @@ def itemid(namespace,nid):
 def items(tiids):
     items = []
     for index,tiid in enumerate(tiids.split(',')):
-        break if index > 99
+        if index > 99: break
         items.append( totalimpact.dao.Item.get(tiid).data )
     resp = make_response( json.dumps(items, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
@@ -134,7 +134,7 @@ def collection(cid,tiid=''):
 
     '''POST /collection/:collection
         post payload is a collection object
-        merges with the collection item we’ve already got.
+        merges with the collection item we've already got.
         returns success/failure
     POST /collection/:collection_id/:tiid
         returns success/failure'''
