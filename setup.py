@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name = 'total-impact',
+    name = 'totalimpact',
     version = '0.2.0',
     packages = find_packages(),
     install_requires = [
@@ -9,7 +9,7 @@ setup(
         "Flask-Login",
         "Flask-WTF",
 				],
-    url = 'http://bibserver.okfn.org/',
+    url = '',
     author = 'Total Impact',
     author_email = '',
     description = 'Total Impact',
