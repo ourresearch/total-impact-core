@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Total Impact</title>
+    <title>Total Impact: uncover the invisible impact of reseach</title>
     <meta name="description" content="Total Impact">
     <meta name="author" content="Total Impact">
 
@@ -11,15 +11,102 @@
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
+    <link href='http://fonts.googleapis.com/css?family=Lobster+Two:400italic' rel='stylesheet' type='text/css' />
+    <link rel="stylesheet" type="text/css" href="/static/main.css" />
+    <link rel="stylesheet" type="text/css" href="/static/homepage.css" />
+    <link rel="stylesheet" type="text/css" href="/static/report.css" />
+    <link rel="icon" type="image/ico" href="/static/favicon.ico" />
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/json2.min.js"></script>
+    <script type="text/javascript" src="/static/js/tinybox.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.headerlinks.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.tooltip.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.zclip.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.color.js"></script>
+    <script type="text/javascript" src="/static/js/home-ui.js"></script>
+
 </head>
 
 <body>
 
-    <p>I am header stuff from the base</p>
+<div id="header">
+    <div class="wrapper">
+        <h1><span class="loathsome-hack"></span><a href="/">total-impact</a><span class="loathsome-hack"></span></h1>
+        <ul id="nav">
+        <li><a href="/about">about</a></li>
+        <li><a href="http://twitter.com/#!/totalImpactdev">twitter</a></li>
+        </ul>
+    </div>
+</div><!-- end header -->
 
     {% block content %}{% endblock %}
 
-    <p>I am footer stuff from the base</p>
+
+<div id="footer">
+<div class="wrapper">
+<div id="twitterfeed" class="footercol">
+
+<!--<h2 class="grey" id="recent">Recent reports</h2>-->
+<!-- https://twitter.com/about/resources/widgets/widget_search -->
+
+<script src="http://widgets.twimg.com/j/2/widget.js"></script>
+<script>
+new TWTR.Widget({
+version: 2,
+type: 'search',
+search: 'via @mytotalImpact',
+interval: 30000,
+subject: 'Latest tweeted reports:',
+width: "100%",
+height: 250,
+theme: {
+shell: {
+background: '#eeeeee',
+color: '#000'
+},
+tweets: {
+background: '#eeeeee',
+color: '#000',
+links: '#b20'
+}
+},
+features: {
+scrollbar: true,
+loop: false,
+live: true,
+hashtags: true,
+timestamp: true,
+avatars: true,
+toptweets: true,
+behavior: 'all'
+}
+}).render().start();
+</script>
+</div>
+<div class="recent-changes footercol">
+<h4>Latest changes on <a href="https://github.com/mhahnel/Total-Impact/blob/master/CHANGES.md">GitHub</a></h4>
+<!-- drop in something here to get the recent changes from the repo -->
+<p>latest stuff from repo here</p>
+</div>
+<div class="altmetrics footercol">
+an <a class="img" href="http://altmetrics.org" title="an altmetrics project"><img src="./ui/img/altmetrics_logo.png" alt="altmetrics" width="80"/></a> project.<br/>
+</div>
+</div>
+</div> <!-- end footer -->
+
+<script type="text/javascript">
+//Google Analytics code
+//var _gaq = _gaq || [];
+//_gaq.push(['_setAccount', 'UA-23384030-1']);
+//_gaq.push(['_trackPageview']);
+
+//(function() {
+//var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+//ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+//var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+//})();
+</script>
 
 </body>
 </html>

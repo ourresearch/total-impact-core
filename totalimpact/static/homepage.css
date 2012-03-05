@@ -1,0 +1,404 @@
+
+/* homepage
+*****************************************************************************
+*****************************************************************************
+*****************************************************************************/
+
+/* about ************************************/
+
+div#about{
+    margin-top: 120px;
+}
+#toc {
+    border: 1px solid #333333;
+    float: right;
+    margin: 16px 21px 12px;
+    padding: 16px;
+    text-align: left;
+    -webkit-border-radius: 4px;    /* CSS3 rounded borders for Safari      */
+    -moz-border-radius: 4px;       /* CSS3 rounded borders for Firefox   */
+}
+
+a.tocBackLink {
+    text-align: right;
+    font-size: 10px;
+    font-weight: normal;
+    margin-left: 10px;
+}
+body#about h2 {
+    margin-top: 40px;
+}
+p#tagline {
+    color: #b20;
+    font-family: 'Lobster Two',helvetica,arial,sans-serif;
+    font-size: 35px;
+    font-style: italic;
+    font-weight: normal;
+    margin: 0 0 10px 23px;
+}
+
+
+
+/* input
+*****************************************************************************/
+
+/* general */
+#input {
+    background: #fff;
+    float:left;
+    width:100%;
+    box-shadow: 0 2px 5px 0 #999999;
+    min-height: 400px;
+    background: url(./img/homepage-bar.png) left top repeat-x;
+    background-color:#fff;
+    border-bottom:1px solid #b20;
+}
+
+#input div.inputcol {
+    width: 340px;
+    padding: 0 40px 50px 0;
+    float:left;
+}
+#input h2 {
+    width:100%;
+    margin:0 0 20px 0;
+    color:#fff;
+    white-space: nowrap;
+    text-align: center;
+}
+#input h2 span {
+    padding:12px 0;
+    display:block;
+}
+
+#input h3 {
+    margin: 0 0 5px 0;
+    color: #333;
+    font-size: 20px;
+    padding: 0;
+}
+
+#input span.loading {
+    display:block;
+}
+#input input {
+    float:left;
+    margin: 2px 7px 10px 0;
+    padding:2px 0;
+    -webkit-border-radius: 3px;    /* CSS3 rounded borders for Safari      */
+    -moz-border-radius: 3px;       /* CSS3 rounded borders for Firefox   */
+    border: 1px solid #CCC;
+    width:60%
+}
+#input textarea {
+    -webkit-border-radius: 3px;    /* CSS3 rounded borders for Safari      */
+    -moz-border-radius: 3px;       /* CSS3 rounded borders for Firefox   */
+    border: 1px solid #CCC;
+}
+#input button {
+    margin:1px 0 0 0;
+}
+
+p.prompt {
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    color: #777;
+}
+div.toggler_contents {
+}
+#input span.loading img {
+    height: 18px;
+}
+#input span.loading {
+    color: #777;
+    font-size: 12px;
+    margin-top:2px;
+}
+
+
+/* the importers column */
+div#input div#importers {
+    position: relative;
+    width:680px;
+}
+#importers #manual-add {
+    height:275px;
+    position:relative;
+    width: 300px;
+}
+#importers #pullers {
+    position: relative;
+    width: 300px;
+    margin-top:-275px;
+    top: 0;
+    left: 340px;
+    background:#fff;
+}
+
+
+#importers ul {
+    clear:both;
+    margin: 0 0 0 0;
+    padding-left:0;
+}
+#importers ul li {
+    list-style-type: none;
+    margin-top:.1em;
+    clear:both;
+}
+
+#importers li a:hover {
+}
+#importers li span.pointer {
+    font-size: .7em;
+    position:relative;
+    top:-.3em;
+    text-decoration: none;
+    color: #b20;
+}
+
+
+#importers span.response span.count {
+    font-weight: bold;
+    color: #333;
+    font-size:18px;
+}
+
+
+#importers em.url {
+    font-style: normal;
+    font-size: 90%;
+    color: #999;
+    width:100%;
+    display:inline-block;
+}
+
+
+#importers fieldset#paste-ids {
+    padding:0;
+    border:none;
+    margin:0 25px 0 0;
+}
+
+#importers #manual-add button {
+    margin: 0;
+    float:right;
+}
+#importers #manual-add textarea {
+    width: 97%;
+    font-size: 80%;
+    padding: .3em;
+    color: #333;
+}
+#importers div.something-missing p {
+    margin:10px 0 0;
+    padding:0;
+    font-size: 12px;
+    color: #999;
+}
+#importers div.something-missing {
+    clear:both;
+    margin:0 0 0 12px;
+}
+#importers p#or {
+    font-family: 'Lobster Two', Helvetica, Arial, sans-serif;
+    color: #b20;
+    font-size:30px;
+    margin: 0 0 5px 20px;
+    clear:both;
+    font-style: italic;
+}
+
+
+
+
+
+
+/* edit-collection column */
+#input #edit-collection {
+    overflow:hidden;
+    width: 0;
+    padding-right: 0;
+}
+#input #edit-collection h2 {
+    font-weight: normal;
+    font-size: 18px;
+    margin: 8px;
+    text-align: left;
+}
+#input #edit-collection h2 span {
+
+}
+#edit-collection #artcounter {
+    background-color: #EEE;
+    color: #666;
+    padding: .6em;
+    -webkit-border-radius: 4px;    /* CSS3 rounded borders for Safari                    */
+    -moz-border-radius: 4px;       /* CSS3 rounded borders for Firefox                   */
+    border-radius: 4px;
+    text-shadow: 1px 1px 0px #FFF;
+    margin:45px 0 0 0;
+    border: 1px solid #EEE;
+    font-size: 14px;
+    width: 320px;
+}
+a#clear-artifacts {
+    font-size: 75%;
+    cursor: pointer;
+    color:#999;
+    text-decoration: underline;
+}
+a#clear-artifacts:hover {
+    color: #b20;
+}
+#edit-collection #artcounter span.count {
+    font-weight: bold;
+    font-size:22px;
+    color: #333;
+}
+#edit-collection ul {
+    margin-left:0;
+    padding-left:0;
+}
+#edit-collection ul li {
+    list-style-type:none;
+    margin-bottom: 3px;
+    font-size: 12px;
+    clear:both;
+    color: #333;
+}
+#edit-collection ul li a {
+    text-indent:-9999px;
+    display:inline-block;
+    width: 12px;
+    height: 12px;
+    background: url(./img/remove-icon.png) no-repeat 0 0;
+    padding:1px 4px 0 0;
+    float:left;
+
+}
+#edit-collection ul li:hover span {
+    text-decoration: line-through;
+    color:#b20;
+    cursor: pointer;
+}
+#edit-collection ul li:hover a {
+    background-position: 0 -12px;
+}
+#edit-collection ul li a:hover {
+    background-position: 0 -12px;
+}
+
+#edit-collection ul li span {
+    word-wrap: break-word;
+    float:left;
+    width: 90%;
+}
+
+
+
+/* create-collection column */
+div#input div#create-collection {
+}
+#input #create-collection h2 {
+    background-image: url(./img/right-chevron.png);
+    background-repeat: no-repeat;
+    background-position: top right;
+}
+#input #create-collection h2 span{
+    background-image: url(./img/right-chevron.png);
+    background-repeat: no-repeat;
+    background-position: top left;
+}
+div#create-collection input#name {
+    font-size: 22px;
+    color: #b20;
+    width:100%;
+}
+
+div.quick-collection {
+    margin: 40px 0 0 10px;
+    float:left;
+}
+div.quick-collection p {
+    margin:0;
+    clear:both;
+}
+div.quick-collection button {
+    float: left;
+}
+div.quick-collection span.loading {
+    display:block;
+    float:left;
+}
+#input div.quick-collection input {
+    width: 98%;
+    float:none;
+}
+#input div.quick-collection button, #input div.quick-collection span.loading {
+    float:left;
+    width: 50%;
+    margin:6px 0 0 0;
+}
+
+#create-collection p#name-collection {
+    float:left;
+    width: 25%;
+    margin:0 2% 0 0;
+    line-height: 1;
+    font-size: 17px;
+    text-align: right;
+    color: #777;
+}
+
+
+#create-collection button.go-button {
+    background:#b20;
+    color: #fff;
+    font-size: 17px;
+    width: 100%;
+    font-family: 'Helvetica', arial, sans-serif;
+    border:none;
+    width:50%;
+    font-weight: bold;
+    -webkit-border-radius: 10px;    /* CSS3 rounded borders for Safari                    */
+    -moz-border-radius: 10px;       /* CSS3 rounded borders for Firefox                   */
+    border-radius: 10px;
+    float:right;
+    padding:3px;
+}
+
+#create-collection button.go-button:hover {
+    background: #800000;
+    cursor:pointer;
+}
+
+
+#report h2 {
+    text-align:right;
+    font-family: 'Lobster Two';
+    font-weight: normal;
+    font-style: italic;
+    margin-right:100px;
+    color: #555;
+    font-size: 16px;
+}
+
+
+#share {
+    clear:both;
+}
+
+hr {
+    border: 0;
+    background-color: #CCC;
+    height: 1px;
+}
+
+
+
+p.sp {
+    margin-top: 2em;
+    margin-bottom: 0;
+}

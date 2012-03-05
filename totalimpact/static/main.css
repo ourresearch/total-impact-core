@@ -1,0 +1,311 @@
+/* globals */
+body {
+    font-family: "Helvetica", sans-serif;
+    margin: 0;
+    border-top:4px solid #b20;
+    background-color: #eee;
+    background-image: url(./img/body-bg-grad.jpeg);
+    background-position: 50% -76px;
+    background-repeat: no-repeat;
+}
+
+body a:link {
+    text-decoration: none;
+    cursor: pointer;    
+}
+body a:hover {
+    text-decoration: underline;
+}
+
+div.wrapper {
+    margin: 0 auto;
+    width: 1150px;
+}
+h3 {
+    margin: 0px;
+    margin-top:20px;
+}
+a {
+    color: #b20;
+    cursor: pointer;
+}
+body div#tooltip {
+    position: absolute;
+    z-index: 3000;
+    border: 1px solid #777;
+    background-color: #333;
+    padding: 10px;
+    color:#eee;
+    opacity: 0.9;
+    font-size: 10px;
+    font-family: Helvetica, Arial, sans-serif;
+    width: 200px;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    -moz-border-radius-topleft: 0;
+    -webkit-border-top-left-radius: 0;
+    box-shadow: 2px 2px 3px #555;
+}
+body div#tooltip.viewport-right {
+    -moz-border-radius-topleft: 10px;
+    -webkit-border-top-left-radius: 10px;
+    -moz-border-radius-topright: 0;
+    -webkit-border-top-right-radius: 0;
+}
+
+
+div#tooltip p, div#tooltip div, div#tooltip h3 {
+    margin:0;
+    padding:0;
+}
+
+
+
+
+
+
+
+
+
+/* header
+*****************************************************************************
+*****************************************************************************
+*****************************************************************************/
+#header {
+    position: absolute;
+    top:0;
+    left:0;
+    width:100%;
+}
+#header div.wrapper {
+    width: 100%;
+}
+h1 {
+    height:85px;
+    margin:0;
+}
+h1 a {
+    background-image:url(./img/ti_logo.png);
+    background-repeat: no-repeat;
+    text-indent: -9999px;
+    width: 345px;
+    display:block;
+    float:left;
+    cursor: pointer;      
+    height:85px;
+
+}
+h1 span.loathsome-hack {
+    background: url(./img/header-top.png) repeat-x;   
+    height:85px;
+    display:block;
+}
+h1 span.loathsome-hack:first-child{
+    float:left;
+    width: 100px;
+}
+h1 span.loathsome-hack:last-child{
+    margin-left: 445px;
+}
+
+
+ul#nav {
+    margin-top: -31px;
+    text-align: right;
+    font-size: 20px;
+    font-family: 'Lobster Two', helvetica, arial, sans-serif;
+    font-style: italic;
+    position: absolute;
+    top:48px;
+    right: 90px;
+
+}
+
+ul#nav li {
+    display:block;
+    float:right;
+    list-style-type:none;
+    margin-right:15px;
+
+}
+ul#nav li a {
+    padding: 0 10px 0;
+    background-color: #aaa;
+    color: #fff;
+    display:block;
+    border:1px solid #ddd;
+    border-top:3px solid #888;
+    -moz-border-radius-bottomright: 5px;
+    -moz-border-radius-bottomleft: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    -webkit-border-bottom-left-radius: 5px;
+    box-shadow: -1px 4px 5px -1px #666666;
+    cursor: pointer;
+}
+
+ul#nav li a:hover {
+    text-decoration: none;
+    padding-top: 3px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* "updating" page
+*****************************************************************************
+*****************************************************************************
+*****************************************************************************/
+div.loading {
+    width: 600px;
+    height: 150px;
+    color: #fff;
+    background: #b20000
+}
+div.loading h2 {
+    font-family: 'Lobster Two', Helvetica, Arial, sans-serif;
+    color: #fff;
+    font-style: italic;
+    font-size: 50px;
+    text-align:center;
+    margin: 0;
+    font-weight:normal;
+    padding: 20px 0 0;
+}
+div.loading p {
+    font-size: 15px;
+    font-weight: bold;
+    font-family: "Helvetica Neue", "helvetica", 'arial', sans-serif;
+    text-align: center;
+}
+div.loading img {
+    margin: 0 10px -5px 0;
+    height: 45px;
+}
+
+
+
+
+
+
+
+
+
+/* "about" page
+*****************************************************************************
+*****************************************************************************
+*****************************************************************************/
+
+table {
+    border-collapse: collapse;
+    padding:2px;
+    border-color: #ccc;
+    width: 700px;
+}
+td {
+    padding: 3px 8px;
+    border:1px solid #ccc;
+    border-left:none;
+    border-right:none;
+}
+th {
+    background: #b20;
+    color:#fff;
+    border:none;
+}
+#faq div.wrapper{
+}
+#faq {
+    margin-top: 100px;
+    background: #fff;
+    border-top: 3px solid #b20;
+    padding-bottom: 50px;
+}
+
+
+
+
+
+
+/* footer
+*****************************************************************************
+*****************************************************************************
+*****************************************************************************/
+
+div#footer {
+    font-size:100%;    
+    padding: 2em 2em 3em 2em;
+    border-top:1px dotted #ddd;
+    clear:both;
+    color: #aaa;
+}
+
+div.footercol {
+    width: 30%;
+    float:left;
+    padding-right: 2%;
+    margin-right: 2%;
+    border-right: 1px dotted #bbb;
+    min-height: 330px;
+}
+div#twitterfeed {
+}
+
+div.recent-changes {
+    color:#333;
+    float: left;
+    margin-left: 2%;
+}
+div.recent-changes h4 {
+    margin:10px 0;
+}
+div.recent-changes a {
+    color: #b20;
+}
+div.recent-changes ul {
+    padding:0;
+    margin:0;
+    font-size: 12px
+}
+div.recent-changes ul li {
+    list-style-type: none;
+    margin-bottom: .7em;
+}
+
+div.altmetrics {
+    float:right;
+    text-align: right;
+    margin-top: 10px;
+    width: 25%;
+    padding-right:0;
+    border-right:none;
+}
+
+div.altmetrics p {
+    padding: 0;
+    margin: 0;
+}
+
+
+/** TinyBox (modal js dialog) styles
+*******************************************************************************/
+.tbox {position:absolute; display:none; padding:14px 17px; z-index:900}
+.tbox h1 {margin:0; font-size: 25px; color: #b20;}
+.tinner {padding:15px; -moz-border-radius:5px; border-radius:5px; background:#fff url(./img/ajax-loader.gif) no-repeat 50% 50%; border-right:1px solid #333; border-bottom:1px solid #333}
+.tmask {position:absolute; display:none; top:0px; left:0px; height:100%; width:100%; background:#000; z-index:800}
+.tclose {position:absolute; top:0px; right:0px; width:30px; height:30px; cursor:pointer; background:url(./img/tinybox-close.png) no-repeat}
+.tclose:hover {background-position:0 -30px}
+
+#error {background:#ff6969; color:#fff; text-shadow:1px 1px #cf5454; border-right:1px solid #000; border-bottom:1px solid #000; padding:0}
+#error .tcontent {padding:10px 14px 11px; border:1px solid #ffb8b8; -moz-border-radius:5px; border-radius:5px}
+#success {background:#2ea125; color:#fff; text-shadow:1px 1px #1b6116; border-right:1px solid #000; border-bottom:1px solid #000; padding:10; -moz-border-radius:0; border-radius:0}
+#bluemask {background:#4195aa}
+#frameless {padding:0}
+#frameless .tclose {left:6px}
