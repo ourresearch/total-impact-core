@@ -16,8 +16,8 @@ class Wikipedia(Provider):
         
     def metrics(self, alias_object):
         metrics = Metrics()
-        for alias in alias_object.aliases:
-            if not self._is_supported(alias):
+        for alias in alias_object.get_aliases():
+            if not self._is_supported(alias[0]):
                 continue
             self._get_metrics(alias, metrics)
         return metrics
