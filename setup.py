@@ -8,6 +8,9 @@ setup(
         "Flask==0.7.2",
         "Flask-Login",
         "Flask-WTF",
+        "couchdb",
+        "requests",
+        "BeautifulSoup"
 				],
     url = '',
     author = 'Total Impact',
