@@ -72,7 +72,7 @@ class ProvidersAliasThread(StoppableThread):
             time.sleep(self.sleep_time())
             
     def sleep_time(self):
-        return 1
+        return 10
 
 class ProviderMetricsThread(StoppableThread):
 
