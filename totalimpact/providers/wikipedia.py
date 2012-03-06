@@ -1,6 +1,6 @@
 import time
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError
-from totalimpact.model import Metrics
+from totalimpact.models import Metrics
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 
@@ -34,9 +34,7 @@ class Wikipedia(Provider):
         try:
             logger.info("Wikipedia:mentions: metrics requested for tiid:" + alias_object.tiid)
             metrics = Metrics()
-            for alias in alias_object.get_aliases():
-                if not self._is_supported(alias):
-                    continue
+            for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
                 logger.debug("Wikipedia:mentions: processing metrics for tiid:" + alias_object.tiid)
                 self._get_metrics(alias, metrics)
             self._add_info(metrics)
@@ -46,9 +44,6 @@ class Wikipedia(Provider):
         except ProviderError as e:
             self.error(e, alias_object)
             return None
-    
-    def _is_supported(self, alias):
-        return alias[0] in self.config.supported_namespaces
     
     def _get_metrics(self, alias, metrics):
         url = self.config.api % alias[1]

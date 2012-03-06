@@ -11,9 +11,17 @@ class EmptyMetricsError(Exception):
 class Aliases:
     ''' handles all the identifiers for an Item.'''
     
-    def __init__(self):
+    def __init__(self, seed=None):
         self.tiid = str(uuid.uuid1())
-        self.data = defaultdict(list)
+        if seed is None
+            self.data = defaultdict(list)
+        else:
+            self._validate_seed(seed)
+            self.data = defaultdict(list, seed)
+    
+    def _validate_seed(self, seed):
+        # FIXME: what does this actually do?
+        pass
     
     def get_aliases_list(self, namespace_list): 
         ''' gets list of this object's aliases in each given namespace
@@ -47,11 +55,32 @@ class Aliases:
         self.data[namespace].append(id) # using defaultdict, no need to test if list exists first
 
 class Metrics:
+
+    def __init__(self, seed=None):
+        self.properties = {} if seed is None else seed
+    
+    def add(self, property, value):
+        self.properties[property] = value
+        
+    def get(self, property, default_value):
+        return self.properties.get(property, default_value)
+        
+    def add_metrics(self, other):
+        # FIXME: use dstruct, or some other dictionary stitching algorithm
+        # this just replaces everything in the current object with the other
+        # object - nothing additive about it
+        for p in other.properties.keys():
+            self.properties[p] = other.properties[p]
+            
+    def __repr__(self):
+        return str(self.properties)
+        
+    def __str__(self):
+        return str(self.properties)
+
     def is_complete(self):
         raise(emptyMetricsError)
  
-
-    
 class Item(dao.Dao):
     def __init__(self):
         pass

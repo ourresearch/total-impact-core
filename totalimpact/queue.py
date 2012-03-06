@@ -1,4 +1,4 @@
-from totalimpact.model import Alias
+from totalimpact.models import Alias
 
 class Queue(object):
     def next(self):
