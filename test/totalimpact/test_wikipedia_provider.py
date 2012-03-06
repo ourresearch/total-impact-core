@@ -53,4 +53,4 @@ class Test_Wikipedia():
         # ensure that the wikipedia reader can interpret a page appropriately
         # ensure that the metric is as we would expect
         # FIXME: we need to mock out the http layer to do this
-			  pass
+        pass
