@@ -50,7 +50,15 @@ class Test_Wikipedia():
         pass
     
     def test_05_metrics(self):
+        wcfg = None
+        for p in self.config.providers:
+            if p["class"].endswith("wikipedia.Wikipedia"):
+                wcfg = p["config"]
+        wconf = Configuration(wcfg, False)
+        provider = Wikipedia(wconf)
+        
         # ensure that the wikipedia reader can interpret a page appropriately
-        # ensure that the metric is as we would expect
-        # FIXME: we need to mock out the http layer to do this
-			  pass
+        metrics = Metrics()
+        f = open("wikipedia_response.xml")
+        provider._extract_stats(f.read(), metrics)
+        assert metrics.get("mentions", 0) == 1

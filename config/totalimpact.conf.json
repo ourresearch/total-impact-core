@@ -10,5 +10,7 @@
             "class" : "totalimpact.providers.wikipedia.Wikipedia",
             "config" : "/Users/richard/Code/External/total-impact/config/wikipedia.conf.json"
         }
-    ]
+    ],
+    
+    "user_agent" : "TotalImpact/0.2.0"
 }
