@@ -13,18 +13,22 @@ class Dao(object):
         self.db = couch[couch_db]
         self.data = dict(kwargs)
         
+    @property
     def id(self):
         '''Get id of this object.'''
         return "id"
         
+    @property
     def version(self):
         return "version"
 
-    def save(self):
+    @classmethod
+    def save(cls):
         '''Save to backend storage.'''
         return "saved"
 
-    def get(self):
+    @classmethod
+    def get(cls,_id):
         '''Retrieve object by id.'''
         return "thing"
     
