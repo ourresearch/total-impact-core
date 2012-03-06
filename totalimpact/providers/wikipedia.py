@@ -1,13 +1,18 @@
+import time
 from provider import Provider
-from model import Metrics
+from totalimpact.model import Metrics
 from BeautifulSoup import BeautifulStoneSoup
 
-class Wikipedia(Provider):
+import logging
+logger = logging.getLogger(__name__)
 
-    WIKIPEDIA_API_URL = 'http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch="%s"'
+class Wikipedia(Provider):
     
     def sleep_time(self):
-        return 5
+        # FIXME: arbitrary
+        sleep_length = 5
+        logger.debug("Wikipedia:mentions Provider: sleeping for " + str(5) + " seconds")
+        return sleep_length
     
     def member_items(self, query_string): 
         raise NotImplementedError()
@@ -16,18 +21,22 @@ class Wikipedia(Provider):
         raise NotImplementedError()
         
     def metrics(self, alias_object):
+        logger.debug("Wikipedia:mentions Provider: metrics requested for tiid:" + alias_object.tiid)
         metrics = Metrics()
         for alias in alias_object.aliases:
             if not self._is_supported(alias):
                 continue
+            logger.debug("Wikipedia:mentions Provider: processing metrics for tiid:" + alias_object.tiid)
             self._get_metrics(alias, metrics)
+        self._add_info(metrics)
         return metrics
     
     def _is_supported(self, alias):
         return alias[0] in self.config.supported_namespaces
     
     def _get_metrics(self, alias, metrics):
-        url = self.WIKIPEDIA_API_URL % alias[1]
+        url = self.config.api % alias[1]
+        logger.debug("Wikipedia:mentions Provider: ")
         response = self.http_get(url)
         this_metrics = Metrics()
         self._extract_stats(response.content, this_metrics)
@@ -42,3 +51,8 @@ class Wikipedia(Provider):
         except AttributeError:
             # doesn't matter
             pass
+    
+    def _add_info(self, metrics):
+        metrics.add("id", self.config.id)
+        metrics.add("last_update", time.time())
+        metrics.add("meta", self.config.meta)

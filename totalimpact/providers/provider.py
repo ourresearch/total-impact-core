@@ -1,4 +1,4 @@
-from cache import Cache
+from totalimpact.cache import Cache
 import requests
 
 class ProviderState(object):
