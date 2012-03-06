@@ -21,8 +21,6 @@ class ProviderServerError(ProviderError):
 
 class ProviderContentError(ProviderError):
     pass
-    
-class Pro
 
 class ProviderState(object):
     def sleep_time():

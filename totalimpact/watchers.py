@@ -94,8 +94,15 @@ class ProviderMetricsThread(StoppableThread):
             # if we get to here, an Alias has been popped off the queue
             metrics = self.provider.metrics(alias_object)
             
-            # FIXME: just for the time being
-            print metrics
+            if metrics is not None:
+                # store the metrics in the database
+                # TODO
+                
+                # remove the alias_object from the queue
+                self.queue.remove(alias_object)
+                
+                # FIXME: just for the time being
+                print metrics
             
             # go to sleep for a time specified by the provider which
             # is dependent on how long this request took in the first place

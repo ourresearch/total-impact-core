@@ -1,5 +1,5 @@
 import time
-from provider import Provider
+from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError
 from totalimpact.model import Metrics
 from BeautifulSoup import BeautifulStoneSoup
 import requests
@@ -18,11 +18,11 @@ class Wikipedia(Provider):
         logger.debug("Wikipedia:mentions: sleeping for " + str(5) + " seconds")
         return sleep_length
     
-    def error(self, error):
+    def error(self, error, alias_object):
         # FIXME: not yet implemented
         # all errors are handled by an incremental back-off and ultimate
         # escalation policy
-        print error
+        print "ERROR", type(error), alias_object
     
     def member_items(self, query_string): 
         raise NotImplementedError()
@@ -31,17 +31,21 @@ class Wikipedia(Provider):
         raise NotImplementedError()
         
     def metrics(self, alias_object):
-        logger.info("Wikipedia:mentions: metrics requested for tiid:" + alias_object.tiid)
-        metrics = Metrics()
-        for alias in alias_object.get_aliases():
-            if not self._is_supported(alias):
-                continue
-            logger.debug("Wikipedia:mentions: processing metrics for tiid:" + alias_object.tiid)
-            self._get_metrics(alias, metrics)
-        self._add_info(metrics)
-        logger.debug("Wikipedia:mentions: final metrics for tiid " + alias_object.tiid + ": " + str(metrics))
-        logger.info("Wikipedia:mentions: metrics completed for tiid:" + alias_object.tiid)
-        return metrics
+        try:
+            logger.info("Wikipedia:mentions: metrics requested for tiid:" + alias_object.tiid)
+            metrics = Metrics()
+            for alias in alias_object.get_aliases():
+                if not self._is_supported(alias):
+                    continue
+                logger.debug("Wikipedia:mentions: processing metrics for tiid:" + alias_object.tiid)
+                self._get_metrics(alias, metrics)
+            self._add_info(metrics)
+            logger.debug("Wikipedia:mentions: final metrics for tiid " + alias_object.tiid + ": " + str(metrics))
+            logger.info("Wikipedia:mentions: metrics completed for tiid:" + alias_object.tiid)
+            return metrics
+        except ProviderError as e:
+            self.error(e, alias_object)
+            return None
     
     def _is_supported(self, alias):
         return alias[0] in self.config.supported_namespaces
@@ -50,21 +54,13 @@ class Wikipedia(Provider):
         url = self.config.api % alias[1]
         logger.debug("Wikipedia:mentions: attempting to retrieve metrics from " + url)
         
-        # try to get a response from the data provider
-        try:
-            response = self.http_get(url)
-            if response.status_code != 200:
-                if response.status_code >= 500:
-                    self.error(ProviderServerError(response))
-                else:
-                    self.error(ProviderClientError(response))
-                return
-        except ProviderTimeout as e:
-            self.error(e)
-            return
-        except ProviderHttpError as e:
-            self.error(e)
-            return
+        # try to get a response from the data provider        
+        response = self.http_get(url)
+        if response.status_code != 200:
+            if response.status_code >= 500:
+                raise ProviderServerError(response)
+            else:
+                raise ProviderClientError(response)
         
         # construct the metrics
         this_metrics = Metrics()
