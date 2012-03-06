@@ -4,7 +4,6 @@ from BeautifulSoup import BeautifulStoneSoup
 
 class Wikipedia(Provider):
 
-    WIKIPEDIA_API_URL = 'http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch="%s"'
     
     def sleep_time(self):
         return 5
@@ -27,7 +26,7 @@ class Wikipedia(Provider):
         return alias[0] in self.config.supported_namespaces
     
     def _get_metrics(self, alias, metrics):
-        url = self.WIKIPEDIA_API_URL % alias[1]
+        url = self.config.url.metrics.replace("[ID]", alias[1])
         response = self.http_get(url)
         this_metrics = Metrics()
         self._extract_stats(response.content, this_metrics)
