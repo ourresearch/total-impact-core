@@ -9,7 +9,7 @@ from flaskext.login import UserMixin
 class DomainObject(UserDict.IterableUserDict):
 
     def __init__(self, **kwargs):
-        pass
+        self.data = dict(kwargs)
         
     @property
     def id(self):
@@ -34,7 +34,15 @@ class Item(DomainObject):
     pass
     
     
+<<<<<<< HEAD
 class Account(DomainObject, UserMixin):
+=======
+class Collection(DomainObject):
+    __type__ = 'collection'
+
+class User(DomainObject, UserMixin):
+    __type__ = 'user'
+>>>>>>> ccb125ae64eb9ff3b92e7e1bef4d9d2d5eb24103
 
     def set_password(self, password):
         self.data['password'] = generate_password_hash(password)
@@ -44,9 +52,6 @@ class Account(DomainObject, UserMixin):
 
     @property
     def collections(self):
-        colls = Collection.query(terms={
-            'owner': [self.id]
-            })
-        colls = [ Collection(**item['_source']) for item in colls['hits']['hits'] ]
+        colls = []
         return colls
 
