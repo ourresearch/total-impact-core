@@ -18,6 +18,7 @@ class Provider(object):
         return 0
     
     def show_details_url(self, url, metrics):
+        print "add show details"
         metrics.add("show_details_url", url)
     
     def http_get(self, url):

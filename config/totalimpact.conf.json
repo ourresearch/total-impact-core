@@ -1,4 +1,3 @@
-
 {
     # used by the class-loader to explore alternative paths from which to load
     # classes depending on the context in which the configuration is used
@@ -8,7 +7,7 @@
     # List of desired providers and their configuration files
     "providers" : [
         {
-            "class" : "totalimpact.providers.wikipedia.Wikipedia", 
+            "class" : "totalimpact.providers.wikipedia.Wikipedia",
             "config" : "/Users/richard/Code/External/total-impact/config/wikipedia.conf.json"
         }
     ]

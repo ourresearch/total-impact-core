@@ -6,3 +6,5 @@ src*
 .Python
 doc/_build/*
 /nbproject
+build
+dist

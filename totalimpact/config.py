@@ -72,12 +72,16 @@ class Configuration(object):
             return {}
         
         f = open(self.CONFIG_FILE)
+        s = f.read()
+        c = "\n".join(["\n" if x.strip().startswith("#") else x for x in s.split("\n")])
+        """
         c = ""
         for line in f:
             if line.strip().startswith("#"):
                 c+= "\n" # this makes it easier to debug the config
             else:
                 c += line
+        """
         return json.loads(c)
     
     def _create_config_file(self):

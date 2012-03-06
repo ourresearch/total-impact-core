@@ -45,7 +45,13 @@ class WikipediaTest(TestCase):
         assert hasattr(provider, "aliases")
         assert hasattr(provider, "metrics")
     
-    def test_03_metrics_successful_parse(self):
+    def test_03_member_items(self):
+        pass
+        
+    def test_04_aliases(self):
+        pass
+    
+    def test_05_metrics(self):
         # ensure that the wikipedia reader can interpret a page appropriately
         
         # ensure that the metric is as we would expect

@@ -7,6 +7,9 @@ class Alias(object):
     def __init__(self, aliases=[]):
         self.aliases = aliases
         self.tiid = str(uuid.uuid4())
+    
+    def get_aliases(self):
+        return self.aliases
         
 class Metrics(object):
     
