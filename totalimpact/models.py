@@ -4,7 +4,7 @@ from collections import defaultdict
 from werkzeug import generate_password_hash, check_password_hash
 from flaskext.login import UserMixin
 
-class aliases:
+class Aliases:
     ''' handles all the identifiers for an Item.'''
     
     def __init__(self):
@@ -29,6 +29,11 @@ class aliases:
         ''' gets list of this object's ids in each given namespace
         
         returns [] if no ids
+        >>> a = Aliases()
+        >>> a.add_alias("foo", "id1")
+        >>> a.get_ids_by_namespace("foo")
+        ['id1']
+        
         '''
         return self.data[namespace]    
     
