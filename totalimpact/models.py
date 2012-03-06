@@ -12,7 +12,7 @@ class Aliases:
         self.tiid = str(uuid.uuid1())
         self.data = defaultdict(list)
     
-    def get_aliases(self, namespace_list): 
+    def get_aliases_list(self, namespace_list): 
         ''' gets list of this object's aliases in each given namespace
         
         returns a list of (namespace, id) tuples
@@ -26,6 +26,9 @@ class Aliases:
         
         return ret
     
+    def get_aliases_dict(self):
+        return self.data
+        
     def get_ids_by_namespace(self, namespace):
         ''' gets list of this object's ids in each given namespace
         
@@ -34,7 +37,6 @@ class Aliases:
         >>> a.add_alias("foo", "id1")
         >>> a.get_ids_by_namespace("foo")
         ['id1']
-        
         '''
         return self.data[namespace]    
     
