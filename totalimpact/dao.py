@@ -49,9 +49,6 @@ class User(DomainObject, UserMixin):
 
     @property
     def collections(self):
-        colls = Collection.query(terms={
-            'owner': [self.id]
-            })
-        colls = [ Collection(**item['_source']) for item in colls['hits']['hits'] ]
+        colls = []
         return colls
 
