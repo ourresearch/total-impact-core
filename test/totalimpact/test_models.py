@@ -34,11 +34,18 @@ class test_aliases:
     def test4(self):
         '''gets a list of aliases from a list of namespaces'''
         
-        res = self.a.get_aliases(["foo", "bar"])
+        res = self.a.get_aliases_list(["foo", "bar"])
         expected = [("foo", "id1"), ("foo", "id2"), ("bar", "id1")]
         assert res == expected, res
 
-        res = self.a.get_aliases(["foo"])
+        res = self.a.get_aliases_list(["foo"])
         expected = [("foo", "id1"), ("foo", "id2")]
         assert res == expected, res
+    
+    def test5(self):
+        '''get aliases as a dictionary'''
+        res = self.a.get_aliases_dict()
+        expected = {"foo":["id1", "id2"], "bar":["id1"]}
+        assert res == expected, res
+        
     
