@@ -1,6 +1,9 @@
 import uuid
 from collections import defaultdict
 
+from werkzeug import generate_password_hash, check_password_hash
+from flaskext.login import UserMixin
+
 class aliases:
     ''' handles all the identifiers for an Item.'''
     
@@ -31,7 +34,27 @@ class aliases:
     
     def add_alias(self, namespace, id):
         self.data[namespace].append(id)
-        
 
 class metrics:
     pass
+
+    
+class Item(object):
+    def __init__(self):
+        pass
+    
+class Collection(object):
+    def __init__(self):
+        pass
+    
+class User(UserMixin):
+    def __init__(self):
+        pass
+    
+    def set_password(self, password):
+        self.data['password'] = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.data['password'], password)
+
+

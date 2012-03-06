@@ -1,52 +1,38 @@
 import json
 import uuid
-import UserDict
+import couchdb
 
-from werkzeug import generate_password_hash, check_password_hash
-from flaskext.login import UserMixin
-
-
-class DomainObject(UserDict.IterableUserDict):
+class Dao(object):
 
     def __init__(self, **kwargs):
+        # read these from config
+        self.couch_url = "http://localhost:5984/"
+        self.couch_db = "bibsoup"
+        
+        self.couch = couchdb.Server(url=couch_url)
+        self.db = couch[couch_db]
         self.data = dict(kwargs)
         
-    @property
     def id(self):
         '''Get id of this object.'''
         return "id"
         
-    @property
     def version(self):
         return "version"
 
-    def save(cls,data):
+    def save(self):
         '''Save to backend storage.'''
         return "saved"
 
-    @classmethod
-    def get(cls, id_):
+    def get(self):
         '''Retrieve object by id.'''
         return "thing"
     
-
-class Item(DomainObject):
-    pass
+    def json(self):
+        return json.dumps(self.data)
     
-class Collection(DomainObject):
-    __type__ = 'collection'
+    def delete(self):
+        '''delete this object'''
+        return "deleted"
 
-class User(DomainObject, UserMixin):
-    __type__ = 'user'
-
-    def set_password(self, password):
-        self.data['password'] = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.data['password'], password)
-
-    @property
-    def collections(self):
-        colls = []
-        return colls
 
