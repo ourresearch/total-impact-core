@@ -4,7 +4,6 @@ from flaskext.login import login_user, current_user
 
 import json
 import totalimpact.util as util
-import totalimpact.dao
 import totalimpact.models
 from totalimpact.core import app, login_manager
 
@@ -54,7 +53,7 @@ def item(tiid):
     if item:
         # is request for JSON or HTML
         # return relevant version of item
-        return "item"
+        return item.json
     else:
         abort(404)
 
