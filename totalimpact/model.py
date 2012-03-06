@@ -19,6 +19,9 @@ class Metrics(object):
     def add(self, property, value):
         self.properties[property] = value
         
+    def get(self, property, default_value):
+        return self.properties.get(property, default_value)
+        
     def add_metrics(self, other):
         # FIXME: use dstruct, or some other dictionary stitching algorithm
         # this just replaces everything in the current object with the other

@@ -32,9 +32,6 @@ class aliases:
     def add_alias(self, namespace, id):
         self.data[namespace].append(id)
         
-    
-    
-        
 
 class metrics:
     pass

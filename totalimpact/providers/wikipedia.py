@@ -46,14 +46,12 @@ class Wikipedia(Provider):
         logger.debug("Wikipedia:mentions: interrim metrics: " + str(metrics))
         
     def _extract_stats(self, content, metrics):
-        print "extract stats"
         soup = BeautifulStoneSoup(content)
         try:
             articles = soup.search.findAll(title=True)
             metrics.add("mentions", len(articles))
         except AttributeError:
-            # doesn't matter
-            pass
+            metrics.add("mentions", 0)
     
     def _add_info(self, metrics):
         metrics.add("id", self.config.id)
