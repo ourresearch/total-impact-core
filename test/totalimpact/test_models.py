@@ -1,5 +1,6 @@
 from totalimpact import models
 from totalimpact.config import Configuration
+from nose.tools import raises
 
 class test_aliases:
     def setup(self):
@@ -49,3 +50,13 @@ class test_aliases:
         assert res == expected, res
         
     
+
+class Test_Metrics:
+    def setup(self):
+        self.m = models.Metrics()
+        
+    @raises(models.emptyMetricsError)
+    def test1(self):
+        '''on validation check, throws error if missing key properties'''
+        self.m.id = "Mendeley:readers"
+        self.m.is_complete()

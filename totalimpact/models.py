@@ -5,6 +5,9 @@ from collections import defaultdict
 from werkzeug import generate_password_hash, check_password_hash
 from flaskext.login import UserMixin
 
+class EmptyMetricsError(Exception):
+    pass
+
 class Aliases:
     ''' handles all the identifiers for an Item.'''
     
@@ -41,10 +44,12 @@ class Aliases:
         return self.data[namespace]    
     
     def add_alias(self, namespace, id):
-        self.data[namespace].append(id)
+        self.data[namespace].append(id) # using defaultdict, no need to test if list exists first
 
-class metrics:
-    pass
+class Metrics:
+    def is_complete(self):
+        raise(emptyMetricsError)
+ 
 
     
 class Item(dao.Dao):
