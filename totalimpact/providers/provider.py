@@ -1,5 +1,26 @@
 from totalimpact.cache import Cache
-import requests
+import requests, logging
+
+logger = logging.getLogger(__name__)
+
+class ProviderError(Exception):
+    def __init__(self, response=None):
+        self.response = response
+
+class ProviderTimeout(ProviderError):
+    pass
+
+class ProviderHttpError(ProviderError):
+    pass
+
+class ProviderClientError(ProviderError):
+    pass
+
+class ProviderServerError(ProviderError):
+    pass
+
+class ProviderContentError(ProviderError):
+    pass
 
 class ProviderState(object):
     def sleep_time():
@@ -7,21 +28,22 @@ class ProviderState(object):
 
 class Provider(object):
 
-    def __init__(self, config):
+    def __init__(self, config, app_config):
         self.config = config
+        self.app_config = app_config
 
     def member_items(self, query_string): raise NotImplementedError()
     def aliases(self, alias_object): raise NotImplementedError()
     def metrics(self, alias_object): raise NotImplementedError()
+    def on_error(self, exception): raise NotImplementedError()
     
-    def sleep_time(self):
+    def sleep_time(self, dead_time=0):
         return 0
     
     def show_details_url(self, url, metrics):
-        print "add show details"
         metrics.add("show_details_url", url)
     
-    def http_get(self, url):
+    def http_get(self, url, headers=None):
         # first thing is to try to retrieve from cache
         # FIXME: no idea what we'd get back from the cache...
         c = Cache()
@@ -30,10 +52,24 @@ class Provider(object):
         if r is not None:
             return content
             
-        # do some stuff with requests to retrieve the page
-        r = requests.get(url)
+        # ensure that a user-agent string is set
+        if headers is None:
+            headers = {}
+        headers['User-Agent'] = self.app_config.user_agent
+        
+        # make the request
+        try:
+            r = requests.get(url, headers=headers, timeout=self.config.timeout)
+        except requests.exceptions.Timeout:
+            logger.debug("Attempt to connect to provider timed out during GET on " + url)
+            raise ProviderTimeout()
+        except requests.exceptions.RequestException as e:
+            # general network error
+            logger.info("RequestException during GET on: " + url)
+            raise ProviderHttpError()
+        
+        # cache the response and return
         c.cache_http_get(url, r)
-
         return r
     
     """
