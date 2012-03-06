@@ -5,7 +5,7 @@ from collections import defaultdict
 from werkzeug import generate_password_hash, check_password_hash
 from flaskext.login import UserMixin
 
-class EmptyMetricsError(Exception):
+class emptyMetricsError(Exception):
     pass
 
 class Aliases:
@@ -48,7 +48,10 @@ class Aliases:
 
 class Metrics:
     def is_complete(self):
-        raise(emptyMetricsError)
+        if 0:
+            return True
+        else:
+            return False
  
 
     
