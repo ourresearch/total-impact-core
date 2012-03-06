@@ -1,4 +1,4 @@
-from totalimpact.models import Alias
+from totalimpact.models import Aliases
 
 class Queue(object):
     def next(self):
@@ -6,7 +6,8 @@ class Queue(object):
         # it should NOT remove it from the tip of the queue
         
         # FIXME: just for testing
-        alias_object = Alias([("doi", "10.1371/journal.pcbi.1000361"), ("url", "http://cottagelabs.com")])
+        d = {"doi" : ["10.1371/journal.pcbi.1000361"], "url" : ["http://cottagelabs.com"]}
+        alias_object = Aliases(d)
         return alias_object
         
     def remove(self, alias_object):

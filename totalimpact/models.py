@@ -12,11 +12,12 @@ class Aliases:
     ''' handles all the identifiers for an Item.'''
     
     def __init__(self, seed=None):
-        self.tiid = str(uuid.uuid1())
-        if seed is None
+        if seed is None:
+            self.tiid = str(uuid.uuid1())
             self.data = defaultdict(list)
         else:
             self._validate_seed(seed)
+            self.tiid = seed.get("tiid", str(uuid.uuid1()))
             self.data = defaultdict(list, seed)
     
     def _validate_seed(self, seed):
