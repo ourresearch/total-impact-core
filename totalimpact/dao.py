@@ -7,8 +7,6 @@ from flaskext.login import UserMixin
 
 
 class DomainObject(UserDict.IterableUserDict):
-    # set __type__ on inheriting class to determine elasticsearch object
-    __type__ = None
 
     def __init__(self, **kwargs):
         pass
@@ -33,10 +31,10 @@ class DomainObject(UserDict.IterableUserDict):
     
 
 class Item(DomainObject):
-    __type__ = 'item'
+    pass
+    
     
 class Account(DomainObject, UserMixin):
-    __type__ = 'account'
 
     def set_password(self, password):
         self.data['password'] = generate_password_hash(password)
