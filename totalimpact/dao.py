@@ -33,16 +33,13 @@ class DomainObject(UserDict.IterableUserDict):
 class Item(DomainObject):
     pass
     
-    
-<<<<<<< HEAD
 class Account(DomainObject, UserMixin):
-=======
+
 class Collection(DomainObject):
     __type__ = 'collection'
 
 class User(DomainObject, UserMixin):
     __type__ = 'user'
->>>>>>> ccb125ae64eb9ff3b92e7e1bef4d9d2d5eb24103
 
     def set_password(self, password):
         self.data['password'] = generate_password_hash(password)
