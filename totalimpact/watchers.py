@@ -1,33 +1,48 @@
-import logging, threading, time
+import logging, threading, time, sys
+from config import Configuration
+from model import Alias
+
 log = logging.getLogger(__name__)
 
 class Watchers(object):
     
+    def __init__(self, config_path):
+        self.threads = []
+        self.config = Configuration(config_path)
+        self.providers = self._get_providers()
+        
     def run(self):
-        threads = []
-        #config = self.get_config()
-        #providers = self.get_providers()
-        #for p in providers:
-        #    threads.append(ProviderMetricsThread(p, config).run()) # start thread
-        #threads.append(ProviderAliasThread(providers).run())
-        alias_thread = ProvidersAliasThread([])
+        for p in self.providers:
+            # create and start the metrics threads
+            t = ProviderMetricsThread(p, self.config)
+            t.start()
+            self.threads.append(t)
+        
+        alias_thread = ProvidersAliasThread(self.providers)
         alias_thread.start()
+        self.threads.append(alias_thread)
         
-        metrics_thread = ProviderMetricsThread(None, None)
-        metrics_thread.start()
-        
+        # now monitor our threads and the system for interrupts,
+        # and manage a clean exit
         try:
             while True:
                 # just spin our wheels waiting for interrupts
-                time.sleep(0.5)
+                time.sleep(1)
         except (KeyboardInterrupt, SystemExit):
-            alias_thread.stop()
-            metrics_thread.stop()
-            
-            print "Interrupted ... exiting"
-            alias_thread.join(5)
-            metrics_thread.join(5)
-            
+            print "Interrupted ... exiting ..."
+            for t in self.threads:
+                t.stop()
+       
+       # FIXME: do we need to join() the thread?
+       
+    def _get_providers(self):
+        providers = []
+        for p in self.config.providers:
+            conf = Configuration(config_file=p['config'])
+            klazz = self.config.get_class(p['class'])
+            providers.append(klazz(conf))
+        return providers
+    
 class StoppableThread(threading.Thread):
     def __init__(self):
         super(StoppableThread, self).__init__()
@@ -51,10 +66,11 @@ class ProvidersAliasThread(StoppableThread):
             time.sleep(self.sleep_time())
             alias_object = None # get this off the queue
             for p in self.providers:
-                p.aliases(alias_object)
+                # FIXME: will currently throw a NotImplementedError
+                #p.aliases(alias_object)
+                pass
             print "aliases"
             
-    
     def sleep_time(self):
         return 1
 
@@ -68,15 +84,17 @@ class ProviderMetricsThread(StoppableThread):
     def run(self):
         while not self.stopped():
             # sleep first, since otherwise this delays stoppage
-            # time.sleep(self.provider.sleep_time())
-            time.sleep(self.sleep_time())
+            time.sleep(self.provider.sleep_time())
             # check queue
             alias_object = None # get this off the queue
-            # metrics = self.provider.metrics(alias_object)
-            print "metrics"
-  
-    def sleep_time(self):
-        return 3
+            
+            # FIXME: just for testing
+            alias_object = Alias([("doi", "10.1371/journal.pcbi.1000361"), ("url", "http://cottagelabs.com")])
+            metrics = self.provider.metrics(alias_object)
+            print metrics
   
 if __name__ == "__main__":
-    Watchers().run()
+    if len(sys.argv) < 2:
+        print "Please supply the path to the configuration file"
+    else:
+        Watchers(sys.argv[1]).run()

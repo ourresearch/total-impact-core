@@ -6,9 +6,16 @@ class ProviderState(object):
         return 1
 
 class Provider(object):
+
+    def __init__(self, config):
+        self.config = config
+
     def member_items(self, query_string): raise NotImplementedError()
     def aliases(self, alias_object): raise NotImplementedError()
     def metrics(self, alias_object): raise NotImplementedError()
+    
+    def sleep_time(self):
+        return 0
     
     def show_details_url(self, url, metrics):
         metrics.add("show_details_url", url)
