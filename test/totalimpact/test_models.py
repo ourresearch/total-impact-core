@@ -1,8 +1,9 @@
 from totalimpact import models
+from totalimpact.config import Configuration
 
 class test_aliases:
     def setup(self):
-        self.a = models.aliases()
+        self.a = models.Aliases()
         self.a.add_alias("foo", "id1")
         self.a.add_alias("foo", "id2")
         self.a.add_alias("bar", "id1") 
