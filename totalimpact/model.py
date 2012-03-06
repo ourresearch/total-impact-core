@@ -1,9 +1,12 @@
 # FIXME: this entire file is just for demonstration, and should be replaced with
 # a proper set of objects.  Most of the operations here are SPURIOUS
 
+import uuid
+
 class Alias(object):
     def __init__(self, aliases=[]):
         self.aliases = aliases
+        self.tiid = str(uuid.uuid4())
         
 class Metrics(object):
     
