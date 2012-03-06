@@ -2,16 +2,27 @@ import time
 from provider import Provider
 from totalimpact.model import Metrics
 from BeautifulSoup import BeautifulStoneSoup
+import requests
 
 import logging
 logger = logging.getLogger(__name__)
 
-class Wikipedia(Provider):    
-    def sleep_time(self):
-        # FIXME: arbitrary
-        sleep_length = 5
+class Wikipedia(Provider):  
+
+    def __init__(self, config, app_config):
+        super(Wikipedia, self).__init__(config, app_config)
+        self.state = WikipediaState(config)
+
+    def sleep_time(self, dead_time=0):
+        sleep_length = self.state.sleep_time(dead_time)
         logger.debug("Wikipedia:mentions: sleeping for " + str(5) + " seconds")
         return sleep_length
+    
+    def error(self, error):
+        # FIXME: not yet implemented
+        # all errors are handled by an incremental back-off and ultimate
+        # escalation policy
+        print error
     
     def member_items(self, query_string): 
         raise NotImplementedError()
@@ -38,14 +49,35 @@ class Wikipedia(Provider):
     def _get_metrics(self, alias, metrics):
         url = self.config.api % alias[1]
         logger.debug("Wikipedia:mentions: attempting to retrieve metrics from " + url)
-        response = self.http_get(url)
+        
+        # try to get a response from the data provider
+        try:
+            response = self.http_get(url)
+            if response.status_code != 200:
+                if response.status_code >= 500:
+                    self.error(ProviderServerError(response))
+                else:
+                    self.error(ProviderClientError(response))
+                return
+        except ProviderTimeout as e:
+            self.error(e)
+            return
+        except ProviderHttpError as e:
+            self.error(e)
+            return
+        
+        # construct the metrics
         this_metrics = Metrics()
         self._extract_stats(response.content, this_metrics)
         self.show_details_url('http://en.wikipedia.org/wiki/Special:Search?search="' + alias[1] + '"&go=Go', this_metrics)
+        
+        # assign the metrics to the main metrics object
         metrics.add_metrics(this_metrics)
         logger.debug("Wikipedia:mentions: interrim metrics: " + str(metrics))
         
     def _extract_stats(self, content, metrics):
+        # FIXME: option to validate document...
+        # FIXME: needs to re-queue after some specified wait (incremental back-off + escalation)
         soup = BeautifulStoneSoup(content)
         try:
             articles = soup.search.findAll(title=True)
@@ -57,3 +89,13 @@ class Wikipedia(Provider):
         metrics.add("id", self.config.id)
         metrics.add("last_update", time.time())
         metrics.add("meta", self.config.meta)
+
+class WikipediaState(object):
+    
+    def __init__(self, config):
+        self.config = config
+        
+    def sleep_time(self, dead_time=0):
+        # wikipedia has no rate limit
+        return 0
+    

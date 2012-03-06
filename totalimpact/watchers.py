@@ -1,6 +1,6 @@
 import logging, threading, time, sys
-from config import Configuration
-from model import Alias
+from totalimpact.config import Configuration
+from totalimpact.queue import Queue
 
 log = logging.getLogger(__name__)
 
@@ -39,8 +39,10 @@ class Watchers(object):
         providers = []
         for p in self.config.providers:
             conf = Configuration(config_file=p['config'])
-            klazz = self.config.get_class(p['class'])
-            providers.append(klazz(conf))
+            provider_class = self.config.get_class(p['class'])
+            
+            # construct the provider with both its own config and the app config
+            providers.append(provider_class(conf, self.config))
         return providers
     
 class StoppableThread(threading.Thread):
@@ -62,14 +64,12 @@ class ProvidersAliasThread(StoppableThread):
         
     def run(self):
         while not self.stopped():
-            # sleep first, since otherwise this delays stoppage
-            time.sleep(self.sleep_time())
             alias_object = None # get this off the queue
             for p in self.providers:
                 # FIXME: will currently throw a NotImplementedError
                 #p.aliases(alias_object)
                 pass
-            print "aliases"
+            time.sleep(self.sleep_time())
             
     def sleep_time(self):
         return 1
@@ -80,18 +80,30 @@ class ProviderMetricsThread(StoppableThread):
         super(ProviderMetricsThread, self).__init__()
         self.provider = provider
         self.config = config
+        self.queue = Queue()
 
     def run(self):
         while not self.stopped():
-            # sleep first, since otherwise this delays stoppage
-            time.sleep(self.provider.sleep_time())
-            # check queue
-            alias_object = None # get this off the queue
+            start = time.time()
             
-            # FIXME: just for testing
-            alias_object = Alias([("doi", "10.1371/journal.pcbi.1000361"), ("url", "http://cottagelabs.com")])
+            # check queue
+            alias_object = None
+            while alias_object is None and not self.stopped():
+                alias_object = self.queue.next()
+            
+            # if we get to here, an Alias has been popped off the queue
             metrics = self.provider.metrics(alias_object)
+            
+            # FIXME: just for the time being
             print metrics
+            
+            # go to sleep for a time specified by the provider which
+            # is dependent on how long this request took in the first place
+            time.sleep(self.provider.sleep_time(self._get_dead_time(start)))
+            
+    def _get_dead_time(self, start):
+        end = time.time()
+        return end - start
   
 if __name__ == "__main__":
     if len(sys.argv) < 2:

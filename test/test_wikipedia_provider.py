@@ -1,14 +1,17 @@
 from unittest import TestCase
 import totalimpact
 
-#from totalimpact.config import Configuration
-#from totalimpact.providers.wikipedia import Wikipedia
+from totalimpact.config import Configuration
+from totalimpact.providers.wikipedia import Wikipedia
+
+#FIXME: this test is currently broken, as the imports don't work for some
+#as yet undetermined reason
 
 class WikipediaTest(TestCase):
 
     def setUp(self):
         super(WikipediaTest, self).setUp()
-        #self.config = Configuration("test/test.conf.json", False)
+        self.config = Configuration("test/test.conf.json", False)
     
     def tearDown(self):
         super(WikipediaTest, self).tearDown()
@@ -54,7 +57,6 @@ class WikipediaTest(TestCase):
     def test_04_aliases(self):
         pass
     
-    """
     def test_05_metrics(self):
         wcfg = None
         for p in self.config.providers:
@@ -71,4 +73,3 @@ class WikipediaTest(TestCase):
         
         # ensure that the metric is as we would expect
         # FIXME: we need to mock out the http layer to do this
-    """
