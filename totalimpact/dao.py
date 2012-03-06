@@ -33,8 +33,6 @@ class DomainObject(UserDict.IterableUserDict):
 class Item(DomainObject):
     pass
     
-class Account(DomainObject, UserMixin):
-
 class Collection(DomainObject):
     __type__ = 'collection'
 
