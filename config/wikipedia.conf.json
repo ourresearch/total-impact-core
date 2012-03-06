@@ -2,6 +2,7 @@
     "supported_namespaces" : [
         "doi"
     ],
+<<<<<<< HEAD
     
     "id" : "Wikipedia:mentions",
     
@@ -19,4 +20,10 @@
         #"can_aggregate": "1",
         #"other_terms_of_use": "Must show logo and say ‘Powered by Santa’",
     }
+=======
+    "url" :{
+        "metrics" : "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch=\"[ID]\""
+    }
+         
+>>>>>>> 79314474abecdc6816806b3bf8d53cfc6d492ffb
 }

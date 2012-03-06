@@ -6,8 +6,7 @@ from BeautifulSoup import BeautifulStoneSoup
 import logging
 logger = logging.getLogger(__name__)
 
-class Wikipedia(Provider):
-    
+class Wikipedia(Provider):    
     def sleep_time(self):
         # FIXME: arbitrary
         sleep_length = 5
@@ -23,8 +22,8 @@ class Wikipedia(Provider):
     def metrics(self, alias_object):
         logger.debug("Wikipedia:mentions Provider: metrics requested for tiid:" + alias_object.tiid)
         metrics = Metrics()
-        for alias in alias_object.aliases:
-            if not self._is_supported(alias):
+        for alias in alias_object.get_aliases():
+            if not self._is_supported(alias[0]):
                 continue
             logger.debug("Wikipedia:mentions Provider: processing metrics for tiid:" + alias_object.tiid)
             self._get_metrics(alias, metrics)
@@ -35,6 +34,7 @@ class Wikipedia(Provider):
         return alias[0] in self.config.supported_namespaces
     
     def _get_metrics(self, alias, metrics):
+
         url = self.config.api % alias[1]
         logger.debug("Wikipedia:mentions Provider: ")
         response = self.http_get(url)

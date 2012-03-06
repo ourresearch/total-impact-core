@@ -132,29 +132,37 @@ def collection(cid,tiid=''):
         resp.mimetype = "application/json"
         return resp
 
-    '''POST /collection/:collection
-        post payload is a collection object
-        merges with the collection item we've already got.
-        returns success/failure
-    POST /collection/:collection_id/:tiid
-        returns success/failure'''
     if request.method == 'POST':
-        # merge the payload (a collection object) with the coll we already have
-        pass
+        if tiid:
+            # update the list of tiids on this coll with this new one
+            resp = "something like updated"
+        else:
+            # merge the payload (a collection object) with the coll we already have
+            # use richards merge stuff to merge hierarchically?
+            resp = "something like updated"
 
-    '''PUT /collection/:collection
-        payload is a collection object
-        overwrites whatever was there before.'''
     if request.method == 'PUT':
-        pass
+        # check if received object was json
+        if request.json:
+            coll.data = request.json
+        else:
+            coll.data = json.loads(request.data)
+        resp = 201
 
-    '''DELETE /collection/:collection_id/:tiid
-        returns success/failure
-    DELETE /collection/:collection
-        returns success/failure'''
     if request.method == 'DELETE':
-        pass
+        if tiid:
+            # remove tiid from tiid list on coll
+            resp = "thing deleted"
+        else:
+            # delete the whole object
+            deleted = coll.delete()
+            if deleted:
+                return 404
+            else:
+                return "err.."
 
+    saved = coll.save()
+    return resp
 
 # routes for user stuff
 @app.route('/user/<uid>')
