@@ -1,0 +1,18 @@
+{
+    "id": "Mendeley:readers",
+    "value": 16,
+    "last_update": 1328569492.406,
+    "drilldown_url": "http:\/\/api.mendeley.com\/research\/public-chemical-compound-databases\/",
+    "meta": {
+        "display_name": "readers",
+        "provider": "Mendeley",
+        "provider_url": "http:\/\/www.mendeley.com\/",
+        "description": "Mendeley readers: the number of readers of the article",
+        "icon": "http:\/\/www.mendeley.com\/favicon.ico",
+        "category": "bookmark",
+        "can_use_commercially": "0",
+        "can_embed": "1",
+        "can_aggregate": "1",
+        "other_terms_of_use":"must show logo and say 'powered by santa'"
+    }
+}
