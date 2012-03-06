@@ -1,10 +1,16 @@
 import json
 import uuid
-
+import couchdb
 
 class Dao(object):
 
     def __init__(self, **kwargs):
+        # read these from config
+        self.couch_url = "http://localhost:5984/"
+        self.couch_db = "bibsoup"
+        
+        self.couch = couchdb.Server(url=couch_url)
+        self.db = couch[couch_db]
         self.data = dict(kwargs)
         
     def id(self):
