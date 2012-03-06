@@ -2,16 +2,16 @@ import json
 import uuid
 import couchdb
 
-
 class Dao(object):
+    __type__ = None
 
     def __init__(self, **kwargs):
-        self.couch, self.db = connection()
         self.data = dict(kwargs)
-        if not self.data.get('_id',False):
+        if '_id' not in self.data:
             self.data['_id'] = uuid.uuid4().hex
 
-    def connection(self):
+    @classmethod
+    def connection(cls):
         # read these from config
         couch_url = 'http://localhost:5984/'
         couch_db = 'ti'
@@ -19,38 +19,33 @@ class Dao(object):
         couch = couchdb.Server(url=couch_url)
         db = couch[couch_db]
         return couch, db
-        
+
     @property
     def id(self):
         '''Get id of this object.'''
-        if self.doc:
-            return self.doc.id
-        else:
-            self.data['_id'] = uuid.uuid(4).hex
-            return self.data['_id']
+        return self.data['_id']
         
     @property
     def version(self):
-        if self.doc:
-            return self.doc.rev
-        else:
-            return False
-
+        return self.data.get('_rev',None)
+        
     @classmethod
-    def save(cls):
+    def get(cls,_id):
+        couch, db = cls.connection()
+        doc = db[_id]
+        if doc:
+            return cls(**doc)
+        else:
+            return None
+
+    def save(self):
         '''Save to backend storage.'''
         db.save(self.data)
         return "saved"
-
-    @classmethod
-    def get(cls,_id):
-        '''Retrieve object by id.'''
-        couch, db = connection()
-        doc = db[_id]
-        return cls(**doc)
     
+    @property
     def json(self):
-        return json.dumps(self.data)
+        return json.dumps(self.data,sort_keys=True,indent=4)
     
     def delete(self):
         '''delete this object'''

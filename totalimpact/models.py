@@ -48,14 +48,14 @@ class metrics:
 
     
 class Item(dao.Dao):
-    def __init__(self):
-        pass
+    __type__ = 'item'
     
 class Collection(dao.Dao):
-    def __init__(self):
-        pass
+    __type__ = 'collection'
     
 class User(dao.Dao,UserMixin):
+    __type__ = 'user'
+
     def set_password(self, password):
         self.data['password'] = generate_password_hash(password)
 
