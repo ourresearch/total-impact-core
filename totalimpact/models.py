@@ -1,4 +1,5 @@
 import uuid
+import totalimpact.dao as dao
 from collections import defaultdict
 
 from werkzeug import generate_password_hash, check_password_hash
@@ -46,18 +47,15 @@ class metrics:
     pass
 
     
-class Item(object):
+class Item(dao.Dao):
     def __init__(self):
         pass
     
-class Collection(object):
+class Collection(dao.Dao):
     def __init__(self):
         pass
     
-class User(UserMixin):
-    def __init__(self):
-        pass
-    
+class User(dao.Dao,UserMixin):
     def set_password(self, password):
         self.data['password'] = generate_password_hash(password)
 

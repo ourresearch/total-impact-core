@@ -51,6 +51,6 @@ class Test_Wikipedia():
     
     def test_05_metrics(self):
         # ensure that the wikipedia reader can interpret a page appropriately
-        
         # ensure that the metric is as we would expect
-        pass
+        # FIXME: we need to mock out the http layer to do this
+			  pass

@@ -5,13 +5,14 @@ from flaskext.login import login_user, current_user
 import json
 import totalimpact.util as util
 import totalimpact.dao
+import totalimpact.models
 from totalimpact.core import app, login_manager
 
 
 # do account / auth stuff
 @login_manager.user_loader
 def load_account_for_login_manager(userid):
-    out = totalimpact.dao.User.get(userid)
+    out = totalimpact.models.User.get(userid)
     return out
 
 @app.context_processor
@@ -24,13 +25,13 @@ def standard_authentication():
     """Check remote_user on a per-request basis."""
     remote_user = request.headers.get('REMOTE_USER', '')
     if remote_user:
-        user = totalimpact.dao.User.get(remote_user)
+        user = totalimpact.models.User.get(remote_user)
         if user:
             login_user(user, remember=False)
     elif 'api_key' in request.values:
-        res = totalimpact.dao.User.query(q='api_key:"' + request.values['api_key'] + '"')['hits']['hits']
+        res = totalimpact.models.User.query(q='api_key:"' + request.values['api_key'] + '"')['hits']['hits']
         if len(res) == 1:
-            user = totalimpact.dao.User.get(res[0]['_source']['id'])
+            user = totalimpact.models.User.get(res[0]['_source']['id'])
             if user:
                 login_user(user, remember=False)
 
@@ -49,7 +50,7 @@ def content():
 # routes for items (TI scholarly object records)
 @app.route('/item/<tiid>')
 def item(tiid):
-    item = totalimpact.dao.Item.get(tiid)
+    item = totalimpact.models.Item.get(tiid)
     if item:
         # is request for JSON or HTML
         # return relevant version of item
@@ -68,7 +69,7 @@ def itemid(namespace,nid):
         else:
             abort(404)
     elif request.method == 'POST':
-        item = totalimpact.dao.Item()
+        item = totalimpact.models.Item()
         # do something to create the new item
         tiid = item.save()
         if tiid:
@@ -82,7 +83,7 @@ def items(tiids):
     items = []
     for index,tiid in enumerate(tiids.split(',')):
         if index > 99: break
-        items.append( totalimpact.dao.Item.get(tiid).data )
+        items.append( totalimpact.models.Item.get(tiid).data )
     resp = make_response( json.dumps(items, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
@@ -124,7 +125,7 @@ def provider_aliases(pid,aliases=''):
 # (groups of TI scholarly object items that are batched together for scoring)
 @app.route('/collection/<cid>/<tiid>')
 def collection(cid,tiid=''):
-    coll = totalimpact.dao.Collection.get(cid)
+    coll = totalimpact.models.Collection.get(cid)
 
     if request.method == 'GET':
         # check for requested response type, or always JSON?
@@ -168,7 +169,7 @@ def collection(cid,tiid=''):
 @app.route('/user/<uid>')
 def user(uid=''):
     if request.method == 'GET':
-        user = totalimpact.dao.User.get(uid)
+        user = totalimpact.models.User.get(uid)
         # check for requested response type, or always JSON?
         resp = make_response( json.dumps(user, sort_keys=True, indent=4) )
         resp.mimetype = "application/json"
@@ -180,7 +181,7 @@ def user(uid=''):
     
     # kill this user
     if request.method == 'DELETE':
-        user = totalimpact.dao.User.get(uid)
+        user = totalimpact.models.User.get(uid)
         user.delete()
         return 'killed' # should return 404?
 
