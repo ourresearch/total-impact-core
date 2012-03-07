@@ -60,7 +60,8 @@ class Wikipedia(Provider):
         # construct the metrics
         this_metrics = Metrics()
         self._extract_stats(response.content, this_metrics)
-        self.show_details_url('http://en.wikipedia.org/wiki/Special:Search?search="' + alias[1] + '"&go=Go', this_metrics)
+        sdurl = self.config.show_details_url % alias[1]
+        self.show_details_url(sdurl, this_metrics)
         
         # assign the metrics to the main metrics object
         metrics.add_metrics(this_metrics)

@@ -16,7 +16,7 @@ DEFAULT_CONFIG = """
     "providers" : [
         {
             "class" : "totalimpact.providers.wikipedia.Wikipedia", 
-            "config" : "/Users/richard/Code/External/total-impact/config/wikipedia.conf.json"
+            "config" : "./config/wikipedia.conf.json"
         }
     ]
 }

@@ -35,7 +35,6 @@ class Provider(object):
     def member_items(self, query_string): raise NotImplementedError()
     def aliases(self, alias_object): raise NotImplementedError()
     def metrics(self, alias_object): raise NotImplementedError()
-    def on_error(self, exception): raise NotImplementedError()
     
     def sleep_time(self, dead_time=0):
         return 0
