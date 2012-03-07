@@ -1,11 +1,11 @@
 from totalimpact.models import Aliases # remove this import once updated
 
-from totalimpact import Item
-import models from totalimpact
+from totalimpact.models import Item
 import totalimpact.dao as dao
 import datetime
 
 class Queue(dao.Dao):
+    __type__ = 'queue'
     def next(self):
         # this should return an Alias object or None
         # it should NOT remove it from the tip of the queue
@@ -15,9 +15,6 @@ class Queue(dao.Dao):
         alias_object = Aliases(d)
         return alias_object
         
-    def remove(self, alias_object):
-        # remove the given alias_object from the tip of the queue
-        pass
     
     
     # instantiate a queue:
@@ -35,14 +32,21 @@ class Queue(dao.Dao):
     def qry(self):
         # define couchdb queries (or calls to couchdb queries)
         # that return the relevant information
+        _qry = {
+            'map_fun':'''function(doc) {
+                if (true)
+                    emit(doc, null);
+            }'''
+        }
+
         if self.qtype == 'aliases':
-            _qry = {}
+            pass
             
         if self.qtype == 'metrics':
-            _qry = {}
+            pass
             
         if self.qtype == 'errors':
-            _qry = {}
+            pass
         
         return _qry
 
@@ -53,8 +57,7 @@ class Queue(dao.Dao):
         # turn this into an instantiation of an item based on the query result
         return Item(**self.queue[0])
     
-    # the name of this will be changed to remove when finished
-    def rremove(self, item):
+    def remove(self, item):
         # change the last updated (or whatever it is actually called)
         # on either the aliases or the metrics
         if self.provider:
