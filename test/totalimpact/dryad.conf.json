@@ -1,6 +1,6 @@
 {
     ###################################################################
-    # DRYAD PROVIDER CONFIGURATION
+    # TEST DRYAD PROVIDER CONFIGURATION
     ###################################################################
     
     # Provider Identifier - used as the "id" of any resulting metrics

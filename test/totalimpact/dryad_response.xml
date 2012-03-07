@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+<lst name="responseHeader"><int name="status">0</int><int name="QTime">31</int><lst name="params"><str name="fl">dc.identifier</str><str name="q">dc.relation.isreferencedby:10.1016/j.meegid.2011.02.004</str></lst></lst><result name="response" numFound="1" start="0"><doc><arr name="dc.identifier"><str>doi:10.5061/dryad.9025</str><str>doi:10.5061/dryad.9025/1</str><str>doi:10.5061/dryad.9025/2</str></arr></doc></result>
+</response>

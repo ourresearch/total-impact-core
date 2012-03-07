@@ -70,9 +70,9 @@ class Metrics:
 
     def __init__(self, seed=None):
         self.properties = {} if seed is None else seed
-        here = os.path.dirname(os.path.realpath(__file__))
-        fp = open(here + '/../test/complete_metric.json')
-        self.example_seed = json.load(fp)
+        #here = os.path.dirname(os.path.realpath(__file__))
+        #fp = open(here + '/../test/complete_metric.json')
+        #self.example_seed = json.load(fp)
     
     def add(self, property, value):
         self.properties[property] = value

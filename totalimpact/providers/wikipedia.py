@@ -12,17 +12,12 @@ class Wikipedia(Provider):
     def __init__(self, config, app_config):
         super(Wikipedia, self).__init__(config, app_config)
         self.state = WikipediaState(config)
+        self.id = self.config.id
 
     def sleep_time(self, dead_time=0):
         sleep_length = self.state.sleep_time(dead_time)
         logger.debug("Wikipedia:mentions: sleeping for " + str(5) + " seconds")
         return sleep_length
-    
-    def error(self, error, alias_object):
-        # FIXME: not yet implemented
-        # all errors are handled by an incremental back-off and ultimate
-        # escalation policy
-        print "ERROR", type(error), alias_object
     
     def member_items(self, query_string): 
         raise NotImplementedError()

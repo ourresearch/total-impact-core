@@ -69,6 +69,12 @@ class Provider(object):
     def aliases(self, alias_object): raise NotImplementedError()
     def metrics(self, alias_object): raise NotImplementedError()
     
+    def error(self, error, alias_object):
+        # FIXME: not yet implemented
+        # all errors are handled by an incremental back-off and ultimate
+        # escalation policy
+        print "ERROR", type(error), alias_object
+    
     def sleep_time(self, dead_time=0):
         return 0
     
