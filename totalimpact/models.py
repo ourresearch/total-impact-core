@@ -90,7 +90,7 @@ class Metrics:
  
 class Item(dao.Dao):
     __type__ = 'item'
-    
+        
 class Collection(dao.Dao):
     __type__ = 'collection'
     
