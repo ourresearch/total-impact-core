@@ -58,6 +58,9 @@ class Dao(object):
         # http://packages.python.org/CouchDB/client.html
         return self.db.query(**kwargs)
         
+    def view(self, viewname):
+        return self.db.view(viewname)
+        
     def save(self):
         if '_id' not in self.data:
             if self.id:

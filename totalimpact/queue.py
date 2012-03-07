@@ -1,63 +1,53 @@
 from totalimpact.models import Aliases # remove this import once updated
+
 from totalimpact.models import Item
 import totalimpact.dao as dao
 import datetime
 
+# some data useful for testing
+# d = {"DOI" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "URL" : ["http://cottagelabs.com"]}
+
 class Queue(dao.Dao):
-    def next(self):
-        # this should return an Alias object or None
-        # it should NOT remove it from the tip of the queue
-        
-        # FIXME: just for testing
-        d = {"DOI" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "URL" : ["http://cottagelabs.com"]}
-        alias_object = Aliases(d)
-        return alias_object
-        
-    def remove(self, alias_object):
-        # remove the given alias_object from the tip of the queue
-        pass
-    
-    
-    # instantiate a queue:
-    # tiid = total impact ID of item in question
-    # qtype = aliases, metrics, errors, maybe more
-    def __init__(self,qtype,provider=None):
-        self.qtype = qtype
-        self.provider = provider
+    __type__ = None
         
     @property
     def queue(self):
-        return self.query(self.qry)
+        # change this for live
+        items = self.view('queues/'+self.__type__)
+        return [Item(**i['key']) for i in items.rows]
 
-    @property
-    def qry(self):
-        # define couchdb queries (or calls to couchdb queries)
-        # that return the relevant information
-        if self.qtype == 'aliases':
-            _qry = {}
-            
-        if self.qtype == 'metrics':
-            _qry = {}
-            
-        if self.qtype == 'errors':
-            _qry = {}
-        
-        return _qry
-
-    # the name of this will be changed to next when finished
+    # TODO: 
     # return next item from this queue (e.g. whatever is on the top of the list
     # does NOT remove item from tip of queue
-    def rnext(self):
+    def next(self):
         # turn this into an instantiation of an item based on the query result
-        return Item(**self.queue[0])
+        #return self.queue[0]
+        return Item(**{'_rev': '4-a3e3574c44c95b86bb2247fe49e171c8', '_id': 'test', '_deleted_conflicts': ['3-2b27cebd890ff56e616f3d7dadc69c74'], 'hello': 'world', 'aliases': {'url': ['http://cottagelabs.com'], 'doi': ['10.1371/journal.pcbi.1000361']}})
     
-    # the name of this will be changed to remove when finished
-    def rremove(self, item):
-        # change the last updated (or whatever it is actually called)
-        # on either the aliases or the metrics
-        if self.provider:
-            item.data[self.qtype][self.provider]['last_updated'] = datetime.datetime.now()
-        else:
-            item.data[self.qtype]['last_updated'] = datetime.datetime.now()
+    # implement this in inheriting classes if needs to be different
+    def remove(self):
+        item.data[cls.__type__]['last_updated'] = datetime.datetime.now()
         item.save()
         
+        
+class AliasQueue(Queue):
+    __type__ = 'aliases'
+    
+    
+class MetricsQueue(Queue):
+    __type__ = 'metrics'
+    
+    @property
+    def provider(self):
+        return self._provider
+        
+    @provider.setter
+    def provider(self, _provider):
+        self._provider = _provider
+
+    def remove(self):
+        if self.provider:
+            item.data[cls.__type__][self.provider]['last_updated'] = datetime.datetime.now()
+            item.save()
+        else:
+            return 'No! you have not set a provider'
