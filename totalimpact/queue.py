@@ -24,6 +24,7 @@ class Queue(dao.Dao):
     
     # implement this in inheriting classes if needs to be different
     def save_and_unqueue(self,item):
+        # alter to use aliases method once exists
         item.data[self.__type__]['last_updated'] = datetime.datetime.now()
         item.save()
         
@@ -44,6 +45,7 @@ class MetricsQueue(Queue):
         self._provider = _provider
 
     def save_and_unqueue(self,item):
+        # alter to use aliases method once exists
         if self.provider:
             item.data[self.__type__][self.provider]['last_updated'] = datetime.datetime.now()
             item.save()
