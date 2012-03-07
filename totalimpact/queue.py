@@ -19,7 +19,10 @@ class Queue(dao.Dao):
     # does NOT remove item from tip of queue
     def first(self):
         # turn this into an instantiation of an item based on the query result
-        #return self.queue[0]
+        #if len(self.queue) > 0:
+        #    return self.queue[0]
+        #else:
+        #    return None
         return Item(**{'_rev': '4-a3e3574c44c95b86bb2247fe49e171c8', '_id': 'test', '_deleted_conflicts': ['3-2b27cebd890ff56e616f3d7dadc69c74'], 'hello': 'world', 'aliases': {'url': ['http://cottagelabs.com'], 'doi': ['10.1371/journal.pcbi.1000361']}})
     
     # implement this in inheriting classes if needs to be different
