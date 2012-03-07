@@ -54,6 +54,17 @@ class Aliases:
     
     def add_alias(self, namespace, id):
         self.data[namespace].append(id) # using defaultdict, no need to test if list exists first
+        
+    def add_unique(self, alias_list):
+        for ns, id in alias_list:
+            if id not in self.data[ns]:
+                self.add_alias(ns, id)
+    
+    def __repr__(self):
+        return "TIID: " + self.tiid + " " + str(self.data)
+        
+    def __str__(self):
+        return "TIID: " + self.tiid + " " + str(self.data)
 
 class Metrics:
 

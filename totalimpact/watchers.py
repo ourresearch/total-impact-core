@@ -1,8 +1,9 @@
-import logging, threading, time, sys
+import threading, time, sys
 from totalimpact.config import Configuration
 from totalimpact.queue import Queue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 
+from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
 
 class Watchers(object):
@@ -21,7 +22,7 @@ class Watchers(object):
             t.start()
             self.threads.append(t)
         
-        alias_thread = ProvidersAliasThread(self.providers)
+        alias_thread = ProvidersAliasThread(self.providers, self.config)
         alias_thread.start()
         self.threads.append(alias_thread)
         
@@ -32,7 +33,7 @@ class Watchers(object):
                 # just spin our wheels waiting for interrupts
                 time.sleep(1)
         except (KeyboardInterrupt, SystemExit):
-            print "Interrupted ... exiting ..."
+            log.info("Interrupted ... exiting ...")
             for t in self.threads:
                 t.stop()
        
@@ -45,7 +46,7 @@ class Watchers(object):
                 prov = ProviderFactory.get_provider(p, self.config)
                 providers.append(prov)
             except ProviderConfigurationError:
-                print "WARN: Unable to configure provider ... skipping ", p
+                log.error("Unable to configure provider ... skipping " + str(p))
         return providers
     
 class StoppableThread(threading.Thread):
@@ -60,23 +61,35 @@ class StoppableThread(threading.Thread):
         return self._stop.isSet()
 
 class ProvidersAliasThread(StoppableThread):
-    def __init__(self, providers):
+    def __init__(self, providers, config):
         super(ProvidersAliasThread, self).__init__()
         self.providers = providers
-        self.config = None
+        self.config = config
+        self.queue = Queue()
         
     def run(self):
         while not self.stopped():
-            alias_object = None # get this off the queue
+            # check queue
+            alias_object = None
+            while alias_object is None and not self.stopped():
+                alias_object = self.queue.next()
+            
             for p in self.providers:
                 try:
-                    p.aliases(alias_object)
+                    aliases = p.aliases(alias_object)
+                    
+                    # FIXME: what to do with these aliases now?
+                    print aliases
                 except NotImplementedError:
                     continue
             time.sleep(self.sleep_time())
             
     def sleep_time(self):
-        return 1
+        # just keep punting through the aliases as fast as possible
+        # FIXME: ultimately we need a better mechanism to throttle
+        # the alias requests, like skipping providers which are over
+        # limit
+        return 0
 
 class ProviderMetricsThread(StoppableThread):
 

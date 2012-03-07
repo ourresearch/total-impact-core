@@ -1,7 +1,8 @@
 from totalimpact.config import Configuration
 from totalimpact.cache import Cache
-import requests, logging, os
+import requests, os
 
+from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
 
 class ProviderFactory(object):

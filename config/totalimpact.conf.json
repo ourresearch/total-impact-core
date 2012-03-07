@@ -17,10 +17,10 @@
     # List of desired providers and their configuration files
     #
     "providers" : [
-        {
-            "class" : "totalimpact.providers.wikipedia.Wikipedia",
-            "config" : "config/wikipedia.conf.json"
-        },
+        #{
+        #    "class" : "totalimpact.providers.wikipedia.Wikipedia",
+        #    "config" : "config/wikipedia.conf.json"
+        #},
         {
             "class" : "totalimpact.providers.dryad.Dryad",
             "config" : "config/dryad.conf.json"

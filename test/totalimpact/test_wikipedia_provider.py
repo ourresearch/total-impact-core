@@ -9,7 +9,7 @@ import os, unittest
 class DummyResponse(object):
     def __init__(self, status, content):
         self.status_code = status
-        self.content = content
+        self.text = content
 def successful_get(self, url, headers=None, timeout=None):
     f = open(XML_DOC, "r")
     return DummyResponse(200, f.read())
