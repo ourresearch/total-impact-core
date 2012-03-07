@@ -53,6 +53,11 @@ class Dao(object):
         except:
             return None
 
+    def query(self,**kwargs):
+        # pass queries through to couchdb, as per couchdb-python query
+        # http://packages.python.org/CouchDB/client.html
+        return self.db.query(**kwargs)
+        
     def save(self):
         if '_id' not in self.data:
             if self.id:
