@@ -10,7 +10,7 @@
     
     # Namespaces supported by this provider
     #
-    "supported_namespaces" : ["doi"],
+    "supported_namespaces" : ["DOI"],
     
     # Wikipedia API configuration for retrieving metrics
     #

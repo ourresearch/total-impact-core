@@ -1,7 +1,5 @@
 from totalimpact.models import Aliases # remove this import once updated
-
-from totalimpact import Item
-import models from totalimpact
+from totalimpact.models import Item
 import totalimpact.dao as dao
 import datetime
 
@@ -11,7 +9,7 @@ class Queue(dao.Dao):
         # it should NOT remove it from the tip of the queue
         
         # FIXME: just for testing
-        d = {"doi" : ["10.1371/journal.pcbi.1000361"], "url" : ["http://cottagelabs.com"]}
+        d = {"DOI" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "URL" : ["http://cottagelabs.com"]}
         alias_object = Aliases(d)
         return alias_object
         

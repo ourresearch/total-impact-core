@@ -65,7 +65,7 @@ class ProvidersAliasThread(StoppableThread):
         super(ProvidersAliasThread, self).__init__()
         self.providers = providers
         self.config = config
-        self.queue = Queue()
+        self.queue = Queue("aliases")
         
     def run(self):
         while not self.stopped():
@@ -97,7 +97,7 @@ class ProviderMetricsThread(StoppableThread):
         super(ProviderMetricsThread, self).__init__()
         self.provider = provider
         self.config = config
-        self.queue = Queue()
+        self.queue = Queue("metrics", self.provider.id)
 
     def run(self):
         while not self.stopped():

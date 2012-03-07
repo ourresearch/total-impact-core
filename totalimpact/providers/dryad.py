@@ -11,7 +11,8 @@ class Dryad(Provider):
 
     def __init__(self, config, app_config):
         super(Dryad, self).__init__(config, app_config)
-        # self.state = DryadState(config)
+        self.state = DryadState(config)
+        self.id = self.config.id
         
         # All CrossRef DOI prefixes begin with "10" followed by a number of four or more digits
         # from http://www.crossref.org/02publishers/doi-guidelines.pdf
@@ -44,7 +45,7 @@ class Dryad(Provider):
 
     def _is_crossref_doi(self, alias):
         # FIXME: Would exclude DataCite ids from here?
-        return self.crossref_rx.search(alias[1]) != None
+        return self.crossref_rx.search(alias[1]) is not None
 
     def _get_aliases(self, alias):
         url = self.config.aliases['url'] % alias[1]
@@ -71,10 +72,16 @@ class Dryad(Provider):
     def _extract_aliases(self, xml):
         soup = BeautifulStoneSoup(xml)
         try:
-            return [("attacheddatadoi", soup.result.doc.arr.str.string)]
+            identifier = soup.result.doc.arr.str.string
+            if identifier.lower().startswith("doi:"):
+                identifier = identifier[4:]
+            
+            # FIXME: we need a namespace table
+            return [("DOI", identifier)]
         except AttributeError:
             return None
     
 class DryadState(object):
-    pass
+    def __init__(self, config):
+        self.config = config
         

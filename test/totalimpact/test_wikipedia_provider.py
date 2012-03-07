@@ -42,7 +42,7 @@ class Test_Wikipedia(unittest.TestCase):
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
                 wcfg = os.path.join(CWD, p["config"])
-        assert wcfg is not None
+        assert os.path.isfile(wcfg)
         
         # instantiate the configuration
         wconf = Configuration(wcfg, False)
@@ -52,6 +52,7 @@ class Test_Wikipedia(unittest.TestCase):
         provider = Wikipedia(wconf, self.config)
         assert provider.config is not None
         assert provider.state is not None
+        assert provider.id == wconf.id
         
     def test_02_implements_interface(self):
         # ensure that the implementation has all the relevant provider methods
@@ -62,11 +63,11 @@ class Test_Wikipedia(unittest.TestCase):
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
-        # must have the three core methods
-        # return NotImplementedErrors()
+        # must have the four core methods
         assert hasattr(provider, "member_items")
         assert hasattr(provider, "aliases")
         assert hasattr(provider, "metrics")
+        assert hasattr(provider, "provides_metrics")
     
     def test_03_member_items(self):
         wcfg = None
@@ -144,7 +145,7 @@ class Test_Wikipedia(unittest.TestCase):
                 wcfg = os.path.join(CWD, p["config"])
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
-        d = {"doi" : ["10.1371/journal.pcbi.1000361"], "url" : ["http://cottagelabs.com"]}
+        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
         metrics = provider.metrics(Aliases(d))
         
         assert metrics.get("mentions", None) is not None
@@ -158,7 +159,7 @@ class Test_Wikipedia(unittest.TestCase):
                 wcfg = os.path.join(CWD, p["config"])
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
-        d = {"doi" : ["10.1371/journal.pcbi.1000361"], "url" : ["http://cottagelabs.com"]}
+        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
         metrics = provider.metrics(Aliases(d))
         
         assert metrics is None
