@@ -46,11 +46,11 @@ class Wikipedia(Provider):
             return None
     
     def _get_metrics(self, alias, metrics):
-        url = self.config.api % alias[1]
+        url = self.config.metrics['url'] % alias[1]
         logger.debug("Wikipedia:mentions: attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url)
+        response = self.http_get(url, timeout=self.config.metrics['timeout'])
         if response.status_code != 200:
             if response.status_code >= 500:
                 raise ProviderServerError(response)
@@ -60,12 +60,12 @@ class Wikipedia(Provider):
         # construct the metrics
         this_metrics = Metrics()
         self._extract_stats(response.content, this_metrics)
-        sdurl = self.config.show_details_url % alias[1]
+        sdurl = self.config.metrics['show_details_url'] % alias[1]
         self.show_details_url(sdurl, this_metrics)
         
         # assign the metrics to the main metrics object
         metrics.add_metrics(this_metrics)
-        logger.debug("Wikipedia:mentions: interrim metrics: " + str(metrics))
+        logger.debug("Wikipedia:mentions: interim metrics: " + str(this_metrics))
         
     def _extract_stats(self, content, metrics):
         # FIXME: option to validate document...

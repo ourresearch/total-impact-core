@@ -39,10 +39,11 @@ class Provider(object):
     def sleep_time(self, dead_time=0):
         return 0
     
+    # FIXME: can we standardise better on the core keys used by metrics
     def show_details_url(self, url, metrics):
         metrics.add("show_details_url", url)
     
-    def http_get(self, url, headers=None):
+    def http_get(self, url, headers=None, timeout=None):
         # first thing is to try to retrieve from cache
         # FIXME: no idea what we'd get back from the cache...
         c = Cache()
@@ -58,7 +59,7 @@ class Provider(object):
         
         # make the request
         try:
-            r = requests.get(url, headers=headers, timeout=self.config.timeout)
+            r = requests.get(url, headers=headers, timeout=timeout)
         except requests.exceptions.Timeout:
             logger.debug("Attempt to connect to provider timed out during GET on " + url)
             raise ProviderTimeout()
