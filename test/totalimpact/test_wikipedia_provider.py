@@ -9,13 +9,13 @@ import os, unittest
 class DummyResponse(object):
     def __init__(self, status, content):
         self.status_code = status
-        self.content = content
-def successful_get(self, url, headers=None):
+        self.text = content
+def successful_get(self, url, headers=None, timeout=None):
     f = open(XML_DOC, "r")
     return DummyResponse(200, f.read())
-def get_400(self, url, headers=None):
+def get_400(self, url, headers=None, timeout=None):
     return DummyResponse(400, "")
-def get_500(self, url, headers=None):
+def get_500(self, url, headers=None, timeout=None):
     return DummyResponse(500, "")
 
 CWD, _ = os.path.split(__file__)

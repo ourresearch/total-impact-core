@@ -1,12 +1,12 @@
 {
     ###################################################################
-    # WIKIPEDIA PROVIDER CONFIGURATION
+    # DRYAD PROVIDER CONFIGURATION
     ###################################################################
     
     # Provider Identifier - used as the "id" of any resulting metrics
     # object
     #
-    "id" : "Wikipedia:mentions",
+    "id" : "Dryad",
     
     # Namespaces supported by this provider
     #
@@ -15,9 +15,13 @@
     # Wikipedia API configuration for retrieving metrics
     #
     "metrics" : {
-        "url" : "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'",
+        "url" : "",
         "timeout" : 5,
-        "show_details_url" : "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go"
+        "show_details_url" : ""
+    },
+    
+    "aliases" : {
+        "url" : "http://datadryad.org/solr/search/select/?q=dc.relation.isreferencedby:%s&fl=dc.identifier"
     },
     
     # Meta information block for this provider to be included as-is in the

@@ -4,7 +4,7 @@ from totalimpact.models import Metrics
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 
-import logging
+from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
 
 class Wikipedia(Provider):  
@@ -29,28 +29,30 @@ class Wikipedia(Provider):
     
     def aliases(self, alias_object): 
         raise NotImplementedError()
-        
+
+    def provides_metrics(self): return True
+    
     def metrics(self, alias_object):
         try:
-            logger.info("Wikipedia:mentions: metrics requested for tiid:" + alias_object.tiid)
+            logger.info(self.config.id + ": metrics requested for tiid:" + alias_object.tiid)
             metrics = Metrics()
             for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
-                logger.debug("Wikipedia:mentions: processing metrics for tiid:" + alias_object.tiid)
+                logger.debug(self.config.id + ": processing metrics for tiid:" + alias_object.tiid)
                 self._get_metrics(alias, metrics)
             self._add_info(metrics)
-            logger.debug("Wikipedia:mentions: final metrics for tiid " + alias_object.tiid + ": " + str(metrics))
-            logger.info("Wikipedia:mentions: metrics completed for tiid:" + alias_object.tiid)
+            logger.debug(self.config.id + ": final metrics for tiid " + alias_object.tiid + ": " + str(metrics))
+            logger.info(self.config.id + ": metrics completed for tiid:" + alias_object.tiid)
             return metrics
         except ProviderError as e:
             self.error(e, alias_object)
             return None
     
     def _get_metrics(self, alias, metrics):
-        url = self.config.api % alias[1]
-        logger.debug("Wikipedia:mentions: attempting to retrieve metrics from " + url)
+        url = self.config.metrics['url'] % alias[1]
+        logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url)
+        response = self.http_get(url, timeout=self.config.metrics['timeout'])
         if response.status_code != 200:
             if response.status_code >= 500:
                 raise ProviderServerError(response)
@@ -59,13 +61,13 @@ class Wikipedia(Provider):
         
         # construct the metrics
         this_metrics = Metrics()
-        self._extract_stats(response.content, this_metrics)
-        sdurl = self.config.show_details_url % alias[1]
+        self._extract_stats(response.text, this_metrics)
+        sdurl = self.config.metrics['show_details_url'] % alias[1]
         self.show_details_url(sdurl, this_metrics)
         
         # assign the metrics to the main metrics object
         metrics.add_metrics(this_metrics)
-        logger.debug("Wikipedia:mentions: interrim metrics: " + str(metrics))
+        logger.debug(self.config.id + ": interim metrics: " + str(this_metrics))
         
     def _extract_stats(self, content, metrics):
         # FIXME: option to validate document...
