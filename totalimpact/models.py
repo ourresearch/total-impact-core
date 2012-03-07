@@ -101,6 +101,34 @@ class Metrics:
  
 class Item(dao.Dao):
     __type__ = 'item'
+    
+    @property
+    def aliases(self):
+        try:
+            return self._als
+        except:
+            self._als = Aliases(seed=self.data.get('aliases',{}))
+            return self._als
+
+    @property
+    def metrics(self):
+        try:
+            return self._ms
+        except:
+            self._ms = Metrics(seed=self.data.get('metrics',{}))
+            return self._ms
+        
+    @property
+    def data(self):
+        try:
+            self._data['aliases'] = self._als.get_aliases_dict
+        except:
+            pass
+        try:
+            self._data['metrics'] = dict(self._ms)
+        except:
+            pass
+        return self._data
         
 class Collection(dao.Dao):
     __type__ = 'collection'

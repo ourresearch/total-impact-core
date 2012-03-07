@@ -1,5 +1,3 @@
-from totalimpact.models import Aliases # remove this import once updated
-
 from totalimpact.models import Item
 import totalimpact.dao as dao
 import datetime
@@ -16,14 +14,14 @@ class Queue(dao.Dao):
     # TODO: 
     # return next item from this queue (e.g. whatever is on the top of the list
     # does NOT remove item from tip of queue
-    def next(self):
+    def first(self):
         # turn this into an instantiation of an item based on the query result
         #return self.queue[0]
         return Item(**{'_rev': '4-a3e3574c44c95b86bb2247fe49e171c8', '_id': 'test', '_deleted_conflicts': ['3-2b27cebd890ff56e616f3d7dadc69c74'], 'hello': 'world', 'aliases': {'url': ['http://cottagelabs.com'], 'doi': ['10.1371/journal.pcbi.1000361']}})
     
     # implement this in inheriting classes if needs to be different
-    def remove(self):
-        item.data[cls.__type__]['last_updated'] = datetime.datetime.now()
+    def save_and_unqueue(self,item):
+        item.data[self.__type__]['last_updated'] = datetime.datetime.now()
         item.save()
         
         
@@ -42,9 +40,9 @@ class MetricsQueue(Queue):
     def provider(self, _provider):
         self._provider = _provider
 
-    def remove(self):
+    def save_and_unqueue(self,item):
         if self.provider:
-            item.data[cls.__type__][self.provider]['last_updated'] = datetime.datetime.now()
+            item.data[self.__type__][self.provider]['last_updated'] = datetime.datetime.now()
             item.save()
         else:
             return 'No! you have not set a provider'
