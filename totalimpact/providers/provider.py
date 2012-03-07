@@ -1,11 +1,42 @@
+from totalimpact.config import Configuration
 from totalimpact.cache import Cache
-import requests, logging
+import requests, logging, os
 
 logger = logging.getLogger(__name__)
+
+class ProviderFactory(object):
+
+    @classmethod
+    def get_provider(cls, provider_definition, config):
+        
+        # first locate the config file
+        cpath = provider_definition['config']
+        if not os.path.isabs(cpath):
+            cwd = os.getcwd()
+            cpaths = []
+            cpaths.append(os.path.join(cwd, cpath))
+            if config.base_dir is not None:
+                cpaths.append(os.path.join(config.base_dir, cpath))
+            for p in cpaths:
+                if os.path.isfile(p):
+                    cpath = p
+                    break
+        
+        if not os.path.isfile(cpath):
+            raise ProviderConfigurationError()
+        
+        # if we get to here, go ahead and make the Provider object
+        conf = Configuration(cpath, False)
+        provider_class = config.get_class(provider_definition['class'])
+        inst = provider_class(conf, config)
+        return inst
 
 class ProviderError(Exception):
     def __init__(self, response=None):
         self.response = response
+
+class ProviderConfigurationError(ProviderError):
+    pass
 
 class ProviderTimeout(ProviderError):
     pass
@@ -32,6 +63,7 @@ class Provider(object):
         self.config = config
         self.app_config = app_config
 
+    def provides_metrics(self): return False
     def member_items(self, query_string): raise NotImplementedError()
     def aliases(self, alias_object): raise NotImplementedError()
     def metrics(self, alias_object): raise NotImplementedError()

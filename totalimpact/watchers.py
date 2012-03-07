@@ -1,6 +1,7 @@
 import logging, threading, time, sys
 from totalimpact.config import Configuration
 from totalimpact.queue import Queue
+from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 
 log = logging.getLogger(__name__)
 
@@ -13,6 +14,8 @@ class Watchers(object):
         
     def run(self):
         for p in self.providers:
+            if not p.provides_metrics():
+                continue
             # create and start the metrics threads
             t = ProviderMetricsThread(p, self.config)
             t.start()
@@ -38,11 +41,11 @@ class Watchers(object):
     def _get_providers(self):
         providers = []
         for p in self.config.providers:
-            conf = Configuration(config_file=p['config'])
-            provider_class = self.config.get_class(p['class'])
-            
-            # construct the provider with both its own config and the app config
-            providers.append(provider_class(conf, self.config))
+            try:
+                prov = ProviderFactory.get_provider(p, self.config)
+                providers.append(prov)
+            except ProviderConfigurationError:
+                print "WARN: Unable to configure provider ... skipping ", p
         return providers
     
 class StoppableThread(threading.Thread):
@@ -54,7 +57,7 @@ class StoppableThread(threading.Thread):
         self._stop.set()
 
     def stopped(self):
-        return self._stop.isSet()        
+        return self._stop.isSet()
 
 class ProvidersAliasThread(StoppableThread):
     def __init__(self, providers):
@@ -66,13 +69,14 @@ class ProvidersAliasThread(StoppableThread):
         while not self.stopped():
             alias_object = None # get this off the queue
             for p in self.providers:
-                # FIXME: will currently throw a NotImplementedError
-                #p.aliases(alias_object)
-                pass
+                try:
+                    p.aliases(alias_object)
+                except NotImplementedError:
+                    continue
             time.sleep(self.sleep_time())
             
     def sleep_time(self):
-        return 10
+        return 1
 
 class ProviderMetricsThread(StoppableThread):
 

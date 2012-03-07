@@ -1,16 +1,33 @@
 {
+    ###################################################################
+    # TOTAL IMPACT APPLICATION CONFIGURATION
+    ###################################################################
+    
+    # Base installation directory.
+    # From here the application will expand any relative paths used in
+    # configuration (absolute paths will not be affected)
+    #
+    "base_dir" : "/Users/richard/Code/External/total-impact/",
+    
     # used by the class-loader to explore alternative paths from which to load
     # classes depending on the context in which the configuration is used
     #
     "module_root" : "totalimpact",
     
     # List of desired providers and their configuration files
+    #
     "providers" : [
         {
             "class" : "totalimpact.providers.wikipedia.Wikipedia",
-            "config" : "/Users/richard/Code/External/total-impact/config/wikipedia.conf.json"
+            "config" : "config/wikipedia.conf.json"
+        },
+        {
+            "class" : "totalimpact.providers.dryad.Dryad",
+            "config" : "config/dryad.conf.json"
         }
     ],
     
+    # During HTTP requests, the User-Agent string to use
+    #
     "user_agent" : "TotalImpact/0.2.0"
 }

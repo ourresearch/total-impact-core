@@ -29,7 +29,9 @@ class Wikipedia(Provider):
     
     def aliases(self, alias_object): 
         raise NotImplementedError()
-        
+
+    def provides_metrics(self): return True
+    
     def metrics(self, alias_object):
         try:
             logger.info("Wikipedia:mentions: metrics requested for tiid:" + alias_object.tiid)
