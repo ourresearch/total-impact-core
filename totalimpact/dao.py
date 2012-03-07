@@ -65,11 +65,24 @@ class Dao(object):
             else:
                 self.data['_id'] = uuid.uuid4().hex
                 self.id = self.data['_id']
-        self._id, self._version = self.db.save(self.data)
-        self.data['_rev'] = self.version
+        if '_rev' not in self.data and self.version:
+            self.data['_rev'] = self.version
+
+        try:
+            self._id, self._version = self.db.save(self.data)
+            self.data['_rev'] = self.version
+            return True
+        except:
+            # log the save error? action on doc update conflict?
+            return False
         
     def delete(self):
-        self.data = {}
-        self.db.delete(self.data)
+        try:
+            self.data = {}
+            self.db.delete(self.data)
+            return True
+        except:
+            # log the delete error? action on doc update conflict?
+            return False
 
 
