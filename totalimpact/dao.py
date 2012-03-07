@@ -6,9 +6,18 @@ class Dao(object):
     __type__ = None
 
     def __init__(self, **kwargs):
-        self.data = dict(kwargs)
-        if '_id' not in self.data:
-            self.data['_id'] = uuid.uuid4().hex
+        self.couch, self.db = self.connection()
+        self._data = dict(kwargs)
+        self._id = self._data.get('_id',None)
+        self._version = self._data.get('_rev',None)
+
+    @property
+    def data(self):
+        return self._data
+        
+    @data.setter
+    def data(self, obj):
+        self._data = obj
 
     @classmethod
     def connection(cls):
@@ -22,34 +31,40 @@ class Dao(object):
 
     @property
     def id(self):
-        '''Get id of this object.'''
-        return self.data['_id']
+        return self._id
+    
+    @id.setter
+    def id(self,_id):
+        self._id = _id
         
     @property
     def version(self):
-        return self.data.get('_rev',None)
+        return self._version
         
-    @classmethod
-    def get(cls,_id):
-        couch, db = cls.connection()
-        doc = db[_id]
-        if doc:
-            return cls(**doc)
-        else:
-            return None
-
-    def save(self):
-        '''Save to backend storage.'''
-        db.save(self.data)
-        return "saved"
-    
     @property
     def json(self):
         return json.dumps(self.data,sort_keys=True,indent=4)
-    
+
+    @classmethod
+    def get(cls,_id):
+        couch, db = cls.connection()
+        try:
+            return cls(**db[_id])
+        except:
+            return None
+
+    def save(self):
+        if '_id' not in self.data:
+            if self.id:
+                self.data['_id'] = self.id            
+            else:
+                self.data['_id'] = uuid.uuid4().hex
+                self.id = self.data['_id']
+        self._id, self._version = self.db.save(self.data)
+        self.data['_rev'] = self.version
+        
     def delete(self):
-        '''delete this object'''
-        db.delete(self.id)
-        return "deleted"
+        self.data = {}
+        self.db.delete(self.data)
 
 

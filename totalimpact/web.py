@@ -53,7 +53,9 @@ def item(tiid):
     if item:
         # is request for JSON or HTML
         # return relevant version of item
-        return item.json
+        resp = make_response(item.json)
+        resp.mimetype = "application/json"
+        return resp
     else:
         abort(404)
 
