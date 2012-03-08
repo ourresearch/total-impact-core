@@ -66,21 +66,20 @@ class Provider(object):
 
     def provides_metrics(self): return False
     def member_items(self, query_string): raise NotImplementedError()
-    def aliases(self, alias_object): raise NotImplementedError()
-    def metrics(self, alias_object): raise NotImplementedError()
+    def aliases(self, item): raise NotImplementedError()
+    def metrics(self, item): raise NotImplementedError()
     
-    def error(self, error, alias_object):
+    def error(self, error, item):
         # FIXME: not yet implemented
         # all errors are handled by an incremental back-off and ultimate
         # escalation policy
-        print "ERROR", type(error), alias_object
+        print "ERROR", type(error), item
     
     def sleep_time(self, dead_time=0):
         return 0
     
-    # FIXME: can we standardise better on the core keys used by metrics
-    def show_details_url(self, url, metrics):
-        metrics.add("show_details_url", url)
+    def add_meta(self, metrics):
+        metrics.data["meta"] = self.config.meta
     
     def http_get(self, url, headers=None, timeout=None):
         # first thing is to try to retrieve from cache

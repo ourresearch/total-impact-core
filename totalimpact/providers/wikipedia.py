@@ -1,6 +1,6 @@
 import time
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError
-from totalimpact.models import Metrics
+from totalimpact.models import ProviderMetrics
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 
@@ -22,24 +22,38 @@ class Wikipedia(Provider):
     def member_items(self, query_string): 
         raise NotImplementedError()
     
-    def aliases(self, alias_object): 
+    def aliases(self, item): 
         raise NotImplementedError()
 
     def provides_metrics(self): return True
     
-    def metrics(self, alias_object):
+    def metrics(self, item):
         try:
-            logger.info(self.config.id + ": metrics requested for tiid:" + alias_object.tiid)
-            metrics = Metrics()
+            # get the alias object out of the item
+            alias_object = item.aliases
+            logger.info(self.config.id + ": metrics requested for tiid:" + item.tiid)
+            
+            # construct the metrics object based on queries on each of the 
+            # appropriate aliases
+            metrics = ProviderMetrics(id=self.config.id)
             for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
-                logger.debug(self.config.id + ": processing metrics for tiid:" + alias_object.tiid)
+                logger.debug(self.config.id + ": processing metrics for tiid:" + item.tiid)
                 self._get_metrics(alias, metrics)
-            self._add_info(metrics)
-            logger.debug(self.config.id + ": final metrics for tiid " + alias_object.tiid + ": " + str(metrics))
-            logger.info(self.config.id + ": metrics completed for tiid:" + alias_object.tiid)
-            return metrics
+            
+            # add the meta info and other bits to the metrics object
+            # FIXME: could probably combine this with the "show_details_url" in some way
+            self.add_meta(metrics)
+            
+            # log our success (DEBUG and INFO)
+            logger.debug(self.config.id + ": final metrics for tiid " + item.tiid + ": " + str(metrics))
+            logger.info(self.config.id + ": metrics completed for tiid:" + item.tiid)
+            
+            # finally update the item's metrics object with the new one, and return the item
+            # FIXME: this will probably change to a call to item.metrics.add_provider_metric
+            item.metrics().add_provider_metric(metrics)
+            return item
         except ProviderError as e:
-            self.error(e, alias_object)
+            self.error(e, item)
             return None
     
     def _get_metrics(self, alias, metrics):
@@ -55,13 +69,13 @@ class Wikipedia(Provider):
                 raise ProviderClientError(response)
         
         # construct the metrics
-        this_metrics = Metrics()
+        this_metrics = ProviderMetrics(id=self.config.id)
         self._extract_stats(response.text, this_metrics)
-        sdurl = self.config.metrics['show_details_url'] % alias[1]
-        self.show_details_url(sdurl, this_metrics)
+        sdurl = self.config.metrics['provenance_url'] % alias[1]
+        this_metrics.data['provenance_url'] = sdurl
         
         # assign the metrics to the main metrics object
-        metrics.add_metrics(this_metrics)
+        metrics.sum(this_metrics)
         logger.debug(self.config.id + ": interim metrics: " + str(this_metrics))
         
     def _extract_stats(self, content, metrics):
@@ -70,14 +84,13 @@ class Wikipedia(Provider):
         soup = BeautifulStoneSoup(content)
         try:
             articles = soup.search.findAll(title=True)
-            metrics.add("mentions", len(articles))
+            metrics.value(len(articles))
         except AttributeError:
-            metrics.add("mentions", 0)
+            metrics.value(0)
     
     def _add_info(self, metrics):
-        metrics.add("id", self.config.id)
         metrics.add("last_update", time.time())
-        metrics.add("meta", self.config.meta)
+        
 
 class WikipediaState(object):
     

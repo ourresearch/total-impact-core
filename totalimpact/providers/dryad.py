@@ -23,24 +23,35 @@ class Dryad(Provider):
     def member_items(self, query_string): 
         raise NotImplementedError()
     
-    def aliases(self, alias_object): 
+    def aliases(self, item): 
         try:
-            logger.info(self.config.id + ": aliases requested for tiid:" + alias_object.tiid)
+            # get the alias object
+            alias_object = item.aliases
+            logger.info(self.config.id + ": aliases requested for tiid:" + item.tiid)
+            
+            # Get a list of the new aliases that can be discovered from the data
+            # source
             new_aliases = []
             for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
                 if not self._is_crossref_doi(alias):
                     continue
-                logger.debug(self.config.id + ": processing aliases for tiid:" + alias_object.tiid)
+                logger.debug(self.config.id + ": processing aliases for tiid:" + item.tiid)
                 new_aliases += self._get_aliases(alias)
-            logger.debug(self.config.id + ": discovered aliases for tiid " + alias_object.tiid + ": " + str(new_aliases))
-            logger.info(self.config.id + ": aliases completed for tiid:" + alias_object.tiid)
+            
+            # update the original alias object with new unique aliases
             alias_object.add_unique(new_aliases)
-            return alias_object
+            
+            # log our success
+            logger.debug(self.config.id + ": discovered aliases for tiid " + item.tiid + ": " + str(new_aliases))
+            logger.info(self.config.id + ": aliases completed for tiid:" + item.tiid)
+            
+            # no need to set the aliases on the item, as everything is by-reference
+            return item
         except ProviderError as e:
-            self.error(e, alias_object)
+            self.error(e, item)
             return None
         
-    def metrics(self, alias_object):
+    def metrics(self, item):
         raise NotImplementedError()
 
     def _is_crossref_doi(self, alias):
