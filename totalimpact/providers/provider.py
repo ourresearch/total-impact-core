@@ -9,8 +9,20 @@ class ProviderFactory(object):
 
     @classmethod
     def get_provider(cls, provider_definition, config):
+        conf = Configuration(get_config(provider_definition,config), False)
+        provider_class = config.get_class(provider_definition['class'])
+        inst = provider_class(conf, config)
+        return inst
         
-        # first locate the config file
+    @classmethod
+    def get_all(cls,config):
+        conf = Configuration(get_config(provider_definition,config), False)
+        providers = []
+        for prov in config.providers:
+            providers.append( get_provider(prov, config) )
+        return providers
+    
+    def get_config(provider_definition, config):
         cpath = provider_definition['config']
         if not os.path.isabs(cpath):
             cwd = os.getcwd()
@@ -26,11 +38,9 @@ class ProviderFactory(object):
         if not os.path.isfile(cpath):
             raise ProviderConfigurationError()
         
-        # if we get to here, go ahead and make the Provider object
-        conf = Configuration(cpath, False)
-        provider_class = config.get_class(provider_definition['class'])
-        inst = provider_class(conf, config)
-        return inst
+        return cpath
+
+    
 
 class ProviderError(Exception):
     def __init__(self, response=None):
