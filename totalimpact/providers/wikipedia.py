@@ -1,6 +1,6 @@
 import time
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError
-from totalimpact.models import ProviderMetrics
+from totalimpact.models import ProviderMetric
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 
@@ -16,7 +16,7 @@ class Wikipedia(Provider):
 
     def sleep_time(self, dead_time=0):
         sleep_length = self.state.sleep_time(dead_time)
-        logger.debug("Wikipedia:mentions: sleeping for " + str(5) + " seconds")
+        logger.debug(self.config.id + ": sleeping for " + str(5) + " seconds")
         return sleep_length
     
     def member_items(self, query_string): 
@@ -31,22 +31,22 @@ class Wikipedia(Provider):
         try:
             # get the alias object out of the item
             alias_object = item.aliases
-            logger.info(self.config.id + ": metrics requested for tiid:" + item.tiid)
+            logger.info(self.config.id + ": metrics requested for tiid:" + alias_object.tiid)
             
             # construct the metrics object based on queries on each of the 
             # appropriate aliases
-            metrics = ProviderMetrics(id=self.config.id)
+            metrics = ProviderMetric(id=self.config.id)
             for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
-                logger.debug(self.config.id + ": processing metrics for tiid:" + item.tiid)
+                logger.debug(self.config.id + ": processing metrics for tiid:" + alias_object.tiid)
                 self._get_metrics(alias, metrics)
             
             # add the meta info and other bits to the metrics object
             # FIXME: could probably combine this with the "show_details_url" in some way
-            self.add_meta(metrics)
+            metrics.meta(self.config.meta)
             
             # log our success (DEBUG and INFO)
-            logger.debug(self.config.id + ": final metrics for tiid " + item.tiid + ": " + str(metrics))
-            logger.info(self.config.id + ": metrics completed for tiid:" + item.tiid)
+            logger.debug(self.config.id + ": final metrics for tiid " + alias_object.tiid + ": " + str(metrics))
+            logger.info(self.config.id + ": metrics completed for tiid:" + alias_object.tiid)
             
             # finally update the item's metrics object with the new one, and return the item
             # FIXME: this will probably change to a call to item.metrics.add_provider_metric
@@ -69,10 +69,10 @@ class Wikipedia(Provider):
                 raise ProviderClientError(response)
         
         # construct the metrics
-        this_metrics = ProviderMetrics(id=self.config.id)
+        this_metrics = ProviderMetric(id=self.config.id)
         self._extract_stats(response.text, this_metrics)
         sdurl = self.config.metrics['provenance_url'] % alias[1]
-        this_metrics.data['provenance_url'] = sdurl
+        this_metrics.provenance(sdurl)
         
         # assign the metrics to the main metrics object
         metrics.sum(this_metrics)
@@ -87,10 +87,7 @@ class Wikipedia(Provider):
             metrics.value(len(articles))
         except AttributeError:
             metrics.value(0)
-    
-    def _add_info(self, metrics):
-        metrics.add("last_update", time.time())
-        
+            
 
 class WikipediaState(object):
     

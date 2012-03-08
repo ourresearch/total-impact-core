@@ -78,9 +78,6 @@ class Provider(object):
     def sleep_time(self, dead_time=0):
         return 0
     
-    def add_meta(self, metrics):
-        metrics.data["meta"] = self.config.meta
-    
     def http_get(self, url, headers=None, timeout=None):
         # first thing is to try to retrieve from cache
         # FIXME: no idea what we'd get back from the cache...

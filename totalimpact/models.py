@@ -1,6 +1,6 @@
 from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
-import time
+import time, uuid
 
 # FIXME: do we want a created and last modified property on the user?
 class User(dao.Dao):
@@ -60,11 +60,16 @@ class User(dao.Dao):
     
     # FIXME: we need a nicer API to get at the contents of the inner
     # data object
-    def __getattr__(self, att):
+    def __getattribute__(self, att):
         try:
-            super(User, self).__getattr__(att)
+            return super(User, self).__getattribute__(att)
         except:
-            self.data.get(att, None)
+            return self.data[att]
+    def __setattr__(self, att, value):
+        if att == "data":
+            super(User, self).__setattr__(att, value)
+        else:
+            self.data[att] = value
 
 # FIXME: collection doesn't have an ID
 # FIXME: may need to ditch the meta section
@@ -127,11 +132,16 @@ class Collection(dao.Dao):
         
     # FIXME: we need a nicer API to get at the contents of the inner
     # data object
-    def __getattr__(self, att):
+    def __getattribute__(self, att):
         try:
-            super(Collection, self).__getattr__(att)
+            return super(Collection, self).__getattribute__(att)
         except:
-            self.data.get(att, None)
+            return self.data[att]
+    def __setattr__(self, att, value):
+        if att == "data":
+            super(Collection, self).__setattr__(att, value)
+        else:
+            self.data[att] = value
 
 # FIXME: the code terminology and the docs terminology differ slightly:
 # "alias" vs "aliases", "metric" vs "metrics"
@@ -251,7 +261,7 @@ class ProviderMetric(object):
             self.data['id'] = self._init(id, str(uuid.uuid4()))
             self.data['value'] = self._init(value, 0)
             self.data['last_update'] = self._init(last_update, time.time())
-            self.data['drilldown_url'] = self._init(drilldown_url)
+            self.data['provenance_url'] = self._init(provenance_url, [])
             self.data['meta']['display_name'] = self._init(display_name)
             self.data['meta']['provider'] = self._init(provider)
             self.data['meta']['provider_url'] = self._init(provider_url)
@@ -267,22 +277,33 @@ class ProviderMetric(object):
             # we need to ensure that meta is initialised
             self.data['meta'] = {}
     
-    def _init(val, default=None):
+    def _init(self, val, default=None):
         return val if val is not None else default
         
     def value(self, val=None):
-        if value is None:
+        if val is None:
             return self.data['value']
         else:
             self.data['value'] = val
             
+    def meta(self, meta=None):
+        if meta is None:
+            return self.data['meta']
+        else:
+            self.data['meta'] = meta
+    
+    def provenance(self, url=None):
+        if url is None:
+            return self.data['provenance_url']
+        else:
+            self.data['provenance_url'].append(url)
+    
     def sum(self, other):
-        # FIXME: use dstruct, or some other dictionary stitching algorithm
-        # this just replaces everything in the current object with the other
-        # object - nothing additive about it
-        #for p in other.properties.keys():
-        #    self.properties[p] = other.properties[p]
-        pass
+        # sum should take all the data out of other that is relevant to
+        # the self, and sum them appropriate.  In practice this is just
+        # the value and the provenance_url
+        self.data['value'] += other.data['value']
+        self.data['provenance_url'] += other.data['provenance']
     
     # FIXME: this is a validation routine, and need to validate the
     # object
@@ -294,11 +315,16 @@ class ProviderMetric(object):
     
     # FIXME: we need a nicer API to get at the contents of the inner
     # data object
-    def __getattr__(self, att):
+    def __getattribute__(self, att):
         try:
-            super(ProviderMetric, self).__getattr__(att)
+            return super(ProviderMetric, self).__getattribute__(att)
         except:
-            self.data.get(att, None)
+            return self.data[att]
+    def __setattr__(self, att, value):
+        if att == "data":
+            super(ProviderMetric, self).__setattr__(att, value)
+        else:
+            self.data[att] = value
     
 class Aliases(object):
     """
@@ -310,19 +336,22 @@ class Aliases(object):
         ...
     }
     """
-    def __init__(self, id=None, seed=None, **kwargs):
+    def __init__(self, tiid=None, seed=None, **kwargs):
         # load from the seed first
         self._validate_seed(seed)
         self.data = seed if seed is not None else {}
         
         # if there was no seed, load the properties, otherwise ignore them
         if seed is None:
-            self.data['id'] = self._init(id, str(uuid.uuid4()))
+            self.data['tiid'] = self._init(tiid, str(uuid.uuid4()))
             for arg, val in kwargs.iteritems():
                 if hasattr(val, "append"):
                     self.data[arg] = val
                 else:
                     self.data[arg] = [val]
+        else:
+            if not self.data.has_key("tiid"):
+                self.data['tiid'] = self._init(tiid, str(uuid.uuid4()))
     
     def get_aliases_list(self, namespace_list): 
         ''' 
@@ -360,13 +389,24 @@ class Aliases(object):
             if id not in self.data[ns]:
                 self.add_alias(ns, id)
     
-    def _init(val, default=None):
+    def _init(self, val, default=None):
         return val if val is not None else default
     
     def _validate_seed(self, seed):
         # FIXME: what does this actually do?
         pass
-        
+    
+    def __getattribute__(self, att):
+        try:
+            return super(Aliases, self).__getattribute__(att)
+        except:
+            return self.data[att]
+    def __setattr__(self, att, value):
+        if att == "data":
+            super(Aliases, self).__setattr__(att, value)
+        else:
+            self.data[att] = value
+    
     def __repr__(self):
         return "TIID: " + self.tiid + " " + str(self.data)
         
