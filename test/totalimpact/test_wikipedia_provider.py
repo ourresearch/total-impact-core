@@ -1,4 +1,4 @@
-from totalimpact.models import Item, ProviderMetric, Aliases
+from totalimpact.models import Item, ProviderMetric, Aliases, Metrics
 from totalimpact.config import Configuration
 from totalimpact.providers.wikipedia import Wikipedia
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
@@ -22,6 +22,7 @@ def get_500(self, url, headers=None, timeout=None):
 class Item(object):
     def __init__(self, aliases=None):
         self.aliases = aliases
+        self.metrics = Metrics()
 
 CWD, _ = os.path.split(__file__)
 
@@ -129,17 +130,15 @@ class Test_Wikipedia(unittest.TestCase):
         
         alias = Aliases(seed={"bob": ["alice"]})
         item = Item(aliases=alias)
-        metrics = provider.metrics(item)
+        item = provider.metrics(item)
         
-        # at this point we can check that there is no "mentions"
-        # key
-        assert metrics.value() is None
+        pms = item.metrics.list_provider_metrics()
+        assert len(pms) == 1
+        assert pms[0].value() == 0
         
         # we can also check that the meta is correct
-        meta = metrics.meta()
+        meta = pms[0].meta()
         assert meta is not None
-        
-        # FIXME: needs more exploration
         assert meta == provider.config.meta
         
     def test_08_metrics_http_success(self):
@@ -151,10 +150,14 @@ class Test_Wikipedia(unittest.TestCase):
                 wcfg = os.path.join(CWD, p["config"])
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
-        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
-        metrics = provider.metrics(Aliases(d))
         
-        assert metrics.value() is not None
+        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
+        alias = Aliases(seed=d)
+        item = Item(aliases=alias)
+        item = provider.metrics(item)
+        
+        pms = item.metrics.list_provider_metrics()
+        assert pms[0].value() > 0
         
     def test_09_metrics_http_general_fail(self):
         Provider.http_get = get_400
@@ -165,10 +168,14 @@ class Test_Wikipedia(unittest.TestCase):
                 wcfg = os.path.join(CWD, p["config"])
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
-        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
-        metrics = provider.metrics(Aliases(d))
         
-        assert metrics is None
+        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
+        alias = Aliases(seed=d)
+        item = Item(aliases=alias)
+        item = provider.metrics(item)
+        
+        pms = item.metrics.list_provider_metrics()
+        assert len(pms) == 0
         
     def test_10_metrics_400(self):
         Provider.http_get = get_400
