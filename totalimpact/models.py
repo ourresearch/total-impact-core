@@ -1,23 +1,29 @@
 from werkzeug import generate_password_hash, check_password_hash
-import time
+import totalimpact.dao as dao
+import time, uuid, json, hashlib
 
 # FIXME: do we want a created and last modified property on the user?
-class User(object):
+class User(dao.Dao):
+    __type__ = 'user'
+    
     """
     {
-        “id”: “1234f,
-        “name”: “jason priem”,
-        “email”: “abcd@foo.com”,
-        “password”: “1234fd56”, # hash
-        “collection_ids”: [“abcd3”, “abcd4”] # tiid
+        "id": "1234f",
+        "name": "jason priem",
+        "email": "abcd@foo.com",
+        "password": "1234fd56", # hash
+        "collection_ids": ["abcd3", "abcd4"] # tiid
     }
     """
-    def __init__(self, id=None, password=None, password_hash=None, name=None, email=None
-                        collections=None, seed=None):
+    def __init__(self, id=None, password=None, password_hash=None, name=None, 
+                        email=None, collections=None, seed=None):
         # for convenience with CouchDB we store all the properties in an internally
         # managed dict object which can just be json serialised out to the DAO
         # This object has a __getattr__ override below which makes the object 
         # appear as if all the dictionary keys are member attributes of this object
+        
+        # inherit the init
+        super(User,self).__init__()
         
         # load from the seed first
         self.data = seed if seed is not None else {}
@@ -54,15 +60,22 @@ class User(object):
     
     # FIXME: we need a nicer API to get at the contents of the inner
     # data object
-    def __getattr__(self, att):
+    def __getattribute__(self, att):
         try:
-            super(User, self).__getattr__(att)
+            return super(User, self).__getattribute__(att)
         except:
-            self.data.get(att, None)
+            return self.data[att]
+    def __setattr__(self, att, value):
+        if att == "data":
+            super(User, self).__setattr__(att, value)
+        else:
+            self.data[att] = value
 
 # FIXME: collection doesn't have an ID
 # FIXME: may need to ditch the meta section
-class Collection(object):
+class Collection(dao.Dao):
+    __type__ = 'collection'
+    
     """
     {
         "meta": {
@@ -71,7 +84,7 @@ class Collection(object):
             "created": 1328569452.406,
             "last_modified": 1328569492.406,
         }
-        “ids”: [“abcd3”, “abcd4”]  #tiid
+        "ids": ["abcd3", "abcd4"]  #tiid
     }
     """
     def __init__(self, id=None, name=None, owner=None, created=None, last_modified=None, 
@@ -80,6 +93,9 @@ class Collection(object):
         # managed dict object which can just be json serialised out to the DAO
         # This object has a __getattr__ override below which makes the object 
         # appear as if all the dictionary keys are member attributes of this object
+
+        # inherit the init
+        super(Collection,self).__init__()
         
         # load from the seed first
         self.data = seed if seed is not None else {}
@@ -116,25 +132,32 @@ class Collection(object):
         
     # FIXME: we need a nicer API to get at the contents of the inner
     # data object
-    def __getattr__(self, att):
+    def __getattribute__(self, att):
         try:
-            super(Collection, self).__getattr__(att)
+            return super(Collection, self).__getattribute__(att)
         except:
-            self.data.get(att, None)
+            return self.data[att]
+    def __setattr__(self, att, value):
+        if att == "data":
+            super(Collection, self).__setattr__(att, value)
+        else:
+            self.data[att] = value
 
 # FIXME: the code terminology and the docs terminology differ slightly:
 # "alias" vs "aliases", "metric" vs "metrics"
 # FIXME: do we want a created and last modified property on the item?
 # FIXME: no id on the item? this should appear in the alias object?
-class Item(object):
+class Item(dao.Dao):
+    __type__ = 'item'
+    
     """
     {
-        “alias“: alias_object, 
-        “metric“: metric_object, 
-        “biblio“: biblio_object
+        "alias": alias_object, 
+        "metric": metric_object, 
+        "biblio": biblio_object
     }
     """
-    def __init__(self, id=None, aliases=None, metrics=None, biblio=None, seed=None):
+    def __init__(self, id=None, aliases=None, metrics=None, biblio=None, seed=None, **kwargs):
         # for convenience with CouchDB we store all the properties in an internally
         # managed dict object which can just be json serialised out to the DAO
         # This object has a __getattr__ override below which makes the object 
@@ -143,44 +166,55 @@ class Item(object):
         # FIXME: implement seed support (this is a bit tricky, as aliases,
         # metrics and biblio are objects)
         
-        self.data = {}
-        
-        self.data['id'] = id if id is not None else str(uuid.uuid4())
-        self.data['aliases'] = aliases if aliases is not None else None # FIXME: if a blank alias, may need to create one
-        self.data['metrics'] = metrics if metrics is not None else None
-        self.data['biblio'] = biblio if biblio is not None else None
-        
-    def aliases(self, aliases=None):
-        if aliases is None:
-            return self.data['aliases']
-        else:
-            self.data['aliases'] = aliases
-    
-    def metrics(self, metrics=None):
-        if metrics is None:
-            return self.data['metrics']
-        else:
-            self.data['metrics'] = metrics
-        
-    def biblio(self, biblio=None):
-        if biblio is None:
-            return self.data['biblio']
-        else:
-            self.data['biblio'] = biblio
-            
-    # FIXME: we need a nicer API to get at the contents of the inner
-    # data object
-    def __getattr__(self, att):
-        try:
-            super(Item, self).__getattr__(att)
-        except:
-            self.data.get(att, None)
+        # inherit the init
+        super(Item,self).__init__(**kwargs)
 
+        self.id = id
+        if seed is not None: self.data = seed
+        self._aliases = Aliases(seed=self._data.get('aliases',None)) if (hasattr(aliases,'keys') or aliases is None) else aliases
+        self._metrics = Metrics(seed=self._data.get('metrics',None)) if (hasattr(metrics,'keys') or metrics is None) else metrics
+        self._biblio = Biblio(seed=self._data.get('biblio',None)) if (hasattr(biblio,'keys') or biblio is None) else biblio
+
+    @property
+    def aliases(self):
+        try:
+            return self._aliases
+        except:
+            self._aliases = Aliases(seed=self._data.get('aliases',None))
+            return self._aliases
+
+    @property
+    def metrics(self):
+        try:
+            return self._aliases
+        except:
+            self._metrics = Metrics(seed=self._data.get('metrics',None))
+            return self._metrics
+        
+    @property
+    def biblio(self):
+        try:
+            return self._biblio
+        except:
+            self._biblio = Biblio(seed=self._data.get('biblio',None))
+            return self._biblio
+            
+    @property
+    def data(self):
+        self._data['aliases'] = self.aliases.data
+        self._data['metrics'] = self.metrics.data
+        self._data['biblio'] = self.biblio.data
+        return self._data
+
+    @data.setter
+    def data(self, val):
+        self._data = val
+            
 # FIXME: there's no documentation on the biblio object, so just leaving
 # it blank for the time being
 class Biblio(object):
     def __init__(self, seed=None):
-        pass
+        self.data = seed if seed is not None else {}
 
 class Metrics(object):
     
@@ -188,16 +222,19 @@ class Metrics(object):
         self.data = seed if seed is not None else {}
     
     def add_provider_metric(self, provider_metric):
-        # FIXME: implement
-        pass
+        hash = self._hash(provider_metric)
+        self.data[hash] = provider_metric
         
     def list_provider_metrics(self):
-        # FIXME: implement
-        pass
+        return self.data.values()
         
     def _hash(self, provider_metric):
         # get a hash of the provider_metric's json representation
-        pass
+        j = json.dumps(provider_metric.data)
+        m = hashlib.md5()
+        m.update(j)
+        return m.hexdigest()
+        
 
 # FIXME: should this have a created property?
 # FIXME: should things like "can_use_commercially" be true/false rather than the - yes
@@ -208,7 +245,7 @@ class ProviderMetric(object):
         "id": "Mendeley:readers",
         "value": 16,
         "last_update": 1328569492.406,
-        "drilldown_url": "http:\/\/api.mendeley.com\/research\/public-chemical-compound-databases\/",
+        "provenance_url": "http:\/\/api.mendeley.com\/research\/public-chemical-compound-databases\/",
         "meta": {
             "display_name": "readers"
             "provider": "Mendeley",
@@ -219,11 +256,11 @@ class ProviderMetric(object):
             "can_use_commercially": "0",
             "can_embed": "1",
             "can_aggregate": "1",
-            "other_terms_of_use": "Must show logo and say ‘Powered by Santa’",
+            "other_terms_of_use": "Must show logo and say 'Powered by Santa'",
         }
     }
     """
-    def __init__(self, id=None, value=None, last_update=None, drilldown_url=None,
+    def __init__(self, id=None, value=None, last_update=None, provenance_url=None,
                         display_name=None, provider=None, provider_url=None,
                         description=None, icon=None, category=None, can_use_commercially=None,
                         can_embed=None, can_aggregate=None, other_terms_of_use=None,
@@ -239,7 +276,7 @@ class ProviderMetric(object):
             self.data['id'] = self._init(id, str(uuid.uuid4()))
             self.data['value'] = self._init(value, 0)
             self.data['last_update'] = self._init(last_update, time.time())
-            self.data['drilldown_url'] = self._init(drilldown_url)
+            self.data['provenance_url'] = self._init(provenance_url, [])
             self.data['meta']['display_name'] = self._init(display_name)
             self.data['meta']['provider'] = self._init(provider)
             self.data['meta']['provider_url'] = self._init(provider_url)
@@ -255,22 +292,33 @@ class ProviderMetric(object):
             # we need to ensure that meta is initialised
             self.data['meta'] = {}
     
-    def _init(val, default=None):
+    def _init(self, val, default=None):
         return val if val is not None else default
         
     def value(self, val=None):
-        if value is None:
+        if val is None:
             return self.data['value']
         else:
             self.data['value'] = val
             
+    def meta(self, meta=None):
+        if meta is None:
+            return self.data['meta']
+        else:
+            self.data['meta'] = meta
+    
+    def provenance(self, url=None):
+        if url is None:
+            return self.data['provenance_url']
+        else:
+            self.data['provenance_url'].append(url)
+    
     def sum(self, other):
-        # FIXME: use dstruct, or some other dictionary stitching algorithm
-        # this just replaces everything in the current object with the other
-        # object - nothing additive about it
-        #for p in other.properties.keys():
-        #    self.properties[p] = other.properties[p]
-        pass
+        # sum should take all the data out of other that is relevant to
+        # the self, and sum them appropriate.  In practice this is just
+        # the value and the provenance_url
+        self.data['value'] += other.data['value']
+        self.data['provenance_url'] += other.data['provenance_url']
     
     # FIXME: this is a validation routine, and need to validate the
     # object
@@ -282,11 +330,16 @@ class ProviderMetric(object):
     
     # FIXME: we need a nicer API to get at the contents of the inner
     # data object
-    def __getattr__(self, att):
+    def __getattribute__(self, att):
         try:
-            super(ProviderMetric, self).__getattr__(att)
+            return super(ProviderMetric, self).__getattribute__(att)
         except:
-            self.data.get(att, None)
+            return self.data[att]
+    def __setattr__(self, att, value):
+        if att == "data":
+            super(ProviderMetric, self).__setattr__(att, value)
+        else:
+            self.data[att] = value
     
 class Aliases(object):
     """
@@ -298,19 +351,22 @@ class Aliases(object):
         ...
     }
     """
-    def __init__(self, id=None, seed=None, **kwargs):
+    def __init__(self, tiid=None, seed=None, **kwargs):
         # load from the seed first
         self._validate_seed(seed)
         self.data = seed if seed is not None else {}
         
         # if there was no seed, load the properties, otherwise ignore them
         if seed is None:
-            self.data['id'] = self._init(id, str(uuid.uuid4()))
+            self.data['tiid'] = self._init(tiid, str(uuid.uuid4()))
             for arg, val in kwargs.iteritems():
                 if hasattr(val, "append"):
                     self.data[arg] = val
                 else:
                     self.data[arg] = [val]
+        else:
+            if not self.data.has_key("tiid"):
+                self.data['tiid'] = self._init(tiid, str(uuid.uuid4()))
     
     def get_aliases_list(self, namespace_list): 
         ''' 
@@ -321,6 +377,8 @@ class Aliases(object):
         ret = []
         for namespace in namespace_list:
             ids = self.get_ids_by_namespace(namespace)
+            if ids is None:
+                return ret
             for id in ids:
                 ret.append((namespace, id))
         
@@ -338,7 +396,7 @@ class Aliases(object):
         >>> a.get_ids_by_namespace("foo")
         ['id1']
         '''
-        return self.data[namespace]    
+        return self.data.get(namespace)
     
     def add_alias(self, namespace, id):
         self.data[namespace].append(id) # using defaultdict, no need to test if list exists first
@@ -348,13 +406,24 @@ class Aliases(object):
             if id not in self.data[ns]:
                 self.add_alias(ns, id)
     
-    def _init(val, default=None):
+    def _init(self, val, default=None):
         return val if val is not None else default
     
     def _validate_seed(self, seed):
         # FIXME: what does this actually do?
         pass
-        
+    
+    def __getattribute__(self, att):
+        try:
+            return super(Aliases, self).__getattribute__(att)
+        except:
+            return self.data[att]
+    def __setattr__(self, att, value):
+        if att == "data":
+            super(Aliases, self).__setattr__(att, value)
+        else:
+            self.data[att] = value
+    
     def __repr__(self):
         return "TIID: " + self.tiid + " " + str(self.data)
         

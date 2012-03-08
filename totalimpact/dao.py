@@ -9,16 +9,8 @@ class Dao(object):
     def __init__(self, **kwargs):
         self.couch, self.db = self.connection()
         self._data = dict(kwargs)
-        self._id = self._data.get('_id',None)
-        self._version = self._data.get('_rev',None)
-
-    @property
-    def data(self):
-        return self._data
-        
-    @data.setter
-    def data(self, obj):
-        self._data = obj
+        self._id = self.data.get('_id',None)
+        self._version = self.data.get('_rev',None)
 
     @classmethod
     def connection(cls):
@@ -29,6 +21,14 @@ class Dao(object):
         couch = couchdb.Server(url=couch_url)
         db = couch[couch_db]
         return couch, db
+
+    @property
+    def data(self):
+        return self._data
+        
+    @data.setter
+    def data(self, val):
+        self._data = val
 
     @property
     def id(self):

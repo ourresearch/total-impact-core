@@ -1,4 +1,4 @@
-from totalimpact.models import Metrics, Aliases
+from totalimpact.models import Item, ProviderMetric, Aliases, Metrics
 from totalimpact.config import Configuration
 from totalimpact.providers.wikipedia import Wikipedia
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
@@ -17,6 +17,12 @@ def get_400(self, url, headers=None, timeout=None):
     return DummyResponse(400, "")
 def get_500(self, url, headers=None, timeout=None):
     return DummyResponse(500, "")
+
+# dummy Item class
+class Item(object):
+    def __init__(self, aliases=None):
+        self.aliases = aliases
+        self.metrics = Metrics()
 
 CWD, _ = os.path.split(__file__)
 
@@ -98,10 +104,10 @@ class Test_Wikipedia(unittest.TestCase):
         provider = Wikipedia(wconf, self.config)
         
         # ensure that the wikipedia reader can interpret a page appropriately
-        metrics = Metrics()
+        metrics = ProviderMetric()
         f = open(XML_DOC, "r")
         provider._extract_stats(f.read(), metrics)
-        assert metrics.get("mentions", 0) == 1
+        assert metrics.value() == 1
         
     def test_06_metrics_sleep(self):
         wcfg = None
@@ -122,18 +128,17 @@ class Test_Wikipedia(unittest.TestCase):
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
-        alias = Aliases({"bob": ["alice"]})
-        metrics = provider.metrics(alias)
+        alias = Aliases(seed={"bob": ["alice"]})
+        item = Item(aliases=alias)
+        item = provider.metrics(item)
         
-        # at this point we can check that there is no "mentions"
-        # key
-        assert metrics.get("mentions", None) is None
+        pms = item.metrics.list_provider_metrics()
+        assert len(pms) == 1
+        assert pms[0].value() == 0
         
         # we can also check that the meta is correct
-        meta = metrics.get("meta", None)
+        meta = pms[0].meta()
         assert meta is not None
-        
-        # FIXME: needs more exploration
         assert meta == provider.config.meta
         
     def test_08_metrics_http_success(self):
@@ -145,10 +150,14 @@ class Test_Wikipedia(unittest.TestCase):
                 wcfg = os.path.join(CWD, p["config"])
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
-        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
-        metrics = provider.metrics(Aliases(d))
         
-        assert metrics.get("mentions", None) is not None
+        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
+        alias = Aliases(seed=d)
+        item = Item(aliases=alias)
+        item = provider.metrics(item)
+        
+        pms = item.metrics.list_provider_metrics()
+        assert pms[0].value() > 0
         
     def test_09_metrics_http_general_fail(self):
         Provider.http_get = get_400
@@ -159,10 +168,14 @@ class Test_Wikipedia(unittest.TestCase):
                 wcfg = os.path.join(CWD, p["config"])
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
-        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
-        metrics = provider.metrics(Aliases(d))
         
-        assert metrics is None
+        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
+        alias = Aliases(seed=d)
+        item = Item(aliases=alias)
+        item = provider.metrics(item)
+        
+        pms = item.metrics.list_provider_metrics()
+        assert len(pms) == 0
         
     def test_10_metrics_400(self):
         Provider.http_get = get_400
@@ -174,7 +187,7 @@ class Test_Wikipedia(unittest.TestCase):
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
-        metrics = Metrics()
+        metrics = ProviderMetric()
         self.assertRaises(ProviderClientError, provider._get_metrics, "10.1371/journal.pcbi.1000361", metrics)
         
     def test_11_metrics_500(self):
@@ -187,5 +200,5 @@ class Test_Wikipedia(unittest.TestCase):
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
-        metrics = Metrics()
+        metrics = ProviderMetric()
         self.assertRaises(ProviderServerError, provider._get_metrics, "10.1371/journal.pcbi.1000361", metrics)
