@@ -7,6 +7,9 @@ import totalimpact.util as util
 import totalimpact.models
 from totalimpact.core import app, login_manager
 
+from totalimpact.config import Configuration
+from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
+
 
 # do account / auth stuff
 @login_manager.user_loader
@@ -98,11 +101,20 @@ def items(tiids):
 #    /provider/GitHub/memberitems?query=jasonpriem&type=user
 #    /provider/GitHub/memberitems?query=bioperl&type=org
 #    /provider/Dryad/memberitems?query=Otto%2C%20Sarah%20P.
+config = Configuration('config/totalimpact.conf.json')
+providers = ProviderFactory.get_providers(config)
 @app.route('/provider/<pid>/memberitems')
 def provider_memberitems(pid):
     query = request.values.get('query','')
     qtype = request.values.get('type','')
-    memberitems = []
+    
+    for prov in providers:
+        if prov.id == pid:
+            provider = prov
+            break
+
+    # FIXME: how does provider take the type, if there is one?
+    memberitems = provider.member_items(query)
     
     # check for requested response type, or always JSON?
     resp = make_response( json.dumps(memberitems, sort_keys=True, indent=4) )
@@ -126,7 +138,8 @@ def provider_aliases(pid,aliases=''):
 # (groups of TI scholarly object items that are batched together for scoring)
 @app.route('/collection/<cid>/<tiid>')
 def collection(cid='',tiid=''):
-    coll = totalimpact.models.Collection.get(cid)
+    if cid:
+        coll = totalimpact.models.Collection.get(cid)
 
     if request.method == 'GET':
         # check for requested response type, or always JSON?
@@ -158,6 +171,8 @@ def collection(cid='',tiid=''):
         if tiid:
             # remove tiid from tiid list on coll
             resp = "thing deleted"
+        elif cid:
+            resp = "col deleted"
         else:
             # delete the whole object
             deleted = coll.delete()
