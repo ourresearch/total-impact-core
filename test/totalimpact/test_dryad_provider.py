@@ -20,6 +20,11 @@ def get_400(self, url, headers=None, timeout=None):
 def get_500(self, url, headers=None, timeout=None):
     return DummyResponse(500, "")
 
+# dummy Item class
+class Item(object):
+    def __init__(self, aliases=None):
+        self.aliases = aliases
+
 CWD, _ = os.path.split(__file__)
 
 APP_CONFIG = os.path.join(CWD, "test.conf.json")
@@ -186,9 +191,12 @@ class Test_Dryad(unittest.TestCase):
         provider = Dryad(dconf, self.config)
         
         d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
-        aliases = provider.aliases(Aliases(d))
+        alias = Aliases(seed=d)
+        item = Item(aliases=alias)
+        item = provider.aliases(item)
         
-        assert aliases is None
+        # the aliases should be unchanged
+        assert item.aliases == alias
     
     def test_11_aliases_general_success(self):
         Provider.http_get = successful_get
@@ -201,15 +209,16 @@ class Test_Dryad(unittest.TestCase):
         provider = Dryad(dconf, self.config)
         
         d = {"DOI" : [DOI], "URL" : ["http://cottagelabs.com"]}
-        aliases = provider.aliases(Aliases(d))
+        alias = Aliases(seed=d)
+        item = Item(aliases=alias)
+        item = provider.aliases(item)
         
-        assert len(aliases.get_aliases_list(["DOI"])) == 2, aliases.data
-        assert len(aliases.get_aliases_list(["URL"])) == 1
+        assert len(item.aliases.get_aliases_list(["DOI"])) == 2
+        assert len(item.aliases.get_aliases_list(["URL"])) == 1
         
-        dois = [x[1] for x in aliases.get_aliases_list(["DOI"])]
+        dois = [x[1] for x in item.aliases.get_aliases_list(["DOI"])]
         assert DOI in dois
         assert "10.5061/dryad.9025" in dois
-            
     
     def test_12_metrics(self):
         dcfg = None

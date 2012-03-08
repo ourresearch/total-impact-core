@@ -49,7 +49,7 @@ class Dryad(Provider):
             return item
         except ProviderError as e:
             self.error(e, item)
-            return None
+            return item
         
     def metrics(self, item):
         raise NotImplementedError()

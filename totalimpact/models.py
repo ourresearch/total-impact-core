@@ -1,6 +1,6 @@
 from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
-import time, uuid
+import time, uuid, json, hashlib
 
 # FIXME: do we want a created and last modified property on the user?
 class User(dao.Dao):
@@ -222,16 +222,19 @@ class Metrics(object):
         self.data = seed if seed is not None else {}
     
     def add_provider_metric(self, provider_metric):
-        # FIXME: implement
-        pass
+        hash = self._hash(provider_metric)
+        self.data[hash] = provider_metric
         
     def list_provider_metrics(self):
-        # FIXME: implement
-        pass
+        return self.data.values()
         
     def _hash(self, provider_metric):
         # get a hash of the provider_metric's json representation
-        pass
+        j = json.dumps(provider_metric.data)
+        m = hashlib.md5()
+        m.update(j)
+        return m.hexdigest()
+        
 
 # FIXME: should this have a created property?
 # FIXME: should things like "can_use_commercially" be true/false rather than the - yes
@@ -315,7 +318,7 @@ class ProviderMetric(object):
         # the self, and sum them appropriate.  In practice this is just
         # the value and the provenance_url
         self.data['value'] += other.data['value']
-        self.data['provenance_url'] += other.data['provenance']
+        self.data['provenance_url'] += other.data['provenance_url']
     
     # FIXME: this is a validation routine, and need to validate the
     # object
@@ -374,6 +377,8 @@ class Aliases(object):
         ret = []
         for namespace in namespace_list:
             ids = self.get_ids_by_namespace(namespace)
+            if ids is None:
+                return ret
             for id in ids:
                 ret.append((namespace, id))
         
@@ -391,7 +396,7 @@ class Aliases(object):
         >>> a.get_ids_by_namespace("foo")
         ['id1']
         '''
-        return self.data[namespace]    
+        return self.data.get(namespace)
     
     def add_alias(self, namespace, id):
         self.data[namespace].append(id) # using defaultdict, no need to test if list exists first

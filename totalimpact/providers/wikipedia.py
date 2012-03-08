@@ -36,6 +36,13 @@ class Wikipedia(Provider):
             # construct the metrics object based on queries on each of the 
             # appropriate aliases
             metrics = ProviderMetric(id=self.config.id)
+            
+            # get the aliases that we want to check
+            aliases = alias_object.get_aliases_list(self.config.supported_namespaces)
+            if aliases is None:
+                return item
+            
+            # if there are aliases to check, carry on
             for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
                 logger.debug(self.config.id + ": processing metrics for tiid:" + alias_object.tiid)
                 self._get_metrics(alias, metrics)
@@ -50,11 +57,11 @@ class Wikipedia(Provider):
             
             # finally update the item's metrics object with the new one, and return the item
             # FIXME: this will probably change to a call to item.metrics.add_provider_metric
-            item.metrics().add_provider_metric(metrics)
+            item.metrics.add_provider_metric(metrics)
             return item
         except ProviderError as e:
             self.error(e, item)
-            return None
+            return item
     
     def _get_metrics(self, alias, metrics):
         url = self.config.metrics['url'] % alias[1]
