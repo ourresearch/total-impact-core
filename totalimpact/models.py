@@ -1,23 +1,29 @@
 from werkzeug import generate_password_hash, check_password_hash
+import totalimpact.dao as dao
 import time
 
 # FIXME: do we want a created and last modified property on the user?
-class User(object):
+class User(dao.Dao):
+    __type__ = 'user'
+    
     """
     {
-        “id”: “1234f,
-        “name”: “jason priem”,
-        “email”: “abcd@foo.com”,
-        “password”: “1234fd56”, # hash
-        “collection_ids”: [“abcd3”, “abcd4”] # tiid
+        "id": "1234f",
+        "name": "jason priem",
+        "email": "abcd@foo.com",
+        "password": "1234fd56", # hash
+        "collection_ids": ["abcd3", "abcd4"] # tiid
     }
     """
-    def __init__(self, id=None, password=None, password_hash=None, name=None, email=None
-                        collections=None, seed=None):
+    def __init__(self, id=None, password=None, password_hash=None, name=None, 
+                        email=None, collections=None, seed=None):
         # for convenience with CouchDB we store all the properties in an internally
         # managed dict object which can just be json serialised out to the DAO
         # This object has a __getattr__ override below which makes the object 
         # appear as if all the dictionary keys are member attributes of this object
+        
+        # inherit the init
+        super(User,self).__init__()
         
         # load from the seed first
         self.data = seed if seed is not None else {}
@@ -62,7 +68,9 @@ class User(object):
 
 # FIXME: collection doesn't have an ID
 # FIXME: may need to ditch the meta section
-class Collection(object):
+class Collection(dao.Dao):
+    __type__ = 'collection'
+    
     """
     {
         "meta": {
@@ -71,7 +79,7 @@ class Collection(object):
             "created": 1328569452.406,
             "last_modified": 1328569492.406,
         }
-        “ids”: [“abcd3”, “abcd4”]  #tiid
+        "ids": ["abcd3", "abcd4"]  #tiid
     }
     """
     def __init__(self, id=None, name=None, owner=None, created=None, last_modified=None, 
@@ -80,6 +88,9 @@ class Collection(object):
         # managed dict object which can just be json serialised out to the DAO
         # This object has a __getattr__ override below which makes the object 
         # appear as if all the dictionary keys are member attributes of this object
+
+        # inherit the init
+        super(Collection,self).__init__()
         
         # load from the seed first
         self.data = seed if seed is not None else {}
@@ -126,15 +137,17 @@ class Collection(object):
 # "alias" vs "aliases", "metric" vs "metrics"
 # FIXME: do we want a created and last modified property on the item?
 # FIXME: no id on the item? this should appear in the alias object?
-class Item(object):
+class Item(dao.Dao):
+    __type__ = 'item'
+    
     """
     {
-        “alias“: alias_object, 
-        “metric“: metric_object, 
-        “biblio“: biblio_object
+        "alias": alias_object, 
+        "metric": metric_object, 
+        "biblio": biblio_object
     }
     """
-    def __init__(self, id=None, aliases=None, metrics=None, biblio=None, seed=None):
+    def __init__(self, id=None, aliases=None, metrics=None, biblio=None, seed=None, **kwargs):
         # for convenience with CouchDB we store all the properties in an internally
         # managed dict object which can just be json serialised out to the DAO
         # This object has a __getattr__ override below which makes the object 
@@ -143,38 +156,36 @@ class Item(object):
         # FIXME: implement seed support (this is a bit tricky, as aliases,
         # metrics and biblio are objects)
         
-        self.data = {}
+        # inherit the init
+        super(Item,self).__init__(**kwargs)
+
+        if id:
+            self.data['_id'] = id
+
+        self.aliases = aliases if aliases is not None else Aliases()
+        self.metrics = metrics if metrics is not None else Metrics()
+        self.biblio = biblio if biblio is not None else Biblio()
+
+        if seed:
+            self.data = seed
         
-        self.data['id'] = id if id is not None else str(uuid.uuid4())
-        self.data['aliases'] = aliases if aliases is not None else None # FIXME: if a blank alias, may need to create one
-        self.data['metrics'] = metrics if metrics is not None else None
-        self.data['biblio'] = biblio if biblio is not None else None
-        
-    def aliases(self, aliases=None):
-        if aliases is None:
-            return self.data['aliases']
-        else:
-            self.data['aliases'] = aliases
-    
-    def metrics(self, metrics=None):
-        if metrics is None:
-            return self.data['metrics']
-        else:
-            self.data['metrics'] = metrics
-        
-    def biblio(self, biblio=None):
-        if biblio is None:
-            return self.data['biblio']
-        else:
-            self.data['biblio'] = biblio
+    @property
+    def data(self):
+        if self.aliases:
+            self.data['aliases'] = self.aliases.data
+        if self.metrics:
+            self.data['metrics'] = self.metrics.data
+        if self.biblio:
+            self.data['biblio'] = self.biblio.data
+        return self.data
             
     # FIXME: we need a nicer API to get at the contents of the inner
     # data object
-    def __getattr__(self, att):
-        try:
-            super(Item, self).__getattr__(att)
-        except:
-            self.data.get(att, None)
+    #def __getattr__(self, att):
+    #    try:
+    #        super(Item, self).__getattr__(att)
+    #    except:
+    #        self.data.get(att, None)
 
 # FIXME: there's no documentation on the biblio object, so just leaving
 # it blank for the time being
@@ -208,7 +219,7 @@ class ProviderMetric(object):
         "id": "Mendeley:readers",
         "value": 16,
         "last_update": 1328569492.406,
-        "drilldown_url": "http:\/\/api.mendeley.com\/research\/public-chemical-compound-databases\/",
+        "provenance_url": "http:\/\/api.mendeley.com\/research\/public-chemical-compound-databases\/",
         "meta": {
             "display_name": "readers"
             "provider": "Mendeley",
@@ -219,11 +230,11 @@ class ProviderMetric(object):
             "can_use_commercially": "0",
             "can_embed": "1",
             "can_aggregate": "1",
-            "other_terms_of_use": "Must show logo and say ‘Powered by Santa’",
+            "other_terms_of_use": "Must show logo and say 'Powered by Santa'",
         }
     }
     """
-    def __init__(self, id=None, value=None, last_update=None, drilldown_url=None,
+    def __init__(self, id=None, value=None, last_update=None, provenance_url=None,
                         display_name=None, provider=None, provider_url=None,
                         description=None, icon=None, category=None, can_use_commercially=None,
                         can_embed=None, can_aggregate=None, other_terms_of_use=None,

@@ -7,17 +7,9 @@ class Dao(object):
 
     def __init__(self, **kwargs):
         self.couch, self.db = self.connection()
-        self._data = dict(kwargs)
-        self._id = self._data.get('_id',None)
-        self._version = self._data.get('_rev',None)
-
-    @property
-    def data(self):
-        return self._data
-        
-    @data.setter
-    def data(self, obj):
-        self._data = obj
+        self.data = dict(kwargs)
+        self._id = self.data.get('_id',None)
+        self._version = self.data.get('_rev',None)
 
     @classmethod
     def connection(cls):
@@ -48,10 +40,10 @@ class Dao(object):
     @classmethod
     def get(cls,_id):
         couch, db = cls.connection()
-        try:
-            return cls(**db[_id])
-        except:
-            return None
+        #try:
+        return cls(**db[_id])
+        #except:
+        #    return None
 
     def query(self,**kwargs):
         # pass queries through to couchdb, as per couchdb-python query
