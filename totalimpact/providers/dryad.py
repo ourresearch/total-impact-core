@@ -1,4 +1,4 @@
-import time, re
+import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError
 from totalimpact.models import Metrics
 from BeautifulSoup import BeautifulStoneSoup
@@ -19,9 +19,18 @@ class Dryad(Provider):
         # DOI_PATTERN = re.compile(r"^10\.(\d)+/(\S)+$", re.DOTALL)
         # CROSSREF_DOI_PATTERN = re.compile(r"^10\.(\d)+/(\S)+$", re.DOTALL)
         self.crossref_rx = re.compile(r"^10\.(\d)+/(\S)+$", re.DOTALL)
+        self.dryad_member_items_rx = re.compile(r"(10\.5061/.*)</span")
 
-    def member_items(self, query_string): 
-        raise NotImplementedError()
+    def member_items(self, query_string):
+        # FIXME: only checks the first dryad page
+        enc = urllib.quote(query_string)
+        url = self.config.member_items['url'] % enc
+        logger.debug(self.config.id + ": attempting to retrieve member items from " + url)
+        
+        # try to get a response from the data provider        
+        response = self.http_get(url, timeout=self.config.member_items.get('timeout', None))
+        hits = self.dryad_member_items_rx.findall(response.text)
+        return [("DOI", hit) for hit in hits]
     
     def aliases(self, item): 
         try:
@@ -59,6 +68,7 @@ class Dryad(Provider):
         return self.crossref_rx.search(alias[1]) is not None
 
     def _get_aliases(self, alias):
+        # FIXME: urlencoding?
         url = self.config.aliases['url'] % alias[1]
         logger.debug(self.config.id + ": attempting to retrieve aliases from " + url)
         
