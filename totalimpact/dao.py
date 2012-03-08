@@ -6,7 +6,7 @@ class Dao(object):
     '''the dao that can be named is not the true dao'''
     __type__ = None
 
-    def __init__(self, **kwargs):
+    def __init(self, **kwargs):
         self.couch, self.db = self.connection()
         self._data = dict(kwargs)
         self._id = self.data.get('_id',None)
