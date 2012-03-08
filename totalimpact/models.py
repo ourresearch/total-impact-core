@@ -1,6 +1,7 @@
 from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
 import time, uuid, json, hashlib
+import time
 
 # FIXME: do we want a created and last modified property on the user?
 class User(dao.Dao):
@@ -154,7 +155,10 @@ class Item(dao.Dao):
     {
         "alias": alias_object, 
         "metric": metric_object, 
-        "biblio": biblio_object
+        "biblio": biblio_object,
+        "created": 23112412414.234,
+        "last_modified": 12414214.234,
+        "last_requested": 124141245.234
     }
     """
     def __init__(self, id=None, aliases=None, metrics=None, biblio=None, seed=None, **kwargs):
@@ -174,6 +178,10 @@ class Item(dao.Dao):
         self._aliases = Aliases(seed=self._data.get('aliases',None)) if (hasattr(aliases,'keys') or aliases is None) else aliases
         self._metrics = Metrics(seed=self._data.get('metrics',None)) if (hasattr(metrics,'keys') or metrics is None) else metrics
         self._biblio = Biblio(seed=self._data.get('biblio',None)) if (hasattr(biblio,'keys') or biblio is None) else biblio
+
+        # save the last requested
+        self.data.last_requested = time.time()
+        self.save()
 
     @property
     def aliases(self):

@@ -1,6 +1,7 @@
 import json
 import uuid
 import couchdb
+import time
 
 class Dao(object):
     '''the dao that can be named is not the true dao'''
@@ -71,6 +72,11 @@ class Dao(object):
                 self.id = self.data['_id']
         if '_rev' not in self.data and self.version:
             self.data['_rev'] = self.version
+            
+        if 'created' not in self.data:
+            self.data['created'] = time.time()
+            
+        self.data['last_modified'] = time.time()
 
         try:
             self._id, self._version = self.db.save(self.data)
