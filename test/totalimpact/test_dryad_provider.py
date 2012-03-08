@@ -10,6 +10,9 @@ class DummyResponse(object):
     def __init__(self, status, content):
         self.status_code = status
         self.text = content
+def get_html(self, url, headers=None, timeout=None):
+    f = open(DRYAD_HTML, "r")
+    return DummyResponse(200, f.read())
 def successful_get(self, url, headers=None, timeout=None):
     f = open(XML_DOC, "r")
     return DummyResponse(200, f.read())
@@ -29,6 +32,7 @@ CWD, _ = os.path.split(__file__)
 
 APP_CONFIG = os.path.join(CWD, "test.conf.json")
 XML_DOC = os.path.join(CWD, "dryad_response.xml")
+DRYAD_HTML = os.path.join(CWD, "dryad_members.html")
 DOI = "10.1016/j.meegid.2011.02.004"
 
 class Test_Dryad(unittest.TestCase):
@@ -100,6 +104,8 @@ class Test_Dryad(unittest.TestCase):
         assert not provider._is_crossref_doi(("DOI", "11.12354/bib"))
     
     def test_04_member_items(self):
+        Provider.http_get = get_html
+        
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
@@ -107,7 +113,8 @@ class Test_Dryad(unittest.TestCase):
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
-        self.assertRaises(NotImplementedError, provider.member_items, "")
+        members = provider.member_items("test")
+        assert len(members) == 10, str(members)
         
     def test_05_aliases_read_content(self):
         dcfg = None

@@ -30,7 +30,7 @@ class Dryad(Provider):
         # try to get a response from the data provider        
         response = self.http_get(url, timeout=self.config.member_items.get('timeout', None))
         hits = self.dryad_member_items_rx.findall(response.text)
-        return [("DOI", hit) for hit in hits]
+        return [("DOI", hit) for hit in list(set(hits))]
     
     def aliases(self, item): 
         try:
