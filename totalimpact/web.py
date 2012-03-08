@@ -125,7 +125,7 @@ def provider_aliases(pid,aliases=''):
 # routes for collections 
 # (groups of TI scholarly object items that are batched together for scoring)
 @app.route('/collection/<cid>/<tiid>')
-def collection(cid,tiid=''):
+def collection(cid='',tiid=''):
     coll = totalimpact.models.Collection.get(cid)
 
     if request.method == 'GET':
@@ -138,6 +138,9 @@ def collection(cid,tiid=''):
         if tiid:
             # update the list of tiids on this coll with this new one
             resp = "something like updated"
+        elif not cid:
+            # create a new collection
+            pass
         else:
             # merge the payload (a collection object) with the coll we already have
             # use richards merge stuff to merge hierarchically?
