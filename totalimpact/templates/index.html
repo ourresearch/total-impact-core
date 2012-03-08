@@ -21,7 +21,15 @@
 <fieldset id="paste-ids">
 <div class="toggler_contents">
 <p class="prompt" >Add one DOI, PubMed ID, URL, or other <a target="_blank" href="./about/#whichartifacts">supported identifier</a> per line:</p>
-<textarea rows="11" cols="40" id="manual_input" class="artifactList" >add example strings in here</textarea>
+<textarea rows="11" cols="40" id="manual_input" class="artifactList" >
+DOI:10.1371/journal.pcbi.1000361
+PubMed:20334632
+PDB:2BAK
+GEO:GSE2109
+Dryad:1295
+http://www.carlboettiger.info/research/lab-notebook
+Slideshare:phylogenomics/eisenall-hands
+</textarea>
 <button class="import-button" id="manual">Add to collection</button>
 </div>
 </fieldset>
@@ -98,7 +106,7 @@
 <h2 class="heading"><span>Create report</span></h2>
 <form name="id_form" action="./fetch/" id="id-form">
 <h3 id="name-collection"><label for="name">Name your collection:</label></h3>
-<input name="name" id="name" title="Add a meaningful title to this collection" value="" />
+<input name="name" id="name" title="Add a meaningful title to this collection" value="My Collection" />
 <button name="run" type="submit" id="go-button" class="go-button">get my metrics!</button>
 <input name="list" id="artifacts-list" type="hidden" value="" />
 </form>

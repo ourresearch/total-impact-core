@@ -280,7 +280,6 @@ a#clear-artifacts:hover {
 }
 #edit-collection ul li:hover span {
     text-decoration: line-through;
-    color:#b20;
     cursor: pointer;
 }
 #edit-collection ul li:hover a {
@@ -290,10 +289,13 @@ a#clear-artifacts:hover {
     background-position: 0 -12px;
 }
 
-#edit-collection ul li span {
+#edit-collection ul li span.object-id {
     word-wrap: break-word;
     float:left;
     width: 90%;
+}
+#edit-collection ul li span.object-id span.namespace {
+    color: #999;
 }
 
 
