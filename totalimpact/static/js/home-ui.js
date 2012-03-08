@@ -1,9 +1,38 @@
 $.ajaxSetup ({
     cache: false
 });
-var ajax_load = "<img src='./ui/img/ajax-loader.gif' alt='loading...' />";
+var ajax_load = "<img src='./static/img/ajax-loader.gif' alt='loading...' />";
 
-addIdsToEditPane = function(str){
+parseImporterArgs = function(argStr){
+    var args = argStr.split('-');
+    var urlArgs = "id=" + args[0];
+    if (args.length > 1) {
+        urlArgs = urlArgs + "&type=" + args[1];
+    }
+    return urlArgs
+}
+
+// puts the textarea-entered ids in a format that addIdsToEditPane likes
+parseTextareaArtifacts = function(str) {
+    var ids = str.split("\n");
+    var ret = [];
+    for (i=0; i<ids.length; i++){
+        var artifact = {};
+        var thisId = ids[i];
+        if (thisId.indexOf(":") > 0) {
+            artifact.namespace = thisId.split(':')[0];
+            artifact.id = thisId.substr(artifact.namespace.length + 1)
+        }
+        else {
+            artifact.namespace = "unknown";
+            artifact.id = thisId;
+        }
+        ret.push(artifact);
+    }
+    return ret;
+}
+
+addIdsToEditPane = function(returnedIds){
     if ($("#importers").width() > 340){
         $("#pullers")
             .animate({
@@ -19,14 +48,17 @@ addIdsToEditPane = function(str){
             .animate({
                 width: "340px"
             }, 1000, function(){
-                return addIdsToEditPane(str);
+                return addIdsToEditPane(returnedIds);
             })
     }
     else {
-        returnedIds = str.split("\n");
         var len = returnedIds.length
         for (i=0; i<len; i++) {
-          returnedIds[i] = "<li><a class='remove' href='#'>remove</a><span class='object-id'>"+returnedIds[i]+"</span></li>";
+            var namespace = returnedIds[i].namespace
+            var id = returnedIds[i].id;
+          returnedIds[i] = "<li><a class='remove' href='#'>remove</a><span class='object-id'>";
+          returnedIds[i] += "<span class='namespace'>"+namespace+": </span>";
+          returnedIds[i] += "<span class='id'>"+id+"</span></span></li>";
         }
         $("ul#collection-list").append(
             $(returnedIds.join("")).hide().fadeIn(1000)
@@ -56,13 +88,13 @@ $(document).ready(function(){
 
     // show/hide stuff
     $('#importers ul li')
-        .prepend('<span class="pointer">▶</span>') // hack; these arrows should be entities, but that causes probs when replacing...
+        .prepend('<span class="pointer">?</span>') // hack; these arrows should be entities, but that causes probs when replacing...
         .children("div")
         .hide();
 
     $('#importers ul li').children("a").click(function(){
         var arrow = $(this).siblings("span").text();
-        arrow = (arrow == "▶") ? "▼" : "▶";
+        arrow = (arrow == "?") ? "?" : "?";
         $(this).siblings("span").text(arrow);
         $(this).siblings("div").slideToggle();
     });
@@ -83,45 +115,39 @@ $(document).ready(function(){
         return false;
     });
 
+
     // use importers to add objects to the edit pane
     $("button.import-button").click(function(){
         var $thisDiv = $(this).parent();
-        var sourceName = $(this).attr("id");
-        var souceQuery = $(this).siblings("input").val();
+        var idStrParts = $(this).attr("id").split('-');
+        var providerName = idStrParts[0];
+        var providerTypeQuery = (idStrParts.length > 1) ? "&type=" + idStrParts[1] : ''
+        var providerIdQuery = "?id=" + $(this).siblings("input").val();
+
         if ($thisDiv.find("textarea")[0]) { // there's a sibling textarea
-            addIdsToEditPane($thisDiv.find("textarea").val());
+            addIdsToEditPane(parseTextareaArtifacts($thisDiv.find("textarea").val()));
         }
         else {
-            $(this).hide().after("<span class='loading'><img src='./ui/img/ajax-loader.gif'> Loading...<span>");
-            $.get("./seed.php?type="+sourceName+"&name="+souceQuery, function(response,status,xhr){
-                if ($thisDiv.parent().hasClass("quick-collection")) { // it's a quick collection
-                    displayStr = (typeof response.contacts == "undefined") ? response.groups : response.contacts;
-                    $thisDiv.find("span.loading").empty();
-                    $thisDiv.append(
-                        // suggest we reformat api respose; presentation should be client's job
-                        $("<div class='response'>"+displayStr+"</div>").hide().slideDown()
-                    );
-                }
-                else {
-                    addIdsToEditPane(response.artifactIds);
-                    $thisDiv.find("span.loading")
-                        .empty()
-                        .append( 
-                            $("<span class='response'><span class='count'>"+response.artifactCount+"</span> added</span>")
-                            .hide()
-                            .fadeIn(500, function(){
-                                $(this).delay(2000).fadeOut(500, function(){
-                                    $(this)
-                                    .parent()
-                                    .siblings("button")
-                                    .fadeIn(500)
-                                    .siblings("span.loading")
-                                    .remove()
+            $(this).hide().after("<span class='loading'>"+ajax_load+" Loading...<span>");
+            $.get("./providers/"+providerName+"/links"+providerIdQuery+providerTypeQuery, function(response,status,xhr){
+                addIdsToEditPane(response);
+                $thisDiv.find("span.loading")
+                    .empty()
+                    .append(
+                        $("<span class='response'><span class='count'>"+response.length+"</span> added</span>")
+                        .hide()
+                        .fadeIn(500, function(){
+                            $(this).delay(2000).fadeOut(500, function(){
+                                $(this)
+                                .parent()
+                                .siblings("button")
+                                .fadeIn(500)
+                                .siblings("span.loading")
+                                .remove()
 
-                                })
                             })
-                        )
-                }
+                        })
+                    )
             }, "json");
         }
     });
@@ -168,7 +194,7 @@ $(document).ready(function(){
     showWaitBox = function(verb){
         verb = (typeof verb == "undefined") ? "Updating" : verb
         var $waitMsg = $("<div class='loading'></div")
-            .append("<h2><img src='ui/img/ajax-loader-rev.gif' />"+verb+" your report now.</h2>")
+            .append("<h2><img src='./static/img/ajax-loader-rev.gif' />"+verb+" your report now.</h2>")
             .append("<p>(Hang in there; it usually takes a few minutes...)</p>")
 
         TINY.box.show({
