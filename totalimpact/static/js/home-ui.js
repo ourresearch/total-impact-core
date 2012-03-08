@@ -129,7 +129,7 @@ $(document).ready(function(){
         }
         else {
             $(this).hide().after("<span class='loading'>"+ajax_load+" Loading...<span>");
-            $.get("./providers/"+providerName+"/links"+providerIdQuery+providerTypeQuery, function(response,status,xhr){
+            $.get("./providers/"+providerName+"/memberitems"+providerIdQuery+providerTypeQuery, function(response,status,xhr){
                 addIdsToEditPane(response);
                 $thisDiv.find("span.loading")
                     .empty()
