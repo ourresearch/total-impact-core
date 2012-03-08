@@ -38,7 +38,11 @@ class MetricsQueue(Queue):
     
     @property
     def provider(self):
-        return self._provider
+        try:
+            return self._provider
+        except:
+            self._provider = None
+            return self._provider
         
     @provider.setter
     def provider(self, _provider):
