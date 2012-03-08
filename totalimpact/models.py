@@ -162,22 +162,23 @@ class Item(dao.Dao):
         if id:
             self.data['_id'] = id
 
-        self.aliases = aliases if aliases is not None else Aliases()
-        self.metrics = metrics if metrics is not None else Metrics()
-        self.biblio = biblio if biblio is not None else Biblio()
+        self.aliases = aliases if aliases is not None else Aliases(seed=self.data.get('aliases',None))
+        self.metrics = metrics if metrics is not None else Metrics(seed=self.data.get('metrics',None))
+        self.biblio = biblio if biblio is not None else Biblio(seed=self.data.get('biblio',None))
 
         if seed:
             self.data = seed
         
     @property
     def data(self):
-        if self.aliases:
-            self.data['aliases'] = self.aliases.data
-        if self.metrics:
-            self.data['metrics'] = self.metrics.data
-        if self.biblio:
-            self.data['biblio'] = self.biblio.data
+        self.data['aliases'] = self.aliases.data
+        self.data['metrics'] = self.metrics.data
+        self.data['biblio'] = self.biblio.data
         return self.data
+
+    @data.setter
+    def data(self, val):
+        self = val
             
     # FIXME: we need a nicer API to get at the contents of the inner
     # data object
