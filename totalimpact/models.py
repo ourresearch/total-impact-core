@@ -169,40 +169,52 @@ class Item(dao.Dao):
         # inherit the init
         super(Item,self).__init__(**kwargs)
 
-        if id:
-            self.data['_id'] = id
+        self.id = id
+        if seed is not None: self.data = seed
+        self._aliases = Aliases(seed=self._data.get('aliases',None)) if (hasattr(aliases,'keys') or aliases is None) else aliases
+        self._metrics = Metrics(seed=self._data.get('metrics',None)) if (hasattr(metrics,'keys') or metrics is None) else metrics
+        self._biblio = Biblio(seed=self._data.get('biblio',None)) if (hasattr(biblio,'keys') or biblio is None) else biblio
 
-        self.aliases = aliases if aliases is not None else Aliases(seed=self.data.get('aliases',None))
-        self.metrics = metrics if metrics is not None else Metrics(seed=self.data.get('metrics',None))
-        self.biblio = biblio if biblio is not None else Biblio(seed=self.data.get('biblio',None))
+    @property
+    def aliases(self):
+        try:
+            return self._aliases
+        except:
+            self._aliases = Aliases(seed=self._data.get('aliases',None))
+            return self._aliases
 
-        if seed:
-            self.data = seed
+    @property
+    def metrics(self):
+        try:
+            return self._aliases
+        except:
+            self._metrics = Metrics(seed=self._data.get('metrics',None))
+            return self._metrics
         
     @property
+    def biblio(self):
+        try:
+            return self._biblio
+        except:
+            self._biblio = Biblio(seed=self._data.get('biblio',None))
+            return self._biblio
+            
+    @property
     def data(self):
-        self.data['aliases'] = self.aliases.data
-        self.data['metrics'] = self.metrics.data
-        self.data['biblio'] = self.biblio.data
-        return self.data
+        self._data['aliases'] = self.aliases.data
+        self._data['metrics'] = self.metrics.data
+        self._data['biblio'] = self.biblio.data
+        return self._data
 
     @data.setter
     def data(self, val):
-        self = val
+        self._data = val
             
-    # FIXME: we need a nicer API to get at the contents of the inner
-    # data object
-    #def __getattr__(self, att):
-    #    try:
-    #        super(Item, self).__getattr__(att)
-    #    except:
-    #        self.data.get(att, None)
-
 # FIXME: there's no documentation on the biblio object, so just leaving
 # it blank for the time being
 class Biblio(object):
     def __init__(self, seed=None):
-        pass
+        self.data = seed if seed is not None else {}
 
 class Metrics(object):
     
