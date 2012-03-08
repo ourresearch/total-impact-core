@@ -152,8 +152,20 @@ def collection(cid='',tiid=''):
             # update the list of tiids on this coll with this new one
             resp = "something like updated"
         elif not cid:
-            # create a new collection
-            pass
+            # check if received object was json
+            if request.json:
+                idlist = request.json
+            else:
+                idlist = json.loads(request.data)
+            tiids = []
+            for thing in idlist:
+                item = totalimpact.models.Item()
+                item.aliases.add_alias(namespace=thing[0],id=thing[1])
+                tiid = item.save()
+                tiids.append(tiid)
+                item.aliases.add_alias(namespace='tiid',id=tiid)
+            coll = totalimpact.models.Collection(seed={ids:tiids})
+            resp = coll.save()
         else:
             # merge the payload (a collection object) with the coll we already have
             # use richards merge stuff to merge hierarchically?

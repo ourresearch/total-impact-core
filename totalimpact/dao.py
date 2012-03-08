@@ -75,7 +75,7 @@ class Dao(object):
         try:
             self._id, self._version = self.db.save(self.data)
             self.data['_rev'] = self.version
-            return True
+            return self.id
         except:
             # log the save error? action on doc update conflict?
             return False
