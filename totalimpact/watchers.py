@@ -1,6 +1,6 @@
 import threading, time, sys
 from totalimpact.config import Configuration
-from totalimpact.queue import Queue
+from totalimpact.queue import AliasQueue, MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 
 from totalimpact.tilogging import logging
@@ -60,28 +60,48 @@ class StoppableThread(threading.Thread):
     def stopped(self):
         return self._stop.isSet()
 
-class ProvidersAliasThread(StoppableThread):
+class QueueConsumer(object):
+
+    def __init__(self, queue):
+        self.queue = queue
+    
+    def first(self):
+        # get the first item on the queue (waiting until there is
+        # such a thing if necessary)
+        item = None
+        while item is None and not self.stopped():
+            item = self.queue.first()
+            if item is None:
+                # if the queue is empty, wait 0.5 seconds before checking
+                # again
+                time.sleep(0.5)
+            return item
+
+class ProvidersAliasThread(StoppableThread, QueueConsumer):
     def __init__(self, providers, config):
-        super(ProvidersAliasThread, self).__init__()
+        StoppableThread.__init__(self)
+        QueueConsumer.__init__(self, AliasQueue())
         self.providers = providers
         self.config = config
-        self.queue = Queue("aliases")
         
     def run(self):
         while not self.stopped():
-            # check queue
-            alias_object = None
-            while alias_object is None and not self.stopped():
-                alias_object = self.queue.next()
+            # get the first item on the queue - this waits until
+            # there is something to return
+            item = self.first()
             
             for p in self.providers:
                 try:
-                    aliases = p.aliases(alias_object)
+                    item = p.aliases(item)
+                    self.queue.save_and_unqueue(item)
                     
-                    # FIXME: what to do with these aliases now?
-                    print aliases
+                    # FIXME: still debugging, but remove soon
+                    print item
                 except NotImplementedError:
                     continue
+                    
+            # FIXME: we need a better sleep mechanism which allows
+            # the thread to be stopped while it is sleeping
             time.sleep(self.sleep_time())
             
     def sleep_time(self):
@@ -91,36 +111,42 @@ class ProvidersAliasThread(StoppableThread):
         # limit
         return 0
 
-class ProviderMetricsThread(StoppableThread):
+class ProviderMetricsThread(StoppableThread, QueueConsumer):
 
     def __init__(self, provider, config):
-        super(ProviderMetricsThread, self).__init__()
+        StoppableThread.__init__(self)
+        QueueConsumer.__init__(self, MetricsQueue())
         self.provider = provider
         self.config = config
-        self.queue = Queue("metrics", self.provider.id)
+        self.queue.provider = self.provider.id
 
     def run(self):
         while not self.stopped():
             start = time.time()
             
-            # check queue
-            alias_object = None
-            while alias_object is None and not self.stopped():
-                alias_object = self.queue.next()
+            # get the first item on the queue - this waits until
+            # there is something to return
+            item = self.first()
             
             # if we get to here, an Alias has been popped off the queue
-            metrics = self.provider.metrics(alias_object)
+            item = self.provider.metrics(item)
             
-            if metrics is not None:
+            # FIXME: metrics requests might throw errors which cause
+            # a None to be returned from the metrics request.  If that's
+            # the case then don't save, but we should probably have a 
+            # better error handling routine
+            if item is not None:
                 # store the metrics in the database
-                # TODO
+                self.queue.save_and_unqueue(item)
                 
-                # remove the alias_object from the queue
-                self.queue.remove(alias_object)
-                
-                # FIXME: just for the time being
+                # FIXME: still debugging, but remove soon
                 print metrics
             
+            # FIXME: we need to take into account dead time which is longer
+            # than the desired sleep time (i.e. dead time that we can carry
+            # over
+            # FIXME: we need a better sleep mechanism which allows
+            # the thread to be stopped while it is sleeping
             # go to sleep for a time specified by the provider which
             # is dependent on how long this request took in the first place
             time.sleep(self.provider.sleep_time(self._get_dead_time(start)))
