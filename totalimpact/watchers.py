@@ -11,7 +11,7 @@ class Watchers(object):
     def __init__(self, config_path):
         self.threads = []
         self.config = Configuration(config_path)
-        self.providers = self._get_providers()
+        self.providers = ProviderFactory.get_providers()
         
     def run(self):
         for p in self.providers:
@@ -38,17 +38,7 @@ class Watchers(object):
                 t.stop()
        
        # FIXME: do we need to join() the thread?
-       
-    def _get_providers(self):
-        providers = []
-        for p in self.config.providers:
-            try:
-                prov = ProviderFactory.get_provider(p, self.config)
-                providers.append(prov)
-            except ProviderConfigurationError:
-                log.error("Unable to configure provider ... skipping " + str(p))
-        return providers
-    
+           
 class StoppableThread(threading.Thread):
     def __init__(self):
         super(StoppableThread, self).__init__()
