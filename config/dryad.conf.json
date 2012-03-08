@@ -24,6 +24,10 @@
         "url" : "http://datadryad.org/solr/search/select/?q=dc.relation.isreferencedby:%s&fl=dc.identifier"
     },
     
+    "member_items" : {
+        "url" : "http://datadryad.org/discover?field=dc.contributor.author_filter&fq=dc.contributor.author_filter%%3A%s"
+    },
+    
     # Meta information block for this provider to be included as-is in the
     # resulting metrics objects
     #

@@ -64,6 +64,7 @@ class Wikipedia(Provider):
             return item
     
     def _get_metrics(self, alias, metrics):
+        # FIXME: urlencoding?
         url = self.config.metrics['url'] % alias[1]
         logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
         
