@@ -54,11 +54,11 @@ addIdsToEditPane = function(returnedIds){
     else {
         var len = returnedIds.length
         for (i=0; i<len; i++) {
-            var namespace = returnedIds[i].namespace
-            var id = returnedIds[i].id;
-          returnedIds[i] = "<li><a class='remove' href='#'>remove</a><span class='object-id'>";
-          returnedIds[i] += "<span class='namespace'>"+namespace+": </span>";
-          returnedIds[i] += "<span class='id'>"+id+"</span></span></li>";
+            var namespace = returnedIds[i][0]
+            var id = returnedIds[i][1];
+            returnedIds[i] = "<li><a class='remove' href='#'>remove</a><span class='object-id'>";
+            returnedIds[i] += "<span class='namespace'>"+namespace+": </span>";
+            returnedIds[i] += "<span class='id'>"+id+"</span></span></li>";
         }
         $("ul#collection-list").append(
             $(returnedIds.join("")).hide().fadeIn(1000)
@@ -122,14 +122,14 @@ $(document).ready(function(){
         var idStrParts = $(this).attr("id").split('-');
         var providerName = idStrParts[0];
         var providerTypeQuery = (idStrParts.length > 1) ? "&type=" + idStrParts[1] : ''
-        var providerIdQuery = "?id=" + $(this).siblings("input").val();
+        var providerIdQuery = "?query=" + $(this).siblings("input").val();
 
         if ($thisDiv.find("textarea")[0]) { // there's a sibling textarea
             addIdsToEditPane(parseTextareaArtifacts($thisDiv.find("textarea").val()));
         }
         else {
             $(this).hide().after("<span class='loading'>"+ajax_load+" Loading...<span>");
-            $.get("./providers/"+providerName+"/links"+providerIdQuery+providerTypeQuery, function(response,status,xhr){
+            $.get("./provider/"+providerName+"/memberitems"+providerIdQuery+providerTypeQuery, function(response,status,xhr){
                 addIdsToEditPane(response);
                 $thisDiv.find("span.loading")
                     .empty()
