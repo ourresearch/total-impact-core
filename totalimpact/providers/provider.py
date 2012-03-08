@@ -13,14 +13,21 @@ class ProviderFactory(object):
         if not os.path.isabs(cpath):
             cwd = os.getcwd()
             cpaths = []
+            
+            # directly beneath the working directory
             cpaths.append(os.path.join(cwd, cpath))
+            
+            # in a config directory below the current one
+            cpaths.append(os.path.join(cwd, "config", cpath))
+            
+            # in the directory as per the base_dir configuration
             if config.base_dir is not None:
                 cpaths.append(os.path.join(config.base_dir, cpath))
+            
             for p in cpaths:
                 if os.path.isfile(p):
                     cpath = p
                     break
-        
         if not os.path.isfile(cpath):
             raise ProviderConfigurationError()
 
