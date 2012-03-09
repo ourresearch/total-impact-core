@@ -61,18 +61,6 @@ class User(dao.Dao):
         if collection_id in self.data['collections']:
             self.data['collections'].remove(collection_id)
     
-    # FIXME: we need a nicer API to get at the contents of the inner
-    # data object
-    def __getattribute__(self, att):
-        try:
-            return super(User, self).__getattribute__(att)
-        except:
-            return self.data[att]
-    def __setattr__(self, att, value):
-        if att == "data":
-            super(User, self).__setattr__(att, value)
-        else:
-            self.data[att] = value
 
 # FIXME: collection doesn't have an ID
 # FIXME: may need to ditch the meta section
@@ -81,12 +69,10 @@ class Collection(dao.Dao):
     
     """
     {
-        "meta": {
-            "collection_name": "My Collection",
-            "owner": "abcdef",
-            "created": 1328569452.406,
-            "last_modified": 1328569492.406,
-        }
+        "collection_name": "My Collection",
+        "owner": "abcdef",
+        "created": 1328569452.406,
+        "last_modified": 1328569492.406,
         "ids": ["abcd3", "abcd4"]  #tiid
     }
     """
@@ -105,18 +91,12 @@ class Collection(dao.Dao):
         
         # if there was no seed, load the properties, otherwise ignore them
         if seed is None:
-            self.data['meta'] = {}
-            
             if id is not None: self.id = id
-
             self.data['ids'] = item_ids if item_ids is not None else []            
-            self.data['meta']['collection_name'] = name if name is not None else None
-            self.data['meta']['owner'] = owner if owner is not None else None
-            self.data['meta']['created'] = created if created is not None else time.time()
-            self.data['meta']['last_modified'] = last_modified if last_modified is not None else time.time()
-        else:
-            # we need to ensure that meta is initialised
-            self.data['meta'] = {}
+            self.data['collection_name'] = name if name is not None else None
+            self.data['owner'] = owner if owner is not None else None
+            self.data['created'] = created if created is not None else time.time()
+            self.data['last_modified'] = last_modified if last_modified is not None else time.time()
         
     def item_ids(self):
         return self.data['ids']
@@ -133,18 +113,6 @@ class Collection(dao.Dao):
         if item_id in self.data['ids']:
             self.data['ids'].remove(item_id)
         
-    # FIXME: we need a nicer API to get at the contents of the inner
-    # data object
-    def __getattribute__(self, att):
-        try:
-            return super(Collection, self).__getattribute__(att)
-        except:
-            return self.data[att]
-    def __setattr__(self, att, value):
-        if att == "data":
-            super(Collection, self).__setattr__(att, value)
-        else:
-            self.data[att] = value
 
 # FIXME: the code terminology and the docs terminology differ slightly:
 # "alias" vs "aliases", "metric" vs "metrics"
