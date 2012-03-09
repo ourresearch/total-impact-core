@@ -205,22 +205,25 @@ $(document).ready(function(){
         });
     }
 
-    // creating a report by submitting the object IDs from the homepage
+    // creating a collection by submitting the object IDs from the homepage
     $("#id-form").submit(function(){
-        var ids = [];
+        var aliases = [];
         $("ul#collection-list span.object-id").each(function(){
-           ids.push($(this).text());
+           var thisAlias = [];
+           thisAlias[0] = $(this).find("span.namespace").text()
+           thisAlias[1] = $(this).find("span.id").text()
+           aliases.push(thisAlias);
         });
-        if (ids.length == 0) {
+        if (aliases.length == 0) {
             alert("Looks like you haven't added any research objects to the collection yet.")
             return false;
         } else {
             showWaitBox("Creating");
             $.post(
-                './update.php',
-                {list: JSON.stringify(ids), name: $("#name").val()},
-                function(data){
-                    location.href="./collection/" +data;
+                './collection',
+                {list: JSON.stringify(aliases), name: $("#name").val()},
+                function(returnedData){
+                    location.href="./collection/" +returnedData;
                 });
             return false;
         }
