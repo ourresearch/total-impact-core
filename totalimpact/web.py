@@ -136,21 +136,27 @@ def provider_aliases(pid,aliases=''):
 
 # routes for collections 
 # (groups of TI scholarly object items that are batched together for scoring)
+@app.route('/collection', methods = ['GET','POST','PUT','DELETE'])
 @app.route('/collection/<cid>/<tiid>')
 def collection(cid='',tiid=''):
     if cid:
         coll = totalimpact.models.Collection.get(cid)
+    else:
+        coll = totalimpact.models.Collection()
 
-    if request.method == 'GET':
+    if request.method == "GET":
         # check for requested response type, or always JSON?
-        resp = make_response( json.dumps(coll, sort_keys=True, indent=4) )
+        resp = make_response( coll.json )
         resp.mimetype = "application/json"
         return resp
 
-    if request.method == 'POST':
+    print request.method
+    if request.method == "POST":
+        print 'post'
         if tiid:
             # update the list of tiids on this coll with this new one
             resp = "something like updated"
+            return resp
         elif not cid:
             # check if received object was json
             if request.json:
@@ -166,25 +172,30 @@ def collection(cid='',tiid=''):
                 item.aliases.add_alias(namespace='tiid',id=tiid)
             coll = totalimpact.models.Collection(seed={ids:tiids})
             resp = coll.save()
+            return resp
         else:
             # merge the payload (a collection object) with the coll we already have
             # use richards merge stuff to merge hierarchically?
             resp = "something like updated"
+            return resp
 
-    if request.method == 'PUT':
+    if request.method == "PUT":
         # check if received object was json
         if request.json:
             coll.data = request.json
         else:
             coll.data = json.loads(request.data)
         resp = 201
+        return resp
 
-    if request.method == 'DELETE':
+    if request.method == "DELETE":
         if tiid:
             # remove tiid from tiid list on coll
             resp = "thing deleted"
+            return resp
         elif cid:
             resp = "col deleted"
+            return resp
         else:
             # delete the whole object
             deleted = coll.delete()
@@ -193,8 +204,6 @@ def collection(cid='',tiid=''):
             else:
                 return "err.."
 
-    saved = coll.save()
-    return resp
 
 # routes for user stuff
 @app.route('/user/<uid>')

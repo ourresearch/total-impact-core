@@ -13,7 +13,9 @@ class User(dao.Dao):
         "name": "jason priem",
         "email": "abcd@foo.com",
         "password": "1234fd56", # hash
-        "collection_ids": ["abcd3", "abcd4"] # tiid
+        "collection_ids": ["abcd3", "abcd4"], # tiid
+        "created": 12134234242.234,
+        "last_modified": 1239898237.234
     }
     """
     def __init__(self, id=None, password=None, password_hash=None, name=None, 
@@ -99,15 +101,15 @@ class Collection(dao.Dao):
         super(Collection,self).__init__()
         
         # load from the seed first
-        self.data = seed if seed is not None else {}
+        if seed is not None: self.data = seed 
         
         # if there was no seed, load the properties, otherwise ignore them
         if seed is None:
             self.data['meta'] = {}
             
-            self.data['id'] = id if id is not None else str(uuid.uuid4())
-            self.data['ids'] = item_ids if item_ids is not None else []
-            
+            if id is not None: self.id = id
+
+            self.data['ids'] = item_ids if item_ids is not None else []            
             self.data['meta']['collection_name'] = name if name is not None else None
             self.data['meta']['owner'] = owner if owner is not None else None
             self.data['meta']['created'] = created if created is not None else time.time()
@@ -158,7 +160,7 @@ class Item(dao.Dao):
         "biblio": biblio_object,
         "created": 23112412414.234,
         "last_modified": 12414214.234,
-        "last_requested": 124141245.234
+        "refresh_on": 124141245.234
     }
     """
     def __init__(self, id=None, aliases=None, metrics=None, biblio=None, seed=None, **kwargs):
@@ -179,8 +181,8 @@ class Item(dao.Dao):
         self._metrics = Metrics(seed=self._data.get('metrics',None)) if (hasattr(metrics,'keys') or metrics is None) else metrics
         self._biblio = Biblio(seed=self._data.get('biblio',None)) if (hasattr(biblio,'keys') or biblio is None) else biblio
 
-        # save the last requested
-        self.data.last_requested = time.time()
+        # save the time for when to queue for refresh - now plus whatever delay we set in config
+        self.data['refresh_on'] = time.time() + 0
         self.save()
 
     @property
@@ -252,6 +254,7 @@ class ProviderMetric(object):
     {
         "id": "Mendeley:readers",
         "value": 16,
+        "created": 1233442897.234,
         "last_modified": 1328569492.406,
         "provenance_url": "http:\/\/api.mendeley.com\/research\/public-chemical-compound-databases\/",
         "meta": {
@@ -356,6 +359,7 @@ class Aliases(object):
         "title":["Why Most Published Research Findings Are False"],
         "url":["http:\/\/www.plosmedicine.org\/article\/info:doi\/10.1371\/journal.pmed.0020124"],
         "doi": ["10.1371\/journal.pmed.0020124"],
+        "created": 12387239847.234,
         "last_modified": 1328569492.406
         ...
     }
