@@ -122,8 +122,8 @@ class Item(dao.Dao):
     
     """
     {
-        "alias": alias_object, 
-        "metric": metric_object, 
+        "aliases": alias_object, 
+        "metrics": metric_object, 
         "biblio": biblio_object,
         "created": 23112412414.234,
         "last_modified": 12414214.234,
@@ -133,8 +133,6 @@ class Item(dao.Dao):
     def __init__(self, id=None, aliases=None, metrics=None, biblio=None, seed=None, **kwargs):
         # for convenience with CouchDB we store all the properties in an internally
         # managed dict object which can just be json serialised out to the DAO
-        # This object has a __getattr__ override below which makes the object 
-        # appear as if all the dictionary keys are member attributes of this object
         
         # inherit the init
         super(Item,self).__init__(**kwargs)
@@ -149,15 +147,9 @@ class Item(dao.Dao):
             self._aliases = Aliases(seed=aliases) if hasattr(aliases, "keys") else aliases
             self._metrics = Metrics(seed=aliases) if hasattr(aliases, "keys") else metrics
             self._biblio = Biblio(seed=aliases) if hasattr(aliases, "keys") else biblio
-            
-        """
-        self._aliases = Aliases(seed=self._data['aliases']) if (hasattr(aliases,'keys') or aliases is None) else aliases
-        self._metrics = Metrics(seed=self._data.get('metrics',None)) if (hasattr(metrics,'keys') or metrics is None) else metrics
-        self._biblio = Biblio(seed=self._data.get('biblio',None)) if (hasattr(biblio,'keys') or biblio is None) else biblio
-        """
-        
-        # save the time for when to queue for refresh - now plus whatever delay we set in config
-        self._data['refresh_on'] = time.time() + 0
+                    
+        # save the time of this request to the object
+        self._data['last_requested'] = time.time()
         self.save()
 
     @property
