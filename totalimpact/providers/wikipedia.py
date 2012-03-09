@@ -1,5 +1,5 @@
 import time
-from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError
+from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
 from totalimpact.models import ProviderMetric
 from BeautifulSoup import BeautifulStoneSoup
 import requests
@@ -14,9 +14,9 @@ class Wikipedia(Provider):
         self.state = WikipediaState(config)
         self.id = self.config.id
 
-    def sleep_time(self, dead_time=0):
-        sleep_length = self.state.sleep_time(dead_time)
-        logger.debug(self.config.id + ": sleeping for " + str(5) + " seconds")
+    def sleep_time(self):
+        sleep_length = self.state.sleep_time()
+        logger.debug(self.config.id + ": sleeping for " + str(sleep_length) + " seconds")
         return sleep_length
     
     def member_items(self, query_string): 
@@ -39,16 +39,18 @@ class Wikipedia(Provider):
             
             # get the aliases that we want to check
             aliases = alias_object.get_aliases_list(self.config.supported_namespaces)
-            if aliases is None:
+            if aliases is None or len(aliases) == 0:
+                logger.debug(self.config.id + ": No acceptable aliases in tiid:" + alias_object.tiid)
+                logger.debug(self.config.id + ": Aliases: " + str(alias_object.get_aliases_dict()))
                 return item
             
             # if there are aliases to check, carry on
-            for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
+            for alias in aliases:
                 logger.debug(self.config.id + ": processing metrics for tiid:" + alias_object.tiid)
+                logger.debug(self.config.id + ": looking for mentions of alias " + alias[1])
                 self._get_metrics(alias, metrics)
             
             # add the meta info and other bits to the metrics object
-            # FIXME: could probably combine this with the "show_details_url" in some way
             metrics.meta(self.config.meta)
             
             # log our success (DEBUG and INFO)
@@ -56,7 +58,6 @@ class Wikipedia(Provider):
             logger.info(self.config.id + ": metrics completed for tiid:" + alias_object.tiid)
             
             # finally update the item's metrics object with the new one, and return the item
-            # FIXME: this will probably change to a call to item.metrics.add_provider_metric
             item.metrics.add_provider_metric(metrics)
             return item
         except ProviderError as e:
@@ -97,12 +98,12 @@ class Wikipedia(Provider):
             metrics.value(0)
             
 
-class WikipediaState(object):
+class WikipediaState(ProviderState):
     
     def __init__(self, config):
-        self.config = config
-        
-    def sleep_time(self, dead_time=0):
-        # wikipedia has no rate limit
-        return 0
+        # need to init the ProviderState object counter
+        if config.rate is not None:        
+            super(WikipediaState, self).__init__(config.rate['period'], config['limit'])
+        else:
+            super(WikipediaState, self).__init__(throttled=False)
     
