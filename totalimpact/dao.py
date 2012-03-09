@@ -50,10 +50,10 @@ class Dao(object):
     @classmethod
     def get(cls,_id):
         couch, db = cls.connection()
-        #try:
-        return cls(**db[_id])
-        #except:
-        #    return None
+        try:
+            return cls(**db[_id])
+        except:
+            return None
 
     def query(self,**kwargs):
         # pass queries through to couchdb, as per couchdb-python query
