@@ -51,11 +51,10 @@ class StoppableThread(threading.Thread):
     def stopped(self):
         return self._stop.isSet()
     
-    def _interruptable_sleep(self, duration):
+    def _interruptable_sleep(self, duration, increment=0.5):
         if duration <= 0:
             return
         slept = 0
-        increment = 0.5
         while not self.stopped() and slept < duration:
             snooze = increment if duration - slept > increment else duration - slept
             time.sleep(snooze)
@@ -78,6 +77,11 @@ class QueueConsumer(object):
                 time.sleep(0.5)
             return item
 
+# NOTE: provider aliases does not throttle or take into account
+# provider sleep times.  This is fine for the time being, as 
+# aliasing is an urgent request.  The provider should count the
+# requests as they happen, so that the metrics thread can keep itself
+# in check to throttle the api requests.
 class ProvidersAliasThread(StoppableThread, QueueConsumer):
     def __init__(self, providers, config):
         StoppableThread.__init__(self)
@@ -94,17 +98,16 @@ class ProvidersAliasThread(StoppableThread, QueueConsumer):
             for p in self.providers:
                 try:
                     item = p.aliases(item)
-                    self.queue.save_and_unqueue(item)
+                    
+                    # FIXME: queue object is not yet working
+                    #self.queue.save_and_unqueue(item)
                 except NotImplementedError:
                     continue
                     
             self._interruptable_sleep(self.sleep_time())
             
     def sleep_time(self):
-        # just keep punting through the aliases as fast as possible
-        # FIXME: ultimately we need a better mechanism to throttle
-        # the alias requests, like skipping providers which are over
-        # limit
+        # just keep punting through the aliases as fast as possible for the time being
         return 0
 
 class ProviderMetricsThread(StoppableThread, QueueConsumer):
@@ -117,10 +120,7 @@ class ProviderMetricsThread(StoppableThread, QueueConsumer):
         self.queue.provider = self.provider.id
 
     def run(self):
-        bonus_time = 0
         while not self.stopped():
-            start = time.time()
-            
             # get the first item on the queue - this waits until
             # there is something to return
             item = self.first()
@@ -134,24 +134,16 @@ class ProviderMetricsThread(StoppableThread, QueueConsumer):
             # better error handling routine
             if item is not None:
                 # store the metrics in the database
-                self.queue.save_and_unqueue(item)
-            
-            # FIXME: we need to take into account dead time which is longer
-            # than the desired sleep time (i.e. dead time that we can carry
-            # over
-            # go to sleep for a time specified by the provider which
-            # is dependent on how long this request took in the first place
-            took = self._get_dead_time(start)
+                
+                # FIXME: queue object is not yet working
+                #self.queue.save_and_unqueue(item)
+                pass
             
             # the provider will return a sleep time which may be negative
-            sleep_time = self.provider.sleep_time(took)
+            sleep_time = self.provider.sleep_time()
             
             # sleep
             self._interruptable_sleep(sleep_time)
-            
-    def _get_dead_time(self, start):
-        end = time.time()
-        return end - start
   
 if __name__ == "__main__":
     if len(sys.argv) < 2:

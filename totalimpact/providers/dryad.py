@@ -1,5 +1,5 @@
 import time, re, urllib
-from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError
+from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
 from totalimpact.models import Metrics
 from BeautifulSoup import BeautifulStoneSoup
 import requests
@@ -75,6 +75,10 @@ class Dryad(Provider):
         # try to get a response from the data provider        
         response = self.http_get(url, timeout=self.config.aliases.get('timeout', None))
         
+        # register the hit, mostly so that anyone copying this remembers to do it,
+        # - we have overriden this in the DryadState object, so it doesn't do anything
+        self.state.register_unthrottled_hit()
+        
         # FIXME: we have to observe the Dryad interface for a bit to get a handle
         # on these response types - this is just a default approach...
         if response.status_code != 200:
@@ -102,7 +106,16 @@ class Dryad(Provider):
         except AttributeError:
             return None
     
-class DryadState(object):
+class DryadState(ProviderState):
     def __init__(self, config):
-        self.config = config
+        # need to init the ProviderState object counter
+        if config.rate is not None:        
+            super(DryadState, self).__init__(config.rate['period'], config['limit'])
+        else:
+            super(DryadState, self).__init__(throttled=False)
+            
+    def register_unthrottled_hit(self):
+        # override this method, so it has no actual effect
+        pass
+        
         
