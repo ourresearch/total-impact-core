@@ -95,8 +95,6 @@ class Collection(dao.Dao):
             self.data['ids'] = item_ids if item_ids is not None else []            
             self.data['collection_name'] = name if name is not None else None
             self.data['owner'] = owner if owner is not None else None
-            self.data['created'] = created if created is not None else time.time()
-            self.data['last_modified'] = last_modified if last_modified is not None else time.time()
         
     def item_ids(self):
         return self.data['ids']
