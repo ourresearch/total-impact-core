@@ -192,17 +192,43 @@ class Biblio(object):
     def __init__(self, seed=None):
         self.data = seed if seed is not None else {}
 
+
 class Metrics(object):
+    """
+    {
+        "meta": {
+            "PROVIDER_ID": {
+                "last_modified": 128798498.234,
+                "last_requested": 2139841098.234,
+                "ignore": false
+            }
+        },
+        "bucket":[
+            "LIST OF PROVIDER METRIC OBJECTS"
+        ]
+    }
+    """
     
     def __init__(self, seed=None):
         self.data = seed if seed is not None else {}
+        
+        if 'meta' not in self.data:
+            self.data['meta'] = {}
+        
+        # list all providers from config
+        providers = []
+        for provider in providers:
+            if provider not in self.data['meta'].keys():
+                self.data['meta'][provider] = {'last_modified':0, 'last_requested':time.time(), 'ignore':false}
+        for item in self.data.get('meta',[]):
+            item['last_requested'] = time.time()
     
     def add_provider_metric(self, provider_metric):
         hash = self._hash(provider_metric)
-        self.data[hash] = provider_metric
+        self.data['bucket'][hash] = provider_metric
         
     def list_provider_metrics(self):
-        return self.data.values()
+        return self.data['bucket'].values()
         
     def _hash(self, provider_metric):
         # get a hash of the provider_metric's json representation

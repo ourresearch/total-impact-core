@@ -1,6 +1,6 @@
 from totalimpact.models import Item
 import totalimpact.dao as dao
-import datetime
+import time
 
 # some data useful for testing
 # d = {"DOI" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "URL" : ["http://cottagelabs.com"]}
@@ -22,7 +22,7 @@ class Queue(dao.Dao):
     # implement this in inheriting classes if needs to be different
     def save_and_unqueue(self,item):
         # alter to use aliases method once exists
-        item.data[self.__type__]['last_updated'] = datetime.datetime.now()
+        item.data[self.__type__]['last_modified'] = time.time()
         item.save()
         
         
