@@ -139,20 +139,21 @@ def provider_aliases(pid,aliases=''):
 @app.route('/collection', methods = ['GET','POST','PUT','DELETE'])
 @app.route('/collection/<cid>/<tiid>')
 def collection(cid='',tiid=''):
-    if cid:
-        coll = totalimpact.models.Collection.get(cid)
-    else:
-        coll = totalimpact.models.Collection()
 
     if request.method == "GET":
         # check for requested response type, or always JSON?
-        resp = make_response( coll.json )
-        resp.mimetype = "application/json"
-        return resp
+        if cid:
+            coll = totalimpact.models.Collection.get(cid)
+            if coll:
+                resp = make_response( coll.json )
+                resp.mimetype = "application/json"
+                return resp
+            else:
+                abort(404)
+        else:
+            abort(404)
 
-    print request.method
     if request.method == "POST":
-        print 'post'
         if tiid:
             # update the list of tiids on this coll with this new one
             resp = "something like updated"
@@ -181,10 +182,12 @@ def collection(cid='',tiid=''):
 
     if request.method == "PUT":
         # check if received object was json
+        coll = totalimpact.models.Collection()
         if request.json:
             coll.data = request.json
         else:
             coll.data = json.loads(request.data)
+        coll.save()
         resp = 201
         return resp
 
@@ -194,15 +197,15 @@ def collection(cid='',tiid=''):
             resp = "thing deleted"
             return resp
         elif cid:
-            resp = "col deleted"
-            return resp
-        else:
             # delete the whole object
+            coll = totalimpact.models.Collection.get(cid)
             deleted = coll.delete()
             if deleted:
-                return 404
+                abort(404)
             else:
                 return "err.."
+        else:
+            abort(404)
 
 
 # routes for user stuff
