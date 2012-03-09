@@ -1,5 +1,6 @@
 from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
+from totalimpact.config import Configuration
 import time, uuid, json, hashlib
 import time
 
@@ -224,8 +225,8 @@ class Metrics(object):
             self.data['meta'] = {}
         
         # list all providers from config
-        providers = []
-        for provider in providers:
+        config = Configuration()
+        for provider in config.providers:
             if provider not in self.data['meta'].keys():
                 self.data['meta'][provider] = {'last_modified':0, 'last_requested':time.time(), 'ignore':false}
         for item in self.data.get('meta',[]):

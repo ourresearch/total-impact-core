@@ -3,6 +3,8 @@ import uuid
 import couchdb
 import time
 
+from totalimpact.config import Configuration
+
 class Dao(object):
     '''the dao that can be named is not the true dao'''
     __type__ = None
@@ -15,9 +17,10 @@ class Dao(object):
 
     @classmethod
     def connection(cls):
+        config = Configuration()
         # read these from config
-        couch_url = 'http://localhost:5984/'
-        couch_db = 'ti'
+        couch_url = config['db_url']
+        couch_db = config['db_name']
         
         couch = couchdb.Server(url=couch_url)
         db = couch[couch_db]
