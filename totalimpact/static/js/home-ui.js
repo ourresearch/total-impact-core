@@ -54,11 +54,11 @@ addIdsToEditPane = function(returnedIds){
     else {
         var len = returnedIds.length
         for (i=0; i<len; i++) {
-            var namespace = returnedIds[i].namespace
-            var id = returnedIds[i].id;
-          returnedIds[i] = "<li><a class='remove' href='#'>remove</a><span class='object-id'>";
-          returnedIds[i] += "<span class='namespace'>"+namespace+": </span>";
-          returnedIds[i] += "<span class='id'>"+id+"</span></span></li>";
+            var namespace = returnedIds[i][0]
+            var id = returnedIds[i][1];
+            returnedIds[i] = "<li><a class='remove' href='#'>remove</a><span class='object-id'>";
+            returnedIds[i] += "<span class='namespace'>"+namespace+": </span>";
+            returnedIds[i] += "<span class='id'>"+id+"</span></span></li>";
         }
         $("ul#collection-list").append(
             $(returnedIds.join("")).hide().fadeIn(1000)
@@ -122,14 +122,14 @@ $(document).ready(function(){
         var idStrParts = $(this).attr("id").split('-');
         var providerName = idStrParts[0];
         var providerTypeQuery = (idStrParts.length > 1) ? "&type=" + idStrParts[1] : ''
-        var providerIdQuery = "?id=" + $(this).siblings("input").val();
+        var providerIdQuery = "?query=" + $(this).siblings("input").val();
 
         if ($thisDiv.find("textarea")[0]) { // there's a sibling textarea
             addIdsToEditPane(parseTextareaArtifacts($thisDiv.find("textarea").val()));
         }
         else {
             $(this).hide().after("<span class='loading'>"+ajax_load+" Loading...<span>");
-            $.get("./providers/"+providerName+"/links"+providerIdQuery+providerTypeQuery, function(response,status,xhr){
+            $.get("./provider/"+providerName+"/memberitems"+providerIdQuery+providerTypeQuery, function(response,status,xhr){
                 addIdsToEditPane(response);
                 $thisDiv.find("span.loading")
                     .empty()
@@ -205,22 +205,25 @@ $(document).ready(function(){
         });
     }
 
-    // creating a report by submitting the object IDs from the homepage
+    // creating a collection by submitting the object IDs from the homepage
     $("#id-form").submit(function(){
-        var ids = [];
+        var aliases = [];
         $("ul#collection-list span.object-id").each(function(){
-           ids.push($(this).text());
+           var thisAlias = [];
+           thisAlias[0] = $(this).find("span.namespace").text()
+           thisAlias[1] = $(this).find("span.id").text()
+           aliases.push(thisAlias);
         });
-        if (ids.length == 0) {
+        if (aliases.length == 0) {
             alert("Looks like you haven't added any research objects to the collection yet.")
             return false;
         } else {
             showWaitBox("Creating");
             $.post(
-                './update.php',
-                {list: JSON.stringify(ids), name: $("#name").val()},
-                function(data){
-                    location.href="./collection/" +data;
+                './collection',
+                {list: JSON.stringify(aliases), name: $("#name").val()},
+                function(returnedData){
+                    location.href="./collection/" +returnedData;
                 });
             return false;
         }

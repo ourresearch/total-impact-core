@@ -1,12 +1,13 @@
 import json
 import uuid
 import couchdb
+import time
 
 class Dao(object):
     '''the dao that can be named is not the true dao'''
     __type__ = None
 
-    def __init(self, **kwargs):
+    def __init__(self, **kwargs):
         self.couch, self.db = self.connection()
         self._data = dict(kwargs)
         self._id = self.data.get('_id',None)
@@ -49,10 +50,10 @@ class Dao(object):
     @classmethod
     def get(cls,_id):
         couch, db = cls.connection()
-        try:
-            return cls(**db[_id])
-        except:
-            return None
+        #try:
+        return cls(**db[_id])
+        #except:
+        #    return None
 
     def query(self,**kwargs):
         # pass queries through to couchdb, as per couchdb-python query
@@ -71,11 +72,19 @@ class Dao(object):
                 self.id = self.data['_id']
         if '_rev' not in self.data and self.version:
             self.data['_rev'] = self.version
+            
+        if 'created' not in self.data:
+            self.data['created'] = time.time()
+        
+        if 'last_modified' not in self.data:
+            self.data['last_modified'] = 0
+        else:
+            self.data['last_modified'] = time.time()
 
         try:
             self._id, self._version = self.db.save(self.data)
             self.data['_rev'] = self.version
-            return True
+            return self.id
         except:
             # log the save error? action on doc update conflict?
             return False

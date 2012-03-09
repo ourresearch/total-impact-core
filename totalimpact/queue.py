@@ -8,12 +8,6 @@ import datetime
 class Queue(dao.Dao):
     __type__ = None
         
-    @property
-    def queue(self):
-        # change this for live
-        items = self.view('queues/'+self.__type__)
-        return [Item(**i['key']) for i in items.rows]
-
     # TODO: 
     # return next item from this queue (e.g. whatever is on the top of the list
     # does NOT remove item from tip of queue
@@ -50,6 +44,15 @@ class MetricsQueue(Queue):
     @provider.setter
     def provider(self, _provider):
         self._provider = _provider
+
+    @property
+    def queue(self):
+        # change this for live
+        addr = 'queues/' + self.__type__
+        if self.provider:
+            addr += '?key=["' + self.provider + '"]'
+        items = self.view(addr)
+        return [Item(**i['key']) for i in items.rows]
 
     def save_and_unqueue(self,item):
         # alter to use aliases method once exists
