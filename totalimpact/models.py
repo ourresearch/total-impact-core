@@ -137,20 +137,28 @@ class Item(dao.Dao):
         # This object has a __getattr__ override below which makes the object 
         # appear as if all the dictionary keys are member attributes of this object
         
-        # FIXME: implement seed support (this is a bit tricky, as aliases,
-        # metrics and biblio are objects)
-        
         # inherit the init
         super(Item,self).__init__(**kwargs)
 
         self.id = id
-        if seed is not None: self.data = seed
-        self._aliases = Aliases(seed=self._data.get('aliases',None)) if (hasattr(aliases,'keys') or aliases is None) else aliases
+        if seed is not None: 
+            self._data = seed
+            self._aliases = Aliases(seed=self._data.get('aliases'))
+            self._metrics = Metrics(seed=self._data.get('metrics'))
+            self._biblio = Biblio(seed=self._data.get('biblio'))
+        else:
+            self._aliases = Aliases(seed=aliases) if hasattr(aliases, "keys") else aliases
+            self._metrics = Metrics(seed=aliases) if hasattr(aliases, "keys") else metrics
+            self._biblio = Biblio(seed=aliases) if hasattr(aliases, "keys") else biblio
+            
+        """
+        self._aliases = Aliases(seed=self._data['aliases']) if (hasattr(aliases,'keys') or aliases is None) else aliases
         self._metrics = Metrics(seed=self._data.get('metrics',None)) if (hasattr(metrics,'keys') or metrics is None) else metrics
         self._biblio = Biblio(seed=self._data.get('biblio',None)) if (hasattr(biblio,'keys') or biblio is None) else biblio
-
+        """
+        
         # save the time for when to queue for refresh - now plus whatever delay we set in config
-        self.data['refresh_on'] = time.time() + 0
+        self._data['refresh_on'] = time.time() + 0
         self.save()
 
     @property
@@ -164,7 +172,7 @@ class Item(dao.Dao):
     @property
     def metrics(self):
         try:
-            return self._aliases
+            return self._metrics
         except:
             self._metrics = Metrics(seed=self._data.get('metrics',None))
             return self._metrics
@@ -306,9 +314,13 @@ class ProviderMetric(object):
             return True
         else:
             return False
+            
+    def __str__(self):
+        return str(self.data)
     
     # FIXME: we need a nicer API to get at the contents of the inner
     # data object
+    """
     def __getattribute__(self, att):
         try:
             return super(ProviderMetric, self).__getattribute__(att)
@@ -319,6 +331,7 @@ class ProviderMetric(object):
             super(ProviderMetric, self).__setattr__(att, value)
         else:
             self.data[att] = value
+    """
     
 class Aliases(object):
     """
@@ -399,11 +412,13 @@ class Aliases(object):
             return super(Aliases, self).__getattribute__(att)
         except:
             return self.data[att]
+    """
     def __setattr__(self, att, value):
         if att == "data":
             super(Aliases, self).__setattr__(att, value)
         else:
             self.data[att] = value
+    """
     
     def __repr__(self):
         return "TIID: " + self.tiid + " " + str(self.data)
