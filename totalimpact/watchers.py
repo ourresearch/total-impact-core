@@ -11,7 +11,7 @@ class Watchers(object):
     def __init__(self, config_path):
         self.threads = []
         self.config = Configuration(config_path)
-        self.providers = ProviderFactory.get_providers()
+        self.providers = ProviderFactory.get_providers(self.config)
         
     def run(self):
         for p in self.providers:
@@ -38,6 +38,7 @@ class Watchers(object):
                 t.stop()
        
        # FIXME: do we need to join() the thread?
+       # it would seem not, but don't forget to keep an eye on this
            
 class StoppableThread(threading.Thread):
     def __init__(self):
@@ -49,6 +50,16 @@ class StoppableThread(threading.Thread):
 
     def stopped(self):
         return self._stop.isSet()
+    
+    def _interruptable_sleep(self, duration):
+        if duration <= 0:
+            return
+        slept = 0
+        increment = 0.5
+        while not self.stopped() and slept < duration:
+            snooze = increment if duration - slept > increment else duration - slept
+            time.sleep(snooze)
+            slept += snooze
 
 class QueueConsumer(object):
 
@@ -84,15 +95,10 @@ class ProvidersAliasThread(StoppableThread, QueueConsumer):
                 try:
                     item = p.aliases(item)
                     self.queue.save_and_unqueue(item)
-                    
-                    # FIXME: still debugging, but remove soon
-                    print item
                 except NotImplementedError:
                     continue
                     
-            # FIXME: we need a better sleep mechanism which allows
-            # the thread to be stopped while it is sleeping
-            time.sleep(self.sleep_time())
+            self._interruptable_sleep(self.sleep_time())
             
     def sleep_time(self):
         # just keep punting through the aliases as fast as possible
@@ -111,6 +117,7 @@ class ProviderMetricsThread(StoppableThread, QueueConsumer):
         self.queue.provider = self.provider.id
 
     def run(self):
+        bonus_time = 0
         while not self.stopped():
             start = time.time()
             
@@ -128,18 +135,19 @@ class ProviderMetricsThread(StoppableThread, QueueConsumer):
             if item is not None:
                 # store the metrics in the database
                 self.queue.save_and_unqueue(item)
-                
-                # FIXME: still debugging, but remove soon
-                print metrics
             
             # FIXME: we need to take into account dead time which is longer
             # than the desired sleep time (i.e. dead time that we can carry
             # over
-            # FIXME: we need a better sleep mechanism which allows
-            # the thread to be stopped while it is sleeping
             # go to sleep for a time specified by the provider which
             # is dependent on how long this request took in the first place
-            time.sleep(self.provider.sleep_time(self._get_dead_time(start)))
+            took = self._get_dead_time(start)
+            
+            # the provider will return a sleep time which may be negative
+            sleep_time = self.provider.sleep_time(took)
+            
+            # sleep
+            self._interruptable_sleep(sleep_time)
             
     def _get_dead_time(self, start):
         end = time.time()
