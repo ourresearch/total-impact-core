@@ -3,7 +3,7 @@ import os, uuid, sys, json
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
 
-CONFIG_FILE = "./totalimpact.conf.json"
+CONFIG_FILE = "./config/totalimpact.conf.json"
 
 DEFAULT_CONFIG = """
 {

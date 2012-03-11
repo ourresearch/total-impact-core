@@ -127,7 +127,7 @@ class Item(dao.Dao):
         "biblio": biblio_object,
         "created": 23112412414.234,
         "last_modified": 12414214.234,
-        "refresh_on": 124141245.234
+        "last_requested": 124141245.234
     }
     """
     def __init__(self, id=None, aliases=None, metrics=None, biblio=None, seed=None, **kwargs):
@@ -220,7 +220,7 @@ class Metrics(object):
         config = Configuration()
         for provider in config.providers:
             if provider not in self.data['meta'].keys():
-                self.data['meta'][provider] = {'last_modified':0, 'last_requested':time.time(), 'ignore':false}
+                self.data['meta'][provider] = {'last_modified':0, 'last_requested':time.time(), 'ignore':False}
         for item in self.data.get('meta',[]):
             item['last_requested'] = time.time()
     

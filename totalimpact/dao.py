@@ -19,8 +19,8 @@ class Dao(object):
     def connection(cls):
         config = Configuration()
         # read these from config
-        couch_url = config['db_url']
-        couch_db = config['db_name']
+        couch_url = config.db_url
+        couch_db = config.db_name
         
         couch = couchdb.Server(url=couch_url)
         db = couch[couch_db]
