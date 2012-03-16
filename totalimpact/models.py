@@ -219,10 +219,10 @@ class Metrics(object):
         # list all providers from config
         config = Configuration()
         for provider in config.providers:
-            if provider not in self.data['meta'].keys():
-                self.data['meta'][provider] = {'last_modified':0, 'last_requested':time.time(), 'ignore':False}
-        for item in self.data.get('meta',[]):
-            item['last_requested'] = time.time()
+            if provider['class'] not in self.data['meta'].keys():
+                self.data['meta'][provider['class']] = {'last_modified':0, 'last_requested':time.time(), 'ignore':False}
+        for item in self.data['meta']:
+            self.data['meta'][item]['last_requested'] = time.time()
     
     def add_provider_metric(self, provider_metric):
         hash = self._hash(provider_metric)
