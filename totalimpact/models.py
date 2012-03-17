@@ -226,6 +226,9 @@ class Metrics(object):
                 self.data['meta'][provider['class']] = {'last_modified':0, 'last_requested':time.time(), 'ignore':False}
         for item in self.data['meta']:
             self.data['meta'][item]['last_requested'] = time.time()
+
+    def meta(self):
+        return self.data['meta']
     
     def add_provider_metric(self, provider_metric):
         hash = self._hash(provider_metric)

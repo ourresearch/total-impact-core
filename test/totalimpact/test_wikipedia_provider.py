@@ -129,18 +129,18 @@ class Test_Wikipedia(unittest.TestCase):
         provider = Wikipedia(wconf, self.config)
         
         alias = Aliases(seed={"bob": ["alice"]})
-        item = Item(aliases=alias)
-        item = provider.metrics(item)
+        itemJustAliases = Item(aliases=alias)
+        itemWithMetrics = provider.metrics(itemJustAliases)
         
-        pms = item.metrics.list_provider_metrics()
-        assert len(pms) == 1
-        assert pms[0].value() == 0
+        providerMetrics = itemWithMetrics.metrics.list_provider_metrics()
+        assert len(providerMetrics) == 0
         
         # we can also check that the meta is correct
-        meta = pms[0].meta()
+        meta = itemWithMetrics.metrics.meta()
         assert meta is not None
-        assert meta == provider.config.meta
-        
+        assert "totalimpact.providers.wikipedia.Wikipedia" in meta.keys()
+        assert meta["totalimpact.providers.wikipedia.Wikipedia"].keys() == ["ignore", "last_modified", "last_requested"]
+
     def test_08_metrics_http_success(self):
         Provider.http_get = successful_get
         
