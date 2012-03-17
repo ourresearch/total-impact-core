@@ -15,3 +15,10 @@ python setup.py install
 How to run tests:
 
 nosetests -v test/
+
+How to run the web app:
+
+cd total-impact
+python totalimpact/web.py
+then surf up http://127.0.0.1:5000/
+
