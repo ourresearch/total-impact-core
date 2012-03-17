@@ -215,6 +215,9 @@ class Metrics(object):
         
         if 'meta' not in self.data:
             self.data['meta'] = {}
+
+        if 'bucket' not in self.data:
+            self.data['bucket'] = {}
         
         # list all providers from config
         config = Configuration()
