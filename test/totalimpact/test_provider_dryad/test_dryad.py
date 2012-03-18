@@ -33,7 +33,7 @@ CWD, _ = os.path.split(__file__)
 APP_CONFIG = os.path.join(CWD, "..", "test.conf.json")
 XML_DOC = os.path.join(CWD, "dryad_response.xml")
 DRYAD_HTML = os.path.join(CWD, "dryad_members.html")
-DOI = "10.1016/j.meegid.2011.02.004"
+DOI = "10.5061/dryad.9025"
 
 class Test_Dryad(unittest.TestCase):
 
@@ -220,12 +220,11 @@ class Test_Dryad(unittest.TestCase):
         item = Item(aliases=alias)
         item = provider.aliases(item)
         
-        assert len(item.aliases.get_aliases_list(["DOI"])) == 2
+        assert len(item.aliases.get_aliases_list(["DOI"])) == 1
         assert len(item.aliases.get_aliases_list(["URL"])) == 1
         
         dois = [x[1] for x in item.aliases.get_aliases_list(["DOI"])]
         assert DOI in dois
-        assert "10.5061/dryad.9025" in dois
     
     def test_12_metrics(self):
         dcfg = None
