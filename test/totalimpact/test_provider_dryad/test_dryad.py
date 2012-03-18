@@ -30,7 +30,7 @@ class Item(object):
 
 CWD, _ = os.path.split(__file__)
 
-APP_CONFIG = os.path.join(CWD, "test.conf.json")
+APP_CONFIG = os.path.join(CWD, "..", "test.conf.json")
 XML_DOC = os.path.join(CWD, "dryad_response.xml")
 DRYAD_HTML = os.path.join(CWD, "dryad_members.html")
 DOI = "10.1016/j.meegid.2011.02.004"

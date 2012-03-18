@@ -26,7 +26,7 @@ class Item(object):
 
 CWD, _ = os.path.split(__file__)
 
-APP_CONFIG = os.path.join(CWD, "test.conf.json")
+APP_CONFIG = os.path.join(CWD, "..", "test.conf.json")
 XML_DOC = os.path.join(CWD, "wikipedia_response.xml")
 
 class Test_Wikipedia(unittest.TestCase):
