@@ -21,8 +21,8 @@ class test_aliases:
     def test2(self):
         '''adds new aliases to the  object'''
 
-        assert self.a.data == {"foo": ["id1", "id2"], \
-            "bar":["id1"]}, self.a.data
+        expected = {"tiid":self.a.tiid, "foo":["id1", "id2"], "bar":["id1"]}
+        assert self.a.data == expected, self.a.data
 
     def test3(self):
         '''gets an alias based on its namespace'''
@@ -47,7 +47,7 @@ class test_aliases:
     def test5(self):
         '''get aliases as a dictionary'''
         res = self.a.get_aliases_dict()
-        expected = {"foo":["id1", "id2"], "bar":["id1"]}
+        expected = {"tiid":self.a.tiid, "foo":["id1", "id2"], "bar":["id1"]}
         assert res == expected, res
         
     
