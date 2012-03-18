@@ -413,7 +413,10 @@ class Aliases(object):
         >>> a.get_ids_by_namespace("foo")
         ['id1']
         '''
-        return self.data.get(namespace)
+        if self.data.get(namespace):
+            return self.data.get(namespace)
+        else:
+            return []
     
     def add_alias(self, namespace, id):
         if namespace in self.data.keys():
