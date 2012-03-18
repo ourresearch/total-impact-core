@@ -24,6 +24,8 @@
     },
 
     "metrics" : {
+        "url" : "http://dx.doi.org/%s",
+        "timeout" : 5,
         "static_meta" : {
             "Dryad:file_views": {
                 "display_name": "file views",

@@ -3,13 +3,15 @@ from provider import Provider, ProviderError, ProviderTimeout, ProviderServerErr
 from totalimpact.models import Metrics, ProviderMetric
 from BeautifulSoup import BeautifulStoneSoup
 import requests
+import simplejson
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
 
 class DryadMetricSnapshot(ProviderMetric):
-    def __init__(self):
-        super(DryadMetricSnapshot, self).__init__()
+    def __init__(self, provider, id, value):
+        meta = provider.config.metrics["static_meta"][id]
+        super(DryadMetricSnapshot, self).__init__(id=id, value=value, meta=meta)
 
 class Dryad(Provider):  
 
@@ -114,15 +116,45 @@ class Dryad(Provider):
     def get_show_details_url(self, doi):
         return "http://dx.doi.org/" + doi
 
-    def metrics(self, item):
-        raise NotImplementedError()
-        return ("1")      
+    def metrics(self, id):
+        #raise NotImplementedError()
+        #return ("1")      
+
+        # FIXME: urlencoding?
+        url = self.config.metrics['url'] % id
+        logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
+        
+        # try to get a response from the data provider        
+        response = self.http_get(url, timeout=self.config.metrics.get('timeout', None))
+        
+        # register the hit, mostly so that anyone copying this remembers to do it,
+        # - we have overriden this in the DryadState object, so it doesn't do anything
+        self.state.register_unthrottled_hit()
+        
+        # FIXME: we have to observe the Dryad interface for a bit to get a handle
+        # on these response types - this is just a default approach...
+        if response.status_code != 200:
+            if response.status_code >= 500:
+                raise ProviderServerError(response)
+            else:
+                raise ProviderClientError(response)
+        
+        # extract the aliases
+        new_stats = self._extract_stats(response.text)
+        metrics = Metrics()
+
+        if new_stats is not None:
+            for metric in new_stats:
+                logger.debug(self.config.id + ": found metrics: " + str(metric))
+                metrics.add_provider_metric(metric)
+            return metrics
+        return []
+
 
     def _extract_stats(self, content):
         DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+) views</span>", re.DOTALL)
         DRYAD_VIEWS_FILE_PATTERN = re.compile("(?P<views>\d+) views\S", re.DOTALL)
         DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+) downloads", re.DOTALL)
-        DRYAD_CITATION_PATTERN = re.compile('please cite the Dryad data package:.*<blockquote>(?P<authors>.+?)\((?P<year>\d{4})\).*(?P<title>Data from.+?)<span>Dryad', re.DOTALL)
 
         view_matches_package = DRYAD_VIEWS_PACKAGE_PATTERN.finditer(content)
         view_matches_file = DRYAD_VIEWS_FILE_PATTERN.finditer(content)
@@ -130,8 +162,8 @@ class Dryad(Provider):
             view_package = max([int(view_match.group("views")) for view_match in view_matches_package])
             file_total_views = sum([int(view_match.group("views")) for view_match in view_matches_file]) - view_package
         except ValueError:
-            max_views = None
-            total_views = None
+            view_package = None
+            file_total_views = None
         
         download_matches = DRYAD_DOWNLOADS_PATTERN.finditer(content)
         try:
@@ -142,6 +174,16 @@ class Dryad(Provider):
             total_downloads = None
             max_downloads = None
 
+        snapshot_file_views = DryadMetricSnapshot(self, "Dryad:file_views", file_total_views)
+        snapshot_view_package = DryadMetricSnapshot(self, "Dryad:package_views", view_package)
+        snapshot_total_downloads = DryadMetricSnapshot(self, "Dryad:total_downloads", total_downloads)
+        snapshot_most_downloaded_file = DryadMetricSnapshot(self, "Dryad:most_downloaded_file", max_downloads)
+
+        return([snapshot_file_views, snapshot_view_package, snapshot_total_downloads, snapshot_most_downloaded_file])
+
+
+    def _extract_biblio(self, content):
+        DRYAD_CITATION_PATTERN = re.compile('please cite the Dryad data package:.*<blockquote>(?P<authors>.+?)\((?P<year>\d{4})\).*(?P<title>Data from.+?)<span>Dryad', re.DOTALL)
         citation_matches = DRYAD_CITATION_PATTERN.search(content)
         try:
             authors = citation_matches.group("authors")
@@ -151,8 +193,7 @@ class Dryad(Provider):
             authors = None
             year = None
             title = None
-                
-        return({"file_views":file_total_views, "package_views":view_package, "total_downloads":total_downloads, "most_downloaded_file":max_downloads, "title":title, "year":year, "authors":authors})
+        return({"title":title, "year":year, "authors":authors})
 
 
 class DryadState(ProviderState):

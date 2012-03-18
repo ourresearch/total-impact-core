@@ -236,7 +236,10 @@ class Metrics(object):
         
     def list_provider_metrics(self):
         return self.data['bucket'].values()
-        
+
+    def str_list_provider_metrics(self):
+        return([str(val) for val in self.data['bucket'].values()])
+
     def _hash(self, provider_metric):
         # get a hash of the provider_metric's json representation
         j = json.dumps(provider_metric.data)
