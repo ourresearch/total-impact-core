@@ -270,36 +270,20 @@ class ProviderMetric(object):
         }
     }
     """
-    def __init__(self, id=None, value=None, last_update=None, provenance_url=None,
-                        display_name=None, provider=None, provider_url=None,
-                        description=None, icon=None, category=None, can_use_commercially=None,
-                        can_embed=None, can_aggregate=None, other_terms_of_use=None,
-                        seed=None):
+    def __init__(self, id=None, value=None, last_modified=None, provenance_url=None, meta=None, seed=None):
                         
         # load from the seed first
         self.data = seed if seed is not None else {}
         
         # if there was no seed, load the properties, otherwise ignore them
-        if seed is None:
-            self.data['meta'] = {}
-            
+        if seed is None:            
             self.data['id'] = self._init(id, str(uuid.uuid4()))
             self.data['value'] = self._init(value, 0)
-            self.data['last_update'] = self._init(last_update, time.time())
+            self.data['last_modified'] = self._init(last_modified, time.time())
             self.data['provenance_url'] = self._init(provenance_url, [])
-            self.data['meta']['display_name'] = self._init(display_name)
-            self.data['meta']['provider'] = self._init(provider)
-            self.data['meta']['provider_url'] = self._init(provider_url)
-            self.data['meta']['description'] = self._init(description)
-            self.data['meta']['icon'] = self._init(icon)
-            self.data['meta']['category'] = self._init(category)
-            self.data['meta']['can_use_commercially'] = self._init(can_use_commercially, "0")
-            self.data['meta']['can_embed'] = self._init(can_embed, "0")
-            self.data['meta']['can_aggregate'] = self._init(can_aggregate, "0")
-            self.data['meta']['other_terms_of_use'] = self._init(other_terms_of_use)
-            
-        else:
-            # we need to ensure that meta is initialised
+            self.data['meta'] = self._init(meta, {})
+
+        if "meta" not in self.data.keys():
             self.data['meta'] = {}
     
     def _init(self, val, default=None):
@@ -322,25 +306,11 @@ class ProviderMetric(object):
             return self.data['provenance_url']
         else:
             self.data['provenance_url'].append(url)
-    
-    def sum(self, other):
-        # sum should take all the data out of other that is relevant to
-        # the self, and sum them appropriate.  In practice this is just
-        # the value and the provenance_url
-        self.data['value'] += other.data['value']
-        self.data['provenance_url'] += other.data['provenance_url']
-    
-    # FIXME: this is a validation routine, and need to validate the
-    # object
-    def is_complete(self):
-        if 0:
-            return True
-        else:
-            return False
-            
+                
     def __str__(self):
         return str(self.data)
     
+    # FIXME: add a validation routine
     # FIXME: we need a nicer API to get at the contents of the inner
     # data object
     """

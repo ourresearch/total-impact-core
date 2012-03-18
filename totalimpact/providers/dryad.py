@@ -1,11 +1,15 @@
 import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
-from totalimpact.models import Metrics
+from totalimpact.models import Metrics, ProviderMetric
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
+
+class DryadMetricSnapshot(ProviderMetric):
+    def __init__(self):
+        super(DryadMetricSnapshot, self).__init__()
 
 class Dryad(Provider):  
 
@@ -163,4 +167,6 @@ class DryadState(ProviderState):
         # override this method, so it has no actual effect
         pass
         
-        
+  
+
+

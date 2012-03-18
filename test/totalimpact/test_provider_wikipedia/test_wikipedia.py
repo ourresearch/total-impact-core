@@ -188,7 +188,7 @@ class Test_Wikipedia(unittest.TestCase):
         provider = Wikipedia(wconf, self.config)
         
         metrics = ProviderMetric()
-        self.assertRaises(ProviderClientError, provider._get_metrics, "10.1371/journal.pcbi.1000361", metrics)
+        self.assertRaises(ProviderClientError, provider._get_metrics, "10.1371/journal.pcbi.1000361")
         
     def test_11_metrics_500(self):
         Provider.http_get = get_500
@@ -201,4 +201,5 @@ class Test_Wikipedia(unittest.TestCase):
         provider = Wikipedia(wconf, self.config)
         
         metrics = ProviderMetric()
-        self.assertRaises(ProviderServerError, provider._get_metrics, "10.1371/journal.pcbi.1000361", metrics)
+        self.assertRaises(ProviderServerError, provider._get_metrics, "10.1371/journal.pcbi.1000361")
+        

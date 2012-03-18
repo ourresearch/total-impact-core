@@ -35,7 +35,7 @@ class Wikipedia(Provider):
             
             # construct the metrics object based on queries on each of the 
             # appropriate aliases
-            metrics = ProviderMetric(id=self.config.id)
+            metric = ProviderMetric(id=self.config.id)
             
             # get the aliases that we want to check
             aliases = alias_object.get_aliases_list(self.config.supported_namespaces)
@@ -48,23 +48,23 @@ class Wikipedia(Provider):
             for alias in aliases:
                 logger.debug(self.config.id + ": processing metrics for tiid:" + alias_object.tiid)
                 logger.debug(self.config.id + ": looking for mentions of alias " + alias[1])
-                self._get_metrics(alias, metrics)
+                metric = self._get_metrics(alias)
             
             # add the meta info and other bits to the metrics object
-            metrics.meta(self.config.meta)
+            metric.meta(self.config.meta)
             
             # log our success (DEBUG and INFO)
-            logger.debug(self.config.id + ": final metrics for tiid " + alias_object.tiid + ": " + str(metrics))
+            logger.debug(self.config.id + ": final metrics for tiid " + alias_object.tiid + ": " + str(metric))
             logger.info(self.config.id + ": metrics completed for tiid:" + alias_object.tiid)
             
             # finally update the item's metrics object with the new one, and return the item
-            item.metrics.add_provider_metric(metrics)
+            item.metrics.add_provider_metric(metric)
             return item
         except ProviderError as e:
             self.error(e, item)
             return item
     
-    def _get_metrics(self, alias, metrics):
+    def _get_metrics(self, alias):
         # FIXME: urlencoding?
         url = self.config.metrics['url'] % alias[1]
         logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
@@ -83,9 +83,8 @@ class Wikipedia(Provider):
         sdurl = self.config.metrics['provenance_url'] % alias[1]
         this_metrics.provenance(sdurl)
         
-        # assign the metrics to the main metrics object
-        metrics.sum(this_metrics)
         logger.debug(self.config.id + ": interim metrics: " + str(this_metrics))
+        return(this_metrics)
         
     def _extract_stats(self, content, metrics):
         # FIXME: option to validate document...
