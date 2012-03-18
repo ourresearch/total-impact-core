@@ -311,20 +311,7 @@ class ProviderMetric(object):
         return str(self.data)
     
     # FIXME: add a validation routine
-    # FIXME: we need a nicer API to get at the contents of the inner
-    # data object
-    """
-    def __getattribute__(self, att):
-        try:
-            return super(ProviderMetric, self).__getattribute__(att)
-        except:
-            return self.data[att]
-    def __setattr__(self, att, value):
-        if att == "data":
-            super(ProviderMetric, self).__setattr__(att, value)
-        else:
-            self.data[att] = value
-    """
+    # FIXME: we need a nicer interface to get at the contents of the inner data object
     
 class Aliases(object):
     """
