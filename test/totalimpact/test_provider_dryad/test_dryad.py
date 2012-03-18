@@ -115,7 +115,7 @@ class Test_Dryad(unittest.TestCase):
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
-        members = provider.member_items("test")
+        members = provider.member_items("test", "author")
         assert len(members) == 10, str(members)
         
     def test_05_aliases_read_content(self):

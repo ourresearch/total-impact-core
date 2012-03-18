@@ -27,10 +27,11 @@ class Dryad(Provider):
         self.crossref_rx = re.compile(r"^10\.(\d)+/(\S)+$", re.DOTALL)
         self.dryad_member_items_rx = re.compile(r"(10\.5061/.*)</span")
 
-    def member_items(self, query_string):
+    def member_items(self, query_string, query_type):
         # FIXME: only checks the first dryad page
         enc = urllib.quote(query_string)
         url = self.config.member_items['url'] % enc
+        logger.debug(self.config.id + ": query type " + query_type)
         logger.debug(self.config.id + ": attempting to retrieve member items from " + url)
         
         # try to get a response from the data provider        
