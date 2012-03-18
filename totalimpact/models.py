@@ -248,6 +248,8 @@ class Metrics(object):
 # FIXME: should this have a created property?
 # FIXME: should things like "can_use_commercially" be true/false rather than the - yes
 # string "0" or "1", or are there other values that can go in there
+# FIXME: add a validation routine
+# FIXME: we need a nicer interface to get at the contents of the inner data object
 class ProviderMetric(object):
     """
     {
@@ -270,7 +272,7 @@ class ProviderMetric(object):
         }
     }
     """
-    def __init__(self, id=None, value=None, last_modified=None, provenance_url=None, meta=None, seed=None):
+    def __init__(self, id=None, value=None, created=None, last_modified=None, provenance_url=None, meta=None, seed=None):
                         
         # load from the seed first
         self.data = seed if seed is not None else {}
@@ -279,6 +281,7 @@ class ProviderMetric(object):
         if seed is None:            
             self.data['id'] = self._init(id, str(uuid.uuid4()))
             self.data['value'] = self._init(value, 0)
+            self.data['created'] = self._init(created, time.time())
             self.data['last_modified'] = self._init(last_modified, time.time())
             self.data['provenance_url'] = self._init(provenance_url, [])
             self.data['meta'] = self._init(meta, {})
@@ -294,24 +297,25 @@ class ProviderMetric(object):
             return self.data['value']
         else:
             self.data['value'] = val
+            self.data['last_modified'] = time.time()
             
     def meta(self, meta=None):
         if meta is None:
             return self.data['meta']
         else:
             self.data['meta'] = meta
+            self.data['last_modified'] = time.time()
     
     def provenance(self, url=None):
         if url is None:
             return self.data['provenance_url']
         else:
             self.data['provenance_url'].append(url)
+            self.data['last_modified'] = time.time()
                 
     def __str__(self):
         return str(self.data)
     
-    # FIXME: add a validation routine
-    # FIXME: we need a nicer interface to get at the contents of the inner data object
     
 class Aliases(object):
     """
