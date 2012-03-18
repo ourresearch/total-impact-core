@@ -121,7 +121,7 @@ $(document).ready(function(){
         var $thisDiv = $(this).parent();
         var idStrParts = $(this).attr("id").split('-');
         var providerName = idStrParts[0];
-        var providerTypeQuery = (idStrParts.length > 1) ? "&type=" + idStrParts[1] : ''
+        var providerTypeQuery = "&type=" + $(this).siblings("input").attr("name");
         var providerIdQuery = "?query=" + $(this).siblings("input").val();
 
         if ($thisDiv.find("textarea")[0]) { // there's a sibling textarea

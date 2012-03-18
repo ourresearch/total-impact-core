@@ -168,7 +168,7 @@ class Provider(object):
         self.app_config = app_config
 
     def provides_metrics(self): return False
-    def member_items(self, query_string): raise NotImplementedError()
+    def member_items(self, query_string, query_type): raise NotImplementedError()
     def aliases(self, item): raise NotImplementedError()
     def metrics(self, item): raise NotImplementedError()
     

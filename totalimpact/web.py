@@ -98,9 +98,9 @@ def items(tiids):
 # should return list of member ID {namespace:id} k/v pairs
 # if > 100 memberitems, return 100 and response code indicates truncated
 # examples:
-#    /provider/GitHub/memberitems?query=jasonpriem&type=user
-#    /provider/GitHub/memberitems?query=bioperl&type=org
-#    /provider/Dryad/memberitems?query=Otto%2C%20Sarah%20P.
+#    /provider/GitHub/memberitems?query=jasonpriem&type=profile
+#    /provider/GitHub/memberitems?query=bioperl&type=orgs
+#    /provider/Dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author
 config = Configuration('config/totalimpact.conf.json')
 providers = ProviderFactory.get_providers(config)
 @app.route('/provider/<pid>/memberitems')
@@ -113,8 +113,7 @@ def provider_memberitems(pid):
             provider = prov
             break
 
-    # FIXME: how does provider take the type, if there is one?
-    memberitems = provider.member_items(query)
+    memberitems = provider.member_items(query, qtype)
     
     # check for requested response type, or always JSON?
     resp = make_response( json.dumps(memberitems, sort_keys=True, indent=4) )
