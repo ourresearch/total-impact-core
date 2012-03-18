@@ -32,6 +32,7 @@ CWD, _ = os.path.split(__file__)
 
 APP_CONFIG = os.path.join(CWD, "..", "test.conf.json")
 XML_DOC = os.path.join(CWD, "dryad_response.xml")
+SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(CWD, "sample_extract_metrics_page.html")
 DRYAD_HTML = os.path.join(CWD, "dryad_members.html")
 DOI = "10.5061/dryad.9025"
 
@@ -172,7 +173,7 @@ class Test_Dryad(unittest.TestCase):
         
         ns, id = aliases[0]
         assert ns == "DOI"
-        assert id == "10.5061/dryad.9025"
+        assert id == DOI
     
     def test_09_aliases_empty_success(self):
         Provider.http_get = get_empty
@@ -225,8 +226,30 @@ class Test_Dryad(unittest.TestCase):
         
         dois = [x[1] for x in item.aliases.get_aliases_list(["DOI"])]
         assert DOI in dois
+
+    def test_12_provides_metrics(self):
+        dcfg = None
+        for p in self.config.providers:
+            if p["class"].endswith("dryad.Dryad"):
+                dcfg = os.path.join(CWD, p["config"])
+        dconf = Configuration(dcfg, False)
+        provider = Dryad(dconf, self.config)
+
+        assert provider.provides_metrics() == True
+
+    def test_13_show_details_url(self):
+        dcfg = None
+        for p in self.config.providers:
+            if p["class"].endswith("dryad.Dryad"):
+                dcfg = os.path.join(CWD, p["config"])
+        dconf = Configuration(dcfg, False)
+        provider = Dryad(dconf, self.config)
+
+        assert provider.get_show_details_url(DOI) == "http://dx.doi.org/10.5061/dryad.9025"
     
-    def test_12_metrics(self):
+
+    ## FIXME these aren't returned in the proper structure yet
+    def test_14_placeholder_basic_extract_stats(self):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
@@ -234,7 +257,11 @@ class Test_Dryad(unittest.TestCase):
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
-        self.assertRaises(NotImplementedError, provider.metrics, None)
+        # ensure that the reader can interpret a page appropriately
+        f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
+        ret = provider._extract_stats(f.read())
+        assert ret == {'title': 'Data from: The role of pleiotropy in the maintenance of sex in yeast. ', 'total_downloads': 178, 'most_downloaded_file': 76, 'authors': 'Hill JA, Otto SP ', 'year': '2007', 'file_views': 268, 'package_views': 407}, ret
+
     
     """
     FIXME: these will be useful once we implement the Dryad metrics code

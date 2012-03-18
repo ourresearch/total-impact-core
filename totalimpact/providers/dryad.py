@@ -60,8 +60,6 @@ class Dryad(Provider):
             self.error(e, item)
             return item
         
-    def metrics(self, item):
-        raise NotImplementedError()
 
     def _is_crossref_doi(self, alias):
         # FIXME: Would exclude DataCite ids from here?
@@ -105,7 +103,54 @@ class Dryad(Provider):
             return [("DOI", identifier)]
         except AttributeError:
             return None
+
+    def provides_metrics(self): 
+        return True
     
+    def get_show_details_url(self, doi):
+        return "http://dx.doi.org/" + doi
+
+    def metrics(self, item):
+        raise NotImplementedError()
+        return ("1")      
+
+    def _extract_stats(self, content):
+        DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+) views</span>", re.DOTALL)
+        DRYAD_VIEWS_FILE_PATTERN = re.compile("(?P<views>\d+) views\S", re.DOTALL)
+        DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+) downloads", re.DOTALL)
+        DRYAD_CITATION_PATTERN = re.compile('please cite the Dryad data package:.*<blockquote>(?P<authors>.+?)\((?P<year>\d{4})\).*(?P<title>Data from.+?)<span>Dryad', re.DOTALL)
+
+        view_matches_package = DRYAD_VIEWS_PACKAGE_PATTERN.finditer(content)
+        view_matches_file = DRYAD_VIEWS_FILE_PATTERN.finditer(content)
+        try:
+            view_package = max([int(view_match.group("views")) for view_match in view_matches_package])
+            file_total_views = sum([int(view_match.group("views")) for view_match in view_matches_file]) - view_package
+        except ValueError:
+            max_views = None
+            total_views = None
+        
+        download_matches = DRYAD_DOWNLOADS_PATTERN.finditer(content)
+        try:
+            downloads = [int(download_match.group("downloads")) for download_match in download_matches]
+            total_downloads = sum(downloads)
+            max_downloads = max(downloads)
+        except ValueError:
+            total_downloads = None
+            max_downloads = None
+
+        citation_matches = DRYAD_CITATION_PATTERN.search(content)
+        try:
+            authors = citation_matches.group("authors")
+            year = citation_matches.group("year")
+            title = citation_matches.group("title")
+        except ValueError:
+            authors = None
+            year = None
+            title = None
+                
+        return({"file_views":file_total_views, "package_views":view_package, "total_downloads":total_downloads, "most_downloaded_file":max_downloads, "title":title, "year":year, "authors":authors})
+
+
 class DryadState(ProviderState):
     def __init__(self, config):
         # need to init the ProviderState object counter
