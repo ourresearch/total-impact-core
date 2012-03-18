@@ -54,7 +54,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         print dcfg
         assert os.path.isfile(dcfg)
         
@@ -73,7 +73,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
@@ -87,7 +87,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
@@ -110,7 +110,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
@@ -121,7 +121,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
@@ -140,7 +140,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
@@ -152,7 +152,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
@@ -164,7 +164,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
@@ -181,7 +181,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
@@ -194,7 +194,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
@@ -212,7 +212,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
@@ -231,7 +231,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
 
@@ -241,7 +241,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
 
@@ -253,7 +253,7 @@ class Test_Dryad(unittest.TestCase):
         dcfg = None
         for p in self.config.providers:
             if p["class"].endswith("dryad.Dryad"):
-                dcfg = os.path.join(CWD, p["config"])
+                dcfg = p["config"]
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         

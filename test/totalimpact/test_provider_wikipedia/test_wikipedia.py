@@ -47,7 +47,7 @@ class Test_Wikipedia(unittest.TestCase):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
+                wcfg = p["config"]
         assert os.path.isfile(wcfg)
         
         # instantiate the configuration
@@ -65,7 +65,7 @@ class Test_Wikipedia(unittest.TestCase):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
+                wcfg = p["config"]
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
@@ -79,7 +79,7 @@ class Test_Wikipedia(unittest.TestCase):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
+                wcfg = p["config"]
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
@@ -89,7 +89,7 @@ class Test_Wikipedia(unittest.TestCase):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
+                wcfg = p["config"]
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
@@ -99,7 +99,7 @@ class Test_Wikipedia(unittest.TestCase):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
+                wcfg = p["config"]
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
@@ -113,7 +113,7 @@ class Test_Wikipedia(unittest.TestCase):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
+                wcfg = p["config"]
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
@@ -124,7 +124,7 @@ class Test_Wikipedia(unittest.TestCase):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
+                wcfg = p["config"]
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
@@ -147,7 +147,7 @@ class Test_Wikipedia(unittest.TestCase):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
+                wcfg = p["config"]
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
@@ -165,7 +165,7 @@ class Test_Wikipedia(unittest.TestCase):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
+                wcfg = p["config"]
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
@@ -183,7 +183,7 @@ class Test_Wikipedia(unittest.TestCase):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
+                wcfg = p["config"]
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
@@ -196,7 +196,7 @@ class Test_Wikipedia(unittest.TestCase):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
+                wcfg = p["config"]
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         

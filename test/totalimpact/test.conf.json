@@ -19,11 +19,11 @@
     "providers" : [
         {
             "class" : "totalimpact.providers.wikipedia.Wikipedia",
-            "config" : "wikipedia.conf.json"
+            "config" : "totalimpact/providers/wikipedia.conf.json"
         },
         {
             "class" : "totalimpact.providers.dryad.Dryad",
-            "config" : "dryad.conf.json"
+            "config" : "totalimpact/providers/dryad.conf.json"
         }
     ],
     
