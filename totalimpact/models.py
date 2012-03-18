@@ -186,7 +186,7 @@ class Item(dao.Dao):
     @data.setter
     def data(self, val):
         self._data = val
-            
+
 # FIXME: there's no documentation on the biblio object, so just leaving
 # it blank for the time being
 class Biblio(object):
@@ -416,8 +416,11 @@ class Aliases(object):
         return self.data.get(namespace)
     
     def add_alias(self, namespace, id):
-        self.data[namespace].append(id) # using defaultdict, no need to test if list exists first
-        
+        if namespace in self.data.keys():
+            self.data[namespace].append(id)
+        else:
+            self.data[namespace] = [id]
+
     def add_unique(self, alias_list):
         for ns, id in alias_list:
             if id not in self.data[ns]:
