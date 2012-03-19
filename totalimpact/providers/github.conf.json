@@ -1,0 +1,33 @@
+{
+    ###################################################################
+    # GITHUB PROVIDER CONFIGURATION
+    ###################################################################
+    
+    # Provider Identifier - used as the "id" of any resulting metrics
+    # object
+    #
+    "id" : "Github",
+    
+    # Namespaces supported by this provider
+    #
+    "supported_namespaces" : ["URL"],
+    
+    # Mendeley API configuration for retrieving metrics
+    #
+    
+    "aliases" : {
+        "url" : ""
+    },
+    
+    "member_items" : {
+        "querytype" : {
+            "githubUser": {
+                "url": "https://api.github.com/users/%s/repos"
+            },
+            "githubOrg":{
+                "url": "https://api.github.com/orgs/%s/repos"
+            }
+        }
+    }
+
+}
