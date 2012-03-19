@@ -10,6 +10,9 @@ from totalimpact.core import app, login_manager
 from totalimpact.config import Configuration
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 
+from totalimpact.tilogging import logging
+logger = logging.getLogger(__name__)
+
 
 # do account / auth stuff
 @login_manager.user_loader
@@ -107,11 +110,15 @@ providers = ProviderFactory.get_providers(config)
 def provider_memberitems(pid):
     query = request.values.get('query','')
     qtype = request.values.get('type','')
+
+    logger.debug("In provider_memberitems with " + query + " " + qtype)
     
     for prov in providers:
         if prov.id == pid:
             provider = prov
             break
+
+    logger.debug("provider: " + prov.id)
 
     memberitems = provider.member_items(query, qtype)
     

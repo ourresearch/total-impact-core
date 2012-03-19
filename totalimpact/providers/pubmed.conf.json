@@ -1,0 +1,30 @@
+{
+    ###################################################################
+    # PUBMED PROVIDER CONFIGURATION
+    ###################################################################
+    
+    # Provider Identifier - used as the "id" of any resulting metrics
+    # object
+    #
+    "id" : "Pubmed",
+    
+    # Namespaces supported by this provider
+    #
+    "supported_namespaces" : ["PMID"],
+    
+    # Mendeley API configuration for retrieving metrics
+    #
+    
+    "aliases" : {
+        "url" : "%s"
+    },
+    
+    "member_items" : {
+        "querytype" : {
+            "pubmedGrant": {
+                "url": "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmax=100&tool=total-impact.org&email=totalimpactdev@gmail.com&term=%s"
+            }
+        }
+    }
+
+}

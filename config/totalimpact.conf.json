@@ -29,8 +29,16 @@
         {
             "class" : "totalimpact.providers.dryad.Dryad",
             "config" : "totalimpact/providers/dryad.conf.json"
+        },
+        {
+            "class" : "totalimpact.providers.github.Github",
+            "config" : "totalimpact/providers/github.conf.json"
+        },
+        {
+            "class" : "totalimpact.providers.pubmed.Pubmed",
+            "config" : "totalimpact/providers/pubmed.conf.json"
         }
-    ],
+        ],
     
     # During HTTP requests, the User-Agent string to use
     #

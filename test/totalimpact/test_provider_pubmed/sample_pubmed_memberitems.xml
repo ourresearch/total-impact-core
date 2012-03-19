@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<!DOCTYPE eSearchResult PUBLIC "-//NLM//DTD eSearchResult, 11 May 2002//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSearch_020511.dtd">
+<eSearchResult><Count>20</Count><RetMax>20</RetMax><RetStart>0</RetStart><IdList>
+		<Id>21984068</Id>
+		<Id>21967305</Id>
+		<Id>21620352</Id>
+		<Id>21291537</Id>
+		<Id>20975837</Id>
+		<Id>20824129</Id>
+		<Id>20624592</Id>
+		<Id>20364130</Id>
+		<Id>20334529</Id>
+		<Id>20232938</Id>
+		<Id>20190755</Id>
+		<Id>20190754</Id>
+		<Id>19865164</Id>
+		<Id>19269161</Id>
+		<Id>19107202</Id>
+		<Id>18682221</Id>
+		<Id>18509477</Id>
+		<Id>18395225</Id>
+		<Id>18250328</Id>
+		<Id>17981120</Id>
+	</IdList><TranslationSet/><TranslationStack>   <TermSet>    <Term>U54-CA121852[All Fields]</Term>    <Field>All Fields</Field>    <Count>20</Count>    <Explode>Y</Explode>   </TermSet>   <OP>GROUP</OP>  </TranslationStack><QueryTranslation>U54-CA121852[All Fields]</QueryTranslation></eSearchResult>
