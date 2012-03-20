@@ -44,6 +44,16 @@ class StoppableThread(threading.Thread):
     def __init__(self):
         super(StoppableThread, self).__init__()
         self._stop = threading.Event()
+        self.sleeping = False
+
+    def run(self):
+        # NOTE: subclasses MUST override this - this behaviour is
+        # only for testing purposes
+        
+        # go into a restless but persistent sleep (in 60 second
+        # batches)
+        while not self.stopped():
+            self._interruptable_sleep(60)
 
     def stop(self):
         self._stop.set()
@@ -52,6 +62,7 @@ class StoppableThread(threading.Thread):
         return self._stop.isSet()
     
     def _interruptable_sleep(self, duration, increment=0.5):
+        self.sleeping = True
         if duration <= 0:
             return
         slept = 0
@@ -59,10 +70,12 @@ class StoppableThread(threading.Thread):
             snooze = increment if duration - slept > increment else duration - slept
             time.sleep(snooze)
             slept += snooze
+        self.sleeping = False
 
-class QueueConsumer(object):
+class QueueConsumer(StoppableThread):
 
     def __init__(self, queue):
+        StoppableThread.__init__(self)
         self.queue = queue
     
     def first(self):
@@ -75,16 +88,15 @@ class QueueConsumer(object):
                 # if the queue is empty, wait 0.5 seconds before checking
                 # again
                 time.sleep(0.5)
-            return item
+        return item
 
 # NOTE: provider aliases does not throttle or take into account
 # provider sleep times.  This is fine for the time being, as 
 # aliasing is an urgent request.  The provider should count the
 # requests as they happen, so that the metrics thread can keep itself
 # in check to throttle the api requests.
-class ProvidersAliasThread(StoppableThread, QueueConsumer):
+class ProvidersAliasThread(QueueConsumer):
     def __init__(self, providers, config):
-        StoppableThread.__init__(self)
         QueueConsumer.__init__(self, AliasQueue())
         self.providers = providers
         self.config = config
@@ -110,10 +122,9 @@ class ProvidersAliasThread(StoppableThread, QueueConsumer):
         # just keep punting through the aliases as fast as possible for the time being
         return 0
 
-class ProviderMetricsThread(StoppableThread, QueueConsumer):
+class ProviderMetricsThread(QueueConsumer):
 
     def __init__(self, provider, config):
-        StoppableThread.__init__(self)
         QueueConsumer.__init__(self, MetricsQueue())
         self.provider = provider
         self.config = config
