@@ -6,13 +6,50 @@ from totalimpact.providers.provider import ProviderFactory, ProviderConfiguratio
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
 
-class Watchers(object):
+class TotalImpactBackend(object):
     
     def __init__(self, config_path):
         self.threads = []
         self.config = Configuration(config_path)
         self.providers = ProviderFactory.get_providers(self.config)
+    
+    def run(self):
+        self._spawn_threads()
+        try:
+            self._monitor()
+        except (KeyboardInterrupt, SystemExit):
+            log.info("Interrupted ... exiting ...")
+            self._cleanup()
+    
+    def _spawn_threads(self):
+        for p in self.providers:
+            if not p.provides_metrics():
+                continue
+            log.info("Spawning thread for provider " + str(p.id))
+            # create and start the metrics threads
+            t = ProviderMetricsThread(p, self.config)
+            t.start()
+            self.threads.append(t)
         
+        log.info("Spawning thread for aliases")
+        alias_thread = ProvidersAliasThread(self.providers, self.config)
+        alias_thread.start()
+        self.threads.append(alias_thread)
+        
+    def _monitor(self):        
+        while True:
+            # just spin our wheels waiting for interrupts
+            time.sleep(1)
+    
+    def _cleanup(self):
+        for t in self.threads:
+            log.info("Stopping " + t.thread_id)
+            t.stop()
+            t.join()
+            log.info("... stopped")
+        self.threads = []
+    
+    """
     def run(self):
         for p in self.providers:
             if not p.provides_metrics():
@@ -39,6 +76,7 @@ class Watchers(object):
        
        # FIXME: do we need to join() the thread?
        # it would seem not, but don't forget to keep an eye on this
+    """
            
 class StoppableThread(threading.Thread):
     def __init__(self):
@@ -100,6 +138,7 @@ class ProvidersAliasThread(QueueConsumer):
         QueueConsumer.__init__(self, AliasQueue())
         self.providers = providers
         self.config = config
+        self.thread_id = "ProvidersAliasThread"
         
     def run(self):
         while not self.stopped():
@@ -129,6 +168,7 @@ class ProviderMetricsThread(QueueConsumer):
         self.provider = provider
         self.config = config
         self.queue.provider = self.provider.id
+        self.thread_id = "ProviderMetricsThread:" + str(self.provider.id)
 
     def run(self):
         while not self.stopped():
@@ -160,4 +200,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print "Please supply the path to the configuration file"
     else:
-        Watchers(sys.argv[1]).run()
+        TotalImpactBackend(sys.argv[1]).run()
