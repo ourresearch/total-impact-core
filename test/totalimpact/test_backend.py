@@ -1,5 +1,5 @@
 import os, unittest, time
-from totalimpact.watchers import Watchers, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
+from totalimpact.watchers import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
 from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import AliasQueue, MetricsQueue
@@ -30,21 +30,32 @@ class ItemMock(object):
     pass
 
 class ProviderMock(Provider):
-    def __init__(self):
+    def __init__(self, id=None):
         Provider.__init__(self, None, None)
+        self.id = id
     def aliases(self, item):
         return item
+    def metrics(self, item):
+        return item
+    def provides_metrics(self):
+        return True
         
 class ProviderNotImplemented(Provider):
     def __init__(self):
         Provider.__init__(self, None, None)
+        self.id = None
     def aliases(self, item):
         raise NotImplementedError()
+    def metrics(self, item):
+        raise NotImplementedError()
 
-def alias_first_mock(self):
+def first_mock(self):
     return ItemMock()
+    
+def get_providers_mock(cls, config):
+    return [ProviderMock("1"), ProviderMock("2"), ProviderMock("3")]
 
-class Test_Watchers(unittest.TestCase):
+class TestBackend(unittest.TestCase):
 
     def setUp(self):
         print APP_CONFIG
@@ -53,8 +64,8 @@ class Test_Watchers(unittest.TestCase):
     def tearDown(self):
         pass
     
-    def test_01_init_watcher(self):
-        watcher = Watchers(APP_CONFIG)
+    def test_01_init_backend(self):
+        watcher = TotalImpactBackend(APP_CONFIG)
         
         assert len(watcher.threads) == 0
         assert watcher.config is not None
@@ -102,20 +113,20 @@ class Test_Watchers(unittest.TestCase):
         start = time.time()
         st._interruptable_sleep(2)
         took = time.time() - start
-        assert took < 2.5 # take into account interval on interruptable sleep
+        assert took < 2.6 # take into account interval on interruptable sleep
         
         # advanced interruptable sleep
         start = time.time()
         st._interruptable_sleep(3, 0.1)
         took = time.time() - start
-        assert took < 3.1
+        assert took < 3.2
         
         # now try interrupting the sleep (need to use a special wrapper
         # class defined above to get this done)
         start = time.time()
         InterruptTester().run(2)
         took = time.time() - start
-        assert took < 2.5
+        assert took < 3 # taking into account all the sleep delays
 
     def test_07_queue_consumer(self):
         q = QueueConsumer(QueueMock())
@@ -136,7 +147,7 @@ class Test_Watchers(unittest.TestCase):
         assert item is None
         
     def test_09_alias_stopped(self):
-        AliasQueue.first = alias_first_mock
+        AliasQueue.first = first_mock
         providers = [ProviderMock()]
         pat = ProvidersAliasThread(providers, self.config)
         
@@ -148,8 +159,8 @@ class Test_Watchers(unittest.TestCase):
         # test completes without error
         assert True
         
-    def test_09_alias_running(self):
-        AliasQueue.first = alias_first_mock
+    def test_10_alias_running(self):
+        AliasQueue.first = first_mock
         providers = [ProviderMock()]
         pat = ProvidersAliasThread(providers, self.config)
         
@@ -166,8 +177,8 @@ class Test_Watchers(unittest.TestCase):
         assert took > 2.0
         assert took < 2.5
         
-    def test_10_alias_provider_not_implemented(self):
-        AliasQueue.first = alias_first_mock
+    def test_11_alias_provider_not_implemented(self):
+        AliasQueue.first = first_mock
         providers = [ProviderNotImplemented()] 
         pat = ProvidersAliasThread(providers, self.config)
         
@@ -185,3 +196,46 @@ class Test_Watchers(unittest.TestCase):
         
     # FIXME: save_and_unqueue is not yet working, so will need more
     # tests when it is
+    
+    def test_12_metrics_stopped(self):
+        MetricsQueue.first = first_mock
+        pmt = ProviderMetricsThread(ProviderMock(), self.config)
+        
+        pmt.start()
+        pmt.stop()
+        pmt.join()
+        
+        # there are no assertions to make here, only that the
+        # test completes without error
+        assert True
+        
+    def test_13_metrics_running(self):
+        MetricsQueue.first = first_mock
+        pmt = ProviderMetricsThread(ProviderMock(), self.config)
+        
+        start = time.time()
+        pmt.start()
+        time.sleep(2)
+        
+        pmt.stop()
+        pmt.join()
+        took = time.time() - start
+        
+        # there are no assertions to make here, only that the
+        # test completes without error in the appropriate time
+        assert took > 2.0
+        assert took < 2.5
+        
+    # FIXME: save_and_unqueue is not yet working, so will need more
+    # tests when it is
+    
+    def test_14_backend(self):
+        ProviderFactory.get_providers = classmethod(get_providers_mock)
+        watcher = TotalImpactBackend(APP_CONFIG)
+        
+        watcher._spawn_threads()
+        assert len(watcher.threads) == 4, len(watcher.threads)
+        
+        watcher._cleanup()
+        assert len(watcher.threads) == 0, len(watcher.threads)
+        
