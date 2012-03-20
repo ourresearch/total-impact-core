@@ -21,7 +21,7 @@ class Test_Watchers(unittest.TestCase):
         
         assert len(watcher.threads) == 0
         assert watcher.config is not None
-        assert len(watcher.providers) == 2
+        assert len(watcher.providers) == 4
         
     def test_02_init_metrics(self):
         provider = Provider(None, self.config)
@@ -51,7 +51,4 @@ class Test_Watchers(unittest.TestCase):
         pat = ProvidersAliasThread(providers, self.config)
         assert pat.sleep_time() == 0
         
-    def test_05_metrics_sleep(self):
-        provider = Provider(None, self.config)
-        provider.id = "test"
-        pmt = ProviderMetricsThread(provider, self.config)
+    

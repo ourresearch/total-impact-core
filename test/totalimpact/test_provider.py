@@ -81,3 +81,5 @@ class Test_Provider(unittest.TestCase):
     def test_09_get_providers(self):
         providers = ProviderFactory.get_providers(self.config)
         assert len(providers) == len(self.config.providers)
+
+    # FIXME: need to add tests for rate limiting

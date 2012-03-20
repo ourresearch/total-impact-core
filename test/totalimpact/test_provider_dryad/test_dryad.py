@@ -129,7 +129,7 @@ class Test_Dryad(unittest.TestCase):
         # ensure that the dryad reader can interpret an xml doc appropriately
         f = open(XML_DOC, "r")
         aliases = provider._extract_aliases(f.read())
-        assert len(aliases) == 1
+        assert len(aliases) == 1, len(aliases)
         
         ns, id = aliases[0]
         assert ns == "DOI"
