@@ -336,6 +336,7 @@ class Aliases(object):
         # load from the seed first
         self._validate_seed(seed)
         self.data = seed if seed is not None else {}
+        self.not_aliases = ["created", "last_modified"]
         
         # if there was no seed, load the properties, otherwise ignore them
         if seed is None:
@@ -349,25 +350,17 @@ class Aliases(object):
             if not self.data.has_key("tiid"):
                 self.data['tiid'] = self._init(tiid, str(uuid.uuid4()))
     
-    def get_aliases_list(self, namespace_list): 
-        ''' 
-        gets list of this object's aliases in each given namespace
-        
-        returns a list of (namespace, id) tuples
-        '''
-        ret = []
-        for namespace in namespace_list:
-            ids = self.get_ids_by_namespace(namespace)
-            if ids is None:
-                return ret
-            for id in ids:
-                ret.append((namespace, id))
-        
-        return ret
+    def add_alias(self, namespace, id):
+        if namespace in self.data.keys():
+            self.data[namespace].append(id)
+        else:
+            self.data[namespace] = [id]
+
+    def add_unique(self, alias_list):
+        for ns, id in alias_list:
+            if id not in self.data.get(ns, []):
+                self.add_alias(ns, id)
     
-    def get_aliases_dict(self):
-        return self.data
-        
     def get_ids_by_namespace(self, namespace):
         ''' gets list of this object's ids in each given namespace
         
@@ -377,22 +370,35 @@ class Aliases(object):
         >>> a.get_ids_by_namespace("foo")
         ['id1']
         '''
-        if self.data.get(namespace):
-            return self.data.get(namespace)
-        else:
-            return []
+        return self.data.get(namespace, [])
     
-    def add_alias(self, namespace, id):
-        if namespace in self.data.keys():
-            self.data[namespace].append(id)
-        else:
-            self.data[namespace] = [id]
-
-    def add_unique(self, alias_list):
-        for ns, id in alias_list:
-            if id not in self.data[ns]:
-                self.add_alias(ns, id)
+    def get_aliases_list(self, namespace_list=None): 
+        ''' 
+        gets list of this object's aliases in each given namespace
+        
+        returns a list of (namespace, id) tuples
+        '''
+        # if this is a get on everything, just summon up the
+        # items
+        if namespace_list is None:
+            return [x for x in self.data.items() if x[0] not in self.not_aliases]
+        
+        # if the caller doesn't pass us a list, but just a single value, wrap it
+        # up for them
+        if not hasattr(namespace_list, "append"):
+            namespace_list = [namespace_list]
+        
+        # otherwise, get for the specific namespaces
+        ret = []
+        for namespace in namespace_list:
+            ids = self.get_ids_by_namespace(namespace)
+            ret += [(namespace, id) for id in ids]
+        
+        return ret
     
+    def get_aliases_dict(self):
+        return self.data
+        
     def _init(self, val, default=None):
         return val if val is not None else default
     
@@ -405,13 +411,6 @@ class Aliases(object):
             return super(Aliases, self).__getattribute__(att)
         except:
             return self.data[att]
-    """
-    def __setattr__(self, att, value):
-        if att == "data":
-            super(Aliases, self).__setattr__(att, value)
-        else:
-            self.data[att] = value
-    """
     
     def __repr__(self):
         return "TIID: " + self.tiid + " " + str(self.data)
