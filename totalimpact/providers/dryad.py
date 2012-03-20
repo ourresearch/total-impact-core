@@ -107,6 +107,10 @@ class Dryad(Provider):
         soup = BeautifulStoneSoup(xml)
         arrs = soup.result.doc.findAll("arr")
         for arr in arrs:
+            # FIXME: this looks fragile.  Dependent on order of attributes
+            # in supplied XML
+            # FIXME: dc.identifier.uri is not in the arr.attrs, but
+            # dc.identifier is.  Is this right or wrong?
             if (u'name', u'dc.identifier.uri') in arr.attrs:
                 identifiers += [("URL", arr.str.text)]
             elif (u'name', u'dc.title') in arr.attrs:
@@ -157,6 +161,8 @@ class Dryad(Provider):
 
 
     def _extract_stats(self, content):
+        # FIXME: move all these to be member attributes of the provider, so 
+        # that they only have to be compiled once
         DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+) views</span>", re.DOTALL)
         DRYAD_VIEWS_FILE_PATTERN = re.compile("(?P<views>\d+) views\S", re.DOTALL)
         DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+) downloads", re.DOTALL)

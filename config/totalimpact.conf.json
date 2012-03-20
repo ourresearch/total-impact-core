@@ -38,7 +38,7 @@
             "class" : "totalimpact.providers.pubmed.Pubmed",
             "config" : "totalimpact/providers/pubmed.conf.json"
         }
-        ],
+    ],
     
     # During HTTP requests, the User-Agent string to use
     #
