@@ -16,7 +16,7 @@
     #
     
     "aliases" : {
-        "url" : "http://datadryad.org/solr/search/select/?q=dc.relation.isreferencedby:%s&fl=dc.identifier"
+        "url" : "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.identifier.uri,dc.title"
     },
     
     "member_items" : {
