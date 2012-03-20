@@ -1,7 +1,7 @@
 from totalimpact import models
 from totalimpact.config import Configuration
 from nose.tools import raises
-import os, unittest, json
+import os, unittest, json, time
 
 ALIAS_SEED = json.loads("""{
     "tiid":"0987654321",
@@ -11,6 +11,27 @@ ALIAS_SEED = json.loads("""{
     "created": 12387239847.234,
     "last_modified": 1328569492.406
 }""")
+
+METRIC_SEED = json.loads("""{
+    "id": "Mendeley:readers",
+    "value": 16,
+    "created": 1233442897.234,
+    "last_modified": 1328569492.406,
+    "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
+    "meta": {
+        "display_name": "readers",
+        "provider": "Mendeley",
+        "provider_url": "http://www.mendeley.com/",
+        "description": "Mendeley readers: the number of readers of the article",
+        "icon": "http://www.mendeley.com/favicon.ico",
+        "category": "bookmark",
+        "can_use_commercially": "0",
+        "can_embed": "1",
+        "can_aggregate": "1",
+        "other_terms_of_use": "Must show logo and say 'Powered by Santa'"
+    }
+}
+""")
 
 class TestModels(unittest.TestCase):
 
@@ -114,6 +135,80 @@ class TestModels(unittest.TestCase):
         # FIXME: seed validation has not yet been implemented.  What does it
         # do, and how should it be tested?
         pass
+    
+    """{
+        "id": "Mendeley:readers",
+        "value": 16,
+        "created": 1233442897.234,
+        "last_modified": 1328569492.406,
+        "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
+        "meta": {
+            "display_name": "readers"
+            "provider": "Mendeley",
+            "provider_url": "http://www.mendeley.com/",
+            "description": "Mendeley readers: the number of readers of the article",
+            "icon": "http://www.mendeley.com/favicon.ico",
+            "category": "bookmark",
+            "can_use_commercially": "0",
+            "can_embed": "1",
+            "can_aggregate": "1",
+            "other_terms_of_use": "Must show logo and say 'Powered by Santa'",
+        }
+    }
+    """
+    
+    def test_08_provider_metric_init(self):
+        m = models.ProviderMetric(seed=METRIC_SEED)
+        
+        assert m.id == "Mendeley:readers"
+        assert m.value() == 16
+        assert m.created == 1233442897.234
+        assert m.last_modified == 1328569492.406
+        assert m.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
+        assert m.meta() == METRIC_SEED['meta']
+        
+        now = time.time()
+        m = models.ProviderMetric(id="Richard:metric", 
+                                    value=23, created=now, last_modified=now,
+                                    provenance_url="http://total-impact.org/")
+        assert m.id == "Richard:metric"
+        assert m.value() == 23
+        assert m.created == now
+        assert m.last_modified == now
+        assert m.provenance() == ["http://total-impact.org/"]
+        assert len(m.meta()) == 0
+        
+        m = models.ProviderMetric(id="Richard:metric", 
+                                    value=23, created=now, last_modified=now,
+                                    provenance_url="http://total-impact.org/",
+                                    meta=METRIC_SEED['meta'])
+        assert m.meta() == METRIC_SEED['meta']
+    
+    def test_09_provider_metric_get_set(self):
+        m = models.ProviderMetric(seed=METRIC_SEED)
+        stale = time.time()
+        
+        assert m.value() == 16
+        m.value(17)
+        assert m.value() == 17
+        assert m.last_modified > stale
+        stale = m.last_modified
+        
+        assert m.meta() == METRIC_SEED['meta']
+        m.meta({"test": "meta"})
+        assert m.meta() == {"test" : "meta"}
+        assert m.last_modified > stale
+        stale = m.last_modified
+        
+        assert m.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
+        m.provenance("http://total-impact.org")
+        assert m.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/", "http://total-impact.org"]
+        assert m.last_modified > stale
+        
+        m.provenance(["http://total-impact.org"])
+        assert m.provenance() == ["http://total-impact.org"], m.provenance()
+        
+    
     
 """ NOTE: incoroprated into above tests; leaving for reference for the time being
 class Test_Aliases:

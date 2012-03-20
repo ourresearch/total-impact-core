@@ -219,6 +219,8 @@ class Metrics(object):
         if 'bucket' not in self.data:
             self.data['bucket'] = {}
         
+        # FIXME: model objects shouldn't know about configuration
+        
         # list all providers from config
         config = Configuration()
         for provider in config.providers:
@@ -260,7 +262,7 @@ class ProviderMetric(object):
         "value": 16,
         "created": 1233442897.234,
         "last_modified": 1328569492.406,
-        "provenance_url": "http:\/\/api.mendeley.com\/research\/public-chemical-compound-databases\/",
+        "provenance_url": ["http:\/\/api.mendeley.com\/research\/public-chemical-compound-databases\/"],
         "meta": {
             "display_name": "readers"
             "provider": "Mendeley",
@@ -286,14 +288,16 @@ class ProviderMetric(object):
             self.data['value'] = self._init(value, 0)
             self.data['created'] = self._init(created, time.time())
             self.data['last_modified'] = self._init(last_modified, time.time())
-            self.data['provenance_url'] = self._init(provenance_url, [])
             self.data['meta'] = self._init(meta, {})
+            
+            # provenance url needs a bit of special treatment
+            if not hasattr(provenance_url, "append"):
+                self.data['provenance_url'] = [provenance_url]
+            else:
+                self.data['provenance_url'] = []
 
         if "meta" not in self.data.keys():
             self.data['meta'] = {}
-    
-    def _init(self, val, default=None):
-        return val if val is not None else default
         
     def value(self, val=None):
         if val is None:
@@ -309,13 +313,33 @@ class ProviderMetric(object):
             self.data['meta'] = meta
             self.data['last_modified'] = time.time()
     
-    def provenance(self, url=None):
-        if url is None:
+    # FIXME: this is not particularly intuitive, consider changing it
+    def provenance(self, provenance=None):
+        """
+        get or set the provenance.
+        
+        This will retrieve the provenance array if urls is None
+        If urls is not a list, the url will be appended to the existing urls
+        If urls IS a list, it will overwrite the existing provenance list
+        """
+        if provenance is None:
             return self.data['provenance_url']
         else:
-            self.data['provenance_url'].append(url)
+            if hasattr(provenance, "append"):
+                self.data['provenance_url'] = provenance
+            else:
+                self.data['provenance_url'].append(provenance)
             self.data['last_modified'] = time.time()
-                
+    
+    def _init(self, val, default=None):
+        return val if val is not None else default
+    
+    def __getattribute__(self, att):
+        try:
+            return super(ProviderMetric, self).__getattribute__(att)
+        except:
+            return self.data[att]
+    
     def __str__(self):
         return str(self.data)
     
