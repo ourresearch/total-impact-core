@@ -76,7 +76,7 @@ class Dryad(Provider):
         # FIXME: urlencoding?
         url = self.config.aliases['url'] % alias[1]
         logger.debug(self.config.id + ": attempting to retrieve aliases from " + url)
-        
+
         # try to get a response from the data provider        
         response = self.http_get(url, timeout=self.config.aliases.get('timeout', None))
         
@@ -100,16 +100,20 @@ class Dryad(Provider):
         return []
     
     def _extract_aliases(self, xml):
+        #print xml
+
+        identifiers = []
+
         soup = BeautifulStoneSoup(xml)
-        try:
-            identifier = soup.result.doc.arr.str.string
-            if identifier.lower().startswith("doi:"):
-                identifier = identifier[4:]
+        arrs = soup.result.doc.findAll("arr")
+        for arr in arrs:
+            if (u'name', u'dc.identifier.uri') in arr.attrs:
+                identifiers += [("URL", arr.str.text)]
+            elif (u'name', u'dc.title') in arr.attrs:
+                identifiers += [("TITLE", arr.str.text)]
             
-            # FIXME: we need a namespace table
-            return [("DOI", identifier)]
-        except AttributeError:
-            return None
+        # FIXME: we need a namespace table
+        return identifiers
 
     def provides_metrics(self): 
         return True
