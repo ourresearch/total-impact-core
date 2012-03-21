@@ -1,6 +1,6 @@
 import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
-from totalimpact.models import Metrics, ProviderMetric
+from totalimpact.models import Metrics, ProviderMetric, Aliases
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 import simplejson
@@ -34,7 +34,7 @@ class Github(Provider):
         hits = simplejson.loads(response.text)
         hits = [hit["name"] for hit in hits]
 
-        return [("Github", (query_string, hit)) for hit in list(set(hits))]
+        return [(Aliases.NS.GITHUB, (query_string, hit)) for hit in list(set(hits))]
     
 
         

@@ -12,6 +12,15 @@ ALIAS_SEED = json.loads("""{
     "last_modified": 1328569492.406
 }""")
 
+ALIAS_SEED_CANONICAL = json.loads("""{
+    "TIID":"0987654321",
+    "TITLE":["Why Most Published Research Findings Are False"],
+    "URL":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
+    "DOI": ["10.1371/journal.pmed.0020124"],
+    "created": 12387239847.234,
+    "last_modified": 1328569492.406
+}""")
+
 METRIC_SEED = json.loads("""{
     "id": "Mendeley:readers",
     "value": 16,
@@ -40,15 +49,15 @@ class TestModels(unittest.TestCase):
         
         # a blank init always sets an id
         assert len(a.data.keys()) == 1
-        assert a.data['tiid'] is not None
+        assert a.data[models.Aliases.NS.TIID] is not None
         assert a.tiid is not None
-        assert a.tiid == a.data['tiid']
+        assert a.tiid == a.data[models.Aliases.NS.TIID]
         
         a = models.Aliases("123456")
         
         # check our id has propagated
         assert len(a.data.keys()) == 1
-        assert a.data['tiid'] == "123456"
+        assert a.data[models.Aliases.NS.TIID] == "123456"
         assert a.tiid == "123456"
         
         a = models.Aliases(seed=ALIAS_SEED)
@@ -67,15 +76,29 @@ class TestModels(unittest.TestCase):
         assert a.tiid == "abcd"
         assert a.doi == ["10.1371/journal/1"]
         assert a.title == ["First", "Second"]
+    
+    def test_02_aliases_canonical(self):
+        a = models.Aliases()
         
-    def test_02_aliases_add(self):
+        assert a._synonym("DIGITAL OBJECT IDENTIFIER") == a.NS.DOI
+        assert a._synonym("MADE UP NAMESPACE") == "MADE UP NAMESPACE"
+        assert a._synonym("URL") == a.NS.URL
+        
+        assert a.canonicalise("doi") == a.NS.DOI
+        assert a.canonicalise("iri") == a.NS.IRI
+        assert a.canonicalise("digital object identifier") == a.NS.DOI
+        assert a.canonicalise("made up namespace") == "MADE UP NAMESPACE"
+        
+        assert a.canonical_dict(ALIAS_SEED) == ALIAS_SEED_CANONICAL, a.canonical_dict(ALIAS_SEED)
+    
+    def test_03_aliases_add(self):
         a = models.Aliases()
         a.add_alias("foo", "id1")
         a.add_alias("foo", "id2")
         a.add_alias("bar", "id1")
         
         # check the data structure is correct
-        expected = {"tiid": a.tiid, "foo":["id1", "id2"], "bar":["id1"]}
+        expected = {"TIID": a.tiid, "FOO":["id1", "id2"], "BAR":["id1"]}
         assert a.data == expected, a.data
         
         to_add = [
@@ -87,13 +110,13 @@ class TestModels(unittest.TestCase):
         a.add_unique(to_add)
         
         # check the data structure is correct
-        expected = {"tiid": a.tiid, 
-                    "foo":["id1", "id2", "id3"], 
-                    "bar":["id1"], 
-                    "baz" : ["id1", "id2"]}
+        expected = {"TIID": a.tiid, 
+                    "FOO":["id1", "id2", "id3"], 
+                    "BAR":["id1"], 
+                    "BAZ" : ["id1", "id2"]}
         assert a.data == expected, a.data
         
-    def test_03_aliases_single_namespaces(self):
+    def test_04_aliases_single_namespaces(self):
         a = models.Aliases(seed=ALIAS_SEED)
         
         ids = a.get_ids_by_namespace("doi")
@@ -106,12 +129,12 @@ class TestModels(unittest.TestCase):
         assert len(aliases) == 4
         
         aliases = a.get_aliases_list("doi")
-        assert aliases == [("doi", "10.1371/journal.pmed.0020124")], aliases
+        assert aliases == [("DOI", "10.1371/journal.pmed.0020124")], aliases
         
         aliases = a.get_aliases_list("title")
-        assert aliases == [("title", "Why Most Published Research Findings Are False")]
+        assert aliases == [("TITLE", "Why Most Published Research Findings Are False")]
         
-    def test_04_aliases_missing(self):
+    def test_05_aliases_missing(self):
         a = models.Aliases(seed=ALIAS_SEED)
         
         failres = a.get_ids_by_namespace("my_missing_namespace")
@@ -120,18 +143,18 @@ class TestModels(unittest.TestCase):
         failres = a.get_aliases_list("another_missing_namespace")
         assert failres == [], failres
         
-    def test_05_aliases_multi_namespaces(self):
+    def test_06_aliases_multi_namespaces(self):
         a = models.Aliases(seed=ALIAS_SEED)
         
         ids = a.get_aliases_list(["doi", "url"])
-        assert ids == [("doi", "10.1371/journal.pmed.0020124"),
-                        ("url", "http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124")], ids
+        assert ids == [("DOI", "10.1371/journal.pmed.0020124"),
+                        ("URL", "http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124")], ids
     
-    def test_06_aliases_dict(self):
+    def test_07_aliases_dict(self):
         a = models.Aliases(seed=ALIAS_SEED)
-        assert a.get_aliases_dict() == ALIAS_SEED
+        assert a.get_aliases_dict() == ALIAS_SEED_CANONICAL
     
-    def test_07_alias_seed_validation(self):
+    def test_08_alias_seed_validation(self):
         # FIXME: seed validation has not yet been implemented.  What does it
         # do, and how should it be tested?
         pass
@@ -157,7 +180,7 @@ class TestModels(unittest.TestCase):
     }
     """
     
-    def test_08_provider_metric_init(self):
+    def test_09_provider_metric_init(self):
         m = models.ProviderMetric(seed=METRIC_SEED)
         
         assert m.id == "Mendeley:readers"
@@ -184,7 +207,7 @@ class TestModels(unittest.TestCase):
                                     meta=METRIC_SEED['meta'])
         assert m.meta() == METRIC_SEED['meta']
     
-    def test_09_provider_metric_get_set(self):
+    def test_10_provider_metric_get_set(self):
         m = models.ProviderMetric(seed=METRIC_SEED)
         stale = time.time()
         
