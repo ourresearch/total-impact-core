@@ -36,9 +36,10 @@ class Test_Github(unittest.TestCase):
     def setUp(self):
         print APP_CONFIG
         self.config = Configuration(APP_CONFIG, False)
+        self.old_http_get = Provider.http_get
     
     def tearDown(self):
-        pass
+        Provider.http_get = self.old_http_get
     
     def test_01_init(self):
         # first ensure that the configuration is valid

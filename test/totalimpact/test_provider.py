@@ -18,9 +18,10 @@ class Test_Provider(unittest.TestCase):
     def setUp(self):
         print APP_CONFIG
         self.config = Configuration(APP_CONFIG, False)
+        self.old_http_get = requests.get
     
     def tearDown(self):
-        pass
+        requests.get = self.old_http_get
     
     def test_01_init(self):
         # since the provider is really abstract, this doen't
@@ -52,11 +53,15 @@ class Test_Provider(unittest.TestCase):
         provider = Provider(None, self.config)
         self.assertRaises(ProviderHttpError, provider.http_get, "", None, None)
         
+        requests.get = self.old_http_get
+        
     def test_06_request_error(self):
         requests.get = timeout_get
         
         provider = Provider(None, self.config)
         self.assertRaises(ProviderTimeout, provider.http_get, "", None, None)
+        
+        requests.get = self.old_http_get
         
     def test_07_request_error(self):
         requests.get = successful_get
@@ -65,6 +70,8 @@ class Test_Provider(unittest.TestCase):
         r = provider.http_get("test")
         
         assert r == "test"
+        
+        requests.get = self.old_http_get
         
     # FIXME: we will also need tests to cover the cacheing when that
     # has been implemented

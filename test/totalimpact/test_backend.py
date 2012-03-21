@@ -1,8 +1,16 @@
+# mock the DAO first, before any of the imports are run
+import totalimpact.dao
+class DAOMock(object):
+    pass
+# this mock is reset in the tearDown method
+old_dao = totalimpact.dao.Dao
+totalimpact.dao.Dao = DAOMock
+    
 import os, unittest, time
-from totalimpact.watchers import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
+from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
 from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
-from totalimpact.queue import AliasQueue, MetricsQueue
+from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 
 CWD, _ = os.path.split(__file__)
 
@@ -54,15 +62,18 @@ def first_mock(self):
     
 def get_providers_mock(cls, config):
     return [ProviderMock("1"), ProviderMock("2"), ProviderMock("3")]
-
+    
 class TestBackend(unittest.TestCase):
 
     def setUp(self):
         print APP_CONFIG
         self.config = Configuration(APP_CONFIG, False)
+        self.queue_first = Queue.first
+        Queue.first = first_mock
     
     def tearDown(self):
-        pass
+        totalimpact.dao.Dao = old_dao
+        Queue.first = self.queue_first
     
     def test_01_init_backend(self):
         watcher = TotalImpactBackend(APP_CONFIG)
@@ -147,7 +158,8 @@ class TestBackend(unittest.TestCase):
         assert item is None
         
     def test_09_alias_stopped(self):
-        AliasQueue.first = first_mock
+        # relies on Queue.first mock as per setUp
+        
         providers = [ProviderMock()]
         pat = ProvidersAliasThread(providers, self.config)
         
@@ -160,7 +172,7 @@ class TestBackend(unittest.TestCase):
         assert True
         
     def test_10_alias_running(self):
-        AliasQueue.first = first_mock
+        # relies on Queue.first mock as per setUp
         providers = [ProviderMock()]
         pat = ProvidersAliasThread(providers, self.config)
         
@@ -178,7 +190,8 @@ class TestBackend(unittest.TestCase):
         assert took < 2.5
         
     def test_11_alias_provider_not_implemented(self):
-        AliasQueue.first = first_mock
+        # relies on Queue.first mock as per setUp
+        
         providers = [ProviderNotImplemented()] 
         pat = ProvidersAliasThread(providers, self.config)
         
@@ -194,11 +207,12 @@ class TestBackend(unittest.TestCase):
         assert took > 2.0
         assert took < 2.5
         
+        
     # FIXME: save_and_unqueue is not yet working, so will need more
     # tests when it is
     
     def test_12_metrics_stopped(self):
-        MetricsQueue.first = first_mock
+        # relies on Queue.first mock as per setUp
         pmt = ProviderMetricsThread(ProviderMock(), self.config)
         
         pmt.start()
@@ -210,7 +224,7 @@ class TestBackend(unittest.TestCase):
         assert True
         
     def test_13_metrics_running(self):
-        MetricsQueue.first = first_mock
+        # relies on Queue.first mock as per setUp
         pmt = ProviderMetricsThread(ProviderMock(), self.config)
         
         start = time.time()
@@ -230,7 +244,9 @@ class TestBackend(unittest.TestCase):
     # tests when it is
     
     def test_14_backend(self):
+        old_method = ProviderFactory.get_providers
         ProviderFactory.get_providers = classmethod(get_providers_mock)
+        
         watcher = TotalImpactBackend(APP_CONFIG)
         
         watcher._spawn_threads()
@@ -238,4 +254,6 @@ class TestBackend(unittest.TestCase):
         
         watcher._cleanup()
         assert len(watcher.threads) == 0, len(watcher.threads)
+        
+        ProviderFactory.get_providers = old_method
         
