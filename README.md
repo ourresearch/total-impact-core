@@ -21,6 +21,17 @@ How to run the web app:
     python totalimpact/web.py
     then surf up http://127.0.0.1:5000/
 
+Note that you need CouchDB installed so that Total Impact can talk to it. 
+Settings for your CouchDB should be added to the config/totalimpact.conf.json file.
+On startup, TI will try to talk to the database and create the necessary views 
+(you can see the view definitions in the config too.)
+
+How to install CouchDB on Ubuntu Linux:
+
+It is available in the recent repos
+
+    apt-get install couchdb
+
 How to install CouchDB to OSX Snow Leopard:
 
 1. Install [homebrew](http://mxcl.github.com/homebrew/).
