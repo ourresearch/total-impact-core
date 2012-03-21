@@ -14,6 +14,10 @@
     #
     "module_root" : "totalimpact",
     
+    # Database information
+    "db_url" : "http://localhost:5984/",
+    "db_name" : "ti",
+
     # List of desired providers and their configuration files
     #
     "providers" : [
