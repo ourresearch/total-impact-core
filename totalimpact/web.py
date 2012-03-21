@@ -243,7 +243,7 @@ def user(uid=''):
 if __name__ == "__main__":
     # try to prepare and connect to the database
     try:
-        couch, db = bibserver.dao.Record.connection()
+        couch, db = totalimpact.dao.Dao.connection()
         print couch, db
     except:
         print "WARNING! No database available."
