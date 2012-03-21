@@ -343,7 +343,7 @@ class ProviderMetric(object):
     def __str__(self):
         return str(self.data)
     
-    
+
 class Aliases(object):
     """
     {
@@ -356,25 +356,46 @@ class Aliases(object):
         ...
     }
     """
+    
+    not_aliases = ["created", "last_modified"]
+    
+    synonyms = {
+        "DOI" : ["DIGITAL OBJECT IDENTIFIER"],
+        "URI" : ["IRI"]
+    }
+    
+    class Namespaces(object):
+        TIID = "TIID"
+        TITLE = "TITLE"
+        URL = "URL"
+        DOI = "DOI"
+        URI = "URI"
+        IRI = "URI" # deliberate
+        GITHUB = "GITHUB"
+        PMID = "PMID"
+    
+    NS = Namespaces
+    
     def __init__(self, tiid=None, seed=None, **kwargs):
         # load from the seed first
         self._validate_seed(seed)
-        self.data = seed if seed is not None else {}
-        self.not_aliases = ["created", "last_modified"]
+        self.data = self.canonical_dict(seed) if seed is not None else {}
         
         # if there was no seed, load the properties, otherwise ignore them
         if seed is None:
-            self.data['tiid'] = self._init(tiid, str(uuid.uuid4()))
+            self.data[self.NS.TIID] = self._init(tiid, str(uuid.uuid4()))
             for arg, val in kwargs.iteritems():
+                arg = self.canonicalise(arg)
                 if hasattr(val, "append"):
                     self.data[arg] = val
                 else:
                     self.data[arg] = [val]
         else:
-            if not self.data.has_key("tiid"):
-                self.data['tiid'] = self._init(tiid, str(uuid.uuid4()))
+            if not self.data.has_key(self.NS.TIID):
+                self.data[self.NS.TIID] = self._init(tiid, str(uuid.uuid4()))
     
     def add_alias(self, namespace, id):
+        namespace = self.canonicalise(namespace)
         if namespace in self.data.keys():
             self.data[namespace].append(id)
         else:
@@ -382,6 +403,7 @@ class Aliases(object):
 
     def add_unique(self, alias_list):
         for ns, id in alias_list:
+            ns = self.canonicalise(ns)
             if id not in self.data.get(ns, []):
                 self.add_alias(ns, id)
     
@@ -394,6 +416,7 @@ class Aliases(object):
         >>> a.get_ids_by_namespace("foo")
         ['id1']
         '''
+        namespace = self.canonicalise(namespace)
         return self.data.get(namespace, [])
     
     def get_aliases_list(self, namespace_list=None): 
@@ -411,6 +434,8 @@ class Aliases(object):
         # up for them
         if not hasattr(namespace_list, "append"):
             namespace_list = [namespace_list]
+        
+        namespace_list = map(self.canonicalise, namespace_list)
         
         # otherwise, get for the specific namespaces
         ret = []
@@ -430,10 +455,33 @@ class Aliases(object):
         # FIXME: what does this actually do?
         pass
     
+    def canonical_dict(self, seed):
+        n = {}
+        for k, v in seed.iteritems():
+            if k not in self.not_aliases:
+                n[self.canonicalise(k)] = v
+            else:
+                n[k] = v
+        return n
+    
+    def canonicalise(self, namespace):
+        canon = namespace.strip().upper()
+        canon = self._synonym(canon)
+        return canon
+    
+    def _synonym(self, namespace):
+        for ns, syn in self.synonyms.iteritems():
+            if namespace == ns:
+                return namespace
+            elif namespace in syn:
+                return ns
+        return namespace
+    
     def __getattribute__(self, att):
         try:
             return super(Aliases, self).__getattribute__(att)
         except:
+            att = self.canonicalise(att) if att not in self.not_aliases else att
             return self.data[att]
     
     def __repr__(self):

@@ -1,6 +1,6 @@
 import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
-from totalimpact.models import Metrics, ProviderMetric
+from totalimpact.models import Metrics, ProviderMetric, Aliases
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 import simplejson
@@ -30,7 +30,7 @@ class Pubmed(Provider):
         response = self.http_get(url, timeout=self.config.member_items.get('timeout', None))
 
         hits = self.member_items_rx.findall(response.text)
-        return [("PMID", hit) for hit in list(set(hits))]        
+        return [(Aliases.NS.PMID, hit) for hit in list(set(hits))]        
     
 
 
