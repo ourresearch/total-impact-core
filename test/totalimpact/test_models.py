@@ -1,3 +1,11 @@
+# mock the DAO first, before any of the imports are run
+import totalimpact.dao
+class DAOMock(object):
+    pass
+# this mock is reset in the tearDown method
+old_dao = totalimpact.dao.Dao
+totalimpact.dao.Dao = DAOMock
+
 from totalimpact import models
 from totalimpact.config import Configuration
 from nose.tools import raises
@@ -43,6 +51,12 @@ METRIC_SEED = json.loads("""{
 """)
 
 class TestModels(unittest.TestCase):
+
+    def setUp(self):
+        pass
+        
+    def tearDown(self):
+        totalimpact.dao.Dao = old_dao
 
     def test_01_aliases_init(self):
         a = models.Aliases()
@@ -231,6 +245,11 @@ class TestModels(unittest.TestCase):
         m.provenance(["http://total-impact.org"])
         assert m.provenance() == ["http://total-impact.org"], m.provenance()
         
+    def test_11_metrics_init(self):
+        m = models.Metrics()
+        # FIXME: need to resolve issues with the Metrics object first
+    
+    
     
     
 """ NOTE: incoroprated into above tests; leaving for reference for the time being
@@ -280,7 +299,6 @@ class Test_Aliases:
         res = self.a.get_aliases_dict()
         expected = {"tiid":self.a.tiid, "foo":["id1", "id2"], "bar":["id1"]}
         assert res == expected, res
-"""
 
 class Test_Metrics:
     def setup(self):
@@ -296,3 +314,4 @@ class Test_Metrics:
         
         del self.m.properties['value']
         #assert self.m.is_complete == False
+"""
