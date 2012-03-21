@@ -4,6 +4,10 @@ from totalimpact.config import Configuration
 import time, uuid, json, hashlib
 import time
 
+class Error(dao.Dao):
+    __type__ = 'error'
+
+
 # FIXME: do we want a created and last modified property on the user?
 class User(dao.Dao):
     __type__ = 'user'
