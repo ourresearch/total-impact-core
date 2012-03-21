@@ -1,6 +1,6 @@
 import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
-from totalimpact.models import Metrics, ProviderMetric
+from totalimpact.models import Metrics, ProviderMetric, Aliases
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 import simplejson
@@ -56,7 +56,7 @@ class Dryad(Provider):
         response = self.http_get(url, timeout=self.config.member_items.get('timeout', None))
 
         identifiers = self._get_first_arr_str_from_xml(response.text, "dc.identifier")
-        return [("DOI", hit.replace("doi:", "")) for hit in list(set(identifiers))]
+        return [(Aliases.NS.DOI, hit.replace("doi:", "")) for hit in list(set(identifiers))]
     
     def aliases(self, item): 
         try:
@@ -124,10 +124,10 @@ class Dryad(Provider):
 
         identifiers = []
         url_identifiers = self._get_first_arr_str_from_xml(xml, u'dc.identifier.uri')
-        identifiers += [("URL", url) for url in url_identifiers]
+        identifiers += [(Aliases.NS.URL, url) for url in url_identifiers]
 
         title_identifiers = self._get_first_arr_str_from_xml(xml, u'dc.title')
-        identifiers += [("TITLE", title) for title in title_identifiers]
+        identifiers += [(Aliases.NS.TITLE, title) for title in title_identifiers]
 
         return identifiers
 
