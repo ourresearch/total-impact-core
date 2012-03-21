@@ -27,6 +27,24 @@ class Dryad(Provider):
         self.crossref_rx = re.compile(r"^10\.(\d)+/(\S)+$", re.DOTALL)
         self.member_items_rx = re.compile(r"(10\.5061/.*)</span")
 
+    def _get_first_arr_str_from_xml(self, xml, name):
+        identifiers = []
+
+        soup = BeautifulStoneSoup(xml)
+        try:
+            arrs = soup.result.findAll("arr")
+        except AttributeError:
+            arrs = []
+            
+        for arr in arrs:
+            # FIXME: this looks fragile.  Dependent on order of attributes
+            # in supplied XML
+            # FIXME: dc.identifier.uri is not in the arr.attrs, but
+            # dc.identifier is.  Is this right or wrong?
+            if (u'name', name) in arr.attrs:
+                identifiers += [arr.str.text]
+        return identifiers
+
     def member_items(self, query_string, query_type):
         # FIXME: only checks the first dryad page
         enc = urllib.quote(query_string)
@@ -36,8 +54,9 @@ class Dryad(Provider):
         
         # try to get a response from the data provider        
         response = self.http_get(url, timeout=self.config.member_items.get('timeout', None))
-        hits = self.member_items_rx.findall(response.text)
-        return [("DOI", hit) for hit in list(set(hits))]
+
+        identifiers = self._get_first_arr_str_from_xml(response.text, "dc.identifier")
+        return [("DOI", hit.replace("doi:", "")) for hit in list(set(identifiers))]
     
     def aliases(self, item): 
         try:
@@ -98,26 +117,20 @@ class Dryad(Provider):
             logger.debug(self.config.id + ": found aliases: " + str(new_aliases))
             return new_aliases
         return []
-    
+
+
     def _extract_aliases(self, xml):
         #print xml
 
         identifiers = []
+        url_identifiers = self._get_first_arr_str_from_xml(xml, u'dc.identifier.uri')
+        identifiers += [("URL", url) for url in url_identifiers]
 
-        soup = BeautifulStoneSoup(xml)
-        arrs = soup.result.doc.findAll("arr")
-        for arr in arrs:
-            # FIXME: this looks fragile.  Dependent on order of attributes
-            # in supplied XML
-            # FIXME: dc.identifier.uri is not in the arr.attrs, but
-            # dc.identifier is.  Is this right or wrong?
-            if (u'name', u'dc.identifier.uri') in arr.attrs:
-                identifiers += [("URL", arr.str.text)]
-            elif (u'name', u'dc.title') in arr.attrs:
-                identifiers += [("TITLE", arr.str.text)]
-            
-        # FIXME: we need a namespace table
+        title_identifiers = self._get_first_arr_str_from_xml(xml, u'dc.title')
+        identifiers += [("TITLE", title) for title in title_identifiers]
+
         return identifiers
+
 
     def provides_metrics(self): 
         return True
