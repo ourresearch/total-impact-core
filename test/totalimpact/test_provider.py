@@ -1,5 +1,5 @@
-import requests, os, unittest
-from totalimpact.providers.provider import Provider, ProviderFactory, ProviderHttpError, ProviderTimeout
+import requests, os, unittest, time
+from totalimpact.providers.provider import Provider, ProviderFactory, ProviderHttpError, ProviderTimeout, ProviderState
 from totalimpact.config import Configuration
 
 CWD, _ = os.path.split(__file__)
@@ -26,7 +26,6 @@ class Test_Provider(unittest.TestCase):
     def test_01_init(self):
         # since the provider is really abstract, this doen't
         # make much sense, but we do it anyway
-        # anyway
         provider = Provider(None, self.config)
 
     def test_02_interface(self):
@@ -89,4 +88,79 @@ class Test_Provider(unittest.TestCase):
         providers = ProviderFactory.get_providers(self.config)
         assert len(providers) == len(self.config.providers)
 
-    # FIXME: need to add tests for rate limiting
+    def test_10_state_init(self):
+        s = ProviderState()
+        
+        assert s.throttled
+        assert s.time_fixture is None
+        assert s.last_request_time is None
+        assert s.rate_period == 3600
+        assert s.rate_limit == 351
+        assert s.request_count == 0
+        
+        now = time.time()
+        s = ProviderState(rate_period=100, rate_limit=100, 
+                    time_fixture=now, last_request_time=now, request_count=7,
+                    throttled=False)
+        
+        assert not s.throttled
+        assert s.time_fixture == now
+        assert s.last_request_time == now
+        assert s.rate_period == 100
+        assert s.rate_limit == 101
+        assert s.request_count == 7
+        
+    def test_11_state_hit(self):
+        s = ProviderState()
+        s.register_unthrottled_hit()
+        assert s.request_count == 1
+    
+    def test_12_state_get_reset_time(self):
+        now = time.time()
+        
+        s = ProviderState()
+        reset = s._get_reset_time(now)
+        assert reset == now
+        
+        s = ProviderState(rate_period=100, time_fixture=now)
+        reset = s._get_reset_time(now + 10)
+        assert reset == now + 100
+        
+    def test_13_state_get_seconds(self):
+        now = time.time()
+        
+        s = ProviderState(rate_period=100, time_fixture=now)
+        seconds = s._get_seconds(100, 0, now + 10)
+        assert seconds == 90, seconds
+        
+        s = ProviderState()
+        seconds = s._get_seconds(100, 50, now)
+        assert seconds == 2, seconds
+        
+    def test_14_state_rate_limit_expired(self):
+        now = time.time()
+        
+        s = ProviderState(rate_period=100, time_fixture=now)
+        assert not s._rate_limit_expired(now + 10)
+        assert s._rate_limit_expired(now + 101)
+        
+    def test_15_state_get_remaining_time(self):
+        now = time.time()
+        s = ProviderState(rate_period=100, time_fixture=now)
+        remaining = s._get_remaining_time(now + 10)
+        assert remaining == 90
+        
+    def test_15_state_sleep_time(self):
+        now = time.time()
+        
+        s = ProviderState(throttled=False)
+        sleep = s.sleep_time()
+        assert sleep == 0.0, sleep
+        
+        s = ProviderState(rate_period=100, time_fixture=now-100, last_request_time=now-100)
+        sleep = s.sleep_time()
+        assert sleep == 0.0, sleep
+        
+        s = ProviderState(rate_period=100, rate_limit=100)
+        sleep = s.sleep_time()
+        assert sleep == 1.0, sleep
