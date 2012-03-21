@@ -5,6 +5,7 @@ import time
 
 from totalimpact.config import Configuration
 
+
 class Dao(object):
     '''the dao that can be named is not the true dao'''
     __type__ = None
@@ -22,8 +23,13 @@ class Dao(object):
         couch_url = config.db_url
         couch_db = config.db_name
         
+        # on first connect, create if not existing
         couch = couchdb.Server(url=couch_url)
-        db = couch[couch_db]
+        try:
+            db = couch[couch_db]
+        except:
+            db = couch.create(couch_db)
+            db.save( config.db_views )
         return couch, db
 
     @property
