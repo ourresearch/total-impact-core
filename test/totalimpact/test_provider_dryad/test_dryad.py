@@ -10,8 +10,8 @@ class DummyResponse(object):
     def __init__(self, status, content):
         self.status_code = status
         self.text = content
-def get_html(self, url, headers=None, timeout=None):
-    f = open(DRYAD_HTML, "r")
+def get_member_items_html(self, url, headers=None, timeout=None):
+    f = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r")
     return DummyResponse(200, f.read())
 def successful_get(self, url, headers=None, timeout=None):
     f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
@@ -34,7 +34,7 @@ APP_CONFIG = os.path.join(CWD, "..", "test.conf.json")
 ALIAS_DOI = "10.5061/dryad.9025"
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(CWD, "sample_extract_metrics_page.html")
 SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(CWD, "sample_extract_aliases_page.xml")
-DRYAD_HTML = os.path.join(CWD, "dryad_members.html")
+SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(CWD, "sample_extract_member_items_page.xml")
 DOI = "10.5061/dryad.7898"
 
 class Test_Dryad(unittest.TestCase):
@@ -105,7 +105,7 @@ class Test_Dryad(unittest.TestCase):
         assert not provider._is_crossref_doi(("DOI", "11.12354/bib"))
     
     def test_04_member_items(self):
-        Provider.http_get = get_html
+        Provider.http_get = get_member_items_html
         
         dcfg = None
         for p in self.config.providers:
@@ -114,8 +114,8 @@ class Test_Dryad(unittest.TestCase):
         dconf = Configuration(dcfg, False)
         provider = Dryad(dconf, self.config)
         
-        members = provider.member_items("test", "author")
-        assert len(members) == 10, str(members)
+        members = provider.member_items("Piwowar, Heather A.", "dryadAuthor")
+        assert len(members) == 4, str(members)
         
     def test_05_aliases_read_content(self):
         dcfg = None
