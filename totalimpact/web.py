@@ -241,5 +241,23 @@ def user(uid=''):
 
 
 if __name__ == "__main__":
+    # try to prepare and connect to the database
+    try:
+        couch, db = bibserver.dao.Record.connection()
+        print couch, db
+    except:
+        print "WARNING! No database available."
+
+    # start the watchers
+    # TODO: find out from rich where the watchers is...
+    #totalimpact.watchers.init()
+    #if not os.path.exists('watchers.pid'):
+    #    watchers=subprocess.Popen(['python', 'totalimpact/watchers.py'])
+    #    open('watchers.pid', 'w').write('%s' % watchers.pid)
+
+    # run it
     app.run(host='0.0.0.0', debug=True)
 
+    # remove unnecessary PIDs
+    #if os.path.exists('watchers.pid'):
+    #    os.remove('watchers.pid')
