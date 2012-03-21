@@ -22,7 +22,7 @@
     "member_items" : {
         "querytype" : {
             "dryadAuthor": {
-                "url": "http://datadryad.org/discover?field=dc.contributor.author_filter&fq=dc.contributor.author_filter%%3A%s"
+                "url": "http://datadryad.org/solr/search/select/?q=dc.contributor.author%%3A%%22%s%%22&fl=dc.identifier"
             }
         }
     },
