@@ -25,6 +25,7 @@ class Dao(object):
         
         # on first connect, create if not existing
         couch = couchdb.Server(url=couch_url)
+        couch.resource.credentials = ( config.db_adminuser,config.db_password )
         try:
             db = couch[couch_db]
         except:
