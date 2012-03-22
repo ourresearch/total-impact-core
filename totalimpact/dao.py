@@ -13,8 +13,8 @@ class Dao(object):
     def __init__(self, **kwargs):
         self.couch, self.db = self.connection()
         self._data = dict(kwargs)
-        self._id = self.data.get('_id',None)
-        self._version = self.data.get('_rev',None)
+        self._id = self._data.get('_id',None)
+        self._version = self._data.get('_rev',None)
 
     @classmethod
     def connection(cls):
