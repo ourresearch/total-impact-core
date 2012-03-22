@@ -181,6 +181,69 @@ class Provider(object):
     def sleep_time(self, dead_time=0):
         return 0
     
+    def do_get(self, url, headers=None, timeout=None, error_conf=None):
+        retry = 0
+        while True:
+            try:
+                return self.http_get(url, headers, timeout)
+            except ProviderTimeout as e:
+                self._snooze_or_raise("timeout", e, retry)
+                """
+                timeout_conf = error_conf.get('timeout')
+                if timeout_conf is None:
+                    raise e
+                retries = timeout_conf.get("retries")
+                if retries is None:
+                    raise e
+                delay = timeout_conf.get("retry_delay", 0)
+                delay_cap = timeout_conf.get("delay_cap", -1)
+                retry_type = timeout_conf.get("retry_type", "linear")
+                if retries > retry or retries == -1:
+                    retry += 1
+                    snooze = self._retry_wait(retry_type, delay, delay_cap, retry)
+                    time.sleep(snooze) # FIXME: need to use an interruptable sleep
+                    continue
+                else:
+                    raise e
+                """
+            except ProviderHttpError as e:
+                self._snooze_or_raise("http_error", e, retry)
+            
+            retry += 1
+    
+    def _snooze_or_raise(self, error_type, exception, retry_count):
+        conf = error_conf.get(error_type)
+        if conf is None:
+            raise exception
+        
+        retries = conf.get("retries")
+        if retries is None or retries == 0:
+            raise exception
+        
+        delay = conf.get("retry_delay", 0)
+        delay_cap = conf.get("delay_cap", -1)
+        retry_type = conf.get("retry_type", "linear")
+        
+        if retries > retry_count or retries == -1:
+            snooze = self._retry_wait(retry_type, delay, delay_cap, retry_count + 1)
+            time.sleep(snooze) # FIXME: need to use an interruptable sleep
+            return
+        
+        raise exception
+    
+    def _retry_wait(self, type, delay, delay_cap, attempt):
+        if type == "incremental_back_off":
+            return self._incremental_back_off(delay, delay_cap, attempt)
+        else:
+            return self._linear_delay(delay, delay_cap, attempt)
+    
+    def _linear_delay(self, delay, delay_cap, attempt):
+        return delay if delay < delay_cap and delay_cap > -1 else delay_cap
+        
+    def _incremental_back_off(self, delay, delay_cap, attempt):
+        proposed_delay = delay * 2**(attempt-1)
+        return proposed_delay if proposed_delay < delay_cap else delay_cap
+    
     def http_get(self, url, headers=None, timeout=None):
         # first thing is to try to retrieve from cache
         # FIXME: no idea what we'd get back from the cache...
