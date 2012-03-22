@@ -142,6 +142,7 @@ class Item(dao.Dao):
         # inherit the init
         super(Item,self).__init__(**kwargs)
 
+        # FIXME: should the item id be inside the seed/in the data model above?
         self.id = id
         if seed is not None: 
             self._data = seed
@@ -150,8 +151,8 @@ class Item(dao.Dao):
             self._biblio = Biblio(seed=self._data.get('biblio'))
         else:
             self._aliases = Aliases(seed=aliases) if hasattr(aliases, "keys") else aliases
-            self._metrics = Metrics(seed=aliases) if hasattr(aliases, "keys") else metrics
-            self._biblio = Biblio(seed=aliases) if hasattr(aliases, "keys") else biblio
+            self._metrics = Metrics(seed=metrics) if hasattr(aliases, "keys") else metrics
+            self._biblio = Biblio(seed=biblio) if hasattr(aliases, "keys") else biblio
                     
         # save the time of this request to the object
         self._data['last_requested'] = time.time()
