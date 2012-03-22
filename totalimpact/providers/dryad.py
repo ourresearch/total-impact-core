@@ -139,11 +139,7 @@ class Dryad(Provider):
         return "http://dx.doi.org/" + doi
 
     def metrics(self, id):
-        #raise NotImplementedError()
-        #return ("1")      
-
-        # FIXME: urlencoding?
-        url = self.config.metrics['url'] % id
+        url = self.config.metrics['url'] % urllib.quote(id)
         logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        

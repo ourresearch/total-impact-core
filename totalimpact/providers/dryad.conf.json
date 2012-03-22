@@ -80,5 +80,14 @@
                 "other_terms_of_use": "CC0"
               }
         }
+    },
+    
+    "errors" : {
+        "timeout" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+        "http_error" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+        "client_server_error" : { },
+        "rate_limit_reached" : { "retries" : -1, "retry_delay" : 1, "retry_type" : "incremental_back_off", "delay_cap" : 256 },
+        "content_malformed" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+        "validation_failed" : { }
     }
 }
