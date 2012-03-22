@@ -162,7 +162,6 @@ class Item(dao.Dao):
     def aliases(self):
         return self._aliases
         
-
     @property
     def metrics(self):
         return self._metrics
