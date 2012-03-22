@@ -1,7 +1,10 @@
 # mock the DAO first, before any of the imports are run
 import totalimpact.dao
 class DAOMock(object):
-    pass
+    def __init__(self, **kwargs):
+        self._data = {}
+    def save(self):
+        pass
 # this mock is reset in the tearDown method
 old_dao = totalimpact.dao.Dao
 totalimpact.dao.Dao = DAOMock
@@ -65,6 +68,17 @@ METRICS_SEED = json.loads("""
 }
 """)
 METRICS_SEED['bucket'][PM_SEED_HASH] = PM_SEED
+
+ITEM_SEED = json.loads("""
+{
+    "created": 23112412414.234,
+    "last_modified": 12414214.234,
+    "last_requested": 124141245.234
+}
+""")
+ITEM_SEED["aliases"] = ALIAS_SEED
+ITEM_SEED["metrics"] = METRICS_SEED
+ITEM_SEED["biblio"] = None
 
 class TestModels(unittest.TestCase):
 
@@ -363,3 +377,47 @@ class TestModels(unittest.TestCase):
         
         m.add_provider_metric(pm)
         assert m.data['bucket'].keys()[0] == PM_SEED_HASH
+    
+    # FIXME: Biblio has not been fully explored yet, so no tests for it
+    
+    """
+    {
+        "aliases": alias_object, 
+        "metrics": metric_object, 
+        "biblio": biblio_object,
+        "created": 23112412414.234,
+        "last_modified": 12414214.234,
+        "last_requested": 124141245.234
+    }
+    """
+    
+    def test_16_item_init(self):
+        i = models.Item()
+        assert i.aliases is None
+        assert i.metrics is None
+        assert i.biblio is None
+        
+        i = models.Item("12345")
+        assert i.id == "12345"
+        
+        i = models.Item("12345", aliases=deepcopy(ALIAS_SEED), metrics=deepcopy(METRICS_SEED), biblio=None)
+        assert isinstance(i.aliases, models.Aliases)
+        assert isinstance(i.metrics, models.Metrics)
+        assert i.aliases.data == ALIAS_SEED_CANONICAL, i.aliases.data
+        # can only compare the buckets, as the meta objects change when they are added
+        assert i.metrics.data['bucket'] == METRICS_SEED['bucket'], (i.metrics.data, METRICS_SEED)
+        
+        a = models.Aliases(seed=deepcopy(ALIAS_SEED))
+        m = models.Metrics(seed=deepcopy(METRICS_SEED))
+        
+        i = models.Item("12345", aliases=a, metrics=m)
+        assert i.aliases.data == ALIAS_SEED_CANONICAL
+        # can only compare the buckets, as the meta objects change when they are added
+        assert i.metrics.data['bucket'] == METRICS_SEED['bucket'], (i.metrics.data, METRICS_SEED)
+        
+        i = models.Item(id="12345", seed=deepcopy(ITEM_SEED))
+        assert i.aliases.data == ALIAS_SEED_CANONICAL
+        assert i.metrics.data['bucket'] == METRICS_SEED['bucket'], (i.metrics.data, METRICS_SEED)
+        
+        
+        
