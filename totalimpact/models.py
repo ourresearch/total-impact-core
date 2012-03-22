@@ -150,14 +150,17 @@ class Item(dao.Dao):
             self._metrics = Metrics(seed=self._data.get('metrics'))
             self._biblio = Biblio(seed=self._data.get('biblio'))
         else:
+            self._data = {}
             self._aliases = Aliases(seed=aliases) if hasattr(aliases, "keys") else aliases
             self._metrics = Metrics(seed=metrics) if hasattr(aliases, "keys") else metrics
             self._biblio = Biblio(seed=biblio) if hasattr(aliases, "keys") else biblio
                     
         # save the time of this request to the object
         self._data['last_requested'] = time.time()
-        self.save()
 
+        # FIXME: do we need a save method?
+        #self.save()
+        
     @property
     def aliases(self):
         try:
