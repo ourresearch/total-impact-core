@@ -67,13 +67,3 @@ class MetricsQueue(Queue):
         items = self.view(addr)
         return [Item(**i['value']) for i in items.rows]
 
-    def save_and_unqueue(self,item):
-        # alter to use aliases method once exists
-        if self.provider:
-            # FIXME: this is no longer necessary, the metrics object automatically sets
-            # the meta values when provider metrics are added
-            # FIXME: aside from that, it's 'last_modified' not 'last_updated'
-            item.data['meta'][self.provider]['last_updated'] = datetime.datetime.now()
-            item.save()
-        else:
-            return 'No! you have not set a provider'
