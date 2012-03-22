@@ -8,6 +8,10 @@ import time
 class Queue(dao.Dao):
     __type__ = None
         
+    def __init__(self):
+        # inherit the init
+        super(Queue,self).__init__()
+
     # TODO: 
     # return next item from this queue (e.g. whatever is on the top of the list
     # does NOT remove item from tip of queue
@@ -38,6 +42,8 @@ class MetricsQueue(Queue):
     __type__ = 'metrics'
     
     def __init__(self,prov=None):
+        # inherit the init
+        super(MetricsQueue,self).__init__()
         self._provider = prov
     
     @property
