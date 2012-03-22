@@ -34,6 +34,9 @@ class QueueMock(object):
         else:
             self.none_count += 1
             return None
+    def save_and_unqueue(self, item):
+        pass
+
 class ItemMock(object):
     pass
 
@@ -59,6 +62,8 @@ class ProviderNotImplemented(Provider):
 
 def first_mock(self):
     return ItemMock()
+def save_and_unqueue_mock(self, item):
+    pass
     
 def get_providers_mock(cls, config):
     return [ProviderMock("1"), ProviderMock("2"), ProviderMock("3")]
@@ -70,10 +75,19 @@ class TestBackend(unittest.TestCase):
         self.config = Configuration(APP_CONFIG, False)
         self.queue_first = Queue.first
         Queue.first = first_mock
+        
+        self.queue_save_and_unqueue = Queue.save_and_unqueue
+        Queue.save_and_unqueue = save_and_unqueue_mock
+        
+        self.metrics_queue_save_and_unqueue = MetricsQueue.save_and_unqueue
+        MetricsQueue.save_and_unqueue = save_and_unqueue_mock
+        
     
     def tearDown(self):
         totalimpact.dao.Dao = old_dao
         Queue.first = self.queue_first
+        Queue.save_and_unqueue = self.queue_save_and_unqueue
+        MetricsQueue.save_and_unqueue = self.metrics_queue_save_and_unqueue
     
     def test_01_init_backend(self):
         watcher = TotalImpactBackend(APP_CONFIG)
