@@ -393,9 +393,9 @@ class TestModels(unittest.TestCase):
     
     def test_16_item_init(self):
         i = models.Item()
-        assert i.aliases is None
-        assert i.metrics is None
-        assert i.biblio is None
+        assert isinstance(i.aliases, models.Aliases)
+        assert isinstance(i.metrics, models.Metrics)
+        assert isinstance(i.biblio, models.Biblio)
         
         i = models.Item("12345")
         assert i.id == "12345"

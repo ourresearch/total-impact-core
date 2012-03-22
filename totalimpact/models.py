@@ -150,9 +150,9 @@ class Item(dao.Dao):
             self._metrics = Metrics(seed=self._data.get('metrics'))
             self._biblio = Biblio(seed=self._data.get('biblio'))
         else:
-            self._aliases = Aliases(seed=aliases) if hasattr(aliases, "keys") else aliases
-            self._metrics = Metrics(seed=metrics) if hasattr(aliases, "keys") else metrics
-            self._biblio = Biblio(seed=biblio) if hasattr(aliases, "keys") else biblio
+            self._aliases = Aliases(seed=aliases) if hasattr(aliases, "keys") else aliases if aliases is not None else Aliases()
+            self._metrics = Metrics(seed=metrics) if hasattr(aliases, "keys") else metrics if metrics is not None else Metrics()
+            self._biblio = Biblio(seed=biblio) if hasattr(aliases, "keys") else biblio if biblio is not None else Biblio()
                     
         # save the time of this request to the object
         self._data['last_requested'] = time.time()
@@ -160,27 +160,16 @@ class Item(dao.Dao):
 
     @property
     def aliases(self):
-        try:
-            return self._aliases
-        except:
-            self._aliases = Aliases(seed=self._data.get('aliases',None))
-            return self._aliases
+        return self._aliases
+        
 
     @property
     def metrics(self):
-        try:
-            return self._metrics
-        except:
-            self._metrics = Metrics(seed=self._data.get('metrics',None))
-            return self._metrics
+        return self._metrics
         
     @property
     def biblio(self):
-        try:
-            return self._biblio
-        except:
-            self._biblio = Biblio(seed=self._data.get('biblio',None))
-            return self._biblio
+        return self._biblio
             
     @property
     def data(self):
