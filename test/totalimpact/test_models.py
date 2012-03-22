@@ -10,6 +10,7 @@ from totalimpact import models
 from totalimpact.config import Configuration
 from nose.tools import raises
 import os, unittest, json, time
+from copy import deepcopy
 
 ALIAS_SEED = json.loads("""{
     "tiid":"0987654321",
@@ -29,7 +30,7 @@ ALIAS_SEED_CANONICAL = json.loads("""{
     "last_modified": 1328569492.406
 }""")
 
-METRIC_SEED = json.loads("""{
+PM_SEED = json.loads("""{
     "id": "Mendeley:readers",
     "value": 16,
     "created": 1233442897.234,
@@ -49,6 +50,21 @@ METRIC_SEED = json.loads("""{
     }
 }
 """)
+PM_SEED_HASH = "d8c8f25061da78cc905e9b837d1c78ed"
+
+METRICS_SEED = json.loads("""
+{
+    "meta": {
+        "Mendeley:readers": {
+            "last_modified": 128798498.234,
+            "last_requested": 2139841098.234,
+            "ignore": false
+        }
+    },
+    "bucket":{}
+}
+""")
+METRICS_SEED['bucket'][PM_SEED_HASH] = PM_SEED
 
 class TestModels(unittest.TestCase):
 
@@ -195,14 +211,15 @@ class TestModels(unittest.TestCase):
     """
     
     def test_09_provider_metric_init(self):
-        m = models.ProviderMetric(seed=METRIC_SEED)
+        m = models.ProviderMetric(seed=deepcopy(PM_SEED))
         
         assert m.id == "Mendeley:readers"
         assert m.value() == 16
         assert m.created == 1233442897.234
         assert m.last_modified == 1328569492.406
         assert m.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
-        assert m.meta() == METRIC_SEED['meta']
+        assert m.meta() == PM_SEED['meta']
+        assert m.data == PM_SEED
         
         now = time.time()
         m = models.ProviderMetric(id="Richard:metric", 
@@ -218,11 +235,11 @@ class TestModels(unittest.TestCase):
         m = models.ProviderMetric(id="Richard:metric", 
                                     value=23, created=now, last_modified=now,
                                     provenance_url="http://total-impact.org/",
-                                    meta=METRIC_SEED['meta'])
-        assert m.meta() == METRIC_SEED['meta']
+                                    meta=PM_SEED['meta'])
+        assert m.meta() == PM_SEED['meta']
     
     def test_10_provider_metric_get_set(self):
-        m = models.ProviderMetric(seed=METRIC_SEED)
+        m = models.ProviderMetric(seed=deepcopy(PM_SEED))
         stale = time.time()
         
         assert m.value() == 16
@@ -231,7 +248,7 @@ class TestModels(unittest.TestCase):
         assert m.last_modified > stale
         stale = m.last_modified
         
-        assert m.meta() == METRIC_SEED['meta']
+        assert m.meta() == PM_SEED['meta']
         m.meta({"test": "meta"})
         assert m.meta() == {"test" : "meta"}
         assert m.last_modified > stale
@@ -244,74 +261,105 @@ class TestModels(unittest.TestCase):
         
         m.provenance(["http://total-impact.org"])
         assert m.provenance() == ["http://total-impact.org"], m.provenance()
-        
+    
+    """
+    {
+        "meta": {
+            "PROVIDER_ID": {
+                "last_modified": 128798498.234,
+                "last_requested": 2139841098.234,
+                "ignore": false
+            }
+        },
+        "bucket":[
+            "LIST OF PROVIDER METRIC OBJECTS"
+        ]
+    }
+    """
+    
     def test_11_metrics_init(self):
         m = models.Metrics()
-        # FIXME: need to resolve issues with the Metrics object first
-    
-    
-    
-    
-""" NOTE: incoroprated into above tests; leaving for reference for the time being
-class Test_Aliases:
-    def setup(self):
-        self.a = models.Aliases()
-        self.a.add_alias("foo", "id1")
-        self.a.add_alias("foo", "id2")
-        self.a.add_alias("bar", "id1") 
-
-    def teardown(self):
-        pass
-
-    def test1(self):
-        ''' alias gives self a tiid at creation'''
-
-        assert len(self.a.tiid) == 36, "len was " + str(len(self.a.tiid))
-
-    def test2(self):
-        '''adds new aliases to the  object'''
-
-        expected = {"tiid":self.a.tiid, "foo":["id1", "id2"], "bar":["id1"]}
-        assert self.a.data == expected, self.a.data
-
-    def test3(self):
-        '''gets an alias based on its namespace'''
-
-        res = self.a.get_ids_by_namespace("foo")
-        assert res == ["id1", "id2"], res
-
-        failres = self.a.get_ids_by_namespace("my_missing_namespace")
-        assert failres == [], failres
-
-    def test4(self):
-        '''gets a list of aliases from a list of namespaces'''
         
-        res = self.a.get_aliases_list(["foo", "bar"])
-        expected = [("foo", "id1"), ("foo", "id2"), ("bar", "id1")]
-        assert res == expected, res
-
-        res = self.a.get_aliases_list(["foo"])
-        expected = [("foo", "id1"), ("foo", "id2")]
-        assert res == expected, res
+        assert len(m.meta()) == 4, m.meta()
+        assert len(m.list_provider_metrics()) == 0
+        
+        m = models.Metrics(deepcopy(METRICS_SEED))
+        
+        assert len(m.meta()) == 5, m.meta()
+        assert len(m.list_provider_metrics()) == 1
+        
+        assert m.meta()['Mendeley:readers'] is not None
+        assert m.meta()['Mendeley:readers']['last_modified'] == 128798498.234
+        assert m.meta()['Mendeley:readers']['last_requested'] != 0  # don't know exactly what it will be
+        assert not m.meta()['Mendeley:readers']['ignore']
+        
+        assert m.meta()['Wikipedia:mentions'] is not None
+        assert m.meta()['Wikipedia:mentions']['last_modified'] == 0
+        assert m.meta()['Wikipedia:mentions']['last_requested'] != 0 # don't know exactly what it will be
+        assert not m.meta()['Wikipedia:mentions']['ignore']
+        
+        pm = m.list_provider_metrics()[0]
+        assert pm == models.ProviderMetric(seed=deepcopy(PM_SEED)), (pm.data, PM_SEED)
+        
+    def test_12_metrics_meta(self):
+        m = models.Metrics(METRICS_SEED)
+        assert len(m.meta()) == 5, m.meta()
+        assert m.meta()['Mendeley:readers'] is not None
+        
+        assert m.meta("Mendeley:readers") is not None
+        assert m.meta("Mendeley:readers") == m.meta()['Mendeley:readers']
     
-    def test5(self):
-        '''get aliases as a dictionary'''
-        res = self.a.get_aliases_dict()
-        expected = {"tiid":self.a.tiid, "foo":["id1", "id2"], "bar":["id1"]}
-        assert res == expected, res
-
-class Test_Metrics:
-    def setup(self):
-        self.m = models.Metrics()
+    def test_13_metrics_add_provider_metric(self):
+        now = time.time()
         
-    def not_implemented_yet(self):
-        '''on validation check, throws error if missing key properties'''
-       
-        config = Configuration(os.getcwd() + '/test/complete_metric.json', False)
+        m = models.Metrics(deepcopy(METRICS_SEED))
+        new_seed = deepcopy(PM_SEED)
+        new_seed['value'] = 25
+        m.add_provider_metric(models.ProviderMetric(seed=new_seed))
         
-        self.m.properties = config.cfg
-        #assert self.m.is_complete == True
+        assert len(m.meta()) == 5, m.meta()
+        assert len(m.list_provider_metrics()) == 2
+        assert len(m.list_provider_metrics(new_seed['id'])) == 2
         
-        del self.m.properties['value']
-        #assert self.m.is_complete == False
-"""
+        assert m.meta('Mendeley:readers')['last_modified'] > now
+        
+    def test_14_metrics_list_provider_metrics(self):
+        m = models.Metrics(deepcopy(METRICS_SEED))
+        
+        assert len(m.list_provider_metrics()) == 1
+        assert m.list_provider_metrics("Mendeley:readers")[0] == models.ProviderMetric(seed=deepcopy(PM_SEED))
+        
+        assert len(m.list_provider_metrics("Some:other")) == 0
+    
+    def test_15_metrics_canonical(self):
+        m = models.Metrics()
+        
+        simple_dict = {"one" : 1, "two" : 2, "three" : 3}
+        simple_expected = "one1three3two2"
+        canon = m._canonical_repr(simple_dict)
+        assert canon == simple_expected, (canon, simple_expected)
+        
+        nested_dict = { "one" : 1, "two" : { "three" : 3, "four" : 4 } }
+        nested_expected = "one1two{four4three3}"
+        canon = m._canonical_repr(nested_dict)
+        assert canon == nested_expected, (canon, nested_expected)
+        
+        nested_list = {"one" : 1, "two" : ['c', 'b', 'a']}
+        list_expected = "one1two[abc]"
+        canon = m._canonical_repr(nested_list)
+        assert canon == list_expected, (canon, list_expected)
+        
+        nested_both = {"zero" : 0, "one" : {"two" : 2, "three" : 3}, "four" : [7,6,5]}
+        both_expected = "four[567]one{three3two2}zero0"
+        canon = m._canonical_repr(nested_both)
+        assert canon == both_expected, (canon, both_expected)
+        
+    def test_15_metrics_hash(self):
+        m = models.Metrics()
+        pm = models.ProviderMetric(seed=deepcopy(PM_SEED))
+        
+        hash = m._hash(pm)
+        assert hash == PM_SEED_HASH, (hash, PM_SEED_HASH)
+        
+        m.add_provider_metric(pm)
+        assert m.data['bucket'].keys()[0] == PM_SEED_HASH
