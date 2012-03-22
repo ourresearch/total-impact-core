@@ -153,27 +153,11 @@ class Item(dao.Dao):
             self._aliases = Aliases(seed=aliases) if hasattr(aliases, "keys") else aliases if aliases is not None else Aliases()
             self._metrics = Metrics(seed=metrics) if hasattr(metrics, "keys") else metrics if metrics is not None else Metrics()
             self._biblio = Biblio(seed=biblio) if hasattr(biblio, "keys") else biblio if biblio is not None else Biblio()
-<<<<<<< HEAD
-  
-    @classmethod
-    def get(cls,_id):
-        couch, db = cls.connection()
-        try:
-            item = cls(**db[_id])
-            # save the time of this request to the object
-            item.data['last_requested'] = time.time()
-            item.save()
-            return item
-        except:
-            return None
-        
-=======
 
     def set_last_requested(self):
         self.data['last_requested'] = time.time()
         self.save()
-                        
->>>>>>> 500aa900e7ca189deb79ac9ba780c5254dd70796
+    
     @property
     def aliases(self):
         return self._aliases
