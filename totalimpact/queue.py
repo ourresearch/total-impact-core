@@ -13,11 +13,11 @@ class Queue(dao.Dao):
     # does NOT remove item from tip of queue
     def first(self):
         # turn this into an instantiation of an item based on the query result
-        #if len(self.queue) > 0:
-        #    return self.queue[0]
-        #else:
-        #    return None
-        return Item(**{'_rev': '4-a3e3574c44c95b86bb2247fe49e171c8', '_id': 'test', '_deleted_conflicts': ['3-2b27cebd890ff56e616f3d7dadc69c74'], 'hello': 'world', 'aliases': {'URL': ['http://cottagelabs.com'], 'DOI': ['10.1371/journal.pcbi.1000361', "10.1016/j.meegid.2011.02.004"]}})
+        if len(self.queue) > 0:
+            return self.queue[0]
+        else:
+            return None
+        #return Item(**{'_rev': '4-a3e3574c44c95b86bb2247fe49e171c8', '_id': 'test', '_deleted_conflicts': ['3-2b27cebd890ff56e616f3d7dadc69c74'], 'hello': 'world', 'aliases': {'URL': ['http://cottagelabs.com'], 'DOI': ['10.1371/journal.pcbi.1000361', "10.1016/j.meegid.2011.02.004"]}})
     
     # implement this in inheriting classes if needs to be different
     def save_and_unqueue(self,item):
@@ -29,9 +29,16 @@ class Queue(dao.Dao):
 class AliasQueue(Queue):
     __type__ = 'aliases'
     
+    def queue(self):
+        addr = 'queues/' + self.__type__
+        items = self.view(addr)
+        return [Item(**i['value']) for i in items.rows]
     
 class MetricsQueue(Queue):
     __type__ = 'metrics'
+    
+    def __init__(self,prov=None):
+        self._provider = prov
     
     @property
     def provider(self):
@@ -52,12 +59,12 @@ class MetricsQueue(Queue):
         if self.provider:
             addr += '?key=["' + self.provider + '"]'
         items = self.view(addr)
-        return [Item(**i['key']) for i in items.rows]
+        return [Item(**i['value']) for i in items.rows]
 
     def save_and_unqueue(self,item):
         # alter to use aliases method once exists
         if self.provider:
-            item.data[self.__type__][self.provider]['last_updated'] = datetime.datetime.now()
+            item.data['meta'][self.provider]['last_updated'] = datetime.datetime.now()
             item.save()
         else:
             return 'No! you have not set a provider'
