@@ -157,7 +157,7 @@ class Item(dao.Dao):
     def set_last_requested(self):
         self.data['last_requested'] = time.time()
         self.save()
-                        
+    
     @property
     def aliases(self):
         return self._aliases
