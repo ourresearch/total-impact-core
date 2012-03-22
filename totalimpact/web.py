@@ -56,6 +56,7 @@ def content():
 @app.route('/item/<tiid>')
 def item(tiid):
     item = totalimpact.models.Item.get(tiid)
+    item.set_last_requested()
     if item:
         # is request for JSON or HTML
         # return relevant version of item
@@ -78,6 +79,7 @@ def itemid(namespace,nid):
     elif request.method == 'POST':
         item = totalimpact.models.Item()
         # do something to create the new item
+        item.set_last_requested()
         tiid = item.save()
         if tiid:
             # set location header to /item/tiid
@@ -90,7 +92,9 @@ def items(tiids):
     items = []
     for index,tiid in enumerate(tiids.split(',')):
         if index > 99: break
-        items.append( totalimpact.models.Item.get(tiid).data )
+        thisitem = totalimpact.models.Item.get(tiid)
+        thisitem.set_last_requested
+        items.append( thisitem.data )
     resp = make_response( json.dumps(items, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
