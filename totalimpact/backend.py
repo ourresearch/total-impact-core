@@ -151,7 +151,7 @@ class ProvidersAliasThread(QueueConsumer):
                     item = p.aliases(item)
                     
                     # FIXME: queue object is not yet working
-                    #self.queue.save_and_unqueue(item)
+                    self.queue.save_and_unqueue(item)
                 except NotImplementedError:
                     continue
                     
@@ -164,10 +164,9 @@ class ProvidersAliasThread(QueueConsumer):
 class ProviderMetricsThread(QueueConsumer):
 
     def __init__(self, provider, config):
-        QueueConsumer.__init__(self, MetricsQueue())
+        QueueConsumer.__init__(self, MetricsQueue(provider.id))
         self.provider = provider
         self.config = config
-        self.queue.provider = self.provider.id
         self.thread_id = "ProviderMetricsThread:" + str(self.provider.id)
 
     def run(self):
@@ -187,8 +186,7 @@ class ProviderMetricsThread(QueueConsumer):
                 # store the metrics in the database
                 
                 # FIXME: queue object is not yet working
-                #self.queue.save_and_unqueue(item)
-                pass
+                self.queue.save_and_unqueue(item)
             
             # the provider will return a sleep time which may be negative
             sleep_time = self.provider.sleep_time()
