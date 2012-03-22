@@ -22,7 +22,8 @@ How to run the web app:
     then surf up http://127.0.0.1:5000/
 
 Note that you need CouchDB installed so that Total Impact can talk to it. 
-Settings for your CouchDB should be added to the config/totalimpact.conf.json file.
+By default, your CouchDB needs to be set up with an admin user called "test" with a password of "password".
+Particular settings for your CouchDB can be added to the config/totalimpact.conf.json file.
 On startup, TI will try to talk to the database and create the necessary views 
 (you can see the view definitions in the config too.)
 
