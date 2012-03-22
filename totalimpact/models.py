@@ -233,8 +233,17 @@ class Metrics(object):
         for item in self.data['meta']:
             self.data['meta'][item]['last_requested'] = time.time()
 
+    @property
     def meta(self):
         return self.data['meta']
+    
+    @meta.setter
+    def meta(self,metainfo):
+        self.data['meta'] = metainfo
+        
+    @property
+    def metrics(self):
+        return self.data['bucket']
     
     def add_provider_metric(self, provider_metric):
         hash = self._hash(provider_metric)
