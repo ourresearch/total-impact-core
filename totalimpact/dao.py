@@ -71,7 +71,21 @@ class Dao(object):
         return self.db.query(**kwargs)
         
     def view(self, viewname, **kwargs):
-        return self.db.view(viewname, kwargs)
+        # error with couchdb view whenever there are params, so doing direct
+        config = Configuration()
+        import httplib
+        import urllib
+        host = str(config.db_url).rstrip('/').replace('http://','')
+        db_name = config.db_name
+        fullpath = '/' + db_name + '/_design/queues/_view/' + viewname.replace('queues/','') + '?'
+        for key,val in kwargs.iteritems():
+            if not fullpath.endswith('&'): fullpath += '&'
+            fullpath += key + '=' + urllib.quote_plus(json.dumps(val))
+        c =  httplib.HTTPConnection(host)
+        c.request('GET', fullpath)
+        result = c.getresponse()
+        return json.loads(result.read())
+        #return self.db.view(viewname, kwargs)
         
     def save(self):
         if '_id' not in self.data:

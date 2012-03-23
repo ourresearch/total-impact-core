@@ -36,7 +36,9 @@ class AliasQueue(Queue):
     def queue(self):
         addr = 'queues/' + self.__type__
         items = self.view(addr)
-        return [Item(**i['value']) for i in items.rows]
+        # due to error in couchdb this reads from json output - see dao view
+        return [Item(**i['value']) for i in items['rows']]
+        #return [Item(**i['value']) for i in items.rows]
     
 class MetricsQueue(Queue):
     __type__ = 'metrics'
@@ -66,5 +68,7 @@ class MetricsQueue(Queue):
             items = self.view(addr, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
         else:
             items = self.view(addr)
-        return [Item(**i['value']) for i in items.rows]
+        # due to error in couchdb this reads from json output - see dao view
+        return [Item(**i['value']) for i in items['rows']]
+        #return [Item(**i['value']) for i in items.rows]
 
