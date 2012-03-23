@@ -1,47 +1,44 @@
-import os
-import json
-from nose.tools import assert_equal
-
 from totalimpact.config import Configuration
+from totalimpact import dao
 
-class TestDAO:
+from nose.tools import raises
+import os, unittest, json, time
+
+class TestDAO(unittest.TestCase):
+
     @classmethod
     def setup_class(cls):
-        pass
-        
+        cls.TESTDB = 'ti_test'
+        cls.d = dao.Dao()
+        cls.d.config.db_name = cls.TESTDB
+        cls.couch, cls.db = cls.d.connection()
+
     @classmethod
     def teardown_class(cls):
-        pass
+        cls.couch.delete( cls.TESTDB )
         
-    def test_connection(self):
-        pass
-
-    def test_get_None(self):
-        assert dao.Dao.get(None) == None
+    def test_01_get_None(self):
+        assert self.d.get(None) == None
         
-    def test_save(self):
-        obj = dao.Dao()
-        assert obj.id == None
-        obj.save()
-        assert obj.id != None
-        assert obj.version != None
+    def test_02_save(self):
+        assert self.d.id == None
+        self.d.save()
+        assert self.d.id != None
+        assert self.d.version != None
         
-    def test_query(self):
-        dbobj = dao.Dao()
+    def test_03_query(self):
         map_fun = 'function(doc) { emit(doc, null); }'
-        res = dbobj.query(map_fun)
-        assert isinstance(res,list)
+        res = self.d.query(map_fun=map_fun)
+        self.assertTrue( isinstance(res.rows,list), res )
         
-    def test_view(self):
-        docs = dao.Dao().view('_all_docs')
-        assert isinstance(docs,list)
+    def test_04_view(self):
+        res = self.d.view('_all_docs')
+        print res
+        self.assertTrue( isinstance(res['rows'],list), res )
         
-    def test_delete(self):
-        obj = dao.Dao()
-        obj.save()
-        assert obj.id != None
-        theid = obj.id
-        assert obj.delete()
-        assert dao.Dao.get(theid) == None
+    def test_05_delete(self):
+        theid = self.d.id
+        self.d.delete()
+        assert self.d.get(theid) == None
     
 
