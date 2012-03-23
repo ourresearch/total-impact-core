@@ -1,6 +1,8 @@
 from totalimpact.models import Item
 import totalimpact.dao as dao
 import time
+from totalimpact.tilogging import logging
+log = logging.getLogger(__name__)
 
 # some data useful for testing
 # d = {"DOI" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "URL" : ["http://cottagelabs.com"]}
@@ -27,6 +29,7 @@ class Queue(dao.Dao):
         # alter to use aliases method once exists
         item.data[self.__type__]['last_modified'] = time.time()
         item.save()
+        log.info("Saved and unqueued item " + item.id)
         
         
 class AliasQueue(Queue):
