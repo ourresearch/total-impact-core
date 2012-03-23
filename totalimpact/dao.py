@@ -5,33 +5,35 @@ import time
 
 from totalimpact.config import Configuration
 
+_config = Configuration()
 
 class Dao(object):
     '''the dao that can be named is not the true dao'''
     __type__ = None
 
+    __config__ = _config
+
     def __init__(self, **kwargs):
-        self.couch, self.db = self.connection()
         self._data = dict(kwargs)
         self._id = self._data.get('_id',None)
         self._version = self._data.get('_rev',None)
+        self.config = self.__config__
 
     @classmethod
     def connection(cls):
-        config = Configuration()
-        # read these from config
-        couch_url = config.db_url
-        couch_db = config.db_name
-        
         # on first connect, create if not existing
-        couch = couchdb.Server(url=couch_url)
-        couch.resource.credentials = ( config.db_adminuser,config.db_password )
+        couch = couchdb.Server( url = cls.__config__.db_url )
+        couch.resource.credentials = ( cls.__config__.db_adminuser,cls.__config__.db_password )
         try:
-            db = couch[couch_db]
+            _db = couch[ cls.__config__.db_name ]
         except:
-            db = couch.create(couch_db)
-            db.save( config.db_views )
-        return couch, db
+            _db = couch.create( cls.__config__.db_name )
+            _db.save( cls.__config__.db_views )
+        return _db
+
+    @property
+    def db(self):
+        return self.connection()
 
     @property
     def data(self):
@@ -59,9 +61,8 @@ class Dao(object):
 
     @classmethod
     def get(cls,_id):
-        couch, db = cls.connection()
         try:
-            return cls(**db[_id])
+            return cls(**cls.connection()[_id])
         except:
             return None
 
@@ -72,11 +73,11 @@ class Dao(object):
         
     def view(self, viewname, **kwargs):
         # error with couchdb view whenever there are params, so doing direct
-        config = Configuration()
+        #return self.db.view(viewname, kwargs)
         import httplib
         import urllib
-        host = str(config.db_url).rstrip('/').replace('http://','')
-        db_name = config.db_name
+        host = str(self.config.db_url).rstrip('/').replace('http://','')
+        db_name = self.config.db_name
         fullpath = '/' + db_name + '/_design/queues/_view/' + viewname.replace('queues/','') + '?'
         for key,val in kwargs.iteritems():
             if not fullpath.endswith('&'): fullpath += '&'
@@ -85,7 +86,6 @@ class Dao(object):
         c.request('GET', fullpath)
         result = c.getresponse()
         return json.loads(result.read())
-        #return self.db.view(viewname, kwargs)
         
     def save(self):
         if '_id' not in self.data:
