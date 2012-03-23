@@ -142,8 +142,8 @@ class Item(dao.Dao):
         # inherit the init
         super(Item,self).__init__(**kwargs)
 
-        # FIXME: should the item id be inside the seed/in the data model above?
-        self.id = id
+        if id is not None:
+            self.id = id
         if seed is not None: 
             self._data = seed
             self._aliases = Aliases(seed=self._data.get('aliases'))
