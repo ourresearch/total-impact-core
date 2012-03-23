@@ -1,8 +1,6 @@
-from totalimpact.config import Configuration
-from totalimpact import dao
+import unittest
 
-from nose.tools import raises
-import os, unittest, json, time
+from totalimpact import dao
 
 class TestDAO(unittest.TestCase):
 

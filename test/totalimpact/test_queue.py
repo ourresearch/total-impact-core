@@ -1,28 +1,44 @@
-import os
-import json
-from nose.tools import assert_equal
+import unittest, json
 
-import totalimpact.queue as queue
-import totalimpact.config as config
+from totalimpact import queue
+from totalimpact import models
 
-class TestQueue:
+class TestQueue(unittest.TestCase):
+
     @classmethod
     def setup_class(cls):
-        config["db_name"] = 'ti-test'
-        pass
+        cls.TESTDB = 'ti_test'
+        cls.item = models.Item(**json.load(open('./test/totalimpact/item.json')))
+        cls.item.config.db_name = cls.TESTDB
+        cls.couch, cls.db = cls.item.connection()
+        cls.item.save()
 
     @classmethod
     def teardown_class(cls):
-        couch, db = dao.Dao.connection()
-        del couch[ config["db_name"] ]
+        cls.couch.delete( cls.TESTDB )
 
-    def test_queue(self):
-        pass
+    def test_01_alias_queue(self):
+        aq = queue.AliasQueue()
+        aq.config.db_name = self.TESTDB
+        self.assertTrue( isinstance(aq.queue,list) ) 
+        assert len(aq.queue) == 1, aq
+        first = aq.first()
+        assert first.id == self.item.id, first
+        aq.save_and_unqueue(first)
+        # TODO: once queues actually work, this should succeed
+        assert len(aq.queue) == 0, aq
 
-    def test_alias_queue(self):
-        pass
-        
-    def test_metrics_queue(self):
-        pass
+    def test_02_metrics_queue(self):
+        mq = queue.MetricsQueue()
+        mq.config.db_name = self.TESTDB
+        mq.provider = 'Wikipedia'
+        assert mq.provider == 'Wikipedia', mq
+        self.assertTrue( isinstance(mq.queue,list) ) 
+        assert len(mq.queue) == 1, mq
+        first = mq.first()
+        assert first.id == self.item.id, first
+        mq.save_and_unqueue(first)
+        # TODO: once queues actually work, this should succeed
+        assert len(mq.queue) == 0, mq
         
 
