@@ -16,7 +16,6 @@ class Queue(dao.Dao):
     # return next item from this queue (e.g. whatever is on the top of the list
     # does NOT remove item from tip of queue
     def first(self):
-        # turn this into an instantiation of an item based on the query result
         if len(self.queue) > 0:
             return self.queue[0]
         else:
@@ -64,7 +63,7 @@ class MetricsQueue(Queue):
         # change this for live
         addr = 'queues/' + self.__type__
         if self.provider:
-            items = self.view(addr, key=[self.provider])
+            items = self.view(addr, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
         else:
             items = self.view(addr)
         return [Item(**i['value']) for i in items.rows]
