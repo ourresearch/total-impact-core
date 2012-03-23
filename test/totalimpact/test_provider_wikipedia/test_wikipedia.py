@@ -139,8 +139,8 @@ class Test_Wikipedia(unittest.TestCase):
         # we can also check that the meta is correct
         meta = itemWithMetrics.metrics.meta()
         assert meta is not None
-        assert "totalimpact.providers.wikipedia.Wikipedia" in meta.keys()
-        assert meta["totalimpact.providers.wikipedia.Wikipedia"].keys() == ["ignore", "last_modified", "last_requested"]
+        assert "Wikipedia" in meta.keys()
+        assert meta["Wikipedia"].keys() == ["ignore", "last_modified", "last_requested"]
 
     def test_08_metrics_http_success(self):
         Provider.http_get = successful_get
