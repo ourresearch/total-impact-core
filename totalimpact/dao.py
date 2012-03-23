@@ -25,15 +25,16 @@ class Dao(object):
         couch = couchdb.Server( url = cls.__config__.db_url )
         couch.resource.credentials = ( cls.__config__.db_adminuser,cls.__config__.db_password )
         try:
-            _db = couch[ cls.__config__.db_name ]
+            db = couch[ cls.__config__.db_name ]
         except:
-            _db = couch.create( cls.__config__.db_name )
-            _db.save( cls.__config__.db_views )
-        return _db
+            db = couch.create( cls.__config__.db_name )
+            db.save( cls.__config__.db_views )
+        return couch, db
 
     @property
     def db(self):
-        return self.connection()
+        couch, db = self.connection()
+        return db
 
     @property
     def data(self):
@@ -77,8 +78,10 @@ class Dao(object):
         import httplib
         import urllib
         host = str(self.config.db_url).rstrip('/').replace('http://','')
-        db_name = self.config.db_name
-        fullpath = '/' + db_name + '/_design/queues/_view/' + viewname.replace('queues/','') + '?'
+        if viewname == '_all_docs':
+            fullpath = '/' + self.config.db_name + '/' + viewname
+        else:
+            fullpath = '/' + self.config.db_name + '/_design/queues/_view/' + viewname.replace('queues/','') + '?'
         for key,val in kwargs.iteritems():
             if not fullpath.endswith('&'): fullpath += '&'
             fullpath += key + '=' + urllib.quote_plus(json.dumps(val))
@@ -115,8 +118,8 @@ class Dao(object):
         
     def delete(self):
         try:
-            self.data = {}
             self.db.delete(self.data)
+            self.data = {}
             return True
         except:
             # log the delete error? action on doc update conflict?
