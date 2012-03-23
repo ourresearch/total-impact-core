@@ -131,15 +131,15 @@ class Dryad(Provider):
 
         return identifiers
 
-
+    # FIXME: just turned this off for a while, as metrics are not working from Dryad
     def provides_metrics(self): 
-        return True
+        return False
     
     def get_show_details_url(self, doi):
         return "http://dx.doi.org/" + doi
 
-    def metrics(self, id):
-        url = self.config.metrics['url'] % urllib.quote(id)
+    def metrics(self, item):
+        url = self.config.metrics['url'] % urllib.quote(item.id)
         logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
