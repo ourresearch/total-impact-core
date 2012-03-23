@@ -33,6 +33,7 @@ class Queue(dao.Dao):
 class AliasQueue(Queue):
     __type__ = 'aliases'
     
+    @property
     def queue(self):
         addr = 'queues/' + self.__type__
         items = self.view(addr)
@@ -63,7 +64,8 @@ class MetricsQueue(Queue):
         # change this for live
         addr = 'queues/' + self.__type__
         if self.provider:
-            addr += '?key=["' + self.provider + '"]'
-        items = self.view(addr)
+            items = self.view(addr, key=[self.provider])
+        else:
+            items = self.view(addr)
         return [Item(**i['value']) for i in items.rows]
 
