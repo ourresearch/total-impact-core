@@ -250,7 +250,7 @@ class Metrics(object):
     def add_provider_metric(self, provider_metric):
         hash = self._hash(provider_metric)
         self.data['bucket'][hash] = provider_metric.data
-        self._update_last_modified(provider_metric.id)
+        self._update_last_modified(provider_metric.meta()["provider"])
         
     def list_provider_metrics(self, provider_id=None):
         if provider_id is None:

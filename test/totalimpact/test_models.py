@@ -58,7 +58,7 @@ PM_SEED_HASH = "d8c8f25061da78cc905e9b837d1c78ed"
 METRICS_SEED = json.loads("""
 {
     "meta": {
-        "Mendeley:readers": {
+        "Mendeley": {
             "last_modified": 128798498.234,
             "last_requested": 2139841098.234,
             "ignore": false
@@ -302,15 +302,15 @@ class TestModels(unittest.TestCase):
         assert len(m.meta()) == 5, m.meta()
         assert len(m.list_provider_metrics()) == 1
         
-        assert m.meta()['Mendeley:readers'] is not None
-        assert m.meta()['Mendeley:readers']['last_modified'] == 128798498.234
-        assert m.meta()['Mendeley:readers']['last_requested'] != 0  # don't know exactly what it will be
-        assert not m.meta()['Mendeley:readers']['ignore']
+        assert m.meta()['Mendeley'] is not None
+        assert m.meta()['Mendeley']['last_modified'] == 128798498.234
+        assert m.meta()['Mendeley']['last_requested'] != 0  # don't know exactly what it will be
+        assert not m.meta()['Mendeley']['ignore']
         
-        assert m.meta()['Wikipedia:mentions'] is not None
-        assert m.meta()['Wikipedia:mentions']['last_modified'] == 0
-        assert m.meta()['Wikipedia:mentions']['last_requested'] != 0 # don't know exactly what it will be
-        assert not m.meta()['Wikipedia:mentions']['ignore']
+        assert m.meta()['Wikipedia'] is not None
+        assert m.meta()['Wikipedia']['last_modified'] == 0
+        assert m.meta()['Wikipedia']['last_requested'] != 0 # don't know exactly what it will be
+        assert not m.meta()['Wikipedia']['ignore']
         
         pm = m.list_provider_metrics()[0]
         assert pm == models.ProviderMetric(seed=deepcopy(PM_SEED)), (pm.data, PM_SEED)
@@ -318,10 +318,10 @@ class TestModels(unittest.TestCase):
     def test_12_metrics_meta(self):
         m = models.Metrics(METRICS_SEED)
         assert len(m.meta()) == 5, m.meta()
-        assert m.meta()['Mendeley:readers'] is not None
+        assert m.meta()['Mendeley'] is not None
         
-        assert m.meta("Mendeley:readers") is not None
-        assert m.meta("Mendeley:readers") == m.meta()['Mendeley:readers']
+        assert m.meta("Mendeley") is not None
+        assert m.meta("Mendeley") == m.meta()['Mendeley']
     
     def test_13_metrics_add_provider_metric(self):
         now = time.time()
@@ -335,7 +335,7 @@ class TestModels(unittest.TestCase):
         assert len(m.list_provider_metrics()) == 2
         assert len(m.list_provider_metrics(new_seed['id'])) == 2
         
-        assert m.meta('Mendeley:readers')['last_modified'] > now
+        assert m.meta('Mendeley')['last_modified'] > now
         
     def test_14_metrics_list_provider_metrics(self):
         m = models.Metrics(deepcopy(METRICS_SEED))

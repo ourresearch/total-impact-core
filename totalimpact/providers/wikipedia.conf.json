@@ -6,7 +6,7 @@
     # Provider Identifier - used as the "id" of any resulting metrics
     # object
     #
-    "id" : "Wikipedia:mentions",
+    "id" : "Wikipedia",
     
     # Namespaces supported by this provider
     #
