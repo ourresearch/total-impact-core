@@ -20,12 +20,9 @@ class Dryad(Provider):
         self.state = DryadState(config)
         self.id = self.config.id
         
-        # All CrossRef DOI prefixes begin with "10" followed by a number of four or more digits
-        # from http://www.crossref.org/02publishers/doi-guidelines.pdf
-        # DOI_PATTERN = re.compile(r"^10\.(\d)+/(\S)+$", re.DOTALL)
-        # CROSSREF_DOI_PATTERN = re.compile(r"^10\.(\d)+/(\S)+$", re.DOTALL)
-        self.crossref_rx = re.compile(r"^10\.(\d)+/(\S)+$", re.DOTALL)
+        self.dryad_doi_rx = re.compile(r"(10\.5061/.*)")
         self.member_items_rx = re.compile(r"(10\.5061/.*)</span")
+
 
     def _get_first_arr_str_from_xml(self, xml, name):
         identifiers = []
@@ -34,7 +31,7 @@ class Dryad(Provider):
         try:
             arrs = soup.result.findAll("arr")
         except AttributeError:
-            arrs = []
+            raise ProviderClientError(soup.text)
             
         for arr in arrs:
             # FIXME: this looks fragile.  Dependent on order of attributes
@@ -61,9 +58,10 @@ class Dryad(Provider):
             else:
                 raise ProviderClientError(response)
 
-        identifiers = self._get_first_arr_str_from_xml(response.text, "dc.identifier")
-        if not identifiers:
+        if (len(response.text) == 0):
             raise ProviderClientError(response)
+
+        identifiers = self._get_first_arr_str_from_xml(response.text, "dc.identifier")
 
         return [(Aliases.NS.DOI, hit.replace("doi:", "")) for hit in list(set(identifiers))]
 
@@ -78,7 +76,7 @@ class Dryad(Provider):
             # source
             new_aliases = []
             for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
-                if not self._is_crossref_doi(alias):
+                if not self._is_dryad_doi(alias):
                     continue
                 logger.debug(self.config.id + ": processing aliases for tiid:" + alias_object.tiid)
                 new_aliases += self._get_aliases(alias)
@@ -97,9 +95,11 @@ class Dryad(Provider):
             return item
         
 
-    def _is_crossref_doi(self, alias):
-        # FIXME: Would exclude DataCite ids from here?
-        return self.crossref_rx.search(alias[1]) is not None
+    def _is_dryad_doi(self, alias):
+        return self.dryad_doi_rx.search(alias[1]) is not None
+
+    def _is_relevant_id(self, alias):
+        return self._is_dryad_doi(alias)
 
     def _get_aliases(self, alias):
         # FIXME: urlencoding?
