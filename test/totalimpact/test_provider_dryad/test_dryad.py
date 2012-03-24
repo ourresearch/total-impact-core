@@ -4,6 +4,7 @@ from totalimpact.providers.dryad import Dryad
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
 
 import os, unittest
+from nose.tools import nottest
 
 # prepare a monkey patch to override the http_get method of the Provider
 class DummyResponse(object):
@@ -231,6 +232,7 @@ class Test_Dryad(unittest.TestCase):
         #dois = [x[1] for x in item.aliases.get_aliases_list(["DOI"])]
         #assert DOI in dois
 
+    @nottest
     def test_12_provides_metrics(self):
         dcfg = None
         for p in self.config.providers:
@@ -264,6 +266,7 @@ class Test_Dryad(unittest.TestCase):
         ret = provider._extract_stats(f.read())
         assert len(ret) == 4, ret
 
+    @nottest
     ## FIXME supposed to take an alias metric
     def test_15_metrics(self):
         dcfg = None
