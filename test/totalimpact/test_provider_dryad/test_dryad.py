@@ -26,6 +26,10 @@ def get_aliases_html_success(self, url, headers=None, timeout=None):
     f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
     return DummyResponse(200, f.read())
 
+def get_metrics_html_success(self, url, headers=None, timeout=None):
+    f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
+    return DummyResponse(200, f.read())
+
 def get_nonsense_xml(self, url, headers=None, timeout=None):
     return DummyResponse(200, '<?xml version="1.0" encoding="UTF-8"?><nothingtoseehere>nonsense</nothingtoseehere>')
 
@@ -152,7 +156,7 @@ class Test_Dryad(unittest.TestCase):
         assert_equals(new_aliases.get_ids_by_namespace(Aliases.NS.DOI), ['10.5061/dryad.7898'])
         assert_equals(new_aliases.get_ids_by_namespace(Aliases.NS.TITLE), [u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides'])
         
-    # zero items doesn't make sense for aliases   
+    # zero items doesn't make sense for dryad aliases becauase will always have a url if a valid page
 
     @raises(ProviderClientError)
     def test_05b_aliases_400(self):
@@ -183,7 +187,6 @@ class Test_Dryad(unittest.TestCase):
     
 
 
-    @nottest
     def test_12_provides_metrics(self):
         assert self.provider.provides_metrics() == True
 
@@ -191,10 +194,21 @@ class Test_Dryad(unittest.TestCase):
         assert self.provider.get_show_details_url(TEST_DRYAD_DOI) == "http://dx.doi.org/" + TEST_DRYAD_DOI
     
 
-    def test_14_basic_extract_stats(self):
+    def test_06_basic_extract_stats(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         ret = self.provider._extract_stats(f.read())
         assert len(ret) == 4, ret
+
+    def test_07a_get_metrics_success(self):
+        Provider.http_get = get_metrics_html_success
+        item_with_new_metrics = self.provider.metrics(self.simple_item)
+
+        new_metrics = item_with_new_metrics.data["bucket"]
+        new_metrics_values = [(m["id"], m["value"]) for m in new_metrics.values()]
+        new_metrics_values.sort()  # for consistent order
+        assert_equals(new_metrics_values,
+            [('Dryad:file_views', 268), ('Dryad:most_downloaded_file', 76), ('Dryad:package_views', 407), ('Dryad:total_downloads', 178)])
+
 
     @nottest
     ## FIXME supposed to take an alias metric
@@ -203,15 +217,7 @@ class Test_Dryad(unittest.TestCase):
         assert len(ret.str_list_provider_metrics()) == 4, len(ret.str_list_provider_metrics())
 
     
-    """
-    FIXME: these will be useful once we implement the Dryad metrics code
-    def test_05_metrics_read_content(self):
-        # ensure that the wikipedia reader can interpret a page appropriately
-        metrics = Metrics()
-        f = open(XML_DOC, "r")
-        provider._extract_stats(f.read(), metrics)
-        assert metrics.get("mentions", 0) == 1
-        
+    """        
     def test_06_metrics_sleep(self):      
         assert provider.sleep_time() == 0
         assert provider.state.sleep_time() == 0
@@ -229,28 +235,5 @@ class Test_Dryad(unittest.TestCase):
         
         # FIXME: needs more exploration
         assert meta == provider.config.meta
-        
-    def test_08_metrics_http_success(self):
-        Provider.http_get = successful_get
-        d = {"doi" : ["10.1371/journal.pcbi.1000361"], "url" : ["http://cottagelabs.com"]}
-        metrics = provider.metrics(Aliases(d))
-        
-        assert metrics.get("mentions", None) is not None
-        
-    def test_09_metrics_http_general_fail(self):
-        Provider.http_get = get_400
-        d = {"doi" : ["10.1371/journal.pcbi.1000361"], "url" : ["http://cottagelabs.com"]}
-        metrics = provider.metrics(Aliases(d))
-        
-        assert metrics is None
-        
-    def test_10_metrics_400(self):
-        Provider.http_get = get_400
-        metrics = Metrics()
-        self.assertRaises(ProviderClientError, provider._get_metrics, "10.1371/journal.pcbi.1000361", metrics)
-        
-    def test_11_metrics_500(self):
-        Provider.http_get = get_500
-        metrics = Metrics()
-        self.assertRaises(ProviderServerError, provider._get_metrics, "10.1371/journal.pcbi.1000361", metrics)
     """
+    
