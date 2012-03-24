@@ -46,7 +46,6 @@ class Dryad(Provider):
         return identifiers
 
     def member_items(self, query_string, query_type):
-        # FIXME: only checks the first dryad page
         enc = urllib.quote(query_string)
 
         url = self.config.member_items["querytype"]["dryadAuthor"]['url'] % enc
@@ -56,8 +55,18 @@ class Dryad(Provider):
         # try to get a response from the data provider        
         response = self.http_get(url, timeout=self.config.member_items.get('timeout', None))
 
+        if response.status_code != 200:
+            if response.status_code >= 500:
+                raise ProviderServerError(response)
+            else:
+                raise ProviderClientError(response)
+
         identifiers = self._get_first_arr_str_from_xml(response.text, "dc.identifier")
+        if not identifiers:
+            raise ProviderClientError(response)
+
         return [(Aliases.NS.DOI, hit.replace("doi:", "")) for hit in list(set(identifiers))]
+
     
     def aliases(self, item): 
         try:
