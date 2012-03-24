@@ -5,7 +5,7 @@ This README will be updated when this is the deployed version.
 
 # About total-impact
 
-See http://total-impact/about
+See [http://total-impact/about](http://total-impact/about).
 
 # Install and run total-impact
 
