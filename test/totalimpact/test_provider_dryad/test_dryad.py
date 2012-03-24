@@ -37,27 +37,18 @@ def get_500(self, url, headers=None, timeout=None):
 
 CWD, _ = os.path.split(__file__)
 
-APP_CONFIG = os.path.join(CWD, "..", "test.conf.json")
-ALIAS_DOI = "10.5061/dryad.9025"
+DRYAD_CONFIG_FILENAME = "totalimpact/providers/dryad.conf.json"
+TEST_DRYAD_DOI = "10.5061/dryad.7898"
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(CWD, "sample_extract_metrics_page.html")
 SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(CWD, "sample_extract_aliases_page.xml")
 SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(CWD, "sample_extract_member_items_page.xml")
-DOI = "10.5061/dryad.7898"
 
 class Test_Dryad(unittest.TestCase):
 
     def setUp(self):
-        print APP_CONFIG
-        self.config = Configuration(APP_CONFIG, False)
         self.old_http_get = Provider.http_get
-
-        dryad_config_filename = None
-        for p in self.config.providers:
-            if p["class"].endswith("dryad.Dryad"):
-                dryad_config_filename = p["config"]
-
-        dryad_config = Configuration(dryad_config_filename, False)
-        self.provider = Dryad(dryad_config, self.config)
+        self.config = Configuration(DRYAD_CONFIG_FILENAME, False)
+        self.provider = Dryad(self.config)
 
     
     def tearDown(self):
@@ -66,7 +57,6 @@ class Test_Dryad(unittest.TestCase):
 
     def test_01_init(self):
         # ensure that the configuration is valid
-        assert len(self.config.cfg) > 0
         assert self.provider.config is not None
         assert self.provider.state is not None
         assert self.provider.id == "Dryad"
@@ -86,14 +76,14 @@ class Test_Dryad(unittest.TestCase):
         # check that the regex is set
         assert self.provider.crossref_rx is not None
         
-        # ensure that it matches an appropriate DOI
-        assert self.provider.crossref_rx.search(DOI) is not None
+        # ensure that it matches an appropriate TEST_DRYAD_DOI
+        assert self.provider.crossref_rx.search(TEST_DRYAD_DOI) is not None
         
-        # ensure that it doesn't match an inappropriate DOI
+        # ensure that it doesn't match an inappropriate TEST_DRYAD_DOI
         assert self.provider.crossref_rx.search("11.12354/bib") is None
         
         # now make sure that the built in method gets the same results
-        assert self.provider._is_crossref_doi(("DOI", DOI))
+        assert self.provider._is_crossref_doi(("DOI", TEST_DRYAD_DOI))
         assert not self.provider._is_crossref_doi(("DOI", "11.12354/bib"))
     
 
@@ -114,19 +104,17 @@ class Test_Dryad(unittest.TestCase):
     
     def test_06_aliases_400(self):
         Provider.http_get = get_400
-        self.assertRaises(ProviderClientError, self.provider._get_aliases, DOI)
+        self.assertRaises(ProviderClientError, self.provider._get_aliases, TEST_DRYAD_DOI)
         
     def test_07_aliases_500(self):
         Provider.http_get = get_500
-        
-        self.assertRaises(ProviderServerError, self.provider._get_aliases, DOI)
+        self.assertRaises(ProviderServerError, self.provider._get_aliases, TEST_DRYAD_DOI)
     
     def test_08_aliases_success(self):
         Provider.http_get = get_aliases_html_success
         
-
         # FIXME add proper tests for aliases
-        #aliases = provider._get_aliases(DOI)
+        #aliases = provider._get_aliases(TEST_DRYAD_DOI)
         #assert len(aliases) == 1, aliases
         
         #ns, id = aliases[0]
@@ -137,7 +125,7 @@ class Test_Dryad(unittest.TestCase):
         Provider.http_get = get_empty
         
         # FIXME add proper tests for aliases        
-        #aliases = provider._get_aliases(DOI)
+        #aliases = provider._get_aliases(TEST_DRYAD_DOI)
         #assert len(aliases) == 1
     
     def test_10_aliases_general_fail(self):
@@ -154,7 +142,7 @@ class Test_Dryad(unittest.TestCase):
     def test_11_aliases_general_success(self):
         Provider.http_get = get_aliases_html_success
         
-        d = {"DOI" : [DOI], "URL" : ["http://cottagelabs.com"]}
+        d = {"DOI" : [TEST_DRYAD_DOI], "URL" : ["http://cottagelabs.com"]}
         alias = Aliases(seed=d)
         item = Item(aliases=alias)
 
@@ -165,20 +153,18 @@ class Test_Dryad(unittest.TestCase):
         #assert len(item.aliases.get_aliases_list(["URL"])) == 1
         
         #dois = [x[1] for x in item.aliases.get_aliases_list(["DOI"])]
-        #assert DOI in dois
+        #assert TEST_DRYAD_DOI in dois
 
     @nottest
     def test_12_provides_metrics(self):
-
         assert self.provider.provides_metrics() == True
 
-    def test_13_show_details_url(self):
 
-        assert self.provider.get_show_details_url(DOI) == "http://dx.doi.org/" + DOI
+    def test_13_show_details_url(self):
+        assert self.provider.get_show_details_url(TEST_DRYAD_DOI) == "http://dx.doi.org/" + TEST_DRYAD_DOI
     
 
     def test_14_basic_extract_stats(self):
-        
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         ret = self.provider._extract_stats(f.read())
         assert len(ret) == 4, ret
@@ -186,51 +172,28 @@ class Test_Dryad(unittest.TestCase):
     @nottest
     ## FIXME supposed to take an alias metric
     def test_15_metrics(self):
-        
-        ret = self.provider.metrics(DOI)
+        ret = self.provider.metrics(TEST_DRYAD_DOI)
         assert len(ret.str_list_provider_metrics()) == 4, len(ret.str_list_provider_metrics())
 
     
     """
     FIXME: these will be useful once we implement the Dryad metrics code
     def test_05_metrics_read_content(self):
-        wcfg = None
-        for p in self.config.providers:
-            if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
-        wconf = Configuration(wcfg, False)
-        provider = Wikipedia(wconf, self.config)
-        
         # ensure that the wikipedia reader can interpret a page appropriately
         metrics = Metrics()
         f = open(XML_DOC, "r")
         provider._extract_stats(f.read(), metrics)
         assert metrics.get("mentions", 0) == 1
         
-    def test_06_metrics_sleep(self):
-        wcfg = None
-        for p in self.config.providers:
-            if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
-        wconf = Configuration(wcfg, False)
-        provider = Wikipedia(wconf, self.config)
-        
+    def test_06_metrics_sleep(self):      
         assert provider.sleep_time() == 0
         assert provider.state.sleep_time() == 0
         
     def test_07_metrics_empty_alias_and_meta(self):
-        wcfg = None
-        for p in self.config.providers:
-            if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
-        wconf = Configuration(wcfg, False)
-        provider = Wikipedia(wconf, self.config)
-        
         alias = Aliases({"bob": ["alice"]})
         metrics = provider.metrics(alias)
         
-        # at this point we can check that there is no "mentions"
-        # key
+        # at this point we can check that there is no "mentions" key
         assert metrics.get("mentions", None) is None
         
         # we can also check that the meta is correct
@@ -242,13 +205,6 @@ class Test_Dryad(unittest.TestCase):
         
     def test_08_metrics_http_success(self):
         Provider.http_get = successful_get
-        
-        wcfg = None
-        for p in self.config.providers:
-            if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
-        wconf = Configuration(wcfg, False)
-        provider = Wikipedia(wconf, self.config)
         d = {"doi" : ["10.1371/journal.pcbi.1000361"], "url" : ["http://cottagelabs.com"]}
         metrics = provider.metrics(Aliases(d))
         
@@ -256,13 +212,6 @@ class Test_Dryad(unittest.TestCase):
         
     def test_09_metrics_http_general_fail(self):
         Provider.http_get = get_400
-        
-        wcfg = None
-        for p in self.config.providers:
-            if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
-        wconf = Configuration(wcfg, False)
-        provider = Wikipedia(wconf, self.config)
         d = {"doi" : ["10.1371/journal.pcbi.1000361"], "url" : ["http://cottagelabs.com"]}
         metrics = provider.metrics(Aliases(d))
         
@@ -270,27 +219,11 @@ class Test_Dryad(unittest.TestCase):
         
     def test_10_metrics_400(self):
         Provider.http_get = get_400
-        
-        wcfg = None
-        for p in self.config.providers:
-            if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
-        wconf = Configuration(wcfg, False)
-        provider = Wikipedia(wconf, self.config)
-        
         metrics = Metrics()
         self.assertRaises(ProviderClientError, provider._get_metrics, "10.1371/journal.pcbi.1000361", metrics)
         
     def test_11_metrics_500(self):
         Provider.http_get = get_500
-        
-        wcfg = None
-        for p in self.config.providers:
-            if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = os.path.join(CWD, p["config"])
-        wconf = Configuration(wcfg, False)
-        provider = Wikipedia(wconf, self.config)
-        
         metrics = Metrics()
         self.assertRaises(ProviderServerError, provider._get_metrics, "10.1371/journal.pcbi.1000361", metrics)
     """
