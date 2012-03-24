@@ -16,13 +16,14 @@ class TestDAO(unittest.TestCase):
         cls.couch.delete( cls.TESTDB )
         
     def test_01_get_None(self):
-        assert self.d.get(None) == None
+        assert dao.Dao.get('woeifwoifmwiemwfw9m09m49ufm9fu93u4f093u394umf093u4mf') == None
         
     def test_02_save(self):
         assert self.d.id == None
         self.d.save()
         assert self.d.id != None
         assert self.d.version != None
+        assert self.d.get(self.d.id) != None
         
     def test_03_query(self):
         map_fun = 'function(doc) { emit(doc, null); }'
