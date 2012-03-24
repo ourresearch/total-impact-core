@@ -186,8 +186,7 @@ class Dryad(Provider):
             view_package = max([int(view_match.group("views")) for view_match in view_matches_package])
             file_total_views = sum([int(view_match.group("views")) for view_match in view_matches_file]) - view_package
         except ValueError:
-            view_package = None
-            file_total_views = None
+            raise ProviderClientError(content)            
         
         download_matches = DRYAD_DOWNLOADS_PATTERN.finditer(content)
         try:
@@ -195,8 +194,7 @@ class Dryad(Provider):
             total_downloads = sum(downloads)
             max_downloads = max(downloads)
         except ValueError:
-            total_downloads = None
-            max_downloads = None
+            raise ProviderClientError(content)            
 
         snapshot_file_views = DryadMetricSnapshot(self, "Dryad:file_views", file_total_views)
         snapshot_view_package = DryadMetricSnapshot(self, "Dryad:package_views", view_package)

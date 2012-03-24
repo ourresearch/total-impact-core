@@ -164,12 +164,12 @@ class Test_Dryad(unittest.TestCase):
         item_with_new_aliases = self.provider.aliases(self.simple_item)
 
     @raises(ProviderServerError)
-    def test_05c_500(self):
+    def test_05c_aliases_500(self):
         Provider.http_get = get_500
         item_with_new_aliases = self.provider.aliases(self.simple_item)
 
     @raises(ProviderClientError)
-    def test_05d_empty(self):
+    def test_05d_aliases_empty(self):
         Provider.http_get = get_empty
         item_with_new_aliases = self.provider.aliases(self.simple_item)
 
@@ -209,31 +209,30 @@ class Test_Dryad(unittest.TestCase):
         assert_equals(new_metrics_values,
             [('Dryad:file_views', 268), ('Dryad:most_downloaded_file', 76), ('Dryad:package_views', 407), ('Dryad:total_downloads', 178)])
 
+    @raises(ProviderClientError)
+    def test_07b_metrics_400(self):
+        Provider.http_get = get_400
+        item_with_new_metrics = self.provider.metrics(self.simple_item)
 
-    @nottest
-    ## FIXME supposed to take an alias metric
-    def test_15_metrics(self):
-        ret = self.provider.metrics(TEST_DRYAD_DOI)
-        assert len(ret.str_list_provider_metrics()) == 4, len(ret.str_list_provider_metrics())
+    @raises(ProviderServerError)
+    def test_07c_metrics_500(self):
+        Provider.http_get = get_500
+        item_with_new_metrics = self.provider.metrics(self.simple_item)
 
-    
-    """        
-    def test_06_metrics_sleep(self):      
-        assert provider.sleep_time() == 0
-        assert provider.state.sleep_time() == 0
-        
-    def test_07_metrics_empty_alias_and_meta(self):
-        alias = Aliases({"bob": ["alice"]})
-        metrics = provider.metrics(alias)
-        
-        # at this point we can check that there is no "mentions" key
-        assert metrics.get("mentions", None) is None
-        
-        # we can also check that the meta is correct
-        meta = metrics.get("meta", None)
-        assert meta is not None
-        
-        # FIXME: needs more exploration
-        assert meta == provider.config.meta
-    """
-    
+    @raises(ProviderClientError)
+    def test_07d_metrics_empty(self):
+        Provider.http_get = get_empty
+        item_with_new_metrics = self.provider.metrics(self.simple_item)
+
+    @raises(ProviderClientError)
+    def test_07g_metrics_nonsense_txt(self):
+        Provider.http_get = get_nonsense_txt
+        item_with_new_metrics = self.provider.metrics(self.simple_item)
+        assert_equals(len(item_with_new_metrics.data["bucket"]) == 0)
+
+    @raises(ProviderClientError)
+    def test_07h_metrics_nonsense_xml(self):
+        Provider.http_get = get_nonsense_xml
+        item_with_new_metrics = self.provider.metrics(self.simple_item)
+        assert_equals(len(item_with_new_metrics.data["bucket"]) == 0)
+
