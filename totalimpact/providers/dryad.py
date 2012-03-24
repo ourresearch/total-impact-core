@@ -15,7 +15,7 @@ class DryadMetricSnapshot(ProviderMetric):
 
 class Dryad(Provider):  
 
-    def __init__(self, config, app_config):
+    def __init__(self, config, app_config=None):
         super(Dryad, self).__init__(config, app_config)
         self.state = DryadState(config)
         self.id = self.config.id
@@ -48,6 +48,7 @@ class Dryad(Provider):
     def member_items(self, query_string, query_type):
         # FIXME: only checks the first dryad page
         enc = urllib.quote(query_string)
+
         url = self.config.member_items["querytype"]["dryadAuthor"]['url'] % enc
         logger.debug(self.config.id + ": query type " + query_type)
         logger.debug(self.config.id + ": attempting to retrieve member items from " + url)

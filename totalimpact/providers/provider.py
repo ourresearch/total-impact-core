@@ -256,7 +256,9 @@ class Provider(object):
         # ensure that a user-agent string is set
         if headers is None:
             headers = {}
-        headers['User-Agent'] = self.app_config.user_agent
+
+        if self.app_config:
+            headers['User-Agent'] = self.app_config.user_agent
         
         # make the request
         try:
