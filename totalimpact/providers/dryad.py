@@ -1,7 +1,8 @@
 import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
 from totalimpact.models import Metrics, ProviderMetric, Aliases
-from BeautifulSoup import BeautifulStoneSoup
+from bs4 import BeautifulSoup
+
 import requests
 import simplejson
 
@@ -33,22 +34,15 @@ class Dryad(Provider):
     def _is_relevant_id(self, alias):
         return self._is_dryad_doi(alias)
 
-    def _get_first_arr_str_from_xml(self, xml, name):
-        identifiers = []
-
-        soup = BeautifulStoneSoup(xml)
+    def _get_named_arr_str_from_xml(self, xml, name):
+        soup = BeautifulSoup(xml, "xml")
         try:
-            arrs = soup.result.findAll("arr")
+            # use attrs approach here because "name" is an attribute name for find_all method itself
+            arrs = soup.result.find_all("arr", attrs={'name':name}) 
+            identifiers = [arr.str.text for arr in arrs]
         except AttributeError:
             raise ProviderClientError(soup.text)
             
-        for arr in arrs:
-            # FIXME: this looks fragile.  Dependent on order of attributes
-            # in supplied XML
-            # FIXME: dc.identifier.uri is not in the arr.attrs, but
-            # dc.identifier is.  Is this right or wrong?
-            if (u'name', name) in arr.attrs:
-                identifiers += [arr.str.text]
         return identifiers
 
     def member_items(self, query_string, query_type):
@@ -70,7 +64,7 @@ class Dryad(Provider):
         if (len(response.text) == 0):
             raise ProviderClientError(response)
 
-        identifiers = self._get_first_arr_str_from_xml(response.text, "dc.identifier")
+        identifiers = self._get_named_arr_str_from_xml(response.text, "dc.identifier")
 
         return [(Aliases.NS.DOI, hit.replace("doi:", "")) for hit in list(set(identifiers))]
 
@@ -132,10 +126,10 @@ class Dryad(Provider):
         #print xml
 
         identifiers = []
-        url_identifiers = self._get_first_arr_str_from_xml(xml, u'dc.identifier.uri')
+        url_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.identifier.uri')
         identifiers += [(Aliases.NS.URL, url) for url in url_identifiers]
 
-        title_identifiers = self._get_first_arr_str_from_xml(xml, u'dc.title')
+        title_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.title')
         identifiers += [(Aliases.NS.TITLE, title) for title in title_identifiers]
 
         return identifiers
