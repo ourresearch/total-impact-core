@@ -11,6 +11,8 @@ setup(
         "couchdb",
         "requests",
         "BeautifulSoup",
+        "beautifulsoup4",
+        "lxml",
         "simplejson"
 				],
     url = '',
