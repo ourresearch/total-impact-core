@@ -62,8 +62,12 @@ class Dao(object):
 
     @classmethod
     def get(cls,_id):
+        if not _id:
+            return None
+
         try:
-            return cls(**cls.connection()[_id])
+            couch, db = cls.connection()
+            return cls(**db[_id])
         except:
             return None
 

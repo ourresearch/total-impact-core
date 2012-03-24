@@ -14,6 +14,10 @@ from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
 
 
+# set config
+config = Configuration()
+
+
 # do account / auth stuff
 @login_manager.user_loader
 def load_account_for_login_manager(userid):
@@ -47,7 +51,7 @@ def home():
     return render_template('index.html')
 
 
-@app.route('/about/')
+@app.route('/about')
 def content():
     return render_template('about.html')
 
@@ -56,8 +60,9 @@ def content():
 @app.route('/item/<tiid>')
 def item(tiid):
     item = totalimpact.models.Item.get(tiid)
-    item.set_last_requested()
+    print item
     if item:
+        item.set_last_requested()
         # is request for JSON or HTML
         # return relevant version of item
         resp = make_response(item.json)
@@ -93,8 +98,9 @@ def items(tiids):
     for index,tiid in enumerate(tiids.split(',')):
         if index > 99: break
         thisitem = totalimpact.models.Item.get(tiid)
-        thisitem.set_last_requested
-        items.append( thisitem.data )
+        if thisitem:
+            thisitem.set_last_requested
+            items.append( thisitem.data )
     resp = make_response( json.dumps(items, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
@@ -108,7 +114,6 @@ def items(tiids):
 #    /provider/GitHub/memberitems?query=jasonpriem&type=profile
 #    /provider/GitHub/memberitems?query=bioperl&type=orgs
 #    /provider/Dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author
-config = Configuration('config/totalimpact.conf.json')
 providers = ProviderFactory.get_providers(config)
 @app.route('/provider/<pid>/memberitems')
 def provider_memberitems(pid):
@@ -230,13 +235,29 @@ def user(uid=''):
 
     # POST updated user data (but don't accept changes to the user colls list)    
     if request.method == 'POST':
-        pass
+        if uid:
+            user = totalimpact.models.User.get(uid)
+        else:
+            user = totalimpact.models()
+        if request.json:
+            newdata = request.json
+        else:
+            newdata = json.loads(request.data)
+        if 'collection_ids' in newdata:
+            del newdata['collection_ids']
+        if 'password' in newdata:
+            pass # should prob hash the password here (fix once user accounts exist)
+        user.data.update(newdata)
+        user.save()
+        resp = make_response( user.json )
+        resp.mimetype = "application/json"
+        return resp
     
     # kill this user
     if request.method == 'DELETE':
         user = totalimpact.models.User.get(uid)
         user.delete()
-        return 'killed' # should return 404?
+        abort(404)
 
 # /user/claim_collection/:collection_id
     # associates a given collection with the user; may require additional tokens, not sure yet.

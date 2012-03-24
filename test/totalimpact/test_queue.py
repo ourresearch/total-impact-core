@@ -3,6 +3,8 @@ import unittest, json
 from totalimpact import queue
 from totalimpact import models
 
+from nose.tools import nottest
+
 class TestQueue(unittest.TestCase):
 
     @classmethod
@@ -17,6 +19,7 @@ class TestQueue(unittest.TestCase):
     def teardown_class(cls):
         cls.couch.delete( cls.TESTDB )
 
+    @nottest
     def test_01_alias_queue(self):
         aq = queue.AliasQueue()
         aq.config.db_name = self.TESTDB
@@ -28,6 +31,7 @@ class TestQueue(unittest.TestCase):
         # TODO: once queues actually work, this should succeed
         assert len(aq.queue) == 0, aq
 
+    @nottest
     def test_02_metrics_queue(self):
         mq = queue.MetricsQueue()
         mq.config.db_name = self.TESTDB
