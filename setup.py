@@ -10,13 +10,14 @@ setup(
         "Flask-WTF",
         "couchdb",
         "requests",
-        "BeautifulSoup"
+        "BeautifulSoup",
+        "simplejson"
 				],
     url = '',
-    author = 'Total Impact',
-    author_email = '',
-    description = 'Total Impact',
-    license = '',
+    author = 'total-impact',
+    author_email = 'totalimpactdev@gmail.com',
+    description = 'source code for the service at http://total-impact.org',
+    license = 'MIT',
     classifiers = [
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
