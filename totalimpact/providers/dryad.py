@@ -23,6 +23,10 @@ class Dryad(Provider):
         self.dryad_doi_rx = re.compile(r"(10\.5061/.*)")
         self.member_items_rx = re.compile(r"(10\.5061/.*)</span")
 
+        self.DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+) views</span>", re.DOTALL)
+        self.DRYAD_VIEWS_FILE_PATTERN = re.compile("(?P<views>\d+) views\S", re.DOTALL)
+        self.DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+) downloads", re.DOTALL)
+
     def _is_dryad_doi(self, alias):
         return self.dryad_doi_rx.search(alias[1]) is not None
 
@@ -174,21 +178,15 @@ class Dryad(Provider):
 
 
     def _extract_stats(self, content):
-        # FIXME: move all these to be member attributes of the provider, so 
-        # that they only have to be compiled once
-        DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+) views</span>", re.DOTALL)
-        DRYAD_VIEWS_FILE_PATTERN = re.compile("(?P<views>\d+) views\S", re.DOTALL)
-        DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+) downloads", re.DOTALL)
-
-        view_matches_package = DRYAD_VIEWS_PACKAGE_PATTERN.finditer(content)
-        view_matches_file = DRYAD_VIEWS_FILE_PATTERN.finditer(content)
+        view_matches_package = self.DRYAD_VIEWS_PACKAGE_PATTERN.finditer(content)
+        view_matches_file = self.DRYAD_VIEWS_FILE_PATTERN.finditer(content)
         try:
             view_package = max([int(view_match.group("views")) for view_match in view_matches_package])
             file_total_views = sum([int(view_match.group("views")) for view_match in view_matches_file]) - view_package
         except ValueError:
             raise ProviderClientError(content)            
         
-        download_matches = DRYAD_DOWNLOADS_PATTERN.finditer(content)
+        download_matches = self.DRYAD_DOWNLOADS_PATTERN.finditer(content)
         try:
             downloads = [int(download_match.group("downloads")) for download_match in download_matches]
             total_downloads = sum(downloads)
