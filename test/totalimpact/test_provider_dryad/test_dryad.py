@@ -1,15 +1,12 @@
-from totalimpact.models import Metrics, Aliases
+from totalimpact.models import Metrics, Aliases, Item
 from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
 
 import os, unittest
-from nose.tools import nottest, raises
+import simplejson
+from nose.tools import nottest, raises, assert_equals
 
-# dummy Item class
-class Item(object):
-    def __init__(self, aliases=None):
-        self.aliases = aliases
 
 # prepare a monkey patch to override the http_get method of the Provider
 class DummyResponse(object):
@@ -55,6 +52,9 @@ SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(CWD, "sample_extract_aliases_page.xml
 SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(CWD, "sample_extract_member_items_page.xml")
 SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE_ZERO_ITEMS = os.path.join(CWD, "sample_extract_member_items_page_zero_items.xml")
 
+TEST_ALIASES_SEED = {"DOI" : [TEST_DRYAD_DOI], "URL" : ["http://datadryad.org/handle/10255/dryad.7898"]}
+
+
 class Test_Dryad(unittest.TestCase):
 
     def setUp(self):
@@ -62,7 +62,11 @@ class Test_Dryad(unittest.TestCase):
         self.config = Configuration(DRYAD_CONFIG_FILENAME, False)
         self.provider = Dryad(self.config)
 
-    
+        a = Aliases()
+        a.add_alias("DOI", TEST_DRYAD_DOI)
+        self.simple_item = Item("12345", aliases=a)
+
+
     def tearDown(self):
         Provider.http_get = self.old_http_get
     
@@ -95,6 +99,7 @@ class Test_Dryad(unittest.TestCase):
         Provider.http_get = get_member_items_html_success
         members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryadAuthor")
         assert len(members) == 4, str(members)
+        assert_equals(members, [('DOI', u'10.5061/dryad.j1fd7'), ('DOI', u'10.5061/dryad.mf1sd'), ('DOI', u'10.5061/dryad.3td2f'), ('DOI', u'10.5061/dryad.j2c4g')])
 
     def test_04f_member_items_zero_items(self):
         Provider.http_get = get_member_items_html_zero_items
@@ -128,73 +133,59 @@ class Test_Dryad(unittest.TestCase):
         members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryadAuthor")
         assert len(members) == 0, str(members)
 
-        
-    def test_05_aliases_read_content(self):
+
+
+    def test_05_extract_aliases(self):
         # ensure that the dryad reader can interpret an xml doc appropriately
         f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
         aliases = self.provider._extract_aliases(f.read())
-        assert len(aliases) == 2, aliases
-        
-        assert ("URL", u'http://hdl.handle.net/10255/dryad.7898') in aliases
-        assert ("TITLE", u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides') in aliases
-    
-    def test_06_aliases_400(self):
-        Provider.http_get = get_400
-        self.assertRaises(ProviderClientError, self.provider._get_aliases, TEST_DRYAD_DOI)
-        
-    def test_07_aliases_500(self):
-        Provider.http_get = get_500
-        self.assertRaises(ProviderServerError, self.provider._get_aliases, TEST_DRYAD_DOI)
-    
-    def test_08_aliases_success(self):
-        Provider.http_get = get_aliases_html_success
-        
-        # FIXME add proper tests for aliases
-        #aliases = provider._get_aliases(TEST_DRYAD_DOI)
-        #assert len(aliases) == 1, aliases
-        
-        #ns, id = aliases[0]
-        #assert ns == "DOI"
-        #assert id == ALIAS_DOI, id
-    
-    def test_09_aliases_empty_success(self):
-        Provider.http_get = get_empty
-        
-        # FIXME add proper tests for aliases        
-        #aliases = provider._get_aliases(TEST_DRYAD_DOI)
-        #assert len(aliases) == 1
-    
-    def test_10_aliases_general_fail(self):
-        Provider.http_get = get_400
-        
-        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
-        alias = Aliases(seed=d)
-        item = Item(aliases=alias)
-        item = self.provider.aliases(item)
-        
-        # the aliases should be unchanged
-        assert item.aliases == alias
-    
-    def test_11_aliases_general_success(self):
-        Provider.http_get = get_aliases_html_success
-        
-        d = {"DOI" : [TEST_DRYAD_DOI], "URL" : ["http://cottagelabs.com"]}
-        alias = Aliases(seed=d)
-        item = Item(aliases=alias)
+        assert_equals(aliases, [('URL', u'http://hdl.handle.net/10255/dryad.7898'), 
+            ('TITLE', u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides')])        
 
-        # FIXME fix tests for aliases
-        #item = provider.aliases(item)
+    def test_05a_get_aliases_success(self):
+        Provider.http_get = get_aliases_html_success
+        item_with_new_aliases = self.provider.aliases(self.simple_item)
+
+        new_aliases = item_with_new_aliases.aliases
+        assert_equals(new_aliases.get_aliases_dict().keys(), ['URL', 'TIID', 'DOI', 'TITLE'])
+        assert_equals(new_aliases.get_ids_by_namespace(Aliases.NS.URL), [u'http://hdl.handle.net/10255/dryad.7898'])
+        assert_equals(new_aliases.get_ids_by_namespace(Aliases.NS.DOI), ['10.5061/dryad.7898'])
+        assert_equals(new_aliases.get_ids_by_namespace(Aliases.NS.TITLE), [u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides'])
         
-        #assert len(item.aliases.get_aliases_list(["DOI"])) == 1
-        #assert len(item.aliases.get_aliases_list(["URL"])) == 1
-        
-        #dois = [x[1] for x in item.aliases.get_aliases_list(["DOI"])]
-        #assert TEST_DRYAD_DOI in dois
+    # zero items doesn't make sense for aliases   
+
+    @raises(ProviderClientError)
+    def test_05b_aliases_400(self):
+        Provider.http_get = get_400
+        item_with_new_aliases = self.provider.aliases(self.simple_item)
+
+    @raises(ProviderServerError)
+    def test_05c_500(self):
+        Provider.http_get = get_500
+        item_with_new_aliases = self.provider.aliases(self.simple_item)
+
+    @raises(ProviderClientError)
+    def test_05d_empty(self):
+        Provider.http_get = get_empty
+        item_with_new_aliases = self.provider.aliases(self.simple_item)
+
+    @raises(ProviderClientError)
+    def test_05g_nonsense_txt(self):
+        Provider.http_get = get_nonsense_txt
+        item_with_new_aliases = self.provider.aliases(self.simple_item)
+        assert len(item_with_new_aliases.aliases.get_aliases_dict().keys()) == 0, str(item_with_new_aliases)
+
+    @raises(ProviderClientError)
+    def test_05h_nonsense_xml(self):
+        Provider.http_get = get_nonsense_xml
+        item_with_new_aliases = self.provider.aliases(self.simple_item)
+        assert len(item_with_new_aliases.aliases.get_aliases_dict().keys()) == 0, str(item_with_new_aliases)    
+    
+
 
     @nottest
     def test_12_provides_metrics(self):
         assert self.provider.provides_metrics() == True
-
 
     def test_13_show_details_url(self):
         assert self.provider.get_show_details_url(TEST_DRYAD_DOI) == "http://dx.doi.org/" + TEST_DRYAD_DOI
