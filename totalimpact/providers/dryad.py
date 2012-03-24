@@ -23,6 +23,11 @@ class Dryad(Provider):
         self.dryad_doi_rx = re.compile(r"(10\.5061/.*)")
         self.member_items_rx = re.compile(r"(10\.5061/.*)</span")
 
+    def _is_dryad_doi(self, alias):
+        return self.dryad_doi_rx.search(alias[1]) is not None
+
+    def _is_relevant_id(self, alias):
+        return self._is_dryad_doi(alias)
 
     def _get_first_arr_str_from_xml(self, xml, name):
         identifiers = []
@@ -67,39 +72,29 @@ class Dryad(Provider):
 
     
     def aliases(self, item): 
-        try:
-            # get the alias object
-            alias_object = item.aliases
-            logger.info(self.config.id + ": aliases requested for tiid:" + alias_object.tiid)
-            
-            # Get a list of the new aliases that can be discovered from the data
-            # source
-            new_aliases = []
-            for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
-                if not self._is_dryad_doi(alias):
-                    continue
-                logger.debug(self.config.id + ": processing aliases for tiid:" + alias_object.tiid)
-                new_aliases += self._get_aliases(alias)
-            
-            # update the original alias object with new unique aliases
-            alias_object.add_unique(new_aliases)
-            
-            # log our success
-            logger.debug(self.config.id + ": discovered aliases for tiid " + alias_object.tiid + ": " + str(new_aliases))
-            logger.info(self.config.id + ": aliases completed for tiid:" + alias_object.tiid)
-            
-            # no need to set the aliases on the item, as everything is by-reference
-            return item
-        except ProviderError as e:
-            self.error(e, item)
-            return item
+        # get the alias object
+        alias_object = item.aliases
+        logger.info(self.config.id + ": aliases requested for tiid:" + alias_object.tiid)
         
-
-    def _is_dryad_doi(self, alias):
-        return self.dryad_doi_rx.search(alias[1]) is not None
-
-    def _is_relevant_id(self, alias):
-        return self._is_dryad_doi(alias)
+        # Get a list of the new aliases that can be discovered from the data
+        # source
+        new_aliases = []
+        for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
+            if not self._is_dryad_doi(alias):
+                continue
+            logger.debug(self.config.id + ": processing aliases for tiid:" + alias_object.tiid)
+            new_aliases += self._get_aliases(alias)
+        
+        # update the original alias object with new unique aliases
+        alias_object.add_unique(new_aliases)
+        
+        # log our success
+        logger.debug(self.config.id + ": discovered aliases for tiid " + alias_object.tiid + ": " + str(new_aliases))
+        logger.info(self.config.id + ": aliases completed for tiid:" + alias_object.tiid)
+        
+        # no need to set the aliases on the item, as everything is by-reference
+        return item
+        
 
     def _get_aliases(self, alias):
         # FIXME: urlencoding?
