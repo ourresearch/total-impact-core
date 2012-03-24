@@ -4,7 +4,7 @@ from totalimpact.providers.dryad import Dryad
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
 
 import os, unittest
-from nose.tools import nottest
+from nose.tools import nottest, raises
 
 # dummy Item class
 class Item(object):
@@ -87,11 +87,38 @@ class Test_Dryad(unittest.TestCase):
         assert not self.provider._is_crossref_doi(("DOI", "11.12354/bib"))
     
 
-    def test_04_member_items(self):
+    def test_04a_member_items_success(self):
         Provider.http_get = get_member_items_html_success
-        
         members = self.provider.member_items("Piwowar, Heather A.", "dryadAuthor")
         assert len(members) == 4, str(members)
+
+    @raises(ProviderClientError)
+    def test_04b_member_items_400(self):
+        Provider.http_get = get_400
+        members = self.provider.member_items("Piwowar, Heather A.", "dryadAuthor")
+
+    @raises(ProviderServerError)
+    def test_04c_member_items_500(self):
+        Provider.http_get = get_500
+        members = self.provider.member_items("Piwowar, Heather A.", "dryadAuthor")
+
+    @raises(ProviderClientError)
+    def test_04d_member_items_empty(self):
+        Provider.http_get = get_empty
+        members = self.provider.member_items("Piwowar, Heather A.", "dryadAuthor")
+
+    @raises(ProviderClientError)
+    def test_04e_member_items_wrong_page(self):
+        Provider.http_get = get_aliases_html_success  # Note this is the wrong page: aliases for member_items
+        members = self.provider.member_items("Piwowar, Heather A.", "dryadAuthor")
+
+    @nottest
+    def test_04e_member_items_wrong_page(self):
+        Provider.http_get = get_member_items_zero_items
+        members = self.provider.member_items("Piwowar, Heather A.", "dryadAuthor")
+        assert len(members) == 0, str(members)
+
+
         
     def test_05_aliases_read_content(self):
         # ensure that the dryad reader can interpret an xml doc appropriately
