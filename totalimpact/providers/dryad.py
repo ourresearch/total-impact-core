@@ -136,9 +136,8 @@ class Dryad(Provider):
 
         return identifiers
 
-    # FIXME: just turned this off for a while, as metrics are not working from Dryad
     def provides_metrics(self): 
-        return False
+        return True
     
     def get_show_details_url(self, doi):
         return "http://dx.doi.org/" + doi
