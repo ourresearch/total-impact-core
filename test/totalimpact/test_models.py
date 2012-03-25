@@ -69,6 +69,23 @@ METRICS_SEED = json.loads("""
 """)
 METRICS_SEED['bucket'][PM_SEED_HASH] = PM_SEED
 
+BIBLIO_SEED = json.loads("""
+    {
+        "bibnumber": "10", 
+        "title": "An extension of de Finetti's theorem", 
+        "journal": "Advances in Applied Probability", 
+        "author": [
+            "Pitman, J"
+        ], 
+        "collection": "pitnoid", 
+        "volume": "10", 
+        "id": "p78", 
+        "year": "1978", 
+        "type": "article", 
+        "pages": "268 to 270"
+}
+""")
+
 ITEM_SEED = json.loads("""
 {
     "created": 23112412414.234,
@@ -78,7 +95,7 @@ ITEM_SEED = json.loads("""
 """)
 ITEM_SEED["aliases"] = ALIAS_SEED
 ITEM_SEED["metrics"] = METRICS_SEED
-ITEM_SEED["biblio"] = None
+ITEM_SEED["biblio"] = BIBLIO_SEED
 
 class TestModels(unittest.TestCase):
 
@@ -400,24 +417,30 @@ class TestModels(unittest.TestCase):
         i = models.Item("12345")
         assert i.id == "12345"
         
-        i = models.Item("12345", aliases=deepcopy(ALIAS_SEED), metrics=deepcopy(METRICS_SEED), biblio=None)
+        i = models.Item("12345", aliases=deepcopy(ALIAS_SEED), metrics=deepcopy(METRICS_SEED), biblio=deepcopy(BIBLIO_SEED))
         assert isinstance(i.aliases, models.Aliases)
         assert isinstance(i.metrics, models.Metrics)
+        assert isinstance(i.biblio, models.Biblio)
+
         assert i.aliases.data == ALIAS_SEED_CANONICAL, i.aliases.data
         # can only compare the buckets, as the meta objects change when they are added
         assert i.metrics.data['bucket'] == METRICS_SEED['bucket'], (i.metrics.data, METRICS_SEED)
+        assert i.biblio.data == BIBLIO_SEED
         
         a = models.Aliases(seed=deepcopy(ALIAS_SEED))
         m = models.Metrics(seed=deepcopy(METRICS_SEED))
+        b = models.Biblio(seed=deepcopy(BIBLIO_SEED))
         
-        i = models.Item("12345", aliases=a, metrics=m)
+        i = models.Item("12345", aliases=a, metrics=m, biblio=b)
         assert i.aliases.data == ALIAS_SEED_CANONICAL
         # can only compare the buckets, as the meta objects change when they are added
         assert i.metrics.data['bucket'] == METRICS_SEED['bucket'], (i.metrics.data, METRICS_SEED)
+        assert i.biblio.data == BIBLIO_SEED
         
         i = models.Item(id="12345", seed=deepcopy(ITEM_SEED))
         assert i.aliases.data == ALIAS_SEED_CANONICAL
         assert i.metrics.data['bucket'] == METRICS_SEED['bucket'], (i.metrics.data, METRICS_SEED)
+        assert i.biblio.data == BIBLIO_SEED
         
         
         

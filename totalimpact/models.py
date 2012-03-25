@@ -181,11 +181,29 @@ class Item(dao.Dao):
     def data(self, val):
         self._data = val
 
-# FIXME: there's no documentation on the biblio object, so just leaving
-# it blank for the time being
 class Biblio(object):
+    """
+    {
+        "title": "An extension of de Finetti's theorem", 
+        "journal": "Advances in Applied Probability", 
+        "author": [
+            "Pitman, J"
+        ], 
+        "collection": "pitnoid", 
+        "volume": "10", 
+        "id": "p78", 
+        "year": "1978", 
+        "pages": "268 to 270"
+    }
+    """
     def __init__(self, seed=None):
-        self.data = seed if seed is not None else {}
+        self.data = seed if seed is not None else ""
+            
+    def __str__(self):
+        return str(self.data)
+
+    def __repr__(self):
+        return str(self.data)
 
 
 class Metrics(object):
@@ -287,6 +305,9 @@ class Metrics(object):
                 canon += unicode(v)
         return canon
 
+    def __repr__(self):
+        return str(self.data)
+
 # FIXME: should this have a created property?
 # FIXME: should things like "can_use_commercially" be true/false rather than the - yes
 # string "0" or "1", or are there other values that can go in there
@@ -350,6 +371,10 @@ class ProviderMetric(object):
             self.data['meta'] = meta
             self.data['last_modified'] = time.time()
     
+    def __repr__(self):
+        return str(self.data)
+
+
     # FIXME: this is not particularly intuitive, consider changing it
     def provenance(self, provenance=None):
         """
