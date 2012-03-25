@@ -71,7 +71,6 @@ METRICS_SEED['bucket'][PM_SEED_HASH] = PM_SEED
 
 BIBLIO_SEED = json.loads("""
     {
-        "bibnumber": "10", 
         "title": "An extension of de Finetti's theorem", 
         "journal": "Advances in Applied Probability", 
         "author": [
@@ -81,7 +80,6 @@ BIBLIO_SEED = json.loads("""
         "volume": "10", 
         "id": "p78", 
         "year": "1978", 
-        "type": "article", 
         "pages": "268 to 270"
 }
 """)
