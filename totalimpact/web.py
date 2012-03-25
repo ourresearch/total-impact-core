@@ -136,18 +136,41 @@ def provider_memberitems(pid):
     resp.mimetype = "application/json"
     return resp
 
-@app.route('/provider/<pid>/<aliases>', methods=['POST'] )
-def provider_aliases(pid,aliases=''):
-    # these two will be implemented internally but not exposed via REST:
-    if aliases:
-        # alias object as cargo, may or may not have a tiid in it
-        # returns alias object
-        return "alias object"
-    else:
-        #alias object as cargo, may or may not have tiid in it
-        #returns dictionary with metrics object and biblio object
-        return "metrics and biblio objs dict"
+@app.route('/provider/<pid>/aliases/<id>', methods=['GET'] )
+def provider_aliases(pid,id):
+    for prov in providers:
+        if prov.id == pid:
+            provider = prov
+            break
+    aliases = provider.get_aliases_for_id(id.replace("%", "/"))
+    # check for requested response type, or always JSON?
+    resp = make_response( json.dumps(aliases, sort_keys=True, indent=4) )
+    resp.mimetype = "application/json"
+    return resp
 
+@app.route('/provider/<pid>/metrics/<id>', methods=['GET'] )
+def provider_metrics(pid,id):
+    for prov in providers:
+        if prov.id == pid:
+            provider = prov
+            break
+    metrics = provider.get_metrics_for_id(id.replace("%", "/"))
+    # check for requested response type, or always JSON?
+    resp = make_response( json.dumps(metrics.data, sort_keys=True, indent=4) )
+    resp.mimetype = "application/json"
+    return resp
+
+@app.route('/provider/<pid>/biblio/<id>', methods=['GET'] )
+def provider_biblio(pid,id):
+    for prov in providers:
+        if prov.id == pid:
+            provider = prov
+            break
+    biblio = provider.get_biblio_for_id(id.replace("%", "/"))
+    # check for requested response type, or always JSON?
+    resp = make_response( json.dumps(biblio.data, sort_keys=True, indent=4) )
+    resp.mimetype = "application/json"
+    return resp
 
 # routes for collections 
 # (groups of TI scholarly object items that are batched together for scoring)
