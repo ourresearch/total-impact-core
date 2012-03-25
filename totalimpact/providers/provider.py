@@ -171,6 +171,7 @@ class Provider(object):
     def member_items(self, query_string, query_type): raise NotImplementedError()
     def aliases(self, item): raise NotImplementedError()
     def metrics(self, item): raise NotImplementedError()
+    def biblio(self, item): raise NotImplementedError()
     
     def error(self, error, item):
         # FIXME: not yet implemented

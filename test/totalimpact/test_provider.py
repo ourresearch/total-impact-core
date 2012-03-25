@@ -37,6 +37,7 @@ class Test_Provider(unittest.TestCase):
         self.assertRaises(NotImplementedError, provider.member_items, None, None)
         self.assertRaises(NotImplementedError, provider.aliases, None)
         self.assertRaises(NotImplementedError, provider.metrics, None)
+        self.assertRaises(NotImplementedError, provider.biblio, None)
         
     def test_03_error(self):
         # FIXME: will need to test this when the error handling is written
