@@ -95,7 +95,8 @@ class Dryad(Provider):
             if not self._is_dryad_doi(alias[1]):
                 continue
             logger.debug(self.config.id + ": processing aliases for tiid:" + alias_object.tiid)
-            new_aliases += self._get_aliases(alias)
+            id = alias[1]
+            new_aliases += self.get_aliases_for_id(id)
         
         # update the original alias object with new unique aliases
         alias_object.add_unique(new_aliases)
@@ -108,9 +109,8 @@ class Dryad(Provider):
         return item
         
 
-    def _get_aliases(self, alias):
-        # FIXME: urlencoding?
-        url = self.config.aliases['url'] % alias[1]
+    def get_aliases_for_id(self, id):
+        url = self.config.aliases['url'] % id
         logger.debug(self.config.id + ": attempting to retrieve aliases from " + url)
 
         # try to get a response from the data provider        
@@ -164,10 +164,14 @@ class Dryad(Provider):
         id = item_dryad_dois[0]
         return(id)        
 
-    def metrics(self, item):
+    def metrics(self, item): 
         id = self._get_dryad_doi(item)
-        
-        url = self.config.metrics['url'] % urllib.quote(id)
+        metrics_object = self.get_metrics_for_id(id)
+        return metrics_object
+
+
+    def get_metrics_for_id(self, id):
+        url = self.config.metrics['url'] % id
         logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
@@ -231,11 +235,13 @@ class Dryad(Provider):
 
     def biblio(self, item): 
         id = self._get_dryad_doi(item)
+        biblio_object = self.get_biblio_for_id(id)
+        return biblio_object
 
-        url = self.config.biblio['url'] % urllib.quote(item.id)
+    def get_biblio_for_id(self, id):
+        id = urllib.unquote(id)
 
-        print url
-
+        url = self.config.biblio['url'] % urllib.quote(id)
         logger.debug(self.config.id + ": attempting to retrieve biblio from " + url)
         
         # try to get a response from the data provider        
