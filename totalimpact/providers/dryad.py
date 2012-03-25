@@ -1,6 +1,6 @@
 import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
-from totalimpact.models import Metrics, ProviderMetric, Aliases
+from totalimpact.models import Metrics, ProviderMetric, Aliases, Biblio
 from bs4 import BeautifulSoup
 
 import requests
@@ -28,22 +28,35 @@ class Dryad(Provider):
         self.DRYAD_VIEWS_FILE_PATTERN = re.compile("(?P<views>\d+) views\S", re.DOTALL)
         self.DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+) downloads", re.DOTALL)
 
-    def _is_dryad_doi(self, alias):
-        return self.dryad_doi_rx.search(alias[1]) is not None
+    def _is_dryad_doi(self, doi):
+        return self.dryad_doi_rx.search(doi) is not None
 
     def _is_relevant_id(self, alias):
-        return self._is_dryad_doi(alias)
+        return self._is_dryad_doi(alias[1])
 
-    def _get_named_arr_str_from_xml(self, xml, name):
-        soup = BeautifulSoup(xml, "xml")
+    def _get_named_arr_int_from_xml(self, xml, name, is_expected=True):
+        arrs = self._get_named_arrs_from_xml(xml, name, is_expected)
+        identifiers = [arr.int.text for arr in arrs]
+        return identifiers
+
+    def _get_named_arr_str_from_xml(self, xml, name, is_expected=True):
+        arrs = self._get_named_arrs_from_xml(xml, name, is_expected)
+        identifiers = [arr.str.text for arr in arrs]
+        return identifiers
+
+    def _get_named_arrs_from_xml(self, xml, name, is_expected=True):
+#        soup = BeautifulSoup(xml, ["lxml", "xml"])
+        soup = BeautifulSoup(xml)
+
         try:
             # use attrs approach here because "name" is an attribute name for find_all method itself
-            arrs = soup.result.find_all("arr", attrs={'name':name}) 
-            identifiers = [arr.str.text for arr in arrs]
+            arrs = soup.find_all("arr", attrs={'name':name}) 
         except AttributeError:
             raise ProviderClientError(soup.text)
-            
-        return identifiers
+        if (is_expected and (len(arrs) == 0)):
+            raise ProviderClientError(soup.text) 
+        return (arrs)
+
 
     def member_items(self, query_string, query_type):
         enc = urllib.quote(query_string)
@@ -61,10 +74,11 @@ class Dryad(Provider):
             else:
                 raise ProviderClientError(response)
 
-        if (len(response.text) == 0):
+        # did we get a page back that seems mostly valid?
+        if ("response" not in response.text):
             raise ProviderClientError(response)
 
-        identifiers = self._get_named_arr_str_from_xml(response.text, "dc.identifier")
+        identifiers = self._get_named_arr_str_from_xml(response.text, "dc.identifier", is_expected=False)
 
         return [(Aliases.NS.DOI, hit.replace("doi:", "")) for hit in list(set(identifiers))]
 
@@ -78,7 +92,7 @@ class Dryad(Provider):
         # source
         new_aliases = []
         for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
-            if not self._is_dryad_doi(alias):
+            if not self._is_dryad_doi(alias[1]):
                 continue
             logger.debug(self.config.id + ": processing aliases for tiid:" + alias_object.tiid)
             new_aliases += self._get_aliases(alias)
@@ -113,6 +127,10 @@ class Dryad(Provider):
                 raise ProviderServerError(response)
             else:
                 raise ProviderClientError(response)
+
+        # did we get a page back that seems mostly valid?
+        if ("response" not in response.text):
+            raise ProviderClientError(response)
         
         # extract the aliases
         new_aliases = self._extract_aliases(response.text)
@@ -123,8 +141,6 @@ class Dryad(Provider):
 
 
     def _extract_aliases(self, xml):
-        #print xml
-
         identifiers = []
         url_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.identifier.uri')
         identifiers += [(Aliases.NS.URL, url) for url in url_identifiers]
@@ -140,8 +156,18 @@ class Dryad(Provider):
     def get_show_details_url(self, doi):
         return "http://dx.doi.org/" + doi
 
+    def _get_dryad_doi(self, item):
+        item_dois = item.aliases.get_ids_by_namespace(Aliases.NS.DOI)
+        item_dryad_dois = [doi for doi in item_dois if self._is_dryad_doi(doi)]
+        if not item_dryad_dois:
+            raise Exception
+        id = item_dryad_dois[0]
+        return(id)        
+
     def metrics(self, item):
-        url = self.config.metrics['url'] % urllib.quote(item.id)
+        id = self._get_dryad_doi(item)
+        
+        url = self.config.metrics['url'] % urllib.quote(id)
         logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
@@ -159,6 +185,10 @@ class Dryad(Provider):
             else:
                 raise ProviderClientError(response)
         
+        # did we get a page back that seems mostly valid?
+        if ("Dryad" not in response.text):
+            raise ProviderClientError(response)
+
         # extract the aliases
         new_stats = self._extract_stats(response.text)
         metrics = Metrics()
@@ -196,18 +226,56 @@ class Dryad(Provider):
         return([snapshot_file_views, snapshot_view_package, snapshot_total_downloads, snapshot_most_downloaded_file])
 
 
-    def _extract_biblio(self, content):
-        DRYAD_CITATION_PATTERN = re.compile('please cite the Dryad data package:.*<blockquote>(?P<authors>.+?)\((?P<year>\d{4})\).*(?P<title>Data from.+?)<span>Dryad', re.DOTALL)
-        citation_matches = DRYAD_CITATION_PATTERN.search(content)
+    def provides_biblio(self): 
+        return True
+
+    def biblio(self, item): 
+        id = self._get_dryad_doi(item)
+
+        url = self.config.biblio['url'] % urllib.quote(item.id)
+
+        print url
+
+        logger.debug(self.config.id + ": attempting to retrieve biblio from " + url)
+        
+        # try to get a response from the data provider        
+        response = self.http_get(url, timeout=self.config.biblio.get('timeout', None))
+        
+        # register the hit, mostly so that anyone copying this remembers to do it,
+        # - we have overriden this in the DryadState object, so it doesn't do anything
+        self.state.register_unthrottled_hit()
+        
+        # FIXME: we have to observe the Dryad interface for a bit to get a handle
+        # on these response types - this is just a default approach...
+        if response.status_code != 200:
+            if response.status_code >= 500:
+                raise ProviderServerError(response)
+            else:
+                raise ProviderClientError(response)
+        
+        # extract the aliases
+        bibJSON = self._extract_biblio(response.text)
+        biblio_object = Biblio(bibJSON)
+
+        return biblio_object
+
+
+    def _extract_biblio(self, xml):
+        biblio_dict = {}
+
         try:
-            authors = citation_matches.group("authors")
-            year = citation_matches.group("year")
-            title = citation_matches.group("title")
-        except ValueError:
-            authors = None
-            year = None
-            title = None
-        return({"title":title, "year":year, "authors":authors})
+            title = self._get_named_arr_str_from_xml(xml, 'dc.title_ac')
+            biblio_dict["title"] = title[0]
+        except AttributeError:
+            raise ProviderClientError(xml)
+
+        try:
+            year = self._get_named_arr_int_from_xml(xml, 'dc.date.accessioned.year')
+            biblio_dict["year"] = year[0]
+        except AttributeError:
+            raise ProviderClientError(xml)
+
+        return biblio_dict
 
 
 class DryadState(ProviderState):

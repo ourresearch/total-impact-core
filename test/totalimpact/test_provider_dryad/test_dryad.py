@@ -30,6 +30,10 @@ def get_metrics_html_success(self, url, headers=None, timeout=None):
     f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
     return DummyResponse(200, f.read())
 
+def get_biblio_html_success(self, url, headers=None, timeout=None):
+    f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
+    return DummyResponse(200, f.read())
+
 def get_nonsense_xml(self, url, headers=None, timeout=None):
     return DummyResponse(200, '<?xml version="1.0" encoding="UTF-8"?><nothingtoseehere>nonsense</nothingtoseehere>')
 
@@ -55,6 +59,7 @@ SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(CWD, "sample_extract_metrics_page.htm
 SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(CWD, "sample_extract_aliases_page.xml")
 SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(CWD, "sample_extract_member_items_page.xml")
 SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE_ZERO_ITEMS = os.path.join(CWD, "sample_extract_member_items_page_zero_items.xml")
+SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(CWD, "sample_extract_biblio_page.xml")
 
 TEST_ALIASES_SEED = {"DOI" : [TEST_DRYAD_DOI], "URL" : ["http://datadryad.org/handle/10255/dryad.7898"]}
 
@@ -187,14 +192,14 @@ class Test_Dryad(unittest.TestCase):
     
 
 
-    def test_12_provides_metrics(self):
+    def test_06a_provides_metrics(self):
         assert self.provider.provides_metrics() == True
 
-    def test_13_show_details_url(self):
+    def test_06b_show_details_url(self):
         assert self.provider.get_show_details_url(TEST_DRYAD_DOI) == "http://dx.doi.org/" + TEST_DRYAD_DOI
     
 
-    def test_06_basic_extract_stats(self):
+    def test_06c_basic_extract_stats(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         ret = self.provider._extract_stats(f.read())
         assert len(ret) == 4, ret
@@ -235,4 +240,44 @@ class Test_Dryad(unittest.TestCase):
         Provider.http_get = get_nonsense_xml
         item_with_new_metrics = self.provider.metrics(self.simple_item)
         assert_equals(len(item_with_new_metrics.data["bucket"]) == 0)
+
+
+    def test_08_provides_biblio(self):
+        assert self.provider.provides_biblio() == True
+
+    def test_09a_basic_extract_biblio(self):
+        f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
+        ret = self.provider._extract_biblio(f.read())
+        assert_equals(ret, {'year': u'2010', 'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides'})
+
+    def test_09b_get_biblio_success(self):
+        Provider.http_get = get_biblio_html_success
+        biblio_object = self.provider.biblio(self.simple_item)
+        assert_equals(biblio_object.data, {'year': u'2010', 'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides'})
+
+    @raises(ProviderClientError)
+    def test_09c_biblio_400(self):
+        Provider.http_get = get_400
+        biblio_object = self.provider.biblio(self.simple_item)
+
+    @raises(ProviderServerError)
+    def test_09d_biblio_500(self):
+        Provider.http_get = get_500
+        biblio_object = self.provider.biblio(self.simple_item)
+
+    @raises(ProviderClientError)
+    def test_09e_biblio_empty(self):
+        Provider.http_get = get_empty
+        biblio_object = self.provider.biblio(self.simple_item)
+
+    @raises(ProviderClientError)
+    def test_09f_biblio_nonsense_txt(self):
+        Provider.http_get = get_nonsense_txt
+        biblio_object = self.provider.biblio(self.simple_item)
+
+    @raises(ProviderClientError)
+    def test_09g_biblio_nonsense_xml(self):
+        Provider.http_get = get_nonsense_xml
+        biblio_object = self.provider.biblio(self.simple_item)
+        
 

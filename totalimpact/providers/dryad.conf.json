@@ -18,6 +18,10 @@
     "aliases" : {
         "url" : "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.identifier.uri,dc.title"
     },
+
+    "biblio" : {
+        "url" : "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.date.accessioned.year,dc.identifier.uri,dc.title_ac,dc.contributor.author_ac"
+    },
     
     "member_items" : {
         "querytype" : {
