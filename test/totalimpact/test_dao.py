@@ -29,18 +29,19 @@ class TestDAO(unittest.TestCase):
     def test_connect_exception(self):
         self.d.connect("nonexistant_database")
 
+    def test_save_section_and_get(self):
+        self.d.create_db("test")
+        self.d.connect("test")
 
-    '''
-    def test_01_get_None(self):
-        assert dao.Dao.get('woeifwoifmwiemwfw9m09m49ufm9fu93u4f093u394umf093u4mf') == None
-        
-    def test_02_save(self):
-        assert self.d.id == None
-        self.d.save()
-        assert self.d.id != None
-        assert self.d.version != None
-        assert self.d.get(self.d.id) != None
-        
+        metrics = {"metrics":{"mendeley1": {}, "wikipedia1":{}}}
+        self.d.save_section(metrics, "metrics")
+
+    def test_nosy_again(self):
+        assert True 
+
+
+
+        '''
     def test_03_query(self):
         map_fun = 'function(doc) { emit(doc, null); }'
         res = self.d.query(map_fun=map_fun)
