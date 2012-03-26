@@ -1,20 +1,36 @@
 import unittest
+from nose.tools import raises
 
-from totalimpact import dao
+from totalimpact import dao, config
 
 class TestDAO(unittest.TestCase):
 
-    @classmethod
-    def setup_class(cls):
-        cls.TESTDB = 'ti_test'
-        cls.d = dao.Dao()
-        cls.d.config.db_name = cls.TESTDB
-        cls.couch, cls.db = cls.d.connection()
-
-    @classmethod
-    def teardown_class(cls):
-        cls.couch.delete( cls.TESTDB )
+    def setUp(self):
+        conf = config.Configuration()
+        self.d = dao.Dao(conf)
+        if self.d.db_exists("test"):
+            self.d.delete_db("test")
         
+    def test_create_db(self):
+        self.d.create_db("test")
+        assert self.d.db.__class__.__name__ == "Database"
+
+    def test_db_exists(self):
+        self.d.create_db("test")
+        assert self.d.db_exists("unlikely_name") == False
+        assert self.d.db_exists("test") == True
+
+    def test_connect(self):
+        self.d.create_db("test")
+        self.d.connect("test")
+        assert self.d.db.__class__.__name__ == "Database"
+
+    @raises(LookupError)
+    def test_connect_exception(self):
+        self.d.connect("nonexistant_database")
+
+
+    '''
     def test_01_get_None(self):
         assert dao.Dao.get('woeifwoifmwiemwfw9m09m49ufm9fu93u4f093u394umf093u4mf') == None
         
@@ -39,5 +55,5 @@ class TestDAO(unittest.TestCase):
         theid = self.d.id
         self.d.delete()
         assert self.d.get(theid) == None
-    
+    '''
 
