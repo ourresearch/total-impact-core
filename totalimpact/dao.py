@@ -16,6 +16,9 @@ class Dao(object):
         self.couch.resource.credentials = ( self.config.db_adminuser, self.config.db_password )
 
     def connect(self, db_name=False):
+        '''connect to an extant database. 
+        Fails if the database doesn't exist'''
+        
         if db_name:
             self.config.db_name = db_name
 
@@ -54,15 +57,10 @@ class Dao(object):
     def json(self):
         return json.dumps(self.data,sort_keys=True,indent=4)
 
-    @classmethod
-    def get(cls,_id):
-        if not _id:
-            return None
-
-        try:
-            couch, db = cls.connection()
-            return cls(**db[_id])
-        except:
+    def get(self,_id):
+        if (_id):
+            return self.db.get(_id)
+        else:
             return None
 
     def query(self,**kwargs):
@@ -88,30 +86,31 @@ class Dao(object):
         result = c.getresponse()
         return json.loads(result.read())
         
-    def save(self):
-        if '_id' not in self.data:
-            if self.id:
-                self.data['_id'] = self.id            
-            else:
-                self.data['_id'] = uuid.uuid4().hex
-                self.id = self.data['_id']
-        if '_rev' not in self.data and self.version:
-            self.data['_rev'] = self.version
-            
-        if 'created' not in self.data:
-            self.data['created'] = time.time()
+    def save_section(self, data, subject, _id=False):
+
+        # first get the doc, or make it
+        doc = self.get(_id)
+        if doc == None:
+            doc = {}
+            doc['created'] = time.time()
+            doc["_id"] = uuid.uuid4().hex
+            doc[subject] = {}
         
-        if 'last_modified' not in self.data:
-            self.data['last_modified'] = 0
+        # merge the old and new data in the relevant section
+        new_section = dict(doc[subject].items() + data.items())
+        doc[subject] = new_section
+        
+        if 'last_modified' not in doc:
+            doc['last_modified'] = 0
         else:
-            self.data['last_modified'] = time.time()
+            doc['last_modified'] = time.time()
+
+        self.db.save(doc)
 
         try:
-            self._id, self._version = self.db.save(self.data)
-            self.data['_rev'] = self.version
-            return self.id
+            return self.save(doc)
         except:
-            # log the save error? action on doc update conflict?
+            # try the save again, probably an update conflict.
             return False
         
     def delete(self):
