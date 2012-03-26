@@ -1,61 +1,55 @@
+import pdb
 import json
 import uuid
 import couchdb
 import time
 
-from totalimpact.config import Configuration
-
-_config = Configuration()
-
 class Dao(object):
     '''the dao that can be named is not the true dao'''
     __type__ = None
 
-    __config__ = _config
+    def __init__(self, config):
+        '''sets up the data properties and makes a db connection'''
+        self.config = config
+        
+        self.couch = couchdb.Server( url = self.config.db_url )
+        self.couch.resource.credentials = ( self.config.db_adminuser, self.config.db_password )
 
-    def __init__(self, **kwargs):
-        self._data = dict(kwargs)
-        self._id = self._data.get('_id',None)
-        self._version = self._data.get('_rev',None)
-        self.config = self.__config__
+    def connect(self, db_name=False):
+        if db_name:
+            self.config.db_name = db_name
 
-    @classmethod
-    def connection(cls):
-        # on first connect, create if not existing
-        couch = couchdb.Server( url = cls.__config__.db_url )
-        couch.resource.credentials = ( cls.__config__.db_adminuser,cls.__config__.db_password )
+        if self.db_exists(self.config.db_name) == False:
+            raise LookupError("database doesn't exist")
+        self.db = self.couch[ self.config.db_name ]
+
+
+    def create_db(self, db_name):
+        self.couch.create( db.name )
+        
+    def db_exists(self, db_name):
         try:
-            db = couch[ cls.__config__.db_name ]
+            self.couch[db_name]
+            return True
         except:
-            db = couch.create( cls.__config__.db_name )
-            db.save( cls.__config__.db_views )
-        return couch, db
+            return False
 
-    @property
-    def db(self):
-        couch, db = self.connection()
-        return db
+    def delete_db(self, db_name):
+        self.couch.delete(db_name);
 
-    @property
-    def data(self):
-        return self._data
-        
-    @data.setter
-    def data(self, val):
-        self._data = val
+    def create_db(self, db_name):
+        '''makes a new database with the given name.
+        uploads couch views stored in the config directory'''
+        view = self.config.db_views
+        for view_name in self.config.db_views['views']:
+            file = open('./config/couch/views/{0}.js'.format(view_name))
+            view["views"][view_name]["map"] = file.read()
 
-    @property
-    def id(self):
-        return self._id
-    
-    @id.setter
-    def id(self,_id):
-        self._id = _id
-        
-    @property
-    def version(self):
-        return self._version
-        
+        self.db = self.couch.create(db_name)
+        self.db.save( view )
+        return True
+
+  
     @property
     def json(self):
         return json.dumps(self.data,sort_keys=True,indent=4)
