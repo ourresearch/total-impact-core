@@ -3,6 +3,8 @@ from flask import request, current_app
 
 
 # a slow decorator for tests, so can exclude them when necessary
+# put @slow on its own line above a slow test method
+# to exclude slow tests, run like this: nosetests -A "not slow"
 def slow(f):
     f.slow = True
     return f
