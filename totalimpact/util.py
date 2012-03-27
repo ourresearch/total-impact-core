@@ -2,6 +2,11 @@ from functools import wraps
 from flask import request, current_app
 
 
+# a slow decorator for tests, so can exclude them when necessary
+def slow(f):
+    f.slow = True
+    return f
+
 # derived from the jsonp function in bibserver
 def jsonp(f):
     """Wraps JSONified output for JSONP"""
