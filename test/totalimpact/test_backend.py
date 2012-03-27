@@ -11,6 +11,7 @@ from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, Provi
 from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
+from totalimpact.util import slow
 
 CWD, _ = os.path.split(__file__)
 
@@ -130,7 +131,8 @@ class TestBackend(unittest.TestCase):
         
         st.stop()
         assert st.stopped()
-        
+      
+    @slow    
     def test_06_sleep_interrupt(self):
         st = StoppableThread()
         
@@ -153,6 +155,7 @@ class TestBackend(unittest.TestCase):
         took = time.time() - start
         assert took < 3 # taking into account all the sleep delays
 
+    @slow
     def test_07_queue_consumer(self):
         q = QueueConsumer(QueueMock())
         
@@ -185,6 +188,7 @@ class TestBackend(unittest.TestCase):
         # test completes without error
         assert True
         
+    @slow    
     def test_10_alias_running(self):
         # relies on Queue.first mock as per setUp
         providers = [ProviderMock()]
@@ -202,7 +206,8 @@ class TestBackend(unittest.TestCase):
         # test completes without error in the appropriate time
         assert took > 2.0
         assert took < 2.5
-        
+
+    @slow
     def test_11_alias_provider_not_implemented(self):
         # relies on Queue.first mock as per setUp
         
@@ -237,6 +242,7 @@ class TestBackend(unittest.TestCase):
         # test completes without error
         assert True
         
+    @slow    
     def test_13_metrics_running(self):
         # relies on Queue.first mock as per setUp
         pmt = ProviderMetricsThread(ProviderMock(), self.config)
