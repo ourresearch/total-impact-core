@@ -37,8 +37,8 @@ class AliasQueue(Queue):
     
     @property
     def queue(self):
-        addr = 'queues/' + self.__type__
-        items = self.view(addr)
+        viewname = 'queues/' + self.__type__
+        items = self.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
         return [Item(**i['value']) for i in items['rows']]
         #return [Item(**i['value']) for i in items.rows]
@@ -66,11 +66,11 @@ class MetricsQueue(Queue):
     @property
     def queue(self):
         # change this for live
-        addr = 'queues/' + self.__type__
+        viewname = 'queues/' + self.__type__
         if self.provider:
-            items = self.view(addr, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
+            items = self.view(viewname, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
         else:
-            items = self.view(addr)
+            items = self.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
         return [Item(**i['value']) for i in items['rows']]
         #return [Item(**i['value']) for i in items.rows]
