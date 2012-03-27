@@ -1,5 +1,6 @@
 import unittest
-from nose.tools import raises
+import nose.tools
+from nose.tools import nottest, raises, assert_equals
 
 from totalimpact import dao, config
 
@@ -29,15 +30,30 @@ class TestDAO(unittest.TestCase):
     def test_connect_exception(self):
         self.d.connect("nonexistant_database")
 
+    '''
     def test_save_section_and_get(self):
         self.d.create_db("test")
         self.d.connect("test")
 
         metrics = {"metrics":{"mendeley1": {}, "wikipedia1":{}}}
-        self.d.save_section(metrics, "metrics")
+        ret = self.d.save_section(metrics, "metrics")
+        
+        assert len(ret) == 2, ret
+        
+        id = ret[0]
+        doc = self.d.get(id)
+        assert_equals(doc["metrics"], metrics)
+   ''' 
 
-    def test_nosy_again(self):
-        assert True 
+    def test_create_and_get_item(self):
+        self.d.create_db("test")
+        self.d.connect("test")
+        
+        ret = self.d.create_item()
+        assert_equals(2, len(ret))
+        doc = self.d.get(ret[0])
+        assert_equals(ret[0], doc["_id"])
+        assert_equals(0, doc["last_modified"])
 
 
 

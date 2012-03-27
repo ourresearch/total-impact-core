@@ -85,30 +85,27 @@ class Dao(object):
         c.request('GET', fullpath)
         result = c.getresponse()
         return json.loads(result.read())
+    
+    def create_item(self):
+        doc = {}
+        doc["_id"] = uuid.uuid4().hex
+        doc['created'] = time.time()
+        doc['last_modified'] = 0
+        return self.db.save(doc)
         
-    def save_section(self, data, subject, _id=False):
-
-        # first get the doc, or make it
-        doc = self.get(_id)
-        if doc == None:
-            doc = {}
-            doc['created'] = time.time()
-            doc["_id"] = uuid.uuid4().hex
-            doc[subject] = {}
         
-        # merge the old and new data in the relevant section
+    def save_section(self, data, subject, id):
+        '''For a given item ID, updates a certain named subset of its data
+        '''
+        
+        doc = self.db.get(_id)
+        
         new_section = dict(doc[subject].items() + data.items())
         doc[subject] = new_section
-        
-        if 'last_modified' not in doc:
-            doc['last_modified'] = 0
-        else:
-            doc['last_modified'] = time.time()
-
-        self.db.save(doc)
+        doc['last_modified'] = time.time()
 
         try:
-            return self.save(doc)
+            return self.db.save(doc)
         except:
             # try the save again, probably an update conflict.
             return False
