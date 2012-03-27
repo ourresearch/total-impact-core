@@ -199,29 +199,40 @@ def collection(cid='',tiid=''):
 
     if request.method == "POST":
         if tiid:
-            # update the list of tiids on this coll with this new one
-            resp = "something like updated"
+            coll = totalimpact.models.Collection.get(cid)
+            # TODO: update the list of tiids on this coll with this new one
+            coll.save()
+            resp = make_response( coll.json )
+            resp.mimetype = "application/json"
             return resp
         elif not cid:
             # check if received object was json
             if request.json:
                 idlist = request.json
             else:
-                idlist = json.loads(request.data)
+                idlist = request.values.to_dict()
+                for item in idlist:
+                    try:
+                        idlist[item] = json.loads(idlist[item])
+                    except:
+                        pass
             tiids = []
-            for thing in idlist:
+            for thing in idlist['list']:
                 item = totalimpact.models.Item()
-                item.aliases.add_alias(namespace=thing[0],id=thing[1])
+                item.aliases.add_alias(thing[0],thing[1])
                 tiid = item.save()
                 tiids.append(tiid)
                 item.aliases.add_alias(namespace='tiid',id=tiid)
-            coll = totalimpact.models.Collection(seed={ids:tiids})
+            coll = totalimpact.models.Collection(seed={'ids':tiids,'name':idlist['name']})
             resp = coll.save()
             return resp
         else:
-            # merge the payload (a collection object) with the coll we already have
+            coll = totalimpact.models.Collection.get(cid)
+            # TODO: merge the payload (a collection object) with the coll we already have
             # use richards merge stuff to merge hierarchically?
-            resp = "something like updated"
+            coll.save()
+            resp = make_response( coll.json )
+            resp.mimetype = "application/json"
             return resp
 
     if request.method == "PUT":
@@ -230,9 +241,15 @@ def collection(cid='',tiid=''):
         if request.json:
             coll.data = request.json
         else:
-            coll.data = json.loads(request.data)
+            coll.data = request.values.to_dict()
+            for item in coll.data:
+                try:
+                    coll.data[item] = json.loads(coll.data[item])
+                except:
+                    pass
         coll.save()
-        resp = 201
+        resp = make_response( coll.json )
+        resp.mimetype = "application/json"
         return resp
 
     if request.method == "DELETE":
@@ -244,10 +261,7 @@ def collection(cid='',tiid=''):
             # delete the whole object
             coll = totalimpact.models.Collection.get(cid)
             deleted = coll.delete()
-            if deleted:
-                abort(404)
-            else:
-                return "err.."
+            abort(404)
         else:
             abort(404)
 
@@ -271,7 +285,12 @@ def user(uid=''):
         if request.json:
             newdata = request.json
         else:
-            newdata = json.loads(request.data)
+            newdata = request.values.to_dict()
+            for item in newdata:
+                try:
+                    newdata[item] = json.loads(newdata[item])
+                except:
+                    pass
         if 'collection_ids' in newdata:
             del newdata['collection_ids']
         if 'password' in newdata:
