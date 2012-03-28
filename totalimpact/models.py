@@ -122,54 +122,40 @@ class Collection(dao.Dao):
 # "alias" vs "aliases", "metric" vs "metrics"
 # FIXME: do we want a created and last modified property on the item?
 # FIXME: no id on the item? this should appear in the alias object?
-class Item(dao.Dao):
+class Item():
     __type__ = 'item'
-    
+
+    dao = None
     """
     {
-        "aliases": alias_object, 
-        "metrics": metric_object, 
+        "_id": "thisisauuid4"
+        "aliases": alias_object,
+        "metrics": metric_object,
         "biblio": biblio_object,
         "created": 23112412414.234,
         "last_modified": 12414214.234,
         "last_requested": 124141245.234
     }
     """
-    def __init__(self, id=None, aliases=None, metrics=None, biblio=None, seed=None, **kwargs):
-        # for convenience with CouchDB we store all the properties in an internally
-        # managed dict object which can just be json serialised out to the DAO
-        
-        # inherit the init
-        super(Item,self).__init__(**kwargs)
 
-        if id is not None:
+    def __init__(self, dao, id=None):
+        if id is None:
+            self.id = uuid.uuid4().hex
+        else: 
             self.id = id
-        if seed is not None: 
-            self._data = seed
-            self._aliases = Aliases(seed=self._data.get('aliases'))
-            self._metrics = Metrics(seed=self._data.get('metrics'))
-            self._biblio = Biblio(seed=self._data.get('biblio'))
-        else:
-            self._aliases = Aliases(seed=aliases) if hasattr(aliases, "keys") else aliases if aliases is not None else Aliases()
-            self._metrics = Metrics(seed=metrics) if hasattr(metrics, "keys") else metrics if metrics is not None else Metrics()
-            self._biblio = Biblio(seed=biblio) if hasattr(biblio, "keys") else biblio if biblio is not None else Biblio()
 
-    def set_last_requested(self):
-        self.data['last_requested'] = time.time()
-        self.save()
-    
-    @property
-    def aliases(self):
-        return self._aliases
-        
-    @property
-    def metrics(self):
-        return self._metrics
-        
-    @property
-    def biblio(self):
-        return self._biblio
-            
+    def load(self):
+        doc = self.dao.get(id)
+        for key in doc:
+            self[key] = doc[key]
+
+        self.last_requested = time.time()
+
+    def save(self):
+        doc = {}
+        # put this objects relevant properties together in the doc.
+        self.dao.save(doc)
+         
     @property
     def data(self):
         self._data['aliases'] = self.aliases.data
@@ -177,9 +163,7 @@ class Item(dao.Dao):
         self._data['biblio'] = self.biblio.data
         return self._data
 
-    @data.setter
-    def data(self, val):
-        self._data = val
+
 
 class Biblio(object):
     """
