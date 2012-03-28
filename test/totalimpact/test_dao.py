@@ -1,33 +1,107 @@
 import unittest
-from nose.tools import nottest
+import nose.tools
+from nose.tools import nottest, raises, assert_equals, assert_true
 
-from totalimpact import dao
+from totalimpact import dao, config
 
 class TestDAO(unittest.TestCase):
 
-    @classmethod
-    def setup_class(cls):
-        cls.TESTDB = 'ti_test'
-        cls.d = dao.Dao()
-        cls.d.config.db_name = cls.TESTDB
-        cls.couch, cls.db = cls.d.connection()
+    def setUp(self):
+        conf = config.Configuration()
+        self.d = dao.Dao(conf)
+        if self.d.db_exists("test"):
+            self.d.delete_db("test")
+        
+    def test_create_db(self):
+        self.d.create_db("test")
+        assert self.d.db.__class__.__name__ == "Database"
 
-    @classmethod
-    def teardown_class(cls):
-        cls.couch.delete( cls.TESTDB )
+    def test_db_exists(self):
+        self.d.create_db("test")
+        assert self.d.db_exists("unlikely_name") == False
+        assert self.d.db_exists("test") == True
+
+    def test_connect(self):
+        self.d.create_db("test")
+        self.d.connect("test")
+        assert self.d.db.__class__.__name__ == "Database"
+
+    @raises(LookupError)
+    def test_connect_exception(self):
+        self.d.connect("nonexistant_database")
+
+    def test_create_item(self):
+        self.d.create_db("test")
+        self.d.connect("test")
+        id = "123"
+
+        data = {"aliases": {}, "biblio": {}, "metrics":{}}
+        ret = self.d.create_item(data, id)
+        assert_equals(ret[0], id)
+
+        doc = self.d.get(id)
+        assert_true(("aliases" in doc) & ("biblio" in doc) & ("metrics" in doc))
+        assert_equals(0, doc["last_modified"])
+        assert 10 == len(str(int(doc["created"]))), int(doc["created"])
+
+    @raises(Exception)
+    def test_create_item_fails_if_item_exists(self):
+        self.d.create_db("test")
+        self.d.connect("test")
+        id = "123"
+        data = {}
         
-    def test_01_get_None(self):
-        assert dao.Dao.get('woeifwoifmwiemwfw9m09m49ufm9fu93u4f093u394umf093u4mf') == None
-     
-    # FIXME Getting something that has been saved is broken.  Upcoming config and dao changes may fix it? 
-    @nottest      
-    def test_02_save(self):
-        assert self.d.id == None
-        self.d.save()
-        assert self.d.id != None
-        assert self.d.version != None
-        assert self.d.get(self.d.id) != None, self.d.id  # FIXME fails
+        ret = self.d.create_item(data, id)
+        ret = self.d.create_item(data, id)
+
+    def test_update_items_updates(self):
+        self.d.create_db("test")
+        self.d.connect("test")
+        id = "123"
+
+        # create a new doc
+        data = {"aliases": {"one": "uno", "two": "dos"}, "biblio": {}, "metrics":{}}
+        ret = self.d.create_item(data, id)
+        assert_equals(id, ret[0])
+
+        # update it and see what we did
+        data["aliases"] = {"one": "uno", "two": "dos", "three": "tres"}
+        ret = self.d.update_item(data, id)
+        doc = self.d.get(id)
+        assert_equals(doc["aliases"], data["aliases"])
+
+    def test_update_items_adds_items_to_sections_instead_of_overwriting(self):
+        self.d.create_db("test")
+        self.d.connect("test")
+        id = "123"
+
+        # create a new doc
+        data = {"aliases": {"one": "uno", "two": "dos"}, "biblio": {}, "metrics":{}}
+        ret = self.d.create_item(data, id)
+        assert_equals(id, ret[0])
+
+        # update it and see what we did
+        data["aliases"] = {"three": "tres"}
+        ret = self.d.update_item(data, id)
+        doc = self.d.get(id)
+        assert_equals(doc["aliases"], {"one":"uno", "two":"dos", "three":"tres"})
+
+    def test_delete(self):
+        self.d.create_db("test")
+        self.d.connect("test")
+        id = "123"
         
+        ret = self.d.create_item({}, id)
+        assert_equals(id, ret[0])
+
+        del_worked = self.d.delete(id)
+        assert_equals(del_worked, True)
+        assert_equals(self.d.get(id), None)
+
+        
+
+
+        '''
     def test_03_query(self):
         map_fun = 'function(doc) { emit(doc, null); }'
         res = self.d.query(map_fun=map_fun)
@@ -37,10 +111,6 @@ class TestDAO(unittest.TestCase):
         res = self.d.view('_all_docs')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )
-        
-    def test_05_delete(self):
-        theid = self.d.id
-        self.d.delete()
-        assert self.d.get(theid) == None
-    
+
+    '''
 
