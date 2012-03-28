@@ -25,11 +25,7 @@ class Dao(object):
         if self.db_exists(self.config.db_name) == False:
             raise LookupError("database doesn't exist")
         self.db = self.couch[ self.config.db_name ]
-
-
-    def create_db(self, db_name):
-        self.couch.create( db.name )
-        
+       
     def db_exists(self, db_name):
         try:
             self.couch[db_name]
@@ -52,7 +48,6 @@ class Dao(object):
         self.db.save( view )
         return True
 
-  
     @property
     def json(self):
         return json.dumps(self.data,sort_keys=True,indent=4)
@@ -122,8 +117,6 @@ class Dao(object):
 
     def update_collection(self):
         pass
-
-
         
     def delete(self, id):
         doc = self.db[id]
