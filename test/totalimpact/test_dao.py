@@ -1,6 +1,6 @@
 import unittest
 import nose.tools
-from nose.tools import nottest, raises, assert_equals
+from nose.tools import nottest, raises, assert_equals, assert_true
 
 from totalimpact import dao, config
 
@@ -30,31 +30,75 @@ class TestDAO(unittest.TestCase):
     def test_connect_exception(self):
         self.d.connect("nonexistant_database")
 
-    '''
-    def test_save_section_and_get(self):
+    def test_create_item(self):
         self.d.create_db("test")
         self.d.connect("test")
+        id = "123"
 
-        metrics = {"metrics":{"mendeley1": {}, "wikipedia1":{}}}
-        ret = self.d.save_section(metrics, "metrics")
-        
-        assert len(ret) == 2, ret
-        
-        id = ret[0]
+        data = {"aliases": {}, "biblio": {}, "metrics":{}}
+        ret = self.d.create_item(data, id)
+        assert_equals(ret[0], id)
+
         doc = self.d.get(id)
-        assert_equals(doc["metrics"], metrics)
-   ''' 
+        assert_true(("aliases" in doc) & ("biblio" in doc) & ("metrics" in doc))
+        assert_equals(0, doc["last_modified"])
+        assert 10 == len(str(int(doc["created"]))), int(doc["created"])
 
-    def test_create_and_get_item(self):
+    @raises(Exception)
+    def test_create_item_fails_if_item_exists(self):
         self.d.create_db("test")
         self.d.connect("test")
+        id = "123"
+        data = {}
         
-        ret = self.d.create_item()
-        assert_equals(2, len(ret))
-        doc = self.d.get(ret[0])
-        assert_equals(ret[0], doc["_id"])
-        assert_equals(0, doc["last_modified"])
+        ret = self.d.create_item(data, id)
+        ret = self.d.create_item(data, id)
 
+    def test_update_items_updates(self):
+        self.d.create_db("test")
+        self.d.connect("test")
+        id = "123"
+
+        # create a new doc
+        data = {"aliases": {"one": "uno", "two": "dos"}, "biblio": {}, "metrics":{}}
+        ret = self.d.create_item(data, id)
+        assert_equals(id, ret[0])
+
+        # update it and see what we did
+        data["aliases"] = {"one": "uno", "two": "dos", "three": "tres"}
+        ret = self.d.update_item(data, id)
+        doc = self.d.get(id)
+        assert_equals(doc["aliases"], data["aliases"])
+
+    def test_update_items_adds_items_to_sections_instead_of_overwriting(self):
+        self.d.create_db("test")
+        self.d.connect("test")
+        id = "123"
+
+        # create a new doc
+        data = {"aliases": {"one": "uno", "two": "dos"}, "biblio": {}, "metrics":{}}
+        ret = self.d.create_item(data, id)
+        assert_equals(id, ret[0])
+
+        # update it and see what we did
+        data["aliases"] = {"three": "tres"}
+        ret = self.d.update_item(data, id)
+        doc = self.d.get(id)
+        assert_equals(doc["aliases"], {"one":"uno", "two":"dos", "three":"tres"})
+
+    def test_delete(self):
+        self.d.create_db("test")
+        self.d.connect("test")
+        id = "123"
+        
+        ret = self.d.create_item({}, id)
+        assert_equals(id, ret[0])
+
+        del_worked = self.d.delete(id)
+        assert_equals(del_worked, True)
+        assert_equals(self.d.get(id), None)
+
+        
 
 
         '''
@@ -67,10 +111,6 @@ class TestDAO(unittest.TestCase):
         res = self.d.view('_all_docs')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )
-        
-    def test_05_delete(self):
-        theid = self.d.id
-        self.d.delete()
-        assert self.d.get(theid) == None
+
     '''
 
