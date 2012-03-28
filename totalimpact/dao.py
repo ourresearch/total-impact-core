@@ -86,37 +86,49 @@ class Dao(object):
         result = c.getresponse()
         return json.loads(result.read())
     
-    def create_item(self):
+    def create_item(self, data, id):
         doc = {}
-        doc["_id"] = uuid.uuid4().hex
+        for d in data:
+            doc[d] = data[d]
+
+        doc["_id"] = id
         doc['created'] = time.time()
         doc['last_modified'] = 0
         return self.db.save(doc)
-        
-        
-    def save_section(self, data, subject, id):
-        '''For a given item ID, updates a certain named subset of its data
-        '''
-        
-        doc = self.db.get(_id)
-        
-        new_section = dict(doc[subject].items() + data.items())
-        doc[subject] = new_section
-        doc['last_modified'] = time.time()
 
+    def update_item(self, data, id):
+        doc = self.get(id)
+        for d in data:
+            # add dict items,but overwrite identical keys
+            new = dict(doc[d].items() + data[d].items())
+            doc[d] = new
+
+        doc['last_modified'] = time.time()
+        
         try:
             return self.db.save(doc)
         except:
             # try the save again, probably an update conflict.
             return False
+
+    def create_user(self):
+        pass
+
+    def update_user(self):
+        pass
+
+    def create_collection(self):
+        pass
+
+    def update_collection(self):
+        pass
+
+
         
-    def delete(self):
-        try:
-            self.db.delete(self.data)
-            self.data = {}
-            return True
-        except:
-            # log the delete error? action on doc update conflict?
-            return False
+    def delete(self, id):
+        doc = self.db[id]
+        self.db.delete(doc)
+        return True
+
 
 
