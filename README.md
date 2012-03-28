@@ -22,6 +22,7 @@ How to install:
 How to run tests:
 
     nosetests -v test/
+    nosetests -v -A "not slow" test/
 
 How to run the web app:
 
