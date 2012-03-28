@@ -40,11 +40,11 @@ class TestDAO(unittest.TestCase):
         assert_equals(ret[0], id)
 
         doc = self.d.get(id)
-        assert_true(("aliases" in doc) & ("biblio" in doc) & ("metrics" in doc))
+        assert_true(("aliases" in doc) and ("biblio" in doc) and ("metrics" in doc))
         assert_equals(0, doc["last_modified"])
         assert 10 == len(str(int(doc["created"]))), int(doc["created"])
 
-    @raises(Exception)
+    @raises(Exception) # throws ResourceConflict, which @raises doesn't catch.
     def test_create_item_fails_if_item_exists(self):
         self.d.create_db("test")
         self.d.connect("test")
