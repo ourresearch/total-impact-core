@@ -9,7 +9,7 @@ See [http://total-impact/about](http://total-impact/about).
 
 # Install and run total-impact
 
-## Get total-impact code
+## Get total-impact-core code
 
 How to install for dev:
 
@@ -24,7 +24,7 @@ How to run tests:
     nosetests -v test/
     nosetests -v -A "not slow" test/
 
-How to run the web app:
+How to run the api:
 
     cd total-impact
     python totalimpact/web.py
@@ -61,5 +61,9 @@ then restart couchdb (the password will be overwritten in the local.ini file wit
 
 When total-impact starts, it will, if necessary, create the database and all necessary views 
 (you can see the view definitions [in the config](https://github.com/total-impact/total-impact/blob/master/config/totalimpact.conf.json).
+
+## total-impact-webapp
+
+The total-impact web application has [its own GitHub repository](http://github.com/total-impact/total-impact-webapp).
 
 
