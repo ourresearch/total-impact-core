@@ -44,17 +44,6 @@ def standard_authentication():
             if user:
                 login_user(user, remember=False)
 
-        
-# static pages
-@app.route('/')
-def home():
-    return render_template('index.html')
-
-
-@app.route('/about')
-def content():
-    return render_template('about.html')
-
 
 # routes for items (TI scholarly object records)
 @app.route('/item/<tiid>')

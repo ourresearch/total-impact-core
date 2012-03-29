@@ -26,14 +26,6 @@ class TestWeb(unittest.TestCase):
         cls.couch, cls.db = cls.d.connection()
         cls.couch.delete( cls.TESTDB )
 
-    def test_root(self):
-        res = self.app.get('/')
-        assert res.status == '200 OK', res.status
-
-    def test_about(self):
-        res = self.app.get('/about')
-        assert res.status == '200 OK', res.status
-
     # FIXME: this test is breaking
     @nottest
     def test_item(self):
