@@ -26,7 +26,7 @@ How to run tests:
 
 How to run the api:
 
-    cd total-impact
+    cd total-impact-core
     python totalimpact/web.py
     then surf up http://127.0.0.1:5000/
 
