@@ -140,11 +140,10 @@ class Item():
 
     def __init__(self, dao, id=None):
         if id is None:
-            # the underscore in _id is not hinting it's a private var--it's for
-            # convenience, as couch uses the underscored form.
+
             self.id = uuid.uuid4().hex
         else: 
-            self._id = id
+            self.id = id
 
     def load(self):
         doc = self.dao.get(id)
