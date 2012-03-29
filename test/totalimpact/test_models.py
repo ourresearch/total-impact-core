@@ -11,7 +11,7 @@ totalimpact.dao.Dao = DAOMock
 
 from totalimpact import models
 from totalimpact.config import Configuration
-from nose.tools import raises
+from nose.tools import raises, assert_equals
 import os, unittest, json, time
 from copy import deepcopy
 
@@ -108,14 +108,13 @@ class TestItem():
     def test_new_testing_class(self):
         assert True
         
-    def test_16_item_init(self):
+    def test_item_init(self):
+        i = models.Item(self.d)
+        assert_equals(len(i.id), 32)
+
+
         '''
-        i = models.Item()
-        assert isinstance(i.aliases, models.Aliases)
-        assert isinstance(i.metrics, models.Metrics)
-        assert isinstance(i.biblio, models.Biblio)
-        
-        i = models.Item("12345")
+        i = models.Item(self.d, "12345")
         assert i.id == "12345"
         
         i = models.Item("12345", aliases=deepcopy(ALIAS_SEED), metrics=deepcopy(METRICS_SEED), biblio=deepcopy(BIBLIO_SEED))
