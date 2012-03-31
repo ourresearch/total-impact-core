@@ -3,15 +3,13 @@ import totalimpact.dao as dao
 from totalimpact.config import Configuration
 from totalimpact.providers.provider import ProviderFactory
 import time, uuid, json, hashlib
-import time
 
 class Error(dao.Dao):
     __type__ = 'error'
 
 
 # FIXME: do we want a created and last modified property on the user?
-class User(dao.Dao):
-    __type__ = 'user'
+class User():
     
     """
     {
@@ -75,6 +73,7 @@ class Collection(dao.Dao):
     
     """
     {
+        "id": "uuid-goes-here"
         "collection_name": "My Collection",
         "owner": "abcdef",
         "created": 1328569452.406,
@@ -82,25 +81,25 @@ class Collection(dao.Dao):
         "ids": ["abcd3", "abcd4"]  #tiid
     }
     """
-    def __init__(self, id=None, name=None, owner=None, created=None, last_modified=None, 
-                        item_ids=None, seed=None):
-        # for convenience with CouchDB we store all the properties in an internally
-        # managed dict object which can just be json serialised out to the DAO
-        # This object has a __getattr__ override below which makes the object 
-        # appear as if all the dictionary keys are member attributes of this object
+    def __init__(self, dao, id):
 
-        # inherit the init
-        super(Collection,self).__init__()
-        
-        # load from the seed first
-        if seed is not None: self.data = seed 
-        
-        # if there was no seed, load the properties, otherwise ignore them
-        if seed is None:
-            if id is not None: self.id = id
-            self.data['ids'] = item_ids if item_ids is not None else []            
-            self.data['collection_name'] = name if name is not None else None
-            self.data['owner'] = owner if owner is not None else None
+        def __init__(self, dao, id=None):
+            if id is None:
+                self.id = uuid.uuid4().hex
+            else:
+                self.id = id
+
+        def load(self):
+            doc = self.dao.get(id)
+            for key in doc:
+                self[key] = doc[key]
+
+            self.last_requested = time.time()
+
+        def save(self):
+            doc = {}
+            # put this objects relevant properties together in the doc.
+            self.dao.save(doc)
         
     def item_ids(self):
         return self.data['ids']
@@ -123,24 +122,21 @@ class Collection(dao.Dao):
 # FIXME: do we want a created and last modified property on the item?
 # FIXME: no id on the item? this should appear in the alias object?
 class Item():
-    __type__ = 'item'
-
-    dao = None
-    """
-    {
-        "_id": "thisisauuid4"
-        "aliases": alias_object,
-        "metrics": metric_object,
-        "biblio": biblio_object,
+    """{
+        "id": "uuid4-goes-here",
+        "aliases": "aliases_object",
+        "metrics": "metric_object",
+        "biblio": "biblio_object",
         "created": 23112412414.234,
         "last_modified": 12414214.234,
         "last_requested": 124141245.234
     }
     """
+    dao = None
 
     def __init__(self, dao, id=None):
         if id is None:
-
+            self.dao = dao
             self.id = uuid.uuid4().hex
         else: 
             self.id = id
@@ -154,17 +150,24 @@ class Item():
 
     def save(self):
         doc = {}
-        # put this objects relevant properties together in the doc.
-        self.dao.save(doc)
-         
-    @property
-    def data(self):
-        self._data['aliases'] = self.aliases.data
-        self._data['metrics'] = self.metrics.data
-        self._data['biblio'] = self.biblio.data
-        return self._data
+        for key in self.keys_from_docstring():
+            try:
+                val = getattr(self, key)
+            except:
+                val = None
 
+            setattr(doc, key, val)
 
+        try :
+            self.dao.update_item(doc, self.id)
+        except:
+            self.dao.create_item(doc, self.id)
+        finally:
+            raise()
+
+    def keys_from_docstring(self):
+        json_doc = inspect.getdoc(self)
+        return json.loads(json_doc).keys()
 
 class Biblio(object):
     """
