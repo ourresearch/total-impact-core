@@ -155,19 +155,14 @@ class Item():
     def save(self):
         doc = {}
         for key in self.keys_from_docstring():
-            try:
-                val = getattr(self, key)
-            except:
-                val = None
-
-            setattr(doc, key, val)
+            val = getattr(self, key)
+            doc[key] = val
 
         try :
             self.dao.update_item(doc, self.id)
         except:
             self.dao.create_item(doc, self.id)
-        finally:
-            raise()
+
 
     def keys_from_docstring(self):
         json_doc = inspect.getdoc(self)
