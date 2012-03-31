@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, json, request, redirect, abort, make_response
 from flask import render_template, flash
 from flaskext.login import login_user, current_user
-
 import json
 import totalimpact.util as util
 import totalimpact.models

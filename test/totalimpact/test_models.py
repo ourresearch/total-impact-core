@@ -136,9 +136,6 @@ class TestModels(unittest.TestCase):
 
     def setUp(self):
         pass
-        
-    def tearDown(self):
-        totalimpact.dao.Dao = old_dao
 
     def test_01_aliases_init(self):
         a = models.Aliases()
