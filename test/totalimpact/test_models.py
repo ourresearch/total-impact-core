@@ -1,14 +1,3 @@
-# mock the DAO first, before any of the imports are run
-import totalimpact.dao
-class DAOMock(object):
-    def __init__(self, **kwargs):
-        self._data = {}
-    def save(self):
-        pass
-# this mock is reset in the tearDown method
-old_dao = totalimpact.dao.Dao
-totalimpact.dao.Dao = DAOMock
-
 from totalimpact import models
 from totalimpact.config import Configuration
 from nose.tools import raises, assert_equals
