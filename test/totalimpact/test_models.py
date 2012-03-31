@@ -89,22 +89,37 @@ class TestItem():
     def setUp(self):
 
         class _MockDao():
-            def get(self):
+            def get(self, id):
                 return ITEM_SEED
 
-        self.d = _MockDao
+        self.d = _MockDao()
 
     def test_new_testing_class(self):
         assert True
-        
+
+    def test_mock_dao(self):
+        assert_equals(self.d.get("123"), ITEM_SEED)
+
     def test_item_init(self):
         i = models.Item(self.d)
-        assert_equals(len(i.id), 32)
+        assert_equals(len(i.id), 32) # made a uuid, yay
+
+    def test_load(self):
+        i = models.Item(self.d, id="123")
+        i.load()
+        assert_equals(i.aliases, ITEM_SEED["aliases"])
+        assert_equals(i.created, ITEM_SEED["created"])
+        assert i.last_requested > ITEM_SEED["last_requested"]
+
+    @raises(LookupError)
+    def test_load_with_nonexistant_item_fails(self):
+        i = models.Item(self.d, id="123")
+        self.d.get = lambda id: None # that item doesn't exist in the db
+        i.load()
+        
 
 
         '''
-        i = models.Item(self.d, "12345")
-        assert i.id == "12345"
         
         i = models.Item("12345", aliases=deepcopy(ALIAS_SEED), metrics=deepcopy(METRICS_SEED), biblio=deepcopy(BIBLIO_SEED))
         assert isinstance(i.aliases, models.Aliases)

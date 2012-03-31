@@ -2,7 +2,7 @@ from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
 from totalimpact.config import Configuration
 from totalimpact.providers.provider import ProviderFactory
-import time, uuid, json, hashlib
+import time, uuid, json, hashlib, inspect
 
 class Error(dao.Dao):
     __type__ = 'error'
@@ -135,16 +135,20 @@ class Item():
     dao = None
 
     def __init__(self, dao, id=None):
+        self.dao = dao
+
         if id is None:
-            self.dao = dao
             self.id = uuid.uuid4().hex
         else: 
             self.id = id
 
     def load(self):
-        doc = self.dao.get(id)
+        doc = self.dao.get(self.id)
+        if doc is None:
+            raise(LookupError)
+        
         for key in doc:
-            self[key] = doc[key]
+            setattr(self, key, doc[key])
 
         self.last_requested = time.time()
 
