@@ -73,7 +73,8 @@ class Test_Dryad(unittest.TestCase):
 
         a = Aliases()
         a.add_alias("DOI", TEST_DRYAD_DOI)
-        self.simple_item = Item("12345", aliases=a)
+        self.simple_item = Item("12345", "not a dao")
+        self.simple_item.aliases = a
 
 
     def tearDown(self):
