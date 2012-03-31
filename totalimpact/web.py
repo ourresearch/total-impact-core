@@ -5,10 +5,12 @@ from flaskext.login import login_user, current_user
 import json
 import totalimpact.util as util
 import totalimpact.models
+from totalimpact import dao
 from totalimpact.core import app, login_manager
 
 from totalimpact.config import Configuration
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
+
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
@@ -16,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 # set config
 config = Configuration()
-
 
 # do account / auth stuff
 @login_manager.user_loader
@@ -305,10 +306,11 @@ def user(uid=''):
 if __name__ == "__main__":
     # try to prepare and connect to the database
     try:
-        couch, db = totalimpact.dao.Dao.connection()
-        print couch, db
+        dao = dao.Dao(config)
+        print dao
     except:
-        print "WARNING! No database available."
+        print "WARNING! No database available:"
+        raise
 
     # start the watchers
     # TODO: find out from rich where the watchers is...
