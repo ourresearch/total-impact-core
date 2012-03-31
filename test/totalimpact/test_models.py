@@ -3,6 +3,7 @@ from totalimpact.config import Configuration
 from nose.tools import raises, assert_equals
 import os, unittest, json, time
 from copy import deepcopy
+from totalimpact import dao
 
 ALIAS_SEED = json.loads("""{
     "tiid":"0987654321",
@@ -88,11 +89,8 @@ class TestItem():
 
     def setUp(self):
 
-        class _MockDao():
-            def get(self, id):
-                return ITEM_SEED
-
-        self.d = _MockDao()
+        self.d = dao.Dao(Configuration())
+        self.d.get = lambda id: ITEM_SEED
 
     def test_new_testing_class(self):
         assert True
@@ -116,36 +114,15 @@ class TestItem():
         i = models.Item(self.d, id="123")
         self.d.get = lambda id: None # that item doesn't exist in the db
         i.load()
-        
 
+    '''
+    def test_save(self):
+        i = models.Item(self.d, id="123")
+        for key in ITEM_SEED:
+            setattr(i, key, ITEM_SEED[key])
+        i.save()
+    '''
 
-        '''
-        
-        i = models.Item("12345", aliases=deepcopy(ALIAS_SEED), metrics=deepcopy(METRICS_SEED), biblio=deepcopy(BIBLIO_SEED))
-        assert isinstance(i.aliases, models.Aliases)
-        assert isinstance(i.metrics, models.Metrics)
-        assert isinstance(i.biblio, models.Biblio)
-
-        assert i.aliases.data == ALIAS_SEED_CANONICAL, i.aliases.data
-        # can only compare the buckets, as the meta objects change when they are added
-        assert i.metrics.data['bucket'] == METRICS_SEED['bucket'], (i.metrics.data, METRICS_SEED)
-        assert i.biblio.data == BIBLIO_SEED
-        
-        a = models.Aliases(seed=deepcopy(ALIAS_SEED))
-        m = models.Metrics(seed=deepcopy(METRICS_SEED))
-        b = models.Biblio(seed=deepcopy(BIBLIO_SEED))
-        
-        i = models.Item("12345", aliases=a, metrics=m, biblio=b)
-        assert i.aliases.data == ALIAS_SEED_CANONICAL
-        # can only compare the buckets, as the meta objects change when they are added
-        assert i.metrics.data['bucket'] == METRICS_SEED['bucket'], (i.metrics.data, METRICS_SEED)
-        assert i.biblio.data == BIBLIO_SEED
-        
-        i = models.Item(id="12345", seed=deepcopy(ITEM_SEED))
-        assert i.aliases.data == ALIAS_SEED_CANONICAL
-        assert i.metrics.data['bucket'] == METRICS_SEED['bucket'], (i.metrics.data, METRICS_SEED)
-        assert i.biblio.data == BIBLIO_SEED
-        '''
 
 class TestModels(unittest.TestCase):
 
