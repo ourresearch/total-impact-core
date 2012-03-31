@@ -50,9 +50,7 @@ To install on OSX Snow Leopard:
 
 Customized settings for connecting to CouchDB can be set in the config/totalimpact.conf.json file.
 
-By default, total-impact will try to contact CouchDB at http://localhost:5984/ through an admin user called "test" with password "password".
-
-To configure CouchDB for this default just use the Futon admin client at <http://localhost:5984/_utils>. At the bottom-right, click "Add User," and add user called "test" with the password "password".
+By default, total-impact will try to contact CouchDB at http://localhost:5984/ through an admin user called "test" with password "password". To configure CouchDB for this default just use the Futon admin client at <http://localhost:5984/_utils>. At the bottom-right, click "Add User," and add user called "test" with the password "password".
 
 When total-impact starts, it will, if necessary, create the database and all necessary views 
 (you can see the view definitions [in the config](https://github.com/total-impact/total-impact/blob/master/config/totalimpact.conf.json).
