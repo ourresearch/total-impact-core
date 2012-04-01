@@ -74,8 +74,7 @@ class TestBackend(unittest.TestCase):
 
     def setUp(self):
         '''
-        print APP_CONFIG
-        self.config = Configuration(APP_CONFIG, False)
+        self.config = Configuration()
         self.queue_first = Queue.first
         Queue.first = first_mock
         
@@ -98,7 +97,7 @@ class TestBackend(unittest.TestCase):
 
     @nottest
     def test_01_init_backend(self):
-        watcher = TotalImpactBackend(APP_CONFIG)
+        watcher = TotalImpactBackend(Configuration())
         
         assert len(watcher.threads) == 0
         assert watcher.config is not None

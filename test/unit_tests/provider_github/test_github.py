@@ -26,7 +26,6 @@ class Item(object):
 
 CWD, _ = os.path.split(__file__)
 
-APP_CONFIG = os.path.join(CWD, "..", "test.conf.json")
 GITHUB_MEMBERITEMS_USER_HTML = os.path.join(CWD, "sample_extract_user_metrics.json")
 GITHUB_MEMBERITEMS_ORGS_HTML = os.path.join(CWD, "sample_extract_orgs_metrics.json")
 DOI = "10.5061/dryad.7898"
@@ -34,8 +33,7 @@ DOI = "10.5061/dryad.7898"
 class Test_Github(unittest.TestCase):
 
     def setUp(self):
-        print APP_CONFIG
-        self.config = Configuration(APP_CONFIG, False)
+        self.config = Configuration()
         self.old_http_get = Provider.http_get
     
     def tearDown(self):

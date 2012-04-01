@@ -4,8 +4,6 @@ from totalimpact.config import Configuration
 
 CWD, _ = os.path.split(__file__)
 
-APP_CONFIG = os.path.join(CWD, "test.conf.json")
-
 def successful_get(url, headers=None, timeout=None):
     return url
 def timeout_get(url, headers=None, timeout=None):
@@ -16,8 +14,7 @@ def error_get(url, headers=None, timeout=None):
 class Test_Provider(unittest.TestCase):
 
     def setUp(self):
-        print APP_CONFIG
-        self.config = Configuration(APP_CONFIG, False)
+        self.config = Configuration()
         self.old_http_get = requests.get
     
     def tearDown(self):
