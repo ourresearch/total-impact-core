@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 config = Configuration()
 providers = ProviderFactory.get_providers(config)
 mydao = dao.Dao(config)
-db_name = mydao.config.db_name
+db_name = config.db_name
 if not mydao.db_exists(db_name):
     mydao.create_db(db_name)
 mydao.connect()
