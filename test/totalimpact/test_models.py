@@ -91,6 +91,9 @@ class TestItem():
 
         self.d = dao.Dao(Configuration())
         self.d.get = lambda id: ITEM_SEED
+        def save_input(data, id):
+            self.input = data
+        self.d.update_item = save_input
 
     def test_new_testing_class(self):
         assert True
@@ -115,13 +118,13 @@ class TestItem():
         self.d.get = lambda id: None # that item doesn't exist in the db
         i.load()
 
-    '''
     def test_save(self):
         i = models.Item(self.d, id="123")
         for key in ITEM_SEED:
             setattr(i, key, ITEM_SEED[key])
         i.save()
-    '''
+        print self.input
+        assert_equals(self.input, ITEM_SEED)
 
 
 class TestModels(unittest.TestCase):
