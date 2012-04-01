@@ -151,18 +151,31 @@ class Item():
             setattr(self, key, doc[key])
 
         self.last_requested = time.time()
+        return doc
 
-    def save(self, aliases=None, metrics=None, biblio=None):
+
+    def save(self, aliases={}, metrics={}, biblio={}):
         doc = dict(aliases=aliases, metrics=metrics, biblio=biblio)
         try:
             self.dao.update_item(doc, self.id)
         except LookupError:
             self.dao.create_item(doc, self.id)
-
+        return doc
 
     def keys_from_docstring(self):
         json_doc = inspect.getdoc(self)
         return json.loads(json_doc).keys()
+
+    def as_dict(self):
+        doc = {}
+        for key in self.keys_from_docstring():
+            doc[key] = getattr(self, key)
+        return(doc)
+
+    def __str__(self):
+        return str(self.as_dict())
+
+
 
 class Biblio(object):
     """
