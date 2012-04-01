@@ -45,12 +45,12 @@ class TestWeb(unittest.TestCase):
         assert_equals(response.status_code, 404)  # Not Found
 
 
-    def test_item_post_unknown_provider(self):
-        response = self.app.post('/item/AnUnknownProviderName/AnIdOfSomeKind/')
+    def test_item_post_unknown_namespace(self):
+        response = self.app.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
         assert_equals(response.status_code, 501)  # "Not implemented"
 
     def test_item_post_unknown_tiid(self):
-        response = self.app.post('/item/Dryad/AnIdOfSomeKind/')
+        response = self.app.post('/item/DOI/AnIdOfSomeKind/')
         print response
         print response.data
         assert_equals(response.status_code, 201)  #Created
@@ -58,7 +58,7 @@ class TestWeb(unittest.TestCase):
         assert_equals(response.mimetype, "application/json")
 
     def test_item_post_known_tiid(self):
-        response = self.app.post('/item/Dryad/IdThatAlreadyExists/')
+        response = self.app.post('/item/DOI/IdThatAlreadyExists/')
         print response
         print response.data
 
@@ -68,9 +68,9 @@ class TestWeb(unittest.TestCase):
         assert_equals(len(json.loads(response.data)), 32)
         assert_equals(response.mimetype, "application/json")
 
-    def test_item_get_success(self):
+    def test_item_get_success_fakeid(self):
         # First put something in
-        response_create = self.app.post('/item/Dryad/AnIdOfSomeKind/')
+        response_create = self.app.post('/item/DOI/AnIdOfSomeKind/')
         tiid = response_create.data
 
         # Now try to get it out
@@ -82,5 +82,24 @@ class TestWeb(unittest.TestCase):
         assert_equals(response.status_code, 200)
         assert_equals(json.loads(response.data).keys(), [u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
         assert_equals(response.mimetype, "application/json")
+
+    def test_item_get_success_realid(self):
+        # First put something in
+        response_create = self.app.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%25"))
+        tiid = response_create.data
+        print tiid
+        print response_create
+
+        # Now try to get it out
+        # remove revisions stuff at the beginning
+        tiid = tiid[-32:0] #.split("-")[1]
+        # Strip off leading and trailing quotation marks
+        tiid = tiid.replace('"', '')
+        response = self.app.get('/item/' + tiid + "/")
+        print response
+        print response.data
+        #assert_equals(response.status_code, 200)
+        #assert_equals(json.loads(response.data).keys(), [u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
+        #assert_equals(response.mimetype, "application/json")
 
 

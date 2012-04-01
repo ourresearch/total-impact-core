@@ -6,6 +6,7 @@ import json
 from totalimpact.core import app, login_manager
 from totalimpact.config import Configuration
 from totalimpact import dao
+from totalimpact.backend import TotalImpactBackend
 from totalimpact.models import Item, Collection, User
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact import util
@@ -89,18 +90,24 @@ def item_tiid_get(tiid):
         abort(404)
 
 
-@app.route('/item/<namespace>/<path:nid>/', methods=['POST'])
+@app.route('/item/<namespace>/<path:nid>/', methods=['POST', 'GET'])
 def item_namespace_post(namespace, nid):
     item = Item(mydao)
+
+    ### FIXME hardcoding this.  
+    ### FIXME namespace is Dryad or DOI?
+    item.save(aliases={namespace:nid})
 
     ## FIXME
     ## Should look up this namespace and id and see if we already have a tiid
     ## If so, return its tiid with a 200.
     # right now this makes a new item every time, creating many dups
 
-    # check to make sure we know this provider
-    known_provider = namespace in [prov.id for prov in providers]
-    if not known_provider:
+    # FIXME pull this from Aliases somehow?
+    # check to make sure we know this namespace
+    #known_namespace = namespace in Aliases().get_valid_namespaces() #implement
+    known_namespaces = ["DOI"]  # hack in the meantime
+    if not namespace in known_namespaces:
         abort(501) # "Not Implemented"
 
     # otherwise, save the item
@@ -116,7 +123,7 @@ def item_namespace_post(namespace, nid):
     return resp
 
 
-@app.route('/items/<tiids>')
+@app.route('/items/<tiids>', methods=['GET'])
 def items(tiids):
     items = []
     for index,tiid in enumerate(tiids.split(',')):
@@ -339,7 +346,7 @@ def user(uid=''):
 
 if __name__ == "__main__":
 
-    watcher = TotalImpactBackend(APP_CONFIG)
+    watcher = TotalImpactBackend(Configuration())
 
     # run it
     app.run(host='0.0.0.0', debug=True)
