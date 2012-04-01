@@ -104,7 +104,7 @@ def items(tiids):
 #    /provider/GitHub/memberitems?query=bioperl&type=orgs
 #    /provider/Dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author
 providers = ProviderFactory.get_providers(config)
-@app.route('/provider/<pid>/memberitems')
+@app.route('/provider/<pid>/memberitems', methods=['GET'])
 def provider_memberitems(pid):
     query = request.values.get('query','')
     qtype = request.values.get('type','')
