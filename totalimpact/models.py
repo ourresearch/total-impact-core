@@ -152,15 +152,11 @@ class Item():
 
         self.last_requested = time.time()
 
-    def save(self):
-        doc = {}
-        for key in self.keys_from_docstring():
-            val = getattr(self, key)
-            doc[key] = val
-
-        try :
+    def save(self, aliases=None, metrics=None, biblio=None):
+        doc = dict(aliases=aliases, metrics=metrics, biblio=biblio)
+        try:
             self.dao.update_item(doc, self.id)
-        except:
+        except LookupError:
             self.dao.create_item(doc, self.id)
 
 

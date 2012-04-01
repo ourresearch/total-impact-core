@@ -115,13 +115,15 @@ class TestItem():
         self.d.get = lambda id: None # that item doesn't exist in the db
         i.load()
 
-    '''
     def test_save(self):
         i = models.Item(self.d, id="123")
-        for key in ITEM_SEED:
-            setattr(i, key, ITEM_SEED[key])
-        i.save()
-    '''
+        i.save(aliases=ALIAS_SEED, metrics=METRICS_SEED, biblio=BIBLIO_SEED)
+        i.load()
+        assert_equals(i.aliases, ALIAS_SEED)
+
+        freshitem = models.Item(self.d, id="123")
+        freshitem.load()
+        assert_equals(freshitem.aliases, i.aliases)
 
 
 class TestModels(unittest.TestCase):

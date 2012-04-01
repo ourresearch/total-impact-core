@@ -93,10 +93,13 @@ class Dao(object):
 
     def update_item(self, data, id):
         doc = self.get(id)
-        for d in data:
+        if not doc:
+            raise LookupError
+            
+        for key in data:
             # add dict items,but overwrite identical keys
-            new = dict(doc[d].items() + data[d].items())
-            doc[d] = new
+            new = dict(doc[key].items() + data[key].items())
+            doc[key] = new
 
         doc['last_modified'] = time.time()
         
