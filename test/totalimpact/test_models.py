@@ -1,8 +1,9 @@
-from totalimpact import models
-from totalimpact.config import Configuration
-from nose.tools import raises, assert_equals
+from nose.tools import raises, assert_equals, nottest
 import os, unittest, json, time
 from copy import deepcopy
+
+from totalimpact import models
+from totalimpact.config import Configuration
 from totalimpact import dao
 
 ALIAS_SEED = json.loads("""{
@@ -76,7 +77,7 @@ BIBLIO_SEED = json.loads("""
 
 ITEM_SEED = json.loads("""
 {
-    "created": 23112412414.234,
+    "created": 1333260456.916,
     "last_modified": 12414214.234,
     "last_requested": 124141245.234
 }
@@ -85,16 +86,31 @@ ITEM_SEED["aliases"] = ALIAS_SEED
 ITEM_SEED["metrics"] = METRICS_SEED
 ITEM_SEED["biblio"] = BIBLIO_SEED
 
+class db_Mock(): 
+    def save(self, a):
+        pass
+
 class TestItem():
 
     def setUp(self):
-
         self.d = dao.Dao(Configuration())
-        self.d.get = lambda id: ITEM_SEED
+
+        ## Mock these out later
+        #self.d.get = lambda id: ITEM_SEED
+        #self.d.db = db_Mock
+
+        # To avoid how-to-mock trouble for now, use the real thing
+        # See the two @nottest below... need to be reenabled once mocks work again
+        db_name = self.d.config.db_name
+        if not self.d.db_exists(db_name):
+            self.d.create_db(db_name)
+        self.d.connect()
+
 
     def test_new_testing_class(self):
         assert True
 
+    @nottest
     def test_mock_dao(self):
         assert_equals(self.d.get("123"), ITEM_SEED)
 
@@ -106,7 +122,7 @@ class TestItem():
         i = models.Item(self.d, id="123")
         i.load()
         assert_equals(i.aliases, ITEM_SEED["aliases"])
-        assert_equals(i.created, ITEM_SEED["created"])
+        assert i.created > ITEM_SEED["created"]
         assert i.last_requested > ITEM_SEED["last_requested"]
 
     @raises(LookupError)
