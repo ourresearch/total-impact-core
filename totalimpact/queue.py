@@ -30,7 +30,7 @@ class Queue():
         # alter to use aliases method once exists
         item.data[self.__type__]['last_modified'] = time.time()
         item.save()
-        log.info("Saved and unqueued item " + item.id)
+        log.debug("Saved and unqueued item " + item.id)
         
         
 class AliasQueue(Queue):
@@ -45,12 +45,10 @@ class AliasQueue(Queue):
         items = self.dao.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
 
-        print items
-        #FIXME response = [Item(**i['value']) for i in items['rows']]
-        response = []
-
+        #response = [Item(**i['value']) for i in items['rows']]
+        response = [i.keys()[0] for i in items['rows']]
+        log.info(i.keys()[0])
         return response
-        #return [Item(**i['value']) for i in items.rows]
     
 
 class MetricsQueue(Queue):
@@ -85,7 +83,5 @@ class MetricsQueue(Queue):
         # due to error in couchdb this reads from json output - see dao view
 
         response = [Item(**i['value']) for i in items['rows']]
-
         return response
-        #return [Item(**i['value']) for i in items.rows]
 

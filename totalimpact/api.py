@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, json, request, redirect, abort, make_response
 from flask import render_template, flash
 from flaskext.login import login_user, current_user
-import json
+import json, time
 
 from totalimpact.core import app, login_manager
 from totalimpact.config import Configuration
@@ -95,8 +95,8 @@ def item_namespace_post(namespace, nid):
     item = Item(mydao)
 
     ### FIXME hardcoding this.  
-    ### FIXME namespace is Dryad or DOI?
-    item.save(aliases={namespace:nid})
+    now=time.time()
+    item.save(aliases={namespace:nid, "created":now, "last_modified":now})
 
     ## FIXME
     ## Should look up this namespace and id and see if we already have a tiid
