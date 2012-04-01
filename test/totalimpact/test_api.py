@@ -35,43 +35,48 @@ class TestWeb(unittest.TestCase):
         assert_equals(response.mimetype, "application/json")
 
     def test_tiid_get(self):
+        # This will get more complicated when more has been implemented
         response = self.app.get('/tiid/Dryad/NotARealId')
         assert_equals(response.status_code, 404)
 
+        # POST isn't supported
         response = self.app.post('/tiid/Dryad/NotARealId')
         assert_equals(response.status_code, 405)  # Method Not Allowed
 
 
-    # FIXME: this test is breaking
+    def test_item_get_unknown_tiid(self):
+        response = self.app.get('/item/mytiid42')
+        assert_equals(response.status_code, 404)
+
     @nottest
-    def test_item(self):
-        res = self.app.get('/item/' + self.TESTITEM)
-        assert res.status == '200 OK', res.status
-        item = json.loads(res.data)
-        assert item['_id'] == self.TESTITEM, item
-        
-    def test_item_id(self):
-        pass
-        
-    # FIXME: this test is breaking
-    @nottest        
-    def test_items(self):
-        res = self.app.get('/items/' + self.TESTITEM + ',' + self.TESTITEM2)
-        assert res.status == '200 OK', res.status
-        item = json.loads(res.data)
-        assert item[0]['_id'] == self.TESTITEM, item
-        assert item[1]['_id'] == self.TESTITEM2, item
-        
-    def test_provider_memberitems(self):
-        pass
+    def test_item_get_success(self):
+        response = self.app.get('/item/mytiid42')
+        print response
+        print response.data
+        assert_equals(response.status_code, 200)
+        assert_equals(json.loads(response.data), GOLD_MEMBER_ITEM_CONTENT)
+        assert_equals(response.mimetype, "application/json")
 
-    def test_provider_aliases(self):
-        pass
-        
-    def test_collection(self):
-        pass
+    def test_item_post_unknown_provider(self):
+        response = self.app.post('/item/AnUnknownProviderName/AnIdOfSomeKind/')
+        assert_equals(response.status_code, 501)
 
-    def test_user(self):
-        pass
+    def test_item_post_unknown_tiid(self):
+        response = self.app.post('/item/Dryad/AnIdOfSomeKind/')
+        print response
+        print response.data
+        assert_equals(response.status_code, 201)  #Created
+        assert_equals(len(json.loads(response.data)), 32)
+        assert_equals(response.mimetype, "application/json")
 
+    def test_item_post_known_tiid(self):
+        response = self.app.post('/item/Dryad/IdThatAlreadyExists/')
+        print response
+        print response.data
+
+        # FIXME should check and if already exists return 200        
+        # right now this makes a new item every time, creating many dups
+        assert_equals(response.status_code, 201) 
+        assert_equals(len(json.loads(response.data)), 32)
+        assert_equals(response.mimetype, "application/json")
 
