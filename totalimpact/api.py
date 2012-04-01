@@ -19,6 +19,9 @@ config = Configuration()
 providers = ProviderFactory.get_providers(config)
 try:
     mydao = dao.Dao(config)
+    db_name = mydao.config.db_name
+    if not mydao.db_exists(db_name):
+        mydao.create_db(db_name)
     mydao.connect()
 except LookupError:
     print "CANNOT CONNECT TO DATABASE, maybe doesn't exist?"
@@ -74,9 +77,8 @@ def item_tiid_get(tiid):
         abort(404)
 
     # success! Return the item.
-    print item
     if item:
-        resp = make_response(str(item))
+        resp = make_response(json.dumps(item.as_dict()), 200)
         resp.mimetype = "application/json"
         return resp
     else:
@@ -102,8 +104,8 @@ def item_namespace_post(namespace, nid):
     response_code = 201 # Created
 
     tiid = item.id
+
     if not tiid:
-        print "hi heather"
         abort(500)
     resp = make_response(json.dumps(tiid), response_code)        
     resp.mimetype = "application/json"
