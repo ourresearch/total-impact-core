@@ -1,16 +1,25 @@
 import threading, time, sys
 from totalimpact.config import Configuration
+from totalimpact import dao
 from totalimpact.queue import AliasQueue, MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
 
+config = Configuration()
+providers = ProviderFactory.get_providers(config)
+mydao = dao.Dao(config)
+db_name = config.db_name
+if not mydao.db_exists(db_name):
+    mydao.create_db(db_name)
+mydao.connect()
+
 class TotalImpactBackend(object):
     
-    def __init__(self, config_path):
+    def __init__(self, config):
         self.threads = []
-        self.config = Configuration(config_path)
+        self.config = config
         self.providers = ProviderFactory.get_providers(self.config)
     
     def run(self):
@@ -135,7 +144,7 @@ class QueueConsumer(StoppableThread):
 # in check to throttle the api requests.
 class ProvidersAliasThread(QueueConsumer):
     def __init__(self, providers, config):
-        QueueConsumer.__init__(self, AliasQueue())
+        QueueConsumer.__init__(self, AliasQueue(mydao))
         self.providers = providers
         self.config = config
         self.thread_id = "ProvidersAliasThread"
@@ -145,15 +154,25 @@ class ProvidersAliasThread(QueueConsumer):
             # get the first item on the queue - this waits until
             # there is something to return
             item = self.first()
-            
-            for p in self.providers:
-                try:
-                    item = p.aliases(item)
-                    
-                    # FIXME: queue object is not yet working
-                    self.queue.save_and_unqueue(item)
-                except NotImplementedError:
-                    continue
+
+            try:
+                if "aliases" in item.keys():
+                    for p in self.providers:
+                        try:
+                            log.info("in ProvidersAliasThread.run")
+
+                            # FIXME need first() to return an item
+                            # see test_alias_queue integration test for current status
+                            ## FIXME item = p.aliases(Item(aliases=item["aliases"]))
+                            
+                            # FIXME: queue object is not yet working
+                            ### FIXMEself.queue.save_and_unqueue(item)
+                        except NotImplementedError:
+                            continue
+
+            except AttributeError:
+                pass
+
                     
             self._interruptable_sleep(self.sleep_time())
             
@@ -164,7 +183,7 @@ class ProvidersAliasThread(QueueConsumer):
 class ProviderMetricsThread(QueueConsumer):
 
     def __init__(self, provider, config):
-        QueueConsumer.__init__(self, MetricsQueue(provider.id))
+        QueueConsumer.__init__(self, MetricsQueue(mydao, provider.id))
         self.provider = provider
         self.config = config
         self.thread_id = "ProviderMetricsThread:" + str(self.provider.id)
@@ -175,18 +194,24 @@ class ProviderMetricsThread(QueueConsumer):
             # there is something to return
             item = self.first()
             
-            # if we get to here, an Alias has been popped off the queue
-            item = self.provider.metrics(item)
-            
-            # FIXME: metrics requests might throw errors which cause
-            # a None to be returned from the metrics request.  If that's
-            # the case then don't save, but we should probably have a 
-            # better error handling routine
-            if item is not None:
-                # store the metrics in the database
+            try:
+                item.metrics # Test if it has this property
+
+                # if we get to here, an Metrics has been popped off the queue
+                item = self.provider.metrics(item)
                 
-                # FIXME: queue object is not yet working
-                self.queue.save_and_unqueue(item)
+                # FIXME: metrics requests might throw errors which cause
+                # a None to be returned from the metrics request.  If that's
+                # the case then don't save, but we should probably have a 
+                # better error handling routine
+                if item is not None:
+                    # store the metrics in the database
+                    
+                    # FIXME: queue object is not yet working
+                    self.queue.save_and_unqueue(item)
+
+            except AttributeError:
+                pass
             
             # the provider will return a sleep time which may be negative
             sleep_time = self.provider.sleep_time()

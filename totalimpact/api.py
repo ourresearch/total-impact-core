@@ -1,27 +1,42 @@
 from flask import Flask, jsonify, json, request, redirect, abort, make_response
 from flask import render_template, flash
 from flaskext.login import login_user, current_user
-import json
-import totalimpact.util as util
-import totalimpact.models
-from totalimpact import dao
+import json, time
+
 from totalimpact.core import app, login_manager
-
 from totalimpact.config import Configuration
+from totalimpact import dao
+from totalimpact.backend import TotalImpactBackend
+from totalimpact.models import Item, Collection, User
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
-
-
+from totalimpact import util
 from totalimpact.tilogging import logging
+
+
 logger = logging.getLogger(__name__)
 
-
-# set config
+# FIXME this should go somewhere better?
 config = Configuration()
+providers = ProviderFactory.get_providers(config)
+try:
+    mydao = dao.Dao(config)
+    db_name = mydao.config.db_name
+    
+    ## FIXME add a check to to make sure it has views already.  If not, reset
+    #mydao.delete_db(db_name)
+    
+    if not mydao.db_exists(db_name):
+        mydao.create_db(db_name)
+    mydao.connect()
+except LookupError:
+    print "CANNOT CONNECT TO DATABASE, maybe doesn't exist?"
+    raise LookupError
+
 
 # do account / auth stuff
 @login_manager.user_loader
 def load_account_for_login_manager(userid):
-    out = totalimpact.models.User.get(userid)
+    out = User.get(userid)
     return out
 
 @app.context_processor
@@ -34,59 +49,86 @@ def standard_authentication():
     """Check remote_user on a per-request basis."""
     remote_user = request.headers.get('REMOTE_USER', '')
     if remote_user:
-        user = totalimpact.models.User.get(remote_user)
+        user = User.get(remote_user)
         if user:
             login_user(user, remember=False)
     elif 'api_key' in request.values:
-        res = totalimpact.models.User.query(q='api_key:"' + request.values['api_key'] + '"')['hits']['hits']
+        res = User.query(q='api_key:"' + request.values['api_key'] + '"')['hits']['hits']
         if len(res) == 1:
-            user = totalimpact.models.User.get(res[0]['_source']['id'])
+            user = User.get(res[0]['_source']['id'])
             if user:
                 login_user(user, remember=False)
 
 
+# <path:> converter for flask accepts slashes.  Useful for DOIs.
+@app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
+def tiid(ns, nid):
+    # Nothing in the database, so return error for everything now
+    # FIXME needs to look things up
+    abort(404)
+
+
 # routes for items (TI scholarly object records)
-@app.route('/item/<tiid>')
-def item(tiid):
-    item = totalimpact.models.Item.get(tiid)
-    print item
+@app.route('/item/<tiid>', methods=['GET'])
+def item_tiid_get(tiid):
+    # initialize the item with the given tii
+    item = Item(mydao, id=tiid)
+
+    # try to load it
+    try:
+        item.load()
+    except LookupError:
+        # nothing with that tiid in the database
+        abort(404)
+
+    # success! Return the item.
     if item:
-        item.set_last_requested()
-        # is request for JSON or HTML
-        # return relevant version of item
-        resp = make_response(item.json)
+        resp = make_response(json.dumps(item.as_dict()), 200)
         resp.mimetype = "application/json"
         return resp
     else:
         abort(404)
 
-@app.route('/item/id/<namespace>/<nid>/')
-def itemid(namespace,nid):
-    if request.method == 'GET':
-        # search for the item with this namespace and nid
-        tiid = True
-        if tiid:
-            # send 303? do we redirect to the item or return its ID?
-            return tiid
-        else:
-            abort(404)
-    elif request.method == 'POST':
-        item = totalimpact.models.Item()
-        # do something to create the new item
-        item.set_last_requested()
-        tiid = item.save()
-        if tiid:
-            # set location header to /item/tiid
-            abort(201)
-        else:
-            abort(500)
 
-@app.route('/items/<tiids>')
+@app.route('/item/<namespace>/<path:nid>/', methods=['POST', 'GET'])
+def item_namespace_post(namespace, nid):
+    item = Item(mydao)
+
+    ### FIXME hardcoding this.  
+    now=time.time()
+    item.save(aliases={namespace:nid, "created":now, "last_modified":now})
+
+    ## FIXME
+    ## Should look up this namespace and id and see if we already have a tiid
+    ## If so, return its tiid with a 200.
+    # right now this makes a new item every time, creating many dups
+
+    # FIXME pull this from Aliases somehow?
+    # check to make sure we know this namespace
+    #known_namespace = namespace in Aliases().get_valid_namespaces() #implement
+    known_namespaces = ["DOI"]  # hack in the meantime
+    if not namespace in known_namespaces:
+        abort(501) # "Not Implemented"
+
+    # otherwise, save the item
+    item.save()
+    response_code = 201 # Created
+
+    tiid = item.id
+
+    if not tiid:
+        abort(500)
+    resp = make_response(json.dumps(tiid), response_code)        
+    resp.mimetype = "application/json"
+    return resp
+
+
+@app.route('/items/<tiids>', methods=['GET'])
 def items(tiids):
     items = []
     for index,tiid in enumerate(tiids.split(',')):
         if index > 99: break
-        thisitem = totalimpact.models.Item.get(tiid)
+        thisitem = Item.get(tiid)
         if thisitem:
             thisitem.set_last_requested
             items.append( thisitem.data )
@@ -103,8 +145,7 @@ def items(tiids):
 #    /provider/GitHub/memberitems?query=jasonpriem&type=profile
 #    /provider/GitHub/memberitems?query=bioperl&type=orgs
 #    /provider/Dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author
-providers = ProviderFactory.get_providers(config)
-@app.route('/provider/<pid>/memberitems')
+@app.route('/provider/<pid>/memberitems', methods=['GET'])
 def provider_memberitems(pid):
     query = request.values.get('query','')
     qtype = request.values.get('type','')
@@ -121,7 +162,7 @@ def provider_memberitems(pid):
     memberitems = provider.member_items(query, qtype)
     
     # check for requested response type, or always JSON?
-    resp = make_response( json.dumps(memberitems, sort_keys=True, indent=4) )
+    resp = make_response( json.dumps(memberitems, sort_keys=True, indent=4), 200 )
     resp.mimetype = "application/json"
     return resp
 
@@ -176,7 +217,7 @@ def collection(cid='',tiid=''):
     if request.method == "GET":
         # check for requested response type, or always JSON?
         if cid:
-            coll = totalimpact.models.Collection.get(cid)
+            coll = Collection.get(cid)
             if coll:
                 resp = make_response( coll.json )
                 resp.mimetype = "application/json"
@@ -188,7 +229,7 @@ def collection(cid='',tiid=''):
 
     if request.method == "POST":
         if tiid:
-            coll = totalimpact.models.Collection.get(cid)
+            coll = Collection.get(cid)
             # TODO: update the list of tiids on this coll with this new one
             coll.save()
             resp = make_response( coll.json )
@@ -207,16 +248,16 @@ def collection(cid='',tiid=''):
                         pass
             tiids = []
             for thing in idlist['list']:
-                item = totalimpact.models.Item()
+                item = Item()
                 item.aliases.add_alias(thing[0],thing[1])
                 tiid = item.save()
                 tiids.append(tiid)
                 item.aliases.add_alias(namespace='tiid',id=tiid)
-            coll = totalimpact.models.Collection(seed={'ids':tiids,'name':idlist['name']})
+            coll = Collection(seed={'ids':tiids,'name':idlist['name']})
             resp = coll.save()
             return resp
         else:
-            coll = totalimpact.models.Collection.get(cid)
+            coll = Collection.get(cid)
             # TODO: merge the payload (a collection object) with the coll we already have
             # use richards merge stuff to merge hierarchically?
             coll.save()
@@ -226,7 +267,7 @@ def collection(cid='',tiid=''):
 
     if request.method == "PUT":
         # check if received object was json
-        coll = totalimpact.models.Collection()
+        coll = Collection()
         if request.json:
             coll.data = request.json
         else:
@@ -248,7 +289,7 @@ def collection(cid='',tiid=''):
             return resp
         elif cid:
             # delete the whole object
-            coll = totalimpact.models.Collection.get(cid)
+            coll = Collection.get(cid)
             deleted = coll.delete()
             abort(404)
         else:
@@ -259,7 +300,7 @@ def collection(cid='',tiid=''):
 @app.route('/user/<uid>')
 def user(uid=''):
     if request.method == 'GET':
-        user = totalimpact.models.User.get(uid)
+        user = User.get(uid)
         # check for requested response type, or always JSON?
         resp = make_response( json.dumps(user, sort_keys=True, indent=4) )
         resp.mimetype = "application/json"
@@ -268,9 +309,10 @@ def user(uid=''):
     # POST updated user data (but don't accept changes to the user colls list)    
     if request.method == 'POST':
         if uid:
-            user = totalimpact.models.User.get(uid)
+            user = User.get(uid)
         else:
-            user = totalimpact.models()
+            #user = totalimpact.models()  Not sure what this is trying to do
+            pass
         if request.json:
             newdata = request.json
         else:
@@ -292,7 +334,7 @@ def user(uid=''):
     
     # kill this user
     if request.method == 'DELETE':
-        user = totalimpact.models.User.get(uid)
+        user = User.get(uid)
         user.delete()
         abort(404)
 
@@ -303,20 +345,8 @@ def user(uid=''):
 
 
 if __name__ == "__main__":
-    # try to prepare and connect to the database
-    try:
-        dao = dao.Dao(config)
-        print dao
-    except:
-        print "WARNING! No database available:"
-        raise
 
-    # start the watchers
-    # TODO: find out from rich where the watchers is...
-    #totalimpact.watchers.init()
-    #if not os.path.exists('watchers.pid'):
-    #    watchers=subprocess.Popen(['python', 'totalimpact/watchers.py'])
-    #    open('watchers.pid', 'w').write('%s' % watchers.pid)
+    watcher = TotalImpactBackend(Configuration())
 
     # run it
     app.run(host='0.0.0.0', debug=True)

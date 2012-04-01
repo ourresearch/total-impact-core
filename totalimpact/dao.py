@@ -15,14 +15,14 @@ class Dao(object):
         self.couch = couchdb.Server( url = self.config.db_url )
         self.couch.resource.credentials = ( self.config.db_adminuser, self.config.db_password )
 
-    def connect(self, db_name=False):
+    def connect(self, db_name=None):
         '''connect to an extant database. 
         Fails if the database doesn't exist'''
         
         if db_name:
             self.config.db_name = db_name
 
-        if self.db_exists(self.config.db_name) == False:
+        if not self.db_exists(self.config.db_name):
             raise LookupError("database doesn't exist")
         self.db = self.couch[ self.config.db_name ]
        
@@ -44,7 +44,11 @@ class Dao(object):
             file = open('./config/couch/views/{0}.js'.format(view_name))
             view["views"][view_name]["map"] = file.read()
 
-        self.db = self.couch.create(db_name)
+        try:
+            self.db = self.couch.create(db_name)
+        except ValueError:
+            print("Error, maybe because database name cannot include uppercase, must match [a-z][a-z0-9_\$\(\)\+-/]*$")
+            raise ValueError
         self.db.save( view )
         return True
 
@@ -79,7 +83,12 @@ class Dao(object):
         c =  httplib.HTTPConnection(host)
         c.request('GET', fullpath)
         result = c.getresponse()
-        return json.loads(result.read())
+        result_json = json.loads(result.read())
+
+        if (u'reason', u'missing_named_view') in result_json.items():
+            raise LookupError
+
+        return result_json
     
     def create_item(self, data, id):
         doc = {}
@@ -93,18 +102,19 @@ class Dao(object):
 
     def update_item(self, data, id):
         doc = self.get(id)
-        for d in data:
+        if not doc:
+            raise LookupError
+
+        for key in data:
             # add dict items,but overwrite identical keys
-            new = dict(doc[d].items() + data[d].items())
-            doc[d] = new
+            new = dict(doc[key].items() + data[key].items())
+            doc[key] = new
 
         doc['last_modified'] = time.time()
-        
-        try:
-            return self.db.save(doc)
-        except:
-            # try the save again, probably an update conflict.
-            return False
+        print(doc)
+
+        # FIXME handle update conflicts properly
+        return self.db.save(doc)
 
     def create_user(self):
         pass

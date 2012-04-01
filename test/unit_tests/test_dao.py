@@ -2,12 +2,13 @@ import unittest
 import nose.tools
 from nose.tools import nottest, raises, assert_equals, assert_true
 
-from totalimpact import dao, config
+from totalimpact.config import Configuration
+from totalimpact import dao
 
 class TestDAO(unittest.TestCase):
 
     def setUp(self):
-        conf = config.Configuration()
+        conf = Configuration()
         self.d = dao.Dao(conf)
         if self.d.db_exists("test"):
             self.d.delete_db("test")
@@ -97,20 +98,42 @@ class TestDAO(unittest.TestCase):
         del_worked = self.d.delete(id)
         assert_equals(del_worked, True)
         assert_equals(self.d.get(id), None)
+       
+    def test_query(self):
+        config = Configuration()
+        mydao = dao.Dao(config)
+        db_name = mydao.config.db_name
+        if not mydao.db_exists(db_name):
+                mydao.create_db(db_name)
+        mydao.connect()
 
-        
-
-
-        '''
-    def test_03_query(self):
         map_fun = 'function(doc) { emit(doc, null); }'
-        res = self.d.query(map_fun=map_fun)
+        res = mydao.query(map_fun=map_fun)
         self.assertTrue( isinstance(res.rows,list), res )
         
-    def test_04_view(self):
+    def test_view_all_docs(self):
         res = self.d.view('_all_docs')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )
 
-    '''
 
+    def test_view_queues_aliases(self):
+        res = self.d.view('queues/aliases')
+        print res
+        self.assertTrue( isinstance(res['rows'],list), res )
+
+    def test_view_queues_metrics(self):
+        res = self.d.view('queues/metrics')
+        print res
+        self.assertTrue( isinstance(res['rows'],list), res )
+
+    @raises(LookupError)    
+    def test_view_queues_noSuchView(self):
+        res = self.d.view('queues/noSuchView')
+        print res
+        self.assertTrue( isinstance(res['rows'],list), res )   
+
+
+
+
+             
