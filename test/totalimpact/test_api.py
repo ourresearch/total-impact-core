@@ -1,7 +1,7 @@
 import unittest, json
 from nose.tools import nottest
 
-from totalimpact import web
+from totalimpact import api
 
 class TestWeb(unittest.TestCase):
 
