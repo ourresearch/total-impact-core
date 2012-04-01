@@ -1,19 +1,17 @@
-from totalimpact.models import Item
-import totalimpact.dao as dao
 import time
+
+from totalimpact.models import Item
+
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
 
 # some data useful for testing
 # d = {"DOI" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "URL" : ["http://cottagelabs.com"]}
 
-class Queue(dao.Dao):
+
+class Queue():
     __type__ = None
         
-    def __init__(self):
-        # inherit the init
-        super(Queue,self).__init__()
-
     # TODO: 
     # return next item from this queue (e.g. whatever is on the top of the list
     # does NOT remove item from tip of queue
@@ -25,30 +23,37 @@ class Queue(dao.Dao):
         #return Item(**{'_rev': '4-a3e3574c44c95b86bb2247fe49e171c8', '_id': 'test', '_deleted_conflicts': ['3-2b27cebd890ff56e616f3d7dadc69c74'], 'hello': 'world', 'aliases': {'URL': ['http://cottagelabs.com'], 'DOI': ['10.1371/journal.pcbi.1000361', "10.1016/j.meegid.2011.02.004"]}})
     
     # implement this in inheriting classes if needs to be different
-    def save_and_unqueue(self,item):
+    def save_and_unqueue(self, item):
         # alter to use aliases method once exists
-        item.data[self.__type__]['last_modified'] = time.time()
         item.save()
-        log.info("Saved and unqueued item " + item.id)
+        log.debug("Saved and unqueued item " + item.id)
         
         
 class AliasQueue(Queue):
     __type__ = 'aliases'
     
+    def __init__(self, dao):
+        self.dao = dao
+
     @property
     def queue(self):
         viewname = 'queues/' + self.__type__
-        items = self.view(viewname)
+        items = self.dao.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
-        return [Item(**i['value']) for i in items['rows']]
-        #return [Item(**i['value']) for i in items.rows]
+
+        #response = [Item(**i['value']) for i in items['rows']]
+        response = [i.items()[0][1] for i in items['rows']]
+        log.info(i.keys()[0])
+        return response
     
+
 class MetricsQueue(Queue):
     __type__ = 'metrics'
     
-    def __init__(self,prov=None):
+    def __init__(self, dao, prov=None):
         # inherit the init
-        super(MetricsQueue,self).__init__()
+        ### FIXME is breaking super(MetricsQueue, self).__init__()
+        self.dao = dao
         self._provider = prov
     
     @property
@@ -68,10 +73,11 @@ class MetricsQueue(Queue):
         # change this for live
         viewname = 'queues/' + self.__type__
         if self.provider:
-            items = self.view(viewname, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
+            items = self.dao.view(viewname, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
         else:
-            items = self.view(viewname)
+            items = self.dao.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
-        return [Item(**i['value']) for i in items['rows']]
-        #return [Item(**i['value']) for i in items.rows]
+
+        response = [Item(**i['value']) for i in items['rows']]
+        return response
 

@@ -1,6 +1,6 @@
 from totalimpact.models import Metrics, Aliases
 from totalimpact.config import Configuration
-from totalimpact.providers.github import Github
+from totalimpact.providers.pubmed import Pubmed
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
 
 import os, unittest
@@ -11,12 +11,8 @@ class DummyResponse(object):
         self.status_code = status
         self.text = content
 
-def get_memberitems_user_html(self, url, headers=None, timeout=None):
-    f = open(GITHUB_MEMBERITEMS_USER_HTML, "r")
-    return DummyResponse(200, f.read())
-
-def get_memberitems_orgs_html(self, url, headers=None, timeout=None):
-    f = open(GITHUB_MEMBERITEMS_ORGS_HTML, "r")
+def get_memberitems_html(self, url, headers=None, timeout=None):
+    f = open(PUBMED_MEMBERITEMS_HTML, "r")
     return DummyResponse(200, f.read())
 
 # dummy Item class
@@ -26,16 +22,13 @@ class Item(object):
 
 CWD, _ = os.path.split(__file__)
 
-APP_CONFIG = os.path.join(CWD, "..", "test.conf.json")
-GITHUB_MEMBERITEMS_USER_HTML = os.path.join(CWD, "sample_extract_user_metrics.json")
-GITHUB_MEMBERITEMS_ORGS_HTML = os.path.join(CWD, "sample_extract_orgs_metrics.json")
+PUBMED_MEMBERITEMS_HTML = os.path.join(CWD, "sample_pubmed_memberitems.xml")
 DOI = "10.5061/dryad.7898"
 
-class Test_Github(unittest.TestCase):
+class Test_Pubmed(unittest.TestCase):
 
     def setUp(self):
-        print APP_CONFIG
-        self.config = Configuration(APP_CONFIG, False)
+        self.config = Configuration()
         self.old_http_get = Provider.http_get
     
     def tearDown(self):
@@ -48,7 +41,7 @@ class Test_Github(unittest.TestCase):
         # can we get the config file
         dcfg = None
         for p in self.config.providers:
-            if p["class"].endswith("github.Github"):
+            if p["class"].endswith("pubmed.Pubmed"):
                 dcfg = p["config"]
         print dcfg
         assert os.path.isfile(dcfg)
@@ -58,9 +51,9 @@ class Test_Github(unittest.TestCase):
         assert len(dconf.cfg) > 0
         
         # basic init of provider
-        provider = Github(dconf, self.config)
+        provider = Pubmed(dconf, self.config)
         assert provider.config is not None
-        
+
         ## FIXME implement state
         #assert provider.state is not None
 
@@ -70,10 +63,10 @@ class Test_Github(unittest.TestCase):
         # ensure that the implementation has all the relevant provider methods
         dcfg = None
         for p in self.config.providers:
-            if p["class"].endswith("github.Github"):
+            if p["class"].endswith("pubmed.Pubmed"):
                 dcfg = p["config"]
         dconf = Configuration(dcfg, False)
-        provider = Github(dconf, self.config)
+        provider = Pubmed(dconf, self.config)
         
         # must have the four core methods
         assert hasattr(provider, "member_items")
@@ -82,19 +75,16 @@ class Test_Github(unittest.TestCase):
         assert hasattr(provider, "provides_metrics")
     
 
-    def test_04_member_items(self):        
+    def test_04_member_items(self):
         dcfg = None
         for p in self.config.providers:
-            if p["class"].endswith("github.Github"):
+            if p["class"].endswith("pubmed.Pubmed"):
                 dcfg = p["config"]
         dconf = Configuration(dcfg, False)
-        provider = Github(dconf, self.config)
+        provider = Pubmed(dconf, self.config)
         
+        Provider.http_get = get_memberitems_html
 
-        Provider.http_get = get_memberitems_user_html
-        members = provider.member_items("egonw", "githubUser")
-        assert len(members) >= 30, (len(members), members)
-
-        Provider.http_get = get_memberitems_orgs_html
-        members = provider.member_items("bioperl", "githubOrg")
-        assert len(members) >= 32, (len(members), members)
+        members = provider.member_items("U54-CA121852", "pubmedGrant")
+        assert len(members) >= 20, len(members)
+        

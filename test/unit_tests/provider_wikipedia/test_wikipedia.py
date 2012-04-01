@@ -26,15 +26,13 @@ class Item(object):
 
 CWD, _ = os.path.split(__file__)
 
-APP_CONFIG = os.path.join(CWD, "..", "test.conf.json")
 XML_DOC = os.path.join(CWD, "wikipedia_response.xml")
 
 class Test_Wikipedia(unittest.TestCase):
 
     def setUp(self):
-        print APP_CONFIG
         print XML_DOC
-        self.config = Configuration(APP_CONFIG, False)
+        self.config = Configuration()
         self.old_http_get = Provider.http_get
     
     def tearDown(self):
