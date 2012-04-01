@@ -154,15 +154,22 @@ class ProvidersAliasThread(QueueConsumer):
             # get the first item on the queue - this waits until
             # there is something to return
             item = self.first()
-            
-            for p in self.providers:
-                try:
-                    item = p.aliases(item)
-                    
-                    # FIXME: queue object is not yet working
-                    self.queue.save_and_unqueue(item)
-                except NotImplementedError:
-                    continue
+
+            try:
+                item.aliases # Test if it has this property
+
+                for p in self.providers:
+                    try:
+                        item = p.aliases(item)
+                        
+                        # FIXME: queue object is not yet working
+                        self.queue.save_and_unqueue(item)
+                    except NotImplementedError:
+                        continue
+
+            except AttributeError:
+                pass
+
                     
             self._interruptable_sleep(self.sleep_time())
             
@@ -184,18 +191,24 @@ class ProviderMetricsThread(QueueConsumer):
             # there is something to return
             item = self.first()
             
-            # if we get to here, an Alias has been popped off the queue
-            item = self.provider.metrics(item)
-            
-            # FIXME: metrics requests might throw errors which cause
-            # a None to be returned from the metrics request.  If that's
-            # the case then don't save, but we should probably have a 
-            # better error handling routine
-            if item is not None:
-                # store the metrics in the database
+            try:
+                item.metrics # Test if it has this property
+
+                # if we get to here, an Metrics has been popped off the queue
+                item = self.provider.metrics(item)
                 
-                # FIXME: queue object is not yet working
-                self.queue.save_and_unqueue(item)
+                # FIXME: metrics requests might throw errors which cause
+                # a None to be returned from the metrics request.  If that's
+                # the case then don't save, but we should probably have a 
+                # better error handling routine
+                if item is not None:
+                    # store the metrics in the database
+                    
+                    # FIXME: queue object is not yet working
+                    self.queue.save_and_unqueue(item)
+
+            except AttributeError:
+                pass
             
             # the provider will return a sleep time which may be negative
             sleep_time = self.provider.sleep_time()
