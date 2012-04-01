@@ -20,6 +20,8 @@ providers = ProviderFactory.get_providers(config)
 try:
     mydao = dao.Dao(config)
     db_name = mydao.config.db_name
+    
+    ## FIXME add a check to to make sure it has views already.  If not, r    
     if not mydao.db_exists(db_name):
         mydao.create_db(db_name)
     mydao.connect()

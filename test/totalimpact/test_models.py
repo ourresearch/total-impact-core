@@ -118,6 +118,8 @@ class TestItem():
         i = models.Item(self.d)
         assert_equals(len(i.id), 32) # made a uuid, yay
 
+    # This one requires mock, unless start with a save
+    @nottest
     def test_load(self):
         i = models.Item(self.d, id="123")
         i.load()
