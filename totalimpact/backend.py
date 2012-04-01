@@ -161,10 +161,12 @@ class ProvidersAliasThread(QueueConsumer):
                         try:
                             log.info("in ProvidersAliasThread.run")
 
-                            item = p.aliases(Item(aliases=item["aliases"]))
+                            # FIXME need first() to return an item
+                            # see test_alias_queue integration test for current status
+                            ## FIXME item = p.aliases(Item(aliases=item["aliases"]))
                             
                             # FIXME: queue object is not yet working
-                            self.queue.save_and_unqueue(item)
+                            ### FIXMEself.queue.save_and_unqueue(item)
                         except NotImplementedError:
                             continue
 
