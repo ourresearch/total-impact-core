@@ -20,7 +20,7 @@ class TestQueue(unittest.TestCase):
         cls.couch.delete( cls.TESTDB )
 
     @nottest
-    def test_01_alias_queue(self):
+    def test_alias_queue(self):
         aq = queue.AliasQueue()
         aq.config.db_name = self.TESTDB
         self.assertTrue( isinstance(aq.queue,list) ) 

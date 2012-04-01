@@ -1,16 +1,25 @@
 import threading, time, sys
 from totalimpact.config import Configuration
+from totalimpact import dao
 from totalimpact.queue import AliasQueue, MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
 
+config = Configuration()
+providers = ProviderFactory.get_providers(config)
+mydao = dao.Dao(config)
+db_name = mydao.config.db_name
+if not mydao.db_exists(db_name):
+    mydao.create_db(db_name)
+mydao.connect()
+
 class TotalImpactBackend(object):
     
-    def __init__(self, config_path):
+    def __init__(self, config):
         self.threads = []
-        self.config = Configuration(config_path)
+        self.config = config
         self.providers = ProviderFactory.get_providers(self.config)
     
     def run(self):
@@ -135,7 +144,7 @@ class QueueConsumer(StoppableThread):
 # in check to throttle the api requests.
 class ProvidersAliasThread(QueueConsumer):
     def __init__(self, providers, config):
-        QueueConsumer.__init__(self, AliasQueue())
+        QueueConsumer.__init__(self, AliasQueue(mydao))
         self.providers = providers
         self.config = config
         self.thread_id = "ProvidersAliasThread"
@@ -164,7 +173,7 @@ class ProvidersAliasThread(QueueConsumer):
 class ProviderMetricsThread(QueueConsumer):
 
     def __init__(self, provider, config):
-        QueueConsumer.__init__(self, MetricsQueue(provider.id))
+        QueueConsumer.__init__(self, MetricsQueue(mydao, provider.id))
         self.provider = provider
         self.config = config
         self.thread_id = "ProviderMetricsThread:" + str(self.provider.id)

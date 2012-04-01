@@ -1,19 +1,20 @@
-from totalimpact.models import Item
-import totalimpact.dao as dao
 import time
+
+from totalimpact.models import Item
+from totalimpact import config
+
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
 
 # some data useful for testing
 # d = {"DOI" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "URL" : ["http://cottagelabs.com"]}
 
-class Queue(dao.Dao):
+config = config.Configuration()
+
+
+class Queue():
     __type__ = None
         
-    def __init__(self):
-        # inherit the init
-        super(Queue,self).__init__()
-
     # TODO: 
     # return next item from this queue (e.g. whatever is on the top of the list
     # does NOT remove item from tip of queue
@@ -35,20 +36,30 @@ class Queue(dao.Dao):
 class AliasQueue(Queue):
     __type__ = 'aliases'
     
+    def __init__(self, dao):
+        self.dao = dao
+
     @property
     def queue(self):
         viewname = 'queues/' + self.__type__
-        items = self.view(viewname)
+        items = self.dao.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
-        return [Item(**i['value']) for i in items['rows']]
+
+        print items
+        #FIXME response = [Item(**i['value']) for i in items['rows']]
+        response = []
+
+        return response
         #return [Item(**i['value']) for i in items.rows]
     
+
 class MetricsQueue(Queue):
     __type__ = 'metrics'
     
-    def __init__(self,prov=None):
+    def __init__(self, dao, prov=None):
         # inherit the init
-        super(MetricsQueue,self).__init__()
+        ### FIXME is breaking super(MetricsQueue, self).__init__()
+        self.dao = dao
         self._provider = prov
     
     @property
@@ -68,10 +79,19 @@ class MetricsQueue(Queue):
         # change this for live
         viewname = 'queues/' + self.__type__
         if self.provider:
-            items = self.view(viewname, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
+            items = self.dao.view(viewname, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
         else:
-            items = self.view(viewname)
+            items = self.dao.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
-        return [Item(**i['value']) for i in items['rows']]
+
+        items = self.dao.view('_all_docs')  #Temporary
+        print items
+        log.info(len(items))
+
+        assert False
+
+        response = [Item(**i['value']) for i in items['rows']]
+
+        return response
         #return [Item(**i['value']) for i in items.rows]
 
