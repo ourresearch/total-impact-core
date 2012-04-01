@@ -334,12 +334,8 @@ def user(uid=''):
 
 
 if __name__ == "__main__":
-    # start the watchers
-    # TODO: find out from rich where the watchers is...
-    #totalimpact.watchers.init()
-    #if not os.path.exists('watchers.pid'):
-    #    watchers=subprocess.Popen(['python', 'totalimpact/watchers.py'])
-    #    open('watchers.pid', 'w').write('%s' % watchers.pid)
+
+    watcher = TotalImpactBackend(APP_CONFIG)
 
     # run it
     app.run(host='0.0.0.0', debug=True)
