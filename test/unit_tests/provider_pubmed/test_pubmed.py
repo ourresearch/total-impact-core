@@ -22,15 +22,13 @@ class Item(object):
 
 CWD, _ = os.path.split(__file__)
 
-APP_CONFIG = os.path.join(CWD, "..", "test.conf.json")
 PUBMED_MEMBERITEMS_HTML = os.path.join(CWD, "sample_pubmed_memberitems.xml")
 DOI = "10.5061/dryad.7898"
 
 class Test_Pubmed(unittest.TestCase):
 
     def setUp(self):
-        print APP_CONFIG
-        self.config = Configuration(APP_CONFIG, False)
+        self.config = Configuration()
         self.old_http_get = Provider.http_get
     
     def tearDown(self):
