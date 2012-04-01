@@ -156,16 +156,17 @@ class ProvidersAliasThread(QueueConsumer):
             item = self.first()
 
             try:
-                item.aliases # Test if it has this property
+                if "aliases" in item.keys():
+                    for p in self.providers:
+                        try:
+                            log.info("in ProvidersAliasThread.run")
 
-                for p in self.providers:
-                    try:
-                        item = p.aliases(item)
-                        
-                        # FIXME: queue object is not yet working
-                        self.queue.save_and_unqueue(item)
-                    except NotImplementedError:
-                        continue
+                            item = p.aliases(Item(aliases=item["aliases"]))
+                            
+                            # FIXME: queue object is not yet working
+                            self.queue.save_and_unqueue(item)
+                        except NotImplementedError:
+                            continue
 
             except AttributeError:
                 pass
