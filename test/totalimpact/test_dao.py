@@ -117,9 +117,23 @@ class TestDAO(unittest.TestCase):
         self.assertTrue( isinstance(res['rows'],list), res )
 
 
-    @nottest
     def test_view_queues_aliases(self):
         res = self.d.view('queues/aliases')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )
 
+    def test_view_queues_metrics(self):
+        res = self.d.view('queues/metrics')
+        print res
+        self.assertTrue( isinstance(res['rows'],list), res )
+
+    @raises(LookupError)    
+    def test_view_queues_noSuchView(self):
+        res = self.d.view('queues/noSuchView')
+        print res
+        self.assertTrue( isinstance(res['rows'],list), res )   
+
+
+
+
+             

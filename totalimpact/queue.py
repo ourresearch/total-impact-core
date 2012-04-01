@@ -84,12 +84,6 @@ class MetricsQueue(Queue):
             items = self.dao.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
 
-        items = self.dao.view('_all_docs')  #Temporary
-        print items
-        log.info(len(items))
-
-        assert False
-
         response = [Item(**i['value']) for i in items['rows']]
 
         return response

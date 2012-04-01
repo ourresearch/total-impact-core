@@ -79,7 +79,12 @@ class Dao(object):
         c =  httplib.HTTPConnection(host)
         c.request('GET', fullpath)
         result = c.getresponse()
-        return json.loads(result.read())
+        result_json = json.loads(result.read())
+
+        if (u'reason', u'missing_named_view') in result_json.items():
+            raise LookupError
+
+        return result_json
     
     def create_item(self, data, id):
         doc = {}
