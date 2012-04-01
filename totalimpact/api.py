@@ -45,6 +45,14 @@ def standard_authentication():
                 login_user(user, remember=False)
 
 
+# <path:> converter for flask accepts slashes.  Useful for DOIs.
+@app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
+def tiid(ns, nid):
+    # Nothing in the database, so return error for everything now
+    # FIXME needs to look things up
+    abort(404)
+
+
 # routes for items (TI scholarly object records)
 @app.route('/item/<tiid>')
 def item(tiid):

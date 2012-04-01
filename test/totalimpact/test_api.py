@@ -24,6 +24,8 @@ class TestWeb(unittest.TestCase):
     def tearDown(self):
         Dryad.member_items = self.orig_Dryad_member_items
 
+
+
     def test_memberitems_get(self):
         response = self.app.get('/provider/Dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author')
         print response
@@ -31,6 +33,13 @@ class TestWeb(unittest.TestCase):
         assert_equals(response.status_code, 200)
         assert_equals(json.loads(response.data), GOLD_MEMBER_ITEM_CONTENT)
         assert_equals(response.mimetype, "application/json")
+
+    def test_tiid_get(self):
+        response = self.app.get('/tiid/Dryad/NotARealId')
+        assert_equals(response.status_code, 404)
+
+        response = self.app.post('/tiid/Dryad/NotARealId')
+        assert_equals(response.status_code, 405)  # Method Not Allowed
 
 
     # FIXME: this test is breaking
