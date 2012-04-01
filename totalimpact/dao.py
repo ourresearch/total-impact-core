@@ -95,19 +95,17 @@ class Dao(object):
         doc = self.get(id)
         if not doc:
             raise LookupError
-            
+
         for key in data:
             # add dict items,but overwrite identical keys
             new = dict(doc[key].items() + data[key].items())
             doc[key] = new
 
         doc['last_modified'] = time.time()
-        
-        try:
-            return self.db.save(doc)
-        except:
-            # try the save again, probably an update conflict.
-            return False
+        print(doc)
+
+        # FIXME handle update conflicts properly
+        return self.db.save(doc)
 
     def create_user(self):
         pass
