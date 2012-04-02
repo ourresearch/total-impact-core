@@ -98,7 +98,12 @@ class TestDAO(unittest.TestCase):
         del_worked = self.d.delete(id)
         assert_equals(del_worked, True)
         assert_equals(self.d.get(id), None)
-       
+
+    def test_create_new_db_and_connect(self):
+       self.d.create_new_db_and_connect("test")
+       assert_equals(self.d.db_exists("test"), True)
+
+
     def test_query(self):
         config = Configuration()
         mydao = dao.Dao(config)
