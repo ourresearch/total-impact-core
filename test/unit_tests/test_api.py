@@ -80,7 +80,9 @@ class TestWeb(unittest.TestCase):
         print response
         print response.data
         assert_equals(response.status_code, 200)
-        assert_equals(json.loads(response.data).keys(), [u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
+        # is this trying to check that the list of keys is equal? if so, how will 
+        # it do so given that order of keys in an object is not guaranteed?
+        assert_equals(json.loads(response.data).keys(), [u'aliases', u'biblio', u'created', u'id', u'last_modified', u'last_requested', u'metrics'])
         assert_equals(response.mimetype, "application/json")
 
     def test_item_get_success_realid(self):

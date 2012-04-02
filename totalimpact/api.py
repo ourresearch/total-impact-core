@@ -71,28 +71,6 @@ def tiid(ns, nid):
     abort(404)
 
 
-# routes for items (TI scholarly object records)
-@app.route('/item/<tiid>', methods=['GET'])
-def item_tiid_get(tiid):
-    # initialize the item with the given tii
-    item = Item(mydao, id=tiid)
-
-    # try to load it
-    try:
-        item.load()
-    except LookupError:
-        # nothing with that tiid in the database
-        abort(404)
-
-    # success! Return the item.
-    if item:
-        resp = make_response(json.dumps(item.as_dict()), 200)
-        resp.mimetype = "application/json"
-        return resp
-    else:
-        abort(404)
-
-
 @app.route('/item/<namespace>/<path:nid>', methods=['POST', 'GET'])
 def item_namespace_post(namespace, nid):
     now = time.time()
@@ -127,18 +105,31 @@ def item_namespace_post(namespace, nid):
     return resp
 
 
+@app.route('/item/<tiids>', methods=['GET'])
 @app.route('/items/<tiids>', methods=['GET'])
 def items(tiids):
     items = []
     for index,tiid in enumerate(tiids.split(',')):
-        if index > 99: break
-        thisitem = Item.get(tiid)
-        if thisitem:
-            thisitem.set_last_requested
-            items.append( thisitem.data )
-    resp = make_response( json.dumps(items, sort_keys=True, indent=4) )
-    resp.mimetype = "application/json"
-    return resp
+        if index > 99: break    # weak
+        try:
+            item = Item(mydao, id=tiid)
+            item.load()
+            items.append( item.as_dict() )
+        except LookupError:
+            # TODO: is it worth setting this blank? or do nothing?
+            # if do nothing, returned list will not match supplied list
+            items.append( {} )
+
+    if len(items) == 1 and not request.path.startswith('/items/') :
+        items = items[0]
+
+    if items:
+        resp = make_response( json.dumps(items, sort_keys=True, indent=4) )
+        resp.mimetype = "application/json"
+        return resp
+    else:
+        abort(404)
+
 
         
 # routes for providers (TI apps to get metrics from remote sources)
@@ -156,6 +147,7 @@ def provider_memberitems(pid):
 
     logger.debug("In provider_memberitems with " + query + " " + qtype)
     
+    # TODO: where does providers list come from now? used to be from config, but not certain now.    
     for prov in providers:
         if prov.id == pid:
             provider = prov
@@ -165,7 +157,6 @@ def provider_memberitems(pid):
 
     memberitems = provider.member_items(query, qtype)
     
-    # check for requested response type, or always JSON?
     resp = make_response( json.dumps(memberitems, sort_keys=True, indent=4), 200 )
     resp.mimetype = "application/json"
     return resp
@@ -174,12 +165,15 @@ def provider_memberitems(pid):
 # Example: http://127.0.0.1:5000/provider/Dryad/aliases/10.5061%25dryad.7898
 @app.route('/provider/<pid>/aliases/<id>', methods=['GET'] )
 def provider_aliases(pid,id):
+
+    # TODO: where does this come from now? used to be from config, but not certain now.
     for prov in providers:
         if prov.id == pid:
             provider = prov
             break
+
     aliases = provider.get_aliases_for_id(id.replace("%", "/"))
-    # check for requested response type, or always JSON?
+
     resp = make_response( json.dumps(aliases, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
@@ -188,12 +182,15 @@ def provider_aliases(pid,id):
 # Example: http://127.0.0.1:5000/provider/Dryad/metrics/10.5061%25dryad.7898
 @app.route('/provider/<pid>/metrics/<id>', methods=['GET'] )
 def provider_metrics(pid,id):
+
+    # TODO: where does this come from now? used to be from config, but not certain now.
     for prov in providers:
         if prov.id == pid:
             provider = prov
             break
+
     metrics = provider.get_metrics_for_id(id.replace("%", "/"))
-    # check for requested response type, or always JSON?
+
     resp = make_response( json.dumps(metrics.data, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
@@ -202,12 +199,15 @@ def provider_metrics(pid,id):
 # Example: http://127.0.0.1:5000/provider/Dryad/biblio/10.5061%25dryad.7898
 @app.route('/provider/<pid>/biblio/<id>', methods=['GET'] )
 def provider_biblio(pid,id):
+
+    # TODO: where does this come from now? used to be from config, but not certain now.
     for prov in providers:
         if prov.id == pid:
             provider = prov
             break
+
     biblio = provider.get_biblio_for_id(id.replace("%", "/"))
-    # check for requested response type, or always JSON?
+
     resp = make_response( json.dumps(biblio.data, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
@@ -217,135 +217,82 @@ def provider_biblio(pid,id):
 @app.route('/collection', methods = ['GET','POST','PUT','DELETE'])
 @app.route('/collection/<cid>/<tiid>')
 def collection(cid='',tiid=''):
-
-    if request.method == "GET":
-        # check for requested response type, or always JSON?
-        if cid:
-            coll = Collection.get(cid)
-            if coll:
-                resp = make_response( coll.json )
-                resp.mimetype = "application/json"
-                return resp
-            else:
-                abort(404)
-        else:
-            abort(404)
-
+    try:
+        coll = Collection(mydao, id=cid)
+        coll.load()
+    except:
+        coll = False
+    
     if request.method == "POST":
-        if tiid:
-            coll = Collection.get(cid)
-            # TODO: update the list of tiids on this coll with this new one
-            coll.save()
-            resp = make_response( coll.json )
-            resp.mimetype = "application/json"
-            return resp
-        elif not cid:
-            # check if received object was json
-            if request.json:
-                idlist = request.json
+        if coll:
+            if tiid:
+                # TODO: update the list of tiids on this coll with this new one
+                coll.save()
             else:
-                idlist = request.values.to_dict()
-                for item in idlist:
-                    try:
-                        idlist[item] = json.loads(idlist[item])
-                    except:
-                        pass
-            tiids = []
-            for thing in idlist['list']:
-                item = Item()
-                item.aliases.add_alias(thing[0],thing[1])
-                tiid = item.save()
-                tiids.append(tiid)
-                item.aliases.add_alias(namespace='tiid',id=tiid)
-            coll = Collection(seed={'ids':tiids,'name':idlist['name']})
-            resp = coll.save()
-            return resp
+                # TODO: merge the payload (a collection object) with the coll we already have
+                # use richards merge stuff to merge hierarchically?
+                coll.save()
         else:
-            coll = Collection.get(cid)
-            # TODO: merge the payload (a collection object) with the coll we already have
-            # use richards merge stuff to merge hierarchically?
-            coll.save()
-            resp = make_response( coll.json )
-            resp.mimetype = "application/json"
-            return resp
+            if tiid:
+                abort(404) # nothing to update
+            else:
+                # TODO: if save fails here, we just pass error to the user - should prob update this
+                coll = Collection(mydao, seed = request.json )
+                coll.save() # making a new collection
 
-    if request.method == "PUT":
-        # check if received object was json
-        coll = Collection()
-        if request.json:
-            coll.data = request.json
-        else:
-            coll.data = request.values.to_dict()
-            for item in coll.data:
-                try:
-                    coll.data[item] = json.loads(coll.data[item])
-                except:
-                    pass
+    elif request.method == "PUT":
+        coll = Collection(mydao, seed = request.json )
         coll.save()
-        resp = make_response( coll.json )
+
+    elif request.method == "DELETE":
+        if coll:
+            if tiid:
+                # TODO: remove tiid from tiid list on coll
+                coll.save()
+            else:
+                coll.delete()
+                abort(404)
+
+    try:
+        resp = make_response( json.dumps( coll.as_dict() ) )
         resp.mimetype = "application/json"
         return resp
-
-    if request.method == "DELETE":
-        if tiid:
-            # remove tiid from tiid list on coll
-            resp = "thing deleted"
-            return resp
-        elif cid:
-            # delete the whole object
-            coll = Collection.get(cid)
-            deleted = coll.delete()
-            abort(404)
-        else:
-            abort(404)
+    except:
+        abort(404)
 
 
 # routes for user stuff
-@app.route('/user/<uid>')
+@app.route('/user/<uid>', methods = ['GET','POST','PUT','DELETE'])
 def user(uid=''):
-    if request.method == 'GET':
-        user = User.get(uid)
-        # check for requested response type, or always JSON?
-        resp = make_response( json.dumps(user, sort_keys=True, indent=4) )
-        resp.mimetype = "application/json"
-        return resp
+    try:
+        user = User(mydao, id=uid)
+        user.load()
+    except:
+        user = False
 
     # POST updated user data (but don't accept changes to the user colls list)    
-    if request.method == 'POST':
-        if uid:
-            user = User.get(uid)
-        else:
-            #user = totalimpact.models()  Not sure what this is trying to do
-            pass
-        if request.json:
-            newdata = request.json
-        else:
-            newdata = request.values.to_dict()
-            for item in newdata:
-                try:
-                    newdata[item] = json.loads(newdata[item])
-                except:
-                    pass
+    if request.json:
+        newdata = request.json
         if 'collection_ids' in newdata:
             del newdata['collection_ids']
         if 'password' in newdata:
             pass # should prob hash the password here (fix once user accounts exist)
-        user.data.update(newdata)
+        # TODO: update this user with the new info, however that is done now
+        if not user:
+            user = User(mydao, seed = newdata )
         user.save()
-        resp = make_response( user.json )
-        resp.mimetype = "application/json"
-        return resp
     
     # kill this user
-    if request.method == 'DELETE':
-        user = User.get(uid)
+    if request.method == 'DELETE' and user:
         user.delete()
         abort(404)
 
-# /user/claim_collection/:collection_id
-    # associates a given collection with the user; may require additional tokens, not sure yet.
-# user/send_new_pw/:user_id
-    # Sends new password to the email stored for that user.
+    try:
+        resp = make_response( json.dumps(user.as_dict(), sort_keys=True, indent=4) )
+        resp.mimetype = "application/json"
+        return resp
+    except:
+        abort(404)
 
 
 if __name__ == "__main__":
@@ -355,6 +302,3 @@ if __name__ == "__main__":
     # run it
     app.run(host='0.0.0.0', debug=True)
 
-    # remove unnecessary PIDs
-    #if os.path.exists('watchers.pid'):
-    #    os.remove('watchers.pid')
