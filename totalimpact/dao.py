@@ -130,5 +130,12 @@ class Dao(object):
         self.db.delete(doc)
         return True
 
+    def create_new_db_and_connect(self, db_name):
+        '''Create and connect to a new db, deleting one of same name if it exists.'''
+        if self.db_exists(db_name):
+            self.delete_db(db_name)
+        self.create_db(db_name)
+        self.connect_db(db_name)
+
 
 

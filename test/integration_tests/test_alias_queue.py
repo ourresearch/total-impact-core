@@ -17,16 +17,15 @@ class TestAliasQueue(unittest.TestCase):
         config = Configuration()
         providers = ProviderFactory.get_providers(config)
 
+        # setup the database
         mydao = dao.Dao(config)
-        db_name = 'alias_queue_test' 
-        # Make sure we start with a fresh DB for testing: delete and create
-        if mydao.db_exists(db_name):
-            mydao.delete_db(db_name)
-        mydao.create_db(db_name)
-        mydao.connect_db(db_name)
+        mydao.create_new_db_and_connect('alias_queue_test')
+        
+        # put an item in there
+
         my_alias_queue = AliasQueue(mydao)
         assert isinstance(my_alias_queue.queue, list)
-        assert false
+        #assert false
 
         '''
         watcher = TotalImpactBackend(config)
