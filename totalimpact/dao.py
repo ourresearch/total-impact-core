@@ -15,16 +15,13 @@ class Dao(object):
         self.couch = couchdb.Server( url = self.config.db_url )
         self.couch.resource.credentials = ( self.config.db_adminuser, self.config.db_password )
 
-    def connect(self, db_name=None):
+    def connect_db(self, db_name):
         '''connect to an extant database. 
         Fails if the database doesn't exist'''
-        
-        if db_name:
-            self.config.db_name = db_name
 
-        if not self.db_exists(self.config.db_name):
+        if not self.db_exists(db_name):
             raise LookupError("database doesn't exist")
-        self.db = self.couch[ self.config.db_name ]
+        self.db = self.couch[ db_name ]
        
     def db_exists(self, db_name):
         try:
