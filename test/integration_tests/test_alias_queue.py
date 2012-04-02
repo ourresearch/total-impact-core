@@ -18,20 +18,22 @@ class TestAliasQueue(unittest.TestCase):
         providers = ProviderFactory.get_providers(config)
 
         mydao = dao.Dao(config)
-        db_name = 'alias_queue_test'
+        db_name = 'alias_queue_test' 
         # Make sure we start with a fresh DB for testing: delete and create
         if mydao.db_exists(db_name):
             mydao.delete_db(db_name)
         mydao.create_db(db_name)
-        mydao.connect()
-
-        watcher = TotalImpactBackend(config)
+        mydao.connect_db(db_name)
         my_alias_queue = AliasQueue(mydao)
         assert isinstance(my_alias_queue.queue, list)
-        assert len(my_alias_queue.queue) > 1
+        assert false
 
+        '''
+        watcher = TotalImpactBackend(config)
+        assert len(my_alias_queue.queue) > 1
         first = my_alias_queue.first()
-        print first
+        '''
+        
 
         ### FIXME Need to make first return an Item so that can pass to save_and_unqueue
 

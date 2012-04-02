@@ -25,9 +25,9 @@ try:
     ## FIXME add a check to to make sure it has views already.  If not, reset
     #mydao.delete_db(db_name)
     
-    if not mydao.db_exists(db_name):
-        mydao.create_db(db_name)
-    mydao.connect()
+    if not mydao.db_exists(config.db_name):
+        mydao.create_db(config.db_name)
+    mydao.connect_db(config.db_name)
 except LookupError:
     print "CANNOT CONNECT TO DATABASE, maybe doesn't exist?"
     raise LookupError

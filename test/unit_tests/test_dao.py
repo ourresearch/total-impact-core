@@ -22,18 +22,18 @@ class TestDAO(unittest.TestCase):
         assert self.d.db_exists("unlikely_name") == False
         assert self.d.db_exists("test") == True
 
-    def test_connect(self):
+    def test_connect_db(self):
         self.d.create_db("test")
-        self.d.connect("test")
+        self.d.connect_db("test")
         assert self.d.db.__class__.__name__ == "Database"
 
     @raises(LookupError)
-    def test_connect_exception(self):
-        self.d.connect("nonexistant_database")
+    def test_connect_db_exception(self):
+        self.d.connect_db("nonexistant_database")
 
     def test_create_item(self):
         self.d.create_db("test")
-        self.d.connect("test")
+        self.d.connect_db("test")
         id = "123"
 
         data = {"aliases": {}, "biblio": {}, "metrics":{}}
@@ -48,7 +48,7 @@ class TestDAO(unittest.TestCase):
     @raises(Exception) # throws ResourceConflict, which @raises doesn't catch.
     def test_create_item_fails_if_item_exists(self):
         self.d.create_db("test")
-        self.d.connect("test")
+        self.d.connect_db("test")
         id = "123"
         data = {}
         
@@ -57,7 +57,7 @@ class TestDAO(unittest.TestCase):
 
     def test_update_items_updates(self):
         self.d.create_db("test")
-        self.d.connect("test")
+        self.d.connect_db("test")
         id = "123"
 
         # create a new doc
@@ -73,7 +73,7 @@ class TestDAO(unittest.TestCase):
 
     def test_update_items_adds_items_to_sections_instead_of_overwriting(self):
         self.d.create_db("test")
-        self.d.connect("test")
+        self.d.connect_db("test")
         id = "123"
 
         # create a new doc
@@ -89,7 +89,7 @@ class TestDAO(unittest.TestCase):
 
     def test_delete(self):
         self.d.create_db("test")
-        self.d.connect("test")
+        self.d.connect_db("test")
         id = "123"
         
         ret = self.d.create_item({}, id)
@@ -105,7 +105,7 @@ class TestDAO(unittest.TestCase):
         db_name = mydao.config.db_name
         if not mydao.db_exists(db_name):
                 mydao.create_db(db_name)
-        mydao.connect()
+        mydao.connect_db(config.db_name)
 
         map_fun = 'function(doc) { emit(doc, null); }'
         res = mydao.query(map_fun=map_fun)
