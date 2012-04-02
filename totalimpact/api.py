@@ -92,11 +92,12 @@ def item_tiid_get(tiid):
 
 @app.route('/item/<namespace>/<path:nid>/', methods=['POST', 'GET'])
 def item_namespace_post(namespace, nid):
+    now = time.time()
     item = Item(mydao)
-
-    ### FIXME hardcoding this.  
-    now=time.time()
-    item.save(aliases={namespace:nid, "created":now, "last_modified":now})
+    item.aliases = {}
+    item.aliases["namespace"] = nid
+    item.created = now
+    item.last_modified = now
 
     ## FIXME
     ## Should look up this namespace and id and see if we already have a tiid

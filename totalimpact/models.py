@@ -159,8 +159,17 @@ class Item():
         return doc
 
 
-    def save(self, aliases={}, metrics={}, biblio={}):
-        doc = dict(aliases=aliases, metrics=metrics, biblio=biblio)
+    def save(self):
+        doc = {}
+        for key in self.keys_from_docstring():
+            try:
+                val = getattr(self, key)
+            except AttributeError:
+                val = None
+            doc[key] = val
+        # couch wants the underscore...should be fixed in dao, not here.
+        doc["_id"] = doc.pop("id") 
+
         try:
             self.dao.update_item(doc, self.id)
         except LookupError:
