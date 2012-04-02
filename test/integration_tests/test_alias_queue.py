@@ -24,6 +24,8 @@ class TestAliasQueue(unittest.TestCase):
         # put an item in there
         app = api.app
         app.testing = True
+        app.config["DB_NAME"] = "alias_queue_test"
+        print app.config.keys()
         client = app.test_client()
 
         response = client.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%25"))
@@ -31,11 +33,21 @@ class TestAliasQueue(unittest.TestCase):
         print tiid
         print response
 
-        my_alias_queue = AliasQueue(mydao)
-        assert isinstance(my_alias_queue.queue, list)
-        #assert false
+        # now get it back out
+        tiid = tiid.replace('"', '')
+        response = client.get('/item/' + tiid)
+        print response
+        print response.data
+        assert_equals(response.status_code, 200)
+        
+        #assert_equals(json.loads(response.data).keys(), [u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
+        #assert_equals(response.mimetype, "application/json")
+
 
         '''
+        my_alias_queue = AliasQueue(mydao)
+        assert isinstance(my_alias_queue.queue, list)
+
         watcher = TotalImpactBackend(config)
         assert len(my_alias_queue.queue) > 1
         first = my_alias_queue.first()
@@ -49,5 +61,7 @@ class TestAliasQueue(unittest.TestCase):
 
         # TODO: once queues actually work, this should succeed
         ## FIXME assert_equals(len(my_alias_queue.queue), 0)
+
+
 
 

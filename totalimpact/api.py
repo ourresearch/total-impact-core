@@ -18,19 +18,8 @@ logger = logging.getLogger(__name__)
 # FIXME this should go somewhere better?
 config = Configuration()
 providers = ProviderFactory.get_providers(config)
-try:
-    mydao = dao.Dao(config)
-    db_name = mydao.config.db_name
-    
-    ## FIXME add a check to to make sure it has views already.  If not, reset
-    #mydao.delete_db(db_name)
-    
-    if not mydao.db_exists(config.db_name):
-        mydao.create_db(config.db_name)
-    mydao.connect_db(config.db_name)
-except LookupError:
-    print "CANNOT CONNECT TO DATABASE, maybe doesn't exist?"
-    raise LookupError
+
+mydao = dao.Dao(config)
 
 
 # do account / auth stuff
@@ -58,6 +47,20 @@ def standard_authentication():
             user = User.get(res[0]['_source']['id'])
             if user:
                 login_user(user, remember=False)
+
+@app.before_request
+def connect_to_db():
+    try:
+
+        ## FIXME add a check to to make sure it has views already.  If not, reset
+        #mydao.delete_db(db_name)
+
+        if not mydao.db_exists(app.config["DB_NAME"]):
+            mydao.create_db(app.config["DB_NAME"])
+        mydao.connect_db(app.config["DB_NAME"])
+    except LookupError:
+        print "CANNOT CONNECT TO DATABASE, maybe doesn't exist?"
+        raise LookupError
 
 
 # <path:> converter for flask accepts slashes.  Useful for DOIs.
