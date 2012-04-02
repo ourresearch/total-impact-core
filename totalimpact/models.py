@@ -134,13 +134,18 @@ class Item():
     """
     dao = None
 
-    def __init__(self, dao, id=None):
+    def __init__(self, dao, id=None, seed=None):
         self.dao = dao
 
         if id is None:
             self.id = uuid.uuid4().hex
         else: 
             self.id = id
+
+        if seed:
+            for key in seed:
+                setattr(self, key, seed[key])
+
 
     def load(self):
         doc = self.dao.get(self.id)
@@ -150,7 +155,7 @@ class Item():
         for key in doc:
             setattr(self, key, doc[key])
 
-        self.last_requested = time.time()
+        setattr(self, "last_requested", time.time())
         return doc
 
 
@@ -169,7 +174,10 @@ class Item():
     def as_dict(self):
         doc = {}
         for key in self.keys_from_docstring():
-            doc[key] = getattr(self, key)
+            try:
+                doc[key] = getattr(self, key)
+            except AttributeError:
+                doc[key] = None
         return(doc)
 
     def __str__(self):
