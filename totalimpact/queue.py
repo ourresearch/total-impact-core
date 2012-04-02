@@ -42,9 +42,11 @@ class AliasQueue(Queue):
         # due to error in couchdb this reads from json output - see dao view
 
         #response = [Item(**i['value']) for i in items['rows']]
-        response = [i.items()[0][1] for i in items['rows']]
+        response_seeds = [i.items()[0][1] for i in items['rows']]
+        response_items = [Item(self.dao, seed=seed) for seed in response_seeds]
         log.info(i.keys()[0])
-        return response
+        log.info(response_items[0])
+        return response_items
     
 
 class MetricsQueue(Queue):
