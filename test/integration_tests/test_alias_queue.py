@@ -14,7 +14,7 @@ TEST_DRYAD_DOI = "10.5061/dryad.7898"
 class TestAliasQueue(unittest.TestCase):
         
     def test_alias_queue(self):
-        config = Configuration()
+        config = Configuration() 
         providers = ProviderFactory.get_providers(config)
 
         # setup the database
