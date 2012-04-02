@@ -6,10 +6,10 @@ from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact.util import slow
-from totalimpact import dao
+from totalimpact import dao, api
 from totalimpact.tilogging import logging
 
-logger = logging.getLogger(__name__)
+TEST_DRYAD_DOI = "10.5061/dryad.7898"
 
 class TestAliasQueue(unittest.TestCase):
         
@@ -22,6 +22,14 @@ class TestAliasQueue(unittest.TestCase):
         mydao.create_new_db_and_connect('alias_queue_test')
         
         # put an item in there
+        app = api.app
+        app.testing = True
+        client = app.test_client()
+
+        response = client.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%25"))
+        tiid = response.data
+        print tiid
+        print response
 
         my_alias_queue = AliasQueue(mydao)
         assert isinstance(my_alias_queue.queue, list)

@@ -90,7 +90,7 @@ def item_tiid_get(tiid):
         abort(404)
 
 
-@app.route('/item/<namespace>/<path:nid>/', methods=['POST', 'GET'])
+@app.route('/item/<namespace>/<path:nid>', methods=['POST', 'GET'])
 def item_namespace_post(namespace, nid):
     now = time.time()
     item = Item(mydao)

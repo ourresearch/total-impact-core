@@ -85,21 +85,10 @@ class TestWeb(unittest.TestCase):
 
     def test_item_get_success_realid(self):
         # First put something in
-        response_create = self.app.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%25"))
-        tiid = response_create.data
-        print tiid
-        print response_create
-
-        # Now try to get it out
-        # remove revisions stuff at the beginning
-        tiid = tiid[-32:0] #.split("-")[1]
-        # Strip off leading and trailing quotation marks
-        tiid = tiid.replace('"', '')
-        response = self.app.get('/item/' + tiid + "/")
+        response = self.app.get('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%25"))
+        tiid = response.data
         print response
-        print response.data
-        #assert_equals(response.status_code, 200)
-        #assert_equals(json.loads(response.data).keys(), [u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
-        #assert_equals(response.mimetype, "application/json")
+        print tiid
+
 
 
