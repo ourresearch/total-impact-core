@@ -77,7 +77,7 @@ BIBLIO_SEED = json.loads("""
 
 ITEM_SEED = json.loads("""
 {
-    "created": 1333260456.916,
+    "created": 1330260456.916,
     "last_modified": 12414214.234,
     "last_requested": 124141245.234
 }
@@ -95,22 +95,16 @@ class TestItem():
     def setUp(self):
         self.d = dao.Dao(Configuration())
 
-        ## Mock these out later
-        #self.d.get = lambda id: ITEM_SEED
-        #self.d.db = db_Mock
+        self.d.get = lambda id: ITEM_SEED
+        def fake_save(data, id):
+            self.input = data
+        self.d.update_item = fake_save
 
-        # To avoid how-to-mock trouble for now, use the real thing
-        # See the two @nottest below... need to be reenabled once mocks work again
-        db_name = self.d.config.db_name
-        if not self.d.db_exists(db_name):
-            self.d.create_db(db_name)
-        self.d.connect()
-
+        self.d.db = db_Mock
 
     def test_new_testing_class(self):
         assert True
 
-    @nottest
     def test_mock_dao(self):
         assert_equals(self.d.get("123"), ITEM_SEED)
 
@@ -118,13 +112,11 @@ class TestItem():
         i = models.Item(self.d)
         assert_equals(len(i.id), 32) # made a uuid, yay
 
-    # This one requires mock, unless start with a save
-    @nottest
     def test_load(self):
         i = models.Item(self.d, id="123")
         i.load()
         assert_equals(i.aliases, ITEM_SEED["aliases"])
-        assert i.created > ITEM_SEED["created"]
+        assert_equals(i.created, ITEM_SEED["created"])
         assert i.last_requested > ITEM_SEED["last_requested"]
 
     @raises(LookupError)
@@ -135,13 +127,20 @@ class TestItem():
 
     def test_save(self):
         i = models.Item(self.d, id="123")
-        i.save(aliases=ALIAS_SEED, metrics=METRICS_SEED, biblio=BIBLIO_SEED)
-        i.load()
+
+
+        # load all the values from the item_seed into the test item.
+        for key in ITEM_SEED:
+            setattr(i, key, ITEM_SEED[key])
+        i.save()
+
         assert_equals(i.aliases, ALIAS_SEED)
 
-        freshitem = models.Item(self.d, id="123")
-        freshitem.load()
-        assert_equals(freshitem.aliases, i.aliases)
+        seed = deepcopy(ITEM_SEED)
+        seed["_id"] = "123"
+        # the fake dao puts the doc-to-save in the self.input var.
+        assert_equals(self.input, seed)
+
 
 
 class TestModels(unittest.TestCase):
