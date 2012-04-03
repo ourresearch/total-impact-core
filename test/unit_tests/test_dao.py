@@ -17,6 +17,11 @@ class TestDAO(unittest.TestCase):
         self.d.create_db("test")
         assert self.d.db.__class__.__name__ == "Database"
 
+    def test_create_db_uploads_views(self):
+        self.d.create_db("test")
+        design_doc = self.d.db.get("_design/queues")
+        assert_equals(set(design_doc["views"].keys()), set(["aliases", "metrics"]))
+
     def test_db_exists(self):
         self.d.create_db("test")
         assert self.d.db_exists("unlikely_name") == False
@@ -26,6 +31,7 @@ class TestDAO(unittest.TestCase):
         self.d.create_db("test")
         self.d.connect_db("test")
         assert self.d.db.__class__.__name__ == "Database"
+        assert_equals("test", self.d.db_name)
 
     @raises(LookupError)
     def test_connect_db_exception(self):
