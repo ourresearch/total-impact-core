@@ -22,6 +22,7 @@ class Dao(object):
         if not self.db_exists(db_name):
             raise LookupError("database doesn't exist")
         self.db = self.couch[ db_name ]
+        self.db_name = db_name
        
     def db_exists(self, db_name):
         try:
