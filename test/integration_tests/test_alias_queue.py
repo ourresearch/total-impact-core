@@ -12,30 +12,38 @@ from totalimpact.tilogging import logging
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
 
 class TestAliasQueue(unittest.TestCase):
+    
+    def setUp(self):
+        #setup api test client
+        self.app = api.app
+        self.app.testing = True
+        self.client = self.app.test_client()
+        
+        # setup the database
+        self.testing_db_name = "alias_queue_test"
+        self.old_db_name = self.app.config["DB_NAME"]
+        self.app.config["DB_NAME"] = self.testing_db_name
+        config = Configuration() 
+        self.d = dao.Dao(config)
+        
+        
+    def tearDown(self):
+        self.app.config["DB_NAME"] = self.old_db_name
         
     def test_alias_queue(self):
-        config = Configuration() 
-        providers = ProviderFactory.get_providers(config)
+        self.d.create_new_db_and_connect(self.testing_db_name)
 
-        # setup the database
-        mydao = dao.Dao(config)
-        mydao.create_new_db_and_connect('alias_queue_test')
-        
-        # put an item in there
-        app = api.app
-        app.testing = True
-        app.config["DB_NAME"] = "alias_queue_test"
-        client = app.test_client()
+        #providers = ProviderFactory.get_providers(config)
 
-        response = client.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%25"))
+        response = self.client.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%25"))
         tiid = response.data
         print tiid
         print response
-        assert False 
+        #assert False
 
         # now get it back out
         tiid = tiid.replace('"', '')
-        response = client.get('/item/' + tiid)
+        response = self.client.get('/item/' + tiid)
         print response
         print response.data
         assert_equals(response.status_code, 200)
