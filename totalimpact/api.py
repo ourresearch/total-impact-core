@@ -63,6 +63,20 @@ def connect_to_db():
         raise LookupError
 
 
+# adding a simple route to confirm working API
+@app.route('/')
+def hello():
+    msg = {
+        "hello": "world",
+        "message": "Congratulations! You have found the Total Impact API.",
+        "moreinfo": "http://total-impact.tumblr.com/",
+        "version": config.version
+    }
+    resp = make_response( json.dumps(msg, sort_keys=True, indent=4), 200)        
+    resp.mimetype = "application/json"
+    return resp
+
+
 # <path:> converter for flask accepts slashes.  Useful for DOIs.
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
 def tiid(ns, nid):
@@ -298,7 +312,7 @@ def user(uid=''):
 if __name__ == "__main__":
 
     # i think that maybe we want to start the watcher seperately, esp for testing?
-    watcher = TotalImpactBackend(Configuration())
+    watcher = TotalImpactBackend(config)
 
     # run it
     app.run(host='0.0.0.0', debug=True)
