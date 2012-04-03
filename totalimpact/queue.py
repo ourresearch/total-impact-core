@@ -38,15 +38,22 @@ class AliasQueue(Queue):
     @property
     def queue(self):
         viewname = 'queues/' + self.__type__
-        items = self.dao.view(viewname)
+        res = self.dao.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
 
-        print (items)
-        
-        
+        items = []
+        for row in res["rows"]:
+            my_item = Item(self.dao, id=row["id"])
+            my_item.aliases = row["value"]
+            items.append(my_item)
+
+        # don't have time to do it the pythonic way...will learn later
+        '''
         response_seeds = [i.items()[0][1] for i in items['rows']]
         response_items = [Item(self.dao, seed=seed) for seed in response_seeds]
-        return response_items 
+        '''
+        print items
+        return items
     
 
 class MetricsQueue(Queue):
