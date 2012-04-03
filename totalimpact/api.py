@@ -6,7 +6,7 @@ import json, time
 from totalimpact.core import app, login_manager
 from totalimpact.config import Configuration
 from totalimpact import dao
-from totalimpact.backend import TotalImpactBackend
+#from totalimpact.backend import TotalImpactBackend
 from totalimpact.models import Item, Collection, User
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact import util
@@ -297,7 +297,8 @@ def user(uid=''):
 
 if __name__ == "__main__":
 
-    watcher = TotalImpactBackend(Configuration())
+    # i think that maybe we want to start the watcher seperately?
+    # watcher = TotalImpactBackend(Configuration())
 
     # run it
     app.run(host='0.0.0.0', debug=True)
