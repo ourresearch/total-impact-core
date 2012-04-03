@@ -3,7 +3,9 @@ from nose.tools import nottest, assert_equals
 
 from totalimpact import api
 from totalimpact.providers.dryad import Dryad
+from totalimpact.core import app
 
+app.config["DB_NAME"] = "test_api"
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
 GOLD_MEMBER_ITEM_CONTENT = ["MEMBERITEM CONTENT"]

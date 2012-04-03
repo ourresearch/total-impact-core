@@ -10,10 +10,7 @@ log = logging.getLogger(__name__)
 
 config = Configuration()
 providers = ProviderFactory.get_providers(config)
-mydao = dao.Dao(config)
-if not mydao.db_exists(app.config["DB_NAME"]):
-    mydao.create_db(app.config["DB_NAME"])
-mydao.connect_db(app.config["DB_NAME"])
+
 
 class TotalImpactBackend(object):
     
@@ -144,6 +141,10 @@ class QueueConsumer(StoppableThread):
 # in check to throttle the api requests.
 class ProvidersAliasThread(QueueConsumer):
     def __init__(self, providers, config):
+        mydao = dao.Dao(config)
+        if not mydao.db_exists(app.config["DB_NAME"]):
+            mydao.create_db(app.config["DB_NAME"])
+        mydao.connect_db(app.config["DB_NAME"])
         QueueConsumer.__init__(self, AliasQueue(mydao))
         self.providers = providers
         self.config = config
@@ -183,6 +184,10 @@ class ProvidersAliasThread(QueueConsumer):
 class ProviderMetricsThread(QueueConsumer):
 
     def __init__(self, provider, config):
+        mydao = dao.Dao(config)
+        if not mydao.db_exists(app.config["DB_NAME"]):
+            mydao.create_db(app.config["DB_NAME"])
+        mydao.connect_db(app.config["DB_NAME"])
         QueueConsumer.__init__(self, MetricsQueue(mydao, provider.id))
         self.provider = provider
         self.config = config
