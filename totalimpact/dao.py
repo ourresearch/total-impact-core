@@ -104,9 +104,13 @@ class Dao(object):
             raise LookupError
 
         for key in data:
-            # add dict items,but overwrite identical keys
-            new = dict(doc[key].items() + data[key].items())
-            doc[key] = new
+            try:
+                # add dict items,but overwrite identical keys
+                new = dict(doc[key].items() + data[key].items())
+                doc[key] = new
+            except AttributeError:
+                if data[key] is not None:
+                    doc[key] = data[key]
 
         doc['last_modified'] = time.time()
         print(doc)

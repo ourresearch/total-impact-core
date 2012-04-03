@@ -115,7 +115,7 @@ class TestItem():
     def test_load(self):
         i = models.Item(self.d, id="123")
         i.load()
-        assert_equals(i.aliases, ITEM_SEED["aliases"])
+        assert_equals(i.aliases.as_dict(), ALIAS_SEED_CANONICAL)
         assert_equals(i.created, ITEM_SEED["created"])
         assert i.last_requested > ITEM_SEED["last_requested"]
 

@@ -83,7 +83,7 @@ class Dryad(Provider):
         return [(Aliases.NS.DOI, hit.replace("doi:", "")) for hit in list(set(identifiers))]
 
     
-    def aliases(self, item): 
+    def aliases(self, item):
         # get the alias object
         alias_object = item.aliases
         logger.info(self.config.id + ": aliases requested for tiid:" + alias_object.tiid)
@@ -91,7 +91,8 @@ class Dryad(Provider):
         # Get a list of the new aliases that can be discovered from the data
         # source
         new_aliases = []
-        for alias in alias_object.get_aliases_list(self.config.supported_namespaces):
+        for alias in alias_object.get_aliases_list("DOI"):
+            print alias
             if not self._is_dryad_doi(alias[1]):
                 continue
             logger.debug(self.config.id + ": processing aliases for tiid:" + alias_object.tiid)

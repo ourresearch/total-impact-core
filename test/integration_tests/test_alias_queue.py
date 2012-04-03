@@ -33,7 +33,7 @@ class TestAliasQueue(unittest.TestCase):
     def test_alias_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
 
-        #providers = ProviderFactory.get_providers(config)
+        providers = ProviderFactory.get_providers(self.config)
 
         response = self.client.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%2F"))
         tiid = response.data
@@ -54,7 +54,7 @@ class TestAliasQueue(unittest.TestCase):
         # test the view works
         res = self.d.view("aliases")
         assert len(res["rows"]) == 1, res
-        assert_equals(res["rows"][0]["value"]["DOI"], TEST_DRYAD_DOI)
+        assert_equals(res["rows"][0]["value"]["aliases"]["DOI"], TEST_DRYAD_DOI)
 
         # see if the item is on the queue
         my_alias_queue = AliasQueue(self.d)
@@ -63,24 +63,19 @@ class TestAliasQueue(unittest.TestCase):
         
         # get our item from the queue
         my_item = my_alias_queue.first()
-        print my_item
-        assert_equals(my_item.aliases["DOI"], TEST_DRYAD_DOI)
+        assert_equals(my_item.aliases.data["DOI"], TEST_DRYAD_DOI)
 
+        # do the update using the backend
+        alias_thread = ProvidersAliasThread(providers, self.config)
+        alias_thread.run_once = True
+        alias_thread.run()
 
-        '''
-
-        watcher = TotalImpactBackend(self.config)
-        '''
-        
-
-        ### FIXME Need to make first return an Item so that can pass to save_and_unqueue
-
-        #assert len(first["_id"]) > 1
-        ## FIXME my_alias_queue.save_and_unqueue(first)
-
-        # TODO: once queues actually work, this should succeed
-        ## FIXME assert_equals(len(my_alias_queue.queue), 0)
-
-
+        # get the item back out again and bask in the awesome
+        response = self.client.get('/item/' + tiid)
+        resp_dict = json.loads(response.data)
+        assert_equals(
+            resp_dict["aliases"]["TITLE"][0],
+            "data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides"
+            )
 
 
