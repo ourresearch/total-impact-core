@@ -37,9 +37,7 @@ class TestAliasQueue(unittest.TestCase):
 
         response = self.client.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%2F"))
         tiid = response.data
-        print tiid
-        print response
-        #assert False
+
 
         # now get it back out
         tiid = tiid.replace('"', '')
@@ -52,7 +50,11 @@ class TestAliasQueue(unittest.TestCase):
             set([u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
             )
         assert_equals(unicode(TEST_DRYAD_DOI), resp_dict["aliases"]["DOI"])
-        
+
+        # test the view works
+        res = self.d.view("aliases")
+        assert len(res["rows"]) == 1, res
+        assert_equals(res["rows"][0]["value"]["DOI"], TEST_DRYAD_DOI)
 
 
         '''
