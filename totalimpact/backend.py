@@ -28,6 +28,7 @@ class TotalImpactBackend(object):
             self._cleanup()
     
     def _spawn_threads(self):
+        
         for p in self.providers:
             if not p.provides_metrics():
                 continue

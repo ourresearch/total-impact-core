@@ -23,8 +23,8 @@ class TestAliasQueue(unittest.TestCase):
         self.testing_db_name = "alias_queue_test"
         self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
-        config = Configuration() 
-        self.d = dao.Dao(config)
+        self.config = Configuration()
+        self.d = dao.Dao(self.config)
         
         
     def tearDown(self):
@@ -56,14 +56,20 @@ class TestAliasQueue(unittest.TestCase):
         assert len(res["rows"]) == 1, res
         assert_equals(res["rows"][0]["value"]["DOI"], TEST_DRYAD_DOI)
 
+        # see if the item is on the queue
+        my_alias_queue = AliasQueue(self.d)
+        assert isinstance(my_alias_queue.queue, list)
+        assert_equals(len(my_alias_queue.queue), 1)
+        
+        # get our item from the queue
+        my_item = my_alias_queue.first()
+        print my_item
+        assert_equals(my_item.aliases["DOI"], TEST_DRYAD_DOI)
+
 
         '''
-        my_alias_queue = AliasQueue(mydao)
-        assert isinstance(my_alias_queue.queue, list)
 
-        watcher = TotalImpactBackend(config)
-        assert len(my_alias_queue.queue) > 1
-        first = my_alias_queue.first()
+        watcher = TotalImpactBackend(self.config)
         '''
         
 

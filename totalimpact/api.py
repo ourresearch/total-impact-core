@@ -297,7 +297,7 @@ def user(uid=''):
 
 if __name__ == "__main__":
 
-    # i think that maybe we want to start the watcher seperately?
+    # i think that maybe we want to start the watcher seperately, esp for testing?
     watcher = TotalImpactBackend(Configuration())
 
     # run it
