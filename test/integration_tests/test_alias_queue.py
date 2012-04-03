@@ -70,23 +70,12 @@ class TestAliasQueue(unittest.TestCase):
         alias_thread.run_once = True
         alias_thread.run()
 
-        assert False
-
-
-        '''
-
-        watcher = TotalImpactBackend(self.config)
-        '''
-        
-
-        ### FIXME Need to make first return an Item so that can pass to save_and_unqueue
-
-        #assert len(first["_id"]) > 1
-        ## FIXME my_alias_queue.save_and_unqueue(first)
-
-        # TODO: once queues actually work, this should succeed
-        ## FIXME assert_equals(len(my_alias_queue.queue), 0)
-
-
+        # get the item back out again and bask in the awesome
+        response = self.client.get('/item/' + tiid)
+        resp_dict = json.loads(response.data)
+        assert_equals(
+            resp_dict["aliases"]["TITLE"][0],
+            "data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides"
+            )
 
 
