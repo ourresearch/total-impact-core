@@ -281,6 +281,7 @@ class TestBackend(unittest.TestCase):
     # FIXME: save_and_unqueue is not yet working, so will need more
     # tests when it is
 
+    @nottest
     def test_14_backend(self):
         ##FIXME old_method = ProviderFactory.get_providers
         
