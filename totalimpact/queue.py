@@ -43,7 +43,8 @@ class AliasQueue(Queue):
 
         items = []
         for row in res["rows"]:
-            my_item = Item(self.dao, seed=row["value"], id=row["id"])
+            my_item = Item(self.dao, id=row["id"])
+            my_item.load() # TODO add better load methods to item so we don't have to go back to the db here
             items.append(my_item)
 
         '''
