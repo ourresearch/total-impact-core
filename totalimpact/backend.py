@@ -3,6 +3,7 @@ from totalimpact.config import Configuration
 from totalimpact import dao
 from totalimpact.queue import AliasQueue, MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
+from totalimpact.core import app
 
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
@@ -10,14 +11,14 @@ log = logging.getLogger(__name__)
 config = Configuration()
 providers = ProviderFactory.get_providers(config)
 mydao = dao.Dao(config)
-if not mydao.db_exists(config.db_name):
-    mydao.create_db(config.db_name)
-mydao.connect_db(config.db_name)
+if not mydao.db_exists(app.config["DB_NAME"]):
+    mydao.create_db(app.config["DB_NAME"])
+mydao.connect_db(app.config["DB_NAME"])
 
 class TotalImpactBackend(object):
     
     def __init__(self, config):
-        self.threads = []
+        self.threads = [] 
         self.config = config
         self.providers = ProviderFactory.get_providers(self.config)
     

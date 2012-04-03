@@ -25,13 +25,13 @@ class TestAliasQueue(unittest.TestCase):
         app = api.app
         app.testing = True
         app.config["DB_NAME"] = "alias_queue_test"
-        print app.config.keys()
         client = app.test_client()
 
         response = client.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%25"))
         tiid = response.data
         print tiid
         print response
+        assert False 
 
         # now get it back out
         tiid = tiid.replace('"', '')

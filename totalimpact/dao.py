@@ -37,6 +37,7 @@ class Dao(object):
     def create_db(self, db_name):
         '''makes a new database with the given name.
         uploads couch views stored in the config directory'''
+        self.db_name = db_name
         view = self.config.db_views
         for view_name in self.config.db_views['views']:
             file = open('./config/couch/views/{0}.js'.format(view_name))
@@ -72,9 +73,9 @@ class Dao(object):
         import urllib
         host = str(self.config.db_url).rstrip('/').replace('http://','')
         if viewname == '_all_docs':
-            fullpath = '/' + self.config.db_name + '/' + viewname
+            fullpath = '/' + self.db_name + '/' + viewname
         else:
-            fullpath = '/' + self.config.db_name + '/_design/queues/_view/' + viewname.replace('queues/','') + '?'
+            fullpath = '/' + self.db_name + '/_design/queues/_view/' + viewname.replace('queues/','') + '?'
         for key,val in kwargs.iteritems():
             if not fullpath.endswith('&'): fullpath += '&'
             fullpath += key + '=' + urllib.quote_plus(json.dumps(val))

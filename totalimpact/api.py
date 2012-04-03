@@ -93,7 +93,7 @@ def item_namespace_post(namespace, nid):
         abort(501) # "Not Implemented"
 
     # otherwise, save the item
-    item.save()
+    item.save() 
     response_code = 201 # Created
 
     tiid = item.id
