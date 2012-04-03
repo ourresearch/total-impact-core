@@ -90,10 +90,18 @@ class TestWeb(unittest.TestCase):
 
     def test_item_get_success_realid(self):
         # First put something in
-        response = self.app.get('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%25"))
+        response = self.app.get('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%2F")) 
         tiid = response.data
         print response
         print tiid
 
+    def test_item_post_urldecodes(self):
+        resp = self.app.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%2F"))
+        tiid = resp.data.replace('"', '')
+
+        resp = self.app.get('/item/' + tiid)
+        saved_item = json.loads(resp.data) 
+
+        assert_equals(TEST_DRYAD_DOI, saved_item["aliases"]["DOI"])
 
 

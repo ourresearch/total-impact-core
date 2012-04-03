@@ -1,4 +1,4 @@
-import os, unittest, time
+import os, unittest, time, json
 from nose.tools import nottest, assert_equals
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
@@ -35,7 +35,7 @@ class TestAliasQueue(unittest.TestCase):
 
         #providers = ProviderFactory.get_providers(config)
 
-        response = self.client.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%25"))
+        response = self.client.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%2F"))
         tiid = response.data
         print tiid
         print response
@@ -44,12 +44,15 @@ class TestAliasQueue(unittest.TestCase):
         # now get it back out
         tiid = tiid.replace('"', '')
         response = self.client.get('/item/' + tiid)
-        print response
-        print response.data
         assert_equals(response.status_code, 200)
         
-        #assert_equals(json.loads(response.data).keys(), [u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
-        #assert_equals(response.mimetype, "application/json")
+        resp_dict = json.loads(response.data)
+        assert_equals(
+            set(resp_dict.keys()),
+            set([u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
+            )
+        assert_equals(unicode(TEST_DRYAD_DOI), resp_dict["aliases"]["DOI"])
+        
 
 
         '''
