@@ -76,9 +76,9 @@ def item_namespace_post(namespace, nid):
     now = time.time()
     item = Item(mydao)
     item.aliases = {}
-    item.aliases["namespace"] = nid
+    item.aliases[namespace] = nid
     item.created = now
-    item.last_modified = now
+    item.last_modified = 0
 
     ## FIXME
     ## Should look up this namespace and id and see if we already have a tiid
