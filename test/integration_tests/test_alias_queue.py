@@ -54,7 +54,8 @@ class TestAliasQueue(unittest.TestCase):
         # test the view works
         res = self.d.view("aliases")
         assert len(res["rows"]) == 1, res
-        assert_equals(res["rows"][0]["value"]["DOI"], TEST_DRYAD_DOI)
+        print res
+        assert_equals(res["rows"][0]["value"]["aliases"]["DOI"], TEST_DRYAD_DOI)
 
         # see if the item is on the queue
         my_alias_queue = AliasQueue(self.d)

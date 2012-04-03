@@ -93,7 +93,7 @@ class TestWeb(unittest.TestCase):
         response = self.app.get('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%2F")) 
         tiid = response.data
         print response
-        print tiid
+        print tiid 
 
     def test_item_post_urldecodes(self):
         resp = self.app.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%2F"))
