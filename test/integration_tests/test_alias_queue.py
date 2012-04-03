@@ -33,7 +33,7 @@ class TestAliasQueue(unittest.TestCase):
     def test_alias_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
 
-        #providers = ProviderFactory.get_providers(config)
+        providers = ProviderFactory.get_providers(self.config)
 
         response = self.client.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%2F"))
         tiid = response.data
@@ -54,7 +54,6 @@ class TestAliasQueue(unittest.TestCase):
         # test the view works
         res = self.d.view("aliases")
         assert len(res["rows"]) == 1, res
-        print res
         assert_equals(res["rows"][0]["value"]["aliases"]["DOI"], TEST_DRYAD_DOI)
 
         # see if the item is on the queue
@@ -64,8 +63,14 @@ class TestAliasQueue(unittest.TestCase):
         
         # get our item from the queue
         my_item = my_alias_queue.first()
-        print my_item
-        assert_equals(my_item.aliases["DOI"], TEST_DRYAD_DOI)
+        assert_equals(my_item.aliases.data["DOI"], TEST_DRYAD_DOI)
+
+        # do the update using the backend
+        alias_thread = ProvidersAliasThread(providers, self.config)
+        alias_thread.run_once = True
+        alias_thread.run()
+
+        assert False
 
 
         '''

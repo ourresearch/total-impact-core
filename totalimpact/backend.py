@@ -141,6 +141,7 @@ class QueueConsumer(StoppableThread):
 # requests as they happen, so that the metrics thread can keep itself
 # in check to throttle the api requests.
 class ProvidersAliasThread(QueueConsumer):
+    run_once = False
     def __init__(self, providers, config):
         mydao = dao.Dao(config)
         if not mydao.db_exists(app.config["DB_NAME"]):
@@ -157,25 +158,17 @@ class ProvidersAliasThread(QueueConsumer):
             # there is something to return
             item = self.first()
 
-            try:
-                if "aliases" in item.keys():
-                    for p in self.providers:
-                        try:
-                            log.info("in ProvidersAliasThread.run")
+            for p in self.providers: 
+                try:
+                    log.info("in ProvidersAliasThread.run")
 
-                            # FIXME need first() to return an item
-                            # see test_alias_queue integration test for current status
-                            ## FIXME item = p.aliases(Item(aliases=item["aliases"]))
-                            
-                            # FIXME: queue object is not yet working
-                            ### FIXMEself.queue.save_and_unqueue(item)
-                        except NotImplementedError:
-                            continue
-
-            except AttributeError:
-                pass
-
-                    
+                    new_item = p.aliases(item)
+                except NotImplementedError, AttributeError:
+                    continue
+            self.queue.save_and_unqueue(new_item)
+                        
+            if self.run_once:
+                self.stop()
             self._interruptable_sleep(self.sleep_time())
             
     def sleep_time(self):

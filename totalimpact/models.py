@@ -155,20 +155,16 @@ class Item():
         for key in doc:
             setattr(self, key, doc[key])
 
+        setattr(self, "aliases", Aliases(seed=doc["aliases"]))
+
         setattr(self, "last_requested", time.time())
         return doc
 
 
     def save(self):
-        doc = {}
-        for key in self.keys_from_docstring():
-            try:
-                val = getattr(self, key)
-            except AttributeError:
-                val = None
-            doc[key] = val
+        doc = self.as_dict()
         # couch wants the underscore...should be fixed in dao, not here.
-        doc["_id"] = doc.pop("id") 
+        doc["_id"] = doc.pop("id")
 
         try:
             self.dao.update_item(doc, self.id)
@@ -184,7 +180,14 @@ class Item():
         doc = {}
         for key in self.keys_from_docstring():
             try:
-                doc[key] = getattr(self, key)
+                temp_val = getattr(self, key)
+                try:
+                    val = temp_val.as_dict()
+                except AttributeError:
+                    val = temp_val
+
+                doc[key] = val
+                
             except AttributeError:
                 doc[key] = None
         return(doc)
@@ -519,11 +522,20 @@ class Aliases(object):
         ret = []
         for namespace in namespace_list:
             ids = self.get_ids_by_namespace(namespace)
+            
+            # crazy hack TODO fix lists/strings flying about
+            if not hasattr(ids, "append"):
+                ids = [ids]
+            print ids
             ret += [(namespace, id) for id in ids]
         
         return ret
     
     def get_aliases_dict(self):
+        return self.data
+
+    def as_dict(self):
+        # renamed for consistancy with Items(); TODO cleanup old one
         return self.data
         
     def _init(self, val, default=None):
