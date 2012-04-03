@@ -5,42 +5,43 @@ from nose.tools import nottest, raises, assert_equals, assert_true
 from totalimpact.config import Configuration
 from totalimpact import dao
 
+TEST_DB_NAME = "test"
+
 class TestDAO(unittest.TestCase):
 
     def setUp(self):
         conf = Configuration()
         self.d = dao.Dao(conf)
-        if self.d.db_exists("test"):
-            self.d.delete_db("test")
+        if self.d.db_exists(TEST_DB_NAME):
+            self.d.delete_db(TEST_DB_NAME)
         
     def test_create_db(self):
-        self.d.create_db("test")
+        self.d.create_db(TEST_DB_NAME)
         assert self.d.db.__class__.__name__ == "Database"
-        assert_equals("test", self.d.db_name)
 
     def test_create_db_uploads_views(self):
-        self.d.create_db("test")
+        self.d.create_db(TEST_DB_NAME)
         design_doc = self.d.db.get("_design/queues")
         assert_equals(set(design_doc["views"].keys()), set(["aliases", "metrics"]))
 
     def test_db_exists(self):
-        self.d.create_db("test")
+        self.d.create_db(TEST_DB_NAME)
         assert self.d.db_exists("unlikely_name") == False
-        assert self.d.db_exists("test") == True
+        assert self.d.db_exists(TEST_DB_NAME) == True
 
     def test_connect_db(self):
-        self.d.create_db("test")
-        self.d.connect_db("test")
+        self.d.create_db(TEST_DB_NAME)
+        self.d.connect_db(TEST_DB_NAME)
         assert self.d.db.__class__.__name__ == "Database"
-        assert_equals("test", self.d.db_name)
+        assert_equals(TEST_DB_NAME, self.d.db_name)
 
     @raises(LookupError)
     def test_connect_db_exception(self):
         self.d.connect_db("nonexistant_database")
 
     def test_create_item(self):
-        self.d.create_db("test")
-        self.d.connect_db("test")
+        self.d.create_db(TEST_DB_NAME)
+        self.d.connect_db(TEST_DB_NAME)
         id = "123"
 
         data = {"aliases": {}, "biblio": {}, "metrics":{}}
@@ -54,8 +55,8 @@ class TestDAO(unittest.TestCase):
 
     @raises(Exception) # throws ResourceConflict, which @raises doesn't catch.
     def test_create_item_fails_if_item_exists(self):
-        self.d.create_db("test")
-        self.d.connect_db("test")
+        self.d.create_db(TEST_DB_NAME)
+        self.d.connect_db(TEST_DB_NAME)
         id = "123"
         data = {}
         
@@ -63,8 +64,8 @@ class TestDAO(unittest.TestCase):
         ret = self.d.create_item(data, id)
 
     def test_update_items_updates(self):
-        self.d.create_db("test")
-        self.d.connect_db("test")
+        self.d.create_db(TEST_DB_NAME)
+        self.d.connect_db(TEST_DB_NAME)
         id = "123"
 
         # create a new doc
@@ -79,8 +80,8 @@ class TestDAO(unittest.TestCase):
         assert_equals(doc["aliases"], data["aliases"])
 
     def test_update_items_adds_items_to_sections_instead_of_overwriting(self):
-        self.d.create_db("test")
-        self.d.connect_db("test")
+        self.d.create_db(TEST_DB_NAME)
+        self.d.connect_db(TEST_DB_NAME)
         id = "123"
 
         # create a new doc
@@ -95,8 +96,8 @@ class TestDAO(unittest.TestCase):
         assert_equals(doc["aliases"], {"one":"uno", "two":"dos", "three":"tres"})
 
     def test_delete(self):
-        self.d.create_db("test")
-        self.d.connect_db("test")
+        self.d.create_db(TEST_DB_NAME)
+        self.d.connect_db(TEST_DB_NAME)
         id = "123"
         
         ret = self.d.create_item({}, id)
@@ -107,39 +108,45 @@ class TestDAO(unittest.TestCase):
         assert_equals(self.d.get(id), None)
 
     def test_create_new_db_and_connect(self):
-       self.d.create_new_db_and_connect("test")
-       assert_equals(self.d.db_exists("test"), True)
+       self.d.create_db(TEST_DB_NAME)
+       self.d.connect_db(TEST_DB_NAME)
+       assert_equals(self.d.db_exists(TEST_DB_NAME), True)
 
 
     def test_query(self):
-        self.d.create_new_db_and_connect("test")
+        self.d.create_db(TEST_DB_NAME)
+        self.d.connect_db(TEST_DB_NAME)
   
         map_fun = 'function(doc) { emit(doc, null); }'
         res = self.d.query(map_fun=map_fun)
         self.assertTrue( isinstance(res.rows,list), res )
         
     def test_view_all_docs(self):
-        self.d.create_new_db_and_connect("test")
+        self.d.create_db(TEST_DB_NAME)
+        self.d.connect_db(TEST_DB_NAME)
         res = self.d.view('_all_docs')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )
 
 
     def test_view_queues_aliases(self):
-        self.d.create_new_db_and_connect("test")
+        self.d.create_db(TEST_DB_NAME)
+        self.d.connect_db(TEST_DB_NAME)
         res = self.d.view('queues/aliases')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )
 
     def test_view_queues_metrics(self):
-        self.d.create_new_db_and_connect("test")
+        self.d.create_db(TEST_DB_NAME)
+        self.d.connect_db(TEST_DB_NAME)
         res = self.d.view('queues/metrics')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )
 
     @raises(LookupError)    
     def test_view_queues_noSuchView(self):
-        self.d.create_new_db_and_connect("test")
+        self.d.create_db(TEST_DB_NAME)
+        self.d.connect_db(TEST_DB_NAME)
         res = self.d.view('queues/noSuchView')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )   
