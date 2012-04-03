@@ -16,6 +16,7 @@ class TestDAO(unittest.TestCase):
     def test_create_db(self):
         self.d.create_db("test")
         assert self.d.db.__class__.__name__ == "Database"
+        assert_equals("test", self.d.db_name)
 
     def test_create_db_uploads_views(self):
         self.d.create_db("test")
@@ -111,35 +112,34 @@ class TestDAO(unittest.TestCase):
 
 
     def test_query(self):
-        config = Configuration()
-        mydao = dao.Dao(config)
-        db_name = mydao.config.db_name
-        if not mydao.db_exists(db_name):
-                mydao.create_db(db_name)
-        mydao.connect_db(config.db_name)
-
+        self.d.create_new_db_and_connect("test")
+  
         map_fun = 'function(doc) { emit(doc, null); }'
-        res = mydao.query(map_fun=map_fun)
+        res = self.d.query(map_fun=map_fun)
         self.assertTrue( isinstance(res.rows,list), res )
         
     def test_view_all_docs(self):
+        self.d.create_new_db_and_connect("test")
         res = self.d.view('_all_docs')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )
 
 
     def test_view_queues_aliases(self):
+        self.d.create_new_db_and_connect("test")
         res = self.d.view('queues/aliases')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )
 
     def test_view_queues_metrics(self):
+        self.d.create_new_db_and_connect("test")
         res = self.d.view('queues/metrics')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )
 
     @raises(LookupError)    
     def test_view_queues_noSuchView(self):
+        self.d.create_new_db_and_connect("test")
         res = self.d.view('queues/noSuchView')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )   
