@@ -36,7 +36,7 @@ class TestMetricsQueue(unittest.TestCase):
     def test_metrics_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
 
-        # create two new items from  plos and dryad dois
+        # create three new items from  plos and dryad dois
         plos_resp = self.client.post('/item/DOI/' + PLOS_TEST_DOI.replace("/", "%2F"))
         plos_tiid = plos_resp.data
 
@@ -64,7 +64,7 @@ class TestMetricsQueue(unittest.TestCase):
         assert 90 < resp_dict["metrics"]["Mendeley"]["readers"]["latest"]["value"] < 100, resp_dict
 
         # test the dryad doi
-        dryad_resp = self.client.get('/item/' + plos_tiid)
+        dryad_resp = self.client.get('/item/' + dryad_tiid)
         resp_dict = json.loads(dryad_resp.data)
         assert_equals(
             resp_dict["aliases"]["TITLE"][0],
@@ -74,7 +74,7 @@ class TestMetricsQueue(unittest.TestCase):
         assert 100 < resp_dict["metrics"]["Dryad"]["file_views"]["latest"]["value"] < 1000, resp_dict
 
         # test the GitHub ID
-        github_resp = self.client.get('/item/' + plos_tiid)
+        github_resp = self.client.get('/item/' + github_tiid)
         resp_dict = json.loads(github_resp.data)
         assert_equals(
             resp_dict["aliases"]["URL"][0],
