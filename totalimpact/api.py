@@ -195,7 +195,7 @@ def provider_aliases(pid,id):
 # For internal use only.  Useful for testing before end-to-end working
 # Example: http://127.0.0.1:5000/provider/Dryad/metrics/10.5061%2Fdryad.7898
 @app.route('/provider/<pid>/metrics/<id>', methods=['GET'] )
-def provider_metrics(pid,id):
+def metric_snaps(pid,id):
 
     # TODO: where does this come from now? used to be from config, but not certain now.
     for prov in providers:

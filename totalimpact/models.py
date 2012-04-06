@@ -281,18 +281,18 @@ class Metrics(object):
     # complex object which synchronises between in-memory MetricSnap objects and their
     # "data" representations which are what actually get saved
 
-    def add_provider_metric(self, provider_metric):
-        hash = self._hash(provider_metric)
-        self.data['bucket'][hash] = provider_metric.data
-        self._update_last_modified(provider_metric.meta()["provider"])
+    def add_metric_snap(self, metric_snap):
+        hash = self._hash(metric_snap)
+        self.data['bucket'][hash] = metric_snap.data
+        self._update_last_modified(metric_snap.meta()["provider"])
         
-    def list_provider_metrics(self, provider_id=None):
+    def list_metric_snaps(self, provider_id=None):
         if provider_id is None:
             return [MetricSnap(seed=x) for x in self.data['bucket'].values()]
         return [MetricSnap(seed=x) for x in self.data['bucket'].values() if x['id'] == provider_id]
 
     # FIXME: is this in use somewhere?
-    def str_list_provider_metrics(self):
+    def str_list_metric_snaps(self):
         return([str(val) for val in self.data['bucket'].values()])
 
     def _update_last_modified(self, provider_id):
@@ -301,9 +301,9 @@ class Metrics(object):
         else:
             self.data['meta'][provider_id] = {'last_modified':0, 'last_requested':time.time(), 'ignore':False}
 
-    def _hash(self, provider_metric):
-        # get a hash of the provider_metric's json representation
-        j = self._canonical_repr(provider_metric.data)
+    def _hash(self, metric_snap):
+        # get a hash of the metric_snap's json representation
+        j = self._canonical_repr(metric_snap.data)
         m = hashlib.md5()
         m.update(j)
         return m.hexdigest()

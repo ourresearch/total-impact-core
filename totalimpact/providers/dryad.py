@@ -201,7 +201,7 @@ class Dryad(Provider):
         if new_stats is not None:
             for metric in new_stats:
                 logger.debug(self.config.id + ": found metrics: " + str(metric))
-                metrics.add_provider_metric(metric)
+                metrics.add_metric_snap(metric)
             return metrics
         return []
 
