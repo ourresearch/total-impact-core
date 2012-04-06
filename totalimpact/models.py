@@ -225,7 +225,7 @@ class Biblio(object):
 class Metrics(object):
     """
     {
-        "meta": {
+        "update_meta": {
             "PROVIDER_ID": {
                 "last_modified": 128798498.234,
                 "last_requested": 2139841098.234,
@@ -240,8 +240,8 @@ class Metrics(object):
     def __init__(self, seed=None):
         self.data = seed if seed is not None else {}
         
-        if 'meta' not in self.data.keys():
-            self.data['meta'] = {}
+        if 'update_meta' not in self.data.keys():
+            self.data['update_meta'] = {}
 
         if 'bucket' not in self.data.keys():
             self.data['bucket'] = {}
@@ -251,28 +251,28 @@ class Metrics(object):
         # list all providers from config
         config = Configuration()
         for provider in config.providers:
-            if provider['class'] not in self.data['meta'].keys():
-                self.data['meta'][provider['class']] = {'last_modified':0, 'last_requested':time.time(), 'ignore':False}
-        for item in self.data['meta']:
-            self.data['meta'][item]['last_requested'] = time.time()
+            if provider['class'] not in self.data['update_meta'].keys():
+                self.data['update_meta'][provider['class']] = {'last_modified':0, 'last_requested':time.time(), 'ignore':False}
+        for item in self.data['update_meta']:
+            self.data['update_meta'][item]['last_requested'] = time.time()
         """
         # FIXME: model objects shouldn't know about configuration
         # FIXME: this initialises all the providers
         config = Configuration()
         providers = ProviderFactory.get_providers(config)
         for p in providers:
-            if p.id not in self.data['meta'].keys():
+            if p.id not in self.data['update_meta'].keys():
                 self._update_last_modified(p.id)
                 
         # FIXME: is constructing an object synonymous with requesting the data?  Aren't there
         # admin functions which might construct this object without "requesting" the data from
         # the provider
         now = time.time()
-        for prov_id in self.data['meta'].keys():
-            self.data['meta'][prov_id]['last_requested'] = now
+        for prov_id in self.data['update_meta'].keys():
+            self.data['update_meta'][prov_id]['last_requested'] = now
 
-    def meta(self, provider_id=None):
-        return self.data['meta'] if provider_id is None else self.data['meta'].get(provider_id)
+    def update_meta(self, provider_id=None):
+        return self.data['update_meta'] if provider_id is None else self.data['update_meta'].get(provider_id)
     
     # FIXME: assuming that MetricSnap objects are deconstructed on ingest and
     # made part of the internal "data" object.  The object representations are then
@@ -284,7 +284,7 @@ class Metrics(object):
     def add_metric_snap(self, metric_snap):
         hash = self._hash(metric_snap)
         self.data['bucket'][hash] = metric_snap.data
-        self._update_last_modified(metric_snap.meta()["provider"])
+        self._update_last_modified(metric_snap.static_meta()["provider"])
         
     def list_metric_snaps(self, provider_id=None):
         if provider_id is None:
@@ -296,10 +296,10 @@ class Metrics(object):
         return([str(val) for val in self.data['bucket'].values()])
 
     def _update_last_modified(self, provider_id):
-        if self.data['meta'].has_key(provider_id):
-            self.data['meta'][provider_id]['last_modified'] = time.time()
+        if self.data['update_meta'].has_key(provider_id):
+            self.data['update_meta'][provider_id]['last_modified'] = time.time()
         else:
-            self.data['meta'][provider_id] = {'last_modified':0, 'last_requested':time.time(), 'ignore':False}
+            self.data['update_meta'][provider_id] = {'last_modified':0, 'last_requested':time.time(), 'ignore':False}
 
     def _hash(self, metric_snap):
         # get a hash of the metric_snap's json representation
@@ -337,7 +337,7 @@ class MetricSnap(object):
         "created": 1233442897.234,
         "last_modified": 1328569492.406,
         "provenance_url": ["http:\/\/api.mendeley.com\/research\/public-chemical-compound-databases\/"],
-        "meta": {
+        "static_meta": {
             "display_name": "readers"
             "provider": "Mendeley",
             "provider_url": "http:\/\/www.mendeley.com\/",
@@ -351,7 +351,7 @@ class MetricSnap(object):
         }
     }
     """
-    def __init__(self, id=None, value=None, created=None, last_modified=None, provenance_url=None, meta=None, seed=None):
+    def __init__(self, id=None, value=None, created=None, last_modified=None, provenance_url=None, static_meta=None, seed=None):
                         
         # load from the seed first
         self.data = seed if seed is not None else {}
@@ -362,7 +362,7 @@ class MetricSnap(object):
             self.data['value'] = self._init(value, 0)
             self.data['created'] = self._init(created, time.time())
             self.data['last_modified'] = self._init(last_modified, time.time())
-            self.data['meta'] = self._init(meta, {})
+            self.data['static_meta'] = self._init(static_meta, {})
             
             # provenance url needs a bit of special treatment
             if not hasattr(provenance_url, "append"):
@@ -370,8 +370,8 @@ class MetricSnap(object):
             else:
                 self.data['provenance_url'] = []
 
-        if "meta" not in self.data.keys():
-            self.data['meta'] = {}
+        if "static_meta" not in self.data.keys():
+            self.data['static_meta'] = {}
         
     def value(self, val=None):
         if val is None:
@@ -380,11 +380,11 @@ class MetricSnap(object):
             self.data['value'] = val
             self.data['last_modified'] = time.time()
             
-    def meta(self, meta=None):
-        if meta is None:
-            return self.data['meta']
+    def static_meta(self, static_meta=None):
+        if static_meta is None:
+            return self.data['static_meta']
         else:
-            self.data['meta'] = meta
+            self.data['static_meta'] = static_meta
             self.data['last_modified'] = time.time()
     
     def __repr__(self):

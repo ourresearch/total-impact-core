@@ -13,7 +13,7 @@
     },
     
     "metrics" : {
-        "meta": { 
+        "update_meta": { 
             "Wikipedia": {
                 "last_modified": 0,
                 "last_requested": 0,
@@ -27,7 +27,7 @@
                 "created": 0,
                 "last_modified": 0,
                 "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
-                "meta": {
+                "static_meta": {
                     "display_name": "mentions",
                     "provider": "Wikipedia",
                     "provider_url": "http://www.wikipedia.com/",

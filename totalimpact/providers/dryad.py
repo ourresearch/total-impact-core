@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 class DryadMetricSnapshot(MetricSnap):
     def __init__(self, provider, id, value):
-        meta = provider.config.metrics["static_meta"][id]
-        super(DryadMetricSnapshot, self).__init__(id=id, value=value, meta=meta)
+        static_meta = provider.config.metrics["static_meta"][id]
+        super(DryadMetricSnapshot, self).__init__(id=id, value=value, static_meta=static_meta)
 
 class Dryad(Provider):  
 

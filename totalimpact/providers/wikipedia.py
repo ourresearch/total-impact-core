@@ -50,8 +50,8 @@ class Wikipedia(Provider):
                 logger.debug(self.config.id + ": looking for mentions of alias " + alias[1])
                 metric = self._get_metrics(alias)
             
-            # add the meta info and other bits to the metrics object
-            metric.meta(self.config.meta)
+            # add the static_meta info and other bits to the metrics object
+            metric.static_meta(self.config.static_meta)
             
             # log our success (DEBUG and INFO)
             logger.debug(self.config.id + ": final metrics for tiid " + alias_object.tiid + ": " + str(metric))
