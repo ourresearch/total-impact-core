@@ -30,7 +30,7 @@ SNAP_SEED = json.loads("""{
     "created": 1233442897.234,
     "last_modified": 1328569492.406,
     "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
-    "meta": {
+    "static_meta": {
         "display_name": "readers",
         "provider": "Mendeley",
         "provider_url": "http://www.mendeley.com/",
@@ -44,11 +44,11 @@ SNAP_SEED = json.loads("""{
     }
 }
 """)
-SNAP_SEED_HASH = "d8c8f25061da78cc905e9b837d1c78ed"
+SNAP_SEED_HASH = "c644c965d836f30d2c4fda7e0514c74a"
 
 METRICS_SEED = json.loads("""
 {
-    "meta": {
+    "update_meta": {
         "Mendeley": {
             "last_modified": 128798498.234,
             "last_requested": 2139841098.234,
@@ -272,7 +272,7 @@ class TestModels(unittest.TestCase):
         "created": 1233442897.234,
         "last_modified": 1328569492.406,
         "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
-        "meta": {
+        "static_meta": {
             "display_name": "readers"
             "provider": "Mendeley",
             "provider_url": "http://www.mendeley.com/",
@@ -288,15 +288,15 @@ class TestModels(unittest.TestCase):
     """
     
     def test_09_metric_snap_init(self):
-        m = models.MetricSnap(seed=deepcopy(SNAP_SEED))
+        snap_simple = models.MetricSnap(seed=deepcopy(SNAP_SEED))
         
-        assert m.id == "Mendeley:readers"
-        assert m.value() == 16
-        assert m.created == 1233442897.234
-        assert m.last_modified == 1328569492.406
-        assert m.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
-        assert m.meta() == SNAP_SEED['meta']
-        assert m.data == SNAP_SEED
+        assert snap_simple.id == "Mendeley:readers"
+        assert snap_simple.value() == 16
+        assert snap_simple.created == 1233442897.234
+        assert snap_simple.last_modified == 1328569492.406
+        assert snap_simple.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
+        assert snap_simple.static_meta() == SNAP_SEED['static_meta']
+        assert snap_simple.data == SNAP_SEED
         
         now = time.time()
         snap = models.MetricSnap(id="Richard:metric", 
@@ -307,41 +307,41 @@ class TestModels(unittest.TestCase):
         assert snap.created == now
         assert snap.last_modified == now
         assert snap.provenance() == ["http://total-impact.org/"]
-        assert len(snap.meta()) == 0
+        assert len(snap.static_meta()) == 0
         
         snap_from_seed = models.MetricSnap(id="Richard:metric", 
                                     value=23, created=now, last_modified=now,
                                     provenance_url="http://total-impact.org/",
-                                    meta=SNAP_SEED['meta'])
-        assert snap_from_seed.meta() == SNAP_SEED['meta']
+                                    static_meta=SNAP_SEED['static_meta'])
+        assert snap_from_seed.static_meta() == SNAP_SEED['static_meta']
     
     def test_10_metric_snap_get_set(self):
-        m = models.MetricSnap(seed=deepcopy(SNAP_SEED))
+        snap = models.MetricSnap(seed=deepcopy(SNAP_SEED))
         stale = time.time()
         
-        assert m.value() == 16
-        m.value(17)
-        assert m.value() == 17
-        assert m.last_modified > stale
-        stale = m.last_modified
+        assert snap.value() == 16
+        snap.value(17)
+        assert snap.value() == 17
+        assert snap.last_modified > stale
+        stale = snap.last_modified
         
-        assert m.meta() == SNAP_SEED['meta']
-        m.meta({"test": "meta"})
-        assert m.meta() == {"test" : "meta"}
-        assert m.last_modified > stale
-        stale = m.last_modified
+        assert snap.static_meta() == SNAP_SEED['static_meta']
+        snap.static_meta({"test": "static_meta"})
+        assert snap.static_meta() == {"test" : "static_meta"}
+        assert snap.last_modified > stale
+        stale = snap.last_modified
         
-        assert m.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
-        m.provenance("http://total-impact.org")
-        assert m.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/", "http://total-impact.org"]
-        assert m.last_modified > stale
+        assert snap.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
+        snap.provenance("http://total-impact.org")
+        assert snap.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/", "http://total-impact.org"]
+        assert snap.last_modified > stale
         
-        m.provenance(["http://total-impact.org"])
-        assert m.provenance() == ["http://total-impact.org"], m.provenance()
+        snap.provenance(["http://total-impact.org"])
+        assert snap.provenance() == ["http://total-impact.org"], snap.provenance()
     
     """
     {
-        "meta": {
+        "update_meta": {
             "PROVIDER_ID": {
                 "last_modified": 128798498.234,
                 "last_requested": 2139841098.234,
@@ -357,34 +357,34 @@ class TestModels(unittest.TestCase):
     def test_11_metrics_init(self):
         m = models.Metrics()
         
-        assert len(m.meta()) == 4, m.meta()
+        assert len(m.update_meta()) == 4, m.update_meta()
         assert len(m.list_metric_snaps()) == 0
         
         m = models.Metrics(deepcopy(METRICS_SEED))
         
-        assert len(m.meta()) == 5, m.meta()
+        assert len(m.update_meta()) == 5, m.update_meta()
         assert len(m.list_metric_snaps()) == 1
         
-        assert m.meta()['Mendeley'] is not None
-        assert m.meta()['Mendeley']['last_modified'] == 128798498.234
-        assert m.meta()['Mendeley']['last_requested'] != 0  # don't know exactly what it will be
-        assert not m.meta()['Mendeley']['ignore']
+        assert m.update_meta()['Mendeley'] is not None
+        assert m.update_meta()['Mendeley']['last_modified'] == 128798498.234
+        assert m.update_meta()['Mendeley']['last_requested'] != 0  # don't know exactly what it will be
+        assert not m.update_meta()['Mendeley']['ignore']
         
-        assert m.meta()['Wikipedia'] is not None
-        assert m.meta()['Wikipedia']['last_modified'] == 0
-        assert m.meta()['Wikipedia']['last_requested'] != 0 # don't know exactly what it will be
-        assert not m.meta()['Wikipedia']['ignore']
+        assert m.update_meta()['Wikipedia'] is not None
+        assert m.update_meta()['Wikipedia']['last_modified'] == 0
+        assert m.update_meta()['Wikipedia']['last_requested'] != 0 # don't know exactly what it will be
+        assert not m.update_meta()['Wikipedia']['ignore']
         
         metric_snaps = m.list_metric_snaps()[0]
         assert metric_snaps == models.MetricSnap(seed=deepcopy(SNAP_SEED)), (metric_snaps.data, SNAP_SEED)
         
-    def test_12_metrics_meta(self):
+    def test_12_metrics_update_meta(self):
         m = models.Metrics(METRICS_SEED)
-        assert len(m.meta()) == 5, m.meta()
-        assert m.meta()['Mendeley'] is not None
+        assert len(m.update_meta()) == 5, m.update_meta()
+        assert m.update_meta()['Mendeley'] is not None
         
-        assert m.meta("Mendeley") is not None
-        assert m.meta("Mendeley") == m.meta()['Mendeley']
+        assert m.update_meta("Mendeley") is not None
+        assert m.update_meta("Mendeley") == m.update_meta()['Mendeley']
     
     def test_13_metrics_add_metric_snap(self):
         now = time.time()
@@ -394,11 +394,11 @@ class TestModels(unittest.TestCase):
         new_seed['value'] = 25
         m.add_metric_snap(models.MetricSnap(seed=new_seed))
         
-        assert len(m.meta()) == 5, m.meta()
+        assert len(m.update_meta()) == 5, m.update_meta()
         assert len(m.list_metric_snaps()) == 2
         assert len(m.list_metric_snaps(new_seed['id'])) == 2
         
-        assert m.meta('Mendeley')['last_modified'] > now
+        assert m.update_meta('Mendeley')['last_modified'] > now
         
     def test_14_metrics_list_metric_snaps(self):
         m = models.Metrics(deepcopy(METRICS_SEED))

@@ -23,7 +23,7 @@
     # Meta information block for this provider to be included as-is in the
     # resulting metrics objects
     #
-    "meta" : {
+    "static_meta" : {
         "display_name": "mentions",
         "provider": "Wikipedia",
         "provider_url": "http://www.wikipedia.org/",

@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 class GithubMetricSnapshot(MetricSnap):
     def __init__(self, provider, id, value):
-        meta = provider.config.metrics["static_meta"][id]
-        super(GithubMetricSnapshot, self).__init__(id=id, value=value, meta=meta)
+        static_meta = provider.config.metrics["static_meta"][id]
+        super(GithubMetricSnapshot, self).__init__(id=id, value=value, static_meta=static_meta)
 
 class Github(Provider):  
 

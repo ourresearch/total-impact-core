@@ -131,14 +131,14 @@ class Test_Wikipedia(unittest.TestCase):
         itemJustAliases = Item(aliases=alias)
         itemWithMetrics = provider.metrics(itemJustAliases)
         
-        providerMetrics = itemWithMetrics.metrics.list_metric_snaps()
-        assert len(providerMetrics) == 0
+        snaps = itemWithMetrics.metrics.list_metric_snaps()
+        assert len(snaps) == 0
         
-        # we can also check that the meta is correct
-        meta = itemWithMetrics.metrics.meta()
-        assert meta is not None
-        assert "Wikipedia" in meta.keys()
-        assert meta["Wikipedia"].keys() == ["ignore", "last_modified", "last_requested"]
+        # we can also check that the update_meta is correct
+        update_meta = itemWithMetrics.metrics.update_meta()
+        assert update_meta is not None
+        assert "Wikipedia" in update_meta.keys()
+        assert set(update_meta["Wikipedia"].keys()) == set(["ignore", "last_modified", "last_requested"])
 
     def test_08_metrics_http_success(self):
         Provider.http_get = successful_get
