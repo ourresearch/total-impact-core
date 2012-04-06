@@ -9,7 +9,7 @@ from totalimpact.util import slow
 from totalimpact import dao, api
 from totalimpact.tilogging import logging
 
-PLOS_TEST_DOI = "10.1371/journal.pone.0007595"
+PLOS_TEST_DOI = "10.1371/journal.pone.0004803"
 DRYAD_TEST_DOI = "10.5061/dryad.7898"
 GITHUB_TEST_ID = "homebrew"
 
@@ -57,7 +57,7 @@ class TestMetricsQueue(unittest.TestCase):
         resp_dict = json.loads(plos_resp.data)
         assert_equals(
             resp_dict["aliases"]["TITLE"][0],
-            "Fellatio by Fruit Bats Prolongs Copulation Time"
+            "Clickstream Data Yields High-Resolution Maps of Science"
             )
         # It's not in the spec, but I think we want a "latest" metric, so that
         # client code doesn't have to sort.
