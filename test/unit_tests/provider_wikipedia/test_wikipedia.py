@@ -131,7 +131,7 @@ class Test_Wikipedia(unittest.TestCase):
         itemJustAliases = Item(aliases=alias)
         itemWithMetrics = provider.metrics(itemJustAliases)
         
-        providerMetrics = itemWithMetrics.metrics.list_provider_metrics()
+        providerMetrics = itemWithMetrics.metrics.list_metric_snaps()
         assert len(providerMetrics) == 0
         
         # we can also check that the meta is correct
@@ -155,7 +155,7 @@ class Test_Wikipedia(unittest.TestCase):
         item = Item(aliases=alias)
         item = provider.metrics(item)
         
-        pms = item.metrics.list_provider_metrics()
+        pms = item.metrics.list_metric_snaps()
         assert pms[0].value() > 0
         
     def test_09_metrics_http_general_fail(self):
@@ -173,7 +173,7 @@ class Test_Wikipedia(unittest.TestCase):
         item = Item(aliases=alias)
         item = provider.metrics(item)
         
-        pms = item.metrics.list_provider_metrics()
+        pms = item.metrics.list_metric_snaps()
         assert len(pms) == 0
         
     def test_10_metrics_400(self):

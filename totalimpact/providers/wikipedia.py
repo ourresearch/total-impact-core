@@ -58,7 +58,7 @@ class Wikipedia(Provider):
             logger.info(self.config.id + ": metrics completed for tiid:" + alias_object.tiid)
             
             # finally update the item's metrics object with the new one, and return the item
-            item.metrics.add_provider_metric(metric)
+            item.metrics.add_metric_snap(metric)
             return item
         except ProviderError as e:
             self.error(e, item)
