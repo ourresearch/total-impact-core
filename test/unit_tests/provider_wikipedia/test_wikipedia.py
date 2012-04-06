@@ -1,4 +1,4 @@
-from totalimpact.models import Item, ProviderMetric, Aliases, Metrics
+from totalimpact.models import Item, MetricSnap, Aliases, Metrics
 from totalimpact.config import Configuration
 from totalimpact.providers.wikipedia import Wikipedia
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
@@ -103,7 +103,7 @@ class Test_Wikipedia(unittest.TestCase):
         provider = Wikipedia(wconf, self.config)
         
         # ensure that the wikipedia reader can interpret a page appropriately
-        metrics = ProviderMetric()
+        metrics = MetricSnap()
         f = open(XML_DOC, "r")
         provider._extract_stats(f.read(), metrics)
         assert metrics.value() == 1
@@ -186,7 +186,7 @@ class Test_Wikipedia(unittest.TestCase):
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
-        metrics = ProviderMetric()
+        metrics = MetricSnap()
         self.assertRaises(ProviderClientError, provider._get_metrics, "10.1371/journal.pcbi.1000361")
         
     def test_11_metrics_500(self):
@@ -199,6 +199,6 @@ class Test_Wikipedia(unittest.TestCase):
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
-        metrics = ProviderMetric()
+        metrics = MetricSnap()
         self.assertRaises(ProviderServerError, provider._get_metrics, "10.1371/journal.pcbi.1000361")
         

@@ -1,6 +1,6 @@
 import time
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
-from totalimpact.models import ProviderMetric
+from totalimpact.models import MetricSnap
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 
@@ -35,7 +35,7 @@ class Wikipedia(Provider):
             
             # construct the metrics object based on queries on each of the 
             # appropriate aliases
-            metric = ProviderMetric(id=self.config.id)
+            metric = MetricSnap(id=self.config.id)
             
             # get the aliases that we want to check
             aliases = alias_object.get_aliases_list(self.config.supported_namespaces)
@@ -78,7 +78,7 @@ class Wikipedia(Provider):
                 raise ProviderClientError(response)
         
         # construct the metrics
-        this_metrics = ProviderMetric(id=self.config.id)
+        this_metrics = MetricSnap(id=self.config.id)
         self._extract_stats(response.text, this_metrics)
         sdurl = self.config.metrics['provenance_url'] % alias[1]
         this_metrics.provenance(sdurl)
