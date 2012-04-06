@@ -1,6 +1,6 @@
 import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
-from totalimpact.models import Metrics, ProviderMetric, Aliases
+from totalimpact.models import Metrics, MetricSnap, Aliases
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 import simplejson
@@ -8,7 +8,7 @@ import simplejson
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
 
-class PubmedMetricSnapshot(ProviderMetric):
+class PubmedMetricSnapshot(MetricSnap):
     def __init__(self, provider, id, value):
         meta = provider.config.metrics["static_meta"][id]
         super(PubmedMetricSnapshot, self).__init__(id=id, value=value, meta=meta)

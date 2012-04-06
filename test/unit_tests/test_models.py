@@ -288,7 +288,7 @@ class TestModels(unittest.TestCase):
     """
     
     def test_09_provider_metric_init(self):
-        m = models.ProviderMetric(seed=deepcopy(PM_SEED))
+        m = models.MetricSnap(seed=deepcopy(PM_SEED))
         
         assert m.id == "Mendeley:readers"
         assert m.value() == 16
@@ -299,7 +299,7 @@ class TestModels(unittest.TestCase):
         assert m.data == PM_SEED
         
         now = time.time()
-        m = models.ProviderMetric(id="Richard:metric", 
+        m = models.MetricSnap(id="Richard:metric", 
                                     value=23, created=now, last_modified=now,
                                     provenance_url="http://total-impact.org/")
         assert m.id == "Richard:metric"
@@ -309,14 +309,14 @@ class TestModels(unittest.TestCase):
         assert m.provenance() == ["http://total-impact.org/"]
         assert len(m.meta()) == 0
         
-        m = models.ProviderMetric(id="Richard:metric", 
+        m = models.MetricSnap(id="Richard:metric", 
                                     value=23, created=now, last_modified=now,
                                     provenance_url="http://total-impact.org/",
                                     meta=PM_SEED['meta'])
         assert m.meta() == PM_SEED['meta']
     
     def test_10_provider_metric_get_set(self):
-        m = models.ProviderMetric(seed=deepcopy(PM_SEED))
+        m = models.MetricSnap(seed=deepcopy(PM_SEED))
         stale = time.time()
         
         assert m.value() == 16
@@ -376,7 +376,7 @@ class TestModels(unittest.TestCase):
         assert not m.meta()['Wikipedia']['ignore']
         
         pm = m.list_provider_metrics()[0]
-        assert pm == models.ProviderMetric(seed=deepcopy(PM_SEED)), (pm.data, PM_SEED)
+        assert pm == models.MetricSnap(seed=deepcopy(PM_SEED)), (pm.data, PM_SEED)
         
     def test_12_metrics_meta(self):
         m = models.Metrics(METRICS_SEED)
@@ -392,7 +392,7 @@ class TestModels(unittest.TestCase):
         m = models.Metrics(deepcopy(METRICS_SEED))
         new_seed = deepcopy(PM_SEED)
         new_seed['value'] = 25
-        m.add_provider_metric(models.ProviderMetric(seed=new_seed))
+        m.add_provider_metric(models.MetricSnap(seed=new_seed))
         
         assert len(m.meta()) == 5, m.meta()
         assert len(m.list_provider_metrics()) == 2
@@ -404,7 +404,7 @@ class TestModels(unittest.TestCase):
         m = models.Metrics(deepcopy(METRICS_SEED))
         
         assert len(m.list_provider_metrics()) == 1
-        assert m.list_provider_metrics("Mendeley:readers")[0] == models.ProviderMetric(seed=deepcopy(PM_SEED))
+        assert m.list_provider_metrics("Mendeley:readers")[0] == models.MetricSnap(seed=deepcopy(PM_SEED))
         
         assert len(m.list_provider_metrics("Some:other")) == 0
     
@@ -433,7 +433,7 @@ class TestModels(unittest.TestCase):
         
     def test_15_metrics_hash(self):
         m = models.Metrics()
-        pm = models.ProviderMetric(seed=deepcopy(PM_SEED))
+        pm = models.MetricSnap(seed=deepcopy(PM_SEED))
         
         hash = m._hash(pm)
         assert hash == PM_SEED_HASH, (hash, PM_SEED_HASH)

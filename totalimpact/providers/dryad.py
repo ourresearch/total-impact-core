@@ -1,6 +1,6 @@
 import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
-from totalimpact.models import Metrics, ProviderMetric, Aliases, Biblio
+from totalimpact.models import Metrics, MetricSnap, Aliases, Biblio
 from bs4 import BeautifulSoup
 
 import requests
@@ -9,7 +9,7 @@ import simplejson
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
 
-class DryadMetricSnapshot(ProviderMetric):
+class DryadMetricSnapshot(MetricSnap):
     def __init__(self, provider, id, value):
         meta = provider.config.metrics["static_meta"][id]
         super(DryadMetricSnapshot, self).__init__(id=id, value=value, meta=meta)

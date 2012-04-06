@@ -274,11 +274,11 @@ class Metrics(object):
     def meta(self, provider_id=None):
         return self.data['meta'] if provider_id is None else self.data['meta'].get(provider_id)
     
-    # FIXME: assuming that ProviderMetric objects are deconstructed on ingest and
+    # FIXME: assuming that MetricSnap objects are deconstructed on ingest and
     # made part of the internal "data" object.  The object representations are then
     # re-constructed when they are requested.  This gives consistent behaviour at the
     # cost of being computationally a little expensive.  Alternative is to have a more
-    # complex object which synchronises between in-memory ProviderMetric objects and their
+    # complex object which synchronises between in-memory MetricSnap objects and their
     # "data" representations which are what actually get saved
 
     def add_provider_metric(self, provider_metric):
@@ -288,8 +288,8 @@ class Metrics(object):
         
     def list_provider_metrics(self, provider_id=None):
         if provider_id is None:
-            return [ProviderMetric(seed=x) for x in self.data['bucket'].values()]
-        return [ProviderMetric(seed=x) for x in self.data['bucket'].values() if x['id'] == provider_id]
+            return [MetricSnap(seed=x) for x in self.data['bucket'].values()]
+        return [MetricSnap(seed=x) for x in self.data['bucket'].values() if x['id'] == provider_id]
 
     # FIXME: is this in use somewhere?
     def str_list_provider_metrics(self):
@@ -329,7 +329,7 @@ class Metrics(object):
 # string "0" or "1", or are there other values that can go in there
 # FIXME: add a validation routine
 # FIXME: we need a nicer interface to get at the contents of the inner data object
-class ProviderMetric(object):
+class MetricSnap(object):
     """
     {
         "id": "Mendeley:readers",
@@ -414,7 +414,7 @@ class ProviderMetric(object):
     
     def __getattribute__(self, att):
         try:
-            return super(ProviderMetric, self).__getattribute__(att)
+            return super(MetricSnap, self).__getattribute__(att)
         except:
             return self.data[att]
     
