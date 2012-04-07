@@ -85,6 +85,6 @@ class Test_Pubmed(unittest.TestCase):
         
         Provider.http_get = get_memberitems_html
 
-        members = provider.member_items("U54-CA121852", "pubmedGrant")
+        members = provider.member_items("U54-CA121852", "pubmed_grant")
         assert len(members) >= 20, len(members)
         

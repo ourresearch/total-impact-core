@@ -22,7 +22,7 @@ class Pubmed(Provider):
 
     def member_items(self, query_string, query_type):
         enc = urllib.quote(query_string)
-        url = self.config.member_items["querytype"]["pubmedGrant"]['url'] % enc
+        url = self.config.member_items["querytype"]["pubmed_grant"]['url'] % enc
         logger.debug(self.config.id + ": query type " + query_type)
         logger.debug(self.config.id + ": attempting to retrieve member items from " + url)
         

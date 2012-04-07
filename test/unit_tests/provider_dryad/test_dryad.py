@@ -85,7 +85,7 @@ class Test_Dryad(unittest.TestCase):
         # ensure that the configuration is valid
         assert self.provider.config is not None
         assert self.provider.state is not None
-        assert self.provider.id == "Dryad"
+        assert self.provider.id == "dryad"
         
 
     def test_02_implements_interface(self):
@@ -107,40 +107,40 @@ class Test_Dryad(unittest.TestCase):
 
     def test_04a_member_items_success(self):
         Provider.http_get = get_member_items_html_success
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryadAuthor")
+        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
         assert len(members) == 4, str(members)
         assert_equals(members, [('doi', u'10.5061/dryad.j1fd7'), ('doi', u'10.5061/dryad.mf1sd'), ('doi', u'10.5061/dryad.3td2f'), ('doi', u'10.5061/dryad.j2c4g')])
 
     def test_04f_member_items_zero_items(self):
         Provider.http_get = get_member_items_html_zero_items
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryadAuthor")
+        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
         assert len(members) == 0, str(members)
 
     @raises(ProviderClientError)
     def test_04b_member_items_400(self):
         Provider.http_get = get_400
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryadAuthor")
+        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
 
     @raises(ProviderServerError)
     def test_04c_member_items_500(self):
         Provider.http_get = get_500
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryadAuthor")
+        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
 
     @raises(ProviderClientError)
     def test_04d_member_items_empty(self):
         Provider.http_get = get_empty
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryadAuthor")
+        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
 
     @raises(ProviderClientError)
     def test_04g_member_items_nonsense_txt(self):
         Provider.http_get = get_nonsense_txt
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryadAuthor")
+        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
         assert len(members) == 0, str(members)
 
     @raises(ProviderClientError)
     def test_04h_member_items_nonsense_xml(self):
         Provider.http_get = get_nonsense_xml
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryadAuthor")
+        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
         assert len(members) == 0, str(members)
 
 
@@ -213,7 +213,7 @@ class Test_Dryad(unittest.TestCase):
         new_metrics_values = [(m["id"], m["value"]) for m in new_metrics.values()]
         new_metrics_values.sort()  # for consistent order
         assert_equals(new_metrics_values,
-            [('Dryad:file_views', 268), ('Dryad:most_downloaded_file', 76), ('Dryad:package_views', 407), ('Dryad:total_downloads', 178)])
+            [('dryad:file_views', 268), ('dryad:most_downloaded_file', 76), ('dryad:package_views', 407), ('dryad:total_downloads', 178)])
 
     @raises(ProviderClientError)
     def test_07b_metrics_400(self):

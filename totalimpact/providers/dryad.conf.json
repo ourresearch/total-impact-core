@@ -6,7 +6,7 @@
     # Provider Identifier - used as the "id" of any resulting metrics
     # object
     #
-    "id" : "Dryad",
+    "id" : "dryad",
     
     # Namespaces supported by this provider
     #
@@ -25,7 +25,7 @@
     
     "member_items" : {
         "querytype" : {
-            "dryadAuthor": {
+            "dryad_author": {
                 "url": "http://datadryad.org/solr/search/select/?q=dc.contributor.author%%3A%%22%s%%22&fl=dc.identifier"
             }
         }
@@ -35,7 +35,7 @@
         "url" : "http://dx.doi.org/%s",
         "timeout" : 5,
         "static_meta" : {
-            "Dryad:file_views": {
+            "dryad:file_views": {
                 "display_name": "file views",
                 "provider": "Dryad",
                 "provider_url": "http:\/\/www.datadryad.org\/",
@@ -47,7 +47,7 @@
                 "can_aggregate": "1",
                 "other_terms_of_use": "CC0"
               },
-            "Dryad:package_views": {
+            "dryad:package_views": {
                 "display_name": "package views",
                 "provider": "Dryad",
                 "provider_url": "http:\/\/www.datadryad.org\/",
@@ -59,7 +59,7 @@
                 "can_aggregate": "1",
                 "other_terms_of_use": "CC0"
               },
-            "Dryad:total_downloads": {
+            "dryad:total_downloads": {
                 "display_name": "total downloads",
                 "provider": "Dryad",
                 "provider_url": "http:\/\/www.datadryad.org\/",
@@ -71,7 +71,7 @@
                 "can_aggregate": "1",
                 "other_terms_of_use": "CC0"
               },
-              "Dryad:most_downloaded_file": {
+              "dryad:most_downloaded_file": {
                 "display_name": "most downloaded file",
                 "provider": "Dryad",
                 "provider_url": "http:\/\/www.datadryad.org\/",

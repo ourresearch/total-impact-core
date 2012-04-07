@@ -6,11 +6,11 @@
     # Provider Identifier - used as the "id" of any resulting metrics
     # object
     #
-    "id" : "Wikipedia",
+    "id" : "wikipedia",
     
     # Namespaces supported by this provider
     #
-    "supported_namespaces" : ["DOI"],
+    "supported_namespaces" : ["doi"],
     
     # Wikipedia API configuration for retrieving metrics
     #

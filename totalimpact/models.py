@@ -284,7 +284,8 @@ class Metrics(object):
     def add_metric_snap(self, metric_snap):
         hash = self._hash(metric_snap)
         self.data['bucket'][hash] = metric_snap.data
-        self._update_last_modified(metric_snap.static_meta()["provider"])
+        provider_id = metric_snap.static_meta()["provider"].lower()
+        self._update_last_modified(provider_id)
         
     def list_metric_snaps(self, provider_id=None):
         if provider_id is None:

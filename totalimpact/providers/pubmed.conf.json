@@ -6,11 +6,11 @@
     # Provider Identifier - used as the "id" of any resulting metrics
     # object
     #
-    "id" : "Pubmed",
+    "id" : "pubmed",
     
     # Namespaces supported by this provider
     #
-    "supported_namespaces" : ["PMID"],
+    "supported_namespaces" : ["pmid"],
     
     # Mendeley API configuration for retrieving metrics
     #
@@ -21,7 +21,7 @@
     
     "member_items" : {
         "querytype" : {
-            "pubmedGrant": {
+            "pubmed_grant": {
                 "url": "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmax=100&tool=total-impact.org&email=totalimpactdev@gmail.com&term=%s"
             }
         }

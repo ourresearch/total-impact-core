@@ -61,7 +61,7 @@ class Dryad(Provider):
     def member_items(self, query_string, query_type):
         enc = urllib.quote(query_string)
 
-        url = self.config.member_items["querytype"]["dryadAuthor"]['url'] % enc
+        url = self.config.member_items["querytype"]["dryad_author"]['url'] % enc
         logger.debug(self.config.id + ": query type " + query_type)
         logger.debug(self.config.id + ": attempting to retrieve member items from " + url)
         
@@ -223,10 +223,10 @@ class Dryad(Provider):
         except ValueError:
             raise ProviderClientError(content)            
 
-        snapshot_file_views = DryadMetricSnapshot(self, "Dryad:file_views", file_total_views)
-        snapshot_view_package = DryadMetricSnapshot(self, "Dryad:package_views", view_package)
-        snapshot_total_downloads = DryadMetricSnapshot(self, "Dryad:total_downloads", total_downloads)
-        snapshot_most_downloaded_file = DryadMetricSnapshot(self, "Dryad:most_downloaded_file", max_downloads)
+        snapshot_file_views = DryadMetricSnapshot(self, "dryad:file_views", file_total_views)
+        snapshot_view_package = DryadMetricSnapshot(self, "dryad:package_views", view_package)
+        snapshot_total_downloads = DryadMetricSnapshot(self, "dryad:total_downloads", total_downloads)
+        snapshot_most_downloaded_file = DryadMetricSnapshot(self, "dryad:most_downloaded_file", max_downloads)
 
         return([snapshot_file_views, snapshot_view_package, snapshot_total_downloads, snapshot_most_downloaded_file])
 

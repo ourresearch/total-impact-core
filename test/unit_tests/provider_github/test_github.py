@@ -90,9 +90,9 @@ class Test_Github(unittest.TestCase):
         
 
         Provider.http_get = get_memberitems_user_html
-        members = provider.member_items("egonw", "githubUser")
+        members = provider.member_items("egonw", "github_user")
         assert len(members) >= 30, (len(members), members)
 
         Provider.http_get = get_memberitems_orgs_html
-        members = provider.member_items("bioperl", "githubOrg")
+        members = provider.member_items("bioperl", "github_org")
         assert len(members) >= 32, (len(members), members)

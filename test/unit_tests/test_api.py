@@ -28,7 +28,7 @@ class TestWeb(unittest.TestCase):
 
 
     def test_memberitems_get(self):
-        response = self.app.get('/provider/Dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author')
+        response = self.app.get('/provider/dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author')
         print response
         print response.data
         assert_equals(response.status_code, 200)
