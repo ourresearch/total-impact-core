@@ -52,7 +52,7 @@ class TestWeb(unittest.TestCase):
         assert_equals(response.status_code, 501)  # "Not implemented"
 
     def test_item_post_unknown_tiid(self):
-        response = self.app.post('/item/DOI/AnIdOfSomeKind/')
+        response = self.app.post('/item/doi/AnIdOfSomeKind/')
         print response
         print response.data
         assert_equals(response.status_code, 201)  #Created
@@ -60,7 +60,7 @@ class TestWeb(unittest.TestCase):
         assert_equals(response.mimetype, "application/json")
 
     def test_item_post_known_tiid(self):
-        response = self.app.post('/item/DOI/IdThatAlreadyExists/')
+        response = self.app.post('/item/doi/IdThatAlreadyExists/')
         print response
         print response.data
 
@@ -72,7 +72,7 @@ class TestWeb(unittest.TestCase):
 
     def test_item_get_success_fakeid(self):
         # First put something in
-        response_create = self.app.post('/item/DOI/AnIdOfSomeKind/')
+        response_create = self.app.post('/item/doi/AnIdOfSomeKind/')
         tiid = response_create.data
 
         # Now try to get it out
@@ -90,18 +90,18 @@ class TestWeb(unittest.TestCase):
 
     def test_item_get_success_realid(self):
         # First put something in
-        response = self.app.get('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%2F")) 
+        response = self.app.get('/item/doi/' + TEST_DRYAD_DOI.replace("/", "%2F")) 
         tiid = response.data
         print response
         print tiid 
 
     def test_item_post_urldecodes(self):
-        resp = self.app.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%2F"))
+        resp = self.app.post('/item/doi/' + TEST_DRYAD_DOI.replace("/", "%2F"))
         tiid = resp.data.replace('"', '')
 
         resp = self.app.get('/item/' + tiid)
         saved_item = json.loads(resp.data) 
 
-        assert_equals(TEST_DRYAD_DOI, saved_item["aliases"]["DOI"])
+        assert_equals(TEST_DRYAD_DOI, saved_item["aliases"]["doi"])
 
 

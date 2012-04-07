@@ -61,7 +61,7 @@ SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(CWD, "sample_extract_member_item
 SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE_ZERO_ITEMS = os.path.join(CWD, "sample_extract_member_items_page_zero_items.xml")
 SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(CWD, "sample_extract_biblio_page.xml")
 
-TEST_ALIASES_SEED = {"DOI" : [TEST_DRYAD_DOI], "URL" : ["http://datadryad.org/handle/10255/dryad.7898"]}
+TEST_ALIASES_SEED = {"doi" : [TEST_DRYAD_DOI], "url" : ["http://datadryad.org/handle/10255/dryad.7898"]}
 
 
 class Test_Dryad(unittest.TestCase):
@@ -72,7 +72,7 @@ class Test_Dryad(unittest.TestCase):
         self.provider = Dryad(self.config)
 
         a = Aliases()
-        a.add_alias("DOI", TEST_DRYAD_DOI)
+        a.add_alias("doi", TEST_DRYAD_DOI)
         self.simple_item = Item("12345", "not a dao")
         self.simple_item.aliases = a
 
@@ -102,14 +102,14 @@ class Test_Dryad(unittest.TestCase):
         assert not self.provider._is_relevant_id("11.12354/bib")
         
         # ensure that it doesn't match an inappropriate TEST_DRYAD_DOI
-        assert not self.provider._is_relevant_id(("DOI", "11.12354/bib"))
+        assert not self.provider._is_relevant_id(("doi", "11.12354/bib"))
     
 
     def test_04a_member_items_success(self):
         Provider.http_get = get_member_items_html_success
         members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryadAuthor")
         assert len(members) == 4, str(members)
-        assert_equals(members, [('DOI', u'10.5061/dryad.j1fd7'), ('DOI', u'10.5061/dryad.mf1sd'), ('DOI', u'10.5061/dryad.3td2f'), ('DOI', u'10.5061/dryad.j2c4g')])
+        assert_equals(members, [('doi', u'10.5061/dryad.j1fd7'), ('doi', u'10.5061/dryad.mf1sd'), ('doi', u'10.5061/dryad.3td2f'), ('doi', u'10.5061/dryad.j2c4g')])
 
     def test_04f_member_items_zero_items(self):
         Provider.http_get = get_member_items_html_zero_items
@@ -149,15 +149,15 @@ class Test_Dryad(unittest.TestCase):
         # ensure that the dryad reader can interpret an xml doc appropriately
         f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
         aliases = self.provider._extract_aliases(f.read())
-        assert_equals(aliases, [('URL', u'http://hdl.handle.net/10255/dryad.7898'), 
-            ('TITLE', u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides')])        
+        assert_equals(aliases, [('url', u'http://hdl.handle.net/10255/dryad.7898'), 
+            ('title', u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides')])        
 
     def test_05a_get_aliases_success(self):
         Provider.http_get = get_aliases_html_success
         item_with_new_aliases = self.provider.aliases(self.simple_item)
 
         new_aliases = item_with_new_aliases.aliases
-        assert_equals(new_aliases.get_aliases_dict().keys(), ['URL', 'TIID', 'DOI', 'TITLE'])
+        assert_equals(new_aliases.get_aliases_dict().keys(), ['url', 'tiid', 'doi', 'title'])
         assert_equals(new_aliases.get_ids_by_namespace(Aliases.NS.URL), [u'http://hdl.handle.net/10255/dryad.7898'])
         assert_equals(new_aliases.get_ids_by_namespace(Aliases.NS.DOI), ['10.5061/dryad.7898'])
         assert_equals(new_aliases.get_ids_by_namespace(Aliases.NS.TITLE), [u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides'])
