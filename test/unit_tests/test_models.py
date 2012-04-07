@@ -16,10 +16,10 @@ ALIAS_SEED = json.loads("""{
 }""")
 
 ALIAS_SEED_CANONICAL = json.loads("""{
-    "TIID":"0987654321",
-    "TITLE":["Why Most Published Research Findings Are False"],
-    "URL":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
-    "DOI": ["10.1371/journal.pmed.0020124"],
+    "tiid":"0987654321",
+    "title":["Why Most Published Research Findings Are False"],
+    "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
+    "doi": ["10.1371/journal.pmed.0020124"],
     "created": 12387239847.234,
     "last_modified": 1328569492.406
 }""")
@@ -187,14 +187,15 @@ class TestModels(unittest.TestCase):
     def test_02_aliases_canonical(self):
         a = models.Aliases()
         
-        assert a._synonym("DIGITAL OBJECT IDENTIFIER") == a.NS.DOI
+        assert a._synonym("digital object identifier") == a.NS.DOI
         assert a._synonym("MADE UP NAMESPACE") == "MADE UP NAMESPACE"
-        assert a._synonym("URL") == a.NS.URL
+        assert a._synonym("url") == a.NS.URL
         
         assert a.canonicalise("doi") == a.NS.DOI
         assert a.canonicalise("iri") == a.NS.IRI
         assert a.canonicalise("digital object identifier") == a.NS.DOI
-        assert a.canonicalise("made up namespace") == "MADE UP NAMESPACE"
+        assert a.canonicalise("DIGITAL OBJECT IDENTIFIER") == a.NS.DOI
+        assert a.canonicalise("MADE UP NAMESPACE") == "made up namespace"
         
         assert a.canonical_dict(ALIAS_SEED) == ALIAS_SEED_CANONICAL, a.canonical_dict(ALIAS_SEED)
     
@@ -205,7 +206,7 @@ class TestModels(unittest.TestCase):
         a.add_alias("bar", "id1")
         
         # check the data structure is correct
-        expected = {"TIID": a.tiid, "FOO":["id1", "id2"], "BAR":["id1"]}
+        expected = {"tiid": a.tiid, "foo":["id1", "id2"], "bar":["id1"]}
         assert a.data == expected, a.data
         
         to_add = [
@@ -217,10 +218,10 @@ class TestModels(unittest.TestCase):
         a.add_unique(to_add)
         
         # check the data structure is correct
-        expected = {"TIID": a.tiid, 
-                    "FOO":["id1", "id2", "id3"], 
-                    "BAR":["id1"], 
-                    "BAZ" : ["id1", "id2"]}
+        expected = {"tiid": a.tiid, 
+                    "foo":["id1", "id2", "id3"], 
+                    "bar":["id1"], 
+                    "baz" : ["id1", "id2"]}
         assert a.data == expected, a.data
         
     def test_04_aliases_single_namespaces(self):
@@ -236,10 +237,10 @@ class TestModels(unittest.TestCase):
         assert len(aliases) == 4
         
         aliases = a.get_aliases_list("doi")
-        assert aliases == [("DOI", "10.1371/journal.pmed.0020124")], aliases
+        assert aliases == [("doi", "10.1371/journal.pmed.0020124")], aliases
         
         aliases = a.get_aliases_list("title")
-        assert aliases == [("TITLE", "Why Most Published Research Findings Are False")]
+        assert aliases == [("title", "Why Most Published Research Findings Are False")]
         
     def test_05_aliases_missing(self):
         a = models.Aliases(seed=ALIAS_SEED)
@@ -254,8 +255,8 @@ class TestModels(unittest.TestCase):
         a = models.Aliases(seed=ALIAS_SEED)
         
         ids = a.get_aliases_list(["doi", "url"])
-        assert ids == [("DOI", "10.1371/journal.pmed.0020124"),
-                        ("URL", "http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124")], ids
+        assert ids == [("doi", "10.1371/journal.pmed.0020124"),
+                        ("url", "http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124")], ids
     
     def test_07_aliases_dict(self):
         a = models.Aliases(seed=ALIAS_SEED)

@@ -102,7 +102,7 @@ def item_namespace_post(namespace, nid):
     # FIXME pull this from Aliases somehow?
     # check to make sure we know this namespace
     #known_namespace = namespace in Aliases().get_valid_namespaces() #implement
-    known_namespaces = ["DOI"]  # hack in the meantime
+    known_namespaces = ["doi"]  # hack in the meantime
     if not namespace in known_namespaces:
         abort(501) # "Not Implemented"
 

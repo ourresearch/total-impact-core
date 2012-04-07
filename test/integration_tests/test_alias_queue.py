@@ -35,7 +35,7 @@ class TestAliasQueue(unittest.TestCase):
 
         providers = ProviderFactory.get_providers(self.config)
 
-        response = self.client.post('/item/DOI/' + TEST_DRYAD_DOI.replace("/", "%2F"))
+        response = self.client.post('/item/doi/' + TEST_DRYAD_DOI.replace("/", "%2F"))
         tiid = response.data
 
 
@@ -49,12 +49,12 @@ class TestAliasQueue(unittest.TestCase):
             set(resp_dict.keys()),
             set([u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
             )
-        assert_equals(unicode(TEST_DRYAD_DOI), resp_dict["aliases"]["DOI"])
+        assert_equals(unicode(TEST_DRYAD_DOI), resp_dict["aliases"]["doi"])
 
         # test the view works
         res = self.d.view("aliases")
         assert len(res["rows"]) == 1, res
-        assert_equals(res["rows"][0]["value"]["aliases"]["DOI"], TEST_DRYAD_DOI)
+        assert_equals(res["rows"][0]["value"]["aliases"]["doi"], TEST_DRYAD_DOI)
 
         # see if the item is on the queue
         my_alias_queue = AliasQueue(self.d)
@@ -63,7 +63,7 @@ class TestAliasQueue(unittest.TestCase):
         
         # get our item from the queue
         my_item = my_alias_queue.first()
-        assert_equals(my_item.aliases.data["DOI"], TEST_DRYAD_DOI)
+        assert_equals(my_item.aliases.data["doi"], TEST_DRYAD_DOI)
 
         # do the update using the backend
         alias_thread = ProvidersAliasThread(providers, self.config)
@@ -74,6 +74,6 @@ class TestAliasQueue(unittest.TestCase):
         response = self.client.get('/item/' + tiid)
         resp_dict = json.loads(response.data)
         assert_equals(
-            resp_dict["aliases"]["TITLE"][0],
+            resp_dict["aliases"]["title"][0],
             "data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides"
             ) 

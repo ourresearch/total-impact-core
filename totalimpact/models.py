@@ -441,19 +441,19 @@ class Aliases(object):
     not_aliases = ["created", "last_modified"]
     
     synonyms = {
-        "DOI" : ["DIGITAL OBJECT IDENTIFIER"],
-        "URI" : ["IRI"]
+        "doi" : ["digital object identifier"],
+        "uri" : ["iri"]
     }
     
     class Namespaces(object):
-        TIID = "TIID"
-        TITLE = "TITLE"
-        URL = "URL"
-        DOI = "DOI"
-        URI = "URI"
-        IRI = "URI" # deliberate
-        GITHUB = "GITHUB"
-        PMID = "PMID"
+        TIID = "tiid"
+        TITLE = "title"
+        URL = "url"
+        DOI = "doi"
+        URI = "uri"
+        IRI = "uri" # deliberate
+        GITHUB = "github"
+        PMID = "pmid"
     
     NS = Namespaces
     
@@ -555,7 +555,7 @@ class Aliases(object):
         return n
     
     def canonicalise(self, namespace):
-        canon = namespace.strip().upper()
+        canon = namespace.strip().lower()
         canon = self._synonym(canon)
         return canon
     

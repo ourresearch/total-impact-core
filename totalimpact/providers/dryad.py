@@ -91,7 +91,7 @@ class Dryad(Provider):
         # Get a list of the new aliases that can be discovered from the data
         # source
         new_aliases = []
-        for alias in alias_object.get_aliases_list("DOI"):
+        for alias in alias_object.get_aliases_list("doi"):
             print alias
             if not self._is_dryad_doi(alias[1]):
                 continue

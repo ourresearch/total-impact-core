@@ -150,7 +150,7 @@ class Test_Wikipedia(unittest.TestCase):
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
-        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
+        d = {"doi" : ["10.1371/journal.pcbi.1000361"], "url" : ["http://cottagelabs.com"]}
         alias = Aliases(seed=d)
         item = Item(aliases=alias)
         item = provider.metrics(item)
@@ -168,7 +168,7 @@ class Test_Wikipedia(unittest.TestCase):
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf, self.config)
         
-        d = {"DOI" : ["10.1371/journal.pcbi.1000361"], "URL" : ["http://cottagelabs.com"]}
+        d = {"doi" : ["10.1371/journal.pcbi.1000361"], "url" : ["http://cottagelabs.com"]}
         alias = Aliases(seed=d)
         item = Item(aliases=alias)
         item = provider.metrics(item)
