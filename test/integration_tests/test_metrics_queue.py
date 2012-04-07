@@ -32,16 +32,38 @@ class TestMetricsQueue(unittest.TestCase):
     def tearDown(self):
         self.app.config["DB_NAME"] = self.old_db_name
 
+
+    # FIXME maybe this should be in another file?  
+    @nottest
+    def test_tiid_retrieve(self):
+        self.d.create_new_db_and_connect(self.testing_db_name)
+
+        # try to retrieve tiid id for something that doesn't exist yet
+        plos_lookup_tiid_resp = self.client.post('/tiid/' + PLOS_TEST_DOI.replace("/", "%2F"))
+        assert_equals(plos_lookup_tiid.status_code, 404)  # Not Found
+
+        # create new plos item from a doi
+        plos_resp = self.client.post('/item/doi/' + PLOS_TEST_DOI.replace("/", "%2F"))
+        plos_tiid = plos_resp.data
+
+        # retrieve the plos tiid using tiid api
+        plos_lookup_tiid_resp = self.client.post('/tiid/' + PLOS_TEST_DOI.replace("/", "%2F"))
+        plos_lookup_tiid = plos_lookup_tiid_resp.data
+
+        # check that the tiids are the same
+        assert_equals(plos_tiid, plos_lookup_tiid)
+
+
     @nottest
     def test_metrics_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
 
-        # create three new items from  plos and dryad dois
+        # create new plos, dryad, github items
         plos_resp = self.client.post('/item/doi/' + PLOS_TEST_DOI.replace("/", "%2F"))
         plos_tiid = plos_resp.data
 
         dryad_resp = self.client.post('/item/doi/' + DRYAD_TEST_DOI.replace("/", "%2F"))
-        dryad_tiid = plos_resp.data
+        dryad_tiid = dryad_resp.data
 
         github_resp = self.client.post('/item/github/' + GITHUB_TEST_ID)
         github_tiid = github_resp.data
