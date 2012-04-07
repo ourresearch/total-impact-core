@@ -1,10 +1,7 @@
 import os, unittest, time, json
 from nose.tools import nottest, assert_equals
 
-from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
 from totalimpact.config import Configuration
-from totalimpact.providers.provider import Provider, ProviderFactory
-from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact.util import slow
 from totalimpact import dao, api
 from totalimpact.tilogging import logging
@@ -13,7 +10,7 @@ PLOS_TEST_DOI = "10.1371/journal.pone.0004803"
 DRYAD_TEST_DOI = "10.5061/dryad.7898"
 GITHUB_TEST_ID = "homebrew"
 
-class TestMetricsQueue(unittest.TestCase):
+class TestCollection(unittest.TestCase):
 
     def setUp(self):
         #setup api test client

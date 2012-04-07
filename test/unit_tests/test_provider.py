@@ -80,7 +80,7 @@ class Test_Provider(unittest.TestCase):
                 pconf = p
                 break
         provider = ProviderFactory.get_provider(pconf, self.config)
-        assert provider.id == "Wikipedia"
+        assert provider.id == "wikipedia"
         
     def test_09_get_providers(self):
         providers = ProviderFactory.get_providers(self.config)

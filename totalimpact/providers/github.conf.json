@@ -6,7 +6,7 @@
     # Provider Identifier - used as the "id" of any resulting metrics
     # object
     #
-    "id" : "Github",
+    "id" : "github",
     
     # Namespaces supported by this provider
     #
@@ -21,10 +21,10 @@
     
     "member_items" : {
         "querytype" : {
-            "githubUser": {
+            "github_user": {
                 "url": "https://api.github.com/users/%s/repos"
             },
-            "githubOrg":{
+            "github_org":{
                 "url": "https://api.github.com/orgs/%s/repos"
             }
         }

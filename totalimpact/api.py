@@ -150,10 +150,6 @@ def items(tiids):
 # external APIs should go to /item routes
 # should return list of member ID {namespace:id} k/v pairs
 # if > 100 memberitems, return 100 and response code indicates truncated
-# examples:
-#    /provider/GitHub/memberitems?query=jasonpriem&type=profile
-#    /provider/GitHub/memberitems?query=bioperl&type=orgs
-#    /provider/Dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author
 @app.route('/provider/<pid>/memberitems', methods=['GET'])
 def provider_memberitems(pid):
     query = request.values.get('query','')
