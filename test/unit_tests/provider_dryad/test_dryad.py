@@ -158,9 +158,9 @@ class Test_Dryad(unittest.TestCase):
 
         new_aliases = item_with_new_aliases.aliases
         assert_equals(new_aliases.get_aliases_dict().keys(), ['url', 'tiid', 'doi', 'title'])
-        assert_equals(new_aliases.get_ids_by_namespace(Aliases.NS.URL), [u'http://hdl.handle.net/10255/dryad.7898'])
-        assert_equals(new_aliases.get_ids_by_namespace(Aliases.NS.DOI), ['10.5061/dryad.7898'])
-        assert_equals(new_aliases.get_ids_by_namespace(Aliases.NS.TITLE), [u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides'])
+        assert_equals(new_aliases.get_ids_by_namespace("url"), [u'http://hdl.handle.net/10255/dryad.7898'])
+        assert_equals(new_aliases.get_ids_by_namespace("doi"), ['10.5061/dryad.7898'])
+        assert_equals(new_aliases.get_ids_by_namespace("title"), [u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides'])
         
     # zero items doesn't make sense for dryad aliases becauase will always have a url if a valid page
 

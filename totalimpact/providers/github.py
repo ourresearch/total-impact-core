@@ -34,7 +34,7 @@ class Github(Provider):
         hits = simplejson.loads(response.text)
         hits = [hit["name"] for hit in hits]
 
-        return [(Aliases.NS.GITHUB, (query_string, hit)) for hit in list(set(hits))]
+        return [("github", (query_string, hit)) for hit in list(set(hits))]
     
 
         
