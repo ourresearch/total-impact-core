@@ -45,10 +45,6 @@
         {
             "class" : "totalimpact.providers.github.Github",
             "config" : "totalimpact/providers/github.conf.json"
-        },
-        {
-            "class" : "totalimpact.providers.pubmed.Pubmed",
-            "config" : "totalimpact/providers/pubmed.conf.json"
         }
     ],
     
