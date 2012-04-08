@@ -10,7 +10,8 @@ class TestQueue(unittest.TestCase):
     @classmethod
     def setup_class(cls):
         cls.TESTDB = 'ti_test'
-        cls.item = models.Item(**json.load(open('./test/totalimpact/item.json')))
+        ## FIXME refactor the line below to use the same method for the item seed as test_models
+        ##cls.item = models.Item(**json.load(open('./test/totalimpact/item.json')))
         cls.item.config.db_name = cls.TESTDB
         cls.couch, cls.db = cls.item.connection()
         cls.item.save()
