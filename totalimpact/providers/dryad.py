@@ -80,7 +80,7 @@ class Dryad(Provider):
 
         identifiers = self._get_named_arr_str_from_xml(response.text, "dc.identifier", is_expected=False)
 
-        return [(Aliases.NS.DOI, hit.replace("doi:", "")) for hit in list(set(identifiers))]
+        return [("doi", hit.replace("doi:", "")) for hit in list(set(identifiers))]
 
     
     def aliases(self, item):
@@ -144,10 +144,10 @@ class Dryad(Provider):
     def _extract_aliases(self, xml):
         identifiers = []
         url_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.identifier.uri')
-        identifiers += [(Aliases.NS.URL, url) for url in url_identifiers]
+        identifiers += [("url", url) for url in url_identifiers]
 
         title_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.title')
-        identifiers += [(Aliases.NS.TITLE, title) for title in title_identifiers]
+        identifiers += [("title", title) for title in title_identifiers]
 
         return identifiers
 
@@ -158,7 +158,7 @@ class Dryad(Provider):
         return "http://dx.doi.org/" + doi
 
     def _get_dryad_doi(self, item):
-        item_dois = item.aliases.get_ids_by_namespace(Aliases.NS.DOI)
+        item_dois = item.aliases.get_ids_by_namespace("doi")
         item_dryad_dois = [doi for doi in item_dois if self._is_dryad_doi(doi)]
         if not item_dryad_dois:
             raise Exception

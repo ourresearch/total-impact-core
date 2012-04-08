@@ -156,15 +156,15 @@ class TestModels(unittest.TestCase):
         
         # a blank init always sets an id
         assert len(a.data.keys()) == 1
-        assert a.data[models.Aliases.NS.TIID] is not None
+        assert a.data["tiid"] is not None
         assert a.tiid is not None
-        assert a.tiid == a.data[models.Aliases.NS.TIID]
+        assert a.tiid == a.data["tiid"]
         
         a = models.Aliases("123456")
         
         # check our id has propagated
         assert len(a.data.keys()) == 1
-        assert a.data[models.Aliases.NS.TIID] == "123456"
+        assert a.data["tiid"] == "123456"
         assert a.tiid == "123456"
         
         a = models.Aliases(seed=ALIAS_SEED)
@@ -183,22 +183,7 @@ class TestModels(unittest.TestCase):
         assert a.tiid == "abcd"
         assert a.doi == ["10.1371/journal/1"]
         assert a.title == ["First", "Second"]
-    
-    def test_02_aliases_canonical(self):
-        a = models.Aliases()
         
-        assert a._synonym("digital object identifier") == a.NS.DOI
-        assert a._synonym("MADE UP NAMESPACE") == "MADE UP NAMESPACE"
-        assert a._synonym("url") == a.NS.URL
-        
-        assert a.canonicalise("doi") == a.NS.DOI
-        assert a.canonicalise("iri") == a.NS.IRI
-        assert a.canonicalise("digital object identifier") == a.NS.DOI
-        assert a.canonicalise("DIGITAL OBJECT IDENTIFIER") == a.NS.DOI
-        assert a.canonicalise("MADE UP NAMESPACE") == "made up namespace"
-        
-        assert a.canonical_dict(ALIAS_SEED) == ALIAS_SEED_CANONICAL, a.canonical_dict(ALIAS_SEED)
-    
     def test_03_aliases_add(self):
         a = models.Aliases()
         a.add_alias("foo", "id1")
