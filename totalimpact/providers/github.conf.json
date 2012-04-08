@@ -23,9 +23,6 @@
         "querytype" : {
             "github_user": {
                 "url": "https://api.github.com/users/%s/repos"
-            },
-            "github_org":{
-                "url": "https://api.github.com/orgs/%s/repos"
             }
         }
     }

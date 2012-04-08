@@ -5,7 +5,7 @@ from totalimpact import dao, api
 from totalimpact.config import Configuration
 
 
-GITHUB_TEST_ORG = "bioperl"
+GITHUB_TEST_USER = "egonw"
 
 class TestMemberItems(unittest.TestCase):
     
@@ -33,42 +33,23 @@ class TestMemberItems(unittest.TestCase):
     def test_member_items(self):
 
         # Test github org member_items
-        response = self.client.get('/provider/github/memberitems?query=' + GITHUB_TEST_ORG + '&type=github_org')
+        response = self.client.get('/provider/github/memberitems?query=' + GITHUB_TEST_USER + '&type=github_user')
         resp_list = json.loads(response.data)
+
         assert len(resp_list) > 12, len(resp_list)
 
         # comes back looking like this
         """
-        [
-            [
-                "github", 
-                [
-                    "bioperl", 
-                    "xml-html"
-                ]
-            ], 
-            [
-                "github", 
-                [
-                    "bioperl", 
-                    "bioperl-papers"
-                ]
-            ], 
-            [
-                "github", 
-                [
-                    "bioperl", 
-                    "bioperl-pise"
-                ]
+        [[u'github', [u'egonw', u'blueobelisk.debian']], [u'github', [u'egonw', u'ron']], [u'github', [u'egonw', u'pubchem-cdk']],...
         ...
         """
         provider = [entry[0] for entry in resp_list]
         assert_equals(set(provider), set(["github"]))
 
-        orgs = [entry[1][0] for entry in resp_list]
-        assert_equals(set(orgs), set([GITHUB_TEST_ORG]))
+        users = [entry[1][0] for entry in resp_list]
+        assert_equals(set(users), set([GITHUB_TEST_USER]))
 
         projects = [entry[1][1] for entry in resp_list]
-        assert "bioperl-cookbook" in projects
+        assert "blueobelisk.debian" in projects
 
         
