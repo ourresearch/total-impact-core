@@ -214,4 +214,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print "Please supply the path to the configuration file"
     else:
-        TotalImpactBackend(sys.argv[1]).run()
+        TotalImpactBackend(Configuration(sys.argv[1])).run()
