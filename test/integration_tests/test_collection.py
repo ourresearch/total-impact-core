@@ -2,7 +2,6 @@ import os, unittest, time, json
 from nose.tools import nottest, assert_equals
 
 from totalimpact.config import Configuration
-from totalimpact.util import slow
 from totalimpact import dao, api
 from totalimpact.tilogging import logging
 
