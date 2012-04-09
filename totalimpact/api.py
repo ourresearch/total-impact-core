@@ -4,52 +4,18 @@ import os, json, time
 
 from totalimpact.config import Configuration
 from totalimpact import dao
-from totalimpact.backend import TotalImpactBackend
 from totalimpact.models import Item, Collection, User
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
-from totalimpact import default_settings
 
 # set up logging
 logger = logging.getLogger(__name__)
 
-# FIXME this should go somewhere better?
+# setup the app
+app = Flask(__name__)
 config = Configuration()
 providers = ProviderFactory.get_providers(config)
-
-# set up the dao
 mydao = dao.Dao(config)
-
-# set up the app
-def create_app():
-    app = Flask(__name__)
-    configure_app(app)
-    return app
-
-def configure_app(app):
-    app.config.from_object(default_settings)
-    # parent directory
-    here = os.path.dirname(os.path.abspath( __file__ ))
-    config_path = os.path.join(os.path.dirname(here), 'app.cfg')
-    if os.path.exists(config_path):
-        app.config.from_pyfile(config_path)
-
-app = create_app()
-
-
-@app.before_request
-def connect_to_db():
-    try:
-
-        ## FIXME add a check to to make sure it has views already.  If not, reset
-        #mydao.delete_db(db_name)
-
-        if not mydao.db_exists(app.config["DB_NAME"]):
-            mydao.create_db(app.config["DB_NAME"])
-        mydao.connect_db(app.config["DB_NAME"])
-    except LookupError:
-        print "CANNOT CONNECT TO DATABASE, maybe doesn't exist?"
-        raise LookupError
 
 
 # adding a simple route to confirm working API
@@ -296,8 +262,13 @@ def user(uid=''):
 
 if __name__ == "__main__":
 
-    # i think that maybe we want to start the watcher seperately, esp for testing?
-    watcher = TotalImpactBackend(config)
+    try:
+        if not mydao.db_exists(config.DB_NAME):
+            mydao.create_db(config.DB_NAME)
+        mydao.connect_db(config.DB_NAME)
+    except LookupError:
+        print "CANNOT CONNECT TO DATABASE, maybe doesn't exist?"
+        raise LookupError
 
     # run it
     app.run(host='0.0.0.0', debug=True)

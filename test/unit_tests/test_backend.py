@@ -5,9 +5,12 @@ from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, Provi
 from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
-from totalimpact.util import slow
 from totalimpact import dao
 from totalimpact.tilogging import logging
+
+def slow(f):
+    f.slow = True
+    return f
 
 logger = logging.getLogger(__name__)
 CWD, _ = os.path.split(__file__)
