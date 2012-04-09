@@ -5,7 +5,6 @@ from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, Provi
 from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
-from totalimpact.util import slow
 from totalimpact import dao, api
 from totalimpact.tilogging import logging
 
