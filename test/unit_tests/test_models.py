@@ -209,6 +209,13 @@ class TestModels(unittest.TestCase):
                     "baz" : ["id1", "id2"]}
         assert a.data == expected, a.data
         
+    def test_aliases_add_potential_errors(self):
+        # checking for the string/list type bug
+        a = models.Aliases()
+        a.data["doi"] = "error"
+        a.add_alias("doi", "noterror")
+        assert a.data['doi'] == ["error", "noterror"], a.data['doi']
+        
     def test_04_aliases_single_namespaces(self):
         a = models.Aliases(seed=ALIAS_SEED)
         
