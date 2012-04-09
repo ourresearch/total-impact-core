@@ -1,5 +1,5 @@
-import requests, os, unittest, time
-from totalimpact.providers.provider import Provider, ProviderFactory, ProviderHttpError, ProviderTimeout, ProviderState
+import requests, os, unittest, time, threading, json
+from totalimpact.providers.provider import Provider, ProviderFactory, ProviderHttpError, ProviderTimeout, ProviderState, ProviderError
 from totalimpact.config import Configuration
 
 CWD, _ = os.path.split(__file__)
@@ -10,6 +10,42 @@ def timeout_get(url, headers=None, timeout=None):
     raise requests.exceptions.Timeout()
 def error_get(url, headers=None, timeout=None):
     raise requests.exceptions.RequestException()
+
+class InterruptableSleepThread(threading.Thread):
+    def run(self):
+        provider = Provider(None, None)
+        provider._interruptable_sleep(0.5)
+    
+    def _interruptable_sleep(self, snooze, duration):
+        time.sleep(0.5)
+
+class InterruptableSleepThread2(threading.Thread):
+    def __init__(self, method, *args):
+        super(InterruptableSleepThread2, self).__init__()
+        self.method = method
+        self.args = args
+        
+    def run(self):
+        self.method(*self.args)
+    
+    def _interruptable_sleep(self, snooze, duration):
+        time.sleep(snooze)
+
+ERROR_CONF = json.loads('''
+{
+    "timeout" : { "retries" : 3, "retry_delay" : 1, "retry_type" : "linear", "delay_cap" : -1 },
+    "http_error" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+    "client_server_error" : { },
+    "rate_limit_reached" : { "retries" : -1, "retry_delay" : 1, "retry_type" : "incremental_back_off", "delay_cap" : 256 },
+    "content_malformed" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+    "validation_failed" : { },
+    
+    "no_retries" : { "retries": 0 },
+    "none_retries" : {},
+    "one_retry" : { "retries" : 1 },
+    "delay_2" : { "retries" : 2, "retry_delay" : 2 }
+}
+''')
 
 class Test_Provider(unittest.TestCase):
 
@@ -43,7 +79,102 @@ class Test_Provider(unittest.TestCase):
     def test_04_sleep(self):
         provider = Provider(None, self.config)
         assert provider.sleep_time() == 0
+    
+    def test_incremental_back_off(self):
+        provider = Provider(None, self.config)
+        initial_delay = provider._incremental_back_off(1, 10, 1)
+        assert initial_delay == 1
         
+        subsequent_delay = provider._incremental_back_off(1, 10, 2)
+        assert subsequent_delay == 2
+        
+        again_delay = provider._incremental_back_off(1, 10, 3)
+        assert again_delay == 4
+        
+        big_delay = provider._incremental_back_off(1, 10, 8)
+        assert big_delay == 10 # the delay cap
+        
+        sequence = [provider._incremental_back_off(2, 1000000, x) for x in range(1, 10)]
+        compare = [2 * 2**(x-1) for x in range(1, 10)]
+        assert sequence == compare, (sequence, compare)
+    
+    def test_linear_delay(self):
+        provider = Provider(None, self.config)
+        initial_delay = provider._linear_delay(1, 10, 10)
+        assert initial_delay == 1
+        
+        another_delay = provider._linear_delay(10, 15, 10)
+        assert another_delay == 10
+        
+        capped_delay = provider._linear_delay(10, 5, 10)
+        assert capped_delay == 5
+        
+    def test_retry_wait(self):
+        provider = Provider(None, self.config)
+        linear_delay = provider._retry_wait("linear", 1, 10, 3)
+        assert linear_delay == 1
+        
+        incremental_delay = provider._retry_wait("incremental_back_off", 1, 10, 3)
+        assert incremental_delay == 4
+        
+        # anything unrecognised is treated as a linear delay
+        other_delay = provider._retry_wait("whatever", 1, 10, 3)
+        assert other_delay == 1
+    
+    def test_interruptable_sleep(self):
+        provider = Provider(None, self.config)
+        
+        # this (nosetests) thread does not have the _interruptable_sleep method, so we 
+        # should get an error
+        self.assertRaises(Exception, provider._interruptable_sleep, 10)
+        
+        # now try kicking off an InterruptableSleepThread
+        ist = InterruptableSleepThread()
+        start = time.time()
+        ist.start()
+        ist.join()
+        took = time.time() - start
+        
+        assert took > 0.5, took
+        assert took < 1.0, took
+    
+    def test_snooze_or_raise_errors(self):
+        provider = Provider(None, self.config)
+        
+        self.assertRaises(ProviderError, provider._snooze_or_raise, "whatever", ERROR_CONF, ProviderError(), 0)
+        self.assertRaises(ProviderError, provider._snooze_or_raise, "no_retries", ERROR_CONF, ProviderError(), 0)
+        self.assertRaises(ProviderError, provider._snooze_or_raise, "none_retries", ERROR_CONF, ProviderError(), 0)
+        self.assertRaises(ProviderError, provider._snooze_or_raise, "one_retry", ERROR_CONF, ProviderError(), 2)
+    
+    def test_snooze_or_raise_defaults(self):
+        provider = Provider(None, self.config)
+
+        # delay of 0
+        ist = InterruptableSleepThread2(provider._snooze_or_raise, "one_retry", ERROR_CONF, ProviderError(), 0)
+        start = time.time()
+        ist.start()
+        ist.join()
+        took = time.time() - start
+        assert took > 0 and took < 0.1, took # has to be basically instantaneous
+        
+        # retry_type of linear
+        ist = InterruptableSleepThread2(provider._snooze_or_raise, "delay_2", ERROR_CONF, ProviderError(), 1)
+        start = time.time()
+        ist.start()
+        ist.join()
+        took = time.time() - start
+        assert took > 1.9 and took < 2.5, took
+    
+    def test_snooze_or_raise_success(self):
+        provider = Provider(None, self.config)
+        # do one which provides all its own configuration arguments
+        ist = InterruptableSleepThread2(provider._snooze_or_raise, "timeout", ERROR_CONF, ProviderError(), 0)
+        start = time.time()
+        ist.start()
+        ist.join()
+        took = time.time() - start
+        assert took > 0.9 and took < 1.1, took # has to be basically instantaneous
+    
     def test_05_request_error(self):
         requests.get = error_get
         

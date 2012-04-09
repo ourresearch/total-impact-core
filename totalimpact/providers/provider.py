@@ -1,6 +1,6 @@
 from totalimpact.config import Configuration
 from totalimpact.cache import Cache
-import requests, os, time
+import requests, os, time, threading
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
@@ -188,31 +188,13 @@ class Provider(object):
             try:
                 return self.http_get(url, headers, timeout)
             except ProviderTimeout as e:
-                self._snooze_or_raise("timeout", e, retry)
-                """
-                timeout_conf = error_conf.get('timeout')
-                if timeout_conf is None:
-                    raise e
-                retries = timeout_conf.get("retries")
-                if retries is None:
-                    raise e
-                delay = timeout_conf.get("retry_delay", 0)
-                delay_cap = timeout_conf.get("delay_cap", -1)
-                retry_type = timeout_conf.get("retry_type", "linear")
-                if retries > retry or retries == -1:
-                    retry += 1
-                    snooze = self._retry_wait(retry_type, delay, delay_cap, retry)
-                    time.sleep(snooze) # FIXME: need to use an interruptable sleep
-                    continue
-                else:
-                    raise e
-                """
+                self._snooze_or_raise("timeout", error_conf, e, retry)
             except ProviderHttpError as e:
                 self._snooze_or_raise("http_error", e, retry)
             
             retry += 1
     
-    def _snooze_or_raise(self, error_type, exception, retry_count):
+    def _snooze_or_raise(self, error_type, error_conf, exception, retry_count):
         conf = error_conf.get(error_type)
         if conf is None:
             raise exception
@@ -227,10 +209,19 @@ class Provider(object):
         
         if retries > retry_count or retries == -1:
             snooze = self._retry_wait(retry_type, delay, delay_cap, retry_count + 1)
-            time.sleep(snooze) # FIXME: need to use an interruptable sleep
+            self._interruptable_sleep(snooze)
             return
         
         raise exception
+    
+    def _interruptable_sleep(self, duration, increment=0.5):
+        thread = threading.current_thread()
+        if hasattr(thread, "_interruptable_sleep"):
+            thread._interruptable_sleep(duration, increment)
+        else:
+            # NOTE: for testing purposes, this may happen, but in
+            # normal operation it should not, so raise an exception
+            raise Exception("Thread does not support interruptable sleep")
     
     def _retry_wait(self, type, delay, delay_cap, attempt):
         if type == "incremental_back_off":
@@ -239,7 +230,7 @@ class Provider(object):
             return self._linear_delay(delay, delay_cap, attempt)
     
     def _linear_delay(self, delay, delay_cap, attempt):
-        return delay if delay < delay_cap and delay_cap > -1 else delay_cap
+        return delay if (delay < delay_cap and delay_cap > -1) or delay_cap == -1 else delay_cap
         
     def _incremental_back_off(self, delay, delay_cap, attempt):
         proposed_delay = delay * 2**(attempt-1)
