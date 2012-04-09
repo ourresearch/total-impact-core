@@ -464,6 +464,8 @@ class Aliases(object):
 
     def add_alias(self, namespace, id):
         if namespace in self.data.keys():
+            if not hasattr(self.data[namespace], "append"):
+                self.data[namespace] = [self.data[namespace]]
             self.data[namespace].append(id)
         else:
             self.data[namespace] = [id]
