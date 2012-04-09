@@ -24,17 +24,24 @@ class InterruptableSleepThread2(threading.Thread):
         super(InterruptableSleepThread2, self).__init__()
         self.method = method
         self.args = args
+        self.failed = False
+        self.exception = None
         
     def run(self):
-        self.method(*self.args)
+        try:
+            self.method(*self.args)
+        except Exception as e:
+            self.failed = True
+            self.exception = e
     
     def _interruptable_sleep(self, snooze, duration):
         time.sleep(snooze)
 
 ERROR_CONF = json.loads('''
 {
-    "timeout" : { "retries" : 3, "retry_delay" : 1, "retry_type" : "linear", "delay_cap" : -1 },
-    "http_error" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+    "timeout" : { "retries" : 3, "retry_delay" : 0.1, "retry_type" : "linear", "delay_cap" : -1 },
+    "http_error" : { "retries" : 3, "retry_delay" : 0.1, "retry_type" : "linear", "delay_cap" : -1 },
+    
     "client_server_error" : { },
     "rate_limit_reached" : { "retries" : -1, "retry_delay" : 1, "retry_type" : "incremental_back_off", "delay_cap" : 256 },
     "content_malformed" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
@@ -43,7 +50,8 @@ ERROR_CONF = json.loads('''
     "no_retries" : { "retries": 0 },
     "none_retries" : {},
     "one_retry" : { "retries" : 1 },
-    "delay_2" : { "retries" : 2, "retry_delay" : 2 }
+    "delay_2" : { "retries" : 2, "retry_delay" : 2 },
+    "example_timeout" : { "retries" : 3, "retry_delay" : 1, "retry_type" : "linear", "delay_cap" : -1 }
 }
 ''')
 
@@ -168,30 +176,57 @@ class Test_Provider(unittest.TestCase):
     def test_snooze_or_raise_success(self):
         provider = Provider(None, self.config)
         # do one which provides all its own configuration arguments
-        ist = InterruptableSleepThread2(provider._snooze_or_raise, "timeout", ERROR_CONF, ProviderError(), 0)
+        ist = InterruptableSleepThread2(provider._snooze_or_raise, "example_timeout", ERROR_CONF, ProviderError(), 0)
         start = time.time()
         ist.start()
         ist.join()
         took = time.time() - start
         assert took > 0.9 and took < 1.1, took # has to be basically instantaneous
     
-    def test_05_request_error(self):
+    def test_05_http_get_request_exception(self):
+        # have to set and unset the requests.get method in-line, as
+        # we are using many different types of monkey patch
         requests.get = error_get
-        
         provider = Provider(None, self.config)
-        self.assertRaises(ProviderHttpError, provider.http_get, "", None, None)
+        
+        # first do the test with no error configuration
+        self.assertRaises(ProviderHttpError, provider.http_get, "", None, None, None)
+        
+        # now we want to go on and test with a linear back-off strategy
+        ist = InterruptableSleepThread2(provider.http_get, "", None, None, ERROR_CONF)
+        start = time.time()
+        ist.start()
+        ist.join()
+        took = time.time() - start
+        
+        assert ist.failed
+        assert isinstance(ist.exception, ProviderHttpError)
+        assert took > 0.28  and took < 0.4
         
         requests.get = self.old_http_get
         
-    def test_06_request_error(self):
+    def test_06_request_timeout(self):
+        # have to set and unset the requests.get method in-line, as
+        # we are using many different types of monkey patch
         requests.get = timeout_get
-        
         provider = Provider(None, self.config)
-        self.assertRaises(ProviderTimeout, provider.http_get, "", None, None)
+        
+        self.assertRaises(ProviderTimeout, provider.http_get, "", None, None, None)
+        
+        # now we want to go on and test with a linear back-off strategy
+        ist = InterruptableSleepThread2(provider.http_get, "", None, None, ERROR_CONF)
+        start = time.time()
+        ist.start()
+        ist.join()
+        took = time.time() - start
+        
+        assert ist.failed
+        assert isinstance(ist.exception, ProviderTimeout)
+        assert took > 0.28  and took < 0.4
         
         requests.get = self.old_http_get
         
-    def test_07_request_error(self):
+    def test_07_request_success(self):
         requests.get = successful_get
         
         provider = Provider(None, self.config)
@@ -200,7 +235,7 @@ class Test_Provider(unittest.TestCase):
         assert r == "test"
         
         requests.get = self.old_http_get
-        
+    
     # FIXME: we will also need tests to cover the cacheing when that
     # has been implemented
     
@@ -279,7 +314,7 @@ class Test_Provider(unittest.TestCase):
         remaining = s._get_remaining_time(now + 10)
         assert remaining == 90
         
-    def test_15_state_sleep_time(self):
+    def test_16_state_sleep_time(self):
         now = time.time()
         
         s = ProviderState(throttled=False)
