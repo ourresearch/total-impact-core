@@ -1,8 +1,5 @@
-import pdb
-import json
-import uuid
-import couchdb
-import time
+import pdb, json, uuid, couchdb, time
+from totalimpact.core import app
 
 class Dao(object):
     '''the dao that can be named is not the true dao'''
@@ -14,6 +11,10 @@ class Dao(object):
         
         self.couch = couchdb.Server( url = self.config.db_url )
         self.couch.resource.credentials = ( self.config.db_adminuser, self.config.db_password )
+        
+        if not self.db_exists(app.config["DB_NAME"]):
+            self.create_db(app.config["DB_NAME"])
+        self.connect_db(app.config["DB_NAME"])
 
     def connect_db(self, db_name):
         '''connect to an extant database. 
