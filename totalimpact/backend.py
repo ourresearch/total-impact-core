@@ -3,14 +3,12 @@ from totalimpact.config import Configuration
 from totalimpact import dao
 from totalimpact.queue import AliasQueue, MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
-from totalimpact.core import app
 
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
 
 config = Configuration()
 providers = ProviderFactory.get_providers(config)
-
 
 class TotalImpactBackend(object):
     
@@ -144,9 +142,6 @@ class ProvidersAliasThread(QueueConsumer):
     run_once = False
     def __init__(self, providers, config):
         mydao = dao.Dao(config)
-        if not mydao.db_exists(app.config["DB_NAME"]):
-            mydao.create_db(app.config["DB_NAME"])
-        mydao.connect_db(app.config["DB_NAME"])
         QueueConsumer.__init__(self, AliasQueue(mydao))
         self.providers = providers
         self.config = config
@@ -162,10 +157,10 @@ class ProvidersAliasThread(QueueConsumer):
                 try:
                     log.info("in ProvidersAliasThread.run")
 
-                    new_item = p.aliases(item)
+                    item = p.aliases(item)
                 except NotImplementedError, AttributeError:
                     continue
-            self.queue.save_and_unqueue(new_item)
+            self.queue.save_and_unqueue(item)
                         
             if self.run_once:
                 self.stop()
@@ -179,9 +174,6 @@ class ProviderMetricsThread(QueueConsumer):
 
     def __init__(self, provider, config):
         mydao = dao.Dao(config)
-        if not mydao.db_exists(app.config["DB_NAME"]):
-            mydao.create_db(app.config["DB_NAME"])
-        mydao.connect_db(app.config["DB_NAME"])
         QueueConsumer.__init__(self, MetricsQueue(mydao, provider.id))
         self.provider = provider
         self.config = config

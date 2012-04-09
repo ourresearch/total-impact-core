@@ -6,18 +6,15 @@ from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact.util import slow
-import totalimpact.dao
+from totalimpact import dao
 from totalimpact.tilogging import logging
 
-
 logger = logging.getLogger(__name__)
-
-# FIXME this should go somewhere better?
-config = Configuration()
-
 CWD, _ = os.path.split(__file__)
 
-'''
+def dao_init_mock(self, config):
+    pass
+
 class InterruptTester(object):
     def run(self, stop_after=0):
         st = StoppableThread()
@@ -69,12 +66,16 @@ def save_and_unqueue_mock(self, item):
     
 def get_providers_mock(cls, config):
     return [ProviderMock("1"), ProviderMock("2"), ProviderMock("3")]
-  '''  
-class TestBackend(unittest.TestCase):
 
+
+class TestBackend(unittest.TestCase):
+    
     def setUp(self):
-        '''
         self.config = Configuration()
+        
+        self.dao_init = dao.Dao.__init__
+        dao.Dao.__init__ = dao_init_mock
+        
         self.queue_first = Queue.first
         Queue.first = first_mock
         
@@ -83,27 +84,26 @@ class TestBackend(unittest.TestCase):
         
         self.metrics_queue_save_and_unqueue = MetricsQueue.save_and_unqueue
         MetricsQueue.save_and_unqueue = save_and_unqueue_mock
-        '''
-        pass
-
-    
+        
+        self.get_providers = ProviderFactory.get_providers
+        ProviderFactory.get_providers = classmethod(get_providers_mock)
+        
     def tearDown(self):
-        '''totalimpact.dao.Dao = old_dao
+        dao.Dao.__init__ = self.dao_init
         Queue.first = self.queue_first
         Queue.save_and_unqueue = self.queue_save_and_unqueue
         MetricsQueue.save_and_unqueue = self.metrics_queue_save_and_unqueue
-        '''
-        pass
+        
+        # FIXME: check that this doesn't need to be wrapped in a classmethod() call
+        ProviderFactory.get_providers = self.get_providers
 
-    @nottest
     def test_01_init_backend(self):
-        watcher = TotalImpactBackend(Configuration())
+        watcher = TotalImpactBackend(self.config)
         
         assert len(watcher.threads) == 0
         assert watcher.config is not None
-        assert len(watcher.providers) == 4
+        assert len(watcher.providers) == 3, len(watcher.providers)
         
-    @nottest
     def test_02_init_metrics(self):
         provider = Provider(None, self.config)
         provider.id = "test"
@@ -117,7 +117,6 @@ class TestBackend(unittest.TestCase):
         assert pmt.config is not None
         assert pmt.queue.provider == "test"
         
-    @nottest
     def test_03_init_aliases(self):
         providers = ProviderFactory.get_providers(self.config)
         pat = ProvidersAliasThread(providers, self.config)
@@ -128,13 +127,11 @@ class TestBackend(unittest.TestCase):
         assert pat.config is not None
         assert pat.queue is not None
         
-    @nottest
     def test_04_alias_sleep(self):
         providers = ProviderFactory.get_providers(self.config)
         pat = ProvidersAliasThread(providers, self.config)
         assert pat.sleep_time() == 0
         
-    @nottest
     def test_05_run_stop(self):
         st = StoppableThread()
         assert not st.stopped()
@@ -142,7 +139,6 @@ class TestBackend(unittest.TestCase):
         st.stop()
         assert st.stopped()
       
-    @nottest
     @slow    
     def test_06_sleep_interrupt(self):
         st = StoppableThread()
@@ -166,7 +162,6 @@ class TestBackend(unittest.TestCase):
         took = time.time() - start
         assert took < 3 # taking into account all the sleep delays
 
-    @nottest
     @slow
     def test_07_queue_consumer(self):
         q = QueueConsumer(QueueMock())
@@ -180,14 +175,12 @@ class TestBackend(unittest.TestCase):
         assert took > 1.5, took
         assert took < 2.0, took
         
-    @nottest
     def test_08_stopped_queue(self):
         q = QueueConsumer(QueueMock())
         q.stop()
         item = q.first()
         assert item is None
         
-    @nottest
     def test_09_alias_stopped(self):
         # relies on Queue.first mock as per setUp
         
@@ -202,7 +195,6 @@ class TestBackend(unittest.TestCase):
         # test completes without error
         assert True
         
-    @nottest
     @slow    
     def test_10_alias_running(self):
         # relies on Queue.first mock as per setUp
@@ -222,7 +214,6 @@ class TestBackend(unittest.TestCase):
         assert took > 2.0
         assert took < 2.5
 
-    @nottest
     @slow
     def test_11_alias_provider_not_implemented(self):
         # relies on Queue.first mock as per setUp
@@ -246,7 +237,6 @@ class TestBackend(unittest.TestCase):
     # FIXME: save_and_unqueue is not yet working, so will need more
     # tests when it is
     
-    @nottest
     def test_12_metrics_stopped(self):
         # relies on Queue.first mock as per setUp
         pmt = ProviderMetricsThread(ProviderMock(), self.config)
@@ -259,7 +249,6 @@ class TestBackend(unittest.TestCase):
         # test completes without error
         assert True
         
-    @nottest
     @slow    
     def test_13_metrics_running(self):
         # relies on Queue.first mock as per setUp
@@ -281,19 +270,11 @@ class TestBackend(unittest.TestCase):
     # FIXME: save_and_unqueue is not yet working, so will need more
     # tests when it is
 
-    @nottest
     def test_14_backend(self):
-        ##FIXME old_method = ProviderFactory.get_providers
-        
-        ##FIXME ProviderFactory.get_providers = classmethod(get_providers_mock)
-        
-        watcher = TotalImpactBackend(config)
+        watcher = TotalImpactBackend(self.config)
         
         watcher._spawn_threads()
-        assert_equals(len(watcher.threads), 3)
+        assert len(watcher.threads) == 4, len(watcher.threads)
         
         watcher._cleanup()
-        assert_equals(len(watcher.threads), 0)
-        
-        ##FIXME ProviderFactory.get_providers = old_method
-        
+        assert len(watcher.threads) == 0, len(watcher.threads)
