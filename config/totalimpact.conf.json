@@ -11,7 +11,7 @@
     
     # Database information
     "db_url" : "http://localhost:5984/",
-    
+    "DB_NAME" : "ti",
     "db_adminuser" : "test",
     "db_password" : "password",
     "db_views" : {
