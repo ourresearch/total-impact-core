@@ -182,19 +182,22 @@ class Provider(object):
     def sleep_time(self, dead_time=0):
         return 0
     
-    def do_get(self, url, headers=None, timeout=None, error_conf=None):
+    def http_get(self, url, headers=None, timeout=None, error_conf=None):
         retry = 0
         while True:
             try:
-                return self.http_get(url, headers, timeout)
+                return self.do_get(url, headers, timeout)
             except ProviderTimeout as e:
                 self._snooze_or_raise("timeout", error_conf, e, retry)
             except ProviderHttpError as e:
-                self._snooze_or_raise("http_error", e, retry)
+                self._snooze_or_raise("http_error", error_conf, e, retry)
             
             retry += 1
     
     def _snooze_or_raise(self, error_type, error_conf, exception, retry_count):
+        if error_conf is None:
+            raise exception
+        
         conf = error_conf.get(error_type)
         if conf is None:
             raise exception
@@ -236,7 +239,7 @@ class Provider(object):
         proposed_delay = delay * 2**(attempt-1)
         return proposed_delay if proposed_delay < delay_cap else delay_cap
     
-    def http_get(self, url, headers=None, timeout=None):
+    def do_get(self, url, headers=None, timeout=None):
         # first thing is to try to retrieve from cache
         # FIXME: no idea what we'd get back from the cache...
         c = Cache()
