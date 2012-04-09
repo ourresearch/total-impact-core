@@ -1,52 +1,41 @@
 from flask import Flask, jsonify, json, request, redirect, abort, make_response
 from flask import render_template, flash
-from flaskext.login import login_user, current_user
-import json, time
+import os, json, time
 
-from totalimpact.core import app, login_manager
 from totalimpact.config import Configuration
 from totalimpact import dao
 from totalimpact.backend import TotalImpactBackend
 from totalimpact.models import Item, Collection, User
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
-from totalimpact import util
 from totalimpact.tilogging import logging
+from totalimpact import default_settings
 
-
+# set up logging
 logger = logging.getLogger(__name__)
 
 # FIXME this should go somewhere better?
 config = Configuration()
 providers = ProviderFactory.get_providers(config)
 
+# set up the dao
 mydao = dao.Dao(config)
 
+# set up the app
+def create_app():
+    app = Flask(__name__)
+    configure_app(app)
+    return app
 
-# do account / auth stuff
-@login_manager.user_loader
-def load_account_for_login_manager(userid):
-    out = User.get(userid)
-    return out
+def configure_app(app):
+    app.config.from_object(default_settings)
+    # parent directory
+    here = os.path.dirname(os.path.abspath( __file__ ))
+    config_path = os.path.join(os.path.dirname(here), 'app.cfg')
+    if os.path.exists(config_path):
+        app.config.from_pyfile(config_path)
 
-@app.context_processor
-def set_current_user():
-    """ Set some template context globals. """
-    return dict(current_user=current_user)
+app = create_app()
 
-@app.before_request
-def standard_authentication():
-    """Check remote_user on a per-request basis."""
-    remote_user = request.headers.get('REMOTE_USER', '')
-    if remote_user:
-        user = User.get(remote_user)
-        if user:
-            login_user(user, remember=False)
-    elif 'api_key' in request.values:
-        res = User.query(q='api_key:"' + request.values['api_key'] + '"')['hits']['hits']
-        if len(res) == 1:
-            user = User.get(res[0]['_source']['id'])
-            if user:
-                login_user(user, remember=False)
 
 @app.before_request
 def connect_to_db():
