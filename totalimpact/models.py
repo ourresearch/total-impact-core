@@ -20,7 +20,6 @@ class Item():
         "last_requested": 124141245.234
     }
     """
-    dao = None
 
     def __init__(self, dao, id=None, seed=None):
         self.dao = dao
@@ -78,7 +77,7 @@ class Item():
                 
             except AttributeError:
                 doc[key] = None
-        return(doc)
+        return doc
 
     def __str__(self):
         return str(self.as_dict())
