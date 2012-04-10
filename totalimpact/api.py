@@ -4,7 +4,7 @@ import os, json, time
 
 from totalimpact.config import Configuration
 from totalimpact import dao
-from totalimpact.models import Item, Collection, User
+from totalimpact.models import Item, Collection
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
 
@@ -32,7 +32,11 @@ def hello():
     return resp
 
 
-# <path:> converter for flask accepts slashes.  Useful for DOIs.
+'''
+GET /tiid/:namespace/:id
+404 if not found because not created yet
+303 else list of tiids
+'''
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
 def tiid(ns, nid):
     # Nothing in the database, so return error for everything now
@@ -40,7 +44,13 @@ def tiid(ns, nid):
     abort(404)
 
 
-@app.route('/item/<namespace>/<path:nid>', methods=['POST', 'GET'])
+'''
+POST /item/:namespace/:id
+201 location: {tiid}
+500?  if fails to create
+example /item/PMID/234234232
+'''
+@app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
     now = time.time()
     item = Item(mydao)
@@ -74,6 +84,13 @@ def item_namespace_post(namespace, nid):
     return resp
 
 
+'''
+GET /item/:tiid
+404 if no tiid else structured item
+
+GET /items/:tiid,:tiid,...
+returns a json list of item objects (100 max)
+'''
 @app.route('/item/<tiids>', methods=['GET'])
 @app.route('/items/<tiids>', methods=['GET'])
 def items(tiids):
@@ -100,7 +117,33 @@ def items(tiids):
         abort(404)
 
 
-        
+'''
+GET /provider/:provider/memberitems?query=:querystring[&type=:type]
+returns member ids associated with the group in a json list of (key, value) pairs like [(namespace1, id1), (namespace2, id2)] 
+of type :type (when this needs disambiguating)
+if > 100 memberitems, return the first 100 with a response code that indicates the list has been truncated
+errors:
+over query limit
+provider error with string value containing error returned by provider
+ti errors
+examples:
+/provider/github/memberitems?query=jasonpriem&type=github_user
+/provider/github/memberitems?query=bioperl&type=github_org
+/provider/dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=dryad_author
+
+POST /provider/:provider/aliases
+alias object as cargo, may or may not have a tiid in it
+returns alias object 
+errors:
+over query limit
+provider error
+ti errors
+
+POST /provider/:provider
+alias object as cargo, may or may not have tiid in it
+returns dictionary with metrics object and biblio object
+'''
+
 # routes for providers (TI apps to get metrics from remote sources)
 # external APIs should go to /item routes
 # should return list of member ID {namespace:id} k/v pairs
@@ -112,7 +155,6 @@ def provider_memberitems(pid):
 
     logger.debug("In provider_memberitems with " + query + " " + qtype)
     
-    # TODO: where does providers list come from now? used to be from config, but not certain now.    
     for prov in providers:
         if prov.id == pid:
             provider = prov
@@ -131,7 +173,6 @@ def provider_memberitems(pid):
 @app.route('/provider/<pid>/aliases/<id>', methods=['GET'] )
 def provider_aliases(pid,id):
 
-    # TODO: where does this come from now? used to be from config, but not certain now.
     for prov in providers:
         if prov.id == pid:
             provider = prov
@@ -148,7 +189,6 @@ def provider_aliases(pid,id):
 @app.route('/provider/<pid>/metrics/<id>', methods=['GET'] )
 def metric_snaps(pid,id):
 
-    # TODO: where does this come from now? used to be from config, but not certain now.
     for prov in providers:
         if prov.id == pid:
             provider = prov
@@ -165,7 +205,6 @@ def metric_snaps(pid,id):
 @app.route('/provider/<pid>/biblio/<id>', methods=['GET'] )
 def provider_biblio(pid,id):
 
-    # TODO: where does this come from now? used to be from config, but not certain now.
     for prov in providers:
         if prov.id == pid:
             provider = prov
@@ -177,11 +216,26 @@ def provider_biblio(pid,id):
     resp.mimetype = "application/json"
     return resp
 
-# routes for collections 
-# (groups of TI scholarly object items that are batched together for scoring)
-@app.route('/collection', methods = ['GET','POST','PUT','DELETE'])
-@app.route('/collection/<cid>/<tiid>')
-def collection(cid='',tiid=''):
+
+'''
+GET /collection/:collection_ID
+returns a collection object 
+
+POST /collection
+creates new collection
+post payload is a list of item IDs as [namespace, id]
+returns collection_id
+
+PUT /collection/:collection
+payload is a collection object
+overwrites whatever was there before.
+
+DELETE /collection/:collection
+returns success/failure
+'''
+@app.route('/collection', methods = ['POST'])
+@app.route('/collection/<cid>', methods = ['GET','POST','PUT','DELETE'])
+def collection(cid=''):
     try:
         coll = Collection(mydao, id=cid)
         coll.load()
@@ -190,70 +244,22 @@ def collection(cid='',tiid=''):
     
     if request.method == "POST":
         if coll:
-            if tiid:
-                # TODO: update the list of tiids on this coll with this new one
-                coll.save()
-            else:
-                # TODO: merge the payload (a collection object) with the coll we already have
-                # use richards merge stuff to merge hierarchically?
-                coll.save()
+            abort(405)
         else:
-            if tiid:
-                abort(404) # nothing to update
-            else:
-                # TODO: if save fails here, we just pass error to the user - should prob update this
-                coll = Collection(mydao, seed = request.json )
-                coll.save() # making a new collection
+            coll = Collection(mydao, seed = request.json )
+            coll.save()
 
-    elif request.method == "PUT":
+    elif request.method == "PUT" and cid:
         coll = Collection(mydao, seed = request.json )
         coll.save()
 
     elif request.method == "DELETE":
         if coll:
-            if tiid:
-                # TODO: remove tiid from tiid list on coll
-                coll.save()
-            else:
-                coll.delete()
-                abort(404)
+            coll.delete()
+        abort(404)
 
     try:
         resp = make_response( json.dumps( coll.as_dict() ) )
-        resp.mimetype = "application/json"
-        return resp
-    except:
-        abort(404)
-
-
-# routes for user stuff
-@app.route('/user/<uid>', methods = ['GET','POST','PUT','DELETE'])
-def user(uid=''):
-    try:
-        user = User(mydao, id=uid)
-        user.load()
-    except:
-        user = False
-
-    # POST updated user data (but don't accept changes to the user colls list)    
-    if request.json:
-        newdata = request.json
-        if 'collection_ids' in newdata:
-            del newdata['collection_ids']
-        if 'password' in newdata:
-            pass # should prob hash the password here (fix once user accounts exist)
-        # TODO: update this user with the new info, however that is done now
-        if not user:
-            user = User(mydao, seed = newdata )
-        user.save()
-    
-    # kill this user
-    if request.method == 'DELETE' and user:
-        user.delete()
-        abort(404)
-
-    try:
-        resp = make_response( json.dumps(user.as_dict(), sort_keys=True, indent=4) )
         resp.mimetype = "application/json"
         return resp
     except:
@@ -272,4 +278,6 @@ if __name__ == "__main__":
 
     # run it
     app.run(host='0.0.0.0', debug=True)
+
+
 
