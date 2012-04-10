@@ -1,8 +1,6 @@
 import pdb, json, uuid, couchdb, time
 
 class Dao(object):
-    '''the dao that can be named is not the true dao'''
-    __type__ = None
 
     def __init__(self, config):
         '''sets up the data properties and makes a db connection'''

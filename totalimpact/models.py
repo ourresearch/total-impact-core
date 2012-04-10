@@ -4,72 +4,12 @@ from totalimpact.config import Configuration
 from totalimpact.providers.provider import ProviderFactory
 import time, uuid, json, hashlib, inspect
 
-class Error(dao.Dao):
-    __type__ = 'error'
+
+class Error():
+    pass
 
 
-# FIXME: do we want a created and last modified property on the user?
-class User():
-    
-    """
-    {
-        "id": "1234f",
-        "name": "jason priem",
-        "email": "abcd@foo.com",
-        "password": "1234fd56", # hash
-        "collection_ids": ["abcd3", "abcd4"], # tiid
-        "created": 12134234242.234,
-        "last_modified": 1239898237.234
-    }
-    """
-    def __init__(self, id=None, password=None, password_hash=None, name=None, 
-                        email=None, collections=None, seed=None):
-        # for convenience with CouchDB we store all the properties in an internally
-        # managed dict object which can just be json serialised out to the DAO
-        # This object has a __getattr__ override below which makes the object 
-        # appear as if all the dictionary keys are member attributes of this object
-        
-        # inherit the init
-        super(User,self).__init__()
-        
-        # load from the seed first
-        self.data = seed if seed is not None else {}
-        
-        # if there was no seed, load the properties, otherwise ignore them
-        if seed is None:
-            self.data['id'] = id if id is not None else str(uuid.uuid4())
-            
-            if password is not None:
-                self.set_password(password)
-            elif password_hash is not None:
-                self.data['password'] = password_hash
-            
-            self.data['collections'] = collections if collections is not None else []
-            self.data['name'] = name if name is not None else None
-            self.data['email'] = email if email is not None else None
-    
-    def set_password(self, password):
-        self.data['password'] = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.data['password'], password)
-        
-    def collection_ids(self):
-        return self.data['collections']
-        
-    def add_collection(self, collection_id):
-        if collection_id not in self.data['collections']:
-            self.data['collections'].append(collection_id)
-    
-    def remove_collection(self, collection_id):
-        if collection_id in self.data['collections']:
-            self.data['collections'].remove(collection_id)
-    
-
-# FIXME: collection doesn't have an ID
-# FIXME: may need to ditch the meta section
-class Collection(dao.Dao):
-    __type__ = 'collection'
+class Collection():
     
     """
     {
