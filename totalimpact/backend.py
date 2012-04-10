@@ -139,7 +139,7 @@ class QueueConsumer(StoppableThread):
 # requests as they happen, so that the metrics thread can keep itself
 # in check to throttle the api requests.
 class ProvidersAliasThread(QueueConsumer):
-    run_once = False
+    
     def __init__(self, providers, config):
         mydao = dao.Dao(config)
         QueueConsumer.__init__(self, AliasQueue(mydao))
@@ -155,15 +155,11 @@ class ProvidersAliasThread(QueueConsumer):
 
             for p in self.providers: 
                 try:
-                    log.info("in ProvidersAliasThread.run")
-
                     item = p.aliases(item)
-                except NotImplementedError, AttributeError:
+                    self.queue.save_and_unqueue(item)
+                except NotImplementedError:
                     continue
-            self.queue.save_and_unqueue(item)
-                        
-            if self.run_once:
-                self.stop()
+            
             self._interruptable_sleep(self.sleep_time())
             
     def sleep_time(self):
@@ -185,31 +181,25 @@ class ProviderMetricsThread(QueueConsumer):
             # there is something to return
             item = self.first()
             
-            try:
-                item.metrics # Test if it has this property
-
-                # if we get to here, an Metrics has been popped off the queue
-                item = self.provider.metrics(item)
-                
-                # FIXME: metrics requests might throw errors which cause
-                # a None to be returned from the metrics request.  If that's
-                # the case then don't save, but we should probably have a 
-                # better error handling routine
-                if item is not None:
-                    # store the metrics in the database
-                    
-                    # FIXME: queue object is not yet working
-                    self.queue.save_and_unqueue(item)
-
-            except AttributeError:
-                pass
+            # if we get to here, an Metrics has been popped off the queue
+            item = self.provider.metrics(item)
             
+            # FIXME: metrics requests might throw errors which cause
+            # a None to be returned from the metrics request.  If that's
+            # the case then don't save, but we should probably have a 
+            # better error handling routine
+            if item is not None:
+                # store the metrics in the database
+                
+                # FIXME: queue object is not yet working
+                self.queue.save_and_unqueue(item)
+
             # the provider will return a sleep time which may be negative
             sleep_time = self.provider.sleep_time()
             
             # sleep
             self._interruptable_sleep(sleep_time)
-  
+            
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print "Please supply the path to the configuration file"
