@@ -1,5 +1,5 @@
 import time
-from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
+from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
 from totalimpact.models import MetricSnap
 from BeautifulSoup import BeautifulStoneSoup
 import requests
@@ -44,6 +44,7 @@ class Wikipedia(Provider):
                 logger.debug(self.config.id + ": Aliases: " + str(alias_object.get_aliases_dict()))
                 return item
             
+            # FIXME: this is broken
             # if there are aliases to check, carry on
             for alias in aliases:
                 logger.debug(self.config.id + ": processing metrics for tiid:" + alias_object.tiid)
@@ -61,39 +62,66 @@ class Wikipedia(Provider):
             item.metrics.add_metric_snap(metric)
             return item
         except ProviderError as e:
+            # this is the ultimate error handling.  All error mitigation should be
+            # done in the above code block (or called methods)
             self.error(e, item)
             return item
     
     def _get_metrics(self, alias):
         # FIXME: urlencoding?
         url = self.config.metrics['url'] % alias[1]
+        this_metrics = MetricSnap(id=self.config.id)
         logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
         
-        # try to get a response from the data provider        
-        response = self.http_get(url, timeout=self.config.metrics['timeout'])
-        if response.status_code != 200:
-            if response.status_code >= 500:
-                raise ProviderServerError(response)
-            else:
-                raise ProviderClientError(response)
+        self._mitigated_get_metrics(url, this_metrics)
         
-        # construct the metrics
-        this_metrics = MetricSnap(id=self.config.id)
-        self._extract_stats(response.text, this_metrics)
         sdurl = self.config.metrics['provenance_url'] % alias[1]
         this_metrics.provenance(sdurl)
         
         logger.debug(self.config.id + ": interim metrics: " + str(this_metrics))
-        return(this_metrics)
-        
+        return this_metrics
+    
+    def _mitigated_get_metrics(self, url, this_metrics):
+        retry = 0
+        while True:
+            # try to get a response from the data provider        
+            response = self.http_get(url, timeout=self.config.metrics['timeout'], error_conf=self.config.errors)
+            
+            # client errors and server errors are not retried, as they usually 
+            # indicate a permanent failure
+            if response.status_code != 200:
+                if response.status_code >= 500:
+                    raise ProviderServerError(response)
+                else:
+                    raise ProviderClientError(response)
+                    
+            # NOTE: if there was a specific error which indicated rate-limit failure,
+            # it could be caught here, and sent to the _snooze_or_raise method
+            
+            try:
+                # construct the metrics
+                self._extract_stats(response.text, this_metrics)
+                return
+            except ProviderContentMalformedError as e:
+                self._snooze_or_raise("content_malformed", self.config.errors, e, retry)
+            except ProviderValidationFailedError as e:
+                self._snooze_or_raise("validation_failed", self.config.errors, e, retry)
+            
+            retry += 1
+    
     def _extract_stats(self, content, metrics):
-        # FIXME: option to validate document...
-        # FIXME: needs to re-queue after some specified wait (incremental back-off + escalation)
-        soup = BeautifulStoneSoup(content)
+        try:
+            soup = BeautifulStoneSoup(content)
+        except:
+            raise ProviderContentMalformedError("Content cannot be parsed into soup")
+        
         try:
             articles = soup.search.findAll(title=True)
             metrics.value(len(articles))
         except AttributeError:
+            # NOTE: this does not raise a ProviderValidationError, because missing
+            # articles are not indicative of a formatting failure - there just might
+            # not be any articles
             metrics.value(0)
             
 

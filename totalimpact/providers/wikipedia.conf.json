@@ -34,10 +34,16 @@
         "can_embed": "NA",
         "can_aggregate": "NA",
         "other_terms_of_use": "NA"
-    }
+    },
     
-    # FIXME: these can be removed when everything else is working
-    #"api" : "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'",
-    #"timeout" : 5,
-    #"show_details_url" : "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go",
+    "errors" : {
+        "timeout" : { "retries" : 1, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+        "http_error" : { "retries" : 1, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+        "content_malformed" : { "retries" : 1, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+        
+        # Not used by the wikipedia provider
+        "rate_limit_reached" : { },
+        "client_server_error" : { },
+        "validation_failed" : { }
+    }
 }
