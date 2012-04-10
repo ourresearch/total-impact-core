@@ -1,7 +1,7 @@
 import unittest, json, uuid
 from nose.tools import nottest, assert_equals
 
-from totalimpact import api
+from totalimpact import api, dao
 from totalimpact.providers.dryad import Dryad
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
@@ -14,6 +14,9 @@ def MOCK_member_items(self, a, b):
 class TestWeb(unittest.TestCase):
 
     def setUp(self):
+        self.DB_NAME = "ti_test"
+        api.config.DB_NAME = self.DB_NAME
+        api.mydao = dao.Dao(api.config)
         self.app = api.app.test_client()
 
         # Mock out relevant methods of the Dryad provider
