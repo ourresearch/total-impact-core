@@ -93,5 +93,9 @@
         "rate_limit_reached" : { "retries" : -1, "retry_delay" : 1, "retry_type" : "incremental_back_off", "delay_cap" : 256 },
         "content_malformed" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
         "validation_failed" : { }
+    },
+
+    "cache" : {
+        "max_cache_duration" : 86400
     }
 }
