@@ -116,17 +116,11 @@ class Dao(object):
         # FIXME handle update conflicts properly
         return self.db.save(doc)
 
-    def create_user(self):
-        pass
-
-    def update_user(self):
-        pass
-
     def create_collection(self):
-        pass
+        return self.create_item()
 
     def update_collection(self):
-        pass
+        return self.update_item()
         
     def delete(self, id):
         doc = self.db[id]

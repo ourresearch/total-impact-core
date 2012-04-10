@@ -21,25 +21,40 @@ class Collection():
         "ids": ["abcd3", "abcd4"]  #tiid
     }
     """
-    def __init__(self, dao, id):
+    def __init__(self, dao, id=None, seed=None):
+        self.dao = dao
 
-        def __init__(self, dao, id=None):
-            if id is None:
-                self.id = uuid.uuid4().hex
-            else:
-                self.id = id
+        if id is None:
+            self.id = uuid.uuid4().hex
+        else: 
+            self.id = id
 
-        def load(self):
-            doc = self.dao.get(id)
-            for key in doc:
-                self[key] = doc[key]
+        if seed:
+            for key in seed:
+                setattr(self, key, seed[key])
 
-            self.last_requested = time.time()
 
-        def save(self):
-            doc = {}
-            # put this objects relevant properties together in the doc.
-            self.dao.save(doc)
+    def load(self):
+        doc = self.dao.get(self.id)
+        if doc is None:
+            raise(LookupError)
+        
+        for key in doc:
+            setattr(self, key, doc[key])
+
+        return doc
+
+    def save(self):
+        doc = self.as_dict()
+        # couch wants the underscore...should be fixed in dao, not here.
+        doc["_id"] = doc.pop("id")
+
+        try:
+            self.dao.update_collection(doc, self.id)
+        except LookupError:
+            self.dao.create_collection(doc, self.id)
+        return doc
+
         
     def item_ids(self):
         return self.data['ids']

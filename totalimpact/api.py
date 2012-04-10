@@ -233,12 +233,9 @@ overwrites whatever was there before.
 DELETE /collection/:collection
 returns success/failure
 '''
-
-# routes for collections 
-# (groups of TI scholarly object items that are batched together for scoring)
-@app.route('/collection', methods = ['GET','POST','PUT','DELETE'])
-@app.route('/collection/<cid>/<tiid>')
-def collection(cid='',tiid=''):
+@app.route('/collection', methods = ['POST'])
+@app.route('/collection/<cid>', methods = ['GET','POST','PUT','DELETE'])
+def collection(cid=''):
     try:
         coll = Collection(mydao, id=cid)
         coll.load()
@@ -247,33 +244,19 @@ def collection(cid='',tiid=''):
     
     if request.method == "POST":
         if coll:
-            if tiid:
-                # TODO: update the list of tiids on this coll with this new one
-                coll.save()
-            else:
-                # TODO: merge the payload (a collection object) with the coll we already have
-                # use richards merge stuff to merge hierarchically?
-                coll.save()
+            abort(405)
         else:
-            if tiid:
-                abort(404) # nothing to update
-            else:
-                # TODO: if save fails here, we just pass error to the user - should prob update this
-                coll = Collection(mydao, seed = request.json )
-                coll.save() # making a new collection
+            coll = Collection(mydao, seed = request.json )
+            coll.save()
 
-    elif request.method == "PUT":
+    elif request.method == "PUT" and cid:
         coll = Collection(mydao, seed = request.json )
         coll.save()
 
     elif request.method == "DELETE":
         if coll:
-            if tiid:
-                # TODO: remove tiid from tiid list on coll
-                coll.save()
-            else:
-                coll.delete()
-                abort(404)
+            coll.delete()
+        abort(404)
 
     try:
         resp = make_response( json.dumps( coll.as_dict() ) )
