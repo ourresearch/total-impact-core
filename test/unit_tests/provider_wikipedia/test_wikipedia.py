@@ -1,22 +1,32 @@
 from totalimpact.models import Item, MetricSnap, Aliases, Metrics
 from totalimpact.config import Configuration
 from totalimpact.providers.wikipedia import Wikipedia
-from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
+from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError, ProviderContentMalformedError, ProviderHttpError, ProviderValidationFailedError
 
-import os, unittest
+import os, unittest, json
 
 # prepare a monkey patch to override the http_get method of the Provider
 class DummyResponse(object):
     def __init__(self, status, content):
         self.status_code = status
         self.text = content
-def successful_get(self, url, headers=None, timeout=None):
+def successful_get(self, url, headers=None, timeout=None, error_conf=None):
     f = open(XML_DOC, "r")
     return DummyResponse(200, f.read())
-def get_400(self, url, headers=None, timeout=None):
+def get_400(self, url, headers=None, timeout=None, error_conf=None):
     return DummyResponse(400, "")
-def get_500(self, url, headers=None, timeout=None):
+def get_500(self, url, headers=None, timeout=None, error_conf=None):
     return DummyResponse(500, "")
+def exception_http_get(self, url, headers=None, timeout=None, error_conf=None):
+    raise ProviderHttpError()
+
+def extract_stats_content_malformed(self, content, metric):
+    raise ProviderContentMalformedError()
+def extract_stats_validation_error(self, content, metric):
+    raise ProviderValidationFailedError()
+
+def mock_snooze_or_raise(self, type, error_conf, exception, retry):
+    raise exception
 
 # dummy Item class
 class Item(object):
@@ -27,6 +37,19 @@ class Item(object):
 CWD, _ = os.path.split(__file__)
 
 XML_DOC = os.path.join(CWD, "wikipedia_response.xml")
+EMPTY_DOC = os.path.join(CWD, "wikipedia_empty_response.xml")
+INCORRECT_DOC = os.path.join(CWD, "wikipedia_incorrect_response.xml")
+
+ERROR_CONF = json.loads('''
+{
+    "timeout" : { "retries" : 1, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+    "http_error" : { "retries" : 1, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+    "content_malformed" : { "retries" : 1, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
+    "rate_limit_reached" : { },
+    "client_server_error" : { },
+    "validation_failed" : { }
+}
+''')
 
 class Test_Wikipedia(unittest.TestCase):
 
@@ -34,9 +57,13 @@ class Test_Wikipedia(unittest.TestCase):
         print XML_DOC
         self.config = Configuration()
         self.old_http_get = Provider.http_get
+        self.old_extract_stats = Wikipedia._extract_stats
+        self.old_snooze_or_raise = Provider._snooze_or_raise
     
     def tearDown(self):
         Provider.http_get = self.old_http_get
+        Provider._snooze_or_raise = self.old_snooze_or_raise
+        Wikipedia._extract_stats = self.old_extract_stats
     
     def test_01_init(self):
         # first ensure that the configuration is valid
@@ -94,7 +121,7 @@ class Test_Wikipedia(unittest.TestCase):
         
         self.assertRaises(NotImplementedError, provider.aliases, None)
     
-    def test_05_metrics_read_content(self):
+    def test_05_metrics_extract_stats(self):
         wcfg = None
         for p in self.config.providers:
             if p["class"].endswith("wikipedia.Wikipedia"):
@@ -107,6 +134,21 @@ class Test_Wikipedia(unittest.TestCase):
         f = open(XML_DOC, "r")
         provider._extract_stats(f.read(), metrics)
         assert metrics.value() == 1
+        
+        # now give it something which can't be read by the internal parser
+        self.assertRaises(ProviderContentMalformedError, provider._extract_stats, object, metrics)
+        
+        # now give it something with no results
+        m = MetricSnap()
+        f = open(EMPTY_DOC, "r")
+        provider._extract_stats(f.read(), m)
+        assert m.value() == 0
+        
+        # now give it an invalid document
+        m = MetricSnap()
+        f = open(INCORRECT_DOC, "r")
+        provider._extract_stats(f.read(), m)
+        assert m.value() == 0
         
     def test_06_metrics_sleep(self):
         wcfg = None
@@ -158,6 +200,8 @@ class Test_Wikipedia(unittest.TestCase):
         pms = item.metrics.list_metric_snaps()
         assert pms[0].value() > 0
         
+        Provider.http_get = self.old_http_get
+        
     def test_09_metrics_http_general_fail(self):
         Provider.http_get = get_400
         
@@ -176,6 +220,8 @@ class Test_Wikipedia(unittest.TestCase):
         pms = item.metrics.list_metric_snaps()
         assert len(pms) == 0
         
+        Provider.http_get = self.old_http_get
+        
     def test_10_metrics_400(self):
         Provider.http_get = get_400
         
@@ -188,6 +234,8 @@ class Test_Wikipedia(unittest.TestCase):
         
         metrics = MetricSnap()
         self.assertRaises(ProviderClientError, provider._get_metrics, "10.1371/journal.pcbi.1000361")
+        
+        Provider.http_get = self.old_http_get
         
     def test_11_metrics_500(self):
         Provider.http_get = get_500
@@ -202,3 +250,93 @@ class Test_Wikipedia(unittest.TestCase):
         metrics = MetricSnap()
         self.assertRaises(ProviderServerError, provider._get_metrics, "10.1371/journal.pcbi.1000361")
         
+        Provider.http_get = self.old_http_get
+        
+    def test_12_mitigated_get_metrics_success(self):
+        Provider.http_get = successful_get
+        
+        wcfg = None
+        for p in self.config.providers:
+            if p["class"].endswith("wikipedia.Wikipedia"):
+                wcfg = p["config"]
+        wconf = Configuration(wcfg, False)
+        provider = Wikipedia(wconf, self.config)
+        
+        metrics = MetricSnap()
+        provider._mitigated_get_metrics("url", metrics)
+        assert metrics.value() == 1
+        
+        Provider.http_get = self.old_http_get
+        
+    def test_13_mitigated_get_metrics_http_error(self):
+        Provider.http_get = exception_http_get
+        
+        wcfg = None
+        for p in self.config.providers:
+            if p["class"].endswith("wikipedia.Wikipedia"):
+                wcfg = p["config"]
+        wconf = Configuration(wcfg, False)
+        provider = Wikipedia(wconf, self.config)
+        
+        metrics = MetricSnap()
+        self.assertRaises(ProviderHttpError, provider._mitigated_get_metrics, "url", metrics)
+        
+        Provider.http_get = self.old_http_get
+    
+    def test_14_mitigated_get_metrics_client_server_errors(self):
+        Provider.http_get = get_400
+        
+        wcfg = None
+        for p in self.config.providers:
+            if p["class"].endswith("wikipedia.Wikipedia"):
+                wcfg = p["config"]
+        wconf = Configuration(wcfg, False)
+        provider = Wikipedia(wconf, self.config)
+        
+        metrics = MetricSnap()
+        self.assertRaises(ProviderClientError, provider._mitigated_get_metrics, "url", metrics)
+        
+        Provider.http_get = get_500
+        
+        metrics = MetricSnap()
+        self.assertRaises(ProviderServerError, provider._mitigated_get_metrics, "url", metrics)
+        
+        Provider.http_get = self.old_http_get
+    
+    def test_15_mitigated_get_metrics_content_malformed(self):
+        Provider.http_get = successful_get
+        Provider._snooze_or_raise = mock_snooze_or_raise
+        Wikipedia._extract_stats = extract_stats_content_malformed
+        
+        wcfg = None
+        for p in self.config.providers:
+            if p["class"].endswith("wikipedia.Wikipedia"):
+                wcfg = p["config"]
+        wconf = Configuration(wcfg, False)
+        provider = Wikipedia(wconf, self.config)
+        
+        metrics = MetricSnap()
+        self.assertRaises(ProviderContentMalformedError, provider._mitigated_get_metrics, "url", metrics)
+        
+        Provider.http_get = self.old_http_get
+        Wikipedia._extract_stats = self.old_extract_stats
+        Provider._snooze_or_raise = self.old_snooze_or_raise
+        
+    def test_16_mitigated_get_metrics_validation_failed(self):
+        Provider.http_get = successful_get
+        Provider._snooze_or_raise = mock_snooze_or_raise
+        Wikipedia._extract_stats = extract_stats_validation_error
+        
+        wcfg = None
+        for p in self.config.providers:
+            if p["class"].endswith("wikipedia.Wikipedia"):
+                wcfg = p["config"]
+        wconf = Configuration(wcfg, False)
+        provider = Wikipedia(wconf, self.config)
+        
+        metrics = MetricSnap()
+        self.assertRaises(ProviderValidationFailedError, provider._mitigated_get_metrics, "url", metrics)
+        
+        Provider.http_get = self.old_http_get
+        Wikipedia._extract_stats = self.old_extract_stats
+        Provider._snooze_or_raise = self.old_snooze_or_raise
