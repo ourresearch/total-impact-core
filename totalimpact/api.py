@@ -122,22 +122,11 @@ GET /provider/:provider/memberitems?query=:querystring[&type=:type]
 returns member ids associated with the group in a json list of (key, value) pairs like [(namespace1, id1), (namespace2, id2)] 
 of type :type (when this needs disambiguating)
 if > 100 memberitems, return the first 100 with a response code that indicates the list has been truncated
-errors:
-over query limit
-provider error with string value containing error returned by provider
-ti errors
-examples:
-/provider/github/memberitems?query=jasonpriem&type=github_user
-/provider/github/memberitems?query=bioperl&type=github_org
-/provider/dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=dryad_author
+examples : /provider/github/memberitems?query=jasonpriem&type=github_user
 
 POST /provider/:provider/aliases
 alias object as cargo, may or may not have a tiid in it
 returns alias object 
-errors:
-over query limit
-provider error
-ti errors
 
 POST /provider/:provider
 alias object as cargo, may or may not have tiid in it

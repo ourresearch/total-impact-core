@@ -5,73 +5,6 @@ from totalimpact.providers.provider import ProviderFactory
 import time, uuid, json, hashlib, inspect
 
 
-class Error():
-    pass
-
-
-class Collection():
-    
-    """
-    {
-        "id": "uuid-goes-here"
-        "collection_name": "My Collection",
-        "owner": "abcdef",
-        "created": 1328569452.406,
-        "last_modified": 1328569492.406,
-        "ids": ["abcd3", "abcd4"]  #tiid
-    }
-    """
-    def __init__(self, dao, id=None, seed=None):
-        self.dao = dao
-
-        if id is None:
-            self.id = uuid.uuid4().hex
-        else: 
-            self.id = id
-
-        if seed:
-            for key in seed:
-                setattr(self, key, seed[key])
-
-
-    def load(self):
-        doc = self.dao.get(self.id)
-        if doc is None:
-            raise(LookupError)
-        
-        for key in doc:
-            setattr(self, key, doc[key])
-
-        return doc
-
-    def save(self):
-        doc = self.as_dict()
-        # couch wants the underscore...should be fixed in dao, not here.
-        doc["_id"] = doc.pop("id")
-
-        try:
-            self.dao.update_collection(doc, self.id)
-        except LookupError:
-            self.dao.create_collection(doc, self.id)
-        return doc
-
-        
-    def item_ids(self):
-        return self.data['ids']
-        
-    def add_item(self, item_id):
-        if item_id not in self.data['ids']:
-            self.data['ids'].append(item_id)
-    
-    def add_items(self, item_ids):
-        for item in item_ids:
-            self.add_item(item)
-    
-    def remove_item(self, item_id):
-        if item_id in self.data['ids']:
-            self.data['ids'].remove(item_id)
-        
-
 # FIXME: the code terminology and the docs terminology differ slightly:
 # "alias" vs "aliases", "metric" vs "metrics"
 # FIXME: do we want a created and last modified property on the item?
@@ -149,6 +82,51 @@ class Item():
 
     def __str__(self):
         return str(self.as_dict())
+
+
+class Error(Item):
+    pass
+
+
+class Collection(Item):
+    
+    """
+    {
+        "id": "uuid-goes-here"
+        "collection_name": "My Collection",
+        "owner": "abcdef",
+        "created": 1328569452.406,
+        "last_modified": 1328569492.406,
+        "ids": ["abcd3", "abcd4"]  #tiid
+    }
+    """
+    def load(self):
+        doc = self.dao.get(self.id)
+        if doc is None:
+            raise(LookupError)
+            
+        for key in doc:
+            setattr(self, key, doc[key])
+
+        if not self.ids: self.ids = []
+
+        return doc
+        
+    def item_ids(self):
+        return self.ids
+        
+    def add_item(self, item_id):
+        if item_id not in self.ids:
+            self.ids.append(item_id)
+    
+    def add_items(self, item_ids):
+        for item in item_ids:
+            self.add_item(item)
+    
+    def remove_item(self, item_id):
+        if item_id in self.ids:
+            self.ids.remove(item_id)
+        
 
 
 
