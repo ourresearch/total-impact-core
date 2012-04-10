@@ -73,7 +73,11 @@ class Configuration(object):
         
         f = open(self.CONFIG_FILE)
         s = f.read()
-        c = "\n".join(["\n" if x.strip().startswith("#") else x for x in s.split("\n")])
+        return self._parse_config_data(s)
+
+    def _parse_config_data(self, config_data):
+        """ Parse json data, allowing comments by starting lines with # """
+        c = "\n".join(["\n" if x.strip().startswith("#") else x for x in config_data.split("\n")])
         """
         c = ""
         for line in f:
@@ -91,7 +95,17 @@ class Configuration(object):
     
     def __getattr__(self, attr):
         return self.cfg.get(attr, None)
-        
+
+
+class StringConfiguration(Configuration):
+    """ Version of Configuration which does not need to read from the filesystem """
+    def __init__(self, config_string):
+        self.cfg = self._parse_config_data(config_string)
+    
+    def __getattr__(self, attr):
+        return self.cfg.get(attr, None)
+
+
 if __name__ == "__main__":
     # if we are run from the command line, run validation over the
     # specified file
