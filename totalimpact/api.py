@@ -112,7 +112,6 @@ def provider_memberitems(pid):
 
     logger.debug("In provider_memberitems with " + query + " " + qtype)
     
-    # TODO: where does providers list come from now? used to be from config, but not certain now.    
     for prov in providers:
         if prov.id == pid:
             provider = prov
@@ -131,7 +130,6 @@ def provider_memberitems(pid):
 @app.route('/provider/<pid>/aliases/<id>', methods=['GET'] )
 def provider_aliases(pid,id):
 
-    # TODO: where does this come from now? used to be from config, but not certain now.
     for prov in providers:
         if prov.id == pid:
             provider = prov
@@ -148,7 +146,6 @@ def provider_aliases(pid,id):
 @app.route('/provider/<pid>/metrics/<id>', methods=['GET'] )
 def metric_snaps(pid,id):
 
-    # TODO: where does this come from now? used to be from config, but not certain now.
     for prov in providers:
         if prov.id == pid:
             provider = prov
@@ -165,7 +162,6 @@ def metric_snaps(pid,id):
 @app.route('/provider/<pid>/biblio/<id>', methods=['GET'] )
 def provider_biblio(pid,id):
 
-    # TODO: where does this come from now? used to be from config, but not certain now.
     for prov in providers:
         if prov.id == pid:
             provider = prov
