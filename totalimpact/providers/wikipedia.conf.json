@@ -45,5 +45,9 @@
         "rate_limit_reached" : { },
         "client_server_error" : { },
         "validation_failed" : { }
+    },
+
+    "cache" : {
+        "max_cache_duration" : 86400 
     }
 }
