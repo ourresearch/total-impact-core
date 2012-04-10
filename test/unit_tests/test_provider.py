@@ -1,6 +1,7 @@
-import requests, os, unittest, time, threading, json
+import requests, os, unittest, time, threading, json, memcache
 from totalimpact.providers.provider import Provider, ProviderFactory, ProviderHttpError, ProviderTimeout, ProviderState, ProviderError
-from totalimpact.config import Configuration
+from totalimpact.config import Configuration, StringConfiguration
+from totalimpact.cache import Cache
 
 CWD, _ = os.path.split(__file__)
 
@@ -55,15 +56,33 @@ ERROR_CONF = json.loads('''
 }
 ''')
 
+BASE_PROVIDER_CONF = StringConfiguration('''
+{
+    "cache" : {
+        "max_cache_duration" : 86400
+    }
+}
+''')
+
+
 class Test_Provider(unittest.TestCase):
 
     def setUp(self):
         self.config = Configuration()
         self.old_http_get = requests.get
+        # Clear memcache so we have an empty cache for testing
+        mc = memcache.Client(['127.0.0.1:11211'])
+        mc.flush_all()
+        # Create a base config which provides necessary settings
+        # which all providers should at least implement
+        self.base_provider_config = BASE_PROVIDER_CONF
     
     def tearDown(self):
         requests.get = self.old_http_get
-    
+        # Clear memcache in case we have stored anything
+        mc = memcache.Client(['127.0.0.1:11211'])
+        mc.flush_all()
+
     def test_01_init(self):
         # since the provider is really abstract, this doen't
         # make much sense, but we do it anyway
@@ -187,7 +206,7 @@ class Test_Provider(unittest.TestCase):
         # have to set and unset the requests.get method in-line, as
         # we are using many different types of monkey patch
         requests.get = error_get
-        provider = Provider(None, self.config)
+        provider = Provider(self.base_provider_config, self.config)
         
         # first do the test with no error configuration
         self.assertRaises(ProviderHttpError, provider.http_get, "", None, None, None)
@@ -209,7 +228,7 @@ class Test_Provider(unittest.TestCase):
         # have to set and unset the requests.get method in-line, as
         # we are using many different types of monkey patch
         requests.get = timeout_get
-        provider = Provider(None, self.config)
+        provider = Provider(self.base_provider_config, self.config)
         
         self.assertRaises(ProviderTimeout, provider.http_get, "", None, None, None)
         
@@ -229,7 +248,7 @@ class Test_Provider(unittest.TestCase):
     def test_07_request_success(self):
         requests.get = successful_get
         
-        provider = Provider(None, self.config)
+        provider = Provider(self.base_provider_config, self.config)
         r = provider.http_get("test")
         
         assert r == "test"
@@ -328,4 +347,27 @@ class Test_Provider(unittest.TestCase):
         s = ProviderState(rate_period=100, rate_limit=100)
         sleep = s.sleep_time()
         assert sleep == 1.0, sleep
+
+    def test_17_http_cache_hit(self):
+        """ Check that subsequent http requests result in a http cache hit """
+        requests.get = successful_get
+
+        provider = Provider(self.base_provider_config, self.config)
+    
+        url = "http://testurl.example/test"
+        r = provider.http_get(url)
+        # Our stub sets the result of the http request to the same as the url
+        assert r == url
         
+        # Check we stored the data in the cache
+        c = Cache()
+        assert c.get_cache_entry(url) == "http://testurl.example/test"
+
+        # Set an alternative result in the cache
+        c = Cache()
+        c.set_cache_entry(url,"http://testurl.example/X")
+
+        # Second request should load from the cache
+        url = "http://testurl.example/test"
+        r = provider.http_get(url)
+        assert r == 'http://testurl.example/X'

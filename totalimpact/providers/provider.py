@@ -10,6 +10,13 @@ class ProviderFactory(object):
 
     @classmethod
     def get_provider(cls, provider_definition, config):
+        """ Create an instance of a Provider object
+        
+            provider_definition is a dictionary which states the class and config file
+            which should be used to create this provider. See totalimpact.conf.json 
+
+            config is the application configuration
+        """
         cpath = provider_definition['config']
         if not os.path.isabs(cpath):
             cwd = os.getcwd()
@@ -39,6 +46,7 @@ class ProviderFactory(object):
         
     @classmethod
     def get_providers(cls, config):
+        """ config is the application configuration """
         providers = []
         for p in config.providers:
             try:
@@ -137,12 +145,12 @@ class Provider(object):
     
     def do_get(self, url, headers=None, timeout=None):
         # first thing is to try to retrieve from cache
-        # FIXME: no idea what we'd get back from the cache...
-        c = Cache()
-        r = c.http_get(url)
-        
-        if r is not None:
-            return content
+        c = Cache(
+            self.config.cache['max_cache_duration']
+        )
+        cache_data = c.get_cache_entry(url)
+        if cache_data:
+            return cache_data
             
         # ensure that a user-agent string is set
         if headers is None:
@@ -163,57 +171,9 @@ class Provider(object):
             raise ProviderHttpError("RequestException during GET on: " + url, e)
         
         # cache the response and return
-        c.cache_http_get(url, r)
+        c.set_cache_entry(url, r)
         return r
     
-    """
-    def get_cache_timeout_response(self,
-                                    url,
-                                    http_timeout_in_seconds = 20,
-                                    max_cache_age_seconds = (1) * (24 * 60 * 60), # (number of days) * (number of seconds in a day),
-                                    header_addons = {}):
-
-        key = hashlib.md5(url).hexdigest()
-        mc = memcache.Client(['127.0.0.1:11211'])
-        response = mc.get(key)
-        if response:
-            self.status["count_got_response_from_cache"] += 1
-        else:
-            http = httplib2.Http(timeout=http_timeout_in_seconds)
-            response = http.request(url)
-            mc.set(key, response, max_cache_age_seconds)
-            self.status["count_api_requests"] += 1
-
-        # This is the old, file-based caching system.
-        # I left some stuff out; Heather, feel free to move up.
-        '''
-        cache_read = http_cached.cache.get(url)
-                self.status["count_got_response_from_cache"] += 1
-        if (cache_read):
-            (response, content) = cache_read.split("\r\n\r\n", 1)
-        else:
-            ## response['cache-control'] = "max-age=" + str(max_cache_age_seconds)
-            ## httplib2._updateCache(header_dict, response, content, http_cached.cache, url)
-            if response.fromcache:
-            else:
-                self.status["count_missed_cache"] += 1
-                self.status["count_cache_miss_details"] = str(self.status["count_cache_miss_details"]) + "; " + url
-                self.status["count_cache_miss_response"] = str(response)
-                self.status["count_api_requests"] += 1
-
-            if False:
-                self.status["count_request_exception"] = "EXCEPTION!"
-                self.status["count_uncached_call"] += 1
-                self.status["count_api_requests"] += 1
-                #(response, content) = http_cached.request(url, headers=header_dict.update({'cache-control':'no-cache'}))
-                req = urllib2.Request(url, headers=header_dict)
-                uh = urllib2.urlopen(req)
-                content = uh.read()
-                response = uh.info()
-        '''
-
-        return(response)
-    """
 
 class ProviderState(object):
     def __init__(self, rate_period=3600, rate_limit=350, 
