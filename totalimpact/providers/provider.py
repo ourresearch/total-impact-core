@@ -1,6 +1,7 @@
 from totalimpact.config import Configuration
 from totalimpact.cache import Cache
-import requests, os, time, threading
+from totalimpact.dao import Dao
+import requests, os, time, threading, sys, traceback
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ class ProviderFactory(object):
                     cpath = p
                     break
         if not os.path.isfile(cpath):
-            raise ProviderConfigurationError()
+            raise ProviderConfigurationError("Configuration path is not a file: " + str(cpath))
 
         conf = Configuration(cpath, False)
         provider_class = config.get_class(provider_definition['class'])
@@ -68,10 +69,22 @@ class Provider(object):
     def biblio(self, item): raise NotImplementedError()
     
     def error(self, error, item):
-        # FIXME: not yet implemented
-        # all errors are handled by an incremental back-off and ultimate
-        # escalation policy
-        print "ERROR", type(error), item
+        # This method is called if all error mitigation approaches
+        # fail
+        '''
+        logger.error("exception: " + error.log())
+        
+        e = Error(Dao(self.app_config))
+        e.message = error.message
+        e.id = item.id
+        e.provider = self.config.id
+        e.stack_trace = "".join(traceback.format_exception(type(error), error, error.traceback))
+        
+        logger.debug(str(e.data))
+        
+        e.save()
+        '''
+        pass
     
     def sleep_time(self, dead_time=0):
         return 0
@@ -152,14 +165,14 @@ class Provider(object):
         # make the request
         try:
             r = requests.get(url, headers=headers, timeout=timeout)
-        except requests.exceptions.Timeout:
+        except requests.exceptions.Timeout as e:
             logger.debug("Attempt to connect to provider timed out during GET on " + url)
-            raise ProviderTimeout()
+            raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
         except requests.exceptions.RequestException as e:
             # general network error
             logger.info("RequestException during GET on: " + url)
-            raise ProviderHttpError()
-
+            raise ProviderHttpError("RequestException during GET on: " + url, e)
+        
         # cache the response and return
         c.set_cache_entry(url, r)
         return r
@@ -257,8 +270,16 @@ class ProviderState(object):
         return sleep_for
 
 class ProviderError(Exception):
-    def __init__(self, response=None):
-        self.response = response
+    def __init__(self, message="", inner=None):
+        self.message = message
+        self.inner = inner
+        # NOTE: experimental
+        self.stack = traceback.format_stack()[:-1]
+        
+    def log(self):
+        msg = " " + self.message + " " if self.message is not None and self.message != "" else ""
+        wraps = "(inner exception: " + repr(self.inner) + ")"
+        return self.__class__.__name__ + ":" + msg + wraps
 
 class ProviderConfigurationError(ProviderError):
     pass
@@ -270,10 +291,14 @@ class ProviderHttpError(ProviderError):
     pass
 
 class ProviderClientError(ProviderError):
-    pass
+    def __init__(self, response, message="", inner=None):
+        super(ProviderClientError, self).__init__(message, inner)
+        self.response = response
 
 class ProviderServerError(ProviderError):
-    pass
+    def __init__(self, response, message="", inner=None):
+        super(ProviderServerError, self).__init__(message, inner)
+        self.response = response
 
 class ProviderContentMalformedError(ProviderError):
     pass
