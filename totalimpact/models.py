@@ -4,7 +4,6 @@ from totalimpact.config import Configuration
 from totalimpact.providers.provider import ProviderFactory
 import time, uuid, json, hashlib, inspect
 
-
 class Model(object):
 
     def __init__(self, dao, id=None, seed=None):
