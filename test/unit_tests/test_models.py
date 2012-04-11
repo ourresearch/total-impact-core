@@ -117,7 +117,6 @@ class TestItem():
         i.load()
         assert_equals(i.aliases.as_dict(), ALIAS_SEED_CANONICAL)
         assert_equals(i.created, ITEM_SEED["created"])
-        assert i.last_requested > ITEM_SEED["last_requested"]
 
     @raises(LookupError)
     def test_load_with_nonexistant_item_fails(self):
