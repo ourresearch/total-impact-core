@@ -5,7 +5,7 @@ from totalimpact.providers.provider import ProviderFactory
 import time, uuid, json, hashlib, inspect
 
 
-class Model():
+class Model(object):
 
     def __init__(self, dao, id=None, seed=None):
         self.dao = dao
