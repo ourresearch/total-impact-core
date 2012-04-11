@@ -13,7 +13,8 @@ setup(
         "BeautifulSoup",
         "beautifulsoup4",
         "lxml",
-        "simplejson"
+        "simplejson",
+        "python-memcached"
 				],
     url = '',
     author = 'total-impact',
