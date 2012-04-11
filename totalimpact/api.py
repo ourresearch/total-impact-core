@@ -100,6 +100,7 @@ def items(tiids):
         try:
             item = Item(mydao, id=tiid)
             item.load()
+            item.set_last_requested()
             items.append( item.as_dict() )
         except LookupError:
             # TODO: is it worth setting this blank? or do nothing?

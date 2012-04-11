@@ -94,9 +94,16 @@ class Item(Model):
 
 
 class Error(Model):
+    """{
+        "id": "uuid4-goes-here",
+        "created": 23112412414.234,
+        "last_modified": 12414214.234,
+        "last_requested": 124141245.234
+    }
+    """
     pass
 
-
+        
 class Collection(Model):    
     """
     {
