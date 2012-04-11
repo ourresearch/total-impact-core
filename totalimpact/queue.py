@@ -10,7 +10,6 @@ log = logging.getLogger(__name__)
 
 
 class Queue():
-    __type__ = None
         
     # TODO: 
     # return next item from this queue (e.g. whatever is on the top of the list
@@ -30,14 +29,13 @@ class Queue():
         
         
 class AliasQueue(Queue):
-    __type__ = 'aliases'
     
     def __init__(self, dao):
         self.dao = dao
 
     @property
     def queue(self):
-        viewname = 'queues/' + self.__type__
+        viewname = 'queues/aliases'
         res = self.dao.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
 
@@ -56,21 +54,14 @@ class AliasQueue(Queue):
     
 
 class MetricsQueue(Queue):
-    __type__ = 'metrics'
     
     def __init__(self, dao, prov=None):
-        # inherit the init
-        ### FIXME is breaking super(MetricsQueue, self).__init__()
         self.dao = dao
         self._provider = prov
     
     @property
     def provider(self):
-        try:
-            return self._provider
-        except:
-            self._provider = None
-            return self._provider
+        return self._provider
         
     @provider.setter
     def provider(self, _provider):
@@ -79,7 +70,7 @@ class MetricsQueue(Queue):
     @property
     def queue(self):
         # change this for live
-        viewname = 'queues/' + self.__type__
+        viewname = 'queues/metrics'
         if self.provider:
             items = self.dao.view(viewname, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
         else:
