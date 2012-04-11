@@ -30,6 +30,10 @@ How to run the api:
     python totalimpact/api.py
     then surf up http://127.0.0.1:5000/
 
+## Install memcache 
+
+    apt-get install memcached
+
 ## Install and run CouchDB
 
 Total-impact needs a running instance of CouchDB.
