@@ -4,23 +4,7 @@ from totalimpact.config import Configuration
 from totalimpact.providers.provider import ProviderFactory
 import time, uuid, json, hashlib, inspect
 
-
-# FIXME: the code terminology and the docs terminology differ slightly:
-# "alias" vs "aliases", "metric" vs "metrics"
-# FIXME: do we want a created and last modified property on the item?
-# FIXME: no id on the item? this should appear in the alias object?
-class Item():
-    """{
-        "id": "uuid4-goes-here",
-        "aliases": "aliases_object",
-        "metrics": "metric_object",
-        "biblio": "biblio_object",
-        "created": 23112412414.234,
-        "last_modified": 12414214.234,
-        "last_requested": 124141245.234
-    }
-    """
-
+class Model():
     def __init__(self, dao, id=None, seed=None):
         self.dao = dao
 
@@ -33,7 +17,6 @@ class Item():
             for key in seed:
                 setattr(self, key, seed[key])
 
-
     def load(self):
         doc = self.dao.get(self.id)
         if doc is None:
@@ -42,11 +25,7 @@ class Item():
         for key in doc:
             setattr(self, key, doc[key])
 
-        setattr(self, "aliases", Aliases(seed=doc["aliases"]))
-
-        setattr(self, "last_requested", time.time())
         return doc
-
 
     def save(self):
         doc = self.as_dict()
@@ -83,12 +62,41 @@ class Item():
         return str(self.as_dict())
 
 
-class Error(Item):
+# FIXME: no id on the item? this should appear in the alias object?
+class Item(Model):
+    """{
+        "id": "uuid4-goes-here",
+        "aliases": "aliases_object",
+        "metrics": "metric_object",
+        "biblio": "biblio_object",
+        "created": 23112412414.234,
+        "last_modified": 12414214.234,
+        "last_requested": 124141245.234
+    }
+    """
+
+    def load(self):
+        doc = self.dao.get(self.id)
+        if doc is None:
+            raise(LookupError)
+        
+        for key in doc:
+            setattr(self, key, doc[key])
+
+        setattr(self, "aliases", Aliases(seed=doc["aliases"]))
+
+        return doc
+    
+    def set_last_requested(self):
+        self.last_requested = time.time()
+        self.save()
+
+
+class Error(Model):
     pass
 
 
-class Collection(Item):
-    
+class Collection(Model):    
     """
     {
         "id": "uuid-goes-here"
@@ -99,34 +107,25 @@ class Collection(Item):
         "ids": ["abcd3", "abcd4"]  #tiid
     }
     """
-    def load(self):
-        doc = self.dao.get(self.id)
-        if doc is None:
-            raise(LookupError)
-            
-        for key in doc:
-            setattr(self, key, doc[key])
-
-        if not self.ids: self.ids = []
-
-        return doc
         
     def item_ids(self):
+        if not hasattr(self, "ids"): self.ids = []
         return self.ids
         
     def add_item(self, item_id):
+        if not hasattr(self, "ids"): self.ids = []
         if item_id not in self.ids:
             self.ids.append(item_id)
     
     def add_items(self, item_ids):
+        if not hasattr(self, "ids"): self.ids = []
         for item in item_ids:
             self.add_item(item)
     
     def remove_item(self, item_id):
+        if not hasattr(self, "ids"): self.ids = []
         if item_id in self.ids:
             self.ids.remove(item_id)
-        
-
 
 
 class Biblio(object):

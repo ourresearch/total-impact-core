@@ -71,6 +71,7 @@ class Provider(object):
     def error(self, error, item):
         # This method is called if all error mitigation approaches
         # fail
+        '''
         logger.error("exception: " + error.log())
         
         e = Error(Dao(self.app_config))
@@ -82,6 +83,8 @@ class Provider(object):
         logger.debug(str(e.data))
         
         e.save()
+        '''
+        pass
     
     def sleep_time(self, dead_time=0):
         return 0
@@ -271,7 +274,7 @@ class ProviderError(Exception):
         self.message = message
         self.inner = inner
         # NOTE: experimental
-        self.traceback = sys.last_traceback
+        self.stack = traceback.format_stack()[:-1]
         
     def log(self):
         msg = " " + self.message + " " if self.message is not None and self.message != "" else ""
