@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class ProviderFactory(object):
 
     @classmethod
-    def get_provider(cls, provider_definition, config):
+    def get_provider(cls, provider_definition):
         """ Create an instance of a Provider object
         
             provider_definition is a dictionary which states the class and config file
@@ -17,50 +17,30 @@ class ProviderFactory(object):
 
             config is the application configuration
         """
-        cpath = provider_definition['config']
-        if not os.path.isabs(cpath):
-            cwd = os.getcwd()
-            cpaths = []
-            
-            # directly beneath the working directory
-            cpaths.append(os.path.join(cwd, cpath))
-            
-            # in a config directory below the current one
-            cpaths.append(os.path.join(cwd, "config", cpath))
-            
-            # in the directory as per the base_dir configuration
-            if config.base_dir is not None:
-                cpaths.append(os.path.join(config.base_dir, cpath))
-            
-            for p in cpaths:
-                if os.path.isfile(p):
-                    cpath = p
-                    break
-        if not os.path.isfile(cpath):
-            raise ProviderConfigurationError("Configuration path is not a file: " + str(cpath))
-
-        conf = Configuration(cpath, False)
-        provider_class = config.get_class(provider_definition['class'])
-        inst = provider_class(conf, config)
+        # directly beneath the working directory
+        provider_config_path = os.path.join(os.getcwd(), provider_definition['config'])
+        provider_config = Configuration(provider_config_path, False)
+        provider_class_name = provider_definition['class']
+        provider_class = provider_config.get_class(provider_class_name)
+        inst = provider_class(provider_config)
         return inst
         
     @classmethod
-    def get_providers(cls, config):
+    def get_providers(cls, config_providers):
         """ config is the application configuration """
         providers = []
-        for p in config.providers:
+        for p in config_providers:
             try:
-                prov = ProviderFactory.get_provider(p, config)
+                prov = ProviderFactory.get_provider(p)
                 providers.append(prov)
             except ProviderConfigurationError:
-                log.error("Unable to configure provider ... skipping " + str(p))
+                logger.error("Unable to configure provider ... skipping " + str(p))
         return providers
         
 class Provider(object):
 
-    def __init__(self, config, app_config):
+    def __init__(self, config):
         self.config = config
-        self.app_config = app_config
 
     def provides_metrics(self): return False
     def member_items(self, query_string, query_type): raise NotImplementedError()
@@ -158,9 +138,6 @@ class Provider(object):
         # ensure that a user-agent string is set
         if headers is None:
             headers = {}
-
-        if self.app_config:
-            headers['User-Agent'] = self.app_config.user_agent
         
         # make the request
         try:

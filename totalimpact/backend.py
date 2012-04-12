@@ -1,21 +1,18 @@
 import threading, time, sys
-from totalimpact.config import Configuration
-from totalimpact import dao
+from totalimpact import dao, api
 from totalimpact.queue import AliasQueue, MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
 
-config = Configuration()
-providers = ProviderFactory.get_providers(config)
 
 class TotalImpactBackend(object):
     
-    def __init__(self, config):
+    def __init__(self, dao, providers):
         self.threads = [] 
-        self.config = config
-        self.providers = ProviderFactory.get_providers(self.config)
+        self.dao = dao
+        self.providers = providers
     
     def run(self):
         self._spawn_threads()
@@ -27,17 +24,17 @@ class TotalImpactBackend(object):
     
     def _spawn_threads(self):
         
-        for p in self.providers:
-            if not p.provides_metrics():
+        for provider in self.providers:
+            if not provider.provides_metrics():
                 continue
-            log.info("Spawning thread for provider " + str(p.id))
+            log.info("Spawning thread for provider " + str(provider.id))
             # create and start the metrics threads
-            t = ProviderMetricsThread(p, self.config)
+            t = ProviderMetricsThread(provider, self.dao)
             t.start()
             self.threads.append(t)
         
         log.info("Spawning thread for aliases")
-        alias_thread = ProvidersAliasThread(self.providers, self.config)
+        alias_thread = ProvidersAliasThread(self.providers, self.dao)
         alias_thread.start()
         self.threads.append(alias_thread)
         
@@ -54,34 +51,7 @@ class TotalImpactBackend(object):
             log.info("... stopped")
         self.threads = []
     
-    """
-    def run(self):
-        for p in self.providers:
-            if not p.provides_metrics():
-                continue
-            # create and start the metrics threads
-            t = ProviderMetricsThread(p, self.config)
-            t.start()
-            self.threads.append(t)
-        
-        alias_thread = ProvidersAliasThread(self.providers, self.config)
-        alias_thread.start()
-        self.threads.append(alias_thread)
-        
-        # now monitor our threads and the system for interrupts,
-        # and manage a clean exit
-        try:
-            while True:
-                # just spin our wheels waiting for interrupts
-                time.sleep(1)
-        except (KeyboardInterrupt, SystemExit):
-            log.info("Interrupted ... exiting ...")
-            for t in self.threads:
-                t.stop()
-       
-       # FIXME: do we need to join() the thread?
-       # it would seem not, but don't forget to keep an eye on this
-    """
+
            
 class StoppableThread(threading.Thread):
     def __init__(self):
@@ -139,12 +109,10 @@ class QueueConsumer(StoppableThread):
 # requests as they happen, so that the metrics thread can keep itself
 # in check to throttle the api requests.
 class ProvidersAliasThread(QueueConsumer):
-    
-    def __init__(self, providers, config):
-        mydao = dao.Dao(config)
-        QueueConsumer.__init__(self, AliasQueue(mydao))
+    run_once = False
+    def __init__(self, providers, dao):
+        QueueConsumer.__init__(self, AliasQueue(dao))
         self.providers = providers
-        self.config = config
         self.thread_id = "ProvidersAliasThread"
         
     def run(self):
@@ -155,11 +123,15 @@ class ProvidersAliasThread(QueueConsumer):
 
             for p in self.providers: 
                 try:
+                    log.info("in ProvidersAliasThread.run")
+
                     item = p.aliases(item)
-                    self.queue.save_and_unqueue(item)
-                except NotImplementedError:
+                except NotImplementedError, AttributeError:
                     continue
-            
+            self.queue.save_and_unqueue(item)
+                        
+            if self.run_once:
+                self.stop()
             self._interruptable_sleep(self.sleep_time())
             
     def sleep_time(self):
@@ -168,11 +140,9 @@ class ProvidersAliasThread(QueueConsumer):
 
 class ProviderMetricsThread(QueueConsumer):
 
-    def __init__(self, provider, config):
-        mydao = dao.Dao(config)
-        QueueConsumer.__init__(self, MetricsQueue(mydao, provider.id))
+    def __init__(self, provider, dao):
+        QueueConsumer.__init__(self, MetricsQueue(dao, provider.id))
         self.provider = provider
-        self.config = config
         self.thread_id = "ProviderMetricsThread:" + str(self.provider.id)
 
     def run(self):
@@ -181,8 +151,24 @@ class ProviderMetricsThread(QueueConsumer):
             # there is something to return
             item = self.first()
             
-            # if we get to here, an Metrics has been popped off the queue
-            item = self.provider.metrics(item)
+            try:
+                item.metrics # Test if it has this property
+
+                # if we get to here, an Metrics has been popped off the queue
+                item = self.provider.metrics(item)
+                
+                # FIXME: metrics requests might throw errors which cause
+                # a None to be returned from the metrics request.  If that's
+                # the case then don't save, but we should probably have a 
+                # better error handling routine
+                if item is not None:
+                    # store the metrics in the database
+                    
+                    # FIXME: queue object is not yet working
+                    self.queue.save_and_unqueue(item)
+
+            except AttributeError:
+                pass
             
             # FIXME: metrics requests might throw errors which cause
             # a None to be returned from the metrics request.  If that's
@@ -199,9 +185,4 @@ class ProviderMetricsThread(QueueConsumer):
             
             # sleep
             self._interruptable_sleep(sleep_time)
-            
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print "Please supply the path to the configuration file"
-    else:
-        TotalImpactBackend(Configuration(sys.argv[1])).run()
+  

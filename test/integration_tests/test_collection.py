@@ -30,7 +30,7 @@ class TestCollection(unittest.TestCase):
 
     @nottest
     def test_collection(self):
-        self.d.create_new_db_and_connect(self.testing_db_name)
+        self.d.create_new_db_and_connect(self.testing_db_name) 
 
         collection_items = []
         collection_items.append(["doi", PLOS_TEST_DOI.replace("/", "%2F")])

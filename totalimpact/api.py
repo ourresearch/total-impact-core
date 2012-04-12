@@ -2,21 +2,47 @@ from flask import Flask, jsonify, json, request, redirect, abort, make_response
 from flask import render_template, flash
 import os, json, time
 
-from totalimpact.config import Configuration
 from totalimpact import dao
 from totalimpact.models import Item, Collection
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
+from totalimpact import default_settings
 
 # set up logging
 logger = logging.getLogger(__name__)
 
-# setup the app
-app = Flask(__name__)
-config = Configuration()
-providers = ProviderFactory.get_providers(config)
-mydao = dao.Dao(config)
 
+# set up the app
+def create_app():
+    app = Flask(__name__)
+    configure_app(app)
+    return app
+
+def configure_app(app):
+    app.config.from_object(default_settings)
+    # parent directory
+    here = os.path.dirname(os.path.abspath( __file__ ))
+    config_path = os.path.join(os.path.dirname(here), 'app.cfg')
+    if os.path.exists(config_path):
+        app.config.from_pyfile(config_path)
+
+app = create_app()
+mydao = dao.Dao(app.config["DB_NAME"], app.config["DB_URL"])
+providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
+provider_classes = providers
+
+@app.before_request
+def connect_to_db():
+    try:
+        ## FIXME add a check to to make sure it has views already.  If not, reset
+        #mydao.delete_db(db_name)
+
+        if not mydao.db_exists(app.config["DB_NAME"]):
+            mydao.create_db(app.config["DB_NAME"])
+        mydao.connect_db(app.config["DB_NAME"])
+    except LookupError:
+        print "CANNOT CONNECT TO DATABASE, maybe doesn't exist?"
+        raise LookupError
 
 # adding a simple route to confirm working API
 @app.route('/')
@@ -25,7 +51,7 @@ def hello():
         "hello": "world",
         "message": "Congratulations! You have found the Total Impact API.",
         "moreinfo": "http://total-impact.tumblr.com/",
-        "version": config.version
+        "version": app.config["version"]
     }
     resp = make_response( json.dumps(msg, sort_keys=True, indent=4), 200)        
     resp.mimetype = "application/json"
@@ -145,7 +171,7 @@ def provider_memberitems(pid):
 
     logger.debug("In provider_memberitems with " + query + " " + qtype)
     
-    for prov in providers:
+    for prov in provider_classes:
         if prov.id == pid:
             provider = prov
             break
@@ -163,7 +189,7 @@ def provider_memberitems(pid):
 @app.route('/provider/<pid>/aliases/<id>', methods=['GET'] )
 def provider_aliases(pid,id):
 
-    for prov in providers:
+    for prov in provider_classes:
         if prov.id == pid:
             provider = prov
             break
@@ -179,7 +205,7 @@ def provider_aliases(pid,id):
 @app.route('/provider/<pid>/metrics/<id>', methods=['GET'] )
 def metric_snaps(pid,id):
 
-    for prov in providers:
+    for prov in provider_classes:
         if prov.id == pid:
             provider = prov
             break
@@ -195,7 +221,7 @@ def metric_snaps(pid,id):
 @app.route('/provider/<pid>/biblio/<id>', methods=['GET'] )
 def provider_biblio(pid,id):
 
-    for prov in providers:
+    for prov in provider_classes:
         if prov.id == pid:
             provider = prov
             break
@@ -259,9 +285,7 @@ def collection(cid=''):
 if __name__ == "__main__":
 
     try:
-        if not mydao.db_exists(config.DB_NAME):
-            mydao.create_db(config.DB_NAME)
-        mydao.connect_db(config.DB_NAME)
+        connect_to_db()
     except LookupError:
         print "CANNOT CONNECT TO DATABASE, maybe doesn't exist?"
         raise LookupError

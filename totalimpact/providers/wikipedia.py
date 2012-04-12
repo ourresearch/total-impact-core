@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 class Wikipedia(Provider):  
 
-    def __init__(self, config, app_config):
-        super(Wikipedia, self).__init__(config, app_config)
+    def __init__(self, config):
+        super(Wikipedia, self).__init__(config)
         self.state = WikipediaState(config)
         self.id = self.config.id
 
@@ -29,6 +29,8 @@ class Wikipedia(Provider):
     
     def metrics(self, item):
         try:
+            ## FIXME.  Should this call Metrics __init__ somewhere to get initialized?
+            
             # get the alias object out of the item
             alias_object = item.aliases
             logger.info(self.config.id + ": metrics requested for tiid:" + alias_object.tiid)
