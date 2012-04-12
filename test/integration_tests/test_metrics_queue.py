@@ -26,6 +26,7 @@ class TestMetricsQueue(unittest.TestCase):
         self.app.config["DB_NAME"] = self.testing_db_name
         self.config = Configuration()
         self.d = dao.Dao(self.config)
+        self.providers = self.app.config["PROVIDERS"]
 
 
     def tearDown(self):
@@ -68,7 +69,7 @@ class TestMetricsQueue(unittest.TestCase):
         github_tiid = github_resp.data
 
         # do the update using the backend
-        backend = TotalImpactBackend(config)
+        backend = TotalImpactBackend(self.d, self.providers)
 
         # we need a new param to exit after a few seconds so we can finish testing
         backend.run(die_in=7)

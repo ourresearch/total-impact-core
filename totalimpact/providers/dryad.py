@@ -16,8 +16,8 @@ class DryadMetricSnapshot(MetricSnap):
 
 class Dryad(Provider):  
 
-    def __init__(self, config, app_config=None):
-        super(Dryad, self).__init__(config, app_config)
+    def __init__(self, config):
+        super(Dryad, self).__init__(config)
         self.state = DryadState(config)
         self.id = self.config.id
         
