@@ -92,7 +92,7 @@ Deal with problems on OSX Snow Leopard:
 3. Run `couchdb` to start Couch. Done. You can test the CouchDB install at <http://localhost:5984/_utils>
 
 
-## Writing Providers
+# Writing Providers
 
 Total Impact uses many different data sources to acquire its metrics, and each of these data sources is connected to via a Provider client library which lives in the TI application.
 
