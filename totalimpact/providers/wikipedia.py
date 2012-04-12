@@ -19,7 +19,7 @@ class Wikipedia(Provider):
         logger.debug(self.config.id + ": sleeping for " + str(sleep_length) + " seconds")
         return sleep_length
     
-    def member_items(self, query_string): 
+    def member_items(self, query_string, query_type): 
         raise NotImplementedError()
     
     def aliases(self, item): 
