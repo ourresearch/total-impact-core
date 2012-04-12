@@ -3,8 +3,7 @@ import os, unittest, json, time
 from copy import deepcopy
 
 from totalimpact import models
-from totalimpact.config import Configuration
-from totalimpact import dao
+from totalimpact import dao, api
 
 ALIAS_SEED = json.loads("""{
     "tiid":"0987654321",
@@ -86,21 +85,21 @@ ITEM_SEED["aliases"] = ALIAS_SEED
 ITEM_SEED["metrics"] = METRICS_SEED
 ITEM_SEED["biblio"] = BIBLIO_SEED
 
-class db_Mock(): 
-    def save(self, a):
-        pass
+TEST_DB_NAME = "test_models"
+TEST_DB_URL = "http://localhost:5984/"
 
 class TestItem():
 
     def setUp(self):
-        self.d = dao.Dao(Configuration())
-
+        self.d = dao.Dao(TEST_DB_NAME, TEST_DB_URL)
+        
+        self.d.create_new_db_and_connect(TEST_DB_NAME)
         self.d.get = lambda id: ITEM_SEED
         def fake_save(data, id):
             self.input = data
         self.d.update_item = fake_save
 
-        self.d.db = db_Mock
+        self.providers = api.provider_classes
 
     def test_new_testing_class(self):
         assert True
@@ -128,7 +127,6 @@ class TestItem():
     def test_save(self):
         i = models.Item(self.d, id="123")
 
-
         # load all the values from the item_seed into the test item.
         for key in ITEM_SEED:
             setattr(i, key, ITEM_SEED[key])
@@ -146,6 +144,8 @@ class TestItem():
 class TestModels(unittest.TestCase):
 
     def setUp(self):
+        self.providers = api.provider_classes
+
         pass
         
     def tearDown(self):
@@ -348,12 +348,12 @@ class TestModels(unittest.TestCase):
     """
     
     def test_11_metrics_init(self):
-        m = models.Metrics()
+        m = models.Metrics(providers=self.providers)
         
         assert len(m.update_meta()) >= 3, m.update_meta()
         assert len(m.list_metric_snaps()) == 0
         
-        m = models.Metrics(deepcopy(METRICS_SEED))
+        m = models.Metrics(deepcopy(METRICS_SEED), providers=self.providers)
         
         assert len(m.update_meta()) >= 4, m.update_meta()
         assert len(m.list_metric_snaps()) == 1
@@ -372,7 +372,7 @@ class TestModels(unittest.TestCase):
         assert metric_snaps == models.MetricSnap(seed=deepcopy(SNAP_SEED)), (metric_snaps.data, SNAP_SEED)
         
     def test_12_metrics_update_meta(self):
-        m = models.Metrics(METRICS_SEED)
+        m = models.Metrics(METRICS_SEED, providers=self.providers)
         assert len(m.update_meta()) >= 4, m.update_meta()
         assert m.update_meta()['mendeley'] is not None
         
@@ -382,7 +382,7 @@ class TestModels(unittest.TestCase):
     def test_13_metrics_add_metric_snap(self):
         now = time.time()
         
-        m = models.Metrics(deepcopy(METRICS_SEED))
+        m = models.Metrics(deepcopy(METRICS_SEED), providers=self.providers)
         new_seed = deepcopy(SNAP_SEED)
         new_seed['value'] = 25
         m.add_metric_snap(models.MetricSnap(seed=new_seed))
@@ -394,7 +394,7 @@ class TestModels(unittest.TestCase):
         assert m.update_meta('mendeley')['last_modified'] > now
         
     def test_14_metrics_list_metric_snaps(self):
-        m = models.Metrics(deepcopy(METRICS_SEED))
+        m = models.Metrics(deepcopy(METRICS_SEED), providers=self.providers)
         
         assert len(m.list_metric_snaps()) == 1
         assert m.list_metric_snaps("mendeley:readers")[0] == models.MetricSnap(seed=deepcopy(SNAP_SEED))
@@ -402,7 +402,7 @@ class TestModels(unittest.TestCase):
         assert len(m.list_metric_snaps("Some:other")) == 0
     
     def test_15_metrics_canonical(self):
-        m = models.Metrics()
+        m = models.Metrics(providers=self.providers)
         
         simple_dict = {"one" : 1, "two" : 2, "three" : 3}
         simple_expected = "one1three3two2"
@@ -425,7 +425,7 @@ class TestModels(unittest.TestCase):
         assert canon == both_expected, (canon, both_expected)
         
     def test_15_metrics_hash(self):
-        m = models.Metrics()
+        m = models.Metrics(providers=self.providers)
         metric_snap = models.MetricSnap(seed=deepcopy(SNAP_SEED))
         
         hash = m._hash(metric_snap)

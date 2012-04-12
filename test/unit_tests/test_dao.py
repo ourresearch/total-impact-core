@@ -2,16 +2,15 @@ import unittest
 import nose.tools
 from nose.tools import nottest, raises, assert_equals, assert_true
 
-from totalimpact.config import Configuration
 from totalimpact import dao
 
-TEST_DB_NAME = "test"
+TEST_DB_NAME = "test_dao"
+TEST_DB_URL = "http://localhost:5984/"
 
 class TestDAO(unittest.TestCase):
 
     def setUp(self):
-        conf = Configuration()
-        self.d = dao.Dao(conf)
+        self.d = dao.Dao(TEST_DB_NAME, TEST_DB_URL)
         if self.d.db_exists(TEST_DB_NAME):
             self.d.delete_db(TEST_DB_NAME)
         

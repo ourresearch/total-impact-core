@@ -21,7 +21,7 @@ class TestMemberItems(unittest.TestCase):
         self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
         self.config = Configuration()
-        self.d = dao.Dao(self.config)
+        self.d = dao.Dao(self.app.config["DB_NAME"], self.app.config["DB_URL"])
 
     def tearDown(self):
         self.app.config["DB_NAME"] = self.old_db_name

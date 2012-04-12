@@ -15,8 +15,8 @@ class GithubMetricSnapshot(MetricSnap):
 
 class Github(Provider):  
 
-    def __init__(self, config, app_config):
-        super(Github, self).__init__(config, app_config)
+    def __init__(self, config):
+        super(Github, self).__init__(config)
         self.id = self.config.id
         self.member_items_rx = re.compile(r"<Id>(.*)</Id>")
         

@@ -2,7 +2,6 @@ import os, unittest, time, json
 from nose.tools import nottest, assert_equals
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
-from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact import dao, api
@@ -22,9 +21,8 @@ class TestAliasQueue(unittest.TestCase):
         self.testing_db_name = "alias_queue_test"
         self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
-        self.config = Configuration()
-        self.d = dao.Dao(self.config)
-        
+        self.d = dao.Dao(self.app.config["DB_NAME"], self.app.config["DB_URL"])
+       
         
     def tearDown(self):
         self.app.config["DB_NAME"] = self.old_db_name
@@ -32,7 +30,7 @@ class TestAliasQueue(unittest.TestCase):
     def test_alias_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
 
-        providers = ProviderFactory.get_providers(self.config)
+        providers = ProviderFactory.get_providers(self.app.config["PROVIDERS"])
 
         response = self.client.post('/item/doi/' + TEST_DRYAD_DOI.replace("/", "%2F"))
         tiid = response.data
@@ -65,7 +63,7 @@ class TestAliasQueue(unittest.TestCase):
         assert_equals(my_item.aliases.data["doi"], TEST_DRYAD_DOI)
 
         # do the update using the backend
-        alias_thread = ProvidersAliasThread(providers, self.config)
+        alias_thread = ProvidersAliasThread(providers, self.d)
         alias_thread.run_once = True
         alias_thread.run()
 
