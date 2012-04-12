@@ -1,6 +1,5 @@
 from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
-from totalimpact.config import Configuration
 from totalimpact.providers.provider import ProviderFactory
 import time, uuid, json, hashlib, inspect
 
@@ -170,7 +169,7 @@ class Metrics(object):
         }
     }
     """
-    def __init__(self, seed=None):
+    def __init__(self, seed=None, providers=[]):
         self.data = seed if seed is not None else {}
         
         if 'update_meta' not in self.data.keys():
@@ -189,10 +188,7 @@ class Metrics(object):
         for item in self.data['update_meta']:
             self.data['update_meta'][item]['last_requested'] = time.time()
         """
-        # FIXME: model objects shouldn't know about configuration
         # FIXME: this initialises all the providers
-        config = Configuration()
-        providers = ProviderFactory.get_providers(config)
         for p in providers:
             if p.id not in self.data['update_meta'].keys():
                 self._update_last_modified(p.id)

@@ -56,7 +56,7 @@ class Test_Github(unittest.TestCase):
         assert len(dconf.cfg) > 0
         
         # basic init of provider
-        provider = Github(dconf, self.config)
+        provider = Github(dconf)
         assert provider.config is not None
         
         ## FIXME implement state
@@ -71,7 +71,7 @@ class Test_Github(unittest.TestCase):
             if p["class"].endswith("github.Github"):
                 dcfg = p["config"]
         dconf = Configuration(dcfg, False)
-        provider = Github(dconf, self.config)
+        provider = Github(dconf)
         
         # must have the four core methods
         assert hasattr(provider, "member_items")
@@ -86,7 +86,7 @@ class Test_Github(unittest.TestCase):
             if p["class"].endswith("github.Github"):
                 dcfg = p["config"]
         dconf = Configuration(dcfg, False)
-        provider = Github(dconf, self.config)
+        provider = Github(dconf)
         
 
         Provider.http_get = get_memberitems_user_html

@@ -1,5 +1,10 @@
 import hashlib
 import memcache
+from cPickle import UnpickleableError
+from totalimpact.tilogging import logging
+
+# set up logging
+logger = logging.getLogger(__name__)
 
 class CacheException(Exception):
     pass
@@ -20,7 +25,14 @@ class Cache(object):
         """ Store a cache entry """
         key = hashlib.md5(url).hexdigest()
         mc = memcache.Client(['127.0.0.1:11211'])
-        if not mc.set(key,data,time=self.max_cache_age):
-            raise CacheException("Unable to store into Memcached. Check config.")
+        try:
+            set_response = mc.set(key, data, time=self.max_cache_age)
+            if not set_response:
+                raise CacheException("Unable to store into Memcached. Make sure memcached server is running.")
+        except UnpickleableError:
+            # This happens when trying to cache a thread.lock object, for example.  Just don't cache.
+            logger.debug("In set_cache_entry with " + url + " but got Unpickleable Error")
+            set_response = None
+        return (set_response)
         
         
