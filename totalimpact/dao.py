@@ -1,17 +1,18 @@
 import pdb, json, uuid, couchdb, time
+from totalimpact.core import app
 
 class Dao(object):
 
-    def __init__(self, config):
+    def __init__(self, db_name, db_url):
         '''sets up the data properties and makes a db connection'''
-        self.config = config
+        self.db_url = db_url
+        self.db_name = db_name
         
-        self.couch = couchdb.Server( url = self.config.db_url )
-        self.couch.resource.credentials = ( self.config.db_adminuser, self.config.db_password )
-        
-        if not self.db_exists(config.DB_NAME):
-            self.create_db(config.DB_NAME)
-        self.connect_db(config.DB_NAME)
+        self.couch = couchdb.Server( url = self.db_url )
+       
+        if not self.db_exists(self.db_name):
+            self.create_db(self.db_name)
+        self.connect_db(self.db_name)
 
     def connect_db(self, db_name):
         '''connect to an extant database. 
@@ -35,8 +36,15 @@ class Dao(object):
     def create_db(self, db_name):
         '''makes a new database with the given name.
         uploads couch views stored in the config directory'''
-        view = self.config.db_views
-        for view_name in self.config.db_views['views']:
+        view = {
+                    "_id": "_design/queues",
+                    "language": "javascript",
+                    "views": {
+                        "metrics": {},
+                        "aliases": {}
+                        } 
+                    }
+        for view_name in view["views"]:
             file = open('./config/couch/views/{0}.js'.format(view_name))
             view["views"][view_name]["map"] = file.read()
 
@@ -68,7 +76,7 @@ class Dao(object):
         #return self.db.view(viewname, kwargs)
         import httplib
         import urllib
-        host = str(self.config.db_url).rstrip('/').replace('http://','')
+        host = str(self.db_url).rstrip('/').replace('http://','')
         if viewname == '_all_docs':
             fullpath = '/' + self.db_name + '/' + viewname
         else:
