@@ -40,7 +40,7 @@ GET /tiid/:namespace/:id
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
 def tiid(ns, nid):
     # Nothing in the database, so return error for everything now
-    # FIXME needs to look things up
+    # FIXME needs to look things up - see issue 85
     abort(404)
 
 
@@ -59,7 +59,7 @@ def item_namespace_post(namespace, nid):
     item.created = now
     item.last_modified = 0
 
-    ## FIXME
+    ## FIXME - see issue 86
     ## Should look up this namespace and id and see if we already have a tiid
     ## If so, return its tiid with a 200.
     # right now this makes a new item every time, creating many dups
@@ -104,7 +104,7 @@ def items(tiids):
             items.append( item.as_dict() )
         except LookupError:
             # TODO: is it worth setting this blank? or do nothing?
-            # if do nothing, returned list will not match supplied list
+            # if do nothing, returned list length will not match supplied list length
             items.append( {} )
 
     if len(items) == 1 and not request.path.startswith('/items/') :
