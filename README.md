@@ -1,66 +1,78 @@
-This is the latest version of total-impact, the software that runs the service available at http://total-impact.org
+# About
 
-This isn't the deployed version -- it is an in-progress port the old codebase at http://github.com/mhahnel/Total-Impact
-This README will be updated when this is the deployed version.
+This is the latest version of total-impact-core. Installing this provides the 
+backend and API for the total-impact service. You can then build or run a 
+frontend or consume direct from the API into your own frontend.
 
-# About total-impact
+(Our own frontend is available at [http://github.com/total-impact/total-impact-webapp](http://github.com/total-impact/total-impact-webapp).)
 
-See [http://total-impact/about](http://total-impact/about).
+This isn't the deployed version -- it is an in-progress port the old codebase 
+at http://github.com/mhahnel/Total-Impact
 
-# Install and run total-impact
+The deployed version is available at [http://total-impact.org](http://total-impact.org), 
+and see [http://total-impact.org/about](http://total-impact.org/about) for more info.
 
-## Get total-impact-core code
+
+# Install
+
+This assumes you are running on a debian / Ubuntu based server.
+
+Get total-impact-core code by cloning from this repo and cd into the directory.
+There are various ways to get code from the repo, here is one example.
+
+    git clone https://github.com/total-impact/total-impact-core
+    cd total-impact-core
 
 How to install for dev:
 
     pip install -e .
 
-How to install:
+Or to install:
 
     python setup.py install
 
-How to run tests:
+How to run tests (requires nosetests):
 
     nosetests -v test/
-    nosetests -v -A "not slow" test/
+    nosetests -v -A "not slow" test/    # avoids slow tests
 
-How to run the api:
+How to run and check the api:
 
-    cd total-impact-core
     python totalimpact/api.py
-    then surf up http://127.0.0.1:5000/
+    curl -X GET http://127.0.0.1:5000/  # or use your web browser
 
-## Install memcache 
 
+# Dependencies
+
+Total Impact needs lxml and memcache, and a running instance of CouchDB
+
+    apt-get install python-lxml
     apt-get install memcached
+    apt-get install couchdb
 
-## Install and run CouchDB
+    # check couch is up
+    curl -X GET http://localhost:5984   # or use your web browser
 
-Total-impact needs a running instance of CouchDB.
 
-To install on Ubuntu Linux:  
-
-1. apt-get install couchdb
-1. run `couchdb` to start Couch. Done. You can test the CouchDB install at <http://localhost:5984/_utils>
-
-To install on OSX Snow Leopard:
+# Notes for OSX Snow Leopard:
 
 1. Install [homebrew](http://mxcl.github.com/homebrew/).
-1. Run `brew install -v couchdb` (The `-v` for "verbose" fixes a [weird bug](http://code418.com/blog/2012/02/22/couchdb-osx-lion-verbose/)). Install will take a while, as there are big dependencies.
-1. Run `couchdb` to start Couch. Done. You can test the CouchDB install at <http://localhost:5984/_utils>
+2. Run `brew install -v couchdb` (The `-v` for "verbose" fixes a [weird bug](http://code418.com/blog/2012/02/22/couchdb-osx-lion-verbose/)). Install will take a while, as there are big dependencies.
+3. Run `couchdb` to start Couch. Done. You can test the CouchDB install at <http://localhost:5984/_utils>
 
 
-## Configure CouchDB for total-impact
+# Config
 
-Customized settings for connecting to CouchDB can be set in the config/totalimpact.conf.json file.
+Customized settings can be set in the config/totalimpact.conf.json file.
 
 By default, total-impact will try to contact CouchDB at http://localhost:5984/ through an admin user called "test" with password "password". To configure CouchDB for this default just use the Futon admin client at <http://localhost:5984/_utils>. At the bottom-right, click "Add User," and add user called "test" with the password "password".
 
 When total-impact starts, it will, if necessary, create the database and all necessary views 
 (you can see the view definitions [in the config](https://github.com/total-impact/total-impact/blob/master/config/totalimpact.conf.json).
 
-## total-impact-webapp
+Note also that running the API as above is the first stage in making it publicly available.
+Follow-up should include checking that debug is set to False, then exposing the API via
+a web server such as NGINX. Supervisord is recommended for keeping your processes up. 
 
-The total-impact web application has [its own GitHub repository](http://github.com/total-impact/total-impact-webapp).
 
 
