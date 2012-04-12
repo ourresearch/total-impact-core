@@ -8,6 +8,12 @@ from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact import dao
 from totalimpact.tilogging import logging
 
+from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
+from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
+from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
+
+from test.mocks import ProviderMock, QueueMock, ItemMock
+
 def slow(f):
     f.slow = True
     return f
@@ -27,32 +33,6 @@ class InterruptTester(object):
         st.stop()
         st.join()
 
-class QueueMock(object):
-    def __init__(self):
-        self.none_count = 0
-    def first(self):
-        if self.none_count >= 3:
-            return ItemMock()
-        else:
-            self.none_count += 1
-            return None
-    def save_and_unqueue(self, item):
-        pass
-
-class ItemMock(object):
-    pass
-
-class ProviderMock(Provider):
-    def __init__(self, id=None):
-        Provider.__init__(self, None, None)
-        self.id = id
-    def aliases(self, item):
-        return item
-    def metrics(self, item):
-        return item
-    def provides_metrics(self):
-        return True
-        
 class ProviderNotImplemented(Provider):
     def __init__(self):
         Provider.__init__(self, None, None)
@@ -272,7 +252,6 @@ class TestBackend(unittest.TestCase):
         
     # FIXME: save_and_unqueue is not yet working, so will need more
     # tests when it is
-
     def test_14_backend(self):
         watcher = TotalImpactBackend(self.config)
         
@@ -281,3 +260,91 @@ class TestBackend(unittest.TestCase):
         
         watcher._cleanup()
         assert len(watcher.threads) == 0, len(watcher.threads)
+
+    def test_15_metrics_exceptions(self):
+        """ test_15_metrics_exceptions
+
+            Check exceptions raised by the metric function on providers
+            This test ensures that we generate and handle each exception
+            type possible from the providers.
+        """
+        # relies on Queue.first mock as per setup
+
+        # Replace update_item, it won't work in this context
+        old_update_item = dao.Dao.update_item 
+        dao.Dao.update_item = (lambda x,y,z: None)
+
+        mock_provider = ProviderMock(
+            metrics_exceptions={
+                1:[ProviderTimeout,ProviderTimeout],
+                2:[ProviderHttpError],
+                3:[ProviderClientError],
+                4:[ProviderServerError],
+                5:[ProviderTimeout,ProviderRateLimitError],
+                6:[ProviderContentMalformedError],
+                7:[ProviderValidationFailedError],
+                8:[ProviderConfigurationError],
+                9:[Exception],
+            }
+        ) 
+        pmt = ProviderMetricsThread(mock_provider, self.config)
+        pmt.queue = QueueMock(max_items=10)
+        
+        pmt.start()
+        while (pmt.queue.count < 10): 
+            time.sleep(1)
+        # Check that items 1,2 were all processed correctly, after a retry
+        self.assertTrue(mock_provider.metrics_processed.has_key(1))
+        self.assertTrue(mock_provider.metrics_processed.has_key(2))
+    
+        # Check that item 9 did not get processed as it had a permanent failure
+        self.assertFalse(mock_provider.metrics_processed.has_key(9))
+
+        # Check that item 10 was processed correctly 
+        self.assertTrue(mock_provider.metrics_processed.has_key(10))
+    
+        pmt.stop()
+        pmt.join()
+
+        dao.Dao.update_item = old_update_item
+
+    @slow
+    def test_16_metrics_retries(self):
+        """ test_16_metrics_retries
+ 
+            Check that we are doing the correct behaviour for retries.
+            Retries for rate limits should go forever, with exponential falloff
+            Exceeding retry limit should result in a failure
+        """
+
+        # Replace update_item, it won't work in this context
+        old_update_item = dao.Dao.update_item 
+        dao.Dao.update_item = (lambda x,y,z: None)
+
+        mock_provider = ProviderMock(
+            metrics_exceptions={
+                1:[ProviderRateLimitError,ProviderRateLimitError,ProviderRateLimitError],
+                2:[ProviderTimeout,ProviderTimeout,ProviderTimeout,ProviderTimeout],
+            }
+        ) 
+        pmt = ProviderMetricsThread(mock_provider, self.config)
+        pmt.queue = QueueMock(max_items=2)
+        
+        start = time.time()
+        pmt.start()
+        while (pmt.queue.count < 2): 
+            time.sleep(1)
+        took = time.time() - start
+
+        # Total time should be 3 * exponential backoff, and 3 * constant (linear) delay
+        assert took >= (1 + 2 + 4) + (0.1 * 3)
+
+        # Check that item 1 was processed correctly, after retries
+        self.assertTrue(mock_provider.metrics_processed.has_key(1))
+        # Check that item 2 did not get processed as it exceeded the failure limit
+        self.assertFalse(mock_provider.metrics_processed.has_key(2))
+
+        pmt.stop()
+        pmt.join()
+
+        dao.Dao.update_item = old_update_item

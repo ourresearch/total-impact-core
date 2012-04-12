@@ -93,6 +93,13 @@ class Item(Model):
 
 
 class Error(Model):
+    """{
+        "error_type": "http_timeout",
+        "message": "Error opening file",
+        "provider": "github_provider",
+        "id": "uuid4-goes-here",
+        "stack_trace": "Python Stacktrace"
+    }"""
     pass
 
 
