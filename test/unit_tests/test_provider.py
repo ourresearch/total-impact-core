@@ -2,6 +2,7 @@ import requests, os, unittest, time, threading, json, memcache
 from totalimpact.providers.provider import Provider, ProviderFactory, ProviderHttpError, ProviderTimeout, ProviderState, ProviderError
 from totalimpact.config import Configuration, StringConfiguration
 from totalimpact.cache import Cache
+from totalimpact import api
 
 CWD, _ = os.path.split(__file__)
 
@@ -14,7 +15,7 @@ def error_get(url, headers=None, timeout=None):
 
 class InterruptableSleepThread(threading.Thread):
     def run(self):
-        provider = Provider(None, None)
+        provider = Provider(None)
         provider._interruptable_sleep(0.5)
     
     def _interruptable_sleep(self, snooze, duration):
@@ -68,7 +69,6 @@ BASE_PROVIDER_CONF = StringConfiguration('''
 class Test_Provider(unittest.TestCase):
 
     def setUp(self):
-        self.config = Configuration()
         self.old_http_get = requests.get
         # Clear memcache so we have an empty cache for testing
         mc = memcache.Client(['127.0.0.1:11211'])
@@ -76,6 +76,8 @@ class Test_Provider(unittest.TestCase):
         # Create a base config which provides necessary settings
         # which all providers should at least implement
         self.base_provider_config = BASE_PROVIDER_CONF
+        self.provider_names = api.app.config["PROVIDERS"]
+        self.providers = api.provider_classes
     
     def tearDown(self):
         requests.get = self.old_http_get
@@ -86,12 +88,12 @@ class Test_Provider(unittest.TestCase):
     def test_01_init(self):
         # since the provider is really abstract, this doen't
         # make much sense, but we do it anyway
-        provider = Provider(None, self.config)
+        provider = Provider(None)
 
     def test_02_interface(self):
         # check that the interface is defined, and has appropriate
         # defaults/NotImplementedErrors
-        provider = Provider(None, self.config)
+        provider = Provider(None)
         
         assert not provider.provides_metrics()
         self.assertRaises(NotImplementedError, provider.member_items, None, None)
@@ -104,11 +106,11 @@ class Test_Provider(unittest.TestCase):
         pass
         
     def test_04_sleep(self):
-        provider = Provider(None, self.config)
+        provider = Provider(None)
         assert provider.sleep_time() == 0
     
     def test_incremental_back_off(self):
-        provider = Provider(None, self.config)
+        provider = Provider(None)
         initial_delay = provider._incremental_back_off(1, 10, 1)
         assert initial_delay == 1
         
@@ -126,7 +128,7 @@ class Test_Provider(unittest.TestCase):
         assert sequence == compare, (sequence, compare)
     
     def test_linear_delay(self):
-        provider = Provider(None, self.config)
+        provider = Provider(None)
         initial_delay = provider._linear_delay(1, 10, 10)
         assert initial_delay == 1
         
@@ -137,7 +139,7 @@ class Test_Provider(unittest.TestCase):
         assert capped_delay == 5
         
     def test_retry_wait(self):
-        provider = Provider(None, self.config)
+        provider = Provider(None)
         linear_delay = provider._retry_wait("linear", 1, 10, 3)
         assert linear_delay == 1
         
@@ -149,7 +151,7 @@ class Test_Provider(unittest.TestCase):
         assert other_delay == 1
     
     def test_interruptable_sleep(self):
-        provider = Provider(None, self.config)
+        provider = Provider(None)
         
         # this (nosetests) thread does not have the _interruptable_sleep method, so we 
         # should get an error
@@ -166,7 +168,7 @@ class Test_Provider(unittest.TestCase):
         assert took < 1.0, took
     
     def test_snooze_or_raise_errors(self):
-        provider = Provider(None, self.config)
+        provider = Provider(None)
         
         self.assertRaises(ProviderError, provider._snooze_or_raise, "whatever", ERROR_CONF, ProviderError(), 0)
         self.assertRaises(ProviderError, provider._snooze_or_raise, "no_retries", ERROR_CONF, ProviderError(), 0)
@@ -174,7 +176,7 @@ class Test_Provider(unittest.TestCase):
         self.assertRaises(ProviderError, provider._snooze_or_raise, "one_retry", ERROR_CONF, ProviderError(), 2)
     
     def test_snooze_or_raise_defaults(self):
-        provider = Provider(None, self.config)
+        provider = Provider(None)
 
         # delay of 0
         ist = InterruptableSleepThread2(provider._snooze_or_raise, "one_retry", ERROR_CONF, ProviderError(), 0)
@@ -193,7 +195,7 @@ class Test_Provider(unittest.TestCase):
         assert took > 1.9 and took < 2.5, took
     
     def test_snooze_or_raise_success(self):
-        provider = Provider(None, self.config)
+        provider = Provider(None)
         # do one which provides all its own configuration arguments
         ist = InterruptableSleepThread2(provider._snooze_or_raise, "example_timeout", ERROR_CONF, ProviderError(), 0)
         start = time.time()
@@ -206,7 +208,7 @@ class Test_Provider(unittest.TestCase):
         # have to set and unset the requests.get method in-line, as
         # we are using many different types of monkey patch
         requests.get = error_get
-        provider = Provider(self.base_provider_config, self.config)
+        provider = Provider(self.base_provider_config)
         
         # first do the test with no error configuration
         self.assertRaises(ProviderHttpError, provider.http_get, "", None, None, None)
@@ -228,7 +230,7 @@ class Test_Provider(unittest.TestCase):
         # have to set and unset the requests.get method in-line, as
         # we are using many different types of monkey patch
         requests.get = timeout_get
-        provider = Provider(self.base_provider_config, self.config)
+        provider = Provider(self.base_provider_config)
         
         self.assertRaises(ProviderTimeout, provider.http_get, "", None, None, None)
         
@@ -248,7 +250,7 @@ class Test_Provider(unittest.TestCase):
     def test_07_request_success(self):
         requests.get = successful_get
         
-        provider = Provider(self.base_provider_config, self.config)
+        provider = Provider(self.base_provider_config)
         r = provider.http_get("test")
         
         assert r == "test"
@@ -260,16 +262,16 @@ class Test_Provider(unittest.TestCase):
     
     def test_08_get_provider(self):
         pconf = None
-        for p in self.config.providers:
+        for p in self.provider_names:
             if p["class"].endswith("wikipedia.Wikipedia"):
                 pconf = p
                 break
-        provider = ProviderFactory.get_provider(pconf, self.config)
+        provider = ProviderFactory.get_provider(pconf)
         assert provider.id == "wikipedia"
         
     def test_09_get_providers(self):
-        providers = ProviderFactory.get_providers(self.config)
-        assert len(providers) == len(self.config.providers)
+        providers = ProviderFactory.get_providers(self.provider_names)
+        assert len(providers) == len(self.providers)
 
     def test_10_state_init(self):
         s = ProviderState()
@@ -352,7 +354,7 @@ class Test_Provider(unittest.TestCase):
         """ Check that subsequent http requests result in a http cache hit """
         requests.get = successful_get
 
-        provider = Provider(self.base_provider_config, self.config)
+        provider = Provider(self.base_provider_config)
     
         url = "http://testurl.example/test"
         r = provider.http_get(url)

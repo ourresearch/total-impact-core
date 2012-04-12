@@ -2,10 +2,9 @@ import os, unittest, time
 from nose.tools import nottest, assert_equals
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
-from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
-from totalimpact import dao
+from totalimpact import dao, api
 from totalimpact.tilogging import logging
 
 def slow(f):
@@ -15,7 +14,7 @@ def slow(f):
 logger = logging.getLogger(__name__)
 CWD, _ = os.path.split(__file__)
 
-def dao_init_mock(self, config):
+def dao_init_mock(self, name, url):
     pass
 
 class InterruptTester(object):
@@ -40,11 +39,12 @@ class QueueMock(object):
         pass
 
 class ItemMock(object):
-    pass
+    def aliases(self, item):
+        return item
 
 class ProviderMock(Provider):
     def __init__(self, id=None):
-        Provider.__init__(self, None, None)
+        Provider.__init__(self, None)
         self.id = id
     def aliases(self, item):
         return item
@@ -55,7 +55,7 @@ class ProviderMock(Provider):
         
 class ProviderNotImplemented(Provider):
     def __init__(self):
-        Provider.__init__(self, None, None)
+        Provider.__init__(self, None)
         self.id = None
     def aliases(self, item):
         raise NotImplementedError()
@@ -71,14 +71,22 @@ def get_providers_mock(cls, config):
     return [ProviderMock("1"), ProviderMock("2"), ProviderMock("3")]
 
 
+
 class TestBackend(unittest.TestCase):
     
     def setUp(self):
-        self.config = Configuration()
-        
-        self.dao_init = dao.Dao.__init__
-        dao.Dao.__init__ = dao_init_mock
-        
+        self.config = None #placeholder
+
+        TEST_DB_NAME = "test_backend"
+        TEST_DB_URL = "http://localhost:5984/"
+        TEST_PROVIDER_CONFIG = [{
+            "class" : "totalimpact.providers.wikipedia.Wikipedia",
+            "config" : "totalimpact/providers/wikipedia.conf.json"
+        }]
+
+        self.d = dao.Dao(TEST_DB_NAME, TEST_DB_URL)        
+        self.d.create_new_db_and_connect(TEST_DB_NAME)
+
         self.queue_first = Queue.first
         Queue.first = first_mock
         
@@ -90,9 +98,10 @@ class TestBackend(unittest.TestCase):
         
         self.get_providers = ProviderFactory.get_providers
         ProviderFactory.get_providers = classmethod(get_providers_mock)
+
+        self.providers = self.get_providers(TEST_PROVIDER_CONFIG)
         
     def tearDown(self):
-        dao.Dao.__init__ = self.dao_init
         Queue.first = self.queue_first
         Queue.save_and_unqueue = self.queue_save_and_unqueue
         MetricsQueue.save_and_unqueue = self.metrics_queue_save_and_unqueue
@@ -101,38 +110,35 @@ class TestBackend(unittest.TestCase):
         ProviderFactory.get_providers = self.get_providers
 
     def test_01_init_backend(self):
-        watcher = TotalImpactBackend(self.config)
+        watcher = TotalImpactBackend(self.d, self.providers)
         
         assert len(watcher.threads) == 0
-        assert watcher.config is not None
-        assert len(watcher.providers) == 3, len(watcher.providers)
+        assert len(watcher.providers) == len(self.providers), len(watcher.providers)
         
     def test_02_init_metrics(self):
-        provider = Provider(None, self.config)
+        provider = Provider(None)
         provider.id = "test"
-        pmt = ProviderMetricsThread(provider, self.config)
+        pmt = ProviderMetricsThread(provider, self.d)
         
         assert hasattr(pmt, "stop")
         assert hasattr(pmt, "stopped")
         assert hasattr(pmt, "first")
         assert pmt.queue is not None
         assert pmt.provider.id == "test"
-        assert pmt.config is not None
         assert pmt.queue.provider == "test"
         
     def test_03_init_aliases(self):
         providers = ProviderFactory.get_providers(self.config)
-        pat = ProvidersAliasThread(providers, self.config)
+        pat = ProvidersAliasThread(providers, self.d)
         
         assert hasattr(pat, "stop")
         assert hasattr(pat, "stopped")
         assert hasattr(pat, "first")
-        assert pat.config is not None
         assert pat.queue is not None
         
     def test_04_alias_sleep(self):
         providers = ProviderFactory.get_providers(self.config)
-        pat = ProvidersAliasThread(providers, self.config)
+        pat = ProvidersAliasThread(providers, self.d)
         assert pat.sleep_time() == 0
         
     def test_05_run_stop(self):
@@ -222,7 +228,7 @@ class TestBackend(unittest.TestCase):
         # relies on Queue.first mock as per setUp
         
         providers = [ProviderNotImplemented()] 
-        pat = ProvidersAliasThread(providers, self.config)
+        pat = ProvidersAliasThread(providers, self.d)
         
         start = time.time()
         pat.start()
@@ -242,7 +248,7 @@ class TestBackend(unittest.TestCase):
     
     def test_12_metrics_stopped(self):
         # relies on Queue.first mock as per setUp
-        pmt = ProviderMetricsThread(ProviderMock(), self.config)
+        pmt = ProviderMetricsThread(ProviderMock(), self.d)
         
         pmt.start()
         pmt.stop()
@@ -255,7 +261,7 @@ class TestBackend(unittest.TestCase):
     @slow    
     def test_13_metrics_running(self):
         # relies on Queue.first mock as per setUp
-        pmt = ProviderMetricsThread(ProviderMock(), self.config)
+        pmt = ProviderMetricsThread(ProviderMock(), self.d)
         
         start = time.time()
         pmt.start()
@@ -274,10 +280,10 @@ class TestBackend(unittest.TestCase):
     # tests when it is
 
     def test_14_backend(self):
-        watcher = TotalImpactBackend(self.config)
+        watcher = TotalImpactBackend(self.d, self.providers)
         
         watcher._spawn_threads()
-        assert len(watcher.threads) == 4, len(watcher.threads)
+        assert len(watcher.threads) == len(self.providers)+1, len(watcher.threads)
         
         watcher._cleanup()
         assert len(watcher.threads) == 0, len(watcher.threads)
