@@ -48,85 +48,10 @@ class Provider(object):
     def metrics(self, item): raise NotImplementedError()
     def biblio(self, item): raise NotImplementedError()
     
-    def error(self, error, item):
-        # This method is called if all error mitigation approaches
-        # fail
-        '''
-        logger.error("exception: " + error.log())
-        
-        e = Error(Dao(self.app_config))
-        e.message = error.message
-        e.id = item.id
-        e.provider = self.config.id
-        e.stack_trace = "".join(traceback.format_exception(type(error), error, error.traceback))
-        
-        logger.debug(str(e.data))
-        
-        e.save()
-        '''
-        pass
-    
     def sleep_time(self, dead_time=0):
         return 0
     
     def http_get(self, url, headers=None, timeout=None, error_conf=None):
-        retry = 0
-        while True:
-            try:
-                return self.do_get(url, headers, timeout)
-            except ProviderTimeout as e:
-                self._snooze_or_raise("timeout", error_conf, e, retry)
-            except ProviderHttpError as e:
-                self._snooze_or_raise("http_error", error_conf, e, retry)
-            
-            retry += 1
-    
-    def _snooze_or_raise(self, error_type, error_conf, exception, retry_count):
-        if error_conf is None:
-            raise exception
-        
-        conf = error_conf.get(error_type)
-        if conf is None:
-            raise exception
-        
-        retries = conf.get("retries")
-        if retries is None or retries == 0:
-            raise exception
-        
-        delay = conf.get("retry_delay", 0)
-        delay_cap = conf.get("delay_cap", -1)
-        retry_type = conf.get("retry_type", "linear")
-        
-        if retries > retry_count or retries == -1:
-            snooze = self._retry_wait(retry_type, delay, delay_cap, retry_count + 1)
-            self._interruptable_sleep(snooze)
-            return
-        
-        raise exception
-    
-    def _interruptable_sleep(self, duration, increment=0.5):
-        thread = threading.current_thread()
-        if hasattr(thread, "_interruptable_sleep"):
-            thread._interruptable_sleep(duration, increment)
-        else:
-            # NOTE: for testing purposes, this may happen, but in
-            # normal operation it should not, so raise an exception
-            raise Exception("Thread does not support interruptable sleep")
-    
-    def _retry_wait(self, type, delay, delay_cap, attempt):
-        if type == "incremental_back_off":
-            return self._incremental_back_off(delay, delay_cap, attempt)
-        else:
-            return self._linear_delay(delay, delay_cap, attempt)
-    
-    def _linear_delay(self, delay, delay_cap, attempt):
-        return delay if (delay < delay_cap and delay_cap > -1) or delay_cap == -1 else delay_cap
-        
-    def _incremental_back_off(self, delay, delay_cap, attempt):
-        proposed_delay = delay * 2**(attempt-1)
-        return proposed_delay if proposed_delay < delay_cap else delay_cap
-    
-    def do_get(self, url, headers=None, timeout=None):
         # first thing is to try to retrieve from cache
         c = Cache(
             self.config.cache['max_cache_duration']
@@ -146,7 +71,6 @@ class Provider(object):
             logger.debug("Attempt to connect to provider timed out during GET on " + url)
             raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
         except requests.exceptions.RequestException as e:
-            # general network error
             logger.info("RequestException during GET on: " + url)
             raise ProviderHttpError("RequestException during GET on: " + url, e)
         
@@ -282,3 +206,7 @@ class ProviderContentMalformedError(ProviderError):
     
 class ProviderValidationFailedError(ProviderError):
     pass
+
+class ProviderRateLimitError(ProviderError):
+    pass
+
