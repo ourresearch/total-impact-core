@@ -1,25 +1,15 @@
 ## ALL KEYS HAVE TO BE UPPERCASE TO BE STORED IN APP SETTINGS
 
-SECRET_KEY = 'default-key'
-BASE_DIR = "/Users/richard/Code/External/total-impact/"
-
 # During HTTP requests, the User-Agent string to use
 USER_AGENT = "TotalImpact/0.2.0"
 # TI version
 VERSION = "jean-claude"
 
 # Database information
-DB_NAME = 'ti'
-DB_VIEWS = {
-    "_id": "_design/queues",
-    "language": "javascript",
-    "views": {
-        "metrics": {},
-        "aliases": {}
-    	} 
-    }
-
-    
+DB_NAME = 'ti'    
+# To use a couchdb database admin account, enable the adminuser and password lines below
+#DB_ADMINUSER = "test"
+#DB_PASSWORD = "password"
 
 # List of desired providers and their configuration files
 # Alias methods will be called in the order of this list
