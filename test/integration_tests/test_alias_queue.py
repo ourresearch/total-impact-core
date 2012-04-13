@@ -26,7 +26,8 @@ class TestAliasQueue(unittest.TestCase):
         
     def tearDown(self):
         self.app.config["DB_NAME"] = self.old_db_name
-        
+
+    @nottest
     def test_alias_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
 
