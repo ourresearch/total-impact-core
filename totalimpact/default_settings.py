@@ -10,7 +10,6 @@ VERSION = "jean-claude"
 
 # Database information
 DB_NAME = 'ti'
-DB_URL = "http://localhost:5984/"
 DB_VIEWS = {
     "_id": "_design/queues",
     "language": "javascript",

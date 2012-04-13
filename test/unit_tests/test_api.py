@@ -26,7 +26,7 @@ class TestWeb(unittest.TestCase):
         self.testing_db_name = "api_test"
         self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
-        self.d = dao.Dao(self.app.config["DB_NAME"], self.app.config["DB_URL"])
+        self.d = dao.Dao(self.app.config["DB_NAME"])
 
         self.d.create_new_db_and_connect(self.testing_db_name)
         

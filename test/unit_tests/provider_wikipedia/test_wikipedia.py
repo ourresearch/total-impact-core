@@ -122,7 +122,7 @@ class Test_Wikipedia(unittest.TestCase):
             if p["class"].endswith("wikipedia.Wikipedia"):
                 wcfg = p["config"]
         wconf = Configuration(wcfg, False)
-        provider = Wikipedia(wconf)
+        provider = Wikipedia(wconf) 
         
         # ensure that the wikipedia reader can interpret a page appropriately
         metrics = MetricSnap()
