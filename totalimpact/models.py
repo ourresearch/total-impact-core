@@ -171,52 +171,24 @@ class Biblio(object):
 class Metrics(object):
     """
     {
-        "update_meta": {
-            "PROVIDER_ID": {
-                "last_modified": 128798498.234,
-                "last_requested": 2139841098.234,
-                "ignore": false
-            }
+        "provider_id": "PROVIDER ID",
+        "meta": {
+            "last_modified": 128798498.234,
+            "last_requested": 2139841098.234,
+            "ignore": False
         },
-        "bucket":{
+        "metric_snaps":{
             "hash" : "PROVIDER METRIC OBJECT", ...
         }
     }
     """
-    def __init__(self, seed=None, providers=[]):
-        self.data = seed if seed is not None else {}
-        
-        if 'update_meta' not in self.data.keys():
-            self.data['update_meta'] = {}
+    def __init__(self,provider_id):
 
-        if 'bucket' not in self.data.keys():
-            self.data['bucket'] = {}
+        self.provider_id = provider_id
+        self.meta = {"last_modified": {}, "last_requested": {}, "ignore": False}
+        self.metric_snaps = {}
         
-        """ NOTE: code was inconsistent with documentation and parallel implementation in
-        query.py; left in for reference for the time being
-        # list all providers from config
-        config = Configuration()
-        for provider in config.providers:
-            if provider['class'] not in self.data['update_meta'].keys():
-                self.data['update_meta'][provider['class']] = {'last_modified':0, 'last_requested':time.time(), 'ignore':False}
-        for item in self.data['update_meta']:
-            self.data['update_meta'][item]['last_requested'] = time.time()
-        """
-        # FIXME: this initialises all the providers
-        for p in providers:
-            if p.id not in self.data['update_meta'].keys():
-                self._update_last_modified(p.id)
-                
-        # FIXME: is constructing an object synonymous with requesting the data?  Aren't there
-        # admin functions which might construct this object without "requesting" the data from
-        # the provider
-        now = time.time()
-        for prov_id in self.data['update_meta'].keys():
-            self.data['update_meta'][prov_id]['last_requested'] = now
-
-    def update_meta(self, provider_id=None):
-        return self.data['update_meta'] if provider_id is None else self.data['update_meta'].get(provider_id)
-    
+   
     # FIXME: assuming that MetricSnap objects are deconstructed on ingest and
     # made part of the internal "data" object.  The object representations are then
     # re-constructed when they are requested.  This gives consistent behaviour at the
