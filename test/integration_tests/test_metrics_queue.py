@@ -53,7 +53,11 @@ class TestMetricsQueue(unittest.TestCase):
         # check that the tiids are the same
         assert_equals(plos_tiid, plos_lookup_tiid)
 
+<<<<<<< HEAD
     @nottest
+=======
+
+>>>>>>> 2ed535478ab3e3da88f46023d1c3c196e9b47f9c
     def test_metrics_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
 
@@ -66,6 +70,37 @@ class TestMetricsQueue(unittest.TestCase):
 
         github_resp = self.client.post('/item/github/' + quote_plus(GITHUB_TEST_ID))
         github_tiid = github_resp.data
+
+
+        # now get look at it
+        dryad_tiid = dryad_tiid.replace('"', '')
+        response = self.client.get('/item/' + dryad_tiid)
+        assert_equals(response.status_code, 200)
+        
+        resp_dict = json.loads(response.data)
+        assert_equals(
+            set(resp_dict.keys()),
+            set([u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
+            )
+        assert_equals(unicode(DRYAD_TEST_DOI), resp_dict["aliases"]["doi"])
+
+
+"""
+        # test the view works
+        res = self.d.view("metrics")
+        assert len(res["rows"]) == 1, res
+        assert_equals(res["rows"][0]["value"]["metrics"]["doi"], DRYAD_TEST_DOI)
+
+        # see if the item is on the queue
+        my_metrics_queue = MetricsQueue(self.d)
+        assert isinstance(my_metrics_queue.queue, list)
+        assert_equals(len(my_metrics_queue.queue), 1)
+        
+        # get our item from the queue
+        my_item = my_metrics_queue.first()
+        assert_equals(my_metrics_queue.aliases.data["doi"], DRYAD_TEST_DOI)
+
+
 
         # do the update using the backend
         backend = TotalImpactBackend(self.d, self.providers)
@@ -103,3 +138,4 @@ class TestMetricsQueue(unittest.TestCase):
             )
 
         assert 5000 < resp_dict["metrics"]["github"]["watchers"]["latest"]["value"] < 10000, resp_dict
+"""
