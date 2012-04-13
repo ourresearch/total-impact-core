@@ -1,4 +1,6 @@
 import requests, os, unittest, time, threading, json, memcache, sys, traceback
+from test.utils import slow
+
 from totalimpact.providers.provider import Provider, ProviderFactory, ProviderHttpError, ProviderTimeout, ProviderState, ProviderError, ProviderConfigurationError, ProviderClientError, ProviderServerError, ProviderContentMalformedError, ProviderValidationFailedError
 from totalimpact.config import Configuration, StringConfiguration
 from totalimpact.cache import Cache
@@ -171,6 +173,7 @@ class Test_Provider(unittest.TestCase):
         other_delay = provider._retry_wait("whatever", 1, 10, 3)
         assert other_delay == 1
     
+    @slow
     def test_interruptable_sleep(self):
         provider = Provider(None)
         
@@ -196,6 +199,7 @@ class Test_Provider(unittest.TestCase):
         self.assertRaises(ProviderError, provider._snooze_or_raise, "none_retries", ERROR_CONF, ProviderError(), 0)
         self.assertRaises(ProviderError, provider._snooze_or_raise, "one_retry", ERROR_CONF, ProviderError(), 2)
     
+    @slow
     def test_snooze_or_raise_defaults(self):
         provider = Provider(None)
 
@@ -215,6 +219,7 @@ class Test_Provider(unittest.TestCase):
         took = time.time() - start
         assert took > 1.9 and took < 2.5, took
     
+    @slow
     def test_snooze_or_raise_success(self):
         provider = Provider(None)
         # do one which provides all its own configuration arguments
@@ -225,6 +230,7 @@ class Test_Provider(unittest.TestCase):
         took = time.time() - start
         assert took > 0.9 and took < 1.1, took # has to be basically instantaneous
     
+    @slow
     def test_05_http_get_request_exception(self):
         # have to set and unset the requests.get method in-line, as
         # we are using many different types of monkey patch
@@ -247,6 +253,7 @@ class Test_Provider(unittest.TestCase):
         
         requests.get = self.old_http_get
         
+    @slow    
     def test_06_request_timeout(self):
         # have to set and unset the requests.get method in-line, as
         # we are using many different types of monkey patch

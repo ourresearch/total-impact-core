@@ -1,15 +1,12 @@
 import os, unittest, time
 from nose.tools import nottest, assert_equals
+from test.utils import slow
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact import dao, api
 from totalimpact.tilogging import logging
-
-def slow(f):
-    f.slow = True
-    return f
 
 logger = logging.getLogger(__name__)
 CWD, _ = os.path.split(__file__)
