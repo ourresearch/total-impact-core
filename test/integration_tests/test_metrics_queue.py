@@ -53,15 +53,11 @@ class TestMetricsQueue(unittest.TestCase):
         # check that the tiids are the same
         assert_equals(plos_tiid, plos_lookup_tiid)
 
-<<<<<<< HEAD
     @nottest
-=======
-
->>>>>>> 2ed535478ab3e3da88f46023d1c3c196e9b47f9c
     def test_metrics_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
 
-        # create new plos, dryad, github items
+        # create new plos, dryad, github items 
         plos_resp = self.client.post('/item/doi/' + quote_plus(PLOS_TEST_DOI))
         plos_tiid = plos_resp.data
 
