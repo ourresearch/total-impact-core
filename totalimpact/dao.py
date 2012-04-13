@@ -1,5 +1,5 @@
 import pdb, json, uuid, couchdb, time
-from totalimpact import default_settings #FIXME WORKAROUND, issue #89
+from totalimpact import default_settings
 
 class Dao(object):
 
@@ -10,8 +10,9 @@ class Dao(object):
         
         self.couch = couchdb.Server( url = self.db_url )
         try:
-            # FIXME reading directly from default_settings until we fix circular import.  Issue #89.
-            self.couch.resource.credentials = ( default_settings.DB_ADMINUSER, default_settings.DB_PASSWORD )
+            self.couch.resource.credentials = ( 
+                default_settings.DB_ADMINUSER, default_settings.DB_PASSWORD
+            )
         except AttributeError:
             # no admin user and password specified
             pass

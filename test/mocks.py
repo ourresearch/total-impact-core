@@ -23,19 +23,19 @@ class InterruptTester(object):
 class QueueMock(object):
     def __init__(self, max_items = None):
         self.none_count = 0
-        self.count = 1
+        self.current_item = 0
         self.max_items = max_items
     def first(self):
         if self.none_count >= 3:
             if self.max_items:
-                if self.count > self.max_items:
+                if self.current_item > self.max_items:
                     return None
-            return ItemMock(self.count)
+            return ItemMock(self.current_item)
         else:
             self.none_count += 1
             return None
     def save_and_unqueue(self, item):
-        self.count += 1
+        self.current_item += 1
 
 class ItemMock(object):
     pass
