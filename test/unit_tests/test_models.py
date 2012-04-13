@@ -5,6 +5,15 @@ from copy import deepcopy
 from totalimpact import models
 from totalimpact import dao, api
 
+COLLECTION_SEED = json.loads("""{
+    "id": "uuid-goes-here",
+    "collection_name": "My Collection",
+    "owner": "abcdef",
+    "created": 1328569452.406,
+    "last_modified": 1328569492.406,
+    "item_tiids": ["origtiid1", "origtiid2"] 
+}""")
+
 ALIAS_SEED = json.loads("""{
     "tiid":"0987654321",
     "title":["Why Most Published Research Findings Are False"],
@@ -110,7 +119,7 @@ class TestItem():
         i = models.Item(self.d)
         assert_equals(len(i.id), 32) # made a uuid, yay
 
-    def test_load(self):
+    def test_item_load(self):
         i = models.Item(self.d, id="123")
         i.load()
         assert_equals(i.aliases.as_dict(), ALIAS_SEED_CANONICAL)
@@ -122,7 +131,7 @@ class TestItem():
         self.d.get = lambda id: None # that item doesn't exist in the db
         i.load()
 
-    def test_save(self):
+    def test_item_save(self):
         i = models.Item(self.d, id="123")
 
         # load all the values from the item_seed into the test item.
@@ -139,7 +148,67 @@ class TestItem():
 
 
 
-class TestModels(unittest.TestCase):
+class TestCollection():
+
+    def setUp(self):        
+        self.d = dao.Dao(TEST_DB_NAME)
+        self.d.create_new_db_and_connect(TEST_DB_NAME)
+
+    def test_mock_dao(self):
+        self.d.get = lambda id: deepcopy(COLLECTION_SEED)       
+        assert_equals(self.d.get("SomeCollectionId"), COLLECTION_SEED)
+
+    def test_collection_init(self):
+        c = models.Collection(self.d)
+        assert_equals(len(c.id), 32) # made a uuid, yay
+
+    def test_collection_add_items(self):
+        c = models.Collection(self.d, seed=deepcopy(COLLECTION_SEED))
+        c.add_items(["newtiid1", "newtiid2"])
+        assert_equals(c.item_ids(), [u'origtiid1', u'origtiid2', 'newtiid1', 'newtiid2'])
+
+    def test_collection_remove_item(self):
+        c = models.Collection(self.d, seed=deepcopy(COLLECTION_SEED))
+        c.remove_item("origtiid1")
+        assert_equals(c.item_ids(), ["origtiid2"])
+
+    def test_collection_load(self):
+        self.d.get = lambda id: deepcopy(COLLECTION_SEED)       
+        c = models.Collection(self.d, id="SomeCollectionId")
+        c.load()
+        assert_equals(c.collection_name, "My Collection")
+        assert_equals(c.item_ids(), [u'origtiid1', u'origtiid2'])
+
+    @raises(LookupError)
+    def test_load_with_nonexistant_collection_fails(self):
+        self.d.get = lambda id: None # that item doesn't exist in the db
+        c = models.Collection(self.d, id="AnUnknownCollectionId")
+        c.load()
+
+    def test_collection_save(self):
+        # this fake save method puts the doc-to-save in the self.input variable
+        def fake_save(data, id):
+            self.input = data
+        self.d.update_item = fake_save
+
+        c = models.Collection(self.d)
+
+        # load all the values from the item_seed into the test item.
+        for key in COLLECTION_SEED:
+            setattr(c, key, COLLECTION_SEED[key])
+        c.save()
+
+        seed = deepcopy(COLLECTION_SEED)
+        # the dao changes the contents to give the id variable the leading underscore expected by couch
+        seed["_id"] = seed["id"]
+        del(seed["id"])
+
+        # check to see if the fake save method did in fact "save" the collection as expected
+        assert_equals(self.input, seed)
+
+
+
+class TestModelObjects(unittest.TestCase):
 
     def setUp(self):
         self.providers = api.provider_objects
@@ -434,16 +503,9 @@ class TestModels(unittest.TestCase):
     
     # FIXME: Biblio has not been fully explored yet, so no tests for it
     
-    """
-    {
-        "aliases": alias_object, 
-        "metrics": metric_object, 
-        "biblio": biblio_object,
-        "created": 23112412414.234,
-        "last_modified": 12414214.234,
-        "last_requested": 124141245.234
-    }
-    """
+
+
+
     
 
         
