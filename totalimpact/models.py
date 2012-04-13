@@ -7,15 +7,18 @@ class Model(object):
 
     def __init__(self, dao, id=None, seed=None):
         self.dao = dao
-
-        if id is None:
-            self.id = uuid.uuid4().hex
-        else: 
-            self.id = id
+        self.id = None #set it properly below
 
         if seed:
             for key in seed:
                 setattr(self, key, seed[key])
+        if id:
+            # if the user passes in an id, override the seed id
+            self.id = id
+        if (self.id is None):
+            # if no id in seed or in parameter then mint a new one
+            self.id = uuid.uuid4().hex
+
 
     def load(self):
         doc = self.dao.get(self.id)
@@ -106,33 +109,38 @@ class Error(Model):
 class Collection(Model):    
     """
     {
-        "id": "uuid-goes-here"
+        "id": "uuid-goes-here",
         "collection_name": "My Collection",
         "owner": "abcdef",
         "created": 1328569452.406,
         "last_modified": 1328569492.406,
-        "ids": ["abcd3", "abcd4"]  #tiid
+        "item_tiids": ["abcd3", "abcd4"]
     }
     """
         
     def item_ids(self):
-        if not hasattr(self, "ids"): self.ids = []
-        return self.ids
+        if not hasattr(self, "item_tiids"): 
+            self.item_tiids = []
+        return self.item_tiids
         
-    def add_item(self, item_id):
-        if not hasattr(self, "ids"): self.ids = []
-        if item_id not in self.ids:
-            self.ids.append(item_id)
+    def add_item(self, new_item_id):
+        if not hasattr(self, "item_tiids"): 
+            self.item_tiids = []
+        if new_item_id not in self.item_tiids:
+            self.item_tiids.append(new_item_id)
     
-    def add_items(self, item_ids):
-        if not hasattr(self, "ids"): self.ids = []
-        for item in item_ids:
-            self.add_item(item)
+    def add_items(self, new_item_ids):
+        if not hasattr(self, "item_tiids"): 
+            self.item_tiids = []
+        for item_id in new_item_ids:
+            self.add_item(item_id)
     
     def remove_item(self, item_id):
-        if not hasattr(self, "ids"): self.ids = []
-        if item_id in self.ids:
-            self.ids.remove(item_id)
+        if not hasattr(self, "item_tiids"): 
+            self.item_tiids = []
+        if item_id in self.item_tiids:
+            self.item_tiids.remove(item_id)
+
 
 
 class Biblio(object):
@@ -450,7 +458,6 @@ class Aliases(object):
             # crazy hack TODO fix lists/strings flying about
             if not hasattr(ids, "append"):
                 ids = [ids]
-            print ids
             ret += [(namespace, id) for id in ids]
         
         return ret
