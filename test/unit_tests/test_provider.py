@@ -94,7 +94,7 @@ class Test_Provider(unittest.TestCase):
         # which all providers should at least implement
         self.base_provider_config = BASE_PROVIDER_CONF
         self.provider_names = api.app.config["PROVIDERS"]
-        self.providers = api.provider_classes
+        self.providers = api.provider_objects
     
     def tearDown(self):
         requests.get = self.old_http_get

@@ -3,7 +3,7 @@ from flask import render_template, flash
 import os, json, time
 
 from totalimpact import dao
-from totalimpact.models import Item, Collection
+from totalimpact.models import Item, Collection, Metrics
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
@@ -29,7 +29,7 @@ def configure_app(app):
 app = create_app()
 mydao = dao.Dao(app.config["DB_NAME"])
 providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
-provider_classes = providers
+provider_objects = providers
 
 @app.before_request
 def connect_to_db():
@@ -82,6 +82,7 @@ def item_namespace_post(namespace, nid):
     item = Item(mydao)
     item.aliases = {}
     item.aliases[namespace] = nid
+    #item.metrics = Metrics(providers=provider_objects)
     item.created = now
     item.last_modified = 0
 
@@ -93,7 +94,7 @@ def item_namespace_post(namespace, nid):
     # FIXME pull this from Aliases somehow?
     # check to make sure we know this namespace
     #known_namespace = namespace in Aliases().get_valid_namespaces() #implement
-    known_namespaces = ["doi"]  # hack in the meantime
+    known_namespaces = ["doi", "github"]  # hack in the meantime
     if not namespace in known_namespaces:
         abort(501) # "Not Implemented"
 
@@ -171,7 +172,7 @@ def provider_memberitems(pid):
 
     logger.debug("In provider_memberitems with " + query + " " + qtype)
     
-    for prov in provider_classes:
+    for prov in provider_objects:
         if prov.id == pid:
             provider = prov
             break
@@ -189,7 +190,7 @@ def provider_memberitems(pid):
 @app.route('/provider/<pid>/aliases/<id>', methods=['GET'] )
 def provider_aliases(pid,id):
 
-    for prov in provider_classes:
+    for prov in provider_objects:
         if prov.id == pid:
             provider = prov
             break
@@ -205,7 +206,7 @@ def provider_aliases(pid,id):
 @app.route('/provider/<pid>/metrics/<id>', methods=['GET'] )
 def metric_snaps(pid,id):
 
-    for prov in provider_classes:
+    for prov in provider_objects:
         if prov.id == pid:
             provider = prov
             break
@@ -221,7 +222,7 @@ def metric_snaps(pid,id):
 @app.route('/provider/<pid>/biblio/<id>', methods=['GET'] )
 def provider_biblio(pid,id):
 
-    for prov in provider_classes:
+    for prov in provider_objects:
         if prov.id == pid:
             provider = prov
             break
