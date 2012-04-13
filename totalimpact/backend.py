@@ -301,9 +301,3 @@ class ProviderMetricsThread(ProviderThread):
 
     def process_item(self, item):
         self.process_item_for_provider(item, self.provider, 'metrics')
-            
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print "Please supply the path to the configuration file"
-    else:
-        TotalImpactBackend(Configuration(sys.argv[1])).run()
