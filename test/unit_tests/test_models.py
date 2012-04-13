@@ -104,7 +104,7 @@ class TestItem():
             self.input = data
         self.d.update_item = fake_save
 
-        self.providers = api.provider_objects
+        self.providers = api.providers
 
     def test_new_testing_class(self):
         assert True
@@ -261,7 +261,7 @@ class TestMetricSnap(unittest.TestCase):
 
 class TestMetrics(unittest.TestCase):
     def setUp(self):
-        self.providers = api.provider_objects
+        self.providers = api.providers
 
     def test_init(self):
         m = models.Metrics(providers=self.providers)
@@ -356,7 +356,7 @@ class TestBiblio(unittest.TestCase):
 class TestAliases(unittest.TestCase):
 
     def setUp(self):
-        self.providers = api.provider_objects
+        self.providers = api.providers
 
         pass
         
