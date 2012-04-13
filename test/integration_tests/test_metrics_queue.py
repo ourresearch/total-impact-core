@@ -60,7 +60,7 @@ class TestMetricsQueue(unittest.TestCase):
         # create new dryad item 
         dryad_resp = self.client.post('/item/doi/' + quote_plus(DRYAD_TEST_DOI))
         number_of_item_api_calls += 1
-        dryad_tiid = dryad_resp.data
+        dryad_tiid = dryad_resp.data 
 
         # test the metrics view works
         res = self.d.view("metrics")
