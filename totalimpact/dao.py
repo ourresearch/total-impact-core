@@ -9,7 +9,12 @@ class Dao(object):
         self.db_name = db_name
         
         self.couch = couchdb.Server( url = self.db_url )
-       
+        try:
+            self.couch.resource.credentials = ( app.config["DB_ADMINUSER"], app.config["DB_PASSWORD"] )
+        except KeyError:
+            # no admin user and password specified
+            pass
+
         if not self.db_exists(self.db_name):
             self.create_db(self.db_name)
         self.connect_db(self.db_name)
