@@ -80,6 +80,7 @@ class TestBackend(unittest.TestCase):
 
         self.providers = self.get_providers(TEST_PROVIDER_CONFIG)
         
+        
     def tearDown(self):
         Queue.first = self.queue_first
         Queue.save_and_unqueue = self.queue_save_and_unqueue
@@ -114,11 +115,6 @@ class TestBackend(unittest.TestCase):
         assert hasattr(pat, "stopped")
         assert hasattr(pat, "first")
         assert pat.queue is not None
-        
-    def test_04_alias_sleep(self):
-        providers = ProviderFactory.get_providers(self.config)
-        pat = ProvidersAliasThread(providers, self.d)
-        assert pat.sleep_time() == 0
         
     def test_05_run_stop(self):
         st = StoppableThread()
@@ -273,12 +269,6 @@ class TestBackend(unittest.TestCase):
             This test ensures that we generate and handle each exception
             type possible from the providers.
         """
-        # relies on Queue.first mock as per setup
-
-        # Replace update_item, it won't work in this context
-        old_update_item = dao.Dao.update_item 
-        dao.Dao.update_item = (lambda x,y,z: None)
-
         mock_provider = ProviderMock(
             metrics_exceptions={
                 1:[ProviderTimeout,ProviderTimeout],
@@ -296,7 +286,7 @@ class TestBackend(unittest.TestCase):
         pmt.queue = QueueMock(max_items=10)
         
         pmt.start()
-        while (pmt.queue.count < 10): 
+        while (pmt.queue.current_item <= 10): 
             time.sleep(1)
         # Check that items 1,2 were all processed correctly, after a retry
         self.assertTrue(mock_provider.metrics_processed.has_key(1))
@@ -311,8 +301,6 @@ class TestBackend(unittest.TestCase):
         pmt.stop()
         pmt.join()
 
-        dao.Dao.update_item = old_update_item
-
     @slow
     def test_16_metrics_retries(self):
         """ test_16_metrics_retries
@@ -321,11 +309,6 @@ class TestBackend(unittest.TestCase):
             Retries for rate limits should go forever, with exponential falloff
             Exceeding retry limit should result in a failure
         """
-
-        # Replace update_item, it won't work in this context
-        old_update_item = dao.Dao.update_item 
-        dao.Dao.update_item = (lambda x,y,z: None)
-
         mock_provider = ProviderMock(
             metrics_exceptions={
                 1:[ProviderRateLimitError,ProviderRateLimitError,ProviderRateLimitError],
@@ -337,19 +320,85 @@ class TestBackend(unittest.TestCase):
         
         start = time.time()
         pmt.start()
-        while (pmt.queue.count < 2): 
+        while (pmt.queue.current_item <= 2): 
             time.sleep(1)
         took = time.time() - start
+        pmt.stop()
+        pmt.join()
 
         # Total time should be 3 * exponential backoff, and 3 * constant (linear) delay
         assert took >= (1 + 2 + 4) + (0.1 * 3)
-
         # Check that item 1 was processed correctly, after retries
         self.assertTrue(mock_provider.metrics_processed.has_key(1))
         # Check that item 2 did not get processed as it exceeded the failure limit
         self.assertFalse(mock_provider.metrics_processed.has_key(2))
 
+    def test_17_alias_thread(self):
+        """ test_17_alias_thread
+
+            Set up the ProvidersAliasThread with a single mock provider. Check
+            that it runs successfully with a single item in the queue, and that
+            it processes the item ok.
+        """
+        mock_provider = ProviderMock() 
+        pmt = ProvidersAliasThread([mock_provider], self.config)
+        pmt.queue = QueueMock(max_items=1)
+        
+        pmt.start()
+        while (pmt.queue.current_item <= 1): 
+            time.sleep(1)
         pmt.stop()
         pmt.join()
 
-        dao.Dao.update_item = old_update_item
+        # Check that item 1 was processed correctly, after a retry
+        self.assertTrue(mock_provider.aliases_processed.has_key(1))
+
+    @slow
+    def test_18_alias_exceptions(self):
+        """ test_18_alias_exceptions
+
+            Set up the ProvidersAliasThread with a two mock providers, which 
+            simulate errors on processing aliases for various items. Check that
+            we handle retries correctly.
+        """
+        mock_provider1 = ProviderMock(
+            aliases_exceptions={
+                1:[ProviderRateLimitError,ProviderRateLimitError,ProviderRateLimitError],
+                2:[ProviderTimeout,ProviderTimeout,ProviderTimeout,ProviderTimeout],
+                4:[ProviderTimeout],
+            }
+        )
+        mock_provider1.name = 'mock1'
+
+        mock_provider2 = ProviderMock(
+            aliases_exceptions={
+                1:[ProviderRateLimitError,ProviderRateLimitError,ProviderRateLimitError],
+                3:[ProviderTimeout,ProviderTimeout,ProviderTimeout,ProviderTimeout],
+                4:[ProviderTimeout],
+            }
+        )
+        mock_provider2.name = 'mock2'
+
+        pmt = ProvidersAliasThread([mock_provider1,mock_provider2], self.config)
+        pmt.queue = QueueMock(max_items=4)
+        
+        pmt.start()
+        while (pmt.queue.current_item <= 4): 
+            time.sleep(1)
+        pmt.stop()
+        pmt.join()
+
+        # Check that item 1 was processed correctly, after a retry
+        self.assertTrue(mock_provider1.aliases_processed.has_key(1))
+        self.assertTrue(mock_provider2.aliases_processed.has_key(1))
+        # Check that item 2 failed on the first provider
+        self.assertFalse(mock_provider1.aliases_processed.has_key(2))
+        self.assertFalse(mock_provider2.aliases_processed.has_key(2))
+        # Check that item 3 failed on the second provider
+        self.assertTrue(mock_provider1.aliases_processed.has_key(3))
+        self.assertFalse(mock_provider2.aliases_processed.has_key(3))
+        # Check that item 4 was processed correctly, after retries
+        self.assertTrue(mock_provider1.aliases_processed.has_key(4))
+        self.assertTrue(mock_provider2.aliases_processed.has_key(4))
+
+
