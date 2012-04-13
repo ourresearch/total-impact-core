@@ -98,7 +98,7 @@ class TestItem():
             self.input = data
         self.d.update_item = fake_save
 
-        self.providers = api.provider_classes
+        self.providers = api.provider_objects
 
     def test_new_testing_class(self):
         assert True
@@ -142,7 +142,7 @@ class TestItem():
 class TestModels(unittest.TestCase):
 
     def setUp(self):
-        self.providers = api.provider_classes
+        self.providers = api.provider_objects
 
         pass
         
