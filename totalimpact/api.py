@@ -29,7 +29,7 @@ def configure_app(app):
 app = create_app()
 mydao = dao.Dao(app.config["DB_NAME"])
 providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
-provider_objects = providers
+providers = providers
 
 @app.before_request
 def connect_to_db():
@@ -82,7 +82,7 @@ def item_namespace_post(namespace, nid):
     item = Item(mydao)
     item.aliases = {}
     item.aliases[namespace] = nid
-    item.metrics = Metrics(providers=provider_objects)
+    item.metrics = Metrics(providers=providers)
     item.created = now
     item.last_modified = 0
 
@@ -172,7 +172,7 @@ def provider_memberitems(pid):
 
     logger.debug("In provider_memberitems with " + query + " " + qtype)
     
-    for prov in provider_objects:
+    for prov in providers:
         if prov.id == pid:
             provider = prov
             break
@@ -190,7 +190,7 @@ def provider_memberitems(pid):
 @app.route('/provider/<pid>/aliases/<id>', methods=['GET'] )
 def provider_aliases(pid,id):
 
-    for prov in provider_objects:
+    for prov in providers:
         if prov.id == pid:
             provider = prov
             break
@@ -206,7 +206,7 @@ def provider_aliases(pid,id):
 @app.route('/provider/<pid>/metrics/<id>', methods=['GET'] )
 def metric_snaps(pid,id):
 
-    for prov in provider_objects:
+    for prov in providers:
         if prov.id == pid:
             provider = prov
             break
@@ -222,7 +222,7 @@ def metric_snaps(pid,id):
 @app.route('/provider/<pid>/biblio/<id>', methods=['GET'] )
 def provider_biblio(pid,id):
 
-    for prov in provider_objects:
+    for prov in providers:
         if prov.id == pid:
             provider = prov
             break
