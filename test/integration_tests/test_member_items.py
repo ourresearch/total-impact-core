@@ -1,5 +1,6 @@
 import os, unittest, time, json
 from nose.tools import nottest, assert_equals
+from test.utils import slow
 
 from totalimpact import dao, api
 from totalimpact.config import Configuration
@@ -30,6 +31,7 @@ class TestMemberItems(unittest.TestCase):
     def tearDown(self):
         pass
         
+    @slow    
     def test_member_items(self):
 
         # Test github org member_items
