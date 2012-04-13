@@ -7,6 +7,7 @@ class Dao(object):
         '''sets up the data properties and makes a db connection'''
         self.db_url = "http://localhost:5984/"
         self.db_name = db_name
+        self.db_url = db_url
         
         self.couch = couchdb.Server( url = self.db_url )
        
