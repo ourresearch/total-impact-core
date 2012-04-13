@@ -25,8 +25,6 @@ def extract_stats_content_malformed(self, content, metric):
 def extract_stats_validation_error(self, content, metric):
     raise ProviderValidationFailedError()
 
-def mock_snooze_or_raise(self, type, error_conf, exception, retry):
-    raise exception
 
 # dummy Item class
 class Item(object):
@@ -58,11 +56,9 @@ class Test_Wikipedia(unittest.TestCase):
         self.config = Configuration()
         self.old_http_get = Provider.http_get
         self.old_extract_stats = Wikipedia._extract_stats
-        self.old_snooze_or_raise = Provider._snooze_or_raise
     
     def tearDown(self):
         Provider.http_get = self.old_http_get
-        Provider._snooze_or_raise = self.old_snooze_or_raise
         Wikipedia._extract_stats = self.old_extract_stats
     
     def test_01_init(self):
@@ -83,7 +79,6 @@ class Test_Wikipedia(unittest.TestCase):
         # basic init of provider
         provider = Wikipedia(wconf)
         assert provider.config is not None
-        assert provider.state is not None
         assert provider.id == wconf.id
         
     def test_02_implements_interface(self):
@@ -109,7 +104,7 @@ class Test_Wikipedia(unittest.TestCase):
         wconf = Configuration(wcfg, False)
         provider = Wikipedia(wconf)
         
-        self.assertRaises(NotImplementedError, provider.member_items, "", "")
+        self.assertRaises(NotImplementedError, provider.member_items, "")
         
     def test_04_aliases(self):
         wcfg = None
@@ -149,17 +144,6 @@ class Test_Wikipedia(unittest.TestCase):
         f = open(INCORRECT_DOC, "r")
         provider._extract_stats(f.read(), m)
         assert m.value() == 0
-        
-    def test_06_metrics_sleep(self):
-        wcfg = None
-        for p in self.config.providers:
-            if p["class"].endswith("wikipedia.Wikipedia"):
-                wcfg = p["config"]
-        wconf = Configuration(wcfg, False)
-        provider = Wikipedia(wconf)
-        
-        assert provider.sleep_time() == 0
-        assert provider.state.sleep_time() == 0
         
     def test_07_metrics_empty_alias_and_meta(self):
         wcfg = None
@@ -216,7 +200,7 @@ class Test_Wikipedia(unittest.TestCase):
         d = {"doi" : ["10.1371/journal.pcbi.1000361"], "url" : ["http://cottagelabs.com"]}
         alias = Aliases(seed=d)
         item = Item(aliases=alias)
-        item = provider.metrics(item)
+        self.assertRaises(ProviderClientError, provider.metrics, item)
         
         pms = item.metrics.list_metric_snaps()
         assert len(pms) == 0
@@ -306,7 +290,6 @@ class Test_Wikipedia(unittest.TestCase):
     
     def test_15_mitigated_get_metrics_content_malformed(self):
         Provider.http_get = successful_get
-        Provider._snooze_or_raise = mock_snooze_or_raise
         Wikipedia._extract_stats = extract_stats_content_malformed
         
         wcfg = None
@@ -321,11 +304,9 @@ class Test_Wikipedia(unittest.TestCase):
         
         Provider.http_get = self.old_http_get
         Wikipedia._extract_stats = self.old_extract_stats
-        Provider._snooze_or_raise = self.old_snooze_or_raise
         
     def test_16_mitigated_get_metrics_validation_failed(self):
         Provider.http_get = successful_get
-        Provider._snooze_or_raise = mock_snooze_or_raise
         Wikipedia._extract_stats = extract_stats_validation_error
         
         wcfg = None
@@ -340,4 +321,3 @@ class Test_Wikipedia(unittest.TestCase):
         
         Provider.http_get = self.old_http_get
         Wikipedia._extract_stats = self.old_extract_stats
-        Provider._snooze_or_raise = self.old_snooze_or_raise
