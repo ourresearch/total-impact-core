@@ -27,7 +27,7 @@ def configure_app(app):
         app.config.from_pyfile(config_path)
 
 app = create_app()
-mydao = dao.Dao(app.config["DB_NAME"], app.config["DB_URL"])
+mydao = dao.Dao(app.config["DB_NAME"])
 providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
 provider_classes = providers
 

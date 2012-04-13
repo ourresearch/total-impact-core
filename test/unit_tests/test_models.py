@@ -86,12 +86,11 @@ ITEM_SEED["metrics"] = METRICS_SEED
 ITEM_SEED["biblio"] = BIBLIO_SEED
 
 TEST_DB_NAME = "test_models"
-TEST_DB_URL = "http://localhost:5984/"
 
 class TestItem():
 
     def setUp(self):
-        self.d = dao.Dao(TEST_DB_NAME, TEST_DB_URL)
+        self.d = dao.Dao(TEST_DB_NAME)
         
         self.d.create_new_db_and_connect(TEST_DB_NAME)
         self.d.get = lambda id: ITEM_SEED

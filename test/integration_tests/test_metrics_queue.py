@@ -1,5 +1,6 @@
 import os, unittest, time, json
 from nose.tools import nottest, assert_equals
+from urllib import quote_plus
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
 from totalimpact.config import Configuration
@@ -24,8 +25,7 @@ class TestMetricsQueue(unittest.TestCase):
         self.testing_db_name = "metrics_queue_test"
         self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
-        self.config = Configuration()
-        self.d = dao.Dao(self.config)
+        self.d = dao.Dao(self.testing_db_name)
         self.providers = self.app.config["PROVIDERS"]
 
 
@@ -39,33 +39,32 @@ class TestMetricsQueue(unittest.TestCase):
         self.d.create_new_db_and_connect(self.testing_db_name)
 
         # try to retrieve tiid id for something that doesn't exist yet
-        plos_lookup_tiid_resp = self.client.post('/tiid/' + PLOS_TEST_DOI.replace("/", "%2F"))
+        plos_lookup_tiid_resp = self.client.post('/tiid/' + quote_plus(PLOS_TEST_DOI))
         assert_equals(plos_lookup_tiid.status_code, 404)  # Not Found
 
         # create new plos item from a doi
-        plos_resp = self.client.post('/item/doi/' + PLOS_TEST_DOI.replace("/", "%2F"))
+        plos_resp = self.client.post('/item/doi/' + quote_plus(PLOS_TEST_DOI))
         plos_tiid = plos_resp.data
 
         # retrieve the plos tiid using tiid api
-        plos_lookup_tiid_resp = self.client.post('/tiid/' + PLOS_TEST_DOI.replace("/", "%2F"))
+        plos_lookup_tiid_resp = self.client.post('/tiid/' + quote_plus(PLOS_TEST_DOI))
         plos_lookup_tiid = plos_lookup_tiid_resp.data
 
         # check that the tiids are the same
         assert_equals(plos_tiid, plos_lookup_tiid)
-
 
     @nottest
     def test_metrics_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
 
         # create new plos, dryad, github items
-        plos_resp = self.client.post('/item/doi/' + PLOS_TEST_DOI.replace("/", "%2F"))
+        plos_resp = self.client.post('/item/doi/' + quote_plus(PLOS_TEST_DOI))
         plos_tiid = plos_resp.data
 
-        dryad_resp = self.client.post('/item/doi/' + DRYAD_TEST_DOI.replace("/", "%2F"))
+        dryad_resp = self.client.post('/item/doi/' + quote_plus(DRYAD_TEST_DOI))
         dryad_tiid = dryad_resp.data
 
-        github_resp = self.client.post('/item/github/' + GITHUB_TEST_ID)
+        github_resp = self.client.post('/item/github/' + quote_plus(GITHUB_TEST_ID))
         github_tiid = github_resp.data
 
         # do the update using the backend

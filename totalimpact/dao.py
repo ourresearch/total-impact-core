@@ -3,9 +3,9 @@ from totalimpact.core import app
 
 class Dao(object):
 
-    def __init__(self, db_name, db_url):
+    def __init__(self, db_name):
         '''sets up the data properties and makes a db connection'''
-        self.db_url = db_url
+        self.db_url = "http://localhost:5984/"
         self.db_name = db_name
         
         self.couch = couchdb.Server( url = self.db_url )
