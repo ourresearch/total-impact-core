@@ -53,50 +53,52 @@ class TestMetricsQueue(unittest.TestCase):
         # check that the tiids are the same
         assert_equals(plos_tiid, plos_lookup_tiid)
 
-    @nottest
     def test_metrics_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
+        number_of_item_api_calls = 0
 
-        # create new plos, dryad, github items 
-        plos_resp = self.client.post('/item/doi/' + quote_plus(PLOS_TEST_DOI))
-        plos_tiid = plos_resp.data
-
+        # create new dryad item 
         dryad_resp = self.client.post('/item/doi/' + quote_plus(DRYAD_TEST_DOI))
+        number_of_item_api_calls += 1
         dryad_tiid = dryad_resp.data
 
+        # test the metrics view works
+        res = self.d.view("metrics")
+        assert_equals(len(res["rows"]), number_of_item_api_calls*len(self.providers))  # three IDs above, three providers
+        assert_equals(res["rows"][0]["value"]["metrics"]["update_meta"]["dryad"]["last_modified"], 0)
+
+        # see if the item is on the queue
+        all_metrics_queue = MetricsQueue(self.d)
+        assert isinstance(all_metrics_queue.queue, list)
+        assert_equals(len(all_metrics_queue.queue), number_of_item_api_calls*len(self.providers))
+        
+        # get our item from the queue
+        my_item = all_metrics_queue.first()
+        assert_equals(my_item.metrics["update_meta"]["dryad"]["last_modified"], 0)
+        assert(my_item.metrics["update_meta"]["dryad"]["last_requested"] - time.time() < 30)
+
+
+        # create new plos item 
+        plos_resp = self.client.post('/item/doi/' + quote_plus(PLOS_TEST_DOI))
+        number_of_item_api_calls += 1        
+        plos_tiid = plos_resp.data
+
+        # create new github item 
         github_resp = self.client.post('/item/github/' + quote_plus(GITHUB_TEST_ID))
+        number_of_item_api_calls += 1        
         github_tiid = github_resp.data
 
+        all_metrics_queue = MetricsQueue(self.d)
+        assert_equals(len(all_metrics_queue.queue), number_of_item_api_calls*len(self.providers)) 
 
-        # now get look at it
-        dryad_tiid = dryad_tiid.replace('"', '')
-        response = self.client.get('/item/' + dryad_tiid)
-        assert_equals(response.status_code, 200)
-        
-        resp_dict = json.loads(response.data)
-        assert_equals(
-            set(resp_dict.keys()),
-            set([u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
-            )
-        assert_equals(unicode(DRYAD_TEST_DOI), resp_dict["aliases"]["doi"])
+        dryad_metrics_queue = MetricsQueue(self.d, "dryad")
+        assert_equals(len(dryad_metrics_queue.queue), number_of_item_api_calls) 
+
+        github_metrics_queue = MetricsQueue(self.d, "github")
+        assert_equals(len(github_metrics_queue.queue), number_of_item_api_calls) 
 
 
 """
-        # test the view works
-        res = self.d.view("metrics")
-        assert len(res["rows"]) == 1, res
-        assert_equals(res["rows"][0]["value"]["metrics"]["doi"], DRYAD_TEST_DOI)
-
-        # see if the item is on the queue
-        my_metrics_queue = MetricsQueue(self.d)
-        assert isinstance(my_metrics_queue.queue, list)
-        assert_equals(len(my_metrics_queue.queue), 1)
-        
-        # get our item from the queue
-        my_item = my_metrics_queue.first()
-        assert_equals(my_metrics_queue.aliases.data["doi"], DRYAD_TEST_DOI)
-
-
 
         # do the update using the backend
         backend = TotalImpactBackend(self.d, self.providers)
@@ -111,6 +113,7 @@ class TestMetricsQueue(unittest.TestCase):
             resp_dict["aliases"]["title"][0],
             "Clickstream Data Yields High-Resolution Maps of Science"
             )
+
         # It's not in the spec, but I think we want a "latest" metric, so that
         # client code doesn't have to sort.
         assert 90 < resp_dict["metrics"]["mendeley"]["readers"]["latest"]["value"] < 100, resp_dict

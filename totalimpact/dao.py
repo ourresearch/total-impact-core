@@ -58,7 +58,7 @@ class Dao(object):
 
     @property
     def json(self):
-        return json.dumps(self.data,sort_keys=True,indent=4)
+        return json.dumps(self.data, sort_keys=True, indent=4)
 
     def get(self,_id):
         if (_id):

@@ -10,7 +10,7 @@ function(doc) {
         for (var metricName in doc.metrics.update_meta) {
             var metricData = doc.metrics.update_meta[metricName];
             if ( !metricData.ignore ) {
-                emit([metric, metricData.last_requested, metricData.last_modified], doc);
+                emit([metricName, metricData.last_requested, metricData.last_modified], doc);
             }
         }
     }

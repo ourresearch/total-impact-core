@@ -82,7 +82,7 @@ def item_namespace_post(namespace, nid):
     item = Item(mydao)
     item.aliases = {}
     item.aliases[namespace] = nid
-    #item.metrics = Metrics(providers=provider_objects)
+    item.metrics = Metrics(providers=provider_objects)
     item.created = now
     item.last_modified = 0
 

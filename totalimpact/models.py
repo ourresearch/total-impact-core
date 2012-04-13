@@ -257,6 +257,10 @@ class Metrics(object):
                 canon += unicode(v)
         return canon
 
+    def as_dict(self):
+        # renamed for consistancy with Items(); TODO cleanup old one
+        return self.data
+
     def __repr__(self):
         return str(self.data)
 
