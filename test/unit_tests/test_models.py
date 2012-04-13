@@ -203,9 +203,157 @@ class TestCollection():
         # check to see if the fake save method did in fact "save" the collection as expected
         assert_equals(self.input, seed)
 
+class TestMetrics(unittest.TestCase):
+    pass
 
+class TestMetricSnap(unittest.TestCase):
+    def test_init(self):
+        snap_simple = models.MetricSnap(seed=deepcopy(TEST_SNAP))
 
-class TestModelObjects(unittest.TestCase):
+        assert snap_simple.id == "mendeley:readers"
+        assert snap_simple.value() == 16
+        assert snap_simple.created == 1233442897.234
+        assert snap_simple.last_modified == 1328569492.406
+        assert snap_simple.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
+        assert snap_simple.static_meta() == TEST_SNAP['static_meta']
+        assert snap_simple.data == TEST_SNAP
+
+        now = time.time()
+        snap = models.MetricSnap(id="richard:metric",
+                                    value=23, created=now, last_modified=now,
+                                    provenance_url="http://total-impact.org/")
+        assert snap.id == "richard:metric"
+        assert snap.value() == 23
+        assert snap.created == now
+        assert snap.last_modified == now
+        assert snap.provenance() == ["http://total-impact.org/"]
+        assert len(snap.static_meta()) == 0
+
+        snap_from_seed = models.MetricSnap(id="richard:metric",
+                                    value=23, created=now, last_modified=now,
+                                    provenance_url="http://total-impact.org/",
+                                    static_meta=TEST_SNAP['static_meta'])
+        assert snap_from_seed.static_meta() == TEST_SNAP['static_meta']
+
+    def test_get_set(self):
+        snap = models.MetricSnap(seed=deepcopy(TEST_SNAP))
+        stale = time.time()
+
+        assert snap.value() == 16
+        snap.value(17)
+        assert snap.value() == 17
+        assert snap.last_modified > stale
+        stale = snap.last_modified
+
+        assert snap.static_meta() == TEST_SNAP['static_meta']
+        snap.static_meta({"test": "static_meta"})
+        assert snap.static_meta() == {"test" : "static_meta"}
+        assert snap.last_modified > stale
+        stale = snap.last_modified
+
+        assert snap.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
+        snap.provenance("http://total-impact.org")
+        assert snap.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/", "http://total-impact.org"]
+        assert snap.last_modified > stale
+
+        snap.provenance(["http://total-impact.org"])
+        assert snap.provenance() == ["http://total-impact.org"], snap.provenance()
+
+class TestMetrics(unittest.TestCase):
+    def setUp(self):
+        self.providers = api.provider_objects
+
+    def test_init(self):
+        m = models.Metrics(providers=self.providers)
+
+        assert len(m.update_meta()) >= 3, m.update_meta()
+        assert len(m.list_metric_snaps()) == 0
+
+        m = models.Metrics(deepcopy(TEST_METRICS), providers=self.providers)
+
+        assert len(m.update_meta()) >= 4, m.update_meta()
+        assert len(m.list_metric_snaps()) == 1
+
+        assert m.update_meta()['mendeley'] is not None
+        assert m.update_meta()['mendeley']['last_modified'] == 128798498.234
+        assert m.update_meta()['mendeley']['last_requested'] != 0  # don't know exactly what it will be
+        assert not m.update_meta()['mendeley']['ignore']
+
+        assert m.update_meta()['wikipedia'] is not None
+        assert m.update_meta()['wikipedia']['last_modified'] == 0
+        assert m.update_meta()['wikipedia']['last_requested'] != 0 # don't know exactly what it will be
+        assert not m.update_meta()['wikipedia']['ignore']
+
+        metric_snaps = m.list_metric_snaps()[0]
+        assert metric_snaps == models.MetricSnap(seed=deepcopy(TEST_SNAP)), (metric_snaps.data, TEST_SNAP)
+
+    def test_update_meta(self):
+        m = models.Metrics(TEST_METRICS, providers=self.providers)
+        assert len(m.update_meta()) >= 4, m.update_meta()
+        assert m.update_meta()['mendeley'] is not None
+
+        assert m.update_meta("mendeley") is not None
+        assert m.update_meta("mendeley") == m.update_meta()['mendeley']
+
+    def test_add_metric_snap(self):
+        now = time.time()
+
+        m = models.Metrics(deepcopy(TEST_METRICS), providers=self.providers)
+        new_seed = deepcopy(TEST_SNAP)
+        new_seed['value'] = 25
+        m.add_metric_snap(models.MetricSnap(seed=new_seed))
+
+        assert len(m.update_meta()) >= 4, (m.update_meta(), len(m.update_meta()))
+        assert len(m.list_metric_snaps()) == 2
+        assert len(m.list_metric_snaps(new_seed['id'])) == 2
+
+        assert m.update_meta('mendeley')['last_modified'] > now
+
+    def test_list_metric_snaps(self):
+        m = models.Metrics(deepcopy(TEST_METRICS), providers=self.providers)
+
+        assert len(m.list_metric_snaps()) == 1
+        assert m.list_metric_snaps("mendeley:readers")[0] == models.MetricSnap(seed=deepcopy(TEST_SNAP))
+
+        assert len(m.list_metric_snaps("Some:other")) == 0
+
+    def test_canonical(self):
+        m = models.Metrics(providers=self.providers)
+
+        simple_dict = {"one" : 1, "two" : 2, "three" : 3}
+        simple_expected = "one1three3two2"
+        canon = m._canonical_repr(simple_dict)
+        assert canon == simple_expected, (canon, simple_expected)
+
+        nested_dict = { "one" : 1, "two" : { "three" : 3, "four" : 4 } }
+        nested_expected = "one1two{four4three3}"
+        canon = m._canonical_repr(nested_dict)
+        assert canon == nested_expected, (canon, nested_expected)
+
+        nested_list = {"one" : 1, "two" : ['c', 'b', 'a']}
+        list_expected = "one1two[abc]"
+        canon = m._canonical_repr(nested_list)
+        assert canon == list_expected, (canon, list_expected)
+
+        nested_both = {"zero" : 0, "one" : {"two" : 2, "three" : 3}, "four" : [7,6,5]}
+        both_expected = "four[567]one{three3two2}zero0"
+        canon = m._canonical_repr(nested_both)
+        assert canon == both_expected, (canon, both_expected)
+
+    def test_hash(self):
+        m = models.Metrics(providers=self.providers)
+        metric_snap = models.MetricSnap(seed=deepcopy(TEST_SNAP))
+
+        hash = m._hash(metric_snap)
+        assert hash == TEST_SNAP_HASH, (hash, TEST_SNAP_HASH)
+
+        m.add_metric_snap(metric_snap)
+        assert m.data['bucket'].keys()[0] == TEST_SNAP_HASH
+
+class TestBiblio(unittest.TestCase):
+    pass
+
+class TestAliases(unittest.TestCase):
 
     def setUp(self):
         self.providers = api.provider_objects
@@ -215,7 +363,7 @@ class TestModelObjects(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_01_aliases_init(self):
+    def test_init(self):
         a = models.Aliases()
         
         # a blank init always sets an id
@@ -248,7 +396,7 @@ class TestModelObjects(unittest.TestCase):
         assert a.doi == ["10.1371/journal/1"]
         assert a.title == ["First", "Second"]
         
-    def test_03_aliases_add(self):
+    def test_add(self):
         a = models.Aliases()
         a.add_alias("foo", "id1")
         a.add_alias("foo", "id2")
@@ -273,14 +421,14 @@ class TestModelObjects(unittest.TestCase):
                     "baz" : ["id1", "id2"]}
         assert a.data == expected, a.data
         
-    def test_aliases_add_potential_errors(self):
+    def test_add_potential_errors(self):
         # checking for the string/list type bug
         a = models.Aliases()
         a.data["doi"] = "error"
         a.add_alias("doi", "noterror")
         assert a.data['doi'] == ["error", "noterror"], a.data['doi']
         
-    def test_04_aliases_single_namespaces(self):
+    def test_single_namespaces(self):
         a = models.Aliases(seed=TEST_ALIAS)
         
         ids = a.get_ids_by_namespace("doi")
@@ -298,7 +446,7 @@ class TestModelObjects(unittest.TestCase):
         aliases = a.get_aliases_list("title")
         assert aliases == [("title", "Why Most Published Research Findings Are False")]
         
-    def test_05_aliases_missing(self):
+    def test_missing(self):
         a = models.Aliases(seed=TEST_ALIAS)
         
         failres = a.get_ids_by_namespace("my_missing_namespace")
@@ -307,199 +455,21 @@ class TestModelObjects(unittest.TestCase):
         failres = a.get_aliases_list("another_missing_namespace")
         assert failres == [], failres
         
-    def test_06_aliases_multi_namespaces(self):
+    def test_multi_namespaces(self):
         a = models.Aliases(seed=TEST_ALIAS)
         
         ids = a.get_aliases_list(["doi", "url"])
         assert ids == [("doi", "10.1371/journal.pmed.0020124"),
                         ("url", "http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124")], ids
     
-    def test_07_aliases_dict(self):
+    def test_dict(self):
         a = models.Aliases(seed=TEST_ALIAS)
         assert a.get_aliases_dict() == TEST_ALIAS_CANONICAL
     
-    def test_08_alias_seed_validation(self):
+    def test_seed_validation(self):
         # FIXME: seed validation has not yet been implemented.  What does it
         # do, and how should it be tested?
         pass
-    
-    """{
-        "id": "mendeley:readers",
-        "value": 16,
-        "created": 1233442897.234,
-        "last_modified": 1328569492.406,
-        "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
-        "static_meta": {
-            "display_name": "readers"
-            "provider": "Mendeley",
-            "provider_url": "http://www.mendeley.com/",
-            "description": "Mendeley readers: the number of readers of the article",
-            "icon": "http://www.mendeley.com/favicon.ico",
-            "category": "bookmark",
-            "can_use_commercially": "0",
-            "can_embed": "1",
-            "can_aggregate": "1",
-            "other_terms_of_use": "Must show logo and say 'Powered by Santa'",
-        }
-    }
-    """
-    
-    def test_09_metric_snap_init(self):
-        snap_simple = models.MetricSnap(seed=deepcopy(TEST_SNAP))
-        
-        assert snap_simple.id == "mendeley:readers"
-        assert snap_simple.value() == 16
-        assert snap_simple.created == 1233442897.234
-        assert snap_simple.last_modified == 1328569492.406
-        assert snap_simple.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
-        assert snap_simple.static_meta() == TEST_SNAP['static_meta']
-        assert snap_simple.data == TEST_SNAP
-        
-        now = time.time()
-        snap = models.MetricSnap(id="richard:metric", 
-                                    value=23, created=now, last_modified=now,
-                                    provenance_url="http://total-impact.org/")
-        assert snap.id == "richard:metric"
-        assert snap.value() == 23
-        assert snap.created == now
-        assert snap.last_modified == now
-        assert snap.provenance() == ["http://total-impact.org/"]
-        assert len(snap.static_meta()) == 0
-        
-        snap_from_seed = models.MetricSnap(id="richard:metric", 
-                                    value=23, created=now, last_modified=now,
-                                    provenance_url="http://total-impact.org/",
-                                    static_meta=TEST_SNAP['static_meta'])
-        assert snap_from_seed.static_meta() == TEST_SNAP['static_meta']
-    
-    def test_10_metric_snap_get_set(self):
-        snap = models.MetricSnap(seed=deepcopy(TEST_SNAP))
-        stale = time.time()
-        
-        assert snap.value() == 16
-        snap.value(17)
-        assert snap.value() == 17
-        assert snap.last_modified > stale
-        stale = snap.last_modified
-        
-        assert snap.static_meta() == TEST_SNAP['static_meta']
-        snap.static_meta({"test": "static_meta"})
-        assert snap.static_meta() == {"test" : "static_meta"}
-        assert snap.last_modified > stale
-        stale = snap.last_modified
-        
-        assert snap.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
-        snap.provenance("http://total-impact.org")
-        assert snap.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/", "http://total-impact.org"]
-        assert snap.last_modified > stale
-        
-        snap.provenance(["http://total-impact.org"])
-        assert snap.provenance() == ["http://total-impact.org"], snap.provenance()
-    
-    """
-    {
-        "update_meta": {
-            "PROVIDER_ID": {
-                "last_modified": 128798498.234,
-                "last_requested": 2139841098.234,
-                "ignore": false
-            }
-        },
-        "bucket":[
-            "LIST OF PROVIDER METRIC OBJECTS"
-        ]
-    }
-    """
-    
-    def test_11_metrics_init(self):
-        m = models.Metrics(providers=self.providers)
-        
-        assert len(m.update_meta()) >= 3, m.update_meta()
-        assert len(m.list_metric_snaps()) == 0
-        
-        m = models.Metrics(deepcopy(TEST_METRICS), providers=self.providers)
-        
-        assert len(m.update_meta()) >= 4, m.update_meta()
-        assert len(m.list_metric_snaps()) == 1
-        
-        assert m.update_meta()['mendeley'] is not None
-        assert m.update_meta()['mendeley']['last_modified'] == 128798498.234
-        assert m.update_meta()['mendeley']['last_requested'] != 0  # don't know exactly what it will be
-        assert not m.update_meta()['mendeley']['ignore']
-        
-        assert m.update_meta()['wikipedia'] is not None
-        assert m.update_meta()['wikipedia']['last_modified'] == 0
-        assert m.update_meta()['wikipedia']['last_requested'] != 0 # don't know exactly what it will be
-        assert not m.update_meta()['wikipedia']['ignore']
-        
-        metric_snaps = m.list_metric_snaps()[0]
-        assert metric_snaps == models.MetricSnap(seed=deepcopy(TEST_SNAP)), (metric_snaps.data, TEST_SNAP)
-        
-    def test_12_metrics_update_meta(self):
-        m = models.Metrics(TEST_METRICS, providers=self.providers)
-        assert len(m.update_meta()) >= 4, m.update_meta()
-        assert m.update_meta()['mendeley'] is not None
-        
-        assert m.update_meta("mendeley") is not None
-        assert m.update_meta("mendeley") == m.update_meta()['mendeley']
-    
-    def test_13_metrics_add_metric_snap(self):
-        now = time.time()
-        
-        m = models.Metrics(deepcopy(TEST_METRICS), providers=self.providers)
-        new_seed = deepcopy(TEST_SNAP)
-        new_seed['value'] = 25
-        m.add_metric_snap(models.MetricSnap(seed=new_seed))
-        
-        assert len(m.update_meta()) >= 4, (m.update_meta(), len(m.update_meta()))
-        assert len(m.list_metric_snaps()) == 2
-        assert len(m.list_metric_snaps(new_seed['id'])) == 2
-        
-        assert m.update_meta('mendeley')['last_modified'] > now
-        
-    def test_14_metrics_list_metric_snaps(self):
-        m = models.Metrics(deepcopy(TEST_METRICS), providers=self.providers)
-        
-        assert len(m.list_metric_snaps()) == 1
-        assert m.list_metric_snaps("mendeley:readers")[0] == models.MetricSnap(seed=deepcopy(TEST_SNAP))
-        
-        assert len(m.list_metric_snaps("Some:other")) == 0
-    
-    def test_15_metrics_canonical(self):
-        m = models.Metrics(providers=self.providers)
-        
-        simple_dict = {"one" : 1, "two" : 2, "three" : 3}
-        simple_expected = "one1three3two2"
-        canon = m._canonical_repr(simple_dict)
-        assert canon == simple_expected, (canon, simple_expected)
-        
-        nested_dict = { "one" : 1, "two" : { "three" : 3, "four" : 4 } }
-        nested_expected = "one1two{four4three3}"
-        canon = m._canonical_repr(nested_dict)
-        assert canon == nested_expected, (canon, nested_expected)
-        
-        nested_list = {"one" : 1, "two" : ['c', 'b', 'a']}
-        list_expected = "one1two[abc]"
-        canon = m._canonical_repr(nested_list)
-        assert canon == list_expected, (canon, list_expected)
-        
-        nested_both = {"zero" : 0, "one" : {"two" : 2, "three" : 3}, "four" : [7,6,5]}
-        both_expected = "four[567]one{three3two2}zero0"
-        canon = m._canonical_repr(nested_both)
-        assert canon == both_expected, (canon, both_expected)
-        
-    def test_15_metrics_hash(self):
-        m = models.Metrics(providers=self.providers)
-        metric_snap = models.MetricSnap(seed=deepcopy(TEST_SNAP))
-        
-        hash = m._hash(metric_snap)
-        assert hash == TEST_SNAP_HASH, (hash, TEST_SNAP_HASH)
-        
-        m.add_metric_snap(metric_snap)
-        assert m.data['bucket'].keys()[0] == TEST_SNAP_HASH
-    
-    # FIXME: Biblio has not been fully explored yet, so no tests for it
-    
 
 
 
