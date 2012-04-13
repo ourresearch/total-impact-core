@@ -9,6 +9,10 @@ from totalimpact.models import Error
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
 
+from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
+from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
+from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
+
 
 class TotalImpactBackend(object):
     
@@ -108,72 +112,25 @@ class QueueConsumer(StoppableThread):
                 time.sleep(0.5)
         return item
 
-# NOTE: provider aliases does not throttle or take into account
-# provider sleep times.  This is fine for the time being, as 
-# aliasing is an urgent request.  The provider should count the
-# requests as they happen, so that the metrics thread can keep itself
-# in check to throttle the api requests.
-class ProvidersAliasThread(QueueConsumer):
-    run_once = False
-    def __init__(self, providers, dao):
-        QueueConsumer.__init__(self, AliasQueue(dao))
-        self.providers = providers
-        self.thread_id = "ProvidersAliasThread"
-        
-    def run(self):
-        while not self.stopped():
-
-            # get the first item on the queue - this waits until
-            # there is something to return
-            item = self.first()
-            
-            # Check we have an item, if we have been signalled to stop, then
-            # item may be None
-            if item:
-                # if we get to here, an item has been popped off the queue and we
-                # now want to calculate it's metrics. 
-                # Repeatedly process this item until we hit the error limit
-                # or we successfully process it         
-                self.process_item(item) 
-
-    def process_item(self, item):
-        if not self.stopped():
-            for p in self.providers: 
-                try:
-                    log.info("in ProvidersAliasThread.run")
-
-                    item = p.aliases(item)
-                    self.queue.save_and_unqueue(item)
-                    if self.run_once:
-                        self.stop()
-                except NotImplementedError:
-                    continue
-            
-            self._interruptable_sleep(self.sleep_time())
-            
-    def sleep_time(self):
-        # just keep punting through the aliases as fast as possible for the time being
-        return 0
 
 
+class ProviderThread(QueueConsumer):
+    """ This is the basis for the threads processing items for a provider
 
-from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
-from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
-from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
+        Subclasses should implement process_item to define how they want
+        to use providers to obtain information about a given item. The
+        method process_item_for_provider defined by this class should then
+        be used to handle those updates. This method will deal with retries
+        and backoff as per the provider configuration.  
 
-
-
-class ProviderMetricsThread(QueueConsumer):
-    """ The provider metrics thread will handle obtaining metrics for all
-        requests for a single provider. It will deal with retries and 
-        timeouts as required.
+        This base class is mostly to avoid code duplication between the 
+        Metric and Alias providers.
     """
 
-    def __init__(self, provider, dao):
-        QueueConsumer.__init__(self, MetricsQueue(dao, provider.id))
-        self.provider = provider
+    def __init__(self, dao, queue):
         self.dao = dao
-        self.thread_id = "ProviderMetricsThread:" + str(self.provider.id)
+        QueueConsumer.__init__(self, queue)
+        self.thread_id = "BaseProviderThread"
 
     def log_error(self, item, error_type, error_msg, tb):
         # This method is called to record any errors which we obtain when
@@ -192,62 +149,9 @@ class ProviderMetricsThread(QueueConsumer):
         
         #e.save()
 
-    def get_sleep_time(self, error_type, retry_count): 
-        """ Find out how long we should sleep for the given error type and count
- 
-            error_type - timeout, http_error, ... should match config
-            retry_count - this will be our n-th retry (first retry is 1)
-        """ 
-        error_conf = self.provider.config.errors
-        if error_conf is None: 
-            raise Exception("Provider has no config for error handling")
-         
-        conf = error_conf.get(error_type) 
-        if conf is None: 
-            raise Exception("Provider has no config for error handling for error type %s" % error_type)
-         
-        retries = conf.get("retries") 
-        if retries is None or retries == 0: 
-            raise exception 
-
-        delay = conf.get("retry_delay", 0) 
-        delay_cap = conf.get("delay_cap", -1) 
-        retry_type = conf.get("retry_type", "linear") 
-         
-        # Check we haven't reached max retries
-        if retry_count > retries and retries != -1: 
-            raise ValueError("Exceeded max retries for %s" % error_type)
-
-        # Linear or exponential delay
-        if retry_type == 'linear':
-            delay_time = delay
-        else:
-            delay_time = delay * 2**(retry_count-1) 
-    
-        # Apply delay cap, which limits how long we can sleep
-        if delay_cap != -1:
-            delay_time = min(delay_cap, delay_time)
-        
-        return delay_time
-
-    def get_max_retries(self, error_type):
-        error_conf = self.provider.config.errors
-        if error_conf is None: 
-            raise Exception("Provider has no config for error handling")
-         
-        conf = error_conf.get(error_type) 
-        if conf is None: 
-            raise Exception("Provider has no config for error handling for error type %s" % error_type)
-         
-        retries = conf.get("retries") 
-        if retries is None:
-            return 0
-        return retries
-         
     def run(self):
 
         while not self.stopped():
-
             # get the first item on the queue - this waits until
             # there is something to return
             item = self.first()
@@ -266,19 +170,19 @@ class ProviderMetricsThread(QueueConsumer):
                 # as we don't process it again a second time.
                 self.queue.save_and_unqueue(item)
 
-                # the provider will return a sleep time which may be negative
-                # this is our base sleep time between requests
-                #sleep_time = self.provider.sleep_time()
-                #self._interruptable_sleep(sleep_time)
+    def process_item_for_provider(self, item, provider, method):
+        """ Run the given method for the given provider on the given item
+        
+            method should either be 'aliases' or 'metrics'
 
-
-    def process_item(self, item):
-        """ Process the given item, obtaining it's metrics.
-
-            This method will retry for the appropriate number of times, sleeping
-            if required according to the config settings.
+            This will deal with retries and sleep / backoff as per the 
+            configuration for the given provider. We will return true if
+            the given method passes, or if it's not implemented.
         """
-        log.info("Item %s: processing metrics" % (item))
+        if method not in ('aliases','metrics'):
+            raise NotImplementedError("Unknown method %s for provider class" % method)
+
+        log.info("Item %s: processing %s for provider %s" % (item, method, provider))
         error_counts = {
             'http_timeout':0,
             'content_malformed':0,
@@ -293,8 +197,9 @@ class ProviderMetricsThread(QueueConsumer):
         while not error_limit_reached and not success and not self.stopped():
 
             error_type = None
+            provider_function = getattr(provider, method)
             try:
-                item = self.provider.metrics(item)
+                item = provider_function(item)
                 success = True
 
             except ProviderTimeout, e:
@@ -316,12 +221,19 @@ class ProviderMetricsThread(QueueConsumer):
                 error_type = 'validation_failed'
                 error_msg = str(e)
 
+            except NotImplementedError, e:
+                # This means we should skip aliases for this provider
+                # Don't record any failures here, just set success as true so we exit
+                # Success = true will mean that we continue processing this item
+                log.debug("Processing item %s with provider %s: Unknown exception %s, aborting" % (item, provider, e))
+                success = True
+
             except Exception, e:
                 # All other fatal errors. These are probably some form of
                 # logic error. We consider these to be fatal.
                 tb = sys.exc_info()[2]
                 self.log_error(item, 'unknown_error', str(e), tb)
-                log.error("Error processing item %s: Unknown exception %s, aborting" % (item, e))
+                log.error("Error processing item %s with provider %s: Unknown exception %s, aborting" % (item, provider, e))
                 error_limit_reached = True
 
             finally:
@@ -336,18 +248,59 @@ class ProviderMetricsThread(QueueConsumer):
 
                     error_counts[error_type] += 1
 
-                    if error_counts[error_type] > self.get_max_retries(error_type) and self.get_max_retries(error_type) != -1:
+                    max_retries = provider.get_max_retries(error_type)
+                    if error_counts[error_type] > max_retries and max_retries != -1:
                         log.info("Error processing item %s: %s, error limit reached (%i/%i), aborting" % (
-                            item, error_type, error_counts[error_type], self.get_max_retries(error_type)))
+                            item, error_type, error_counts[error_type], max_retries))
                         error_limit_reached = True
                     else:
-                        duration = self.get_sleep_time(error_type, error_counts[error_type])
+                        duration = provider.get_sleep_time(error_type, error_counts[error_type])
                         log.info("Error processing item %s: %s, pausing thread for %s" % (item, error_type, duration))
                         self._interruptable_sleep(duration)
                 elif success:
                     log.info("Item %s: processing successful" % (item))
 
         return success
+
+
+class ProvidersAliasThread(ProviderThread):
+    
+    def __init__(self, providers, dao):
+        self.providers = providers
+        queue = AliasQueue(dao)
+        ProviderThread.__init__(self, dao, queue)
+        self.providers = providers
+        self.thread_id = "ProvidersAliasThread"
+        
+    def process_item(self, item):
+        """ Process the given item, obtaining it's metrics.
+
+            This method will retry for the appropriate number of times, sleeping
+            if required according to the config settings.
+        """
+        if not self.stopped():
+            for provider in self.providers: 
+                if not self.process_item_for_provider(item, provider, 'aliases'):
+                    # This provider has failed and exceeded the 
+                    # total number of retries. Don't process any 
+                    # more providers, we abort this item entirely
+                    break
+
+
+
+class ProviderMetricsThread(ProviderThread):
+    """ The provider metrics thread will handle obtaining metrics for all
+        requests for a single provider. It will deal with retries and 
+        timeouts as required.
+    """
+    def __init__(self, provider, dao):
+        self.provider = provider
+        queue = MetricsQueue(dao, provider.id)
+        ProviderThread.__init__(self, dao, queue)
+        self.thread_id = "ProviderMetricsThread:" + str(self.provider.id)
+
+    def process_item(self, item):
+        self.process_item_for_provider(item, self.provider, 'metrics')
             
 if __name__ == "__main__":
     if len(sys.argv) < 2:
