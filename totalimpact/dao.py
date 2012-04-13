@@ -1,5 +1,5 @@
 import pdb, json, uuid, couchdb, time
-from totalimpact.core import app
+from totalimpact import default_settings #FIXME WORKAROUND, issue #89
 
 class Dao(object):
 
@@ -10,8 +10,9 @@ class Dao(object):
         
         self.couch = couchdb.Server( url = self.db_url )
         try:
-            self.couch.resource.credentials = ( app.config["DB_ADMINUSER"], app.config["DB_PASSWORD"] )
-        except KeyError:
+            # FIXME reading directly from default_settings until we fix circular import.  Issue #89.
+            self.couch.resource.credentials = ( default_settings.DB_ADMINUSER, default_settings.DB_PASSWORD )
+        except AttributeError:
             # no admin user and password specified
             pass
 

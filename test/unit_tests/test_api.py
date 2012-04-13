@@ -4,7 +4,6 @@ from nose.tools import nottest, assert_equals
 from totalimpact import api, dao
 from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
-from totalimpact.core import app
 
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
