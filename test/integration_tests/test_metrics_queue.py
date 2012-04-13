@@ -73,7 +73,7 @@ class TestMetricsQueue(unittest.TestCase):
         assert_equals(len(all_metrics_queue.queue), number_of_item_api_calls*len(self.providers))
         
         # get our item from the queue
-        my_item = all_metrics_queue.first()
+        my_item = all_metrics_queue.first() 
         assert_equals(my_item.metrics["update_meta"]["dryad"]["last_modified"], 0)
         assert(my_item.metrics["update_meta"]["dryad"]["last_requested"] - time.time() < 30)
 
