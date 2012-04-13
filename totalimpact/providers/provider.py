@@ -41,6 +41,13 @@ class Provider(object):
 
     def __init__(self, config):
         self.config = config
+        self.name = 'Unknown Provider'
+
+    def __repr__(self):
+        return "Provider(%s)" % self.name
+    
+    # API Methods
+    # These should be filled in by each Provider implementing this signature
 
     def provides_metrics(self): return False
     def member_items(self, query_string, query_type): raise NotImplementedError()
@@ -48,17 +55,86 @@ class Provider(object):
     def metrics(self, item): raise NotImplementedError()
     def biblio(self, item): raise NotImplementedError()
     
+    # Core methods
+    # These should be consistent for all providers
+
+    def get_sleep_time(self, error_type, retry_count):
+        """ Find out how long we should sleep for the given error type and count
+ 
+            error_type - timeout, http_error, ... should match config
+            retry_count - this will be our n-th retry (first retry is 1)
+        """
+        error_conf = self.config.errors
+        if error_conf is None:
+            raise Exception("This provider has no config for error handling")
+
+        conf = error_conf.get(error_type)
+        if conf is None:
+            raise Exception("This provider has no config for error handling for error type %s" % error_type)
+
+        retries = conf.get("retries")
+        if retries is None or retries == 0:
+            raise exception
+
+        delay = conf.get("retry_delay", 0)
+        delay_cap = conf.get("delay_cap", -1)
+        retry_type = conf.get("retry_type", "linear")
+
+        # Check we haven't reached max retries
+        if retry_count > retries and retries != -1:
+            raise ValueError("Exceeded max retries for %s" % error_type)
+
+        # Linear or exponential delay
+        if retry_type == 'linear':
+            delay_time = delay
+        else:
+            delay_time = delay * 2**(retry_count-1)
+
+        # Apply delay cap, which limits how long we can sleep
+        if delay_cap != -1:
+            delay_time = min(delay_cap, delay_time)
+
+        return delay_time
+    
+    def get_max_retries(self, error_type):
+        error_conf = self.config.errors
+        if error_conf is None:
+            raise Exception("This provider has no config for error handling")
+
+        conf = error_conf.get(error_type)
+        if conf is None:
+            raise Exception("This provider has no config for error handling for error type %s" % error_type)
+
+        retries = conf.get("retries")
+        if retries is None:
+            return 0
+        return retries
+
     def sleep_time(self, dead_time=0):
         return 0
     
     def http_get(self, url, headers=None, timeout=None, error_conf=None):
+        return self.do_get(url, headers, timeout)
+    
+    def do_get(self, url, headers=None, timeout=None):
+        """ Returns a requests.models.Response object or raises exception
+            on failure. Will cache requests to the same URL. """
+
         # first thing is to try to retrieve from cache
         c = Cache(
             self.config.cache['max_cache_duration']
         )
         cache_data = c.get_cache_entry(url)
         if cache_data:
-            return cache_data
+            # Return a stripped down equivalent of requests.models.Response
+            # We don't store headers or other information here. If we need
+            # that later, we can add it
+            class CachedResponse:
+                pass
+            r = CachedResponse()
+            r.status_code = cache_data['status_code']
+            r.text = cache_data['text']
+            return r
             
         # ensure that a user-agent string is set
         if headers is None:
@@ -75,7 +151,7 @@ class Provider(object):
             raise ProviderHttpError("RequestException during GET on: " + url, e)
         
         # cache the response and return
-        c.set_cache_entry(url, r)
+        c.set_cache_entry(url, {'text' : r.text, 'status_code' : r.status_code})
         return r
     
 
