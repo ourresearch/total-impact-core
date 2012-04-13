@@ -71,12 +71,16 @@ class MetricsQueue(Queue):
     def queue(self):
         # change this for live
         viewname = 'queues/metrics'
-        if self.provider:
-            items = self.dao.view(viewname, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
+        if self._provider:
+            res = self.dao.view(viewname, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
         else:
-            items = self.dao.view(viewname)
+            res = self.dao.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
 
-        response = [Item(**i['value']) for i in items['rows']]
-        return response
+        items = []
+        for row in res["rows"]:
+            my_item = Item(self.dao, id=row["id"])
+            my_item.load() # TODO add better load methods to item so we don't have to go back to the db here
+            items.append(my_item)
+        return items
 
