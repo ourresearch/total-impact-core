@@ -5,7 +5,7 @@ from copy import deepcopy
 from totalimpact import models
 from totalimpact import dao, api
 
-TEST_COLLECTION = {
+COLLECTION_DATA = {
     "id": "uuid-goes-here",
     "collection_name": "My Collection",
     "owner": "abcdef",
@@ -14,7 +14,7 @@ TEST_COLLECTION = {
     "item_tiids": ["origtiid1", "origtiid2"] 
     }
 
-TEST_ALIAS = {
+ALIAS_DATA = {
     "tiid":"0987654321",
     "title":["Why Most Published Research Findings Are False"],
     "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
@@ -23,7 +23,7 @@ TEST_ALIAS = {
     "last_modified": 1328569492.406
     }
 
-TEST_ALIAS_CANONICAL = {
+ALIAS_CANONICAL_DATA = {
     "tiid":"0987654321",
     "title":["Why Most Published Research Findings Are False"],
     "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
@@ -32,7 +32,7 @@ TEST_ALIAS_CANONICAL = {
     "last_modified": 1328569492.406
     }
 
-TEST_SNAP = {
+SNAP_DATA = {
     "id": "mendeley:readers",
     "value": 16,
     "created": 1233442897.234,
@@ -52,9 +52,7 @@ TEST_SNAP = {
         }
     }
 
-TEST_SNAP_HASH = "5771be360d7f79aba51a2824636fef6f"
-
-TEST_METRICS = {
+METRICS_DATA = {
     "update_meta": {
         "mendeley": {
             "last_modified": 128798498.234,
@@ -63,12 +61,11 @@ TEST_METRICS = {
             }
         },
         "bucket":{
-            TEST_SNAP_HASH: TEST_SNAP
         }
     }
 
 
-TEST_BIBLIO = {
+BIBLIO_DATA = {
         "title": "An extension of de Finetti's theorem", 
         "journal": "Advances in Applied Probability", 
         "author": [
@@ -82,13 +79,13 @@ TEST_BIBLIO = {
     }
 
 
-TEST_ITEM = {
+ITEM_DATA = {
     "created": 1330260456.916,
     "last_modified": 12414214.234,
     "last_requested": 124141245.234, 
-    "aliases": TEST_ALIAS,
-    "metrics": TEST_METRICS,
-    "biblio": TEST_BIBLIO
+    "aliases": ALIAS_DATA,
+    "metrics": METRICS_DATA,
+    "biblio": BIBLIO_DATA
     }
     
 TEST_DB_NAME = "test_models"
@@ -99,7 +96,7 @@ class TestItem():
         self.d = dao.Dao(TEST_DB_NAME)
         
         self.d.create_new_db_and_connect(TEST_DB_NAME)
-        self.d.get = lambda id: TEST_ITEM
+        self.d.get = lambda id: ITEM_DATA
         def fake_save(data, id):
             self.input = data
         self.d.update_item = fake_save
@@ -110,17 +107,17 @@ class TestItem():
         assert True
 
     def test_mock_dao(self):
-        assert_equals(self.d.get("123"), TEST_ITEM)
+        assert_equals(self.d.get("123"), ITEM_DATA)
 
-    def test_item_init(self):
+    def ITEM_DATA_init(self):
         i = models.Item(self.d)
         assert_equals(len(i.id), 32) # made a uuid, yay
 
-    def test_item_load(self):
+    def ITEM_DATA_load(self):
         i = models.Item(self.d, id="123")
         i.load()
-        assert_equals(i.aliases.as_dict(), TEST_ALIAS_CANONICAL)
-        assert_equals(i.created, TEST_ITEM["created"])
+        assert_equals(i.aliases.as_dict(), ALIAS_CANONICAL_DATA)
+        assert_equals(i.created, ITEM_DATA["created"])
 
     @raises(LookupError)
     def test_load_with_nonexistant_item_fails(self):
@@ -128,17 +125,17 @@ class TestItem():
         self.d.get = lambda id: None # that item doesn't exist in the db
         i.load()
 
-    def test_item_save(self):
+    def ITEM_DATA_save(self):
         i = models.Item(self.d, id="123")
 
-        # load all the values from the item_seed into the test item.
-        for key in TEST_ITEM:
-            setattr(i, key, TEST_ITEM[key])
+        # load all the values from the item_DATA into the test item.
+        for key in ITEM_DATA:
+            setattr(i, key, ITEM_DATA[key])
         i.save()
 
-        assert_equals(i.aliases, TEST_ALIAS)
+        assert_equals(i.aliases, ALIAS_DATA)
 
-        seed = deepcopy(TEST_ITEM)
+        seed = deepcopy(ITEM_DATA)
         seed["_id"] = "123"
         # the fake dao puts the doc-to-save in the self.input var.
         assert_equals(self.input, seed)
@@ -152,25 +149,25 @@ class TestCollection():
         self.d.create_new_db_and_connect(TEST_DB_NAME)
 
     def test_mock_dao(self):
-        self.d.get = lambda id: deepcopy(TEST_COLLECTION)
-        assert_equals(self.d.get("SomeCollectionId"), TEST_COLLECTION)
+        self.d.get = lambda id: deepcopy(COLLECTION_DATA)
+        assert_equals(self.d.get("SomeCollectionId"), COLLECTION_DATA)
 
-    def test_collection_init(self):
+    def COLLECTION_DATA_init(self):
         c = models.Collection(self.d)
         assert_equals(len(c.id), 32) # made a uuid, yay
 
-    def test_collection_add_items(self):
-        c = models.Collection(self.d, seed=deepcopy(TEST_COLLECTION))
+    def COLLECTION_DATA_add_items(self):
+        c = models.Collection(self.d, seed=deepcopy(COLLECTION_DATA))
         c.add_items(["newtiid1", "newtiid2"])
         assert_equals(c.item_ids(), [u'origtiid1', u'origtiid2', 'newtiid1', 'newtiid2'])
 
-    def test_collection_remove_item(self):
-        c = models.Collection(self.d, seed=deepcopy(TEST_COLLECTION))
+    def COLLECTION_DATA_remove_item(self):
+        c = models.Collection(self.d, seed=deepcopy(COLLECTION_DATA))
         c.remove_item("origtiid1")
         assert_equals(c.item_ids(), ["origtiid2"])
 
-    def test_collection_load(self):
-        self.d.get = lambda id: deepcopy(TEST_COLLECTION)
+    def COLLECTION_DATA_load(self):
+        self.d.get = lambda id: deepcopy(COLLECTION_DATA)
         c = models.Collection(self.d, id="SomeCollectionId")
         c.load()
         assert_equals(c.collection_name, "My Collection")
@@ -182,7 +179,7 @@ class TestCollection():
         c = models.Collection(self.d, id="AnUnknownCollectionId")
         c.load()
 
-    def test_collection_save(self):
+    def COLLECTION_DATA_save(self):
         # this fake save method puts the doc-to-save in the self.input variable
         def fake_save(data, id):
             self.input = data
@@ -190,12 +187,12 @@ class TestCollection():
 
         c = models.Collection(self.d)
 
-        # load all the values from the item_seed into the test item.
-        for key in TEST_COLLECTION:
-            setattr(c, key, TEST_COLLECTION[key])
+        # load all the values from the item_DATA into the test item.
+        for key in COLLECTION_DATA:
+            setattr(c, key, COLLECTION_DATA[key])
         c.save()
 
-        seed = deepcopy(TEST_COLLECTION)
+        seed = deepcopy(COLLECTION_DATA)
         # the dao changes the contents to give the id variable the leading underscore expected by couch
         seed["_id"] = seed["id"]
         del(seed["id"])
@@ -208,15 +205,15 @@ class TestMetrics(unittest.TestCase):
 
 class TestMetricSnap(unittest.TestCase):
     def test_init(self):
-        snap_simple = models.MetricSnap(seed=deepcopy(TEST_SNAP))
+        snap_simple = models.MetricSnap(seed=deepcopy(SNAP_DATA))
 
         assert snap_simple.id == "mendeley:readers"
         assert snap_simple.value() == 16
         assert snap_simple.created == 1233442897.234
         assert snap_simple.last_modified == 1328569492.406
         assert snap_simple.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
-        assert snap_simple.static_meta() == TEST_SNAP['static_meta']
-        assert snap_simple.data == TEST_SNAP
+        assert snap_simple.static_meta() == SNAP_DATA['static_meta']
+        assert snap_simple.data == SNAP_DATA
 
         now = time.time()
         snap = models.MetricSnap(id="richard:metric",
@@ -229,14 +226,14 @@ class TestMetricSnap(unittest.TestCase):
         assert snap.provenance() == ["http://total-impact.org/"]
         assert len(snap.static_meta()) == 0
 
-        snap_from_seed = models.MetricSnap(id="richard:metric",
+        snap_from_DATA = models.MetricSnap(id="richard:metric",
                                     value=23, created=now, last_modified=now,
                                     provenance_url="http://total-impact.org/",
-                                    static_meta=TEST_SNAP['static_meta'])
-        assert snap_from_seed.static_meta() == TEST_SNAP['static_meta']
+                                    static_meta=SNAP_DATA['static_meta'])
+        assert snap_from_DATA.static_meta() == SNAP_DATA['static_meta']
 
     def test_get_set(self):
-        snap = models.MetricSnap(seed=deepcopy(TEST_SNAP))
+        snap = models.MetricSnap(seed=deepcopy(SNAP_DATA))
         stale = time.time()
 
         assert snap.value() == 16
@@ -245,7 +242,7 @@ class TestMetricSnap(unittest.TestCase):
         assert snap.last_modified > stale
         stale = snap.last_modified
 
-        assert snap.static_meta() == TEST_SNAP['static_meta']
+        assert snap.static_meta() == SNAP_DATA['static_meta']
         snap.static_meta({"test": "static_meta"})
         assert snap.static_meta() == {"test" : "static_meta"}
         assert snap.last_modified > stale
@@ -269,40 +266,50 @@ class TestMetrics(unittest.TestCase):
     def test_init(self):
         m = models.Metrics(self.PROVIDER_ID)
 
-        assert len(m.list_metric_snaps()) == 0
+        assert len(m.metric_snaps) == 0
         assert_equals(m.provider_id, self.PROVIDER_ID )
 
- 
-    @nottest
-    def test_update_meta(self):
-        m = models.Metrics(self.PROVIDER_ID)
-        assert len(m.update_meta()) >= 4, m.update_meta()
-        assert m.update_meta()['mendeley'] is not None
-
-        assert m.update_meta("mendeley") is not None
-        assert m.update_meta("mendeley") == m.update_meta()['mendeley']
-
-    @nottest
     def test_add_metric_snap(self):
-        now = time.time()
+        start_time = time.time()
 
         m = models.Metrics(self.PROVIDER_ID)
-        new_seed = deepcopy(TEST_SNAP)
-        new_seed['value'] = 25
-        m.add_metric_snap(PROVIDER_ID)
+        snap1 = models.MetricSnap(seed=deepcopy(SNAP_DATA))
+        hash = m.add_metric_snap(snap1)
 
-        assert len(m.update_meta()) >= 4, (m.update_meta(), len(m.update_meta()))
-        assert len(m.list_metric_snaps()) == 2
-        assert len(m.list_metric_snaps(new_seed['id'])) == 2
+        assert_equals(len(hash), 32)
+        assert_equals(m.metric_snaps[hash], snap1)
+        assert_equals(len(m.metric_snaps), 1)
+        assert_equals(m.latest_snap.data["value"], snap1.data["value"])
 
-        assert m.update_meta('mendeley')['last_modified'] > now
+        # the we've changed something, so the last_modified value should change
+        assert  m.last_modified > start_time
+
+        # let's try adding a new snap; this has a new value, so it'll get stored
+        # alongside the first one.
+        snap2 = models.MetricSnap(seed=deepcopy(SNAP_DATA))
+        snap2.data['value'] = 17
+        hash2 = m.add_metric_snap(snap2)
+
+        assert_equals(len(hash), 32)
+        assert_equals(m.metric_snaps[hash2], snap2)
+        assert_equals(len(m.metric_snaps), 2) # two metricSnaps in there now.
+        assert_equals(m.latest_snap.data["value"], snap2.data["value"])
+
+        # now a third snap with the same value; shouldn't get stored.
+        snap3 = models.MetricSnap(seed=deepcopy(SNAP_DATA))
+        snap3.data['value'] = 17 #same as snap2
+        hash3 = m.add_metric_snap(snap2)
+
+        assert_equals(hash3, hash2)
+        assert_equals(len(m.metric_snaps), 2) # still just two metricSnaps in there.
+        assert_equals(m.latest_snap.data["value"], snap2.data["value"])
 
     @nottest
     def test_list_metric_snaps(self):
         m = models.Metrics(self.PROVIDER_ID)
 
         assert len(m.list_metric_snaps()) == 1
-        assert m.list_metric_snaps("mendeley:readers")[0] == models.MetricSnap(seed=deepcopy(TEST_SNAP))
+        assert m.list_metric_snaps("mendeley:readers")[0] == models.MetricSnap(seed=deepcopy(SNAP_DATA))
 
         assert len(m.list_metric_snaps("Some:other")) == 0
 
@@ -333,13 +340,13 @@ class TestMetrics(unittest.TestCase):
     @nottest
     def test_hash(self):
         m = models.Metrics(self.PROVIDER_ID)
-        metric_snap = models.MetricSnap(seed=deepcopy(TEST_SNAP))
+        metric_snap = models.MetricSnap(seed=deepcopy(SNAP_DATA))
 
         hash = m._hash(metric_snap)
-        assert hash == TEST_SNAP_HASH, (hash, TEST_SNAP_HASH)
+        assert hash == SNAP_DATA_MD5, (hash, SNAP_DATA_MD5)
 
         m.add_metric_snap(metric_snap)
-        assert m.data['bucket'].keys()[0] == TEST_SNAP_HASH
+        assert m.data['bucket'].keys()[0] == SNAP_DATA_MD5
 
 class TestBiblio(unittest.TestCase):
     pass
@@ -370,7 +377,7 @@ class TestAliases(unittest.TestCase):
         assert a.data["tiid"] == "123456"
         assert a.tiid == "123456"
         
-        a = models.Aliases(seed=TEST_ALIAS)
+        a = models.Aliases(seed=ALIAS_DATA)
         
         assert len(a.data.keys()) == 6
         assert a.tiid == "0987654321"
@@ -420,7 +427,7 @@ class TestAliases(unittest.TestCase):
         assert a.data['doi'] == ["error", "noterror"], a.data['doi']
         
     def test_single_namespaces(self):
-        a = models.Aliases(seed=TEST_ALIAS)
+        a = models.Aliases(seed=ALIAS_DATA)
         
         ids = a.get_ids_by_namespace("doi")
         assert ids == ["10.1371/journal.pmed.0020124"]
@@ -438,7 +445,7 @@ class TestAliases(unittest.TestCase):
         assert aliases == [("title", "Why Most Published Research Findings Are False")]
         
     def test_missing(self):
-        a = models.Aliases(seed=TEST_ALIAS)
+        a = models.Aliases(seed=ALIAS_DATA)
         
         failres = a.get_ids_by_namespace("my_missing_namespace")
         assert failres == [], failres
@@ -447,17 +454,17 @@ class TestAliases(unittest.TestCase):
         assert failres == [], failres
         
     def test_multi_namespaces(self):
-        a = models.Aliases(seed=TEST_ALIAS)
+        a = models.Aliases(seed=ALIAS_DATA)
         
         ids = a.get_aliases_list(["doi", "url"])
         assert ids == [("doi", "10.1371/journal.pmed.0020124"),
                         ("url", "http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124")], ids
     
     def test_dict(self):
-        a = models.Aliases(seed=TEST_ALIAS)
-        assert a.get_aliases_dict() == TEST_ALIAS_CANONICAL
+        a = models.Aliases(seed=ALIAS_DATA)
+        assert a.get_aliases_dict() == ALIAS_CANONICAL_DATA
     
-    def test_seed_validation(self):
+    def test_DATA_validation(self):
         # FIXME: seed validation has not yet been implemented.  What does it
         # do, and how should it be tested?
         pass
