@@ -113,19 +113,22 @@ class TestWeb(unittest.TestCase):
         assert_equals(response.status_code, 200)
         assert_equals(
             set(json.loads(response.data).keys()),
-            set([u'aliases', u'biblio', u'created', u'id', u'last_modified', u'last_requested', u'metrics'])
+            set([u'aliases', u'biblio', u'created', u'id', u'last_modified', 
+                u'last_requested', u'metrics'])
             )
         assert_equals(response.mimetype, "application/json")
 
     def test_item_get_success_realid(self):
         # First put something in
-        response = self.client.get('/item/doi/' + TEST_DRYAD_DOI.replace("/", "%2F")) 
+        response = self.client.get('/item/doi/' + 
+            TEST_DRYAD_DOI.replace("/", "%2F")) 
         tiid = response.data
         print response
         print tiid 
 
     def test_item_post_urldecodes(self):
-        resp = self.client.post('/item/doi/' + TEST_DRYAD_DOI.replace("/", "%2F"))
+        resp = self.client.post('/item/doi/' + 
+            TEST_DRYAD_DOI.replace("/", "%2F"))
         tiid = resp.data.replace('"', '')
 
         resp = self.client.get('/item/' + tiid)
@@ -147,18 +150,21 @@ class TestWeb(unittest.TestCase):
         response_loaded = json.loads(response.data)
         assert_equals(
                 set(response_loaded.keys()), 
-                set([u'created', u'collection_name', u'item_tiids', u'last_modified', u'owner', u'id']))
+                set([u'created', u'collection_name', u'item_tiids', 
+                    u'last_modified', u'owner', u'id']))
         assert_equals(len(response_loaded["id"]), 32)
 
     def test_collection_put_updated_collection(self):
         # Put in an item.  Could mock this out in the future.
         response = self.client.post('/collection', 
-                data=json.dumps(TEST_COLLECTION_TIID_LIST), content_type="application/json")
+                data=json.dumps(TEST_COLLECTION_TIID_LIST), 
+                content_type="application/json")
         response_loaded = json.loads(response.data)
         new_collection_id = response_loaded["id"]
 
         response = self.client.put('/collection/' + new_collection_id, 
-                data=json.dumps(COLLECTION_SEED_MODIFIED), content_type="application/json")
+                data=json.dumps(COLLECTION_SEED_MODIFIED), 
+                content_type="application/json")
         print response
         print response.data
         assert_equals(response.status_code, 200)  #updated
@@ -167,7 +173,8 @@ class TestWeb(unittest.TestCase):
         assert_equals(
                 set(response_loaded.keys()), 
                 set([u'created', u'collection_name', u'item_tiids', u'last_modified', u'owner', u'id']))
-        assert_equals(response_loaded["item_tiids"], COLLECTION_SEED_MODIFIED["item_tiids"])
+        assert_equals(response_loaded["item_tiids"], 
+            COLLECTION_SEED_MODIFIED["item_tiids"])
 
     def test_collection_put_empty_payload(self):
         response = self.client.put('/collection/' + TEST_COLLECTION_ID)

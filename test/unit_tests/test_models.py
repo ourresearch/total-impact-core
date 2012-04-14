@@ -203,8 +203,12 @@ class TestCollection():
         # check to see if the fake save method did in fact "save" the collection as expected
         assert_equals(self.input, seed)
 
-class TestMetrics(unittest.TestCase):
-    pass
+    def test_collection_delete(self):
+        self.d.delete = lambda id: True
+        c = models.Collection(self.d, id="SomeCollectionId")
+        response = c.delete()
+        assert_equals(response, True)
+
 
 class TestMetricSnap(unittest.TestCase):
     def test_init(self):
