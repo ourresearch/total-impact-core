@@ -41,6 +41,10 @@ class Model(object):
             self.dao.create_item(doc, self.id)
         return doc
 
+    def delete(self):
+        response = self.dao.delete(self.id)
+        return response        
+
     def keys_from_docstring(self):
         json_doc = inspect.getdoc(self)
         return json.loads(json_doc).keys()
