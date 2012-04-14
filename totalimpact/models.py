@@ -172,40 +172,44 @@ class Metrics(object):
     """
     {
         "provider_id": "PROVIDER ID",
-        "meta": {
-            "last_modified": 128798498.234,
-            "last_requested": 2139841098.234,
-            "ignore": False
-        },
+        "last_modified": 128798498.234,
+        "last_requested": 2139841098.234,
+        "ignore": False,
+        "latest_snap": MetricSnap object,
         "metric_snaps":{
-            "hash" : "PROVIDER METRIC OBJECT", ...
+            "hash" : MetricSnap object, ...
         }
     }
     """
+    '''
+    This is set up to only deal with *one* type of metric; plos:pdf_view and
+    plos:html_views, for example, need different Metrics objects despite being
+    from the same provider.
+    '''
     def __init__(self,provider_id):
 
         self.provider_id = provider_id
-        self.meta = {"last_modified": {}, "last_requested": {}, "ignore": False}
+        self.ignore = False
         self.metric_snaps = {}
         
-   
-    # FIXME: assuming that MetricSnap objects are deconstructed on ingest and
-    # made part of the internal "data" object.  The object representations are then
-    # re-constructed when they are requested.  This gives consistent behaviour at the
-    # cost of being computationally a little expensive.  Alternative is to have a more
-    # complex object which synchronises between in-memory MetricSnap objects and their
-    # "data" representations which are what actually get saved
-
     def add_metric_snap(self, metric_snap):
-        hash = self._hash(metric_snap)
+        '''Stores a MetricSnap object based on a key hashed from its "value" attr.
+
+        When you get the snap back out, you're getting the object, not its attributes.
+        Also, note that snaps with identical values get overwritten.
+        '''
+
+        hash = hashlib.md5(str(metric_snap.data["value"])).hexdigest()
+        self.metric_snaps[hash] = metric_snap
+        self.latest_snap = metric_snap
+        self.last_modified = time.time()
+        return hash
+        '''
         self.data['bucket'][hash] = metric_snap.data
         provider_id = metric_snap.static_meta()["provider"].lower()
         self._update_last_modified(provider_id)
+        '''
         
-    def list_metric_snaps(self, provider_id=None):
-        if provider_id is None:
-            return [MetricSnap(seed=x) for x in self.data['bucket'].values()]
-        return [MetricSnap(seed=x) for x in self.data['bucket'].values() if x['id'] == provider_id]
 
     # FIXME: is this in use somewhere?
     def str_list_metric_snaps(self):
@@ -241,8 +245,10 @@ class Metrics(object):
         # renamed for consistancy with Items(); TODO cleanup old one
         return self.data
 
+    '''
     def __repr__(self):
         return str(self.data)
+    '''
 
 # FIXME: should this have a created property?
 # FIXME: should things like "can_use_commercially" be true/false rather than the - yes
