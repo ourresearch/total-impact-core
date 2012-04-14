@@ -242,45 +242,58 @@ POST /collection
 creates new collection
 post payload is a list of item IDs as [namespace, id]
 returns collection_id
+returns 405 or 201
 
 PUT /collection/:collection
 payload is a collection object
 overwrites whatever was there before.
+returns 404 or 200 (see http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete)
 
 DELETE /collection/:collection
-returns success/failure
+returns 404 or 204 (see http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete)
 '''
 @app.route('/collection', methods = ['POST'])
-@app.route('/collection/<cid>', methods = ['GET','POST','PUT','DELETE'])
+@app.route('/collection/<cid>', methods = ['GET', 'PUT', 'DELETE'])
 def collection(cid=''):
+    response_code = None
+
     try:
         coll = Collection(mydao, id=cid)
         coll.load()
-    except:
-        coll = False
+    except LookupError:
+        coll = None
     
     if request.method == "POST":
         if coll:
-            abort(405)
-        else:
-            coll = Collection(mydao, seed = request.json )
-            coll.save()
+            # Collection already exists: should call PUT instead
+            abort(405)   # Method Not Allowed
+        if not request.json:
+            abort(404)  #what is the right error message for needs arguments?
+        coll = Collection(mydao)
+        coll.add_items(request.json)
+        coll.save()
+        response_code = 201 # Created
 
-    elif request.method == "PUT" and cid:
+    elif request.method == "PUT":
+        if not coll:
+            abort(404)
         coll = Collection(mydao, seed = request.json )
         coll.save()
+        response_code = 200 # OK
 
     elif request.method == "DELETE":
-        if coll:
-            coll.delete()
-        abort(404)
+        if not coll:
+            abort(404)
+        coll.delete()
+        response_code = 204 # The server successfully processed the request, but is not returning any content
 
-    try:
-        resp = make_response( json.dumps( coll.as_dict() ) )
-        resp.mimetype = "application/json"
-        return resp
-    except:
-        abort(404)
+    elif request.method == "GET":
+        if not coll:
+            abort(404)
+
+    resp = make_response( json.dumps( coll.as_dict(), sort_keys=True, indent=4 ), response_code)
+    resp.mimetype = "application/json"
+    return resp
 
 
 if __name__ == "__main__":
