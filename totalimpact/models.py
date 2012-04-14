@@ -169,28 +169,17 @@ class Biblio(object):
 
 
 class Metrics(object):
-    """
-    {
-        "provider_id": "PROVIDER ID",
-        "last_modified": 128798498.234,
-        "last_requested": 2139841098.234,
-        "ignore": False,
-        "latest_snap": MetricSnap object,
-        "metric_snaps":{
-            "hash" : MetricSnap object, ...
-        }
-    }
-    """
     '''
     This is set up to only deal with *one* type of metric; plos:pdf_view and
     plos:html_views, for example, need different Metrics objects despite being
     from the same provider.
     '''
-    def __init__(self,provider_id):
+    def __init__(self, name):
 
-        self.provider_id = provider_id
+        self.name = name
         self.ignore = False
         self.metric_snaps = {}
+        self.latest_snap = None
         
     def add_metric_snap(self, metric_snap):
         '''Stores a MetricSnap object based on a key hashed from its "value" attr.
@@ -204,51 +193,11 @@ class Metrics(object):
         self.latest_snap = metric_snap
         self.last_modified = time.time()
         return hash
-        '''
-        self.data['bucket'][hash] = metric_snap.data
-        provider_id = metric_snap.static_meta()["provider"].lower()
-        self._update_last_modified(provider_id)
-        '''
         
-
-    # FIXME: is this in use somewhere?
-    def str_list_metric_snaps(self):
-        return([str(val) for val in self.data['bucket'].values()])
-
-    def _update_last_modified(self, provider_id):
-        if self.data['update_meta'].has_key(provider_id):
-            self.data['update_meta'][provider_id]['last_modified'] = time.time()
-        else:
-            self.data['update_meta'][provider_id] = {'last_modified':0, 'last_requested':time.time(), 'ignore':False}
-
-    def _hash(self, metric_snap):
-        # get a hash of the metric_snap's json representation
-        j = self._canonical_repr(metric_snap.data)
-        m = hashlib.md5()
-        m.update(j)
-        return m.hexdigest()
-    
-    def _canonical_repr(self, dict):
-        canon = ""
-        for key in sorted(dict.keys()):
-            canon += unicode(key)
-            v = dict[key]
-            if hasattr(v, "keys"): # testing for 'dict' type doesn't work; go figure
-                canon += "{" + self._canonical_repr(v) + "}"
-            elif type(v) == list or type(v) == tuple:
-                canon += "[" + "".join([unicode(x) for x in sorted(v)]) + "]"
-            else:
-                canon += unicode(v)
-        return canon
-
     def as_dict(self):
-        # renamed for consistancy with Items(); TODO cleanup old one
-        return self.data
+        return self.__dict__
+      
 
-    '''
-    def __repr__(self):
-        return str(self.data)
-    '''
 
 # FIXME: should this have a created property?
 # FIXME: should things like "can_use_commercially" be true/false rather than the - yes
@@ -346,9 +295,11 @@ class MetricSnap(object):
     
     def __str__(self):
         return str(self.data)
-        
+
+    '''
     def __eq__(self, other):
         return self.data == other.data
+    '''
     
 
 class Aliases(object):
