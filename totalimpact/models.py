@@ -194,8 +194,7 @@ class Metrics(object):
         self.last_modified = time.time()
         return hash
         
-    def as_dict(self):
-        return self.__dict__
+    
       
 
 
