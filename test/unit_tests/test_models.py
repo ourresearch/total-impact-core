@@ -52,17 +52,13 @@ SNAP_DATA = {
         }
     }
 
+METRIC_NAME = "views"
 METRICS_DATA = {
-    "update_meta": {
-        "mendeley": {
-            "last_modified": 128798498.234,
-            "last_requested": 2139841098.234,
-            "ignore": False
-            }
-        },
-        "bucket":{
-        }
-    }
+    "name": METRIC_NAME,
+    "ignore": False,
+    "metric_snaps": {},
+    "latest_snap": None
+}
 
 
 BIBLIO_DATA = {
@@ -200,8 +196,6 @@ class TestCollection():
         # check to see if the fake save method did in fact "save" the collection as expected
         assert_equals(self.input, seed)
 
-class TestMetrics(unittest.TestCase):
-    pass
 
 class TestMetricSnap(unittest.TestCase):
     def test_init(self):
@@ -258,95 +252,59 @@ class TestMetricSnap(unittest.TestCase):
 
 class TestMetrics(unittest.TestCase):
 
-    PROVIDER_ID = "test_provider"
 
     def setUp(self):
-        self.providers = api.providers
+        self.m = models.Metrics(METRIC_NAME)
 
     def test_init(self):
-        m = models.Metrics(self.PROVIDER_ID)
-
-        assert len(m.metric_snaps) == 0
-        assert_equals(m.provider_id, self.PROVIDER_ID )
+        assert len(self.m.metric_snaps) == 0
+        assert_equals(self.m.name, METRIC_NAME )
 
     def test_add_metric_snap(self):
         start_time = time.time()
 
-        m = models.Metrics(self.PROVIDER_ID)
         snap1 = models.MetricSnap(seed=deepcopy(SNAP_DATA))
-        hash = m.add_metric_snap(snap1)
+        hash = self.m.add_metric_snap(snap1)
 
         assert_equals(len(hash), 32)
-        assert_equals(m.metric_snaps[hash], snap1)
-        assert_equals(len(m.metric_snaps), 1)
-        assert_equals(m.latest_snap.data["value"], snap1.data["value"])
+        assert_equals(self.m.metric_snaps[hash], snap1)
+        assert_equals(len(self.m.metric_snaps), 1)
+        assert_equals(self.m.latest_snap.data["value"], snap1.data["value"])
 
         # the we've changed something, so the last_modified value should change
-        assert  m.last_modified > start_time
+        assert  self.m.last_modified > start_time
 
         # let's try adding a new snap; this has a new value, so it'll get stored
         # alongside the first one.
         snap2 = models.MetricSnap(seed=deepcopy(SNAP_DATA))
         snap2.data['value'] = 17
-        hash2 = m.add_metric_snap(snap2)
+        hash2 = self.m.add_metric_snap(snap2)
 
         assert_equals(len(hash), 32)
-        assert_equals(m.metric_snaps[hash2], snap2)
-        assert_equals(len(m.metric_snaps), 2) # two metricSnaps in there now.
-        assert_equals(m.latest_snap.data["value"], snap2.data["value"])
+        assert_equals(self.m.metric_snaps[hash2], snap2)
+        assert_equals(len(self.m.metric_snaps), 2) # two metricSnaps in there now.
+        assert_equals(self.m.latest_snap.data["value"], snap2.data["value"])
 
         # now a third snap with the same value; shouldn't get stored.
         snap3 = models.MetricSnap(seed=deepcopy(SNAP_DATA))
         snap3.data['value'] = 17 #same as snap2
-        hash3 = m.add_metric_snap(snap2)
+        hash3 = self.m.add_metric_snap(snap2)
 
         assert_equals(hash3, hash2)
-        assert_equals(len(m.metric_snaps), 2) # still just two metricSnaps in there.
-        assert_equals(m.latest_snap.data["value"], snap2.data["value"])
+        assert_equals(len(self.m.metric_snaps), 2) # still just two metricSnaps in there.
+        assert_equals(self.m.latest_snap.data["value"], snap2.data["value"])
 
-    @nottest
-    def test_list_metric_snaps(self):
-        m = models.Metrics(self.PROVIDER_ID)
+    def test_as_dict(self):
+        assert_equals(METRICS_DATA, self.m.__dict__)
 
-        assert len(m.list_metric_snaps()) == 1
-        assert m.list_metric_snaps("mendeley:readers")[0] == models.MetricSnap(seed=deepcopy(SNAP_DATA))
+        # has to also work when there are snaps in the metric_snaps attr.
+        snap_data = deepcopy(SNAP_DATA)
+        snap = models.MetricSnap(snap_data)
+        hash = self.m.add_metric_snap(snap)
+        print self.m.__dict__['metric_snaps'][hash]
+        assert_equals(self.m.__dict__['metric_snaps'][hash], snap)
 
-        assert len(m.list_metric_snaps("Some:other")) == 0
 
-    @nottest
-    def test_canonical(self):
-        m = models.Metrics(self.PROVIDER_ID)
-
-        simple_dict = {"one" : 1, "two" : 2, "three" : 3}
-        simple_expected = "one1three3two2"
-        canon = m._canonical_repr(simple_dict)
-        assert canon == simple_expected, (canon, simple_expected)
-
-        nested_dict = { "one" : 1, "two" : { "three" : 3, "four" : 4 } }
-        nested_expected = "one1two{four4three3}"
-        canon = m._canonical_repr(nested_dict)
-        assert canon == nested_expected, (canon, nested_expected)
-
-        nested_list = {"one" : 1, "two" : ['c', 'b', 'a']}
-        list_expected = "one1two[abc]"
-        canon = m._canonical_repr(nested_list)
-        assert canon == list_expected, (canon, list_expected)
-
-        nested_both = {"zero" : 0, "one" : {"two" : 2, "three" : 3}, "four" : [7,6,5]}
-        both_expected = "four[567]one{three3two2}zero0"
-        canon = m._canonical_repr(nested_both)
-        assert canon == both_expected, (canon, both_expected)
-
-    @nottest
-    def test_hash(self):
-        m = models.Metrics(self.PROVIDER_ID)
-        metric_snap = models.MetricSnap(seed=deepcopy(SNAP_DATA))
-
-        hash = m._hash(metric_snap)
-        assert hash == SNAP_DATA_MD5, (hash, SNAP_DATA_MD5)
-
-        m.add_metric_snap(metric_snap)
-        assert m.data['bucket'].keys()[0] == SNAP_DATA_MD5
 
 class TestBiblio(unittest.TestCase):
     pass
