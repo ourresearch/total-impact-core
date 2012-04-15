@@ -26,6 +26,11 @@ class Saveable(object):
         str = re.sub(r'!![^\s]+ *', '', str)
         return  yaml.load(str)
 
+    def merge(self, other_item):
+        '''merge this with another Item, overwriting/appending where appropriate'''
+
+    def save(self, dao):
+        pass
 
 
 
@@ -37,7 +42,6 @@ class ItemFactory():
     def make(self, tiid=None):
         now = time.time()
         item = Item()
-        item.last_modified = now
 
         if tiid is None: # we're making a brand new item
             item.created = now
@@ -81,10 +85,13 @@ class Item(Saveable):
         "last_requested": 124141245.234
     }
     """
-
-
-
     pass
+
+    def merge(self, other_item):
+        '''merge this with another Item, overwriting/appending where appropriate'''
+
+    def save(self, dao):
+        pass
 
 
 class Error(Saveable):
@@ -160,6 +167,7 @@ class Biblio(object):
         return str(self.data)
 
 
+
 class Metrics(object):
     '''
     This is set up to only deal with *one* type of metric; plos:pdf_view and
@@ -173,6 +181,7 @@ class Metrics(object):
         self.ignore = False
         self.metric_snaps = {}
         self.latest_snap = None
+        # no need to set a last_modified...it's just the last_modified of self.latest
         
     def add_metric_snap(self, metric_snap):
         '''Stores a MetricSnap object based on a key hashed from its "value" attr.
@@ -187,9 +196,6 @@ class Metrics(object):
         self.last_modified = time.time()
         return hash
 
-
-        
-    
       
 
 
@@ -198,6 +204,7 @@ class Metrics(object):
 # string "0" or "1", or are there other values that can go in there
 # FIXME: add a validation routine
 # FIXME: we need a nicer interface to get at the contents of the inner data object
+# just here for documentation purposes right now...
 class MetricSnap(object):
     """
     {
@@ -249,6 +256,7 @@ class Aliases(object):
 
         if self.tiid is None:
             self.tiid = str(uuid.uuid4())
+            self.created = time.time()
 
     def add_alias(self, namespace, id):
         try:
