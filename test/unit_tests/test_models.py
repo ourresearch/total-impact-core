@@ -363,7 +363,7 @@ class TestAliases(unittest.TestCase):
         
         # check the data structure is correct
         expected = {"tiid": a.tiid, "foo":["id1", "id2"], "bar":["id1"]}
-        del a.last_modified
+        del a.last_modified, a.created
         assert a.__dict__ == expected, a
 
     def test_add_unique(self):
@@ -385,7 +385,7 @@ class TestAliases(unittest.TestCase):
                     "foo":["id1", "id2", "id3"], 
                     "bar":["id1"], 
                     "baz" : ["id1", "id2"]}
-        del a.last_modified
+        del a.last_modified, a.created
         assert_equals(a.__dict__, expected)
 
         
