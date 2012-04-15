@@ -1,7 +1,7 @@
 from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
 from totalimpact.providers.provider import ProviderFactory
-import time, uuid, json, hashlib, inspect
+import time, uuid, json, hashlib, inspect, yaml, re
 
 class Saveable(object):
 
@@ -14,21 +14,19 @@ class Saveable(object):
             self.id = id
 
     def as_dict(self, obj=None):
-        '''Recursively calls __dict__ on itself and all constituent objects.'''
+        '''Recursively calls __dict__ on itself and all constituent objects.
 
-        if obj is None:
-            obj = self
-            
-        data = {}
-        for key, value in obj.__dict__.iteritems():
-            try:
-                data[key] = self.as_dict(value)
-            except AttributeError:
-                data[key] = value
-        return data
+        Currently uses yaml as a ridiculous hack because recursive dict call
+        turn out to be pretty difficult. None of the functions listed here
+        http://stackoverflow.com/questions/1036409/recursively-convert-python-object-graph-to-dictionary
+        work.
+        '''
 
-    def __str__(self):
-        return str(self.as_dict())
+        str = yaml.dump(self)
+        str = re.sub(r'!![^\s]+ *', '', str)
+        return  yaml.load(str)
+
+
 
 
 class ItemFactory():
@@ -187,6 +185,8 @@ class Metrics(object):
         self.latest_snap = metric_snap
         self.last_modified = time.time()
         return hash
+
+
         
     
       
@@ -289,10 +289,6 @@ class MetricSnap(object):
     def __str__(self):
         return str(self.data)
 
-    '''
-    def __eq__(self, other):
-        return self.data == other.data
-    '''
     
 
 class Aliases(object):
@@ -310,51 +306,33 @@ class Aliases(object):
     
     not_aliases = ["created", "last_modified"]
     
-    def __init__(self, tiid=None, seed=None, **kwargs):
-        # load from the seed first
-        self.data = seed if seed is not None else {}
-        
-        if self.data.has_key("tiid"):
-            tiid = self.data["tiid"]
-        if not tiid:
-            tiid = str(uuid.uuid4())
+    def __init__(self, tiid=None, seed=None):
+        self.tiid = tiid
+        try:
+            for k in seed:
+                setattr(self, k, seed[k])
+        except TypeError:
+            pass
 
-        # if there was no seed, load the properties, otherwise ignore them
-        if seed is None:
-            self.data["tiid"] = tiid
-            for arg, val in kwargs.iteritems():
-                if hasattr(val, "append"):
-                    self.data[arg] = val
-                else:
-                    self.data[arg] = [val]
-        else:
-            if not self.data.has_key("tiid"):
-                self.data["tiid"] = tiid
+        if self.tiid is None:
+            self.tiid = str(uuid.uuid4())
 
     def add_alias(self, namespace, id):
-        if namespace in self.data.keys():
-            if not hasattr(self.data[namespace], "append"):
-                self.data[namespace] = [self.data[namespace]]
-            self.data[namespace].append(id)
-        else:
-            self.data[namespace] = [id]
+        try:
+            attr = getattr(self, namespace)
+            attr.append(id)
+            print attr
+        except AttributeError:
+            setattr(self, namespace, [id])
 
-
+    #FIXME: this should take namespace and id, not a list of them
     def add_unique(self, alias_list):
         for ns, id in alias_list:
-            if id not in self.data.get(ns, []):
-                self.add_alias(ns, id)
-    
-    def get_ids_by_namespace(self, namespace):
-        ''' gets list of this object's ids in each given namespace
-        
-        returns [] if no ids
-        >>> a = Aliases()
-        >>> a.add_alias("foo", "id1")
-        >>> a.get_ids_by_namespace("foo")
-        ['id1']
-        '''
-        return self.data.get(namespace, [])
+            try:
+                if id not in getattr(self, ns):
+                    self.add_alias(ns, id)
+            except:
+                    self.add_alias(ns, id)
     
     def get_aliases_list(self, namespace_list=None): 
         ''' 
@@ -362,10 +340,9 @@ class Aliases(object):
         
         returns a list of (namespace, id) tuples
         '''
-        # if this is a get on everything, just summon up the
-        # items
+        # if this is a get on everything, just summon up the items
         if namespace_list is None:
-            return [x for x in self.data.items() if x[0] not in self.not_aliases]
+            return [x for x in self.__dict__ if x not in self.not_aliases]
         
         # if the caller doesn't pass us a list, but just a single value, wrap it
         # up for them
@@ -375,7 +352,7 @@ class Aliases(object):
         # otherwise, get for the specific namespaces
         ret = []
         for namespace in namespace_list:
-            ids = self.get_ids_by_namespace(namespace)
+            ids = getattr(self, namespace)
             
             # crazy hack TODO fix lists/strings flying about
             if not hasattr(ids, "append"):
@@ -384,22 +361,7 @@ class Aliases(object):
         
         return ret
     
-    def get_aliases_dict(self):
-        return self.data
-
     def as_dict(self):
-        # renamed for consistancy with Items(); TODO cleanup old one
-        return self.data
+        return self.__dict__
 
-    def __getattribute__(self, att):
-        try:
-            return super(Aliases, self).__getattribute__(att)
-        except AttributeError:
-            return self.data[att]
-                
-    def __repr__(self):
-        return "TIID: " + self.tiid + " " + str(self.data)
-        
-    def __str__(self):
-        return "TIID: " + self.tiid + " " + str(self.data)
 

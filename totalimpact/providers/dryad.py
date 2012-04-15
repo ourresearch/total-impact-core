@@ -158,7 +158,7 @@ class Dryad(Provider):
         return "http://dx.doi.org/" + doi
 
     def _get_dryad_doi(self, item):
-        item_dois = item.aliases.get_ids_by_namespace("doi")
+        item_dois = item.aliases.doi
         item_dryad_dois = [doi for doi in item_dois if self._is_dryad_doi(doi)]
         if not item_dryad_dois:
             raise Exception
