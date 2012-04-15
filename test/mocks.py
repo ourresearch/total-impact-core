@@ -14,7 +14,9 @@ def dao_init_mock(self, config):
 class MockDao(object):
 
     def get(self, id):
-        return self.responses[self.index]
+        ret = self.responses[self.index]
+        self.index = self.index + 1
+        return ret
     
     def setResponses(self, responses):
         self.responses = responses

@@ -109,6 +109,23 @@ class TestSaveable():
         s2 = models.Saveable(id="123")
         assert_equals(s2.id, "123")
 
+    def test_as_dict(self):
+        s = models.Saveable()
+        s.foo = "a var"
+        s.bar = "another var"
+        assert_equals(s.as_dict()['foo'], "a var")
+
+    def test_as_dict_recursive(self):
+        s = models.Saveable()
+        class TestObj:
+            pass
+        
+        foo = TestObj()
+        foo.bar = "I'm in an object" 
+        s.foo_object = foo
+        assert_equals(s.as_dict()['foo_object']['bar'], foo.bar)
+
+
 
 class TestItemFactory():
 
@@ -125,12 +142,12 @@ class TestItemFactory():
     @nottest
     def test_make_from_db(self):
         dao = MockDao()
-        resp = ITEM_DATA
-        dao.setResponses([resp])
+        dao.setResponses([ITEM_DATA])
 
         factory = models.ItemFactory(dao)
         item = factory.make("123")
-        assert_equals(item, resp)
+        print item
+        assert_equals(item.as_dict(), ITEM_DATA)
 
 '''
 class TestItem():
