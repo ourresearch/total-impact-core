@@ -13,12 +13,14 @@ class Saveable(object):
         else:
             self.id = id
 
-    def as_dict(self):
+    def as_dict(self, obj=None):
         '''Recursively calls __dict__ on itself and all constituent objects.'''
 
+        if obj is None:
+            obj = self
+            
         data = {}
-        for key, value in self.__dict__.iteritems():
-            if key == "dao": continue
+        for key, value in obj.__dict__.iteritems():
             try:
                 data[key] = self.as_dict(value)
             except AttributeError:
@@ -50,25 +52,20 @@ class ItemFactory():
             # we make these objects using doc data, then put them in the item.
             item.aliases = Aliases(seed=item_doc['aliases'])
             item.metrics = []
-            '''
-            for i in item_doc['metrics']:
-                my_metric_dict = item_doc['metrics'][i]
 
+            for metrics_dict in item_doc['metrics']:
+                
+                provider_name = metrics_dict["provider_name"]
+                metric_name = metrics_dict["metric_name"]
+                my_metric_obj = Metrics(provider_name, metric_name)
+                my_metric_obj.ignore = metrics_dict["ignore"]
 
-                my_metric_obj = Metrics(my_metric_dict["metric_name"])
-
-
-
-                my_metric_obj["ignore"] = my_metric_dict["ignore"]
-
-                latest_snap = MetricSnap(seed=my_metric_dict["latest_snap"])
-                my_metric_obj["latest_snap"] = latest_snap
-                for s in my_metric_dict["metric_snaps"]:
-                    snap = MetricSnap(seed=my_metric_dict["metric_snaps"][s])
-                    my_metric_obj.metric_snaps[s] = snap
+                latest_snap = MetricSnap(seed=metrics_dict["latest_snap"])
+                my_metric_obj.latest_snap = latest_snap
+                for k, snap_dict in metrics_dict["metric_snaps"]:
+                    my_metric_obj.metric_snaps[k] = MetricSnap(seed=snap_dict)
 
                 item.metrics.append(my_metric_obj)
-                '''
 
 
         return item
