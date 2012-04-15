@@ -26,7 +26,8 @@ class TestMetricsQueue(unittest.TestCase):
         self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
         self.d = dao.Dao(self.testing_db_name)
-        self.providers = self.app.config["PROVIDERS"]
+        provider_configs = self.app.config["PROVIDERS"]
+        self.providers = ProviderFactory.get_providers(provider_configs)
 
 
     def tearDown(self):
@@ -44,13 +45,15 @@ class TestMetricsQueue(unittest.TestCase):
 
         # test the metrics view works
         res = self.d.view("metrics")
-        assert_equals(len(res["rows"]), number_of_item_api_calls*len(self.providers))  # three IDs above, three providers
+        assert_equals(len(res["rows"]), 
+                number_of_item_api_calls*len(self.providers))  # three IDs above, three providers
         assert_equals(res["rows"][0]["value"]["metrics"]["update_meta"]["dryad"]["last_modified"], 0)
 
         # see if the item is on the queue
         all_metrics_queue = MetricsQueue(self.d)
         assert isinstance(all_metrics_queue.queue, list)
-        assert_equals(len(all_metrics_queue.queue), number_of_item_api_calls*len(self.providers))
+        assert_equals(len(all_metrics_queue.queue), 
+                number_of_item_api_calls*len(self.providers))
         
         # get our item from the queue
         my_item = all_metrics_queue.first() 
@@ -69,22 +72,28 @@ class TestMetricsQueue(unittest.TestCase):
         github_tiid = github_resp.data
 
         all_metrics_queue = MetricsQueue(self.d)
-        assert_equals(len(all_metrics_queue.queue), number_of_item_api_calls*len(self.providers)) 
+        assert_equals(len(all_metrics_queue.queue), 
+                number_of_item_api_calls*len(self.providers)) 
 
         dryad_metrics_queue = MetricsQueue(self.d, "dryad")
-        assert_equals(len(dryad_metrics_queue.queue), number_of_item_api_calls) 
+        assert_equals(len(dryad_metrics_queue.queue), 
+                number_of_item_api_calls) 
 
         github_metrics_queue = MetricsQueue(self.d, "github")
-        assert_equals(len(github_metrics_queue.queue), number_of_item_api_calls) 
+        assert_equals(len(github_metrics_queue.queue), 
+                number_of_item_api_calls) 
 
-
-"""
 
         # do the update using the backend
         backend = TotalImpactBackend(self.d, self.providers)
 
         # we need a new param to exit after a few seconds so we can finish testing
-        backend.run(die_in=7)
+        backend.run_once = True
+        #backend.run()
+
+        #backend.run(die_in=7)
+
+"""
 
         # test the plos doi
         plos_resp = self.client.get('/item/' + plos_tiid)
