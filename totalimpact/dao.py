@@ -48,7 +48,8 @@ class Dao(object):
                     "language": "javascript",
                     "views": {
                         "metrics": {},
-                        "aliases": {}
+                        "aliases": {},
+                        "by_alias": {}
                         } 
                     }
         for view_name in view["views"]:

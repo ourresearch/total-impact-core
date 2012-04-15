@@ -1,5 +1,6 @@
 import unittest, json, uuid
 from copy import deepcopy
+from urllib import quote_plus
 from nose.tools import nottest, assert_equals
 
 from totalimpact import api, dao
@@ -8,6 +9,7 @@ from totalimpact.providers.dryad import Dryad
 
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
+PLOS_TEST_DOI = "10.1371/journal.pone.0004803"
 GOLD_MEMBER_ITEM_CONTENT = ["MEMBERITEM CONTENT"]
 TEST_COLLECTION_ID = "TestCollectionId"
 TEST_COLLECTION_TIID_LIST = ["tiid1", "tiid2"]
@@ -29,7 +31,7 @@ def MOCK_member_items(self, a, b):
     return(GOLD_MEMBER_ITEM_CONTENT)
 
 
-class TestWeb(unittest.TestCase):
+class TestApi(unittest.TestCase):
 
     def setUp(self):
         #setup api test client
@@ -187,5 +189,46 @@ class TestWeb(unittest.TestCase):
     def test_collection_get_with_no_id(self):
         response = self.client.get('/collection/')
         assert_equals(response.status_code, 404)  #Not found
+
+    def test_tiid_get_with_unknown_alias(self):
+        # try to retrieve tiid id for something that doesn't exist yet
+        plos_no_tiid_resp = self.client.get('/tiid/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        assert_equals(plos_no_tiid_resp.status_code, 404)  # Not Found
+
+    def test_tiid_get_with_known_alias(self):
+        # create new plos item from a doi
+        plos_create_tiid_resp = self.client.post('/item/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        plos_create_tiid = json.loads(plos_create_tiid_resp.data)
+
+        # retrieve the plos tiid using tiid api
+        plos_lookup_tiid_resp = self.client.get('/tiid/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        assert_equals(plos_lookup_tiid_resp.status_code, 303)  
+        plos_lookup_tiids = json.loads(plos_lookup_tiid_resp.data)
+
+        # check that the tiids are the same
+        assert_equals(plos_create_tiid, plos_lookup_tiids[0])
+
+    def test_tiid_get_tiids_for_multiple_known_aliases(self):
+        # create two new items with the same plos alias
+        first_plos_create_tiid_resp = self.client.post('/item/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        first_plos_create_tiid = json.loads(first_plos_create_tiid_resp.data)
+
+        second_plos_create_tiid_resp = self.client.post('/item/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        second_plos_create_tiid = json.loads(second_plos_create_tiid_resp.data)
+
+        # retrieve the plos tiid using tiid api
+        plos_lookup_tiid_resp = self.client.get('/tiid/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        assert_equals(plos_lookup_tiid_resp.status_code, 303)  
+        plos_lookup_tiids = json.loads(plos_lookup_tiid_resp.data)
+
+        # check that the tiid lists are the same
+        assert_equals(sorted(plos_lookup_tiids), 
+            sorted([first_plos_create_tiid, second_plos_create_tiid]))
 
 

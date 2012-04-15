@@ -33,26 +33,6 @@ class TestMetricsQueue(unittest.TestCase):
         self.app.config["DB_NAME"] = self.old_db_name
 
 
-    # FIXME maybe this should be in another file?  
-    @nottest
-    def test_tiid_retrieve(self):
-        self.d.create_new_db_and_connect(self.testing_db_name)
-
-        # try to retrieve tiid id for something that doesn't exist yet
-        plos_lookup_tiid_resp = self.client.post('/tiid/' + quote_plus(PLOS_TEST_DOI))
-        assert_equals(plos_lookup_tiid.status_code, 404)  # Not Found
-
-        # create new plos item from a doi
-        plos_resp = self.client.post('/item/doi/' + quote_plus(PLOS_TEST_DOI))
-        plos_tiid = plos_resp.data
-
-        # retrieve the plos tiid using tiid api
-        plos_lookup_tiid_resp = self.client.post('/tiid/' + quote_plus(PLOS_TEST_DOI))
-        plos_lookup_tiid = plos_lookup_tiid_resp.data
-
-        # check that the tiids are the same
-        assert_equals(plos_tiid, plos_lookup_tiid)
-
     def test_metrics_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
         number_of_item_api_calls = 0
