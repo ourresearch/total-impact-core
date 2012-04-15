@@ -84,9 +84,6 @@ def item_namespace_post(namespace, nid):
     item = Item(mydao)
     item.aliases = {}
     item.aliases[namespace] = nid
-    item.metrics = Metrics(providers=providers)
-    item.created = now
-    item.last_modified = 0
 
     ## FIXME - see issue 86
     ## Should look up this namespace and id and see if we already have a tiid

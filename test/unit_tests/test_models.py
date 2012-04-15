@@ -1,5 +1,6 @@
 from nose.tools import raises, assert_equals, nottest
 import os, unittest, json, time
+from test.mocks import MockDao
 from copy import deepcopy
 
 from totalimpact import models
@@ -52,9 +53,17 @@ SNAP_DATA = {
         }
     }
 
-METRIC_NAME = "views"
 METRICS_DATA = {
-    "name": METRIC_NAME,
+    "provider_name": "plos", 
+    "metric_name": "html_views",
+    "ignore": False,
+    "metric_snaps": {},
+    "latest_snap": None
+}
+
+METRICS_DATA2 = {
+    "provider_name": "plos",
+    "metric_name": "pdf_views",
     "ignore": False,
     "metric_snaps": {},
     "latest_snap": None
@@ -76,16 +85,54 @@ BIBLIO_DATA = {
 
 
 ITEM_DATA = {
+    "_id": "123",
+    "_rev": "456",
     "created": 1330260456.916,
     "last_modified": 12414214.234,
     "last_requested": 124141245.234, 
     "aliases": ALIAS_DATA,
-    "metrics": METRICS_DATA,
+    "metrics": [METRICS_DATA, METRICS_DATA2],
     "biblio": BIBLIO_DATA
-    }
+}
     
 TEST_DB_NAME = "test_models"
 
+
+class TestSaveable():
+    def setUp(self):
+        pass
+
+    def test_id_gets_set(self):
+        s = models.Saveable()
+        assert_equals(len(s.id), 32)
+
+        s2 = models.Saveable(id="123")
+        assert_equals(s2.id, "123")
+
+
+class TestItemFactory():
+
+    def setUp(self):
+        pass
+
+    def test_make_new(self):
+        '''create an item from scratch.'''
+        factory = models.ItemFactory("not a dao")
+        item = factory.make()
+        assert_equals(len(item.id), 32)
+        assert item.created < time.time
+
+    @nottest
+    def test_make_from_db(self):
+        dao = MockDao()
+        resp = ITEM_DATA
+        dao.setResponses([resp])
+
+        factory = models.ItemFactory(dao)
+        item = factory.make("123")
+        assert_equals(item, resp)
+
+'''
 class TestItem():
 
     def setUp(self):
@@ -117,7 +164,7 @@ class TestItem():
 
     @raises(LookupError)
     def test_load_with_nonexistant_item_fails(self):
-        i = models.Item(self.d, id="123")
+        i = models.Item(id="123")
         self.d.get = lambda id: None # that item doesn't exist in the db
         i.load()
 
@@ -135,9 +182,9 @@ class TestItem():
         seed["_id"] = "123"
         # the fake dao puts the doc-to-save in the self.input var.
         assert_equals(self.input, seed)
+'''
 
-
-
+@nottest
 class TestCollection():
 
     def setUp(self):        
@@ -254,11 +301,11 @@ class TestMetrics(unittest.TestCase):
 
 
     def setUp(self):
-        self.m = models.Metrics(METRIC_NAME)
+        self.m = models.Metrics("plos", "html_views")
 
     def test_init(self):
         assert len(self.m.metric_snaps) == 0
-        assert_equals(self.m.name, METRIC_NAME )
+        assert_equals(self.m.ignore, False )
 
     def test_add_metric_snap(self):
         start_time = time.time()
@@ -295,14 +342,18 @@ class TestMetrics(unittest.TestCase):
         assert_equals(self.m.latest_snap.data["value"], snap2.data["value"])
 
     def test_as_dict(self):
-        assert_equals(METRICS_DATA, self.m.__dict__)
+        assert_equals(METRICS_DATA, self.m.__dict__) 
 
         # has to also work when there are snaps in the metric_snaps attr.
         snap_data = deepcopy(SNAP_DATA)
         snap = models.MetricSnap(snap_data)
         hash = self.m.add_metric_snap(snap)
         print self.m.__dict__['metric_snaps'][hash]
+        assert_equals(len(self.m.__dict__['metric_snaps']), 1)
         assert_equals(self.m.__dict__['metric_snaps'][hash], snap)
+        assert_equals(self.m.__dict__['latest_snap'], snap)
+
+
 
 
 
