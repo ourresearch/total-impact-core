@@ -115,15 +115,20 @@ class TestSaveable():
         s.bar = "another var"
         assert_equals(s.as_dict()['foo'], "a var")
 
+    @nottest
     def test_as_dict_recursive(self):
         s = models.Saveable()
         class TestObj:
             pass
         
-        foo = TestObj()
-        foo.bar = "I'm in an object" 
-        s.foo_object = foo
-        assert_equals(s.as_dict()['foo_object']['bar'], foo.bar)
+        class TestObj2:
+            pass
+        
+        foo =  TestObj()
+        foo.bar = "I'm in foo!"
+        s.my_list = []
+        s.my_list.append(foo)
+        assert_equals(s.as_dict()['my_list'][0]['bar'], foo.bar)
 
 
 
@@ -146,8 +151,9 @@ class TestItemFactory():
 
         factory = models.ItemFactory(dao)
         item = factory.make("123")
-        print item
-        assert_equals(item.as_dict(), ITEM_DATA)
+        print item.as_dict()
+
+        assert_equals(item.as_dict()["aliases"], ITEM_DATA["aliases"])
 
 '''
 class TestItem():
@@ -381,45 +387,24 @@ class TestAliases(unittest.TestCase):
 
     def setUp(self):
         self.providers = api.providers
-
         pass
         
     def tearDown(self):
-        pass
+        pass 
 
     def test_init(self):
         a = models.Aliases()
         
-        # a blank init always sets an id
-        assert len(a.data.keys()) == 1
-        assert a.data["tiid"] is not None
-        assert a.tiid is not None
-        assert a.tiid == a.data["tiid"]
+        assert_equals(len(a.tiid), 36)
         
         a = models.Aliases("123456")
-        
-        # check our id has propagated
-        assert len(a.data.keys()) == 1
-        assert a.data["tiid"] == "123456"
-        assert a.tiid == "123456"
-        
+        assert_equals(a.tiid, "123456")
+
         a = models.Aliases(seed=ALIAS_DATA)
-        
-        assert len(a.data.keys()) == 6
         assert a.tiid == "0987654321"
         assert a.title == ["Why Most Published Research Findings Are False"]
-        assert a.url == ["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"]
-        assert a.doi == ["10.1371/journal.pmed.0020124"]
-        assert a.created == 12387239847.234
-        assert a.last_modified == 1328569492.406
-        
-        a = models.Aliases(tiid="abcd", doi="10.1371/journal/1", title=["First", "Second"])
-        
-        assert len(a.data.keys()) == 3
-        assert a.tiid == "abcd"
-        assert a.doi == ["10.1371/journal/1"]
-        assert a.title == ["First", "Second"]
-        
+
+      
     def test_add(self):
         a = models.Aliases()
         a.add_alias("foo", "id1")
@@ -428,8 +413,14 @@ class TestAliases(unittest.TestCase):
         
         # check the data structure is correct
         expected = {"tiid": a.tiid, "foo":["id1", "id2"], "bar":["id1"]}
-        assert a.data == expected, a.data
-        
+        assert a.__dict__ == expected, a
+
+    def test_add_unique(self):
+        a = models.Aliases()
+        a.add_alias("foo", "id1")
+        a.add_alias("foo", "id2")
+        a.add_alias("bar", "id1")
+
         to_add = [
             ("baz", "id1"),
             ("baz", "id2"),
@@ -439,44 +430,39 @@ class TestAliases(unittest.TestCase):
         a.add_unique(to_add)
         
         # check the data structure is correct
-        expected = {"tiid": a.tiid, 
+        expected = {"tiid": a.tiid,
                     "foo":["id1", "id2", "id3"], 
                     "bar":["id1"], 
                     "baz" : ["id1", "id2"]}
-        assert a.data == expected, a.data
+        assert_equals(a.__dict__, expected)
+
         
     def test_add_potential_errors(self):
         # checking for the string/list type bug
         a = models.Aliases()
-        a.data["doi"] = "error"
+        a.doi = ["error"]
         a.add_alias("doi", "noterror")
-        assert a.data['doi'] == ["error", "noterror"], a.data['doi']
+        assert_equals(a.doi, ["error", "noterror"])
         
     def test_single_namespaces(self):
         a = models.Aliases(seed=ALIAS_DATA)
         
-        ids = a.get_ids_by_namespace("doi")
-        assert ids == ["10.1371/journal.pmed.0020124"]
-        
-        ids = a.get_ids_by_namespace("url")
-        assert ids == ["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"]
-        
-        aliases = a.get_aliases_list()
-        assert len(aliases) == 4
+        assert a.doi == ["10.1371/journal.pmed.0020124"]
+        assert a.url == ["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"]
+
+        assert_equals(len(a.get_aliases_list()), 4)
         
         aliases = a.get_aliases_list("doi")
         assert aliases == [("doi", "10.1371/journal.pmed.0020124")], aliases
         
         aliases = a.get_aliases_list("title")
         assert aliases == [("title", "Why Most Published Research Findings Are False")]
-        
+
+    @raises(AttributeError)
     def test_missing(self):
         a = models.Aliases(seed=ALIAS_DATA)
         
-        failres = a.get_ids_by_namespace("my_missing_namespace")
-        assert failres == [], failres
-        
-        failres = a.get_aliases_list("another_missing_namespace")
+        failres = a.my_missing_namespace
         assert failres == [], failres
         
     def test_multi_namespaces(self):
@@ -488,13 +474,14 @@ class TestAliases(unittest.TestCase):
     
     def test_dict(self):
         a = models.Aliases(seed=ALIAS_DATA)
-        assert a.get_aliases_dict() == ALIAS_CANONICAL_DATA
+        assert a.as_dict() == ALIAS_DATA
+        '''
     
     def test_DATA_validation(self):
         # FIXME: seed validation has not yet been implemented.  What does it
         # do, and how should it be tested?
         pass
-
+    '''
 
 
     
