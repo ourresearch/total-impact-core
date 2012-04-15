@@ -11,6 +11,17 @@ from totalimpact.providers.provider import ProviderValidationFailedError, Provid
 def dao_init_mock(self, config):
     pass
 
+class MockDao(object):
+
+    def get(self, id):
+        return self.responses[self.index]
+    
+    def setResponses(self, responses):
+        self.responses = responses
+        self.index = 0
+
+
+
 class InterruptTester(object):
     def run(self, stop_after=0):
         st = StoppableThread()

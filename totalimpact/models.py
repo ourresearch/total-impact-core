@@ -3,70 +3,80 @@ import totalimpact.dao as dao
 from totalimpact.providers.provider import ProviderFactory
 import time, uuid, json, hashlib, inspect
 
-class Model(object):
+class Saveable(object):
 
-    def __init__(self, dao, id=None, seed=None):
-        self.dao = dao
-        self.id = None #set it properly below
+    def __init__(self, id=None):
+        self.id = id #set it properly below
 
-        if seed:
-            for key in seed:
-                setattr(self, key, seed[key])
-        if id:
-            # if the user passes in an id, override the seed id
-            self.id = id
-        if (self.id is None):
-            # if no id in seed or in parameter then mint a new one
+        if id is None:
             self.id = uuid.uuid4().hex
-
-
-    def load(self):
-        doc = self.dao.get(self.id)
-        if doc is None:
-            raise(LookupError)
-        
-        for key in doc:
-            setattr(self, key, doc[key])
-
-        return doc
-
-    def save(self):
-        doc = self.as_dict()
-        # couch wants the underscore...should be fixed in dao, not here.
-        doc["_id"] = doc.pop("id")
-
-        try:
-            self.dao.update_item(doc, self.id)
-        except LookupError:
-            self.dao.create_item(doc, self.id)
-        return doc
-
-    def keys_from_docstring(self):
-        json_doc = inspect.getdoc(self)
-        return json.loads(json_doc).keys()
+        else:
+            self.id = id
 
     def as_dict(self):
-        doc = {}
-        for key in self.keys_from_docstring():
-            try:
-                temp_val = getattr(self, key)
-                try:
-                    val = temp_val.as_dict()
-                except AttributeError:
-                    val = temp_val
+        '''Recursively calls __dict__ on itself and all constituent objects.'''
 
-                doc[key] = val
-                
+        data = {}
+        for key, value in self.__dict__.iteritems():
+            if key == "dao": continue
+            try:
+                data[key] = self.as_dict(value)
             except AttributeError:
-                doc[key] = None
-        return doc
+                data[key] = value
+        return data
 
     def __str__(self):
         return str(self.as_dict())
 
 
+class ItemFactory():
+
+    def __init__(self, dao):
+        self.dao = dao
+
+    def make(self, tiid=None):
+        now = time.time()
+        item = Item()
+        item.last_modified = now
+
+        if tiid is None: # we're making a brand new item
+            item.created = now
+        else: # load an extant item
+            item_doc = self.dao.get(tiid)
+            for k in item_doc:
+                setattr(item, k, item_doc[k])
+
+            # some of the item's properties are objects, not dictionaries.
+            # we make these objects using doc data, then put them in the item.
+            item.aliases = Aliases(seed=item_doc['aliases'])
+            item.metrics = []
+            '''
+            for i in item_doc['metrics']:
+                my_metric_dict = item_doc['metrics'][i]
+
+
+                my_metric_obj = Metrics(my_metric_dict["metric_name"])
+
+
+
+                my_metric_obj["ignore"] = my_metric_dict["ignore"]
+
+                latest_snap = MetricSnap(seed=my_metric_dict["latest_snap"])
+                my_metric_obj["latest_snap"] = latest_snap
+                for s in my_metric_dict["metric_snaps"]:
+                    snap = MetricSnap(seed=my_metric_dict["metric_snaps"][s])
+                    my_metric_obj.metric_snaps[s] = snap
+
+                item.metrics.append(my_metric_obj)
+                '''
+
+
+        return item
+
+
+
 # FIXME: no id on the item? this should appear in the alias object?
-class Item(Model):
+class Item(Saveable):
     """{
         "id": "uuid4-goes-here",
         "aliases": "aliases_object",
@@ -78,24 +88,10 @@ class Item(Model):
     }
     """
 
-    def load(self):
-        doc = self.dao.get(self.id)
-        if doc is None:
-            raise(LookupError)
-        
-        for key in doc:
-            setattr(self, key, doc[key])
-
-        setattr(self, "aliases", Aliases(seed=doc["aliases"]))
-
-        return doc
-    
-    def set_last_requested(self):
-        self.last_requested = time.time()
-        self.save()
+    pass
 
 
-class Error(Model):
+class Error(Saveable):
     """{
         "error_type": "http_timeout",
         "message": "Error opening file",
@@ -106,7 +102,7 @@ class Error(Model):
     pass
 
         
-class Collection(Model):    
+class Collection(Saveable):
     """
     {
         "id": "uuid-goes-here",
@@ -174,9 +170,10 @@ class Metrics(object):
     plos:html_views, for example, need different Metrics objects despite being
     from the same provider.
     '''
-    def __init__(self, name):
+    def __init__(self, provider_name, metric_name):
 
-        self.name = name
+        self.metric_name = metric_name
+        self.provider_name = provider_name
         self.ignore = False
         self.metric_snaps = {}
         self.latest_snap = None
