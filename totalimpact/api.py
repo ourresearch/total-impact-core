@@ -65,9 +65,16 @@ GET /tiid/:namespace/:id
 '''
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
 def tiid(ns, nid):
-    # Nothing in the database, so return error for everything now
-    # FIXME needs to look things up - see issue 85
-    abort(404)
+    viewname = 'queues/by_alias'
+    res = mydao.view(viewname)
+    rows = res["rows"]
+    tiids = [row["id"] for row in rows]
+
+    if not tiids:
+        abort(404)
+    resp = make_response( json.dumps(tiids, sort_keys=True, indent=4 ), 303) 
+    resp.mimetype = "application/json"
+    return resp
 
 
 '''
