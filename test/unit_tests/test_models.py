@@ -144,14 +144,13 @@ class TestItemFactory():
         assert_equals(len(item.id), 32)
         assert item.created < time.time
 
-    @nottest
     def test_make_from_db(self):
         dao = MockDao()
         dao.setResponses([ITEM_DATA])
 
         factory = models.ItemFactory(dao)
         item = factory.make("123")
-        print item.as_dict()
+        print item.as_dict() 
 
         assert_equals(item.as_dict()["aliases"], ITEM_DATA["aliases"])
 
@@ -268,57 +267,7 @@ class TestCollection():
 
 
 class TestMetricSnap(unittest.TestCase):
-    def test_init(self):
-        snap_simple = models.MetricSnap(seed=deepcopy(SNAP_DATA))
-
-        assert snap_simple.id == "mendeley:readers"
-        assert snap_simple.value() == 16
-        assert snap_simple.created == 1233442897.234
-        assert snap_simple.last_modified == 1328569492.406
-        assert snap_simple.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
-        assert snap_simple.static_meta() == SNAP_DATA['static_meta']
-        assert snap_simple.data == SNAP_DATA
-
-        now = time.time()
-        snap = models.MetricSnap(id="richard:metric",
-                                    value=23, created=now, last_modified=now,
-                                    provenance_url="http://total-impact.org/")
-        assert snap.id == "richard:metric"
-        assert snap.value() == 23
-        assert snap.created == now
-        assert snap.last_modified == now
-        assert snap.provenance() == ["http://total-impact.org/"]
-        assert len(snap.static_meta()) == 0
-
-        snap_from_DATA = models.MetricSnap(id="richard:metric",
-                                    value=23, created=now, last_modified=now,
-                                    provenance_url="http://total-impact.org/",
-                                    static_meta=SNAP_DATA['static_meta'])
-        assert snap_from_DATA.static_meta() == SNAP_DATA['static_meta']
-
-    def test_get_set(self):
-        snap = models.MetricSnap(seed=deepcopy(SNAP_DATA))
-        stale = time.time()
-
-        assert snap.value() == 16
-        snap.value(17)
-        assert snap.value() == 17
-        assert snap.last_modified > stale
-        stale = snap.last_modified
-
-        assert snap.static_meta() == SNAP_DATA['static_meta']
-        snap.static_meta({"test": "static_meta"})
-        assert snap.static_meta() == {"test" : "static_meta"}
-        assert snap.last_modified > stale
-        stale = snap.last_modified
-
-        assert snap.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/"]
-        snap.provenance("http://total-impact.org")
-        assert snap.provenance() == ["http://api.mendeley.com/research/public-chemical-compound-databases/", "http://total-impact.org"]
-        assert snap.last_modified > stale
-
-        snap.provenance(["http://total-impact.org"])
-        assert snap.provenance() == ["http://total-impact.org"], snap.provenance()
+    pass
 
 class TestMetrics(unittest.TestCase):
 
@@ -333,43 +282,42 @@ class TestMetrics(unittest.TestCase):
     def test_add_metric_snap(self):
         start_time = time.time()
 
-        snap1 = models.MetricSnap(seed=deepcopy(SNAP_DATA))
+        snap1 = deepcopy(SNAP_DATA)
         hash = self.m.add_metric_snap(snap1)
 
         assert_equals(len(hash), 32)
         assert_equals(self.m.metric_snaps[hash], snap1)
         assert_equals(len(self.m.metric_snaps), 1)
-        assert_equals(self.m.latest_snap.data["value"], snap1.data["value"])
+        assert_equals(self.m.latest_snap["value"], snap1["value"])
 
         # the we've changed something, so the last_modified value should change
         assert  self.m.last_modified > start_time
 
         # let's try adding a new snap; this has a new value, so it'll get stored
         # alongside the first one.
-        snap2 = models.MetricSnap(seed=deepcopy(SNAP_DATA))
-        snap2.data['value'] = 17
+        snap2 =deepcopy(SNAP_DATA)
+        snap2['value'] = 17
         hash2 = self.m.add_metric_snap(snap2)
 
         assert_equals(len(hash), 32)
         assert_equals(self.m.metric_snaps[hash2], snap2)
         assert_equals(len(self.m.metric_snaps), 2) # two metricSnaps in there now.
-        assert_equals(self.m.latest_snap.data["value"], snap2.data["value"])
+        assert_equals(self.m.latest_snap["value"], snap2["value"])
 
         # now a third snap with the same value; shouldn't get stored.
-        snap3 = models.MetricSnap(seed=deepcopy(SNAP_DATA))
-        snap3.data['value'] = 17 #same as snap2
+        snap3 =deepcopy(SNAP_DATA)
+        snap3['value'] = 17 #same as snap2 
         hash3 = self.m.add_metric_snap(snap2)
 
         assert_equals(hash3, hash2)
         assert_equals(len(self.m.metric_snaps), 2) # still just two metricSnaps in there.
-        assert_equals(self.m.latest_snap.data["value"], snap2.data["value"])
+        assert_equals(self.m.latest_snap["value"], snap2["value"])
 
     def test_as_dict(self):
         assert_equals(METRICS_DATA, self.m.__dict__) 
 
         # has to also work when there are snaps in the metric_snaps attr.
-        snap_data = deepcopy(SNAP_DATA)
-        snap = models.MetricSnap(snap_data)
+        snap = deepcopy(SNAP_DATA)
         hash = self.m.add_metric_snap(snap)
         print self.m.__dict__['metric_snaps'][hash]
         assert_equals(len(self.m.__dict__['metric_snaps']), 1)
@@ -410,9 +358,12 @@ class TestAliases(unittest.TestCase):
         a.add_alias("foo", "id1")
         a.add_alias("foo", "id2")
         a.add_alias("bar", "id1")
+
+        assert a.last_modified < time.time()
         
         # check the data structure is correct
         expected = {"tiid": a.tiid, "foo":["id1", "id2"], "bar":["id1"]}
+        del a.last_modified
         assert a.__dict__ == expected, a
 
     def test_add_unique(self):
@@ -434,6 +385,7 @@ class TestAliases(unittest.TestCase):
                     "foo":["id1", "id2", "id3"], 
                     "bar":["id1"], 
                     "baz" : ["id1", "id2"]}
+        del a.last_modified
         assert_equals(a.__dict__, expected)
 
         

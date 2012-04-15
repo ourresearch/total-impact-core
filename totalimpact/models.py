@@ -57,15 +57,14 @@ class ItemFactory():
                 metric_name = metrics_dict["metric_name"]
                 my_metric_obj = Metrics(provider_name, metric_name)
                 my_metric_obj.ignore = metrics_dict["ignore"]
-
-                latest_snap = MetricSnap(seed=metrics_dict["latest_snap"])
-                my_metric_obj.latest_snap = latest_snap
+                my_metric_obj.latest_snap = metrics_dict["latest_snap"]
+                
                 for k, snap_dict in metrics_dict["metric_snaps"]:
-                    my_metric_obj.metric_snaps[k] = MetricSnap(seed=snap_dict)
+                    my_metric_obj.metric_snaps[k] = snap_dict
 
                 item.metrics.append(my_metric_obj)
 
-
+        item.last_requested = now
         return item
 
 
@@ -82,6 +81,8 @@ class Item(Saveable):
         "last_requested": 124141245.234
     }
     """
+
+
 
     pass
 
@@ -180,7 +181,7 @@ class Metrics(object):
         Also, note that snaps with identical values get overwritten.
         '''
 
-        hash = hashlib.md5(str(metric_snap.data["value"])).hexdigest()
+        hash = hashlib.md5(str(metric_snap["value"])).hexdigest()
         self.metric_snaps[hash] = metric_snap
         self.latest_snap = metric_snap
         self.last_modified = time.time()
@@ -219,76 +220,8 @@ class MetricSnap(object):
         }
     }
     """
-    def __init__(self, id=None, value=None, created=None, last_modified=None, provenance_url=None, static_meta=None, seed=None):
-                        
-        # load from the seed first
-        self.data = seed if seed is not None else {}
-        
-        # if there was no seed, load the properties, otherwise ignore them
-        if seed is None:            
-            self.data['id'] = self._init(id, str(uuid.uuid4()))
-            self.data['value'] = self._init(value, 0)
-            self.data['created'] = self._init(created, time.time())
-            self.data['last_modified'] = self._init(last_modified, time.time())
-            self.data['static_meta'] = self._init(static_meta, {})
-            
-            # provenance url needs a bit of special treatment
-            if not hasattr(provenance_url, "append"):
-                self.data['provenance_url'] = [provenance_url]
-            else:
-                self.data['provenance_url'] = []
 
-        if "static_meta" not in self.data.keys():
-            self.data['static_meta'] = {}
-        
-    def value(self, val=None):
-        if val is None:
-            return self.data['value']
-        else:
-            self.data['value'] = val
-            self.data['last_modified'] = time.time()
-            
-    def static_meta(self, static_meta=None):
-        if static_meta is None:
-            return self.data['static_meta']
-        else:
-            self.data['static_meta'] = static_meta
-            self.data['last_modified'] = time.time()
     
-    def __repr__(self):
-        return str(self.data)
-
-
-    # FIXME: this is not particularly intuitive, consider changing it
-    def provenance(self, provenance=None):
-        """
-        get or set the provenance.
-        
-        This will retrieve the provenance array if urls is None
-        If urls is not a list, the url will be appended to the existing urls
-        If urls IS a list, it will overwrite the existing provenance list
-        """
-        if provenance is None:
-            return self.data['provenance_url']
-        else:
-            if hasattr(provenance, "append"):
-                self.data['provenance_url'] = provenance
-            else:
-                self.data['provenance_url'].append(provenance)
-            self.data['last_modified'] = time.time()
-    
-    def _init(self, val, default=None):
-        return val if val is not None else default
-    
-    def __getattribute__(self, att):
-        try:
-            return super(MetricSnap, self).__getattribute__(att)
-        except:
-            return self.data[att]
-    
-    def __str__(self):
-        return str(self.data)
-
     
 
 class Aliases(object):
@@ -324,6 +257,7 @@ class Aliases(object):
             print attr
         except AttributeError:
             setattr(self, namespace, [id])
+        self.last_modified = time.time()
 
     #FIXME: this should take namespace and id, not a list of them
     def add_unique(self, alias_list):
@@ -333,6 +267,7 @@ class Aliases(object):
                     self.add_alias(ns, id)
             except:
                     self.add_alias(ns, id)
+        self.last_modified = time.time()
     
     def get_aliases_list(self, namespace_list=None): 
         ''' 
@@ -358,7 +293,7 @@ class Aliases(object):
             if not hasattr(ids, "append"):
                 ids = [ids]
             ret += [(namespace, id) for id in ids]
-        
+
         return ret
     
     def as_dict(self):

@@ -64,7 +64,7 @@ class Wikipedia(Provider):
         self._mitigated_get_metrics(url, this_metrics)
         
         sdurl = self.config.metrics['provenance_url'] % alias[1]
-        this_metrics.provenance(sdurl)
+        this_metrics.static_meta.provenance_url.append(sdurl)
         
         logger.debug(self.config.id + ": interim metrics: " + str(this_metrics))
         return this_metrics
