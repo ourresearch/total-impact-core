@@ -1,4 +1,6 @@
 import unittest, json, uuid
+from copy import deepcopy
+from urllib import quote_plus
 from nose.tools import nottest, assert_equals
 
 from totalimpact import api, dao
@@ -7,13 +9,29 @@ from totalimpact.providers.dryad import Dryad
 
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
+PLOS_TEST_DOI = "10.1371/journal.pone.0004803"
 GOLD_MEMBER_ITEM_CONTENT = ["MEMBERITEM CONTENT"]
+TEST_COLLECTION_ID = "TestCollectionId"
+TEST_COLLECTION_TIID_LIST = ["tiid1", "tiid2"]
+TEST_COLLECTION_TIID_LIST_MODIFIED = ["tiid1", "tiid_different"]
+
+COLLECTION_SEED = json.loads("""{
+    "id": "uuid-goes-here",
+    "collection_name": "My Collection",
+    "owner": "abcdef",
+    "created": 1328569452.406,
+    "last_modified": 1328569492.406,
+    "item_tiids": ["origtiid1", "origtiid2"] 
+}""")
+COLLECTION_SEED_MODIFIED = deepcopy(COLLECTION_SEED)
+COLLECTION_SEED_MODIFIED["item_tiids"] = TEST_COLLECTION_TIID_LIST_MODIFIED
+
 
 def MOCK_member_items(self, a, b):
     return(GOLD_MEMBER_ITEM_CONTENT)
 
 
-class TestWeb(unittest.TestCase):
+class TestApi(unittest.TestCase):
 
     def setUp(self):
         #setup api test client
@@ -97,24 +115,120 @@ class TestWeb(unittest.TestCase):
         assert_equals(response.status_code, 200)
         assert_equals(
             set(json.loads(response.data).keys()),
-            set([u'aliases', u'biblio', u'created', u'id', u'last_modified', u'last_requested', u'metrics'])
+            set([u'aliases', u'biblio', u'created', u'id', u'last_modified', 
+                u'last_requested', u'metrics'])
             )
         assert_equals(response.mimetype, "application/json")
 
     def test_item_get_success_realid(self):
         # First put something in
-        response = self.client.get('/item/doi/' + TEST_DRYAD_DOI.replace("/", "%2F")) 
+        response = self.client.get('/item/doi/' + 
+            TEST_DRYAD_DOI.replace("/", "%2F")) 
         tiid = response.data
         print response
         print tiid 
 
     def test_item_post_urldecodes(self):
-        resp = self.client.post('/item/doi/' + TEST_DRYAD_DOI.replace("/", "%2F"))
+        resp = self.client.post('/item/doi/' + 
+            TEST_DRYAD_DOI.replace("/", "%2F"))
         tiid = resp.data.replace('"', '')
 
         resp = self.client.get('/item/' + tiid)
         saved_item = json.loads(resp.data) 
 
         assert_equals(TEST_DRYAD_DOI, saved_item["aliases"]["doi"])
+
+
+    def test_collection_post_already_exists(self):
+        response = self.client.post('/collection/' + TEST_COLLECTION_ID)
+        assert_equals(response.status_code, 405)  # Method Not Allowed
+
+    def test_collection_post_new_collection(self):
+        response = self.client.post('/collection', data=json.dumps(TEST_COLLECTION_TIID_LIST), content_type="application/json")
+        print response
+        print response.data
+        assert_equals(response.status_code, 201)  #Created
+        assert_equals(response.mimetype, "application/json")
+        response_loaded = json.loads(response.data)
+        assert_equals(
+                set(response_loaded.keys()), 
+                set([u'created', u'collection_name', u'item_tiids', 
+                    u'last_modified', u'owner', u'id']))
+        assert_equals(len(response_loaded["id"]), 32)
+
+    def test_collection_put_updated_collection(self):
+        # Put in an item.  Could mock this out in the future.
+        response = self.client.post('/collection', 
+                data=json.dumps(TEST_COLLECTION_TIID_LIST), 
+                content_type="application/json")
+        response_loaded = json.loads(response.data)
+        new_collection_id = response_loaded["id"]
+
+        response = self.client.put('/collection/' + new_collection_id, 
+                data=json.dumps(COLLECTION_SEED_MODIFIED), 
+                content_type="application/json")
+        print response
+        print response.data
+        assert_equals(response.status_code, 200)  #updated
+        assert_equals(response.mimetype, "application/json")
+        response_loaded = json.loads(response.data)
+        assert_equals(
+                set(response_loaded.keys()), 
+                set([u'created', u'collection_name', u'item_tiids', u'last_modified', u'owner', u'id']))
+        assert_equals(response_loaded["item_tiids"], 
+            COLLECTION_SEED_MODIFIED["item_tiids"])
+
+    def test_collection_put_empty_payload(self):
+        response = self.client.put('/collection/' + TEST_COLLECTION_ID)
+        assert_equals(response.status_code, 404)  #Not found
+
+    def test_collection_delete_with_no_id(self):
+        response = self.client.delete('/collection/')
+        assert_equals(response.status_code, 404)  #Not found
+
+    def test_collection_get_with_no_id(self):
+        response = self.client.get('/collection/')
+        assert_equals(response.status_code, 404)  #Not found
+
+    def test_tiid_get_with_unknown_alias(self):
+        # try to retrieve tiid id for something that doesn't exist yet
+        plos_no_tiid_resp = self.client.get('/tiid/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        assert_equals(plos_no_tiid_resp.status_code, 404)  # Not Found
+
+    def test_tiid_get_with_known_alias(self):
+        # create new plos item from a doi
+        plos_create_tiid_resp = self.client.post('/item/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        plos_create_tiid = json.loads(plos_create_tiid_resp.data)
+
+        # retrieve the plos tiid using tiid api
+        plos_lookup_tiid_resp = self.client.get('/tiid/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        assert_equals(plos_lookup_tiid_resp.status_code, 303)  
+        plos_lookup_tiids = json.loads(plos_lookup_tiid_resp.data)
+
+        # check that the tiids are the same
+        assert_equals(plos_create_tiid, plos_lookup_tiids[0])
+
+    def test_tiid_get_tiids_for_multiple_known_aliases(self):
+        # create two new items with the same plos alias
+        first_plos_create_tiid_resp = self.client.post('/item/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        first_plos_create_tiid = json.loads(first_plos_create_tiid_resp.data)
+
+        second_plos_create_tiid_resp = self.client.post('/item/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        second_plos_create_tiid = json.loads(second_plos_create_tiid_resp.data)
+
+        # retrieve the plos tiid using tiid api
+        plos_lookup_tiid_resp = self.client.get('/tiid/doi/' + 
+                quote_plus(PLOS_TEST_DOI))
+        assert_equals(plos_lookup_tiid_resp.status_code, 303)  
+        plos_lookup_tiids = json.loads(plos_lookup_tiid_resp.data)
+
+        # check that the tiid lists are the same
+        assert_equals(sorted(plos_lookup_tiids), 
+            sorted([first_plos_create_tiid, second_plos_create_tiid]))
 
 

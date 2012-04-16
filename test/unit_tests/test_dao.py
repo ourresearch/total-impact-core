@@ -20,7 +20,8 @@ class TestDAO(unittest.TestCase):
     def test_create_db_uploads_views(self):
         self.d.create_db(TEST_DB_NAME)
         design_doc = self.d.db.get("_design/queues")
-        assert_equals(set(design_doc["views"].keys()), set(["aliases", "metrics"]))
+        assert_equals(set(design_doc["views"].keys()), 
+            set([u'metrics', u'by_alias', u'aliases']))
 
     def test_db_exists(self):
         self.d.create_db(TEST_DB_NAME)

@@ -35,18 +35,6 @@
         "url" : "http://dx.doi.org/%s",
         "timeout" : 5,
         "static_meta" : {
-            "dryad:file_views": {
-                "display_name": "file views",
-                "provider": "Dryad",
-                "provider_url": "http:\/\/www.datadryad.org\/",
-                "description": "Dryad file views: combined number of views of the data package and data files",
-                "icon": "http:\/\/datadryad.org\/favicon.ico",
-                "category": "views",
-                "can_use_commercially": "1",
-                "can_embed": "1",
-                "can_aggregate": "1",
-                "other_terms_of_use": "CC0"
-              },
             "dryad:package_views": {
                 "display_name": "package views",
                 "provider": "Dryad",

@@ -24,9 +24,8 @@ class Dryad(Provider):
         self.dryad_doi_rx = re.compile(r"(10\.5061/.*)")
         self.member_items_rx = re.compile(r"(10\.5061/.*)</span")
 
-        self.DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+) views</span>", re.DOTALL)
-        self.DRYAD_VIEWS_FILE_PATTERN = re.compile("(?P<views>\d+) views\S", re.DOTALL)
-        self.DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+) downloads", re.DOTALL)
+        self.DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+)\W*views<span", re.DOTALL)
+        self.DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+)\W*downloads</span", re.DOTALL)
 
     def _is_dryad_doi(self, doi):
         return self.dryad_doi_rx.search(doi) is not None
@@ -92,7 +91,6 @@ class Dryad(Provider):
         # source
         new_aliases = []
         for alias in alias_object.get_aliases_list("doi"):
-            print alias
             if not self._is_dryad_doi(alias[1]):
                 continue
             logger.debug(self.config.id + ": processing aliases for tiid:" + alias_object.tiid)
@@ -207,11 +205,9 @@ class Dryad(Provider):
 
 
     def _extract_stats(self, content):
-        view_matches_package = self.DRYAD_VIEWS_PACKAGE_PATTERN.finditer(content)
-        view_matches_file = self.DRYAD_VIEWS_FILE_PATTERN.finditer(content)
+        view_matches_package = self.DRYAD_VIEWS_PACKAGE_PATTERN.search(content)
         try:
-            view_package = max([int(view_match.group("views")) for view_match in view_matches_package])
-            file_total_views = sum([int(view_match.group("views")) for view_match in view_matches_file]) - view_package
+            view_package = view_matches_package.group("views")
         except ValueError:
             raise ProviderClientError(content)            
         
@@ -223,12 +219,11 @@ class Dryad(Provider):
         except ValueError:
             raise ProviderClientError(content)            
 
-        snapshot_file_views = DryadMetricSnapshot(self, "dryad:file_views", file_total_views)
         snapshot_view_package = DryadMetricSnapshot(self, "dryad:package_views", view_package)
         snapshot_total_downloads = DryadMetricSnapshot(self, "dryad:total_downloads", total_downloads)
         snapshot_most_downloaded_file = DryadMetricSnapshot(self, "dryad:most_downloaded_file", max_downloads)
 
-        return([snapshot_file_views, snapshot_view_package, snapshot_total_downloads, snapshot_most_downloaded_file])
+        return([snapshot_view_package, snapshot_total_downloads, snapshot_most_downloaded_file])
 
 
     def provides_biblio(self): 

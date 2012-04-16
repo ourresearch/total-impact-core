@@ -203,7 +203,7 @@ class Test_Dryad(unittest.TestCase):
     def test_06c_basic_extract_stats(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         ret = self.provider._extract_stats(f.read())
-        assert len(ret) == 4, ret
+        assert len(ret) == 3, ret
 
     def test_07a_get_metrics_success(self):
         Provider.http_get = get_metrics_html_success
@@ -213,7 +213,7 @@ class Test_Dryad(unittest.TestCase):
         new_metrics_values = [(m["id"], m["value"]) for m in new_metrics.values()]
         new_metrics_values.sort()  # for consistent order
         assert_equals(new_metrics_values,
-            [('dryad:file_views', 268), ('dryad:most_downloaded_file', 76), ('dryad:package_views', 407), ('dryad:total_downloads', 178)])
+            [('dryad:most_downloaded_file', 63), ('dryad:package_views', '149'), ('dryad:total_downloads', 169)])
 
     @raises(ProviderClientError)
     def test_07b_metrics_400(self):

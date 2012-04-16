@@ -26,11 +26,14 @@ class Saveable(object):
         str = re.sub(r'!![^\s]+ *', '', str)
         return  yaml.load(str)
 
+
     def _update_dict(self, input, my_dict=None):
         '''Use another dict to recursively add list or dict items not in this.
         
         This object's value wins all conflicts, but new values in lists and 
         dictionaries are added. Used to update from the db before saving.
+        I think this might should go in the dao...not sure.
+
         returns - dict
         '''
         if my_dict is None:
@@ -49,7 +52,12 @@ class Saveable(object):
     def save(self):
         new_dict = self.dao.get(self.id)
         dict_to_save = self._update_dict(new_dict)
-        self.dao.save(dict_to_save)
+        res = self.dao.save(dict_to_save)
+        return res
+
+    def delete(self):
+        self.dao.delete(self.id)
+        return True
 
 
 
@@ -66,6 +74,10 @@ class ItemFactory():
             item.created = now
         else: # load an extant item
             item_doc = self.dao.get(tiid)
+
+            if item_doc is None:
+                raise LookupError
+
             for k in item_doc:
                 setattr(item, k, item_doc[k])
 
@@ -116,7 +128,26 @@ class Error(Saveable):
     }"""
     pass
 
-        
+class CollectionFactory():
+    def __init__(self, dao):
+        self.dao = dao
+
+    def make(self, id=None):
+        collection = Collection(dao=self.dao)
+
+        if id is None:
+            collection.id = uuid.uuid4().hex
+        else: # load an extant item
+            collection_doc = self.dao.get(id)
+            if collection_doc is None:
+                raise LookupError
+            
+            for k in collection_doc:
+                setattr(collection, k, item_doc[k])
+
+        return collection
+
+
 class Collection(Saveable):
     """
     {
