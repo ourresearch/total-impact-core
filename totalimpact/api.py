@@ -3,7 +3,7 @@ from flask import render_template, flash
 import os, json, time
 
 from totalimpact import dao
-from totalimpact.models import Item, Collection, Metrics
+from totalimpact.models import Item, Collection, Metrics, ItemFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
@@ -79,18 +79,18 @@ def tiid(ns, nid):
     return resp
 
 
-'''
-POST /item/:namespace/:id
-201 location: {tiid}
-500?  if fails to create
-example /item/PMID/234234232
-'''
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
-    now = time.time()
-    item = Item(mydao)
-    item.aliases = {}
-    item.aliases[namespace] = nid
+    '''Creates a new item using the given namespace and id.
+
+    POST /item/:namespace/:id
+    201 location: {tiid}
+    500?  if fails to create
+    example /item/PMID/234234232
+    '''
+    
+    item = ItemFactory.make(mydao)
+    item.aliases.add_alias(namespace, nid)
 
     ## FIXME - see issue 86
     ## Should look up this namespace and id and see if we already have a tiid
@@ -103,18 +103,15 @@ def item_namespace_post(namespace, nid):
     known_namespaces = ["doi", "github"]  # hack in the meantime
     if not namespace in known_namespaces:
         abort(501) # "Not Implemented"
+    else:
+        item.save()
+        response_code = 201 # Created
 
-    # otherwise, save the item
-    item.save() 
-    response_code = 201 # Created
-
-    tiid = item.id
-
-    if not tiid:
-        abort(500)
-    resp = make_response(json.dumps(tiid), response_code)        
-    resp.mimetype = "application/json"
-    return resp
+        if not item.id:
+            abort(500)
+        resp = make_response(json.dumps(item.id), response_code)
+        resp.mimetype = "application/json"
+        return resp
 
 
 '''
