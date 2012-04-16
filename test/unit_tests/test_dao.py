@@ -54,7 +54,7 @@ class TestDAO(unittest.TestCase):
         self.d.connect_db(TEST_DB_NAME)
         id = "123"
         
-        ret = self.d.create_item({}, id)
+        ret = self.d.save({"id":"123"})
         assert_equals(id, ret[0])
 
         del_worked = self.d.delete(id)

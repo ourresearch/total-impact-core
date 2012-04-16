@@ -76,14 +76,15 @@ class Dao(object):
 
     def save(self, doc):
         #FIXME: docs should only come with "id"s
+        print doc
         try:
-            doc._id = doc.tiid
-        except AttributeError:
-            doc._id = doc.id
-        except AttributeError(e):
-            raise e
+            doc["_id"] = doc["tiid"]
+        except KeyError:
+            doc["_id"] = doc["id"]
+        except KeyError:
+            raise
 
-        self.db.save(doc)
+        return self.db.save(doc)
 
 
     def query(self,**kwargs):
