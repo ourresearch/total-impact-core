@@ -16,11 +16,17 @@ class MockDao(object):
     def get(self, id):
         ret = self.responses[self.index]
         self.index = self.index + 1
+        self.saved = []
         return ret
     
     def setResponses(self, responses):
         self.responses = responses
         self.index = 0
+
+    def save(self, doc):
+        self.save.append(doc)
+
+
 
 
 

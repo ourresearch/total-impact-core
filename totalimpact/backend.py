@@ -131,6 +131,7 @@ class ProviderThread(QueueConsumer):
         self.dao = dao
         QueueConsumer.__init__(self, queue)
         self.thread_id = "BaseProviderThread"
+        self.run_once = False
 
     def log_error(self, item, error_type, error_msg, tb):
         # This method is called to record any errors which we obtain when
@@ -169,6 +170,11 @@ class ProviderThread(QueueConsumer):
                 # an excessive number of retries. Either way, update the item
                 # as we don't process it again a second time.
                 self.queue.save_and_unqueue(item)
+
+            # Flag for testing. We should finish the run loop as soon
+            # as we've processed a single item.
+            if self.run_once:
+                return
 
     def process_item_for_provider(self, item, provider, method):
         """ Run the given method for the given provider on the given item

@@ -48,7 +48,8 @@ class Dao(object):
                     "language": "javascript",
                     "views": {
                         "metrics": {},
-                        "aliases": {}
+                        "aliases": {},
+                        "by_alias": {}
                         } 
                     }
         for view_name in view["views"]:
@@ -72,6 +73,18 @@ class Dao(object):
             return self.db.get(_id)
         else:
             return None
+
+    def save(self, doc):
+        #FIXME: docs should only come with "id"s
+        try:
+            doc._id = doc.tiid
+        except AttributeError:
+            doc._id = doc.id
+        except AttributeError(e):
+            raise e
+
+        self.db.save(doc)
+
 
     def query(self,**kwargs):
         # pass queries through to couchdb, as per couchdb-python query

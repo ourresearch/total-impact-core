@@ -114,7 +114,7 @@ class TestSaveable():
         s = models.Saveable(dao="dao")
         assert_equals(len(s.id), 32)
 
-        s2 = models.Saveable(id="123")
+        s2 = models.Saveable(dao="dao", id="123")
         assert_equals(s2.id, "123")
 
     def test_as_dict(self):
@@ -227,22 +227,19 @@ class TestItemFactory():
         assert_equals(item.aliases.__class__.__name__, "Aliases")
         assert_equals(item.as_dict()["aliases"], ITEM_DATA["aliases"])
 
-'''
+    @raises(LookupError)
+    def test_load_with_nonexistant_item_fails(self):
+        dao = MockDao()
+        dao.setResponses([None])
+        factory = models.ItemFactory(dao)
+        item = factory.make("123")
+
 class TestItem():
 
     def setUp(self):
-        self.d = dao.Dao(TEST_DB_NAME)
-        
-        self.d.create_new_db_and_connect(TEST_DB_NAME)
-        self.d.get = lambda id: ITEM_DATA
-        def fake_save(data, id):
-            self.input = data
-        self.d.update_item = fake_save
+        self.d = MockDao()
+        self.d.setResponses([ITEM_DATA])
 
-        self.providers = api.providers
-
-    def test_new_testing_class(self):
-        assert True
 
     def test_mock_dao(self):
         assert_equals(self.d.get("123"), ITEM_DATA)
@@ -250,18 +247,6 @@ class TestItem():
     def ITEM_DATA_init(self):
         i = models.Item(self.d)
         assert_equals(len(i.id), 32) # made a uuid, yay
-
-    def ITEM_DATA_load(self):
-        i = models.Item(self.d, id="123")
-        i.load()
-        assert_equals(i.aliases.as_dict(), ALIAS_CANONICAL_DATA)
-        assert_equals(i.created, ITEM_DATA["created"])
-
-    @raises(LookupError)
-    def test_load_with_nonexistant_item_fails(self):
-        i = models.Item(id="123")
-        self.d.get = lambda id: None # that item doesn't exist in the db
-        i.load()
 
     def ITEM_DATA_save(self):
         i = models.Item(self.d, id="123")
@@ -277,17 +262,32 @@ class TestItem():
         seed["_id"] = "123"
         # the fake dao puts the doc-to-save in the self.input var.
         assert_equals(self.input, seed)
-'''
 
-@nottest
+class TestCollectionFactory():
+
+    def setUp(self):        
+        self.d = MockDao()
+        
+    def COLLECTION_DATA_load(self):
+        self.d.get = lambda id: deepcopy(COLLECTION_DATA)
+        c = models.Collection(self.d, id="SomeCollectionId")
+        c.load()
+        assert_equals(c.collection_name, "My Collection")
+        assert_equals(c.item_ids(), [u'origtiid1', u'origtiid2'])
+
+    @raises(LookupError)
+    def test_load_with_nonexistant_collection_fails(self):
+        self.d.setResponses([None])
+        factory = models.CollectionFactory(self.d)
+        collection = factory.make("AnUnknownCollectionId")
+
 class TestCollection():
 
     def setUp(self):        
-        self.d = dao.Dao(TEST_DB_NAME)
-        self.d.create_new_db_and_connect(TEST_DB_NAME)
+        self.d = MockDao()
 
     def test_mock_dao(self):
-        self.d.get = lambda id: deepcopy(COLLECTION_DATA)
+        self.d.setResponses([ deepcopy(COLLECTION_DATA)])
         assert_equals(self.d.get("SomeCollectionId"), COLLECTION_DATA)
 
     def COLLECTION_DATA_init(self):
@@ -303,19 +303,6 @@ class TestCollection():
         c = models.Collection(self.d, seed=deepcopy(COLLECTION_DATA))
         c.remove_item("origtiid1")
         assert_equals(c.item_ids(), ["origtiid2"])
-
-    def COLLECTION_DATA_load(self):
-        self.d.get = lambda id: deepcopy(COLLECTION_DATA)
-        c = models.Collection(self.d, id="SomeCollectionId")
-        c.load()
-        assert_equals(c.collection_name, "My Collection")
-        assert_equals(c.item_ids(), [u'origtiid1', u'origtiid2'])
-
-    @raises(LookupError)
-    def test_load_with_nonexistant_collection_fails(self):
-        self.d.get = lambda id: None # that item doesn't exist in the db
-        c = models.Collection(self.d, id="AnUnknownCollectionId")
-        c.load()
 
     def COLLECTION_DATA_save(self):
         # this fake save method puts the doc-to-save in the self.input variable
@@ -337,6 +324,12 @@ class TestCollection():
 
         # check to see if the fake save method did in fact "save" the collection as expected
         assert_equals(self.input, seed)
+
+    def test_collection_delete(self):
+        self.d.delete = lambda id: True
+        c = models.Collection(self.d, id="SomeCollectionId")
+        response = c.delete()
+        assert_equals(response, True)
 
 
 class TestMetricSnap(unittest.TestCase):
@@ -499,13 +492,8 @@ class TestAliases(unittest.TestCase):
     def test_dict(self):
         a = models.Aliases(seed=ALIAS_DATA)
         assert a.as_dict() == ALIAS_DATA
-        '''
-    
-    def test_DATA_validation(self):
-        # FIXME: seed validation has not yet been implemented.  What does it
-        # do, and how should it be tested?
-        pass
-    '''
+
+
 
 
     
