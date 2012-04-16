@@ -28,7 +28,8 @@ class Dryad(Provider):
         self.DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+)\W*downloads</span", re.DOTALL)
 
     def _is_dryad_doi(self, doi):
-        return self.dryad_doi_rx.search(doi) is not None
+        response = self.dryad_doi_rx.search(doi)
+        return response is not None
 
     def _is_relevant_id(self, alias):
         return self._is_dryad_doi(alias[1])
@@ -156,12 +157,10 @@ class Dryad(Provider):
         return "http://dx.doi.org/" + doi
 
     def _get_dryad_doi(self, item):
-        item_dois = item.aliases.get_ids_by_namespace("doi")
-        item_dryad_dois = [doi for doi in item_dois if self._is_dryad_doi(doi)]
-        if not item_dryad_dois:
+        item_doi = item.aliases.get_ids_by_namespace("doi")
+        if not item_doi:
             raise Exception
-        id = item_dryad_dois[0]
-        return(id)        
+        return(item_doi)        
 
     def metrics(self, item): 
         id = self._get_dryad_doi(item)
@@ -174,8 +173,9 @@ class Dryad(Provider):
         logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url, timeout=self.config.metrics.get('timeout', None))
-        
+        response = self.http_get(url, 
+            timeout=self.config.metrics.get('timeout', None))
+
         # register the hit, mostly so that anyone copying this remembers to do it,
         # - we have overriden this in the DryadState object, so it doesn't do anything
         self.state.register_unthrottled_hit()
@@ -194,6 +194,7 @@ class Dryad(Provider):
 
         # extract the aliases
         new_stats = self._extract_stats(response.text)
+
         metrics = Metrics()
 
         if new_stats is not None:
@@ -235,9 +236,7 @@ class Dryad(Provider):
         return biblio_object
 
     def get_biblio_for_id(self, id):
-        id = urllib.unquote(id)
-
-        url = self.config.biblio['url'] % urllib.quote(id)
+        url = self.config.biblio['url'] % id
         logger.debug(self.config.id + ": attempting to retrieve biblio from " + url)
         
         # try to get a response from the data provider        

@@ -1,5 +1,9 @@
 import pdb, json, uuid, couchdb, time
 from totalimpact import default_settings
+from totalimpact.tilogging import logging
+
+# set up logging
+logger = logging.getLogger(__name__)
 
 class Dao(object):
 
@@ -129,8 +133,16 @@ class Dao(object):
         doc['last_modified'] = time.time()
         print(doc)
 
-        # FIXME handle update conflicts properly
-        return self.db.save(doc)
+        save_response = None
+        while not save_response:
+            try:
+                save_response = self.db.save(doc)
+            except couchdb.ResourceConflict:
+                print "conflict"
+                logger.debug("In dao update_item with ResourceConflict. Sleeping and will try again.")
+                time.sleep(0.1)
+
+        return save_response
 
     def create_collection(self):
         return self.create_item()
