@@ -5,8 +5,8 @@ import time, uuid, json, hashlib, inspect, yaml, re
 
 class Saveable(object):
 
-    def __init__(self, id=None):
-        self.id = id #set it properly below
+    def __init__(self, dao, id=None):
+        self.dao = dao
 
         if id is None:
             self.id = uuid.uuid4().hex
@@ -26,11 +26,30 @@ class Saveable(object):
         str = re.sub(r'!![^\s]+ *', '', str)
         return  yaml.load(str)
 
-    def merge(self, other_item):
-        '''merge this with another Item, overwriting/appending where appropriate'''
+    def _update_dict(self, input, my_dict=None):
+        '''Use another dict to recursively add list or dict items not in this.
+        
+        This object's value wins all conflicts, but new values in lists and 
+        dictionaries are added. Used to update from the db before saving.
+        returns - dict
+        '''
+        if my_dict is None:
+            my_dict = self.as_dict()
 
-    def save(self, dao):
-        pass
+        for k, v in input.iteritems():
+            try:
+                new_my_dict = my_dict.setdefault(k, {})
+                self._update_dict(v, new_my_dict)
+            except AttributeError:
+                if not my_dict[k]:
+                    my_dict[k] = v
+        
+        return my_dict
+
+    def save(self):
+        new_dict = self.dao.get(self.id)
+        dict_to_save = self._update_dict(new_dict)
+        self.dao.save(dict_to_save)
 
 
 
@@ -41,7 +60,7 @@ class ItemFactory():
 
     def make(self, tiid=None):
         now = time.time()
-        item = Item()
+        item = Item(dao=self.dao)
 
         if tiid is None: # we're making a brand new item
             item.created = now
@@ -53,20 +72,14 @@ class ItemFactory():
             # some of the item's properties are objects, not dictionaries.
             # we make these objects using doc data, then put them in the item.
             item.aliases = Aliases(seed=item_doc['aliases'])
-            item.metrics = []
+            item.metrics = {}
 
-            for metrics_dict in item_doc['metrics']:
-                
-                provider_name = metrics_dict["provider_name"]
-                metric_name = metrics_dict["metric_name"]
-                my_metric_obj = Metrics(provider_name, metric_name)
-                my_metric_obj.ignore = metrics_dict["ignore"]
-                my_metric_obj.latest_snap = metrics_dict["latest_snap"]
-                
-                for k, snap_dict in metrics_dict["metric_snaps"]:
-                    my_metric_obj.metric_snaps[k] = snap_dict
-
-                item.metrics.append(my_metric_obj)
+            for metric_name, metrics_dict in item_doc['metrics'].iteritems():
+                my_metric_obj = Metrics()
+                for k, v in metrics_dict.iteritems():
+                    setattr(my_metric_obj, k, v)
+    
+                item.metrics[metric_name] = my_metric_obj
 
         item.last_requested = now
         return item
@@ -87,8 +100,7 @@ class Item(Saveable):
     """
     pass
 
-    def merge(self, other_item):
-        '''merge this with another Item, overwriting/appending where appropriate'''
+
 
     def save(self, dao):
         pass
@@ -174,10 +186,8 @@ class Metrics(object):
     plos:html_views, for example, need different Metrics objects despite being
     from the same provider.
     '''
-    def __init__(self, provider_name, metric_name):
+    def __init__(self):
 
-        self.metric_name = metric_name
-        self.provider_name = provider_name
         self.ignore = False
         self.metric_snaps = {}
         self.latest_snap = None
@@ -195,6 +205,7 @@ class Metrics(object):
         self.latest_snap = metric_snap
         self.last_modified = time.time()
         return hash
+
 
       
 
@@ -303,7 +314,8 @@ class Aliases(object):
             ret += [(namespace, id) for id in ids]
 
         return ret
-    
+
+    # FIXME I don't think we need this any more?
     def as_dict(self):
         return self.__dict__
 
