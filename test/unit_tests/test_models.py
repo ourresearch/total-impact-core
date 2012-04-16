@@ -121,7 +121,6 @@ class TestSaveable():
         s.bar = "another var"
         assert_equals(s.as_dict()['foo'], "a var")
 
-    @nottest
     def test_as_dict_recursive(self):
         s = models.Saveable(dao="dao")
         class TestObj:
@@ -130,11 +129,11 @@ class TestSaveable():
         foo =  TestObj()
         foo.bar = "I'm in foo!"
 
-        s.my_dict = {}
-        s.my_dict["foo_obj"] = foo
+        s.constituent_dict = {}
+        s.constituent_dict["foo_obj"] = foo
         print s.as_dict()
 
-        assert_equals(s.as_dict()['foo_obj']['bar'], foo.bar)
+        assert_equals(s.as_dict()['constituent_dict']['foo_obj']['bar'], foo.bar)
 
     def test__update_dict(self):
         '''These tests are more naturalistic because they use the objects

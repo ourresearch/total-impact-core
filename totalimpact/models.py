@@ -1,7 +1,7 @@
 from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
 from totalimpact.providers.provider import ProviderFactory
-import time, uuid, json, hashlib, inspect, yaml, re
+import time, uuid, json, hashlib, inspect, yaml, re, copy
 
 class Saveable(object):
 
@@ -17,28 +17,12 @@ class Saveable(object):
     def as_dict(self, obj=None, classkey=None):
         '''Recursively calls __dict__ on itself and all constituent objects.
 
+
         '''
         
-        if obj is None:
-            obj = self
-
-        data = {}
-        for key, value in obj.__dict__.iteritems():
-            try:
-                data[key] = self.as_dict(value)
-            except AttributeError:
-                data[key] = value
-        return data
-
-        '''
-        dict = {}
-        for k, v in obj.__dict__.iteritems():
-            try:
-                dict[k] = obj.as_dict(v)
-            except:
-                dict[k] = v
-                return dict
-        '''
+        str = yaml.dump(self)
+        str = re.sub(r'!![^\s]+ *', '', str)
+        return  yaml.load(str)
 
 
 
