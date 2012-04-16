@@ -21,6 +21,14 @@ class Dao(object):
             self.create_db(self.db_name)
         self.connect_db(self.db_name)
 
+    def __getstate__(self):
+        '''Returns None when you try to pickle this object.
+
+        Otherwise a threadlock from couch prevents pickling of other stuff that
+        may contain this object.'''
+
+        return None
+
     def connect_db(self, db_name):
         '''connect to an extant database. 
         Fails if the database doesn't exist'''
