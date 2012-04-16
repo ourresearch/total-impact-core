@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<response>
-<lst name="responseHeader"><int name="status">0</int><int name="QTime">10</int><lst name="params"><str name="fl">dc.identifier.uri,dc.title</str><str name="q">dc.identifier:10.5061/dryad.7898</str></lst></lst><result name="response" numFound="1" start="0"><doc><arr name="dc.identifier.uri"><str>http://hdl.handle.net/10255/dryad.7898</str><str>http://hdl.handle.net/10255/dryad.7899</str><str>http://hdl.handle.net/10255/dryad.7900</str><str>http://hdl.handle.net/10255/dryad.7901</str></arr><arr name="dc.title"><str>data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides</str><str>ssr_data_11905036mec-08-0315.r1</str><str>riske_creek_sizedata</str><str>rr_sizedata</str></arr></doc></result>
-</response>
