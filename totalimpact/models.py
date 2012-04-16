@@ -63,17 +63,15 @@ class Saveable(object):
 
 class ItemFactory():
 
-    def __init__(self, dao):
-        self.dao = dao
-
-    def make(self, tiid=None):
+    @staticmethod
+    def make(dao, tiid=None):
         now = time.time()
-        item = Item(dao=self.dao)
+        item = Item(dao=dao)
 
         if tiid is None: # we're making a brand new item
             item.created = now
         else: # load an extant item
-            item_doc = self.dao.get(tiid)
+            item_doc = dao.get(tiid)
 
             if item_doc is None:
                 raise LookupError
