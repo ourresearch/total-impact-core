@@ -101,35 +101,6 @@ class Dao(object):
 
         return result_json
     
-    def create_item(self, data, id):
-        doc = {}
-        for d in data:
-            doc[d] = data[d]
-
-        doc["_id"] = id
-        doc['created'] = time.time()
-        doc['last_modified'] = 0
-        return self.db.save(doc)
-
-    def update_item(self, data, id):
-        doc = self.get(id)
-        if not doc:
-            raise LookupError
-
-        for key in data:
-            try:
-                # add dict items,but overwrite identical keys
-                new = dict(doc[key].items() + data[key].items())
-                doc[key] = new
-            except AttributeError:
-                if data[key] is not None:
-                    doc[key] = data[key]
-
-        doc['last_modified'] = time.time()
-        print(doc)
-
-        # FIXME handle update conflicts properly
-        return self.db.save(doc)
 
     def create_collection(self):
         return self.create_item()

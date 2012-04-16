@@ -1,7 +1,8 @@
 from nose.tools import raises, assert_equals, nottest
-import os, unittest, json, time
+import os, unittest, json, time, yaml
 from test.mocks import MockDao
 from copy import deepcopy
+from pprint import PrettyPrinter
 
 from totalimpact import models
 from totalimpact import dao, api
@@ -54,16 +55,20 @@ SNAP_DATA = {
     }
 
 METRICS_DATA = {
-    "provider_name": "plos", 
-    "metric_name": "html_views",
+    "ignore": False,
+    "metric_snaps": {
+        "thisissupposedtobeahash": SNAP_DATA
+    },
+    "latest_snap": SNAP_DATA
+}
+
+METRICS_DATA2 = {
     "ignore": False,
     "metric_snaps": {},
     "latest_snap": None
 }
 
-METRICS_DATA2 = {
-    "provider_name": "plos",
-    "metric_name": "pdf_views",
+METRICS_DATA3 = {
     "ignore": False,
     "metric_snaps": {},
     "latest_snap": None
@@ -91,7 +96,10 @@ ITEM_DATA = {
     "last_modified": 12414214.234,
     "last_requested": 124141245.234, 
     "aliases": ALIAS_DATA,
-    "metrics": [METRICS_DATA, METRICS_DATA2],
+    "metrics": { # this could be a list, but limiting to dicts makes processing easier.
+        "plos:html_views": METRICS_DATA,
+        "plos:pdf_views": METRICS_DATA2
+    },
     "biblio": BIBLIO_DATA
 }
     
@@ -103,21 +111,20 @@ class TestSaveable():
         pass
 
     def test_id_gets_set(self):
-        s = models.Saveable()
+        s = models.Saveable(dao="dao")
         assert_equals(len(s.id), 32)
 
         s2 = models.Saveable(id="123")
         assert_equals(s2.id, "123")
 
     def test_as_dict(self):
-        s = models.Saveable()
+        s = models.Saveable(dao="dao")
         s.foo = "a var"
         s.bar = "another var"
         assert_equals(s.as_dict()['foo'], "a var")
 
-    @nottest
     def test_as_dict_recursive(self):
-        s = models.Saveable()
+        s = models.Saveable(dao="dao")
         class TestObj:
             pass
         
@@ -129,6 +136,71 @@ class TestSaveable():
         s.my_list = []
         s.my_list.append(foo)
         assert_equals(s.as_dict()['my_list'][0]['bar'], foo.bar)
+
+    def test__update_dict(self):
+        '''These tests are more naturalistic because they use the objects
+        we're using. but in future, toy objects are way easier to work with and
+        grok later.'''
+
+        dao = MockDao()
+        item_response = deepcopy(ITEM_DATA)
+        item_response2 = deepcopy(ITEM_DATA)
+
+        dao.setResponses([item_response])
+
+        # simulate pulling an item out of the db
+        factory = models.ItemFactory(dao)
+        item = factory.make(ITEM_DATA['_id'])
+
+        assert_equals(item._id, ITEM_DATA['_id'])
+        assert_equals(item.aliases.__class__.__name__, "Aliases")
+
+        # now let's simulate adding some stuff to this object
+        # change a string
+        now = "99999999999.9" # it's the future!
+        item.last_modified = now
+
+        # add a snap to an existing Metrics object
+        new_snap = deepcopy(SNAP_DATA)
+        new_snap['value'] = 22
+        item.metrics["plos:html_views"].metric_snaps["a_new_snap"] = new_snap
+
+        # add a whole 'nother Metrics object (a list item)
+        item.metrics["test:a_new_metric"] = METRICS_DATA3
+
+        # Meanwhile, it seems the item in the db has changed, thanks to other Providers:
+        item_response2["metrics"]["test:while_you_were_away"] = METRICS_DATA3
+        new_snap = deepcopy(SNAP_DATA)
+        new_snap['value'] = 44 
+        item_response2["metrics"]["plos:html_views"]["metric_snaps"] \
+            ["while_you_were_away_snap"] = new_snap
+
+        # now let's see if this works:
+        output = item._update_dict(item_response2)
+        print yaml.dump(output)
+
+        # things that are common to both dicts are preserved
+        assert_equals(output["aliases"], item_response2["aliases"])
+
+        # when strings differ, the object's version takes priority
+        assert_equals(output["last_modified"], now)
+
+        # plos:html_views should have one snap initially, +1 we added right
+        # away, + 1 back from the database = 3
+        assert_equals(len(output["metrics"]["plos:html_views"]["metric_snaps"]), 3)
+
+        # locally and remotely added metrics are preserved
+        assert_equals(output["metrics"]["test:a_new_metric"]["ignore"], False)
+        assert_equals(output["metrics"]["test:while_you_were_away"]["ignore"], False)
+
+        # locally and remotely added metric snaps are preserved
+        assert_equals(output["metrics"]["plos:html_views"]["metric_snaps"] \
+            ["while_you_were_away_snap"]["value"], 44)
+        assert_equals(output["metrics"]["test:while_you_were_away"]["ignore"], False)
+
+        def save(self):
+            # not much to test here, unless we want to use the real dao.
+            pass
 
 
 
@@ -150,8 +222,9 @@ class TestItemFactory():
 
         factory = models.ItemFactory(dao)
         item = factory.make("123")
-        print item.as_dict() 
-
+        
+        assert_equals(item._id, ITEM_DATA['_id'])
+        assert_equals(item.aliases.__class__.__name__, "Aliases")
         assert_equals(item.as_dict()["aliases"], ITEM_DATA["aliases"])
 
 '''
@@ -273,7 +346,7 @@ class TestMetrics(unittest.TestCase):
 
 
     def setUp(self):
-        self.m = models.Metrics("plos", "html_views")
+        self.m = models.Metrics()
 
     def test_init(self):
         assert len(self.m.metric_snaps) == 0
@@ -314,12 +387,11 @@ class TestMetrics(unittest.TestCase):
         assert_equals(self.m.latest_snap["value"], snap2["value"])
 
     def test_as_dict(self):
-        assert_equals(METRICS_DATA, self.m.__dict__) 
+        assert_equals(METRICS_DATA["ignore"], self.m.__dict__["ignore"])
 
         # has to also work when there are snaps in the metric_snaps attr.
         snap = deepcopy(SNAP_DATA)
         hash = self.m.add_metric_snap(snap)
-        print self.m.__dict__['metric_snaps'][hash]
         assert_equals(len(self.m.__dict__['metric_snaps']), 1)
         assert_equals(self.m.__dict__['metric_snaps'][hash], snap)
         assert_equals(self.m.__dict__['latest_snap'], snap)
