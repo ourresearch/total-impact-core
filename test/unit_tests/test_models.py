@@ -17,7 +17,6 @@ COLLECTION_DATA = {
     }
 
 ALIAS_DATA = {
-    "tiid":"0987654321",
     "title":["Why Most Published Research Findings Are False"],
     "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
     "doi": ["10.1371/journal.pmed.0020124"],
@@ -26,7 +25,6 @@ ALIAS_DATA = {
     }
 
 ALIAS_CANONICAL_DATA = {
-    "tiid":"0987654321",
     "title":["Why Most Published Research Findings Are False"],
     "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
     "doi": ["10.1371/journal.pmed.0020124"],
@@ -401,14 +399,9 @@ class TestAliases(unittest.TestCase):
 
     def test_init(self):
         a = models.Aliases()
-        
-        assert_equals(len(a.tiid), 36)
-        
-        a = models.Aliases("123456")
-        assert_equals(a.tiid, "123456")
+        a = models.Aliases()
 
         a = models.Aliases(seed=ALIAS_DATA)
-        assert a.tiid == "0987654321"
         assert a.title == ["Why Most Published Research Findings Are False"]
 
       
@@ -421,7 +414,7 @@ class TestAliases(unittest.TestCase):
         assert a.last_modified < time.time()
         
         # check the data structure is correct
-        expected = {"tiid": a.tiid, "foo":["id1", "id2"], "bar":["id1"]}
+        expected = {"foo":["id1", "id2"], "bar":["id1"]}
         del a.last_modified, a.created
         assert a.__dict__ == expected, a
 
@@ -440,8 +433,7 @@ class TestAliases(unittest.TestCase):
         a.add_unique(to_add)
         
         # check the data structure is correct
-        expected = {"tiid": a.tiid,
-                    "foo":["id1", "id2", "id3"], 
+        expected = {"foo":["id1", "id2", "id3"], 
                     "bar":["id1"], 
                     "baz" : ["id1", "id2"]}
         del a.last_modified, a.created
@@ -461,7 +453,7 @@ class TestAliases(unittest.TestCase):
         assert a.doi == ["10.1371/journal.pmed.0020124"]
         assert a.url == ["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"]
 
-        assert_equals(len(a.get_aliases_list()), 4)
+        assert_equals(len(a.get_aliases_list()), 3)
         
         aliases = a.get_aliases_list("doi")
         assert aliases == [("doi", "10.1371/journal.pmed.0020124")], aliases

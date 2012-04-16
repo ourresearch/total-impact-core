@@ -10,6 +10,7 @@ class Saveable(object):
 
         if id is None:
             self.id = uuid.uuid4().hex
+            self.created = time.time()
         else:
             self.id = id
 
@@ -65,12 +66,9 @@ class ItemFactory():
 
     @staticmethod
     def make(dao, tiid=None):
-        now = time.time()
-        item = Item(dao=dao)
+        item = Item(dao=dao, id=tiid)
 
-        if tiid is None: # we're making a brand new item
-            item.created = now
-        else: # load an extant item
+        if tiid is not None: # we're making a brand new item
             item_doc = dao.get(tiid)
 
             if item_doc is None:
@@ -91,7 +89,7 @@ class ItemFactory():
     
                 item.metrics[metric_name] = my_metric_obj
 
-        item.last_requested = now
+            item.last_requested = time.time()
         return item
 
 
@@ -286,17 +284,13 @@ class Aliases(object):
     
     not_aliases = ["created", "last_modified"]
     
-    def __init__(self, tiid=None, seed=None):
-        self.tiid = tiid
+    def __init__(self, seed=None):
+        self.created = time.time() # will get overwritten if need be
         try:
             for k in seed:
                 setattr(self, k, seed[k])
         except TypeError:
             pass
-
-        if self.tiid is None:
-            self.tiid = str(uuid.uuid4())
-            self.created = time.time()
 
     def add_alias(self, namespace, id):
         try:
