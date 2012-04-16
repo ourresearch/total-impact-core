@@ -140,7 +140,7 @@ class Provider(object):
         if headers is None:
             headers = {}
         
-        # make the request
+    # make the request
         try:
             r = requests.get(url, headers=headers, timeout=timeout)
         except requests.exceptions.Timeout as e:

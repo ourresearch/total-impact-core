@@ -14,18 +14,33 @@ class Saveable(object):
         else:
             self.id = id
 
-    def as_dict(self, obj=None):
+    def as_dict(self, obj=None, classkey=None):
         '''Recursively calls __dict__ on itself and all constituent objects.
 
-        Currently uses yaml as a ridiculous hack because recursive dict call
-        turn out to be pretty difficult. None of the functions listed here
-        http://stackoverflow.com/questions/1036409/recursively-convert-python-object-graph-to-dictionary
-        work.
+        '''
+        
+        if obj is None:
+            obj = self
+
+        data = {}
+        for key, value in obj.__dict__.iteritems():
+            try:
+                data[key] = self.as_dict(value)
+            except AttributeError:
+                data[key] = value
+        return data
+
+        '''
+        dict = {}
+        for k, v in obj.__dict__.iteritems():
+            try:
+                dict[k] = obj.as_dict(v)
+            except:
+                dict[k] = v
+                return dict
         '''
 
-        str = yaml.dump(self)
-        str = re.sub(r'!![^\s]+ *', '', str)
-        return  yaml.load(str)
+
 
 
     def _update_dict(self, input, my_dict=None):
@@ -40,10 +55,16 @@ class Saveable(object):
         if my_dict is None:
             my_dict = self.as_dict()
 
+        if input is None:
+            return my_dict
+
         for k, v in input.iteritems():
             try:
+                #get the dict here...
+                
                 new_my_dict = my_dict.setdefault(k, {})
                 self._update_dict(v, new_my_dict)
+
             except AttributeError:
                 if not my_dict[k]:
                     my_dict[k] = v
@@ -67,6 +88,7 @@ class ItemFactory():
     @staticmethod
     def make(dao, tiid=None):
         item = Item(dao=dao, id=tiid)
+        item.aliases = Aliases()
 
         if tiid is not None: # we're making a brand new item
             item_doc = dao.get(tiid)
@@ -107,11 +129,6 @@ class Item(Saveable):
     }
     """
     pass
-
-
-
-    def save(self, dao):
-        pass
 
 
 class Error(Saveable):
