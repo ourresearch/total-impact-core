@@ -149,8 +149,7 @@ class TestSaveable():
         dao.setResponses([item_response])
 
         # simulate pulling an item out of the db
-        factory = models.ItemFactory(dao)
-        item = factory.make(ITEM_DATA['_id'])
+        item = models.ItemFactory.make(dao, ITEM_DATA['_id'])
 
         assert_equals(item._id, ITEM_DATA['_id'])
         assert_equals(item.aliases.__class__.__name__, "Aliases")
@@ -207,21 +206,18 @@ class TestSaveable():
 class TestItemFactory():
 
     def setUp(self):
-        pass
+        self.d = MockDao()
 
     def test_make_new(self):
         '''create an item from scratch.'''
-        factory = models.ItemFactory("not a dao")
-        item = factory.make()
+        item = models.ItemFactory.make(self.d)
         assert_equals(len(item.id), 32)
         assert item.created < time.time
 
     def test_make_from_db(self):
-        dao = MockDao()
-        dao.setResponses([ITEM_DATA])
+        self.d.setResponses([ITEM_DATA])
 
-        factory = models.ItemFactory(dao)
-        item = factory.make("123")
+        item = models.ItemFactory.make(self.d, "123")
         
         assert_equals(item._id, ITEM_DATA['_id'])
         assert_equals(item.aliases.__class__.__name__, "Aliases")
@@ -229,10 +225,8 @@ class TestItemFactory():
 
     @raises(LookupError)
     def test_load_with_nonexistant_item_fails(self):
-        dao = MockDao()
-        dao.setResponses([None])
-        factory = models.ItemFactory(dao)
-        item = factory.make("123")
+        self.d.setResponses([None])
+        item = models.ItemFactory.make(self.d, "123")
 
 class TestItem():
 
