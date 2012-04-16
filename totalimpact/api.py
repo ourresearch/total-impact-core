@@ -29,7 +29,6 @@ def configure_app(app):
 app = create_app()
 mydao = dao.Dao(app.config["DB_NAME"])
 providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
-providers = providers
 
 @app.before_request
 def connect_to_db():

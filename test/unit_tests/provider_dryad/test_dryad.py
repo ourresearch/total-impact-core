@@ -50,16 +50,21 @@ def get_500(self, url, headers=None, timeout=None):
     return DummyResponse(500, "")
 
 
-CWD, _ = os.path.split(__file__)
+datadir = os.path.join(os.path.split(__file__)[0], "../../data")
 
 DRYAD_CONFIG_FILENAME = "totalimpact/providers/dryad.conf.json"
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
 TEST_DRYAD_AUTHOR = "Piwowar, Heather A."
-SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(CWD, "sample_extract_metrics_page.html")
-SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(CWD, "sample_extract_aliases_page.xml")
-SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(CWD, "sample_extract_member_items_page.xml")
-SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE_ZERO_ITEMS = os.path.join(CWD, "sample_extract_member_items_page_zero_items.xml")
-SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(CWD, "sample_extract_biblio_page.xml")
+SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, 
+    "sample_extract_metrics_page.html")
+SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, 
+    "sample_extract_aliases_page.xml")
+SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(datadir, 
+    "sample_extract_member_items_page.xml")
+SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE_ZERO_ITEMS = os.path.join(datadir, 
+    "sample_extract_member_items_page_zero_items.xml")
+SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, 
+    "sample_extract_biblio_page.xml")
 
 TEST_ALIASES_SEED = {"doi" : [TEST_DRYAD_DOI], "url" : ["http://datadryad.org/handle/10255/dryad.7898"]}
 

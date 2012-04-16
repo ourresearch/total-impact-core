@@ -9,6 +9,22 @@ from totalimpact.tilogging import logging
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
 
+datadir = os.path.join(os.path.split(__file__)[0], "../data")
+
+DRYAD_CONFIG_FILENAME = "totalimpact/providers/dryad.conf.json"
+SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, 
+    "sample_extract_aliases_page.xml")
+
+# prepare a monkey patch to override the http_get method of the Provider
+class DummyResponse(object):
+    def __init__(self, status, content):
+        self.status_code = status
+        self.text = content
+
+def get_aliases_html_success(self, url, headers=None, timeout=None):
+    f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
+    return DummyResponse(200, f.read())
+
 class TestAliasQueue(unittest.TestCase):
     
     def setUp(self):
@@ -22,10 +38,15 @@ class TestAliasQueue(unittest.TestCase):
         self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
         self.d = dao.Dao(self.app.config["DB_NAME"])
+
+        # monkey patch http_get
+        self.old_http_get = Provider.http_get
+        Provider.http_get = get_aliases_html_success
        
         
     def tearDown(self):
         self.app.config["DB_NAME"] = self.old_db_name
+        Provider.http_get = self.old_http_get
 
     def test_alias_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
@@ -64,8 +85,7 @@ class TestAliasQueue(unittest.TestCase):
 
         # do the update using the backend
         alias_thread = ProvidersAliasThread(providers, self.d)
-        alias_thread.run_once = True
-        alias_thread.run()
+        alias_thread.run(run_only_once=True)
 
         # get the item back out again and bask in the awesome
         response = self.client.get('/item/' + tiid)

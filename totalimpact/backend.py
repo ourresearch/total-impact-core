@@ -131,7 +131,6 @@ class ProviderThread(QueueConsumer):
         self.dao = dao
         QueueConsumer.__init__(self, queue)
         self.thread_id = "BaseProviderThread"
-        self.run_once = False
 
     def log_error(self, item, error_type, error_msg, tb):
         # This method is called to record any errors which we obtain when
@@ -150,7 +149,7 @@ class ProviderThread(QueueConsumer):
         
         #e.save()
 
-    def run(self):
+    def run(self, run_only_once=False):
 
         while not self.stopped():
             # get the first item on the queue - this waits until
@@ -159,6 +158,7 @@ class ProviderThread(QueueConsumer):
             
             # Check we have an item, if we have been signalled to stop, then
             # item may be None
+
             if item:
                 # if we get to here, an item has been popped off the queue and we
                 # now want to calculate it's metrics. 
@@ -173,7 +173,7 @@ class ProviderThread(QueueConsumer):
 
             # Flag for testing. We should finish the run loop as soon
             # as we've processed a single item.
-            if self.run_once:
+            if run_only_once:
                 return
 
     def process_item_for_provider(self, item, provider, method):
@@ -205,7 +205,11 @@ class ProviderThread(QueueConsumer):
             error_type = None
             provider_function = getattr(provider, method)
             try:
-                item = provider_function(item)
+                response = provider_function(item)
+                if "metrics" in method:
+                    item.metrics = response
+                else:
+                    item = response
                 success = True
 
             except ProviderTimeout, e:
@@ -306,4 +310,7 @@ class ProviderMetricsThread(ProviderThread):
         self.thread_id = "ProviderMetricsThread:" + str(self.provider.id)
 
     def process_item(self, item):
-        self.process_item_for_provider(item, self.provider, 'metrics')
+        success = self.process_item_for_provider(item, 
+            self.provider, 
+            'metrics')
+        return success
