@@ -3,7 +3,7 @@ from flask import render_template, flash
 import os, json, time
 
 from totalimpact import dao
-from totalimpact.models import Item, Collection, Metrics, ItemFactory
+from totalimpact.models import Item, Collection, Metrics, ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
@@ -263,8 +263,7 @@ def collection(cid=''):
     response_code = None
 
     try:
-        coll = Collection(mydao, id=cid)
-        coll.load()
+        coll = CollectionFactory.make(mydao, id=cid)
     except LookupError:
         coll = None
     
@@ -272,12 +271,13 @@ def collection(cid=''):
         if coll:
             # Collection already exists: should call PUT instead
             abort(405)   # Method Not Allowed
-        if not request.json:
-            abort(404)  #what is the right error message for needs arguments?
-        coll = Collection(mydao)
-        coll.add_items(request.json)
-        coll.save()
-        response_code = 201 # Created
+        else:
+            if not request.json:
+                abort(404)  #what is the right error message for needs arguments?
+            coll = CollectionFactory.make(mydao)
+            coll.add_items(request.json)
+            coll.save()
+            response_code = 201 # Created
 
     elif request.method == "PUT":
         if not coll:

@@ -129,9 +129,12 @@ class TestApi(unittest.TestCase):
         response = self.client.post('/collection/' + TEST_COLLECTION_ID)
         assert_equals(response.status_code, 405)  # Method Not Allowed
 
-    '''
     def test_collection_post_new_collection(self):
-        response = self.client.post('/collection', data=json.dumps(TEST_COLLECTION_TIID_LIST), content_type="application/json")
+        response = self.client.post(
+            '/collection',
+            data=json.dumps(TEST_COLLECTION_TIID_LIST),
+            content_type="application/json")
+
         print response
         print response.data
         assert_equals(response.status_code, 201)  #Created
@@ -139,10 +142,11 @@ class TestApi(unittest.TestCase):
         response_loaded = json.loads(response.data)
         assert_equals(
                 set(response_loaded.keys()), 
-                set([u'created', u'collection_name', u'item_tiids', 
-                    u'last_modified', u'owner', u'id']))
+                set([u'created', u'item_tiids', 
+                    u'last_modified', u'id']))
         assert_equals(len(response_loaded["id"]), 32)
 
+    '''
     def test_collection_put_updated_collection(self):
         # Put in an item.  Could mock this out in the future.
         response = self.client.post('/collection', 
