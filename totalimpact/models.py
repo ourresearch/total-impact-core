@@ -156,10 +156,13 @@ class CollectionFactory():
 
     @staticmethod
     def make(dao, id=None):
+        now = time.time()
         collection = Collection(dao=dao)
 
         if id is None:
             collection.id = uuid.uuid4().hex
+            collection.created = now
+            collection.last_modified = now
         else: # load an extant item
             collection_doc = dao.get(id)
             if collection_doc is None:
