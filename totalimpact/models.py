@@ -152,24 +152,29 @@ class Error(Saveable):
     pass
 
 class CollectionFactory():
-    #TODO this should subclass a SaveableFactory
 
     @staticmethod
-    def make(dao, id=None):
+    def make(dao, id=None, collection_dict=None):
+
+        if id is not None and collection_dict is not None:
+            raise TypeError("you can load from the db or from a dict, but not both")
+
         now = time.time()
         collection = Collection(dao=dao)
 
-        if id is None:
+        if id is None and collection_dict is None:
             collection.id = uuid.uuid4().hex
             collection.created = now
             collection.last_modified = now
         else: # load an extant item
-            collection_doc = dao.get(id)
-            if collection_doc is None:
+            if collection_dict is None:
+                collection_dict = dao.get(id)
+
+            if collection_dict is None:
                 raise LookupError
             
-            for k in collection_doc:
-                setattr(collection, k, item_doc[k])
+            for k in collection_dict:
+                setattr(collection, k, collection_dict[k])
 
         return collection
 

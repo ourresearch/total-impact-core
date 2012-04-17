@@ -266,6 +266,8 @@ def collection(cid=''):
         coll = CollectionFactory.make(mydao, id=cid)
     except LookupError:
         coll = None
+
+    print coll
     
     if request.method == "POST":
         if coll:
@@ -280,11 +282,16 @@ def collection(cid=''):
             response_code = 201 # Created
 
     elif request.method == "PUT":
-        if not coll:
+        # it exists in the database already, but we're going to overwrite it.
+        #FIXME: currently does not delete anything...only adds. to fix, must add
+        # an "overwrite" method to dao.save, or (better yet) rename dao.save to
+        # dao.update and write a new save methods that overwrites by default.
+        if coll:
+            coll = CollectionFactory.make(mydao, collection_dict=request.json )
+            coll.save()
+            response_code = 200 # OK
+        else:
             abort(404)
-        coll = Collection(mydao, seed = request.json )
-        coll.save()
-        response_code = 200 # OK
 
     elif request.method == "DELETE":
         if not coll:
