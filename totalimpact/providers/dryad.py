@@ -233,7 +233,8 @@ class Dryad(Provider):
     def biblio(self, item): 
         id = self._get_dryad_doi(item)
         biblio_object = self.get_biblio_for_id(id)
-        return biblio_object
+        item.biblio = biblio_object
+        return item
 
     def get_biblio_for_id(self, id):
         url = self.config.biblio['url'] % id

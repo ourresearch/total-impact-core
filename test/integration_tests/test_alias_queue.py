@@ -12,6 +12,8 @@ TEST_DRYAD_DOI = "10.5061/dryad.7898"
 datadir = os.path.join(os.path.split(__file__)[0], "../data")
 
 DRYAD_CONFIG_FILENAME = "totalimpact/providers/dryad.conf.json"
+SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, 
+    "sample_extract_biblio_page.xml")
 SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, 
     "sample_extract_aliases_page.xml")
 
@@ -22,8 +24,12 @@ class DummyResponse(object):
         self.text = content
 
 def get_aliases_html_success(self, url, headers=None, timeout=None):
-    f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
+    if ("dc.contributor" in url):
+        f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
+    else:
+        f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
     return DummyResponse(200, f.read())
+
 
 class TestAliasQueue(unittest.TestCase):
     
@@ -65,14 +71,16 @@ class TestAliasQueue(unittest.TestCase):
         resp_dict = json.loads(response.data)
         assert_equals(
             set(resp_dict.keys()),
-            set([u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
+            set([u'created', u'last_requested', u'metrics', u'last_modified', 
+                u'biblio', u'id', u'aliases'])
             )
         assert_equals(unicode(TEST_DRYAD_DOI), resp_dict["aliases"]["doi"])
 
         # test the view works
         res = self.d.view("aliases")
         assert len(res["rows"]) == 1, res
-        assert_equals(res["rows"][0]["value"]["aliases"]["doi"], TEST_DRYAD_DOI)
+        assert_equals(res["rows"][0]["value"]["aliases"]["doi"], 
+            TEST_DRYAD_DOI)
 
         # see if the item is on the queue
         my_alias_queue = AliasQueue(self.d)
@@ -94,3 +102,6 @@ class TestAliasQueue(unittest.TestCase):
             resp_dict["aliases"]["title"][0],
             "data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides"
             ) 
+        assert_equals(resp_dict["biblio"]["year"], "2010")
+
+
