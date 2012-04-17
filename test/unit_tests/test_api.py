@@ -54,7 +54,6 @@ class TestApi(unittest.TestCase):
         
     def tearDown(self):
         self.app.config["DB_NAME"] = self.old_db_name
-        
         Dryad.member_items = self.orig_Dryad_member_items
 
     def test_item_post_unknown_namespace(self):
@@ -146,8 +145,8 @@ class TestApi(unittest.TestCase):
                     u'last_modified', u'id']))
         assert_equals(len(response_loaded["id"]), 32)
 
-    '''
     def test_collection_put_updated_collection(self):
+
         # Put in an item.  Could mock this out in the future.
         response = self.client.post('/collection', 
                 data=json.dumps(TEST_COLLECTION_TIID_LIST), 
@@ -155,6 +154,7 @@ class TestApi(unittest.TestCase):
         response_loaded = json.loads(response.data)
         new_collection_id = response_loaded["id"]
 
+        # put the new collection stuff
         response = self.client.put('/collection/' + new_collection_id, 
                 data=json.dumps(COLLECTION_SEED_MODIFIED), 
                 content_type="application/json")
@@ -165,14 +165,17 @@ class TestApi(unittest.TestCase):
         response_loaded = json.loads(response.data)
         assert_equals(
                 set(response_loaded.keys()), 
-                set([u'created', u'collection_name', u'item_tiids', u'last_modified', u'owner', u'id']))
+                set([u'created', u'collection_name', u'item_tiids', u'last_modified',
+                    u'owner', u'id'])
+                )
         assert_equals(response_loaded["item_tiids"], 
             COLLECTION_SEED_MODIFIED["item_tiids"])
-
+            
     def test_collection_put_empty_payload(self):
         response = self.client.put('/collection/' + TEST_COLLECTION_ID)
         assert_equals(response.status_code, 404)  #Not found
 
+    '''
     def test_collection_delete_with_no_id(self):
         response = self.client.delete('/collection/')
         assert_equals(response.status_code, 404)  #Not found
