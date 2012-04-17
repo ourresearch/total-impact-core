@@ -127,10 +127,10 @@ def items(tiids):
     items = []
     for index,tiid in enumerate(tiids.split(',')):
         if index > 99: break    # weak
+
         try:
-            item = Item(mydao, id=tiid)
-            item.load()
-            item.set_last_requested()
+            item = ItemFactory.make(mydao, id=tiid)
+            item.last_requested = time.time()
             items.append( item.as_dict() )
         except LookupError:
             # TODO: is it worth setting this blank? or do nothing?
@@ -141,7 +141,7 @@ def items(tiids):
         items = items[0]
 
     if items:
-        resp = make_response( json.dumps(items, sort_keys=True, indent=4) )
+        resp = make_response( json.dumps(item.as_dict(), sort_keys=True, indent=4) )
         resp.mimetype = "application/json"
         return resp
     else:
