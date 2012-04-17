@@ -297,7 +297,6 @@ def collection(cid=''):
             abort(404)
 
     elif request.method == "GET":
-        print "getchasome!"
         if coll:
             response_code = 200 #OK
         else:

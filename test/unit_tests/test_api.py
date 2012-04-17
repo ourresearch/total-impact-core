@@ -200,7 +200,6 @@ class TestApi(unittest.TestCase):
         assert_equals(response2.status_code, 404)  #Not found
 
 
-    '''
     def test_collection_get_with_no_id(self):
         response = self.client.get('/collection/')
         assert_equals(response.status_code, 404)  #Not found
@@ -258,6 +257,3 @@ class TestApi(unittest.TestCase):
         # check that the tiid lists are the same
         assert_equals(sorted(plos_lookup_tiids), 
             sorted([first_plos_create_tiid, second_plos_create_tiid]))
-
-
-            '''
