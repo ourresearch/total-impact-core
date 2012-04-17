@@ -179,13 +179,13 @@ class ProviderThread(QueueConsumer):
     def process_item_for_provider(self, item, provider, method):
         """ Run the given method for the given provider on the given item
         
-            method should either be 'aliases' or 'metrics'
+            method should either be 'aliases', 'biblio', or 'metrics'
 
             This will deal with retries and sleep / backoff as per the 
             configuration for the given provider. We will return true if
             the given method passes, or if it's not implemented.
         """
-        if method not in ('aliases','metrics'):
+        if method not in ('aliases', 'biblio', 'metrics'):
             raise NotImplementedError("Unknown method %s for provider class" % method)
 
         log.info("Item %s: processing %s for provider %s" % (item, method, provider))
@@ -291,6 +291,11 @@ class ProvidersAliasThread(ProviderThread):
         if not self.stopped():
             for provider in self.providers: 
                 if not self.process_item_for_provider(item, provider, 'aliases'):
+                    # This provider has failed and exceeded the 
+                    # total number of retries. Don't process any 
+                    # more providers, we abort this item entirely
+                    break
+                if not self.process_item_for_provider(item, provider, 'biblio'):
                     # This provider has failed and exceeded the 
                     # total number of retries. Don't process any 
                     # more providers, we abort this item entirely

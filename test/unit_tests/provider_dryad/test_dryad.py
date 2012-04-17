@@ -258,8 +258,8 @@ class Test_Dryad(unittest.TestCase):
 
     def test_09b_get_biblio_success(self):
         Provider.http_get = get_biblio_html_success
-        biblio_object = self.provider.biblio(self.simple_item)
-        assert_equals(biblio_object.data, {'year': u'2010', 'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides'})
+        item = self.provider.biblio(self.simple_item)
+        assert_equals(item.biblio.data, {'year': u'2010', 'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides'})
 
     @raises(ProviderClientError)
     def test_09c_biblio_400(self):
