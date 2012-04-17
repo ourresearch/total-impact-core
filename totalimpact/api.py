@@ -267,8 +267,6 @@ def collection(cid=''):
     except LookupError:
         coll = None
 
-    print coll
-    
     if request.method == "POST":
         if coll:
             # Collection already exists: should call PUT instead
@@ -283,9 +281,7 @@ def collection(cid=''):
 
     elif request.method == "PUT":
         # it exists in the database already, but we're going to overwrite it.
-        #FIXME: currently does not delete anything...only adds. to fix, must add
-        # an "overwrite" method to dao.save, or (better yet) rename dao.save to
-        # dao.update and write a new save methods that overwrites by default.
+        #FIXME: currently does not delete anything...only adds. See #93
         if coll:
             coll = CollectionFactory.make(mydao, collection_dict=request.json )
             coll.save()
@@ -294,13 +290,17 @@ def collection(cid=''):
             abort(404)
 
     elif request.method == "DELETE":
-        if not coll:
+        if coll:
+            coll.delete()
+            response_code = 204 # The server successfully processed the request, but is not returning any content
+        else:
             abort(404)
-        coll.delete()
-        response_code = 204 # The server successfully processed the request, but is not returning any content
 
     elif request.method == "GET":
-        if not coll:
+        print "getchasome!"
+        if coll:
+            response_code = 200 #OK
+        else:
             abort(404)
 
     resp = make_response( json.dumps( coll.as_dict(), sort_keys=True, indent=4 ), response_code)

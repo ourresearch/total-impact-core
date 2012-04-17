@@ -175,11 +175,32 @@ class TestApi(unittest.TestCase):
         response = self.client.put('/collection/' + TEST_COLLECTION_ID)
         assert_equals(response.status_code, 404)  #Not found
 
-    '''
     def test_collection_delete_with_no_id(self):
         response = self.client.delete('/collection/')
         assert_equals(response.status_code, 404)  #Not found
 
+    def test_collection_delete_deletes(self):
+        # Put in an item.  Could mock this out in the future.
+        response = self.client.post('/collection',
+                data=json.dumps(TEST_COLLECTION_TIID_LIST),
+                content_type="application/json")
+        response_loaded = json.loads(response.data)
+        new_collection_id = response_loaded["id"]
+
+        # it's in there
+        response1 = self.client.get('/collection/' + new_collection_id)
+        assert_equals(response1.status_code, 200) #OK
+
+        # lightning bolt! lightning bolt!
+        response = self.client.delete('/collection/' + new_collection_id)
+        assert_equals(response.status_code, 204)
+
+        # is it gone?
+        response2 = self.client.get('/collection/' + new_collection_id)
+        assert_equals(response2.status_code, 404)  #Not found
+
+
+    '''
     def test_collection_get_with_no_id(self):
         response = self.client.get('/collection/')
         assert_equals(response.status_code, 404)  #Not found
