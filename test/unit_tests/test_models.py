@@ -2,7 +2,6 @@ from nose.tools import raises, assert_equals, nottest
 import os, unittest, json, time, yaml
 from test.mocks import MockDao
 from copy import deepcopy
-from pprint import PrettyPrinter
 
 from totalimpact import models
 from totalimpact import dao, api
@@ -106,6 +105,7 @@ TEST_DB_NAME = "test_models"
 
 class TestSaveable():
     def setUp(self):
+        print ITEM_DATA
         pass
 
     def test_id_gets_set(self):
@@ -131,7 +131,6 @@ class TestSaveable():
 
         s.constituent_dict = {}
         s.constituent_dict["foo_obj"] = foo
-        print s.as_dict()
 
         assert_equals(s.as_dict()['constituent_dict']['foo_obj']['bar'], foo.bar)
 
@@ -140,16 +139,17 @@ class TestSaveable():
         we're using. but in future, toy objects are way easier to work with and
         grok later.'''
 
-        dao = MockDao()
         item_response = deepcopy(ITEM_DATA)
         item_response2 = deepcopy(ITEM_DATA)
 
+        dao = MockDao()
         dao.setResponses([item_response])
 
         # simulate pulling an item out of the db
-        item = models.ItemFactory.make(dao, ITEM_DATA['_id'])
+        item = models.ItemFactory.make(dao, item_response['_id'])
 
-        assert_equals(item._id, ITEM_DATA['_id'])
+        # note the item has an 'id' but not an '_id' attr
+        assert_equals(item.id, item_response['_id'])
         assert_equals(item.aliases.__class__.__name__, "Aliases")
 
         # now let's simulate adding some stuff to this object
@@ -213,11 +213,11 @@ class TestItemFactory():
         assert item.created < time.time
 
     def test_make_from_db(self):
-        self.d.setResponses([ITEM_DATA])
+        self.d.setResponses([deepcopy(ITEM_DATA)])
 
         item = models.ItemFactory.make(self.d, "123")
         
-        assert_equals(item._id, ITEM_DATA['_id'])
+        assert_equals(item.id, ITEM_DATA['_id'])
         assert_equals(item.aliases.__class__.__name__, "Aliases")
         assert_equals(item.as_dict()["aliases"], ITEM_DATA["aliases"])
 
@@ -230,7 +230,7 @@ class TestItem():
 
     def setUp(self):
         self.d = MockDao()
-        self.d.setResponses([ITEM_DATA])
+        self.d.setResponses([deepcopy(ITEM_DATA)])
 
 
     def test_mock_dao(self):
@@ -270,8 +270,7 @@ class TestCollectionFactory():
     @raises(LookupError)
     def test_load_with_nonexistant_collection_fails(self):
         self.d.setResponses([None])
-        factory = models.CollectionFactory(self.d)
-        collection = factory.make("AnUnknownCollectionId")
+        factory = models.CollectionFactory.make(self.d, "AnUnknownCollectionId")
 
 class TestCollection():
 

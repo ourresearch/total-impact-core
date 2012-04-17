@@ -69,6 +69,7 @@ class Saveable(object):
 
 
 class ItemFactory():
+    #TODO this should subclass a SaveableFactory
 
     @staticmethod
     def make(dao, id=None):
@@ -99,6 +100,7 @@ class ItemFactory():
             # the item.metrics dict is full of Metrics objects. We have to build
             # these one by one, iterating through the item_doc['metrics'] the
             # db gave us.
+
             try:
                 for metric_name, metrics_dict in item_doc['metrics'].iteritems():
                     my_metric_obj = Metrics()
@@ -150,16 +152,16 @@ class Error(Saveable):
     pass
 
 class CollectionFactory():
-    def __init__(self, dao):
-        self.dao = dao
+    #TODO this should subclass a SaveableFactory
 
-    def make(self, id=None):
-        collection = Collection(dao=self.dao)
+    @staticmethod
+    def make(dao, id=None):
+        collection = Collection(dao=dao)
 
         if id is None:
             collection.id = uuid.uuid4().hex
         else: # load an extant item
-            collection_doc = self.dao.get(id)
+            collection_doc = dao.get(id)
             if collection_doc is None:
                 raise LookupError
             
@@ -321,7 +323,6 @@ class Aliases(object):
         try:
             attr = getattr(self, namespace)
             attr.append(id)
-            print attr
         except AttributeError:
             setattr(self, namespace, [id])
         self.last_modified = time.time()

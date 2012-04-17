@@ -250,10 +250,12 @@ returns 405 or 201
 PUT /collection/:collection
 payload is a collection object
 overwrites whatever was there before.
-returns 404 or 200 (see http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete)
+returns 404 or 200
+(see http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete)
 
 DELETE /collection/:collection
-returns 404 or 204 (see http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete)
+returns 404 or 204
+(see http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete)
 '''
 @app.route('/collection', methods = ['POST'])
 @app.route('/collection/<cid>', methods = ['GET', 'PUT', 'DELETE'])
