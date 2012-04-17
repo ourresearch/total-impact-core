@@ -1,7 +1,7 @@
 from totalimpact.models import Metrics, Aliases, Item
 from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
-from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
+from totalimpact.providers.provider import Provider, ProviderError, ProviderTimeout,ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
 
 import os, unittest
 import simplejson
@@ -131,18 +131,18 @@ class Test_Dryad(unittest.TestCase):
         Provider.http_get = get_500
         members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_04d_member_items_empty(self):
         Provider.http_get = get_empty
         members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_04g_member_items_nonsense_txt(self):
         Provider.http_get = get_nonsense_txt
         members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
         assert len(members) == 0, str(members)
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_04h_member_items_nonsense_xml(self):
         Provider.http_get = get_nonsense_xml
         members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
@@ -179,18 +179,18 @@ class Test_Dryad(unittest.TestCase):
         Provider.http_get = get_500
         item_with_new_aliases = self.provider.aliases(self.simple_item)
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_05d_aliases_empty(self):
         Provider.http_get = get_empty
         item_with_new_aliases = self.provider.aliases(self.simple_item)
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_05g_nonsense_txt(self):
         Provider.http_get = get_nonsense_txt
         item_with_new_aliases = self.provider.aliases(self.simple_item)
         assert len(item_with_new_aliases.aliases.get_aliases_dict().keys()) == 0, str(item_with_new_aliases)
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_05h_nonsense_xml(self):
         Provider.http_get = get_nonsense_xml
         item_with_new_aliases = self.provider.aliases(self.simple_item)
@@ -230,18 +230,18 @@ class Test_Dryad(unittest.TestCase):
         Provider.http_get = get_500
         item_with_new_metrics = self.provider.metrics(self.simple_item)
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_07d_metrics_empty(self):
         Provider.http_get = get_empty
         item_with_new_metrics = self.provider.metrics(self.simple_item)
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_07g_metrics_nonsense_txt(self):
         Provider.http_get = get_nonsense_txt
         item_with_new_metrics = self.provider.metrics(self.simple_item)
         assert_equals(len(item_with_new_metrics.data["bucket"]) == 0)
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_07h_metrics_nonsense_xml(self):
         Provider.http_get = get_nonsense_xml
         item_with_new_metrics = self.provider.metrics(self.simple_item)
@@ -271,17 +271,17 @@ class Test_Dryad(unittest.TestCase):
         Provider.http_get = get_500
         biblio_object = self.provider.biblio(self.simple_item)
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_09e_biblio_empty(self):
         Provider.http_get = get_empty
         biblio_object = self.provider.biblio(self.simple_item)
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_09f_biblio_nonsense_txt(self):
         Provider.http_get = get_nonsense_txt
         biblio_object = self.provider.biblio(self.simple_item)
 
-    @raises(ProviderClientError)
+    @raises(ProviderContentMalformedError)
     def test_09g_biblio_nonsense_xml(self):
         Provider.http_get = get_nonsense_xml
         biblio_object = self.provider.biblio(self.simple_item)
