@@ -87,7 +87,7 @@ class TestApi(unittest.TestCase):
 
     def test_item_get_success_fakeid(self):
         # First put something in 
-        response_create = self.client.post('/item/doi/AnIdOfSomeKind/')
+        response_create = self.client.post('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
         tiid = response_create.data
         print tiid
 
@@ -105,7 +105,6 @@ class TestApi(unittest.TestCase):
             )
         assert_equals(response.mimetype, "application/json")
 
-    '''
     def test_item_post_urldecodes(self):
         resp = self.client.post('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
         tiid = resp.data.replace('"', '')
@@ -113,14 +112,13 @@ class TestApi(unittest.TestCase):
         resp = self.client.get('/item/' + tiid)
         saved_item = json.loads(resp.data)
 
-        assert_equals(TEST_DRYAD_DOI, saved_item["aliases"]["doi"])
+        assert_equals([unicode(TEST_DRYAD_DOI)], saved_item["aliases"]["doi"])
 
 
 
     def test_item_get_success_realid(self):
         # First put something in
-        response = self.client.get('/item/doi/' + 
-            TEST_DRYAD_DOI.replace("/", "%2F")) 
+        response = self.client.get('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
         tiid = response.data
         print response
         print tiid
@@ -131,6 +129,7 @@ class TestApi(unittest.TestCase):
         response = self.client.post('/collection/' + TEST_COLLECTION_ID)
         assert_equals(response.status_code, 405)  # Method Not Allowed
 
+    '''
     def test_collection_post_new_collection(self):
         response = self.client.post('/collection', data=json.dumps(TEST_COLLECTION_TIID_LIST), content_type="application/json")
         print response
