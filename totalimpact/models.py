@@ -10,22 +10,23 @@ class Saveable(object):
 
         if id is None:
             self.id = uuid.uuid4().hex
-            self.created = time.time()
         else:
             self.id = id
 
     def as_dict(self, obj=None, classkey=None):
         '''Recursively calls __dict__ on itself and all constituent objects.
 
-
+        Currently uses krazy yaml conversion hack because Recursion Is Hard. None
+        of the approaches listed at
+        http://stackoverflow.com/questions/1036409/recursively-convert-python-object-graph-to-dictionary
+        seemed to work for me.
         '''
         
         str = yaml.dump(self)
         str = re.sub(r'!![^\s]+ *', '', str)
-        return  yaml.load(str)
-
-
-
+        dict = yaml.load(str)
+        del dict["dao"]
+        return dict
 
     def _update_dict(self, input, my_dict=None):
         '''Use another dict to recursively add list or dict items not in this.
@@ -70,12 +71,21 @@ class Saveable(object):
 class ItemFactory():
 
     @staticmethod
-    def make(dao, tiid=None):
-        item = Item(dao=dao, id=tiid)
+    def make(dao, id=None):
+        now = time.time()
+        item = Item(dao=dao, id=id)
+        
+        # make all the top-level stuff
         item.aliases = Aliases()
+        item.metrics = {}
+        item.biblio = {}
+        item.last_modified = now
+        item.created = now
 
-        if tiid is not None: # we're making a brand new item
-            item_doc = dao.get(tiid)
+        # if we've already got an id, don't make an item; instead, retrieve it
+        # from teh db
+        if id is not None: 
+            item_doc = dao.get(id)
 
             if item_doc is None:
                 raise LookupError
@@ -83,19 +93,33 @@ class ItemFactory():
             for k in item_doc:
                 setattr(item, k, item_doc[k])
 
-            # some of the item's properties are objects, not dictionaries.
-            # we make these objects using doc data, then put them in the item.
+            # the aliases property needs to be an Aliases obj, not a dict.
             item.aliases = Aliases(seed=item_doc['aliases'])
-            item.metrics = {}
 
-            for metric_name, metrics_dict in item_doc['metrics'].iteritems():
-                my_metric_obj = Metrics()
-                for k, v in metrics_dict.iteritems():
-                    setattr(my_metric_obj, k, v)
-    
-                item.metrics[metric_name] = my_metric_obj
+            # the item.metrics dict is full of Metrics objects. We have to build
+            # these one by one, iterating through the item_doc['metrics'] the
+            # db gave us.
+            try:
+                for metric_name, metrics_dict in item_doc['metrics'].iteritems():
+                    my_metric_obj = Metrics()
+                    for k, v in metrics_dict.iteritems():
+                        # set every attribute in the metric object (incl. the
+                        # list of metricSnaps) equal to its counterpart in the
+                        # dictionary from the db
+                        setattr(my_metric_obj, k, v)
+
+                    item.metrics[metric_name] = my_metric_obj
+            except KeyError:
+                # there's no top-level metrics section in the returned item doc.
+                # keep it as item.metrics = {}
+                pass
 
             item.last_requested = time.time()
+            
+            # remove cruft from couch that we don't need
+            del item._id
+            del item._rev
+
         return item
 
 

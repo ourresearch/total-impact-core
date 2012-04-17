@@ -43,7 +43,7 @@ class TestApi(unittest.TestCase):
         self.testing_db_name = "api_test"
         self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
-        self.d = dao.Dao(self.app.config["DB_NAME"])
+        self.d = dao.Dao(self.app.config["DB_NAME"]) 
 
         self.d.create_new_db_and_connect(self.testing_db_name)
         
@@ -80,34 +80,16 @@ class TestApi(unittest.TestCase):
         assert_equals(len(json.loads(response.data)), 32)
         assert_equals(response.mimetype, "application/json")
 
-    '''
-   def test_item_post_urldecodes(self):
-        resp = self.client.post('/item/doi/' +
-            TEST_DRYAD_DOI.replace("/", "%2F"))
-        tiid = resp.data.replace('"', '')
-
-        resp = self.client.get('/item/' + tiid)
-        saved_item = json.loads(resp.data)
-
-        assert_equals(TEST_DRYAD_DOI, saved_item["aliases"]["doi"])
-
     def test_item_get_unknown_tiid(self):
         # pick a random ID, very unlikely to already be something with this ID
         response = self.client.get('/item/' + str(uuid.uuid4()))
-        assert_equals(response.status_code, 404)  # Not Found
-
-    def test_item_get_success_realid(self):
-        # First put something in
-        response = self.client.get('/item/doi/' + 
-            TEST_DRYAD_DOI.replace("/", "%2F")) 
-        tiid = response.data
-        print response
-        print tiid
+        assert_equals(response.status_code, 404)  # Not Found 
 
     def test_item_get_success_fakeid(self):
-        # First put something in
+        # First put something in 
         response_create = self.client.post('/item/doi/AnIdOfSomeKind/')
         tiid = response_create.data
+        print tiid
 
         # Now try to get it out
         # Strip off leading and trailing quotation marks
@@ -122,6 +104,28 @@ class TestApi(unittest.TestCase):
                 u'last_requested', u'metrics'])
             )
         assert_equals(response.mimetype, "application/json")
+
+    '''
+    def test_item_post_urldecodes(self):
+        resp = self.client.post('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
+        tiid = resp.data.replace('"', '')
+
+        resp = self.client.get('/item/' + tiid)
+        saved_item = json.loads(resp.data)
+
+        assert_equals(TEST_DRYAD_DOI, saved_item["aliases"]["doi"])
+
+
+
+    def test_item_get_success_realid(self):
+        # First put something in
+        response = self.client.get('/item/doi/' + 
+            TEST_DRYAD_DOI.replace("/", "%2F")) 
+        tiid = response.data
+        print response
+        print tiid
+
+
 
     def test_collection_post_already_exists(self):
         response = self.client.post('/collection/' + TEST_COLLECTION_ID)
