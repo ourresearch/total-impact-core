@@ -14,19 +14,27 @@ DB_NAME = 'ti'
 # List of desired providers and their configuration files
 # Alias methods will be called in the order of this list
 #
-PROVIDERS = [
-    {
+PROVIDERS = {
+    "wikipedia":{
         "class" : "totalimpact.providers.wikipedia.Wikipedia",
         "config" : "totalimpact/providers/wikipedia.conf.json"
     },
-    {
+    "dryad": {
         "class" : "totalimpact.providers.dryad.Dryad",
         "config" : "totalimpact/providers/dryad.conf.json"
     },
-    {
+    "github": {
         "class" : "totalimpact.providers.github.Github",
         "config" : "totalimpact/providers/github.conf.json"
     }
+}
+
+#TODO this should be created from the providers config item.
+METRIC_NAMES = [
+    "wikipedia:mentions",
+    "dryad:package_views",
+    "dryad:total_downloads",
+    "dryad:most_downloaded_file"
 ]
 
 # used by the class-loader to explore alternative paths from which to load

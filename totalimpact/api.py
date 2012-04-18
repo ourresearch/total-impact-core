@@ -3,7 +3,7 @@ from flask import render_template, flash
 import os, json, time
 
 from totalimpact import dao
-from totalimpact.models import Item, Collection, Metrics, ItemFactory, CollectionFactory
+from totalimpact.models import Item, Collection, Metric, ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
@@ -28,7 +28,7 @@ def configure_app(app):
 
 app = create_app()
 mydao = dao.Dao(app.config["DB_NAME"])
-providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
+metric_names = app.config["METRIC_NAMES"]
 
 @app.before_request
 def connect_to_db():
@@ -174,13 +174,9 @@ def provider_memberitems(pid):
     qtype = request.values.get('type','')
 
     logger.debug("In provider_memberitems with " + query + " " + qtype)
-    
-    for prov in providers:
-        if prov.id == pid:
-            provider = prov
-            break
 
-    logger.debug("provider: " + prov.id)
+    provider = ProviderFactory.get_provider(app.config["PROVIDERS"][pid])
+    logger.debug("provider: " + provider.id)
 
     memberitems = provider.member_items(query, qtype)
     

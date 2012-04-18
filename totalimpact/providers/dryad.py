@@ -1,6 +1,6 @@
 import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
-from totalimpact.models import Metrics, MetricSnap, Aliases, Biblio
+from totalimpact.models import Metric, MetricSnap, Aliases, Biblio
 from bs4 import BeautifulSoup
 
 import requests
