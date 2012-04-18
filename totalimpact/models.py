@@ -45,7 +45,7 @@ class Saveable(object):
 
         for k, v in input.iteritems():
             try:
-                #get the dict here...
+                #get the dict here...whenever
                 
                 new_my_dict = my_dict.setdefault(k, {})
                 self._update_dict(v, new_my_dict)
@@ -70,6 +70,8 @@ class Saveable(object):
 
 class ItemFactory():
     #TODO this should subclass a SaveableFactory
+
+
 
     @staticmethod
     def make(dao, id=None):
@@ -97,13 +99,13 @@ class ItemFactory():
             # the aliases property needs to be an Aliases obj, not a dict.
             item.aliases = Aliases(seed=item_doc['aliases'])
 
-            # the item.metrics dict is full of Metrics objects. We have to build
+            # the item.metrics dict is full of metric objects. We have to build
             # these one by one, iterating through the item_doc['metrics'] the
             # db gave us.
 
             try:
                 for metric_name, metrics_dict in item_doc['metrics'].iteritems():
-                    my_metric_obj = Metrics()
+                    my_metric_obj = Metric()
                     for k, v in metrics_dict.iteritems():
                         # set every attribute in the metric object (incl. the
                         # list of metricSnaps) equal to its counterpart in the
@@ -242,10 +244,10 @@ class Biblio(object):
 
 
 
-class Metrics(object):
+class Metric(object):
     '''
     This is set up to only deal with *one* type of metric; plos:pdf_view and
-    plos:html_views, for example, need different Metrics objects despite being
+    plos:html_views, for example, need different metric objects despite being
     from the same provider.
     '''
     def __init__(self):

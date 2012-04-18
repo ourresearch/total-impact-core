@@ -71,6 +71,8 @@ METRICS_DATA3 = {
     "latest_snap": None
 }
 
+METRIC_NAMES = ["foo:views", "bar:views", "bar:downloads", "baz:sparkles"]
+
 
 BIBLIO_DATA = {
         "title": "An extension of de Finetti's theorem", 
@@ -157,12 +159,12 @@ class TestSaveable():
         now = "99999999999.9" # it's the future!
         item.last_modified = now
 
-        # add a snap to an existing Metrics object
+        # add a snap to an existing metric object
         new_snap = deepcopy(SNAP_DATA)
         new_snap['value'] = 22
         item.metrics["plos:html_views"].metric_snaps["a_new_snap"] = new_snap
 
-        # add a whole 'nother Metrics object (a list item)
+        # add a whole 'nother metric object (a list item)
         item.metrics["test:a_new_metric"] = METRICS_DATA3
 
         # Meanwhile, it seems the item in the db has changed, thanks to other Providers:
@@ -205,6 +207,7 @@ class TestItemFactory():
 
     def setUp(self):
         self.d = MockDao()
+        self.metric_names = deepcopy(METRIC_NAMES)
 
     def test_make_new(self):
         '''create an item from scratch.'''
@@ -225,6 +228,12 @@ class TestItemFactory():
     def test_load_with_nonexistant_item_fails(self):
         self.d.setResponses([None])
         item = models.ItemFactory.make(self.d, "123")
+
+    def test_factory_loads_all_metrics_objects(self):
+        self.d.setResponses([deepcopy(ITEM_DATA)])
+        item = models.ItemFactory.make(self.d, "123")
+        #assert_equals(item.metrics["foo:views"])
+
 
 class TestItem():
 
@@ -330,7 +339,7 @@ class TestMetrics(unittest.TestCase):
 
 
     def setUp(self):
-        self.m = models.Metrics()
+        self.m = models.Metric()
 
     def test_init(self):
         assert len(self.m.metric_snaps) == 0
@@ -390,7 +399,6 @@ class TestBiblio(unittest.TestCase):
 class TestAliases(unittest.TestCase):
 
     def setUp(self):
-        self.providers = api.providers
         pass
         
     def tearDown(self):
