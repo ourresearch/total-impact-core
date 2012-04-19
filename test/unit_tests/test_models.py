@@ -211,19 +211,47 @@ class TestItemFactory():
 
     def test_make_new(self):
         '''create an item from scratch.'''
-        item = models.ItemFactory.make(self.d)
+        item = models.ItemFactory.make(self.d, self.metric_names)
         assert_equals(len(item.id), 32)
         assert item.created < time.time
 
-    def test_make_from_db(self):
-        self.d.setResponses([deepcopy(ITEM_DATA)])
+        assert_equals(item.aliases.__class__.__name__, "Aliases")
+        assert_equals(item.metrics["bar:views"].__class__.__name__, "Metric")
 
-        item = models.ItemFactory.make(self.d, "123")
+    def test_get(self):
+        self.d.setResponses([deepcopy(ITEM_DATA)])
+        item = models.ItemFactory.get(self.d, "123", self.metric_names)
         
         assert_equals(item.id, ITEM_DATA['_id'])
         assert_equals(item.aliases.__class__.__name__, "Aliases")
         assert_equals(item.as_dict()["aliases"], ITEM_DATA["aliases"])
 
+        
+    def test_get_creates_metrics(self):
+        item_data = deepcopy(ITEM_DATA)
+        item_data2 = deepcopy(ITEM_DATA)
+        del item_data2['metrics']
+
+        self.d.setResponses([item_data, item_data2])
+        item = models.ItemFactory.get(self.d, "123", self.metric_names)
+
+        assert_equals(item.metrics["bar:views"].__class__.__name__, "Metric")
+
+        # should include metric keys from the params, and from the DB doc.
+        # that is, nothing gets overwritten.
+        assert_equals(
+            len(item.metrics),
+            len(self.metric_names)+len(ITEM_DATA["metrics"])
+        )
+        assert_equals(item.metrics["plos:html_views"].__class__.__name__, "Metric")
+
+        # works even if there are no metrics in the db:
+        item2 = models.ItemFactory.get(self.d, "123", self.metric_names)
+        assert_equals(item2.metrics["bar:views"].__class__.__name__, "Metric")
+        assert_equals(len(item2.metrics), len(self.metric_names))
+
+
+'''
     @raises(LookupError)
     def test_load_with_nonexistant_item_fails(self):
         self.d.setResponses([None])
@@ -233,7 +261,7 @@ class TestItemFactory():
         self.d.setResponses([deepcopy(ITEM_DATA)])
         item = models.ItemFactory.make(self.d, "123")
         #assert_equals(item.metrics["foo:views"])
-
+'''
 
 class TestItem():
 
@@ -335,7 +363,7 @@ class TestCollection():
 class TestMetricSnap(unittest.TestCase):
     pass
 
-class TestMetrics(unittest.TestCase):
+class TestMetric(unittest.TestCase):
 
 
     def setUp(self):
@@ -389,7 +417,11 @@ class TestMetrics(unittest.TestCase):
         assert_equals(self.m.__dict__['metric_snaps'][hash], snap)
         assert_equals(self.m.__dict__['latest_snap'], snap)
 
-
+    def test_init_with_doc_arg(self):
+        doc = {"one": "uno", "dict":{"two":"dos", "three": "tres"}}
+        metric = models.Metric(doc)
+        assert_equals(metric.one, doc["one"])
+        assert_equals(metric.dict["two"], "dos")
 
 
 

@@ -71,12 +71,50 @@ class Saveable(object):
 class ItemFactory():
     #TODO this should subclass a SaveableFactory
 
+    @classmethod
+    def get(cls, dao, id, metric_names):
+        item_doc = dao.get(id)
+        item = Item(dao, id=id)
 
+        if item_doc is None:
+            raise LookupError
 
-    @staticmethod
-    def make(dao, id=None):
+        item.last_requested = time.time()
+
+        # first, just copy everything from the item_doc the DB gave us
+        for k in item_doc:
+            if k not in ["_id", "_rev"]:
+                setattr(item, k, item_doc[k])
+
+        # the aliases property needs to be an Aliases obj, not a dict.
+        item.aliases = Aliases(seed=item_doc['aliases'])
+
+        # make the Metric objects. We have to make keys for each metric in the config
+        # so that Providers will know which metrics to update later on.
+        # Then we fill these Metric objects's dictionaries with the metricSnaps
+        # from the db.
+
+        # first combine all the keys we have. Don't want to overwrite anything.
+        try:
+            metric_names = set(metric_names + item_doc["metrics"].keys() )
+        except KeyError:
+            pass
+
+        item.metrics = {}
+        for name in metric_names:
+            try:
+                my_metric_obj = Metric(doc=item_doc["metrics"][name])
+            except KeyError:
+                my_metric_obj = Metric()
+
+            item.metrics[name] = my_metric_obj
+
+        return item
+
+    @classmethod
+    def make(cls, dao, metric_names):
         now = time.time()
-        item = Item(dao=dao, id=id)
+        item = Item(dao=dao)
         
         # make all the top-level stuff
         item.aliases = Aliases()
@@ -85,46 +123,13 @@ class ItemFactory():
         item.last_modified = now
         item.created = now
 
-        # if we've already got an id, don't make an item; instead, retrieve it
-        # from teh db
-        if id is not None: 
-            item_doc = dao.get(id)
-
-            if item_doc is None:
-                raise LookupError
-
-            for k in item_doc:
-                setattr(item, k, item_doc[k])
-
-            # the aliases property needs to be an Aliases obj, not a dict.
-            item.aliases = Aliases(seed=item_doc['aliases'])
-
-            # the item.metrics dict is full of metric objects. We have to build
-            # these one by one, iterating through the item_doc['metrics'] the
-            # db gave us.
-
-            try:
-                for metric_name, metrics_dict in item_doc['metrics'].iteritems():
-                    my_metric_obj = Metric()
-                    for k, v in metrics_dict.iteritems():
-                        # set every attribute in the metric object (incl. the
-                        # list of metricSnaps) equal to its counterpart in the
-                        # dictionary from the db
-                        setattr(my_metric_obj, k, v)
-
-                    item.metrics[metric_name] = my_metric_obj
-            except KeyError:
-                # there's no top-level metrics section in the returned item doc.
-                # keep it as item.metrics = {}
-                pass
-
-            item.last_requested = time.time()
-            
-            # remove cruft from couch that we don't need
-            del item._id
-            del item._rev
+        # make the metrics objects. We have to make all the ones in the config
+        # so that Providers will know which ones to update later on.
+        for name in metric_names:
+            item.metrics[name] = Metric()
 
         return item
+
 
 
 
@@ -250,13 +255,16 @@ class Metric(object):
     plos:html_views, for example, need different metric objects despite being
     from the same provider.
     '''
-    def __init__(self):
+    def __init__(self, doc=None):
 
         self.ignore = False
         self.metric_snaps = {}
         self.latest_snap = None
-        # no need to set a last_modified...it's just the last_modified of self.latest
-        
+
+        if doc is not None:
+            for k, v in doc.iteritems():
+                setattr(self, k, v)
+
     def add_metric_snap(self, metric_snap):
         '''Stores a MetricSnap object based on a key hashed from its "value" attr.
 
