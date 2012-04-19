@@ -89,7 +89,7 @@ def item_namespace_post(namespace, nid):
     example /item/PMID/234234232
     '''
     
-    item = ItemFactory.make(mydao)
+    item = ItemFactory.make(mydao, metric_names)
     item.aliases.add_alias(namespace, nid)
 
     ## FIXME - see issue 86
@@ -129,7 +129,7 @@ def items(tiids):
         if index > 99: break    # weak
 
         try:
-            item = ItemFactory.make(mydao, id=tiid)
+            item = ItemFactory.get(mydao, id=tiid, metric_names=metric_names)
             item.last_requested = time.time()
             items.append( item.as_dict() )
         except LookupError:
