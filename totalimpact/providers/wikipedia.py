@@ -1,6 +1,5 @@
 import time
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
-from totalimpact.models import MetricSnap
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 
@@ -24,52 +23,49 @@ class Wikipedia(Provider):
     def metrics(self, item):
         # get the alias object out of the item
         alias_object = item.aliases
-        logger.info(self.config.id + ": metrics requested for tiid:" + alias_object.tiid)
-        
-        # construct the metrics object based on queries on each of the 
-        # appropriate aliases
-        metric = MetricSnap(id=self.config.id)
+        logger.info(self.config.id + ": metrics requested for tiid:" + item.id)
         
         # get the aliases that we want to check
         aliases = alias_object.get_aliases_list(self.config.supported_namespaces)
+        print aliases
         if aliases is None or len(aliases) == 0:
-            logger.debug(self.config.id + ": No acceptable aliases in tiid:" + alias_object.tiid)
-            logger.debug(self.config.id + ": Aliases: " + str(alias_object.get_aliases_dict()))
+            logger.debug(self.config.id + ": No acceptable aliases in tiid:" + item.id)
+            logger.debug(self.config.id + ": Aliases: " + str(alias_object.__dict__))
             return item
         
-        # FIXME: this is broken
         # if there are aliases to check, carry on
         for alias in aliases:
-            logger.debug(self.config.id + ": processing metrics for tiid:" + alias_object.tiid)
+            logger.debug(self.config.id + ": processing metrics for tiid:" + item.id)
             logger.debug(self.config.id + ": looking for mentions of alias " + alias[1])
-            metric = self._get_metrics(alias)
-        
-        # add the static_meta info and other bits to the metrics object
-        metric.static_meta(self.config.static_meta)
+            item.metrics = self._update_metrics_from_id(item.metrics, alias[1])
         
         # log our success (DEBUG and INFO)
-        logger.debug(self.config.id + ": final metrics for tiid " + alias_object.tiid + ": " + str(metric))
-        logger.info(self.config.id + ": metrics completed for tiid:" + alias_object.tiid)
+        logger.debug(self.config.id + ": final metrics for tiid " + item.id + ": "
+            + str(item.metrics))
+        logger.info(self.config.id + ": metrics completed for tiid:" + item.id)
         
-        # finally update the item's metrics object with the new one, and return the item
-        item.metrics.add_metric_snap(metric)
         return item
     
-    def _get_metrics(self, alias):
+    def _update_metrics_from_dict(self, new_metrics, old_metrics):
+        #TODO all Providers will use this method; move it up to the parent class.
+        for metric_name, metric_val in new_metrics.iteritems():
+            old_metrics[metric_name]['values'][metric_val] = time.time()
+
+            #TODO config should have different static_meta sections keyed by metric.
+            old_metrics[metric_name]['static_meta'] = self.config.static_meta
+
+        return old_metrics # now updated
+    
+    def _update_metrics_from_id(self, metrics, id):
+        #TODO this should take an alias in other Providers (esp. Mendeley),
+        # since there will be different API calls and extract_stats methods
+        # for different alias namespaces. Should actually think about making new
+        # classes/subclasses to do this.
+    
         # FIXME: urlencoding?
-        url = self.config.metrics['url'] % alias[1]
-        this_metrics = MetricSnap(id=self.config.id)
+        url = self.config.metrics['url'] % id 
         logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
         
-        self._mitigated_get_metrics(url, this_metrics)
-        
-        sdurl = self.config.metrics['provenance_url'] % alias[1]
-        this_metrics.static_meta.provenance_url.append(sdurl)
-        
-        logger.debug(self.config.id + ": interim metrics: " + str(this_metrics))
-        return this_metrics
-    
-    def _mitigated_get_metrics(self, url, this_metrics):
         # try to get a response from the data provider        
         response = self.http_get(url, timeout=self.config.metrics['timeout'], error_conf=self.config.errors)
         
@@ -81,23 +77,27 @@ class Wikipedia(Provider):
             else:
                 raise ProviderClientError(response)
                     
-        # NOTE: if there was a specific error which indicated rate-limit failure,
-        # it could be caught here, and sent to the _snooze_or_raise method
+        new_metric_values = self._extract_stats(response.text)
+        metrics = self._update_metrics_from_dict(new_metric_values, metrics)
         
-        self._extract_stats(response.text, this_metrics)
+        return metrics
     
-    def _extract_stats(self, content, metrics):
+    def _extract_stats(self, content):
         try:
             soup = BeautifulStoneSoup(content)
         except:
+            # seems this pretty much never gets called, as soup will happily
+            # try to parse just about anything you throw at it.
             raise ProviderContentMalformedError("Content cannot be parsed into soup")
         
         try:
             articles = soup.search.findAll(title=True)
-            metrics.value(len(articles))
+            val = len(articles)
         except AttributeError:
             # NOTE: this does not raise a ProviderValidationError, because missing
             # articles are not indicative of a formatting failure - there just might
             # not be any articles
-            metrics.value(0)
+            val = 0
+
+        return {"wikipedia:mentions": val}
             

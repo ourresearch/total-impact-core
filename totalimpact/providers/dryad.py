@@ -159,6 +159,7 @@ class Dryad(Provider):
         return(id)        
 
     def metrics(self, item):
+        #TODO Make provenance URL and stick it on the metric
         id = self._get_dryad_doi(item)
         metrics_dict = self.get_metrics_for_id(id)
         for metric_name, metric_val in metrics_dict.iteritems():
