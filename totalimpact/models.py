@@ -317,7 +317,6 @@ class MetricSnap(object):
 class Aliases(object):
     """
     {
-        "tiid":"123456",
         "title":["Why Most Published Research Findings Are False"],
         "url":["http:\/\/www.plosmedicine.org\/article\/info:doi\/10.1371\/journal.pmed.0020124"],
         "doi": ["10.1371\/journal.pmed.0020124"],
@@ -325,6 +324,9 @@ class Aliases(object):
         "last_modified": 1328569492.406
         ...
     }
+
+    note we're not keeping the TIID in here any more. it needs to be on the the
+    item, since that's what it describes. having it in two places == bad.
     """
     
     not_aliases = ["created", "last_modified"]
