@@ -1,4 +1,4 @@
-from totalimpact.models import Metrics, Aliases, Item
+from totalimpact.models import Metric, Aliases, Item
 from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
@@ -73,7 +73,7 @@ class Test_Dryad(unittest.TestCase):
 
         a = Aliases()
         a.add_alias("doi", TEST_DRYAD_DOI)
-        self.simple_item = Item("12345", "not a dao")
+        self.simple_item = Item("not a dao", "12345")
         self.simple_item.aliases = a
 
 
@@ -143,8 +143,6 @@ class Test_Dryad(unittest.TestCase):
         members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
         assert len(members) == 0, str(members)
 
-
-
     def test_05_extract_aliases(self):
         # ensure that the dryad reader can interpret an xml doc appropriately
         f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
@@ -157,7 +155,10 @@ class Test_Dryad(unittest.TestCase):
         item_with_new_aliases = self.provider.aliases(self.simple_item)
 
         new_aliases = item_with_new_aliases.aliases
-        assert_equals(new_aliases.get_aliases_dict().keys(), ['url', 'tiid', 'doi', 'title'])
+        assert_equals(
+            set(new_aliases.__dict__.keys()),
+            set(['url', 'created', 'last_modified', 'doi', 'title'])
+            )
         assert_equals(new_aliases.url, [u'http://hdl.handle.net/10255/dryad.7898'])
         assert_equals(new_aliases.doi, ['10.5061/dryad.7898'])
         assert_equals(new_aliases.title, [u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides'])
@@ -207,13 +208,15 @@ class Test_Dryad(unittest.TestCase):
 
     def test_07a_get_metrics_success(self):
         Provider.http_get = get_metrics_html_success
-        item_with_new_metrics = self.provider.metrics(self.simple_item)
+        metrics = self.provider.metrics(self.simple_item)
 
-        new_metrics = item_with_new_metrics.data["bucket"]
-        new_metrics_values = [(m["id"], m["value"]) for m in new_metrics.values()]
+        new_metrics_values = [(m["id"], m["value"])
+            for m in metrics.metric_snaps.values()]
         new_metrics_values.sort()  # for consistent order
-        assert_equals(new_metrics_values,
-            [('dryad:most_downloaded_file', 63), ('dryad:package_views', '149'), ('dryad:total_downloads', 169)])
+        assert_equals(
+            new_metrics_values,
+            [('dryad:most_downloaded_file', 63), ('dryad:package_views', '149'), ('dryad:total_downloads', 169)]
+            )
 
     @raises(ProviderClientError)
     def test_07b_metrics_400(self):

@@ -9,11 +9,6 @@ import simplejson
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
 
-class DryadMetricSnapshot(MetricSnap):
-    def __init__(self, provider, id, value):
-        static_meta = provider.config.metrics["static_meta"][id]
-        super(DryadMetricSnapshot, self).__init__(id=id, value=value, static_meta=static_meta)
-
 class Dryad(Provider):  
 
     def __init__(self, config):
@@ -32,6 +27,14 @@ class Dryad(Provider):
 
     def _is_relevant_id(self, alias):
         return self._is_dryad_doi(alias[1])
+    
+    def _create_snapshot(self, id, value):
+        return {
+            'static_meta': self.config.metrics["static_meta"][id],
+            'id': id,
+            'value': value,
+        }
+
 
     def _get_named_arr_int_from_xml(self, xml, name, is_expected=True):
         arrs = self._get_named_arrs_from_xml(xml, name, is_expected)
@@ -85,7 +88,7 @@ class Dryad(Provider):
     def aliases(self, item):
         # get the alias object
         alias_object = item.aliases
-        logger.info(self.config.id + ": aliases requested for tiid:" + alias_object.tiid)
+        logger.info(self.config.id + ": aliases requested for tiid:" + item.id)
         
         # Get a list of the new aliases that can be discovered from the data
         # source
@@ -93,7 +96,7 @@ class Dryad(Provider):
         for alias in alias_object.get_aliases_list("doi"):
             if not self._is_dryad_doi(alias[1]):
                 continue
-            logger.debug(self.config.id + ": processing aliases for tiid:" + alias_object.tiid)
+            logger.debug(self.config.id + ": processing aliases for tiid:" + item.id)
             id = alias[1]
             new_aliases += self.get_aliases_for_id(id)
         
@@ -101,8 +104,8 @@ class Dryad(Provider):
         alias_object.add_unique(new_aliases)
         
         # log our success
-        logger.debug(self.config.id + ": discovered aliases for tiid " + alias_object.tiid + ": " + str(new_aliases))
-        logger.info(self.config.id + ": aliases completed for tiid:" + alias_object.tiid)
+        logger.debug(self.config.id + ": discovered aliases for tiid " + item.id + ": " + str(new_aliases))
+        logger.info(self.config.id + ": aliases completed for tiid:" + item.id)
         
         # no need to set the aliases on the item, as everything is by-reference
         return item
@@ -194,13 +197,13 @@ class Dryad(Provider):
 
         # extract the aliases
         new_stats = self._extract_stats(response.text)
-        metrics = Metrics()
+        my_metric = Metric()
 
         if new_stats is not None:
             for metric in new_stats:
                 logger.debug(self.config.id + ": found metrics: " + str(metric))
-                metrics.add_metric_snap(metric)
-            return metrics
+                my_metric.add_metric_snap(metric)
+            return my_metric
         return []
 
 
@@ -219,11 +222,15 @@ class Dryad(Provider):
         except ValueError:
             raise ProviderClientError(content)            
 
-        snapshot_view_package = DryadMetricSnapshot(self, "dryad:package_views", view_package)
-        snapshot_total_downloads = DryadMetricSnapshot(self, "dryad:total_downloads", total_downloads)
-        snapshot_most_downloaded_file = DryadMetricSnapshot(self, "dryad:most_downloaded_file", max_downloads)
+        snapshot_view_package = self._create_snapshot(
+            "dryad:package_views", view_package)
+        snapshot_total_downloads = self._create_snapshot(
+            "dryad:total_downloads", total_downloads)
+        snapshot_most_downloaded_file = self._create_snapshot(
+            "dryad:most_downloaded_file", max_downloads)
 
-        return([snapshot_view_package, snapshot_total_downloads, snapshot_most_downloaded_file])
+        return([snapshot_view_package, snapshot_total_downloads,
+            snapshot_most_downloaded_file])
 
 
     def provides_biblio(self): 
