@@ -1,6 +1,6 @@
 import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
-from totalimpact.models import Metric, MetricSnap, Aliases, Biblio
+from totalimpact.models import Aliases, Biblio
 from bs4 import BeautifulSoup
 
 import requests
@@ -28,13 +28,6 @@ class Dryad(Provider):
     def _is_relevant_id(self, alias):
         return self._is_dryad_doi(alias[1])
     
-    def _create_snapshot(self, value):
-        return {
-            'value': value,
-            'time': time.time()
-        }
-
-
     def _get_named_arr_int_from_xml(self, xml, name, is_expected=True):
         arrs = self._get_named_arrs_from_xml(xml, name, is_expected)
         identifiers = [arr.int.text for arr in arrs]
@@ -166,13 +159,11 @@ class Dryad(Provider):
         return(id)        
 
     def metrics(self, item):
-        now = time.time()
         id = self._get_dryad_doi(item)
-        new_metrics_dict = self.get_metrics_for_id(id)
-        for metric_name, metric_val in new_metrics_dict.iteritems():
-            item.metrics[metric_name].metric_snaps[metric_val] = now
-            item.metrics[metric_name].static_meta = self.config.metrics["static_meta"][metric_name]
-            item.metrics[metric_name].last_updated = now
+        metrics_dict = self.get_metrics_for_id(id)
+        for metric_name, metric_val in metrics_dict.iteritems():
+            item.metrics[metric_name]['values'][metric_val] = time.time()
+            item.metrics[metric_name]['static_meta'] = self.config.metrics["static_meta"][metric_name]
 
         return item
 
@@ -220,9 +211,9 @@ class Dryad(Provider):
             raise ProviderClientError(content)            
 
         return {
-            "dryad:package_views": view_package,
-            "dryad:total_downloads": total_downloads,
-            "dryad:most_downloaded_file": max_downloads
+            "dryad:package_views": int(view_package),
+            "dryad:total_downloads": int(total_downloads),
+            "dryad:most_downloaded_file": int(max_downloads)
         }
 
 

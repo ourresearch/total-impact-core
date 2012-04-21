@@ -52,7 +52,6 @@ VAL2 = "9999999999.9"
 
 METRICS_DATA = {
     "ignore": False,
-    "latest_value": "13",
     "static_meta": STATIC_META,
     "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
     "values":{

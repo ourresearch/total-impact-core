@@ -1,4 +1,4 @@
-from totalimpact.models import Metric, Aliases, Item, ItemFactory
+from totalimpact.models import Aliases, Item, ItemFactory
 from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
@@ -214,14 +214,21 @@ class Test_Dryad(unittest.TestCase):
 
     def test_07a_get_metrics_success(self):
         Provider.http_get = get_metrics_html_success
-        metrics = self.provider.metrics(self.simple_item)
+        new_item = self.provider.metrics(self.simple_item)
+        print new_item.__dict__
+        assert False
 
-        new_metrics_values = [(m["id"], m["value"])
-            for m in metrics.metric_snaps.values()]
-        new_metrics_values.sort()  # for consistent order
         assert_equals(
-            new_metrics_values,
-            [('dryad:most_downloaded_file', 63), ('dryad:package_views', '149'), ('dryad:total_downloads', 169)]
+            new_item.metrics['dryad:most_downloaded_file']['values'].keys()[0],
+            63
+            )
+        assert_equals(
+            new_item.metrics['dryad:package_views']['values'].keys()[0],
+            149
+            )
+        assert_equals(
+            new_item.metrics['dryad:total_downloads']['values'].keys()[0],
+            169
             )
 
     @raises(ProviderClientError)
