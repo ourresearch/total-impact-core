@@ -340,12 +340,16 @@ class Aliases(object):
         # otherwise, get for the specific namespaces
         ret = []
         for namespace in namespace_list:
-            ids = getattr(self, namespace)
+            try:
+                ids = getattr(self, namespace)
             
-            # crazy hack TODO fix lists/strings flying about
-            if not hasattr(ids, "append"):
-                ids = [ids]
-            ret += [(namespace, id) for id in ids]
+                # crazy hack TODO fix lists/strings flying about
+                if not hasattr(ids, "append"):
+                    ids = [ids]
+                ret += [(namespace, id) for id in ids]
+            except AttributeError:
+                # this alias doesn't have that namespace...no worries, move on.
+                pass
 
         return ret
 
