@@ -1,6 +1,6 @@
 import time
-
-from totalimpact.models import Item
+from totalimpact import default_settings as conf
+from totalimpact.models import Item, ItemFactory
 
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
@@ -41,15 +41,9 @@ class AliasQueue(Queue):
 
         items = []
         for row in res["rows"]:
-            my_item = Item(self.dao, id=row["id"])
-            my_item.load() # TODO add better load methods to item so we don't have to go back to the db here
+            my_item = ItemFactory.get(self.dao, row["id"], config.METRIC_NAMES)
             items.append(my_item)
 
-        '''
-        # don't have time to do it the pythonic way...will learn later
-        response_seeds = [i.items()[0][1] for i in items['rows']]
-        response_items = [Item(self.dao, seed=seed) for seed in response_seeds]
-        '''
         return items
     
 
@@ -79,8 +73,7 @@ class MetricsQueue(Queue):
 
         items = []
         for row in res["rows"]:
-            my_item = Item(self.dao, id=row["id"])
-            my_item.load() # TODO add better load methods to item so we don't have to go back to the db here
+            my_item = ItemFactory.get(self.dao, row["id"], config.METRIC_NAMES)
             items.append(my_item)
         return items
 
