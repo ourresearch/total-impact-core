@@ -263,10 +263,6 @@ class Metric(object):
             12: "1234556789.2",
             13: "1234567999.9"
         },
-        latest_snap: {
-            13: "1234567999.9"
-        }
-        "last_modified": 1328569492.406,
         "static_meta": {
             "display_name": "readers"
             "provider": "Mendeley",
