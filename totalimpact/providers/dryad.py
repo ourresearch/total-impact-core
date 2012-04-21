@@ -159,17 +159,15 @@ class Dryad(Provider):
         return(id)        
 
     def metrics(self, item):
-        #TODO Make provenance URL and stick it on the metric
         id = self._get_dryad_doi(item)
-        metrics_dict = self.get_metrics_for_id(id)
-        for metric_name, metric_val in metrics_dict.iteritems():
-            item.metrics[metric_name]['values'][metric_val] = time.time()
-            item.metrics[metric_name]['static_meta'] = self.config.metrics["static_meta"][metric_name]
+        new_metrics = self._get_metrics_for_id(id)
+        item.metrics = self._update_metrics_from_dict(new_metrics, item.metrics)
 
+        logger.info("{0}: metrics completed for tiid {1}".format(self.config.id, item.id))
         return item
 
 
-    def get_metrics_for_id(self, id):
+    def _get_metrics_for_id(self, id):
         url = self.config.metrics['url'] % id
         logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
         
