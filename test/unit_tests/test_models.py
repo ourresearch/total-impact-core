@@ -19,8 +19,8 @@ ALIAS_DATA = {
     "title":["Why Most Published Research Findings Are False"],
     "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
     "doi": ["10.1371/journal.pmed.0020124"],
-    "created": 12387239847.234,
-    "last_modified": 1328569492.406
+    "created": 12345.111,
+    "last_modified": 12346.222
     }
 
 ALIAS_CANONICAL_DATA = {
@@ -31,13 +31,8 @@ ALIAS_CANONICAL_DATA = {
     "last_modified": 1328569492.406
     }
 
-SNAP_DATA = {
-    "id": "mendeley:readers",
-    "value": 16,
-    "created": 1233442897.234,
-    "last_modified": 1328569492.406,
-    "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
-    "static_meta": {
+
+STATIC_META = {
         "display_name": "readers",
         "provider": "Mendeley",
         "provider_url": "http://www.mendeley.com/",
@@ -47,28 +42,45 @@ SNAP_DATA = {
         "can_use_commercially": "0",
         "can_embed": "1",
         "can_aggregate": "1",
-        "other_terms_of_use": "Must show logo and say 'Powered by Santa'"
+        "other_terms_of_use": "Must show logo and say 'Powered by Santa'",
         }
-    }
+
+KEY1 = 1
+KEY2 = 2
+VAL1 = "8888888888.8"
+VAL2 = "9999999999.9"
 
 METRICS_DATA = {
     "ignore": False,
-    "metric_snaps": {
-        "thisissupposedtobeahash": SNAP_DATA
-    },
-    "latest_snap": SNAP_DATA
+    "latest_value": "13",
+    "static_meta": STATIC_META,
+    "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
+    "values":{
+        KEY1: VAL1,
+        KEY2: VAL2
+    }
 }
 
 METRICS_DATA2 = {
     "ignore": False,
-    "metric_snaps": {},
-    "latest_snap": None
-}
+    "latest_value": 21,
+    "static_meta": STATIC_META,
+    "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
+    "values":{
+        KEY1: VAL1,
+        KEY2: VAL2
+    }
+} 
 
 METRICS_DATA3 = {
     "ignore": False,
-    "metric_snaps": {},
-    "latest_snap": None
+    "latest_value": 31,
+    "static_meta": STATIC_META,
+    "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
+    "values":{
+        KEY1: VAL1,
+        KEY2: VAL2
+    }
 }
 
 METRIC_NAMES = ["foo:views", "bar:views", "bar:downloads", "baz:sparkles"]
@@ -95,9 +107,9 @@ ITEM_DATA = {
     "last_modified": 12414214.234,
     "last_requested": 124141245.234, 
     "aliases": ALIAS_DATA,
-    "metrics": { # this could be a list, but limiting to dicts makes processing easier.
-        "plos:html_views": METRICS_DATA,
-        "plos:pdf_views": METRICS_DATA2
+    "metrics": { 
+        "foo:views": METRICS_DATA,
+        "bar:views": METRICS_DATA2
     },
     "biblio": BIBLIO_DATA
 }
@@ -107,7 +119,6 @@ TEST_DB_NAME = "test_models"
 
 class TestSaveable():
     def setUp(self):
-        print ITEM_DATA
         pass
 
     def test_id_gets_set(self):
@@ -137,9 +148,12 @@ class TestSaveable():
         assert_equals(s.as_dict()['constituent_dict']['foo_obj']['bar'], foo.bar)
 
     def test__update_dict(self):
-        '''These tests are more naturalistic because they use the objects
-        we're using. but in future, toy objects are way easier to work with and
-        grok later.'''
+        '''Test that items can update their values from an input dict.
+
+        These tests are more naturalistic because they use the objects
+        we're using. but next time, would do differently...toy objects are way
+        easier to work with and grok later.
+        '''
 
         item_response = deepcopy(ITEM_DATA)
         item_response2 = deepcopy(ITEM_DATA)
@@ -148,53 +162,49 @@ class TestSaveable():
         dao.setResponses([item_response])
 
         # simulate pulling an item out of the db
-        item = models.ItemFactory.make(dao, item_response['_id'])
+        item = models.ItemFactory.make(dao, METRIC_NAMES)
 
         # note the item has an 'id' but not an '_id' attr
-        assert_equals(item.id, item_response['_id'])
+        assert_equals(len(item.id), 32)
         assert_equals(item.aliases.__class__.__name__, "Aliases")
 
         # now let's simulate adding some stuff to this object
-        # change a string
+        # change a string 
         now = "99999999999.9" # it's the future!
         item.last_modified = now
 
-        # add a snap to an existing metric object
-        new_snap = deepcopy(SNAP_DATA)
-        new_snap['value'] = 22
-        item.metrics["plos:html_views"].metric_snaps["a_new_snap"] = new_snap
+        # add a value to an existing metric object
+        item.metrics["foo:views"]['values'][111] = "added value to extant metric"
 
         # add a whole 'nother metric object (a list item)
         item.metrics["test:a_new_metric"] = METRICS_DATA3
 
         # Meanwhile, it seems the item in the db has changed, thanks to other Providers:
         item_response2["metrics"]["test:while_you_were_away"] = METRICS_DATA3
-        new_snap = deepcopy(SNAP_DATA)
-        new_snap['value'] = 44 
-        item_response2["metrics"]["plos:html_views"]["metric_snaps"] \
-            ["while_you_were_away_snap"] = new_snap
 
-        # now let's see if this works:
-        output = item._update_dict(item_response2)
+        item_response2["metrics"]["foo:views"]["values"] \
+            [777] = "while you were away, new vals on an old metric"
+
+        output = item._update_dict(item_response2) 
         print yaml.dump(output)
 
         # things that are common to both dicts are preserved
-        assert_equals(output["aliases"], item_response2["aliases"])
+        assert_equals(output["aliases"]['doi'], item_response2["aliases"]['doi'])
 
         # when strings differ, the object's version takes priority
         assert_equals(output["last_modified"], now)
 
         # plos:html_views should have one snap initially, +1 we added right
         # away, + 1 back from the database = 3
-        assert_equals(len(output["metrics"]["plos:html_views"]["metric_snaps"]), 3)
+        assert_equals(len(output["metrics"]["foo:views"]["values"]), 4)
 
         # locally and remotely added metrics are preserved
         assert_equals(output["metrics"]["test:a_new_metric"]["ignore"], False)
         assert_equals(output["metrics"]["test:while_you_were_away"]["ignore"], False)
 
-        # locally and remotely added metric snaps are preserved
-        assert_equals(output["metrics"]["plos:html_views"]["metric_snaps"] \
-            ["while_you_were_away_snap"]["value"], 44)
+        # locally and remotely added metric values are preserved
+        assert_equals(output["metrics"]["foo:views"]["values"] \
+            [777], "while you were away, new vals on an old metric")
         assert_equals(output["metrics"]["test:while_you_were_away"]["ignore"], False)
 
         def save(self):
@@ -207,7 +217,7 @@ class TestItemFactory():
 
     def setUp(self):
         self.d = MockDao()
-        self.metric_names = deepcopy(METRIC_NAMES)
+        self.metric_names = ["test:new_name", "test:another_new_name"]
 
     def test_make_new(self):
         '''create an item from scratch.'''
@@ -216,7 +226,7 @@ class TestItemFactory():
         assert item.created < time.time
 
         assert_equals(item.aliases.__class__.__name__, "Aliases")
-        assert_equals(item.metrics["bar:views"].__class__.__name__, "Metric")
+        assert_equals(item.metrics["test:new_name"]['values'], {})
 
     def test_get(self):
         self.d.setResponses([deepcopy(ITEM_DATA)])
@@ -235,7 +245,7 @@ class TestItemFactory():
         self.d.setResponses([item_data, item_data2])
         item = models.ItemFactory.get(self.d, "123", self.metric_names)
 
-        assert_equals(item.metrics["bar:views"].__class__.__name__, "Metric")
+        assert_equals(item.metrics["bar:views"]['values'][KEY1], VAL1)
 
         # should include metric keys from the params, and from the DB doc.
         # that is, nothing gets overwritten.
@@ -243,11 +253,12 @@ class TestItemFactory():
             len(item.metrics),
             len(self.metric_names)+len(ITEM_DATA["metrics"])
         )
-        assert_equals(item.metrics["plos:html_views"].__class__.__name__, "Metric")
+        assert_equals(item.metrics["foo:views"]['values'][KEY1], VAL1)
 
         # works even if there are no metrics in the db:
         item2 = models.ItemFactory.get(self.d, "123", self.metric_names)
-        assert_equals(item2.metrics["bar:views"].__class__.__name__, "Metric")
+        print item2.metrics
+        assert_equals(item2.metrics["test:new_name"]['values'], {})
         assert_equals(len(item2.metrics), len(self.metric_names))
 
 
@@ -358,72 +369,6 @@ class TestCollection():
         c = models.Collection(self.d, id="SomeCollectionId")
         response = c.delete()
         assert_equals(response, True)
-
-
-class TestMetricSnap(unittest.TestCase):
-    pass
-
-class TestMetric(unittest.TestCase):
-
-
-    def setUp(self):
-        self.m = models.Metric()
-
-    def test_init(self):
-        assert len(self.m.metric_snaps) == 0
-        assert_equals(self.m.ignore, False )
-
-    def test_add_metric_snap(self):
-        start_time = time.time()
-
-        snap1 = deepcopy(SNAP_DATA)
-        hash = self.m.add_metric_snap(snap1)
-
-        assert_equals(len(hash), 32)
-        assert_equals(self.m.metric_snaps[hash], snap1)
-        assert_equals(len(self.m.metric_snaps), 1)
-        assert_equals(self.m.latest_snap["value"], snap1["value"])
-
-        # the we've changed something, so the last_modified value should change
-        assert  self.m.last_modified > start_time
-
-        # let's try adding a new snap; this has a new value, so it'll get stored
-        # alongside the first one.
-        snap2 =deepcopy(SNAP_DATA)
-        snap2['value'] = 17
-        hash2 = self.m.add_metric_snap(snap2)
-
-        assert_equals(len(hash), 32)
-        assert_equals(self.m.metric_snaps[hash2], snap2)
-        assert_equals(len(self.m.metric_snaps), 2) # two metricSnaps in there now.
-        assert_equals(self.m.latest_snap["value"], snap2["value"])
-
-        # now a third snap with the same value; shouldn't get stored.
-        snap3 =deepcopy(SNAP_DATA)
-        snap3['value'] = 17 #same as snap2 
-        hash3 = self.m.add_metric_snap(snap2)
-
-        assert_equals(hash3, hash2)
-        assert_equals(len(self.m.metric_snaps), 2) # still just two metricSnaps in there.
-        assert_equals(self.m.latest_snap["value"], snap2["value"])
-
-    def test_as_dict(self):
-        assert_equals(METRICS_DATA["ignore"], self.m.__dict__["ignore"])
-
-        # has to also work when there are snaps in the metric_snaps attr.
-        snap = deepcopy(SNAP_DATA)
-        hash = self.m.add_metric_snap(snap)
-        assert_equals(len(self.m.__dict__['metric_snaps']), 1)
-        assert_equals(self.m.__dict__['metric_snaps'][hash], snap)
-        assert_equals(self.m.__dict__['latest_snap'], snap)
-
-    def test_init_with_doc_arg(self):
-        doc = {"one": "uno", "dict":{"two":"dos", "three": "tres"}}
-        metric = models.Metric(doc)
-        assert_equals(metric.one, doc["one"])
-        assert_equals(metric.dict["two"], "dos")
-
-
 
 class TestBiblio(unittest.TestCase):
     pass

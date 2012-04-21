@@ -103,11 +103,9 @@ class ItemFactory():
         item.metrics = {}
         for name in metric_names:
             try:
-                my_metric_obj = Metric(doc=item_doc["metrics"][name])
-            except KeyError:
-                my_metric_obj = Metric()
-
-            item.metrics[name] = my_metric_obj
+                item.metrics[name] = item_doc["metrics"][name]
+            except KeyError: #this metric ain't in the item_doc from the db
+                item.metrics[name] = {'values': {} }
 
         return item
 
@@ -126,7 +124,7 @@ class ItemFactory():
         # make the metrics objects. We have to make all the ones in the config
         # so that Providers will know which ones to update later on.
         for name in metric_names:
-            item.metrics[name] = Metric()
+            item.metrics[name] = {'values': {} }
 
         return item
 
@@ -251,51 +249,24 @@ class Biblio(object):
 
 class Metric(object):
     '''
-    This is set up to only deal with *one* type of metric; plos:pdf_view and
+    This doesn't do anything anymore...just leaving it here for the docs, for now.
+
+    Only deals with *one* type of metric; plos:pdf_view and
     plos:html_views, for example, need different metric objects despite being
     from the same provider.
-    '''
-    def __init__(self, doc=None):
 
-        self.ignore = False
-        self.metric_snaps = {}
-        self.latest_snap = None
-
-        if doc is not None:
-            for k, v in doc.iteritems():
-                setattr(self, k, v)
-
-    def add_metric_snap(self, metric_snap):
-        '''Stores a MetricSnap object based on a key hashed from its "value" attr.
-
-        When you get the snap back out, you're getting the object, not its attributes.
-        Also, note that snaps with identical values get overwritten.
-        '''
-
-        hash = hashlib.md5(str(metric_snap["value"])).hexdigest()
-        self.metric_snaps[hash] = metric_snap
-        self.latest_snap = metric_snap
-        self.last_modified = time.time()
-        return hash
-
-
-      
-
-
-# FIXME: should this have a created property?
-# FIXME: should things like "can_use_commercially" be true/false rather than the - yes
-# string "0" or "1", or are there other values that can go in there
-# FIXME: add a validation routine
-# FIXME: we need a nicer interface to get at the contents of the inner data object
-# just here for documentation purposes right now...
-class MetricSnap(object):
-    """
+    example:
     {
-        "id": "Mendeley:readers",
-        "value": 16,
-        "created": 1233442897.234,
+        "ignore": False,
+        "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
+        "metric_snaps": {
+            12: "1234556789.2",
+            13: "1234567999.9"
+        },
+        latest_snap: {
+            13: "1234567999.9"
+        }
         "last_modified": 1328569492.406,
-        "provenance_url": ["http:\/\/api.mendeley.com\/research\/public-chemical-compound-databases\/"],
         "static_meta": {
             "display_name": "readers"
             "provider": "Mendeley",
@@ -309,10 +280,8 @@ class MetricSnap(object):
             "other_terms_of_use": "Must show logo and say 'Powered by Santa'",
         }
     }
-    """
+    '''
 
-    
-    
 
 class Aliases(object):
     """

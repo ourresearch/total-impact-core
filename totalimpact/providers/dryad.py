@@ -28,11 +28,10 @@ class Dryad(Provider):
     def _is_relevant_id(self, alias):
         return self._is_dryad_doi(alias[1])
     
-    def _create_snapshot(self, id, value):
+    def _create_snapshot(self, value):
         return {
-            'static_meta': self.config.metrics["static_meta"][id],
-            'id': id,
             'value': value,
+            'time': time.time()
         }
 
 
@@ -166,10 +165,16 @@ class Dryad(Provider):
         id = item_dryad_dois[0]
         return(id)        
 
-    def metrics(self, item): 
+    def metrics(self, item):
+        now = time.time()
         id = self._get_dryad_doi(item)
-        metrics_object = self.get_metrics_for_id(id)
-        return metrics_object
+        new_metrics_dict = self.get_metrics_for_id(id)
+        for metric_name, metric_val in new_metrics_dict.iteritems():
+            item.metrics[metric_name].metric_snaps[metric_val] = now
+            item.metrics[metric_name].static_meta = self.config.metrics["static_meta"][metric_name]
+            item.metrics[metric_name].last_updated = now
+
+        return item
 
 
     def get_metrics_for_id(self, id):
@@ -196,15 +201,7 @@ class Dryad(Provider):
             raise ProviderClientError(response)
 
         # extract the aliases
-        new_stats = self._extract_stats(response.text)
-        my_metric = Metric()
-
-        if new_stats is not None:
-            for metric in new_stats:
-                logger.debug(self.config.id + ": found metrics: " + str(metric))
-                my_metric.add_metric_snap(metric)
-            return my_metric
-        return []
+        return self._extract_stats(response.text)
 
 
     def _extract_stats(self, content):
@@ -222,15 +219,12 @@ class Dryad(Provider):
         except ValueError:
             raise ProviderClientError(content)            
 
-        snapshot_view_package = self._create_snapshot(
-            "dryad:package_views", view_package)
-        snapshot_total_downloads = self._create_snapshot(
-            "dryad:total_downloads", total_downloads)
-        snapshot_most_downloaded_file = self._create_snapshot(
-            "dryad:most_downloaded_file", max_downloads)
+        return {
+            "dryad:package_views": view_package,
+            "dryad:total_downloads": total_downloads,
+            "dryad:most_downloaded_file": max_downloads
+        }
 
-        return([snapshot_view_package, snapshot_total_downloads,
-            snapshot_most_downloaded_file])
 
 
     def provides_biblio(self): 
