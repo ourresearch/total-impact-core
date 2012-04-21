@@ -1,4 +1,4 @@
-from totalimpact.models import Metric, Aliases, Item
+from totalimpact.models import Metric, Aliases, Item, ItemFactory
 from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
@@ -73,7 +73,13 @@ class Test_Dryad(unittest.TestCase):
 
         a = Aliases()
         a.add_alias("doi", TEST_DRYAD_DOI)
-        self.simple_item = Item("not a dao", "12345")
+        metric_names = [
+            "dryad:package_views",
+            "dryad:total_downloads",
+            "dryad:most_downloaded_file",
+            "foo:bar"
+            ]
+        self.simple_item = ItemFactory.make("not a dao", metric_names)
         self.simple_item.aliases = a
 
 
