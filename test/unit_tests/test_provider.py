@@ -93,8 +93,7 @@ class Test_Provider(unittest.TestCase):
         # Create a base config which provides necessary settings
         # which all providers should at least implement
         self.base_provider_config = BASE_PROVIDER_CONF
-        self.provider_names = api.app.config["PROVIDERS"]
-        self.providers = api.providers
+        self.provider_configs = api.app.config["PROVIDERS"]
     
     def tearDown(self):
         requests.get = self.old_http_get
@@ -133,16 +132,17 @@ class Test_Provider(unittest.TestCase):
     
     def test_08_get_provider(self):
         pconf = None
-        for p in self.provider_names:
-            if p["class"].endswith("wikipedia.Wikipedia"):
-                pconf = p
+        print self.provider_configs
+        for provider_name, v in self.provider_configs.iteritems():
+            if v["class"].endswith("wikipedia.Wikipedia"):
+                pconf = v
                 break
         provider = ProviderFactory.get_provider(pconf)
         assert provider.id == "wikipedia"
         
     def test_09_get_providers(self):
-        providers = ProviderFactory.get_providers(self.provider_names)
-        assert len(providers) == len(self.providers)
+        providers = ProviderFactory.get_providers(self.provider_configs)
+        assert len(providers) == len(self.provider_configs)
 
     def test_10_state_init(self):
         s = ProviderState()

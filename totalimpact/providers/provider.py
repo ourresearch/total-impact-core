@@ -10,6 +10,8 @@ class ProviderFactory(object):
 
     @classmethod
     def get_provider(cls, provider_definition):
+        #TODO simplify. include conf params in providers, don't lookup paths to instantiate.
+
         """ Create an instance of a Provider object
         
             provider_definition is a dictionary which states the class and config file
@@ -29,12 +31,12 @@ class ProviderFactory(object):
     def get_providers(cls, config_providers):
         """ config is the application configuration """
         providers = []
-        for p in config_providers:
+        for provider_name, v in config_providers.iteritems():
             try:
-                prov = ProviderFactory.get_provider(p)
+                prov = ProviderFactory.get_provider(v)
                 providers.append(prov)
             except ProviderConfigurationError:
-                logger.error("Unable to configure provider ... skipping " + str(p))
+                logger.error("Unable to configure provider ... skipping " + str(v))
         return providers
         
 class Provider(object):
