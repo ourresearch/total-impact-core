@@ -1,17 +1,12 @@
 import time, re, urllib
 from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
-from totalimpact.models import Metrics, MetricSnap, Aliases
+from totalimpact.models import Aliases
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 import simplejson
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
-
-class GithubMetricSnapshot(MetricSnap):
-    def __init__(self, provider, id, value):
-        static_meta = provider.config.metrics["static_meta"][id]
-        super(GithubMetricSnapshot, self).__init__(id=id, value=value, static_meta=static_meta)
 
 class Github(Provider):  
 
