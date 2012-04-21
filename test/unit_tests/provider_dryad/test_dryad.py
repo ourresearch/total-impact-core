@@ -216,7 +216,6 @@ class Test_Dryad(unittest.TestCase):
         Provider.http_get = get_metrics_html_success
         new_item = self.provider.metrics(self.simple_item)
         print new_item.__dict__
-        assert False
 
         assert_equals(
             new_item.metrics['dryad:most_downloaded_file']['values'].keys()[0],

@@ -154,6 +154,14 @@ class Provider(object):
         c.set_cache_entry(url, {'text' : r.text, 'status_code' : r.status_code})
         return r
     
+    def _update_metrics_from_dict(self, new_metrics, old_metrics):
+        for metric_name, metric_val in new_metrics.iteritems():
+            old_metrics[metric_name]['values'][metric_val] = time.time()
+
+            #TODO config should have different static_meta sections keyed by metric.
+            old_metrics[metric_name]['static_meta'] = self.config.static_meta
+
+        return old_metrics # now updated
 
 class ProviderState(object):
     def __init__(self, rate_period=3600, rate_limit=350, 

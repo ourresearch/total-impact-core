@@ -21,42 +21,20 @@ class Wikipedia(Provider):
     def provides_metrics(self): return True
     
     def metrics(self, item):
-        # get the alias object out of the item
-        alias_object = item.aliases
-        logger.info(self.config.id + ": metrics requested for tiid:" + item.id)
-        
-        # get the aliases that we want to check
-        aliases = alias_object.get_aliases_list(self.config.supported_namespaces)
-        print aliases
-        if aliases is None or len(aliases) == 0:
-            logger.debug(self.config.id + ": No acceptable aliases in tiid:" + item.id)
-            logger.debug(self.config.id + ": Aliases: " + str(alias_object.__dict__))
-            return item
-        
-        # if there are aliases to check, carry on
+        aliases = item.aliases.get_aliases_list(self.config.supported_namespaces)
+        logger.info("{0}: found {1} good aliases for {2}"
+            .format(self.config.id, len(aliases), item.id))
+
         for alias in aliases:
             logger.debug(self.config.id + ": processing metrics for tiid:" + item.id)
             logger.debug(self.config.id + ": looking for mentions of alias " + alias[1])
-            item.metrics = self._update_metrics_from_id(item.metrics, alias[1])
-        
-        # log our success (DEBUG and INFO)
-        logger.debug(self.config.id + ": final metrics for tiid " + item.id + ": "
-            + str(item.metrics))
-        logger.info(self.config.id + ": metrics completed for tiid:" + item.id)
-        
+            new_metrics = self._get_metrics_for_id(alias[1])
+            item.metrics = self._update_metrics_from_dict(new_metrics, item.metrics)
+
+        logger.info("{0}: metrics completed for tiid {1}".format(self.config.id, item.id))
         return item
     
-    def _update_metrics_from_dict(self, new_metrics, old_metrics):
-        #TODO all Providers will use this method; move it up to the parent class.
-        for metric_name, metric_val in new_metrics.iteritems():
-            old_metrics[metric_name]['values'][metric_val] = time.time()
-
-            #TODO config should have different static_meta sections keyed by metric.
-            old_metrics[metric_name]['static_meta'] = self.config.static_meta
-
-        return old_metrics # now updated
-    
-    def _update_metrics_from_id(self, metrics, id):
+    def _get_metrics_for_id(self, id):
         #TODO this should take an alias in other Providers (esp. Mendeley),
         # since there will be different API calls and extract_stats methods
         # for different alias namespaces. Should actually think about making new
@@ -77,10 +55,8 @@ class Wikipedia(Provider):
             else:
                 raise ProviderClientError(response)
                     
-        new_metric_values = self._extract_stats(response.text)
-        metrics = self._update_metrics_from_dict(new_metric_values, metrics)
-        
-        return metrics
+        return self._extract_stats(response.text)
+
     
     def _extract_stats(self, content):
         try:
