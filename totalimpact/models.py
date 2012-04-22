@@ -129,15 +129,23 @@ class ItemFactory():
         return item
 
 
-
-
-# FIXME: no id on the item? this should appear in the alias object?
 class Item(Saveable):
     """{
-        "id": "uuid4-goes-here",
-        "aliases": "aliases_object",
-        "metrics": "metric_object",
-        "biblio": "biblio_object",
+        "id": "<uuid4>",
+        "aliases": "<Aliases object>",
+        "metrics": {
+            "plos:html_views":{
+                "ignore":False,
+                "static_meta": "<static_meta dict from provider>",
+                "values":
+                    12: "1234556789.2",
+                    13: "1234567999.9"
+            },
+            "plos:pdf_views: {...},
+            "dryad:total_downloads: {...},
+            ...
+        },
+        "biblio": "<Biblio object>",
         "created": 23112412414.234,
         "last_modified": 12414214.234,
         "last_requested": 124141245.234
@@ -251,39 +259,6 @@ class Biblio(object):
     def as_dict(self):
         # renamed for consistancy with Items(); TODO cleanup old one
         return self.data
-
-
-
-class Metric(object):
-    '''
-    This doesn't do anything anymore...just leaving it here for the docs, for now.
-
-    Only deals with *one* type of metric; plos:pdf_view and
-    plos:html_views, for example, need different metric objects despite being
-    from the same provider.
-
-    example:
-    {
-        "ignore": False,
-        "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
-        "metric_snaps": {
-            12: "1234556789.2",
-            13: "1234567999.9"
-        },
-        "static_meta": {
-            "display_name": "readers"
-            "provider": "Mendeley",
-            "provider_url": "http:\/\/www.mendeley.com\/",
-            "description": "Mendeley readers: the number of readers of the article",
-            "icon": "http:\/\/www.mendeley.com\/favicon.ico",
-            "category": "bookmark",
-            "can_use_commercially": "0",
-            "can_embed": "1",
-            "can_aggregate": "1",
-            "other_terms_of_use": "Must show logo and say 'Powered by Santa'",
-        }
-    }
-    '''
 
 
 class Aliases(object):
