@@ -150,7 +150,7 @@ class ProviderThread(QueueConsumer):
         
         #e.save()
 
-    def run(self):
+    def run(self, run_only_once=False):
 
         while not self.stopped():
             # get the first item on the queue - this waits until
@@ -159,6 +159,7 @@ class ProviderThread(QueueConsumer):
             
             # Check we have an item, if we have been signalled to stop, then
             # item may be None
+
             if item:
                 # if we get to here, an item has been popped off the queue and we
                 # now want to calculate it's metrics. 
@@ -173,19 +174,19 @@ class ProviderThread(QueueConsumer):
 
             # Flag for testing. We should finish the run loop as soon
             # as we've processed a single item.
-            if self.run_once:
+            if run_only_once:
                 return
 
     def process_item_for_provider(self, item, provider, method):
         """ Run the given method for the given provider on the given item
         
-            method should either be 'aliases' or 'metrics'
+            method should either be 'aliases', 'biblio', or 'metrics'
 
             This will deal with retries and sleep / backoff as per the 
             configuration for the given provider. We will return true if
             the given method passes, or if it's not implemented.
         """
-        if method not in ('aliases','metrics'):
+        if method not in ('aliases', 'biblio', 'metrics'):
             raise NotImplementedError("Unknown method %s for provider class" % method)
 
         log.info("Item %s: processing %s for provider %s" % (item, method, provider))
@@ -205,7 +206,11 @@ class ProviderThread(QueueConsumer):
             error_type = None
             provider_function = getattr(provider, method)
             try:
-                item = provider_function(item)
+                response = provider_function(item)
+                if "metrics" in method:
+                    item.metrics = response
+                else:
+                    item = response
                 success = True
 
             except ProviderTimeout, e:
@@ -291,6 +296,11 @@ class ProvidersAliasThread(ProviderThread):
                     # total number of retries. Don't process any 
                     # more providers, we abort this item entirely
                     break
+                if not self.process_item_for_provider(item, provider, 'biblio'):
+                    # This provider has failed and exceeded the 
+                    # total number of retries. Don't process any 
+                    # more providers, we abort this item entirely
+                    break
 
 
 
@@ -306,4 +316,7 @@ class ProviderMetricsThread(ProviderThread):
         self.thread_id = "ProviderMetricsThread:" + str(self.provider.id)
 
     def process_item(self, item):
-        self.process_item_for_provider(item, self.provider, 'metrics')
+        success = self.process_item_for_provider(item, 
+            self.provider, 
+            'metrics')
+        return success

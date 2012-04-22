@@ -23,7 +23,8 @@ class Dryad(Provider):
         self.DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+)\W*downloads</span", re.DOTALL)
 
     def _is_dryad_doi(self, doi):
-        return self.dryad_doi_rx.search(doi) is not None
+        response = self.dryad_doi_rx.search(doi)
+        return response is not None
 
     def _is_relevant_id(self, alias):
         return self._is_dryad_doi(alias[1])
@@ -46,9 +47,9 @@ class Dryad(Provider):
             # use attrs approach here because "name" is an attribute name for find_all method itself
             arrs = soup.find_all("arr", attrs={'name':name}) 
         except AttributeError:
-            raise ProviderClientError(soup.text)
+            raise ProviderContentMalformedError("Content cannot be parsed into soup")
         if (is_expected and (len(arrs) == 0)):
-            raise ProviderClientError(soup.text) 
+            raise ProviderContentMalformedError("Content cannot be parsed into soup")
         return (arrs)
 
 
@@ -60,7 +61,8 @@ class Dryad(Provider):
         logger.debug(self.config.id + ": attempting to retrieve member items from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url, timeout=self.config.member_items.get('timeout', None))
+        response = self.http_get(url, 
+            timeout=self.config.member_items.get('timeout', None))
 
         if response.status_code != 200:
             if response.status_code >= 500:
@@ -70,7 +72,7 @@ class Dryad(Provider):
 
         # did we get a page back that seems mostly valid?
         if ("response" not in response.text):
-            raise ProviderClientError(response)
+            raise ProviderContentMalformedError("Content does not contain expected text")
 
         identifiers = self._get_named_arr_str_from_xml(response.text, "dc.identifier", is_expected=False)
 
@@ -108,7 +110,8 @@ class Dryad(Provider):
         logger.debug(self.config.id + ": attempting to retrieve aliases from " + url)
 
         # try to get a response from the data provider        
-        response = self.http_get(url, timeout=self.config.aliases.get('timeout', None))
+        response = self.http_get(url, 
+            timeout=self.config.aliases.get('timeout', None))
         
         # register the hit, mostly so that anyone copying this remembers to do it,
         # - we have overriden this in the DryadState object, so it doesn't do anything
@@ -124,7 +127,7 @@ class Dryad(Provider):
 
         # did we get a page back that seems mostly valid?
         if ("response" not in response.text):
-            raise ProviderClientError(response)
+            raise ProviderContentMalformedError("Content does not contain expected text")
         
         # extract the aliases
         new_aliases = self._extract_aliases(response.text)
@@ -172,8 +175,9 @@ class Dryad(Provider):
         logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url, timeout=self.config.metrics.get('timeout', None))
-        
+        response = self.http_get(url, 
+            timeout=self.config.metrics.get('timeout', None))
+
         # register the hit, mostly so that anyone copying this remembers to do it,
         # - we have overriden this in the DryadState object, so it doesn't do anything
         self.state.register_unthrottled_hit()
@@ -188,7 +192,7 @@ class Dryad(Provider):
         
         # did we get a page back that seems mostly valid?
         if ("Dryad" not in response.text):
-            raise ProviderClientError(response)
+            raise ProviderContentMalformedError("Content does not contain expected text")
 
         # extract the aliases
         return self._extract_stats(response.text)
@@ -199,7 +203,7 @@ class Dryad(Provider):
         try:
             view_package = view_matches_package.group("views")
         except ValueError:
-            raise ProviderClientError(content)            
+            raise ProviderContentMalformedError("Content does not contain expected text")
         
         download_matches = self.DRYAD_DOWNLOADS_PATTERN.finditer(content)
         try:
@@ -223,16 +227,16 @@ class Dryad(Provider):
     def biblio(self, item): 
         id = self._get_dryad_doi(item)
         biblio_object = self.get_biblio_for_id(id)
-        return biblio_object
+        item.biblio = biblio_object
+        return item
 
     def get_biblio_for_id(self, id):
-        id = urllib.unquote(id)
-
-        url = self.config.biblio['url'] % urllib.quote(id)
+        url = self.config.biblio['url'] % id
         logger.debug(self.config.id + ": attempting to retrieve biblio from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url, timeout=self.config.biblio.get('timeout', None))
+        response = self.http_get(url, 
+            timeout=self.config.biblio.get('timeout', None))
         
         # register the hit, mostly so that anyone copying this remembers to do it,
         # - we have overriden this in the DryadState object, so it doesn't do anything
@@ -260,13 +264,13 @@ class Dryad(Provider):
             title = self._get_named_arr_str_from_xml(xml, 'dc.title_ac')
             biblio_dict["title"] = title[0]
         except AttributeError:
-            raise ProviderClientError(xml)
+            raise ProviderContentMalformedError("Content does not contain expected text")
 
         try:
             year = self._get_named_arr_int_from_xml(xml, 'dc.date.accessioned.year')
             biblio_dict["year"] = year[0]
         except AttributeError:
-            raise ProviderClientError(xml)
+            raise ProviderContentMalformedError("Content does not contain expected text")
 
         return biblio_dict
 

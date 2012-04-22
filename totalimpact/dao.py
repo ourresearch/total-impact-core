@@ -1,5 +1,9 @@
 import pdb, json, uuid, couchdb, time
 from totalimpact import default_settings
+from totalimpact.tilogging import logging
+
+# set up logging
+logger = logging.getLogger(__name__)
 
 class Dao(object):
 
