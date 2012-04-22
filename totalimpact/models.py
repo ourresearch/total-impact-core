@@ -73,13 +73,14 @@ class ItemFactory():
 
     @classmethod
     def get(cls, dao, id, metric_names):
+        now = time.time()
         item_doc = dao.get(id)
         item = Item(dao, id=id)
 
         if item_doc is None:
             raise LookupError
 
-        item.last_requested = time.time()
+        item.last_requested = now
 
         # first, just copy everything from the item_doc the DB gave us
         for k in item_doc:
@@ -106,7 +107,6 @@ class ItemFactory():
                 item.metrics[name] = item_doc["metrics"][name]
             except KeyError: #this metric ain't in the item_doc from the db
                 item.metrics[name] = {'values': {} }
-
         return item
 
     @classmethod

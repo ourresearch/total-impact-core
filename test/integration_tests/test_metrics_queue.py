@@ -40,22 +40,32 @@ class TestMetricsQueue(unittest.TestCase):
         # create new dryad item 
         dryad_resp = self.client.post('/item/doi/' + quote_plus(DRYAD_TEST_DOI))
         number_of_item_api_calls += 1
-        dryad_tiid = dryad_resp.data 
+        dryad_tiid = dryad_resp.data
+
+        print self.providers
 
         # test the metrics view works
         res = self.d.view("metrics")
-        assert_equals(len(res["rows"]), number_of_item_api_calls*len(self.providers))  # three IDs above, three providers
-        assert_equals(res["rows"][0]["value"]["metrics"]["update_meta"]["dryad"]["last_modified"], 0)
+        assert_equals(
+            len(res["rows"]),
+             number_of_item_api_calls*len(self.providers)
+            )  # three IDs above, three providers
+        assert_equals(
+            res["rows"][0]["value"]["metrics"]["dryad:package_views"]["values"],
+            {})
 
         # see if the item is on the queue
-        all_metrics_queue = MetricsQueue(self.d)
+        all_metrics_queue = MetricsQueue(self.d) 
         assert isinstance(all_metrics_queue.queue, list)
-        assert_equals(len(all_metrics_queue.queue), number_of_item_api_calls*len(self.providers))
+        assert_equals(
+            len(all_metrics_queue.queue),
+            number_of_item_api_calls*len(self.providers)
+            )
         
         # get our item from the queue
         my_item = all_metrics_queue.first() 
-        assert_equals(my_item.metrics["update_meta"]["dryad"]["last_modified"], 0)
-        assert(my_item.metrics["update_meta"]["dryad"]["last_requested"] - time.time() < 30)
+        assert_equals(my_item.metrics["dryad:package_views"]['values'], {})
+        assert(my_item.created - time.time() < 30)
 
 
         # create new plos item 

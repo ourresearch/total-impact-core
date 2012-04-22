@@ -34,7 +34,8 @@ METRIC_NAMES = [
     "wikipedia:mentions",
     "dryad:package_views",
     "dryad:total_downloads",
-    "dryad:most_downloaded_file"
+    "dryad:most_downloaded_file",
+    "github:forks "
 ]
 
 # used by the class-loader to explore alternative paths from which to load

@@ -163,6 +163,7 @@ class Provider(object):
             #TODO config should have different static_meta sections keyed by metric.
             old_metrics[metric_name]['static_meta'] = self.config.static_meta
 
+        old_metrics.last_updated = time.time()
         return old_metrics # now updated
 
 class ProviderState(object):
