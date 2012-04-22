@@ -235,6 +235,12 @@ class Test_Dryad(unittest.TestCase):
             169
             )
 
+    def test_get_metrics_with_no_aliases(self):
+        del self.simple_item.aliases.doi
+        new_item = self.provider.metrics(self.simple_item)
+        print new_item.__dict__
+        assert_equals(new_item.metrics['dryad:package_views']['values'], {})
+
     @raises(ProviderClientError)
     def test_07b_metrics_400(self):
         Provider.http_get = get_400

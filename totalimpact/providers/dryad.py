@@ -1,5 +1,5 @@
 import time, re, urllib
-from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
+from totalimpact.providers.provider import Provider, ProviderError, ProviderTimeout,ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
 from totalimpact.models import Aliases, Biblio
 from bs4 import BeautifulSoup
 
@@ -154,17 +154,18 @@ class Dryad(Provider):
         return "http://dx.doi.org/" + doi
 
     def _get_dryad_doi(self, item):
-        item_dois = item.aliases.doi
-        item_dryad_dois = [doi for doi in item_dois if self._is_dryad_doi(doi)]
-        if not item_dryad_dois:
-            raise Exception
-        id = item_dryad_dois[0]
-        return(id)        
+        try:
+            for doi in item.aliases.doi:
+                if self._is_dryad_doi(doi):
+                    return doi
+        except (AttributeError, KeyError):
+            return None
 
     def metrics(self, item):
         id = self._get_dryad_doi(item)
-        new_metrics = self._get_metrics_for_id(id)
-        item.metrics = self._update_metrics_from_dict(new_metrics, item.metrics)
+        if id is not None:
+            new_metrics = self._get_metrics_for_id(id)
+            item.metrics = self._update_metrics_from_dict(new_metrics, item.metrics)
 
         logger.info("{0}: metrics completed for tiid {1}".format(self.config.id, item.id))
         return item

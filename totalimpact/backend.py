@@ -208,7 +208,7 @@ class ProviderThread(QueueConsumer):
             try:
                 response = provider_function(item)
                 if "metrics" in method:
-                    item.metrics = response
+                    item = response
                 else:
                     item = response
                 success = True
