@@ -66,12 +66,18 @@ class MetricsQueue(Queue):
         # change this for live
         viewname = 'queues/metrics'
         if self._provider:
-            res = self.dao.view(viewname, startkey=[self.provider,None,None], endkey=[self.provider,u'\ufff0',u'\ufff0'])
+            res = self.dao.view(
+                viewname,
+                startkey=[self.provider,None,None],
+                endkey=[self.provider,u'\ufff0',u'\ufff0']
+                )
         else:
             res = self.dao.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
 
         items = []
+        # using reversed() as a hack...we actually want to use the couchdb
+        # descending=true param to get the oldest stuff first, but
         for row in res["rows"]:
             my_item = ItemFactory.get(self.dao, row["id"], config.METRIC_NAMES)
             items.append(my_item)

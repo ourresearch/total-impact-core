@@ -236,6 +236,9 @@ class Biblio(object):
         "pages": "268 to 270"
     }
     """
+    #TODO remove the "data" property, bringing this into parallel with teh
+    # other stuff in this module.
+    
     def __init__(self, seed=None):
         self.data = seed if seed is not None else ""
             

@@ -36,12 +36,20 @@ def get_aliases_html_success(self, url, headers=None, timeout=None):
     f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
     return DummyResponse(200, f.read())
 
-PROVIDERS = [
-    {
+PROVIDERS = {
+    "dryad": {
         "class" : "totalimpact.providers.dryad.Dryad",
         "config" : "totalimpact/providers/dryad.conf.json"
+    },
+    "wikipedia":{
+        "class" : "totalimpact.providers.wikipedia.Wikipedia",
+        "config" : "totalimpact/providers/wikipedia.conf.json"
+    },
+    "github": {
+        "class" : "totalimpact.providers.github.Github",
+        "config" : "totalimpact/providers/github.conf.json"
     }
-]
+}
 
 class TestMetricsQueue(unittest.TestCase):
 
@@ -78,7 +86,6 @@ class TestMetricsQueue(unittest.TestCase):
         number_of_item_api_calls += 1
         dryad_tiid = dryad_resp.data
 
-        print self.providers
 
         # test the metrics view works
         res = self.d.view("metrics")
@@ -126,43 +133,29 @@ class TestMetricsQueue(unittest.TestCase):
         assert_equals(len(github_metrics_queue.queue), 
                 number_of_item_api_calls) 
 
+        # run the aliases to get ready for the metrics
         Provider.http_get = get_aliases_html_success
 
         alias_thread = ProvidersAliasThread(self.providers, self.d)
         alias_thread.run(run_only_once=True)
 
-        one_provider = self.providers[0]
-        metrics_thread = ProviderMetricsThread(one_provider, self.d)
-
+        # now run just the dryad metrics thread.
+        metrics_thread = ProviderMetricsThread(self.providers[0], self.d)
         Provider.http_get = get_metrics_html_success
-
+        metrics_thread.run(run_only_once=True)  
+        metrics_thread.run(run_only_once=True)
         metrics_thread.run(run_only_once=True)
 
-        # do the update using the backend
-        #backend = TotalImpactBackend(self.d, self.providers)
-
-        # we need a new param to exit after a few seconds so we can finish testing
-
         # test the dryad doi
-        dryad_resp = self.client.get('/item/' + dryad_tiid)
+        dryad_resp = self.client.get('/item/' + dryad_tiid.replace('"', ''))
         Provider.http_get = self.old_http_get
 
         resp_dict = json.loads(dryad_resp.data)
-
-        #assert_equals(
-        #    resp_dict["aliases"]["title"][0],
-        #    "data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides"
-        #    )
-
         print json.dumps(resp_dict, sort_keys=True, indent=4)
 
-        hashes = resp_dict["metrics"]["bucket"].keys()
-        print hashes
-        print resp_dict["metrics"]["bucket"][hashes[0]]["id"]
-        print resp_dict["metrics"]["bucket"][hashes[0]]["value"]
-        print resp_dict["metrics"]["bucket"][hashes[0]]["static_meta"]["description"]
+        assert_equals(resp_dict['metrics']['dryad:total_downloads']['values'].keys()[0],
+            u'169')
 
-        assert 50 < int(resp_dict["metrics"]["bucket"][hashes[0]]["value"]) < 1000, resp_dict["metrics"]["bucket"][hashes[0]]["value"]
 
         #assert 100 < resp_dict["metrics"]["bucket"]["dryad"]["file_views"]["latest"]["value"] < 1000, resp_dict
 

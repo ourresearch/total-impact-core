@@ -6,7 +6,7 @@ function(doc) {
     getMetricLastUpdated = function(metricValues){
         latest = null
         for (key in metricValues) {
-            latest = max(highest, metricValues[key])
+            latest = Math.max(latest, metricValues[key])
         }
         return latest
     }
