@@ -58,10 +58,12 @@ class TestBackend(unittest.TestCase):
         self.config = None #placeholder
 
         TEST_DB_NAME = "test_backend"
-        TEST_PROVIDER_CONFIG = [{
-            "class" : "totalimpact.providers.wikipedia.Wikipedia",
-            "config" : "totalimpact/providers/wikipedia.conf.json"
-        }]
+        TEST_PROVIDER_CONFIG = {
+            "wikipedia": {
+                "class" : "totalimpact.providers.wikipedia.Wikipedia",
+                "config" : "totalimpact/providers/wikipedia.conf.json"
+            }
+        }
 
         self.d = dao.Dao(TEST_DB_NAME)        
         self.d.create_new_db_and_connect(TEST_DB_NAME)

@@ -46,12 +46,12 @@ class TestAliasQueue(unittest.TestCase):
             set(resp_dict.keys()),
             set([u'created', u'last_requested', u'metrics', u'last_modified', u'biblio', u'id', u'aliases'])
             )
-        assert_equals(unicode(TEST_DRYAD_DOI), resp_dict["aliases"]["doi"])
+        assert_equals(unicode(TEST_DRYAD_DOI), resp_dict["aliases"]["doi"][0])
 
         # test the view works
         res = self.d.view("aliases")
         assert len(res["rows"]) == 1, res
-        assert_equals(res["rows"][0]["value"]["aliases"]["doi"], TEST_DRYAD_DOI)
+        assert_equals(TEST_DRYAD_DOI, res["rows"][0]["value"]["aliases"]["doi"][0])
 
         # see if the item is on the queue
         my_alias_queue = AliasQueue(self.d)
@@ -60,7 +60,7 @@ class TestAliasQueue(unittest.TestCase):
         
         # get our item from the queue
         my_item = my_alias_queue.first()
-        assert_equals(my_item.aliases.data["doi"], TEST_DRYAD_DOI)
+        assert_equals(my_item.aliases.doi[0], TEST_DRYAD_DOI)
 
         # do the update using the backend
         alias_thread = ProvidersAliasThread(providers, self.d)
