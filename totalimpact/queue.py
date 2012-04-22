@@ -1,5 +1,5 @@
 import time
-from totalimpact import default_settings as conf
+from totalimpact import default_settings as config
 from totalimpact.models import Item, ItemFactory
 
 from totalimpact.tilogging import logging
