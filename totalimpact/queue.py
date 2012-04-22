@@ -66,7 +66,7 @@ class MetricsQueue(Queue):
         # change this for live
         viewname = 'queues/metrics'
         if self._provider:
-            res = self.dao.view(viewname, startkey=[self.provider,0,0], endkey=[self.provider,9999999999,9999999999])
+            res = self.dao.view(viewname, startkey=[self.provider,None,None], endkey=[self.provider,u'\ufff0',u'\ufff0'])
         else:
             res = self.dao.view(viewname)
         # due to error in couchdb this reads from json output - see dao view
