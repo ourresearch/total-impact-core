@@ -56,6 +56,27 @@ class TestApi(unittest.TestCase):
         self.app.config["DB_NAME"] = self.old_db_name
         Dryad.member_items = self.orig_Dryad_member_items
 
+
+    def test_memberitems_get(self):
+        response = self.client.get('/provider/dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author')
+        print response
+        print response.data
+        assert_equals(response.status_code, 200)
+        assert_equals(json.loads(response.data), GOLD_MEMBER_ITEM_CONTENT)
+        assert_equals(response.mimetype, "application/json")
+
+    def test_tiid_post(self):
+        # POST isn't supported
+        response = self.client.post('/tiid/Dryad/NotARealId')
+        assert_equals(response.status_code, 405)  # Method Not Allowed
+
+
+    def test_item_get_unknown_tiid(self):
+        # pick a random ID, very unlikely to already be something with this ID
+        response = self.client.get('/item/' + str(uuid.uuid4()))
+        assert_equals(response.status_code, 404)  # Not Found
+
+
     def test_item_post_unknown_namespace(self):
         response = self.client.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
         assert_equals(response.status_code, 501)  # "Not implemented"

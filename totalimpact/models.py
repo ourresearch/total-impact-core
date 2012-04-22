@@ -245,6 +245,10 @@ class Biblio(object):
     def __repr__(self):
         return str(self.data)
 
+    def as_dict(self):
+        # renamed for consistancy with Items(); TODO cleanup old one
+        return self.data
+
 
 
 class Metric(object):
