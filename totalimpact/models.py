@@ -3,6 +3,12 @@ import totalimpact.dao as dao
 from totalimpact.providers.provider import ProviderFactory
 import time, uuid, json, hashlib, inspect, yaml, re, copy
 
+import threading
+
+# Master lock to ensure that only a single thread can write
+# to the DB at one time to avoid document conflicts
+db_write_lock = threading.Lock()
+
 class Saveable(object):
 
     def __init__(self, dao, id=None):
@@ -57,9 +63,14 @@ class Saveable(object):
         return my_dict
 
     def save(self):
+        """ Save the object to the database, handling merging of data 
+            should the object have already been updated elsewhere """
+        # Blocking call to acquire a lock for this section
+        db_write_lock.acquire(True)
         new_dict = self.dao.get(self.id)
         dict_to_save = self._update_dict(new_dict)
         res = self.dao.save(dict_to_save)
+        db_write_lock.release()
         return res
 
     def delete(self):
