@@ -1,13 +1,35 @@
 from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
 from totalimpact.providers.provider import ProviderFactory
-import time, uuid, json, hashlib, inspect, yaml, re, copy
+import time, uuid, json, hashlib, inspect, re, copy
 
 import threading
+from pprint import pprint
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
 db_write_lock = threading.Lock()
+
+def todict(obj, classkey=None):
+    """ Convert an object to a diff representation 
+        Recipe from http://stackoverflow.com/questions/1036409/recursively-convert-python-object-graph-to-dictionary
+    """
+    if isinstance(obj, dict):
+        for k in obj.keys():
+            obj[k] = todict(obj[k], classkey)
+        return obj
+    elif hasattr(obj, "__iter__"):
+        return [todict(v, classkey) for v in obj]
+    elif hasattr(obj, "__dict__"):
+        data = dict([(key, todict(value, classkey)) 
+            for key, value in obj.__dict__.iteritems() 
+            if not callable(value) and not key.startswith('_')])
+        if classkey is not None and hasattr(obj, "__class__"):
+            data[classkey] = obj.__class__.__name__
+        return data
+    else:
+        return obj
+
 
 class Saveable(object):
 
@@ -20,19 +42,13 @@ class Saveable(object):
             self.id = id
 
     def as_dict(self, obj=None, classkey=None):
-        '''Recursively calls __dict__ on itself and all constituent objects.
-
-        Currently uses krazy yaml conversion hack because Recursion Is Hard. None
-        of the approaches listed at
-        http://stackoverflow.com/questions/1036409/recursively-convert-python-object-graph-to-dictionary
-        seemed to work for me.
+        ''' Recursively convert this object's members into a dictionary structure for 
+            serialisation to the database.
         '''
-        
-        str = yaml.dump(self)
-        str = re.sub(r'!![^\s]+ *', '', str)
-        dict = yaml.load(str)
-        del dict["dao"]
-        return dict
+        dict_repr = todict(self)
+        # We don't want to store the dao object
+        del dict_repr["dao"]
+        return dict_repr
 
     def _update_dict(self, input, my_dict=None):
         '''Use another dict to recursively add list or dict items not in this.

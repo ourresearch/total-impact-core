@@ -1,5 +1,5 @@
 from nose.tools import raises, assert_equals, nottest
-import os, unittest, json, time, yaml
+import os, unittest, json, time
 from test.mocks import MockDao
 from copy import deepcopy
 
@@ -185,7 +185,6 @@ class TestSaveable():
             [777] = "while you were away, new vals on an old metric"
 
         output = item._update_dict(item_response2) 
-        print yaml.dump(output)
 
         # things that are common to both dicts are preserved
         assert_equals(output["aliases"]['doi'], item_response2["aliases"]['doi'])
