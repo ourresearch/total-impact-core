@@ -3,7 +3,7 @@ from flask import render_template, flash
 import os, json, time
 
 from totalimpact import dao
-from totalimpact.models import Item, Collection, Metric, ItemFactory, CollectionFactory
+from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
