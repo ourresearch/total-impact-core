@@ -185,7 +185,7 @@ def provider_memberitems(pid):
     return resp
 
 # For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5000/provider/Dryad/aliases/10.5061%2Fdryad.7898
+# Example: http://127.0.0.1:5001/provider/Dryad/aliases/10.5061%2Fdryad.7898
 @app.route('/provider/<pid>/aliases/<id>', methods=['GET'] )
 def provider_aliases(pid,id):
 
@@ -201,7 +201,7 @@ def provider_aliases(pid,id):
     return resp
 
 # For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5000/provider/Dryad/metrics/10.5061%2Fdryad.7898
+# Example: http://127.0.0.1:5001/provider/Dryad/metrics/10.5061%2Fdryad.7898
 @app.route('/provider/<pid>/metrics/<id>', methods=['GET'] )
 def metric_snaps(pid,id):
 
@@ -217,7 +217,7 @@ def metric_snaps(pid,id):
     return resp
 
 # For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5000/provider/Dryad/biblio/10.5061%2Fdryad.7898
+# Example: http://127.0.0.1:5001/provider/Dryad/biblio/10.5061%2Fdryad.7898
 @app.route('/provider/<pid>/biblio/<id>', methods=['GET'] )
 def provider_biblio(pid,id):
 
@@ -312,7 +312,7 @@ if __name__ == "__main__":
         raise LookupError
 
     # run it
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
 
 
 
