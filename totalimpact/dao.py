@@ -1,25 +1,26 @@
 import pdb, json, uuid, couchdb, time
-from totalimpact import default_settings
 from totalimpact.tilogging import logging
+from totalimpact.config import Configuration
 
 # set up logging
 logger = logging.getLogger(__name__)
 
 class Dao(object):
 
-    def __init__(self, db_name):
+    def __init__(self, db_name=None):
         '''sets up the data properties and makes a db connection'''
-        self.db_url = "http://localhost:5984/"
-        self.db_name = db_name
+        config = Configuration()
+        self.db_url = config.db_url
+        if db_name:
+            self.db_name = db_name
+        else:
+            self.db_name = config.db_name
         
         self.couch = couchdb.Server( url = self.db_url )
-        try:
+        if config.db_adminuser:
             self.couch.resource.credentials = ( 
-                default_settings.DB_ADMINUSER, default_settings.DB_PASSWORD
+                config.db_adminuser, config.db_password
             )
-        except AttributeError:
-            # no admin user and password specified
-            pass
 
         if not self.db_exists(self.db_name):
             self.create_db(self.db_name)
