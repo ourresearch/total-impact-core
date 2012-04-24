@@ -65,7 +65,7 @@ These will only work if install is successful and the CouchDB is available with 
 How to run the API and check it is up:
 
     python totalimpact/api.py
-    curl -X GET http://127.0.0.1:5000/  # or use your web browser
+    curl -X GET http://127.0.0.1:5001/  # or use your web browser
 
 For dev, how to run tests:
 
