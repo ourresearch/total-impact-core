@@ -63,7 +63,9 @@ class TestMetricsQueue(unittest.TestCase):
         self.testing_db_name = "metrics_queue_test"
         self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
-        self.d = dao.Dao(self.testing_db_name)
+        self.d = dao.Dao(self.testing_db_name, self.app.config["DB_URL"],
+            self.app.config["DB_USERNAME"], self.app.config["DB_PASSWORD"])
+
         provider_configs = PROVIDERS
         self.providers = ProviderFactory.get_providers(provider_configs)
 
