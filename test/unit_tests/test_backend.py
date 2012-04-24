@@ -8,6 +8,11 @@ from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact import dao, api
 from totalimpact.tilogging import logging
 
+# To read global config
+from totalimpact.api import app
+
+TEST_DB_NAME = "test_dao"
+
 from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
 from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
 from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
@@ -65,7 +70,8 @@ class TestBackend(unittest.TestCase):
             }
         }
 
-        self.d = dao.Dao(TEST_DB_NAME)        
+        self.d = dao.Dao(TEST_DB_NAME, app.config["DB_URL"],
+            app.config["DB_USERNAME"], app.config["DB_PASSWORD"])
         self.d.create_new_db_and_connect(TEST_DB_NAME)
 
         self.queue_first = Queue.first

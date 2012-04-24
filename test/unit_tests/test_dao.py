@@ -3,13 +3,17 @@ import nose.tools
 from nose.tools import nottest, raises, assert_equals, assert_true
 
 from totalimpact import dao
+# To read global config
+from totalimpact.api import app
 
 TEST_DB_NAME = "test_dao"
+
 
 class TestDAO(unittest.TestCase):
 
     def setUp(self):
-        self.d = dao.Dao(TEST_DB_NAME)
+        self.d = dao.Dao(TEST_DB_NAME, app.config["DB_URL"], 
+            app.config["DB_USERNAME"], app.config["DB_PASSWORD"])
         if self.d.db_exists(TEST_DB_NAME):
             self.d.delete_db(TEST_DB_NAME)
         

@@ -18,7 +18,8 @@ class TestTiidRetrieve(unittest.TestCase):
         self.testing_db_name = "tiid_retrieve_test"
         self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
-        self.d = dao.Dao(self.testing_db_name)
+        self.d = dao.Dao(self.testing_db_name, self.app.config["DB_URL"],
+            self.app.config["DB_USERNAME"], self.app.config["DB_PASSWORD"])
 
 
     def tearDown(self):

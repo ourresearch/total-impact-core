@@ -22,12 +22,18 @@ def configure_app(app):
     app.config.from_object(default_settings)
     # parent directory
     here = os.path.dirname(os.path.abspath( __file__ ))
-    config_path = os.path.join(os.path.dirname(here), 'app.cfg')
-    if os.path.exists(config_path):
-        app.config.from_pyfile(config_path)
+    # Check for config overrides
+    if os.environ.has_key('TOTALIMPACT_CONFIG'):
+        config_path = os.environ['TOTALIMPACT_CONFIG']
+        if os.path.exists(config_path):
+            app.config.from_pyfile(config_path)
+    else:
+        config_path = os.path.join(os.path.dirname(here), 'app.cfg')
+        if os.path.exists(config_path):
+            app.config.from_pyfile(config_path)
 
 app = create_app()
-mydao = dao.Dao(app.config["DB_NAME"])
+mydao = dao.Dao(app.config["DB_NAME"], app.config["DB_URL"], app.config["DB_USERNAME"], app.config["DB_PASSWORD"])
 metric_names = app.config["METRIC_NAMES"]
 
 @app.before_request
@@ -53,7 +59,7 @@ def hello():
         "hello": "world",
         "message": "Congratulations! You have found the Total Impact API.",
         "moreinfo": "http://total-impact.tumblr.com/",
-        "version": app.config["version"]
+        "version": app.config["VERSION"]
     }
     resp = make_response( json.dumps(msg, sort_keys=True, indent=4), 200)        
     resp.mimetype = "application/json"

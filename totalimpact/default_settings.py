@@ -1,4 +1,18 @@
-## ALL KEYS HAVE TO BE UPPERCASE TO BE STORED IN APP SETTINGS
+##################################################################
+#
+# Total Impact default configuration settings
+#
+# If you want to change these settings for your own deployment, 
+# create a file entitled app.cfg using this file as a template. 
+# Any settings you define in app.cfg will override the default 
+# settings contained in this file.
+#
+# If you want to use a different path or filename than app.cfg
+# then set the TOTALIMPACT_CONFIG environment variable to the
+# path to your config file
+#
+# ALL KEYS HAVE TO BE UPPERCASE TO BE STORED IN APP SETTINGS
+#
 
 # During HTTP requests, the User-Agent string to use
 USER_AGENT = "TotalImpact/0.2.0"
@@ -6,10 +20,12 @@ USER_AGENT = "TotalImpact/0.2.0"
 VERSION = "jean-claude"
 
 # Database information
+# Default config is to connect to couchdb on localhost with no login 
+# credentials. 
 DB_NAME = 'ti'    
-# To use a couchdb database admin account, enable the adminuser and password lines below
-#DB_ADMINUSER = "test"
-#DB_PASSWORD = "password"
+DB_URL = "http://localhost:5984/"
+DB_USERNAME = ""
+DB_PASSWORD = ""
 
 # List of desired providers and their configuration files
 # Alias methods will be called in the order of this list

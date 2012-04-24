@@ -1,26 +1,25 @@
 import pdb, json, uuid, couchdb, time
 from totalimpact.tilogging import logging
-from totalimpact.config import Configuration
+from totalimpact import default_settings
 
 # set up logging
 logger = logging.getLogger(__name__)
 
 class Dao(object):
 
-    def __init__(self, db_name=None):
+    def __init__(self, db_name=None, db_url=None, db_username=None, db_password=None):
         '''sets up the data properties and makes a db connection'''
-        config = Configuration()
-        self.db_url = config.db_url
-        if db_name:
-            self.db_name = db_name
-        else:
-            self.db_name = config.db_name
+        self.db_name = db_name if db_name != None else default_settings.DB_NAME
+        self.db_url = db_url if db_url != None else default_settings.DB_URL
+        self.db_username = db_username if db_username != None else default_settings.DB_USERNAME
+        self.db_password = db_password if db_password != None else default_settings.DB_PASSWORD
         
         self.couch = couchdb.Server( url = self.db_url )
-        if config.db_adminuser:
+        if self.db_username:
             self.couch.resource.credentials = ( 
-                config.db_adminuser, config.db_password
+                self.db_username, self.db_password
             )
+        print self.couch.resource.credentials
 
         if not self.db_exists(self.db_name):
             self.create_db(self.db_name)
