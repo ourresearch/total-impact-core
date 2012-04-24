@@ -24,7 +24,7 @@ def configure_app(app):
     here = os.path.dirname(os.path.abspath( __file__ ))
     # Check for config overrides
     if os.environ.has_key('TOTALIMPACT_CONFIG'):
-        config_path = os.environ['TOTALIMPACT_CONFIG']
+        config_path = os.path.normpath(os.path.join(os.path.dirname(here), os.environ['TOTALIMPACT_CONFIG']))
         if os.path.exists(config_path):
             app.config.from_pyfile(config_path)
     else:

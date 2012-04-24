@@ -27,8 +27,6 @@ class Configuration(object):
         self.auto_create = auto_create
         if config_file:
             self.CONFIG_FILE = config_file
-        elif os.environ.has_key('TOTALIMPACT_CONFIG'):
-            self.CONFIG_FILE = os.environ['TOTALIMPACT_CONFIG']
         else:
             self.CONFIG_FILE = CONFIG_FILE  # default
         
