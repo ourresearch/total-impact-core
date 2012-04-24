@@ -25,9 +25,12 @@ DEFAULT_CONFIG = """
 class Configuration(object):
     def __init__(self, config_file=None, auto_create=True):
         self.auto_create = auto_create
-        self.CONFIG_FILE = CONFIG_FILE  # default
-        if config_file is not None:
+        if config_file:
             self.CONFIG_FILE = config_file
+        elif os.environ.has_key('TOTALIMPACT_CONFIG'):
+            self.CONFIG_FILE = os.environ['TOTALIMPACT_CONFIG']
+        else:
+            self.CONFIG_FILE = CONFIG_FILE  # default
         
         # extract the configuration from the json object
         self.cfg = self._load_json()
