@@ -31,13 +31,16 @@ class Item(object):
     def __init__(self, aliases=None):
         self.aliases = aliases
 
-CWD, _ = os.path.split(__file__)
+datadir = os.path.join(os.path.split(__file__)[0], "../../data/wikipedia")
 
-XML_DOC = os.path.join(CWD, "wikipedia_response.xml")
-EMPTY_DOC = os.path.join(CWD, "wikipedia_empty_response.xml")
-INCORRECT_DOC = os.path.join(CWD, "wikipedia_incorrect_response.xml")
 CONFIG_FILENAME = "totalimpact/providers/wikipedia.conf.json"
 TEST_URL = "http://www.example.com"
+XML_DOC = os.path.join(datadir, 
+    "wikipedia_response.xml")
+EMPTY_DOC = os.path.join(datadir, 
+    "wikipedia_empty_response.xml")
+INCORRECT_DOC = os.path.join(datadir, 
+    "wikipedia_incorrect_response.xml")
 
 ERROR_CONF = json.loads('''
 {

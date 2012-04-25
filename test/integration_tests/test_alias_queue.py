@@ -9,7 +9,7 @@ from totalimpact.tilogging import logging
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
 
-datadir = os.path.join(os.path.split(__file__)[0], "../data")
+datadir = os.path.join(os.path.split(__file__)[0], "../data/dryad")
 
 DRYAD_CONFIG_FILENAME = "totalimpact/providers/dryad.conf.json"
 SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, 

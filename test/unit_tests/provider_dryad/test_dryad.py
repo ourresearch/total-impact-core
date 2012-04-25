@@ -50,7 +50,7 @@ def get_500(self, url, headers=None, timeout=None):
     return DummyResponse(500, "")
 
 
-datadir = os.path.join(os.path.split(__file__)[0], "../../data")
+datadir = os.path.join(os.path.split(__file__)[0], "../../data/dryad")
 
 DRYAD_CONFIG_FILENAME = "totalimpact/providers/dryad.conf.json"
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
