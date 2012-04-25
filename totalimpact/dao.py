@@ -19,7 +19,6 @@ class Dao(object):
             self.couch.resource.credentials = ( 
                 self.db_username, self.db_password
             )
-        print self.couch.resource.credentials
 
         if not self.db_exists(self.db_name):
             self.create_db(self.db_name)
