@@ -123,11 +123,15 @@ class Provider(object):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
+        from totalimpact.api import app
+
         # first thing is to try to retrieve from cache
-        c = Cache(
-            self.config.cache['max_cache_duration']
-        )
-        cache_data = c.get_cache_entry(url)
+        cache_data = None
+        if app.config["CACHE_ENABLED"]:
+            c = Cache(
+                self.config.cache['max_cache_duration']
+            )
+            cache_data = c.get_cache_entry(url)
         if cache_data:
             # Return a stripped down equivalent of requests.models.Response
             # We don't store headers or other information here. If we need
@@ -143,9 +147,12 @@ class Provider(object):
         if headers is None:
             headers = {}
         
-    # make the request
+        # make the request
         try:
-            r = requests.get(url, headers=headers, timeout=timeout)
+            proxies = None
+            if app.config["PROXY"]:
+                proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}
+            r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies)
         except requests.exceptions.Timeout as e:
             logger.debug("Attempt to connect to provider timed out during GET on " + url)
             raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
@@ -154,7 +161,8 @@ class Provider(object):
             raise ProviderHttpError("RequestException during GET on: " + url, e)
         
         # cache the response and return
-        c.set_cache_entry(url, {'text' : r.text, 'status_code' : r.status_code})
+        if app.config["CACHE_ENABLED"]:
+            c.set_cache_entry(url, {'text' : r.text, 'status_code' : r.status_code})
         return r
     
     def _update_metrics_from_dict(self, new_metrics, old_metrics):

@@ -27,6 +27,13 @@ DB_URL = "http://localhost:5984/"
 DB_USERNAME = ""
 DB_PASSWORD = ""
 
+# This is particularly useful when using the providers-test-proxy.py
+# script in the extras directory
+PROXY = ""
+
+# Memcache server enabled
+CACHE_ENABLED = "1"
+
 # List of desired providers and their configuration files
 # Alias methods will be called in the order of this list
 #
@@ -51,7 +58,8 @@ METRIC_NAMES = [
     "dryad:package_views",
     "dryad:total_downloads",
     "dryad:most_downloaded_file",
-    "github:forks "
+    "github:watchers",
+    "github:forks",
 ]
 
 # used by the class-loader to explore alternative paths from which to load

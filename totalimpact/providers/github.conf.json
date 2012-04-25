@@ -10,13 +10,10 @@
     
     # Namespaces supported by this provider
     #
-    "supported_namespaces" : ["url"],
+    "supported_namespaces" : ["github"],
     
-    # Mendeley API configuration for retrieving metrics
-    #
-    
-    "aliases" : {
-        "url" : ""
+    "metrics" : {
+        "url" : "https://github.com/api/v2/json/repos/show/%s"
     },
     
     "member_items" : {
