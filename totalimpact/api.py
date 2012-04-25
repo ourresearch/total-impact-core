@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from flask import Flask, jsonify, json, request, redirect, abort, make_response
 from flask import render_template, flash
 import os, json, time
