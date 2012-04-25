@@ -4,6 +4,7 @@ from totalimpact.models import Aliases
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 import simplejson
+import json
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
@@ -32,7 +33,54 @@ class Github(Provider):
         return [("github", (query_string, hit)) for hit in list(set(hits))]
     
 
-        
-  
+    def metrics(self, item):
+        # get the alias object out of the item
+        alias_object = item.aliases
+        logger.info(self.config.id + ": metrics requested for tiid:" + item.id)
+
+        # get the aliases that we want to check
+        aliases = alias_object.get_aliases_list(self.config.supported_namespaces)
+        if aliases is None or len(aliases) == 0:
+            logger.debug(self.config.id + ": No acceptable aliases in tiid:" + item.id)
+            logger.debug(self.config.id + ": Aliases: " + str(alias_object.get_aliases_list()))
+            return item
+
+        for alias in aliases:
+            logger.debug(self.config.id + ": processing metrics for tiid:" + item.id)
+            logger.debug(self.config.id + ": looking for mentions of alias " + alias[1])
+            metrics = self.get_metrics_for_alias(alias)
+
+            # add the static_meta info and values to the item
+            for key in metrics.keys():
+                value = metrics[key]
+                item.metrics[key]['static_meta'] = self.config.static_meta
+                if item.metrics[key]['values'].has_key(value):
+                    item.metrics[key]['values'][value].append(time.time())
+                item.metrics[key]['values'][metrics[key]] = [time.time()] 
+
+        # log our success (DEBUG and INFO)
+        logger.debug(self.config.id + ": final metrics for tiid " + item.id + ": " + str(item.metrics))
+        logger.info(self.config.id + ": metrics completed for tiid:" + item.id)
+
+        return item
+
+    def get_metrics_for_alias(self, alias):
+        (namespace, val) = alias
+
+        if namespace == 'github':
+            url = self.config.metrics['url'] % val
+            response = self.http_get(url)
+
+            if response.status_code != 200:
+                raise ProviderServerError
+
+            data = json.loads(response.text) 
+            metrics = {}
+            metrics['github:watchers'] = data['repository']['watchers'] 
+            metrics['github:forks'] = data['repository']['forks'] 
+            return metrics
+        else:
+            # Currently only github is supported
+            return {}
 
 
