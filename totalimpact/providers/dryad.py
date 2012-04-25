@@ -1,7 +1,7 @@
 import time, re, urllib
 from totalimpact.providers.provider import Provider, ProviderError, ProviderTimeout,ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
 from totalimpact.models import Aliases, Biblio
-from bs4 import BeautifulSoup
+from xml.dom import minidom 
 
 import requests
 import simplejson
@@ -30,28 +30,37 @@ class Dryad(Provider):
         return self._is_dryad_doi(alias[1])
     
     def _get_named_arr_int_from_xml(self, xml, name, is_expected=True):
+        """ Find the first node in the XML <arr> sections which are of node type <int>
+            and return their text values. """
+        identifiers = []
         arrs = self._get_named_arrs_from_xml(xml, name, is_expected)
-        identifiers = [arr.int.text for arr in arrs]
+        for arr in arrs:
+            node = arr.getElementsByTagName('int')[0]
+            identifiers.append(node.firstChild.nodeValue)
         return identifiers
 
     def _get_named_arr_str_from_xml(self, xml, name, is_expected=True):
+        """ Find the first node in the XML <arr> sections which are of node type <str>
+            and return their text values. """
+        identifiers = []
         arrs = self._get_named_arrs_from_xml(xml, name, is_expected)
-        identifiers = [arr.str.text for arr in arrs]
+        for arr in arrs:
+            node = arr.getElementsByTagName('str')[0]
+            identifiers.append(node.firstChild.nodeValue)
         return identifiers
 
     def _get_named_arrs_from_xml(self, xml, name, is_expected=True):
-#        soup = BeautifulSoup(xml, ["lxml", "xml"])
-        soup = BeautifulSoup(xml)
-
+        """ Find <arr> sections in the given xml document which have a
+            match for the name attribute """
         try:
-            # use attrs approach here because "name" is an attribute name for find_all method itself
-            arrs = soup.find_all("arr", attrs={'name':name}) 
-        except AttributeError:
-            raise ProviderContentMalformedError("Content cannot be parsed into soup")
-        if (is_expected and (len(arrs) == 0)):
-            raise ProviderContentMalformedError("Content cannot be parsed into soup")
-        return (arrs)
-
+            doc = minidom.parseString(xml)
+        except minidom.ExpatError, e:
+            raise ProviderContentMalformedError("Content parse provider supplied XML document")
+        arrs = doc.getElementsByTagName('arr')
+        matching_arrs = [elem for elem in arrs if elem.attributes['name'].value == name]
+        if (is_expected and (len(matching_arrs) == 0)):
+            raise ProviderContentMalformedError("Did not find expected number of matching arr blocks")
+        return matching_arrs
 
     def member_items(self, query_string, query_type):
         enc = urllib.quote(query_string)
