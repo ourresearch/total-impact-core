@@ -13,7 +13,7 @@ PLOS_TEST_DOI = "10.1371/journal.pone.0004803"
 DRYAD_TEST_DOI = "10.5061/dryad.7898"
 GITHUB_TEST_ID = "homebrew"
 
-datadir = os.path.join(os.path.split(__file__)[0], "../data")
+datadir = os.path.join(os.path.split(__file__)[0], "../data/dryad")
 
 DRYAD_CONFIG_FILENAME = "totalimpact/providers/dryad.conf.json"
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
