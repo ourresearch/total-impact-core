@@ -324,11 +324,8 @@ class Aliases(object):
     #FIXME: this should take namespace and id, not a list of them
     def add_unique(self, alias_list):
         for ns, id in alias_list:
-            try:
-                if id not in getattr(self, ns):
-                    self.add_alias(ns, id)
-            except:
-                    self.add_alias(ns, id)
+            if id not in getattr(self, ns, []):
+                self.add_alias(ns, id)
         self.last_modified = time.time()
     
     def get_aliases_list(self, namespace_list=None): 
