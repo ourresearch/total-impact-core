@@ -209,14 +209,11 @@ class ProviderThread(QueueConsumer):
             provider_function = getattr(provider, method)
             try:
                 response = provider_function(item)
-                if "metrics" in method:
-                    item = response
-                else:
-                    item = response
+                item = response
                 success = True
 
             except NotImplementedError, e:
-                log.debug("Processing item %s with provider %s: Skipped, aliases not implemented" % (item, provider))
+                log.debug("Processing item %s with provider %s: Skipped, %s not implemented" % (item, provider, method))
                 success = True
             except ProviderTimeout, e:
                 error_type = 'http_timeout'
@@ -302,7 +299,16 @@ class ProvidersAliasThread(ProviderThread):
                     # This provider has failed and exceeded the 
                     # total number of retries. Don't process any 
                     # more providers, we abort this item entirely
+
+                    # Wipe out the aliases and set last_updated so that the item
+                    # is then removed from the queue. If we don't wipe the aliases
+                    # then the aliases list is not complete and will given incorrect
+                    # results. We had agreed before to go with no results rather than
+                    # incorrect.
+                    item.aliases.clear_aliases()
+                    item.save()
                     break
+
                 if not self.process_item_for_provider(item, provider, 'biblio'):
                     # This provider has failed and exceeded the 
                     # total number of retries. Don't process any 

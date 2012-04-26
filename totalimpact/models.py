@@ -368,6 +368,14 @@ class Aliases(object):
 
         return ret
 
+    def clear_aliases(self):
+        # Wipe out the aliases and set last_modified. This should be used
+        # when an alias update has failed, so that we can dequeue the item
+        # without then going on to process metrics incorrectly.
+        for attr in self.get_aliases_list():
+            delattr(self, attr)
+        self.last_modified = time.time()
+
     # FIXME I don't think we need this any more?
     def as_dict(self):
         return self.__dict__

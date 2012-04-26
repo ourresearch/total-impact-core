@@ -400,14 +400,18 @@ class TestBackend(unittest.TestCase):
         # Check that item 1 was processed correctly, after a retry
         self.assertTrue(mock_provider1.aliases_processed.has_key(1))
         self.assertTrue(mock_provider2.aliases_processed.has_key(1))
+        self.assertEqual(pmt.queue.items[1].aliases.get_aliases_list(),['doi'])
         # Check that item 2 failed on the first provider
         self.assertFalse(mock_provider1.aliases_processed.has_key(2))
         self.assertFalse(mock_provider2.aliases_processed.has_key(2))
+        self.assertEqual(pmt.queue.items[2].aliases.get_aliases_list(),[])
         # Check that item 3 failed on the second provider
         self.assertTrue(mock_provider1.aliases_processed.has_key(3))
         self.assertFalse(mock_provider2.aliases_processed.has_key(3))
+        self.assertEqual(pmt.queue.items[3].aliases.get_aliases_list(),[])
         # Check that item 4 was processed correctly, after retries
         self.assertTrue(mock_provider1.aliases_processed.has_key(4))
         self.assertTrue(mock_provider2.aliases_processed.has_key(4))
+        self.assertEqual(pmt.queue.items[4].aliases.get_aliases_list(),['doi'])
 
 
