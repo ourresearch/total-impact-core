@@ -154,7 +154,7 @@ class TestSaveable():
         easier to work with and grok later.
         '''
 
-        item_response = deepcopy(ITEM_DATA)
+        item_response = deepcopy(ITEM_DATA) 
         item_response2 = deepcopy(ITEM_DATA)
 
         dao = MockDao()

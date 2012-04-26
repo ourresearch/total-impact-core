@@ -116,39 +116,49 @@ def item_namespace_post(namespace, nid):
         resp.mimetype = "application/json"
         return resp
 
+def make_item_dict(tiid):
+    '''Utility function for /item and /items endpoints
+
+    It will cause the request to abort with 404 if any item is missing'''
+    try:
+        item = ItemFactory.get(mydao, id=tiid, metric_names=metric_names)
+        item.last_requested = time.time()
+        ret = item.as_dict()
+    except LookupError:
+        abort(404)
+
+    return ret
+
+'''GET /item/:tiid
+404 if tiid not found in db
+'''
+@app.route('/item/<tiid>', methods=['GET'])
+def item(tiid):
+    item_dict = make_item_dict(tiid)
+    resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4))
+    resp.mimetype = "application/json"
+    return resp
+
 
 '''
-GET /item/:tiid
-404 if no tiid else structured item
-
 GET /items/:tiid,:tiid,...
 returns a json list of item objects (100 max)
+404 unless all tiids return items from db
 '''
-@app.route('/item/<tiids>', methods=['GET'])
+
 @app.route('/items/<tiids>', methods=['GET'])
 def items(tiids):
     items = []
+
     for index,tiid in enumerate(tiids.split(',')):
-        if index > 99: break    # weak
+        if index > 99: break    # weak, change
+        items.append(make_item_dict(tiid))
 
-        try:
-            item = ItemFactory.get(mydao, id=tiid, metric_names=metric_names)
-            item.last_requested = time.time()
-            items.append( item.as_dict() )
-        except LookupError:
-            # TODO: is it worth setting this blank? or do nothing?
-            # if do nothing, returned list length will not match supplied list length
-            items.append( {} )
+    resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4))
+    resp.mimetype = "application/json"
+    return resp
+        
 
-    if len(items) == 1 and not request.path.startswith('/items/') :
-        items = items[0]
-
-    if items:
-        resp = make_response( json.dumps(item.as_dict(), sort_keys=True, indent=4) )
-        resp.mimetype = "application/json"
-        return resp
-    else:
-        abort(404)
 
 
 '''
