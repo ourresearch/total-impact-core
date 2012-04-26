@@ -91,8 +91,15 @@ class Dao(object):
             return None
 
     def save(self, doc):
+        """ returns (id, rev) tuple of the save document
+            raises exceptions on failure """
         doc["_id"] = doc["id"]
         return self.db.save(doc)
+
+    def save_and_commit(self, doc):
+        ret = self.save(doc)
+        self.db.commit()
+        return ret
 
 
     def query(self,**kwargs):

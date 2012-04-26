@@ -242,7 +242,11 @@ class Test_Dryad(unittest.TestCase):
         del self.simple_item.aliases.doi
         new_item = self.provider.metrics(self.simple_item)
         print new_item.__dict__
-        assert_equals(new_item.metrics['dryad:package_views']['values'], {})
+        # The provider should have filled in values to have an entry for
+        # the timestamp with None as the value.
+        assert_equals(len(new_item.metrics['dryad:package_views']['values']), 1)
+        ts = new_item.metrics['dryad:package_views']['values'].keys()[0]
+        assert_equals(new_item.metrics['dryad:package_views']['values'][ts], None)
 
     @raises(ProviderClientError)
     def test_07b_metrics_400(self):
