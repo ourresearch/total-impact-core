@@ -11,6 +11,9 @@ from totalimpact.providers.provider import ProviderConfigurationError, ProviderT
 from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
 from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
 
+from totalimpact.models import Aliases
+
+
 def dao_init_mock(self, config):
     pass
 
@@ -46,12 +49,15 @@ class QueueMock(object):
         self.none_count = 0
         self.current_item = 0
         self.max_items = max_items
+        self.items = {}
     def first(self):
         if self.none_count >= 3:
             if self.max_items:
                 if self.current_item > self.max_items:
                     return None
-            return ItemMock(self.current_item)
+            item = ItemMock(self.current_item)
+            self.items[self.current_item] = item
+            return item
         else:
             self.none_count += 1
             return None
@@ -59,14 +65,13 @@ class QueueMock(object):
         logging.debug("Unqueue item %s" % item.id)
         self.current_item += 1
 
-class AliasesMock(object):
-    pass
 
 class ItemMock(object):
-    pass
     def __init__(self,id=None):
         self.id = id
-        self.aliases = AliasesMock()
+        # Aliases is safe to include in this way as it doesn't
+        # communicate with the dao
+        self.aliases = Aliases()
         self.metrics = {}
     def __repr__(self):
         return "ItemMock(%s)" % self.id
@@ -130,6 +135,7 @@ class ProviderMock(Provider):
                         raise exc('error')
                     else:
                         raise exc
+        item.aliases.add_alias('doi','test_alias')
         self.aliases_processed[item.id] = True
         return item
 
