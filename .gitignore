@@ -8,4 +8,3 @@ doc/_build/*
 /nbproject
 build
 dist
-logs/
