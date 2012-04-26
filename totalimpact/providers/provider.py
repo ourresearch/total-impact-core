@@ -166,8 +166,9 @@ class Provider(object):
         return r
     
     def _update_metrics_from_dict(self, new_metrics, old_metrics):
+        now_str = str(int(time.time()))
         for metric_name, metric_val in new_metrics.iteritems():
-            old_metrics[metric_name]['values'][metric_val] = time.time()
+            old_metrics[metric_name]['values'][now_str] = metric_val
 
             #TODO config should have different static_meta sections keyed by metric.
             old_metrics[metric_name]['static_meta'] = self.config.static_meta

@@ -223,17 +223,20 @@ class Test_Dryad(unittest.TestCase):
         print new_item.__dict__
 
         assert_equals(
-            new_item.metrics['dryad:most_downloaded_file']['values'].keys()[0],
+            new_item.metrics['dryad:most_downloaded_file']['values'].values()[0],
             63
             )
         assert_equals(
-            new_item.metrics['dryad:package_views']['values'].keys()[0],
+            new_item.metrics['dryad:package_views']['values'].values()[0],
             149
             )
         assert_equals(
-            new_item.metrics['dryad:total_downloads']['values'].keys()[0],
+            new_item.metrics['dryad:total_downloads']['values'].values()[0],
             169
             )
+        # make sure keys are timestamp strings
+        key = new_item.metrics['dryad:total_downloads']['values'].keys()[0]
+        assert_equals(len(key), 10)  
 
     def test_get_metrics_with_no_aliases(self):
         del self.simple_item.aliases.doi

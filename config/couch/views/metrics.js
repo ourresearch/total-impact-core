@@ -2,17 +2,17 @@ function(doc) {
     // for items that have aliases, lists items sorted by provider, last request
     //    time, and last update time
 
-    
+
     getMetricLastUpdated = function(metricValues){
-        latest = null
+        latest_key = null
         for (key in metricValues) {
-            latest = Math.max(latest, metricValues[key])
+            latest_key = Math.max(latest_key, key)
         }
-        return latest
+        return latest_key
     }
 
     if (typeof doc.metrics == "object" ) {
-        
+
 
         // make a list of all the Provider names. We have to be a little hacky
         // because we only store metric names, which *contain* provider names
@@ -33,7 +33,7 @@ function(doc) {
         for (var name in providerNames) {
             lastModified = providerNames[name]
             emit([name, doc.last_requested, lastModified], doc);
-            
+
         }
     }
 }

@@ -3,7 +3,7 @@ from totalimpact.config import Configuration
 from totalimpact.providers.wikipedia import Wikipedia
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError, ProviderContentMalformedError, ProviderHttpError, ProviderValidationFailedError
 from nose.tools import assert_equals, raises
-import os, unittest, json, re
+import os, unittest, json, re, time
 
 # prepare a monkey patch to override the http_get method of the Provider
 class DummyResponse(object):
@@ -106,7 +106,13 @@ class Test_Wikipedia(unittest.TestCase):
         
         assert_equals(len(new_item.metrics), len(self.metric_names))
         assert_equals(len(new_item.metrics["wikipedia:mentions"]['values']), 1)
-        assert_equals(new_item.metrics["wikipedia:mentions"]['values'].keys()[0], 1)
+        print new_item.metrics["wikipedia:mentions"]['values']
+        assert_equals(
+            new_item.metrics["wikipedia:mentions"]['values'].values()[0],
+            1)
+        # the key is a timestamp string
+        key = new_item.metrics["wikipedia:mentions"]['values'].keys()[0]
+        assert_equals(len(key), 10)
 
     def test_no_aliases_returns_item(self):
         self.provider.http_get = successful_get
