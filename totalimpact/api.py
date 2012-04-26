@@ -314,8 +314,38 @@ if __name__ == "__main__":
         print "CANNOT CONNECT TO DATABASE, maybe doesn't exist?"
         raise LookupError
 
-    # run it
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    logger = logging.getLogger()
+    logger.debug("test")
 
+    from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
+    from totalimpact.providers.provider import Provider, ProviderFactory
+
+    # Start all of the backend processes
+    print "Starting alias retrieval thread"
+    providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
+    alias_thread = ProvidersAliasThread(providers, mydao)
+    alias_thread.start()
+
+    # Start each of the metric providers
+    metrics_threads = []
+    for provider in providers:
+        thread = ProviderMetricsThread(provider, mydao)
+        metrics_threads.append(thread)
+        thread.start()
+
+    # run it
+    app.run(host='0.0.0.0', port=5001, debug=False)
+
+    print "Stopping alias thread"
+    alias_thread.stop()
+    print "Stopping metric threads"
+    for thread in metrics_threads:
+        thread.stop()
+    print "Waiting on metric threads"
+    for thread in metrics_threads:
+        thread.join()
+    print "Waiting on alias thread"
+    alias_thread.join()
+    print "All stopped"
 
 

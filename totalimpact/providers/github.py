@@ -32,7 +32,6 @@ class Github(Provider):
 
         return [("github", (query_string, hit)) for hit in list(set(hits))]
     
-
     def metrics(self, item):
         # get the alias object out of the item
         alias_object = item.aliases
@@ -43,20 +42,25 @@ class Github(Provider):
         if aliases is None or len(aliases) == 0:
             logger.debug(self.config.id + ": No acceptable aliases in tiid:" + item.id)
             logger.debug(self.config.id + ": Aliases: " + str(alias_object.get_aliases_list()))
+            # Set all our metrics to None as we won't get a value here. This shows
+            # that we've completed processing, otherwise we'd end up retrying
+            for key in ['github:watchers','github:forks']:
+                item.metrics[key]['static_meta'] = self.config.static_meta
+                item.metrics[key]['values'][time.time()] = None
             return item
 
-        for alias in aliases:
-            logger.debug(self.config.id + ": processing metrics for tiid:" + item.id)
-            logger.debug(self.config.id + ": looking for mentions of alias " + alias[1])
-            metrics = self.get_metrics_for_alias(alias)
+        # Just take the first alias. As I understand, we shouldn't find an item
+        # with aliases for a repo, as these will not by the same Item
+        alias = aliases[0]
+        logger.debug(self.config.id + ": processing metrics for tiid:" + item.id)
+        logger.debug(self.config.id + ": looking for mentions of alias " + alias[1])
+        metrics = self.get_metrics_for_alias(alias)
 
-            # add the static_meta info and values to the item
-            for key in metrics.keys():
-                value = metrics[key]
-                item.metrics[key]['static_meta'] = self.config.static_meta
-                if item.metrics[key]['values'].has_key(value):
-                    item.metrics[key]['values'][value].append(time.time())
-                item.metrics[key]['values'][metrics[key]] = [time.time()] 
+        # add the static_meta info and values to the item
+        for key in metrics.keys():
+            value = metrics[key]
+            item.metrics[key]['static_meta'] = self.config.static_meta
+            item.metrics[key]['values'][time.time()] = metrics[key]
 
         # log our success (DEBUG and INFO)
         logger.debug(self.config.id + ": final metrics for tiid " + item.id + ": " + str(item.metrics))

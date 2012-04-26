@@ -82,11 +82,19 @@ class Saveable(object):
         """ Save the object to the database, handling merging of data 
             should the object have already been updated elsewhere """
         # Blocking call to acquire a lock for this section
-        db_write_lock.acquire(True)
-        new_dict = self.dao.get(self.id)
-        dict_to_save = self._update_dict(new_dict)
-        res = self.dao.save(dict_to_save)
-        db_write_lock.release()
+        try:
+            db_write_lock.acquire(True)
+            new_dict = self.dao.get(self.id)
+            dict_to_save = self._update_dict(new_dict)
+            # If we are updating an object, then we should
+            # set _rev from the object we have just read so
+            # we don't get conflict errors on commit.
+            if new_dict:
+                dict_to_save['_rev'] = new_dict['_rev']
+            res = self.dao.save_and_commit(dict_to_save)
+        finally:
+            db_write_lock.release()
+
         return res
 
     def delete(self):
@@ -146,6 +154,7 @@ class ItemFactory():
         item.metrics = {}
         item.biblio = {}
         item.last_modified = now
+        item.last_requested = now
         item.created = now
 
         # make the metrics objects. We have to make all the ones in the config

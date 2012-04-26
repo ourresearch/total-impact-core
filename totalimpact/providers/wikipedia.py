@@ -25,6 +25,9 @@ class Wikipedia(Provider):
         logger.info("{0}: found {1} good aliases for {2}"
             .format(self.config.id, len(aliases), item.id))
 
+        if len(aliases) == 0:
+            item.metrics = self._update_metrics_from_dict({"wikipedia:mentions": None}, item.metrics)
+
         for alias in aliases:
             logger.debug(self.config.id + ": processing metrics for tiid:" + item.id)
             logger.debug(self.config.id + ": looking for mentions of alias " + alias[1])

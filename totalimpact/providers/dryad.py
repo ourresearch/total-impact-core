@@ -175,6 +175,13 @@ class Dryad(Provider):
         if id is not None:
             new_metrics = self._get_metrics_for_id(id)
             item.metrics = self._update_metrics_from_dict(new_metrics, item.metrics)
+        else:
+            new_metrics = {
+                "dryad:package_views": None,
+                "dryad:total_downloads": None,
+                "dryad:most_downloaded_file": None
+            }
+            item.metrics = self._update_metrics_from_dict(new_metrics, item.metrics)
 
         logger.info("{0}: metrics completed for tiid {1}".format(self.config.id, item.id))
         return item
@@ -236,8 +243,12 @@ class Dryad(Provider):
 
     def biblio(self, item): 
         id = self._get_dryad_doi(item)
-        biblio_object = self.get_biblio_for_id(id)
-        item.biblio = biblio_object
+        # Only lookup biblio for items with dryad doi's
+        if id:
+            biblio_object = self.get_biblio_for_id(id)
+            item.biblio = biblio_object
+        else:
+            logger.debug(self.config.id + ": Not checking biblio for %s as no dryad doi" % item.id)
         return item
 
     def get_biblio_for_id(self, id):

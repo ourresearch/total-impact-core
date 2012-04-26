@@ -132,12 +132,12 @@ class ProviderThread(QueueConsumer):
         QueueConsumer.__init__(self, queue)
         self.thread_id = "BaseProviderThread"
         self.run_once = False
+        self.logger = logging.getLogger('backend')
 
     def log_error(self, item, error_type, error_msg, tb):
         # This method is called to record any errors which we obtain when
         # trying process an item.
-        logger = logging.getLogger('backend')
-        logger.error("exception for item(%s): %s (%s)" % (item.id, error_msg, error_type))
+        self.logger.error("exception for item(%s): %s (%s)" % (item.id, error_msg, error_type))
         
         e = Error(self.dao)
         e.message = error_msg
@@ -146,7 +146,7 @@ class ProviderThread(QueueConsumer):
         e.provider = self.thread_id
         e.stack_trace = "".join(traceback.format_tb(tb))
         
-        logger.debug(str(e.stack_trace))
+        self.logger.debug(str(e.stack_trace))
         
         #e.save()
 
@@ -155,21 +155,23 @@ class ProviderThread(QueueConsumer):
         while not self.stopped():
             # get the first item on the queue - this waits until
             # there is something to return
+            self.logger.debug("%s - waiting for queue item" % self.thread_id)
             item = self.first()
             
             # Check we have an item, if we have been signalled to stop, then
             # item may be None
-
             if item:
                 # if we get to here, an item has been popped off the queue and we
                 # now want to calculate it's metrics. 
                 # Repeatedly process this item until we hit the error limit
                 # or we successfully process it         
+                self.logger.debug("%s - processing item %s" % (self.thread_id, item.id))
                 self.process_item(item) 
 
                 # Either this item was successfully process, or we failed for 
                 # an excessive number of retries. Either way, update the item
                 # as we don't process it again a second time.
+                self.logger.debug("%s - unqueue item %s" % (self.thread_id, item.id))
                 self.queue.save_and_unqueue(item)
 
             # Flag for testing. We should finish the run loop as soon
@@ -213,6 +215,9 @@ class ProviderThread(QueueConsumer):
                     item = response
                 success = True
 
+            except NotImplementedError, e:
+                log.debug("Processing item %s with provider %s: Skipped, aliases not implemented" % (item, provider))
+                success = True
             except ProviderTimeout, e:
                 error_type = 'http_timeout'
                 error_msg = str(e)
@@ -237,6 +242,8 @@ class ProviderThread(QueueConsumer):
                 # Don't record any failures here, just set success as true so we exit
                 # Success = true will mean that we continue processing this item
                 log.debug("Processing item %s with provider %s: Unknown exception %s, aborting" % (item, provider, e))
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                log.debug(traceback.format_tb(exc_traceback))
                 success = True
 
             except Exception, e:
@@ -281,7 +288,7 @@ class ProvidersAliasThread(ProviderThread):
         queue = AliasQueue(dao)
         ProviderThread.__init__(self, dao, queue)
         self.providers = providers
-        self.thread_id = "ProvidersAliasThread"
+        self.thread_id = "AliasThread"
         
     def process_item(self, item):
         """ Process the given item, obtaining it's metrics.
@@ -313,7 +320,7 @@ class ProviderMetricsThread(ProviderThread):
         self.provider = provider
         queue = MetricsQueue(dao, provider.id)
         ProviderThread.__init__(self, dao, queue)
-        self.thread_id = "ProviderMetricsThread:" + str(self.provider.id)
+        self.thread_id = "MetricsThread:" + str(self.provider.id)
 
     def process_item(self, item):
         success = self.process_item_for_provider(item, 
