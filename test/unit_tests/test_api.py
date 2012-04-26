@@ -151,6 +151,14 @@ class TestItem(ApiTester):
         response = self.client.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
         assert_equals(response.status_code, 501)  # "Not implemented"
 
+    def test_returns_html(self):
+        # put an item in the db
+        response = self.client.get('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
+        tiid = response.data
+
+        # update the item manually...there's no api call to do this.
+        
+
 
 class TestCollection(ApiTester):
 
