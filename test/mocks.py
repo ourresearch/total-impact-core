@@ -1,4 +1,7 @@
 import os, unittest, time
+import sys
+import logging
+import traceback
 
 from totalimpact.backend import StoppableThread
 from totalimpact.config import Configuration, StringConfiguration
@@ -53,14 +56,23 @@ class QueueMock(object):
             self.none_count += 1
             return None
     def save_and_unqueue(self, item):
+        logging.debug("Unqueue item %s" % item.id)
         self.current_item += 1
+
+class AliasesMock(object):
+    pass
 
 class ItemMock(object):
     pass
     def __init__(self,id=None):
         self.id = id
+        self.aliases = AliasesMock()
+        self.metrics = {}
     def __repr__(self):
         return "ItemMock(%s)" % self.id
+    def save(self):
+        pass
+
 
 base_provider_conf = StringConfiguration('''
 {
