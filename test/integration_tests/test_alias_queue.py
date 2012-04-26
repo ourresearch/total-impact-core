@@ -1,4 +1,4 @@
-import os, unittest, time, json
+import os, unittest, time, json, yaml
 from nose.tools import nottest, assert_equals
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
@@ -16,6 +16,7 @@ SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir,
     "sample_extract_biblio_page.xml")
 SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, 
     "sample_extract_aliases_page.xml")
+
 
 # prepare a monkey patch to override the http_get method of the Provider
 class DummyResponse(object):

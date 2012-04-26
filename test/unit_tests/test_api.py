@@ -6,6 +6,7 @@ from nose.tools import nottest, assert_equals
 from totalimpact import api, dao
 from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
+import os, yaml
 
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
@@ -26,6 +27,16 @@ COLLECTION_SEED = json.loads("""{
 COLLECTION_SEED_MODIFIED = deepcopy(COLLECTION_SEED)
 COLLECTION_SEED_MODIFIED["item_tiids"] = TEST_COLLECTION_TIID_LIST_MODIFIED
 
+sample_item_loc = os.path.join(
+    os.path.split(__file__)[0],
+    '../data/couch_docs/article.yml')
+f = open(sample_item_loc, "r")
+ARTICLE_ITEM = yaml.load(f.read())
+
+rendered_article_loc = os.path.join(
+    os.path.split(__file__)[0],
+    '../rendered_views/article.html')
+RENDERED_ARTICLE = open(rendered_article_loc, "r").read()
 
 def MOCK_member_items(self, a, b):
     return(GOLD_MEMBER_ITEM_CONTENT) 
@@ -152,12 +163,16 @@ class TestItem(ApiTester):
         assert_equals(response.status_code, 501)  # "Not implemented"
 
     def test_returns_html(self):
-        # put an item in the db
-        response = self.client.get('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
-        tiid = response.data
+        # upload the item manually...there's no api call to do this.
+        print self.d.save(ARTICLE_ITEM)
 
-        # update the item manually...there's no api call to do this.
-        
+        response = self.client.get('/item/' + ARTICLE_ITEM['id'])
+        assert_equals(response.headers[0][1], 'application/json')
+
+        print  RENDERED_ARTICLE
+        response = self.client.get('item/{0}.html'.format(ARTICLE_ITEM['id']))
+
+        #assert_equals(response.data, RENDERED_ARTICLE)
 
 
 class TestCollection(ApiTester):
