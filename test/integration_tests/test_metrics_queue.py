@@ -36,7 +36,7 @@ def get_aliases_html_success(self, url, headers=None, timeout=None):
     f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
     return DummyResponse(200, f.read())
 
-PROVIDERS = {
+PROVIDERS = { 
     "dryad": {
         "class" : "totalimpact.providers.dryad.Dryad",
         "config" : "totalimpact/providers/dryad.conf.json"
@@ -153,10 +153,10 @@ class TestMetricsQueue(unittest.TestCase):
         Provider.http_get = self.old_http_get
 
         resp_dict = json.loads(dryad_resp.data)
-        print json.dumps(resp_dict, sort_keys=True, indent=4)
+        print json.dumps(resp_dict, sort_keys=True, indent=4) 
 
-        assert_equals(resp_dict['metrics']['dryad:total_downloads']['values'].keys()[0],
-            u'169')
+        assert_equals(resp_dict['metrics']['dryad:total_downloads']['values'].values()[0],
+            169)
 
 
         #assert 100 < resp_dict["metrics"]["bucket"]["dryad"]["file_views"]["latest"]["value"] < 1000, resp_dict

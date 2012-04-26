@@ -45,10 +45,10 @@ STATIC_META = {
         "other_terms_of_use": "Must show logo and say 'Powered by Santa'",
         }
 
-KEY1 = 1
-KEY2 = 2
-VAL1 = "8888888888.8"
-VAL2 = "9999999999.9"
+KEY1 = "8888888888.8"
+KEY2 = "9999999999.9"
+VAL1 = 1
+VAL2 = 2
 
 METRICS_DATA = {
     "ignore": False,
