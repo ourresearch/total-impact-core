@@ -296,6 +296,10 @@ class TestBackend(unittest.TestCase):
         pmt.start()
         while (pmt.queue.current_item <= 10): 
             time.sleep(1)
+    
+        pmt.stop()
+        pmt.join()
+
         # Check that items 1,2 were all processed correctly, after a retry
         self.assertTrue(mock_provider.metrics_processed.has_key(1))
         self.assertTrue(mock_provider.metrics_processed.has_key(2))
@@ -305,9 +309,6 @@ class TestBackend(unittest.TestCase):
 
         # Check that item 10 was processed correctly 
         self.assertTrue(mock_provider.metrics_processed.has_key(10))
-    
-        pmt.stop()
-        pmt.join()
 
     @slow
     def test_16_metrics_retries(self):
