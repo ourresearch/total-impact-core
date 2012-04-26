@@ -23,6 +23,7 @@ def load_test_data(provider, filename):
 responses['dryad']['aliases'] = load_test_data('dryad', 'sample_extract_aliases_page.xml')
 responses['dryad']['metrics'] = load_test_data('dryad', 'sample_extract_metrics_page.html')
 responses['wikipedia']['metrics'] = load_test_data('wikipedia', 'wikipedia_response.xml')
+responses['wikipedia']['10.1186'] = load_test_data('wikipedia', 'wikipedia_10.1186_response.xml')
 responses['github']['members'] = load_test_data('github', 'egonw_gtd_member_response.json')
 responses['github']['metrics'] = load_test_data('github', 'egonw_gtd_metric_response.json')
 
@@ -30,6 +31,7 @@ urlmap = {
     "http://datadryad.org/solr/search/select/?q=dc.identifier:10.5061/dryad.7898&fl=dc.identifier.uri,dc.title": responses['dryad']['aliases'],
     "http://dx.doi.org/10.5061/dryad.7898": responses['dryad']['metrics'],
     "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='10.1371/journal.pcbi.1000361'": responses['wikipedia']['metrics'],
+    "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='10.1186/1745-6215-11-32'": responses['wikipedia']['10.1186'],
     "https://api.github.com/users/egonw/repos": responses['github']['members'],
     "https://github.com/api/v2/json/repos/show/egonw/gtd": responses['github']['metrics']
 }
@@ -62,8 +64,11 @@ if __name__ == '__main__':
         logger = logging.getLogger('totalimpact.providers')
         logger.setLevel(logging.WARNING)
 
+    class ReuseServer(SocketServer.TCPServer):
+        allow_reuse_address = True
+
     handler = ProvidersTestProxy
-    httpd = SocketServer.TCPServer(("", int(options.port)), handler)
+    httpd = ReuseServer(("", int(options.port)), handler)
     print "listening on port", options.port
     httpd.serve_forever()
 
