@@ -35,24 +35,19 @@ def configure_app(app):
             app.config.from_pyfile(config_path)
 
 app = create_app()
-mydao = dao.Dao(app.config["DB_NAME"], app.config["DB_URL"], app.config["DB_USERNAME"], app.config["DB_PASSWORD"])
 metric_names = app.config["METRIC_NAMES"]
 
 @app.before_request
 def connect_to_db():
-    try:
-        ## FIXME add a check to to make sure it has views already.  If not, reset
-        #mydao.delete_db(db_name)
+    '''sets up the db. this has to happen before every request, so that
+    we can pass in alternate config values for testing'''
+    global mydao #ick
+    mydao = dao.Dao(
+        app.config["DB_NAME"],
+        app.config["DB_URL"],
+        app.config["DB_USERNAME"],
+        app.config["DB_PASSWORD"]) 
 
-        ## FIXME move this back into the dao. no need for non-db classes to have
-        # to think about this.
-
-        if not mydao.db_exists(app.config["DB_NAME"]):
-            mydao.create_db(app.config["DB_NAME"])
-        mydao.connect_db(app.config["DB_NAME"])
-    except LookupError:
-        print "CANNOT CONNECT TO DATABASE, maybe doesn't exist?"
-        raise LookupError
 
 # adding a simple route to confirm working API
 @app.route('/')

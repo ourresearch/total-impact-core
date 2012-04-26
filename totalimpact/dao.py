@@ -20,9 +20,14 @@ class Dao(object):
                 self.db_username, self.db_password
             )
 
-        if not self.db_exists(self.db_name):
+        # connect to the db. It it doesn't exist, create it.
+        try:
+            self.connect_db(self.db_name)
+        except LookupError:
             self.create_db(self.db_name)
-        self.connect_db(self.db_name)
+            self.connect_db(self.db_name)
+        except LookupError:
+            raise LookupError("CANNOT CONNECT TO DATABASE, maybe doesn't exist?")
 
     def __getstate__(self):
         '''Returns None when you try to pickle this object.
@@ -132,8 +137,11 @@ class Dao(object):
 
     def create_new_db_and_connect(self, db_name):
         '''Create and connect to a new db, deleting one of same name if it exists.'''
-        if self.db_exists(db_name):
+        try:
             self.delete_db(db_name)
+        except LookupError:
+            pass # no worries, it doesn't exist but we don't want it to
+
         self.create_db(db_name)
         self.connect_db(db_name)
 

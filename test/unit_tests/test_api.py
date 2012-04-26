@@ -28,35 +28,37 @@ COLLECTION_SEED_MODIFIED["item_tiids"] = TEST_COLLECTION_TIID_LIST_MODIFIED
 
 
 def MOCK_member_items(self, a, b):
-    return(GOLD_MEMBER_ITEM_CONTENT)
+    return(GOLD_MEMBER_ITEM_CONTENT) 
 
 
-class TestApi(unittest.TestCase):
+class ApiTester(unittest.TestCase):
 
     def setUp(self):
         #setup api test client
         self.app = api.app
         self.app.testing = True
         self.client = self.app.test_client()
-        
         # setup the database
         self.testing_db_name = "api_test"
-        self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
-        self.d = dao.Dao(self.app.config["DB_NAME"], self.app.config["DB_URL"], 
-            self.app.config["DB_USERNAME"], self.app.config["DB_PASSWORD"]) 
+        self.d = dao.Dao(
+            self.app.config["DB_NAME"],
+            self.app.config["DB_URL"],
+            self.app.config["DB_USERNAME"], 
+            self.app.config["DB_PASSWORD"])
 
         self.d.create_new_db_and_connect(self.testing_db_name)
-        
+
+class TestMemberItems(ApiTester):
+
+    def setUp(self): 
+        super(TestMemberItems, self).setUp()
         # Mock out relevant methods of the Dryad provider
         self.orig_Dryad_member_items = Dryad.member_items
         Dryad.member_items = MOCK_member_items
 
-        
     def tearDown(self):
-        self.app.config["DB_NAME"] = self.old_db_name
         Dryad.member_items = self.orig_Dryad_member_items
-
 
     def test_memberitems_get(self):
         response = self.client.get('/provider/dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author')
@@ -66,21 +68,40 @@ class TestApi(unittest.TestCase):
         assert_equals(json.loads(response.data), GOLD_MEMBER_ITEM_CONTENT)
         assert_equals(response.mimetype, "application/json")
 
+class TestTiid(ApiTester):
+
     def test_tiid_post(self):
         # POST isn't supported
         response = self.client.post('/tiid/Dryad/NotARealId')
         assert_equals(response.status_code, 405)  # Method Not Allowed
 
+    def test_tiid_post(self):
+        # POST isn't supported
+        response = self.client.post('/tiid/Dryad/NotARealId')
+        assert_equals(response.status_code, 405)  # Method Not Allowed
 
     def test_item_get_unknown_tiid(self):
         # pick a random ID, very unlikely to already be something with this ID
         response = self.client.get('/item/' + str(uuid.uuid4()))
         assert_equals(response.status_code, 404)  # Not Found
 
+    def test_item_post_known_tiid(self):
+        response = self.client.post('/item/doi/IdThatAlreadyExists/')
+        print response
+        print response.data
 
-    def test_item_post_unknown_namespace(self):
-        response = self.client.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
-        assert_equals(response.status_code, 501)  # "Not implemented"
+        # FIXME should check and if already exists return 200
+        # right now this makes a new item every time, creating many dups
+        assert_equals(response.status_code, 201)
+        assert_equals(len(json.loads(response.data)), 32)
+        assert_equals(response.mimetype, "application/json")
+
+    def test_item_get_unknown_tiid(self):
+        # pick a random ID, very unlikely to already be something with this ID
+        response = self.client.get('/item/' + str(uuid.uuid4()))
+        assert_equals(response.status_code, 404)  # Not Found
+
+class TestItem(ApiTester):
 
     def test_item_post_unknown_tiid(self):
         response = self.client.post('/item/doi/AnIdOfSomeKind/')
@@ -90,24 +111,8 @@ class TestApi(unittest.TestCase):
         assert_equals(len(json.loads(response.data)), 32)
         assert_equals(response.mimetype, "application/json")
 
-    def test_item_post_known_tiid(self):
-        response = self.client.post('/item/doi/IdThatAlreadyExists/')
-        print response
-        print response.data
-
-        # FIXME should check and if already exists return 200        
-        # right now this makes a new item every time, creating many dups
-        assert_equals(response.status_code, 201) 
-        assert_equals(len(json.loads(response.data)), 32)
-        assert_equals(response.mimetype, "application/json")
-
-    def test_item_get_unknown_tiid(self):
-        # pick a random ID, very unlikely to already be something with this ID
-        response = self.client.get('/item/' + str(uuid.uuid4()))
-        assert_equals(response.status_code, 404)  # Not Found 
-
     def test_item_get_success_fakeid(self):
-        # First put something in 
+        # First put something in
         response_create = self.client.post('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
         tiid = response_create.data
         print tiid
@@ -135,8 +140,6 @@ class TestApi(unittest.TestCase):
 
         assert_equals([unicode(TEST_DRYAD_DOI)], saved_item["aliases"]["doi"])
 
-
-
     def test_item_get_success_realid(self):
         # First put something in
         response = self.client.get('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
@@ -144,7 +147,12 @@ class TestApi(unittest.TestCase):
         print response
         print tiid
 
+    def test_item_post_unknown_namespace(self):
+        response = self.client.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
+        assert_equals(response.status_code, 501)  # "Not implemented"
 
+
+class TestCollection(ApiTester):
 
     def test_collection_post_already_exists(self):
         response = self.client.post('/collection/' + TEST_COLLECTION_ID)
@@ -162,23 +170,23 @@ class TestApi(unittest.TestCase):
         assert_equals(response.mimetype, "application/json")
         response_loaded = json.loads(response.data)
         assert_equals(
-                set(response_loaded.keys()), 
-                set([u'created', u'item_tiids', 
+                set(response_loaded.keys()),
+                set([u'created', u'item_tiids',
                     u'last_modified', u'id']))
         assert_equals(len(response_loaded["id"]), 32)
 
     def test_collection_put_updated_collection(self):
 
         # Put in an item.  Could mock this out in the future.
-        response = self.client.post('/collection', 
-                data=json.dumps(TEST_COLLECTION_TIID_LIST), 
+        response = self.client.post('/collection',
+                data=json.dumps(TEST_COLLECTION_TIID_LIST),
                 content_type="application/json")
         response_loaded = json.loads(response.data)
         new_collection_id = response_loaded["id"]
 
         # put the new collection stuff
-        response = self.client.put('/collection/' + new_collection_id, 
-                data=json.dumps(COLLECTION_SEED_MODIFIED), 
+        response = self.client.put('/collection/' + new_collection_id,
+                data=json.dumps(COLLECTION_SEED_MODIFIED),
                 content_type="application/json")
         print response
         print response.data
@@ -186,13 +194,13 @@ class TestApi(unittest.TestCase):
         assert_equals(response.mimetype, "application/json")
         response_loaded = json.loads(response.data)
         assert_equals(
-                set(response_loaded.keys()), 
+                set(response_loaded.keys()),
                 set([u'created', u'collection_name', u'item_tiids', u'last_modified',
                     u'owner', u'id'])
                 )
-        assert_equals(response_loaded["item_tiids"], 
+        assert_equals(response_loaded["item_tiids"],
             COLLECTION_SEED_MODIFIED["item_tiids"])
-            
+
     def test_collection_put_empty_payload(self):
         response = self.client.put('/collection/' + TEST_COLLECTION_ID)
         assert_equals(response.status_code, 404)  #Not found
@@ -200,6 +208,20 @@ class TestApi(unittest.TestCase):
     def test_collection_delete_with_no_id(self):
         response = self.client.delete('/collection/')
         assert_equals(response.status_code, 404)  #Not found
+
+
+
+
+    def test_collection_get_with_no_id(self):
+        response = self.client.get('/collection/')
+        assert_equals(response.status_code, 404)  #Not found
+
+class TestApi(ApiTester):
+
+    def setUp(self):
+
+        super(TestApi, self).setUp()
+
 
     def test_collection_delete_deletes(self):
         # Put in an item.  Could mock this out in the future.
@@ -220,29 +242,12 @@ class TestApi(unittest.TestCase):
         # is it gone?
         response2 = self.client.get('/collection/' + new_collection_id)
         assert_equals(response2.status_code, 404)  #Not found
-
-
-    def test_collection_get_with_no_id(self):
-        response = self.client.get('/collection/')
-        assert_equals(response.status_code, 404)  #Not found
-
+        
     def test_tiid_get_with_unknown_alias(self):
         # try to retrieve tiid id for something that doesn't exist yet
         plos_no_tiid_resp = self.client.get('/tiid/doi/' + 
                 quote_plus(PLOS_TEST_DOI))
         assert_equals(plos_no_tiid_resp.status_code, 404)  # Not Found
-    def test_memberitems_get(self):
-        response = self.client.get('/provider/dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author')
-        print response
-        print response.data
-        assert_equals(response.status_code, 200)
-        assert_equals(json.loads(response.data), GOLD_MEMBER_ITEM_CONTENT)
-        assert_equals(response.mimetype, "application/json")
-
-    def test_tiid_post(self):
-        # POST isn't supported
-        response = self.client.post('/tiid/Dryad/NotARealId')
-        assert_equals(response.status_code, 405)  # Method Not Allowed
 
 
     def test_tiid_get_with_known_alias(self):
