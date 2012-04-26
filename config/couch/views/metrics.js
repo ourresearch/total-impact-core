@@ -32,8 +32,11 @@ function(doc) {
         // now that we've got the provider names, just emit 'em
         for (var name in providerNames) {
             lastModified = providerNames[name]
-            emit([name, doc.last_requested, lastModified], doc);
-
+            // Check to see if this metric has been updated since
+            // the latest compilation of the aliases
+            if ( lastModified < doc.last_modified ) {
+                emit([name, doc.last_requested, lastModified], doc);
+            }
         }
     }
 }
