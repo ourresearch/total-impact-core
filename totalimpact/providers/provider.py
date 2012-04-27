@@ -44,7 +44,6 @@ class Provider(object):
 
     def __init__(self, config):
         self.config = config
-        self.name = 'Unknown Provider'
 
     def __repr__(self):
         return "Provider(%s)" % self.name
@@ -52,11 +51,10 @@ class Provider(object):
     # API Methods
     # These should be filled in by each Provider implementing this signature
 
-    def provides_metrics(self): return False
     def member_items(self, query_string, query_type): raise NotImplementedError()
-    def aliases(self, item): raise NotImplementedError()
-    def metrics(self, item): raise NotImplementedError()
-    def biblio(self, item): raise NotImplementedError()
+    def aliases(self, aliases, logger): raise NotImplementedError()
+    def metrics(self, aliases, logger): raise NotImplementedError()
+    def biblio(self, aliases, logger): raise NotImplementedError()
     
     # Core methods
     # These should be consistent for all providers
@@ -118,6 +116,10 @@ class Provider(object):
     
     def http_get(self, url, headers=None, timeout=None, error_conf=None):
         return self.do_get(url, headers, timeout)
+
+    @staticmethod
+    def filter_aliases(aliases, supported_namespaces):
+        aliases = ((ns,v) for (ns,v) in aliases if k == 'github')
     
     def do_get(self, url, headers=None, timeout=None):
         """ Returns a requests.models.Response object or raises exception
@@ -164,7 +166,7 @@ class Provider(object):
         if app.config["CACHE_ENABLED"]:
             c.set_cache_entry(url, {'text' : r.text, 'status_code' : r.status_code})
         return r
-    
+
     def _update_metrics_from_dict(self, new_metrics, old_metrics):
         now_str = str(int(time.time()))
         for metric_name, metric_val in new_metrics.iteritems():

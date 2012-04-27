@@ -105,7 +105,7 @@ def item_namespace_post(namespace, nid):
     # FIXME pull this from Aliases somehow?
     # check to make sure we know this namespace
     #known_namespace = namespace in Aliases().get_valid_namespaces() #implement
-    known_namespaces = ["doi", "github"]  # hack in the meantime
+    known_namespaces = ["doi", "github", "url"]  # hack in the meantime
     if not namespace in known_namespaces:
         abort(501) # "Not Implemented"
     else:
@@ -336,6 +336,16 @@ if __name__ == "__main__":
         raise LookupError
 
     logger = logging.getLogger()
+
+    # Adding this by handle. fileConfig doesn't allow filters to be added
+    from totalimpact.backend import ctxfilter
+    handler = logging.handlers.RotatingFileHandler("logs/total-impact.log")
+    handler.level = logging.DEBUG
+    formatter = logging.Formatter("%(asctime)s %(levelname)8s %(name)s %(item)s %(method)s %(provider)s - %(message)s","%y%m%d %H%M%S")
+    handler.formatter = formatter
+    handler.addFilter(ctxfilter)
+    logger.addHandler(handler)
+
     logger.debug("test")
 
     from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer

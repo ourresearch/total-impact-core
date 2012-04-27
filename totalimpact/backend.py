@@ -7,12 +7,12 @@ from totalimpact.providers.provider import ProviderFactory, ProviderConfiguratio
 from totalimpact.models import Error
 
 from totalimpact.tilogging import logging
-log = logging.getLogger(__name__)
 
 from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
 from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
 from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
 
+log = logging.getLogger()
 
 class TotalImpactBackend(object):
     
@@ -93,6 +93,37 @@ class StoppableThread(threading.Thread):
         self.sleeping = False
 
 
+class ContextFilter(logging.Filter):
+    """ Filter to add contextual information regarding items to logs
+
+        This filter will check the thread local storage to see if we have
+        recorded that we are processing an item. If so, we will add this 
+        into the formatter so that the logs print it.
+    """
+    def __init__(self):
+        # Check thread local storage
+        self.local = threading.local()
+
+    def filter(self, record):
+    
+        # Attempt to get values. Any problems, just assume empty
+        item = method = provider = thread = ""
+        try:
+            item = self.local.backend['item']
+            method = self.local.backend['method']
+            provider = self.local.backend['provider']
+            thread = self.local.backend['thread']
+        except (AttributeError, KeyError), e:
+            pass
+
+        # Store context information for logger to print
+        record.item = item
+        record.method = method
+        record.provider = provider
+        record.thread = thread
+        return True
+
+ctxfilter = ContextFilter()
 
 class QueueConsumer(StoppableThread):
 
@@ -133,6 +164,7 @@ class ProviderThread(QueueConsumer):
         self.thread_id = "BaseProviderThread"
         self.run_once = False
         self.logger = logging.getLogger('backend')
+        self.logger.addFilter(ctxfilter)
 
     def log_error(self, item, error_type, error_msg, tb):
         # This method is called to record any errors which we obtain when
@@ -190,8 +222,16 @@ class ProviderThread(QueueConsumer):
         """
         if method not in ('aliases', 'biblio', 'metrics'):
             raise NotImplementedError("Unknown method %s for provider class" % method)
+        
+        ctxfilter.local.backend = {
+            'item': item.id,
+            'method': method,
+            'provider': provider.provider_name,
+            'thread': self.thread_id
+        }
 
-        log.info("Item %s: processing %s for provider %s" % (item, method, provider))
+        logger = self.logger
+        logger.info("%s/%s: processing %s for provider %s" % (self.thread_id, item.id, method, provider))
         error_counts = {
             'http_timeout':0,
             'content_malformed':0,
@@ -201,20 +241,40 @@ class ProviderThread(QueueConsumer):
             'http_error':0
         }
         success = False
+        response = None
         error_limit_reached = False
 
         while not error_limit_reached and not success and not self.stopped():
 
             error_type = None
-            provider_function = getattr(provider, method)
             try:
-                response = provider_function(item)
-                item = response
+
+                if method == 'aliases':
+                    if provider.provides_aliases:
+                        current_aliases = item.aliases.get_aliases_list(provider.alias_namespaces)
+                        if current_aliases:
+                            response = provider.aliases(current_aliases, self.logger)
+                        else:
+                            logger.debug("processing item: Skipped, no suitable aliases") 
+                            response = []
+                    else:
+                        logger.debug("processing item: Skipped, not implemented") 
+                        response = []
+
+                if method == 'metrics':
+                    if provider.provides_metrics:
+                        current_aliases = item.aliases.get_aliases_list(provider.metric_namespaces)
+                        if current_aliases:
+                            response = provider.metrics(current_aliases, self.logger)
+                        else:
+                            logger.debug("%s/%s: processing item with provider %s: Skipped, no suitable aliases for %s" % (self.thread_id, item.id, provider, method))
+                            response = {}
+                    else:
+                        logger.debug("%s/%s: processing item with provider %s: Skipped, %s not implemented" % (self.thread_id, item.id, provider, method))
+                        response = {}
+
                 success = True
 
-            except NotImplementedError, e:
-                log.debug("Processing item %s with provider %s: Skipped, %s not implemented" % (item, provider, method))
-                success = True
             except ProviderTimeout, e:
                 error_type = 'http_timeout'
                 error_msg = str(e)
@@ -234,21 +294,13 @@ class ProviderThread(QueueConsumer):
                 error_type = 'validation_failed'
                 error_msg = str(e)
 
-            except NotImplementedError, e:
-                # This means we should skip aliases for this provider
-                # Don't record any failures here, just set success as true so we exit
-                # Success = true will mean that we continue processing this item
-                log.debug("Processing item %s with provider %s: Unknown exception %s, aborting" % (item, provider, e))
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                log.debug(traceback.format_tb(exc_traceback))
-                success = True
-
             except Exception, e:
                 # All other fatal errors. These are probably some form of
                 # logic error. We consider these to be fatal.
                 tb = sys.exc_info()[2]
                 self.log_error(item, 'unknown_error', str(e), tb)
-                log.error("Error processing item %s with provider %s: Unknown exception %s, aborting" % (item, provider, e))
+                logger.error("%s/%s: Error processing item for provider %s: Unknown exception %s, aborting" % (self.thread_id, item.id, provider, e))
+                logger.debug(traceback.format_tb(tb))
                 error_limit_reached = True
 
             finally:
@@ -265,17 +317,20 @@ class ProviderThread(QueueConsumer):
 
                     max_retries = provider.get_max_retries(error_type)
                     if error_counts[error_type] > max_retries and max_retries != -1:
-                        log.info("Error processing item %s: %s, error limit reached (%i/%i), aborting" % (
-                            item, error_type, error_counts[error_type], max_retries))
+                        logger.info("%s/%s: Error processing item: %s, error limit reached (%i/%i), aborting" % (
+                            self.thread_id, item.id, error_type, error_counts[error_type], max_retries))
                         error_limit_reached = True
                     else:
                         duration = provider.get_sleep_time(error_type, error_counts[error_type])
-                        log.info("Error processing item %s: %s, pausing thread for %s" % (item, error_type, duration))
+                        logger.info("%s/%s: Error processing item, pausing thread for %s" % (self.thread_id, item.id, error_type, duration))
                         self._interruptable_sleep(duration)
                 elif success:
-                    log.info("Item %s: processing successful" % (item))
+                    logger.info("%s/%s: processing successful" % (self.thread_id, item.id))
 
-        return success
+        # Stop processing an item, remove logging information
+        #local.backend = {}
+
+        return (success, response)
 
 
 class ProvidersAliasThread(ProviderThread):
@@ -295,7 +350,14 @@ class ProvidersAliasThread(ProviderThread):
         """
         if not self.stopped():
             for provider in self.providers: 
-                if not self.process_item_for_provider(item, provider, 'aliases'):
+                (success, response) = self.process_item_for_provider(item, provider, 'aliases')
+                if success:
+                    # Add in the new aliases to the item
+                    # response is a list of (k,v) pairs (may be empty)
+                    item.aliases.add_unique(response)
+                    item.save()
+
+                else:
                     # This provider has failed and exceeded the 
                     # total number of retries. Don't process any 
                     # more providers, we abort this item entirely
@@ -309,11 +371,11 @@ class ProvidersAliasThread(ProviderThread):
                     item.save()
                     break
 
-                if not self.process_item_for_provider(item, provider, 'biblio'):
-                    # This provider has failed and exceeded the 
-                    # total number of retries. Don't process any 
-                    # more providers, we abort this item entirely
-                    break
+                #if not self.process_item_for_provider(item, provider, 'biblio'):
+                #    # This provider has failed and exceeded the 
+                #    # total number of retries. Don't process any 
+                #    # more providers, we abort this item entirely
+                #    break
 
 
 
@@ -324,12 +386,31 @@ class ProviderMetricsThread(ProviderThread):
     """
     def __init__(self, provider, dao):
         self.provider = provider
-        queue = MetricsQueue(dao, provider.id)
+        queue = MetricsQueue(dao, provider.provider_name)
         ProviderThread.__init__(self, dao, queue)
-        self.thread_id = "MetricsThread:" + str(self.provider.id)
+        self.thread_id = "MetricsThread:" + str(self.provider.provider_name)
 
     def process_item(self, item):
-        success = self.process_item_for_provider(item, 
-            self.provider, 
-            'metrics')
-        return success
+        (success, metrics) = self.process_item_for_provider(item, 
+            self.provider, 'metrics')
+        
+        ts = str(time.time())
+
+        if success:
+            if metrics:
+                for key in metrics.keys():
+                    item.metrics[key]['values'][ts] = metrics[key]
+                    item.metrics[key]['static_meta'] = {} #self.provider
+            else:
+                # The provider returned None for this item. This is either
+                # a non result or a permanent failure
+                for key in self.provider.metric_names:
+                    item.metrics[key]['values'][ts] = None
+                    item.metrics[key]['static_meta'] = {} #self.provider
+        else:
+            # metrics failed, write None values in for the metric
+            # values so we don't attempt to reprocess this item
+            for key in self.provider.metric_names:
+                item.metrics[key]['values'][ts] = None
+                item.metrics[key]['static_meta'] = {} #self.provider
+        item.save()
