@@ -38,14 +38,19 @@ class TotalImpactAPI:
 
 ti = TotalImpactAPI()
 
-dryad_item = ti.request_item('doi','10.1186/1745-6215-11-32')
-wikipedia_item = ti.request_item('doi', '10.1371/journal.pcbi.1000361')
+#dryad_item = ti.request_item('doi','10.1186/1745-6215-11-32')
+#wikipedia_item = ti.request_item('doi', '10.1371/journal.pcbi.1000361')
+##wikipedia_item = ti.request_item("url", "http://cottagelabs.com")
+
 github_item = ti.request_item('github', 'egonw/gtd')
 
 time.sleep(10)
 
-print ti.request_item_result(dryad_item)
-print ti.request_item_result(wikipedia_item)
+print "== Dryad Item =========================================="
+#print ti.request_item_result(dryad_item)
+print "== Wikipedia Item ======================================"
+#print ti.request_item_result(wikipedia_item)
+print "== Github Item ========================================="
 print ti.request_item_result(github_item)
 
 
