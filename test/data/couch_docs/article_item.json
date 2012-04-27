@@ -1,0 +1,47 @@
+{
+   "last_requested": 1335399102.206035,
+   "created": 1335399101.683406,
+   "metrics": {
+       "wikipedia:mentions": {
+           "values": {
+           }
+       },
+       "dryad:most_downloaded_file": {
+           "static_meta": null,
+           "values": {
+               "1335399102.847159": 63
+           }
+       },
+       "github:forks": {
+           "values": {
+           }
+       },
+       "dryad:total_downloads": {
+           "static_meta": null,
+           "values": {
+               "1335399102.847153": 169
+           }
+       },
+       "github:watchers": {
+           "values": {
+           }
+       }
+   },
+   "last_modified": 1335399101.683406,
+   "biblio": {
+   },
+   "id": "0f8e3cda38964f9ebf56a2cd4245c275",
+   "aliases": {
+       "url": [
+           "http://hdl.handle.net/10255/dryad.7898"
+       ],
+       "doi": [
+           "10.5061/dryad.7898"
+       ],
+       "created": 1335399101.683624,
+       "last_modified": 1335399102.225339,
+       "title": [
+           "data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides"
+       ]
+   }
+}

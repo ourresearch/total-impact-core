@@ -10,8 +10,10 @@ from totalimpact.providers.provider import ProviderFactory, ProviderConfiguratio
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
 
+
 # set up logging
 logger = logging.getLogger(__name__)
+
 
 
 # set up the app
@@ -118,36 +120,45 @@ def item_namespace_post(namespace, nid):
 
 def make_item_dict(tiid):
     '''Utility function for /item and /items endpoints
-
-    It will cause the request to abort with 404 if any item is missing'''
+    Will cause the request to abort with 404 if item is missing from db'''
     try:
         item = ItemFactory.get(mydao, id=tiid, metric_names=metric_names)
-        item.last_requested = time.time()
-        ret = item.as_dict()
+        item_dict = item.as_dict()
     except LookupError:
         abort(404)
+    return item_dict
 
-    return ret
+def make_item_resp(item_dict, format):
+    if format == "html":
+        try:
+            template = item_dict["genre"] + ".html"
+        except KeyError:
+            template = "article.html"
+            item_dict['genre'] = "article"
+        resp = make_response(render_template(template, item=item_dict ))
+        resp.content_type = "text/html"
+    else:
+        resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4))
+        resp.mimetype = "application/json"
+    return resp
 
 '''GET /item/:tiid
 404 if tiid not found in db
 '''
 @app.route('/item/<tiid>', methods=['GET'])
-def item(tiid):
+@app.route('/item/<tiid>.<format>', methods=['GET'])
+def item(tiid, format=None):
+    # TODO check request headers for format as well.
     item_dict = make_item_dict(tiid)
-    resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4))
-    resp.mimetype = "application/json"
-    return resp
-
+    return make_item_resp(item_dict, format)
 
 '''
 GET /items/:tiid,:tiid,...
 returns a json list of item objects (100 max)
 404 unless all tiids return items from db
 '''
-
 @app.route('/items/<tiids>', methods=['GET'])
-def items(tiids):
+def items(tiids, format=None):
     items = []
 
     for index,tiid in enumerate(tiids.split(',')):

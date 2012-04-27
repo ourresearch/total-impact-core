@@ -2,6 +2,7 @@ import unittest, json, uuid
 from copy import deepcopy
 from urllib import quote_plus
 from nose.tools import nottest, assert_equals
+from BeautifulSoup import BeautifulSoup
 
 from totalimpact import api, dao
 from totalimpact.config import Configuration
@@ -162,17 +163,46 @@ class TestItem(ApiTester):
         response = self.client.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
         assert_equals(response.status_code, 501)  # "Not implemented"
 
-    def test_returns_html(self):
+    def test_returns_json_default(self): 
         # upload the item manually...there's no api call to do this.
         print self.d.save(ARTICLE_ITEM)
-
         response = self.client.get('/item/' + ARTICLE_ITEM['id'])
         assert_equals(response.headers[0][1], 'application/json')
 
-        print  RENDERED_ARTICLE
+    def test_returns_html_mimetype(self):
+        print self.d.save(ARTICLE_ITEM) 
+        response = self.client.get('item/{0}.html'.format(ARTICLE_ITEM['id']))
+        assert_equals(response.headers[0][1], 'text/html') 
+
+    def test_returns_html_view(self):
+        print self.d.save(ARTICLE_ITEM)
         response = self.client.get('item/{0}.html'.format(ARTICLE_ITEM['id']))
 
-        #assert_equals(response.data, RENDERED_ARTICLE)
+        # parsing makes debugging much easier...impossible   to visually compare
+        # the raw markup strings when not pretty-printed.
+        returned = BeautifulSoup(response.data)
+        expected = BeautifulSoup(RENDERED_ARTICLE)
+
+
+        assert returned.find('h4') is not None
+        assert_equals(returned('h4'), expected('h4'))     
+
+        assert returned.find('ul', "biblio") is not None
+        assert_equals(
+            returned.find('ul', "biblio"),
+            expected.find('ul', "biblio"))
+
+        # in progress... 
+        '''
+        assert returned.find('ul', "metrics") is not None
+        assert_equals(
+            returned.find('ul', "metrics"),
+            expected.find('ul', "metrics"))
+        '''
+
+
+
+
 
 
 class TestCollection(ApiTester):

@@ -12,7 +12,7 @@ from nose.tools import nottest, raises, assert_equals
 class DummyResponse(object):
     def __init__(self, status, content):
         self.status_code = status
-        self.text = content
+        self.text = content  
 
 def get_member_items_html_success(self, url, headers=None, timeout=None):
     f = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r")

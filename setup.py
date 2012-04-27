@@ -15,7 +15,8 @@ setup(
         "lxml",
         "simplejson",
         "python-memcached",
-        "PyYAML"
+        "PyYAML",
+        "negotiate"
     ],
     url = '',
     author = 'total-impact',

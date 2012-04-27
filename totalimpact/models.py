@@ -142,6 +142,22 @@ class ItemFactory():
                 item.metrics[name] = item_doc["metrics"][name]
             except KeyError: #this metric ain't in the item_doc from the db
                 item.metrics[name] = {'values': {} }
+
+        # create all the provenance urls. should break this off into function, add tests.
+        for name, metric in item.metrics.iteritems():
+            try:
+                url = metric['static_meta']['provenance_url']
+                res =  re.search(r'<([^>]+)>', url)
+                alias_token = res.group(0)
+                alias_name = res.group(1)
+                alias_value = item_doc['aliases'][alias_name][0]
+                metric['static_meta']['provenance_url'] = url.replace(alias_token, alias_value)
+
+            except (KeyError, TypeError):
+                # if metrics are malformed or missing, it's probably just because
+                # we're using test stubs. Doesn't hurt to ignore.
+                pass
+
         return item
 
     @classmethod
