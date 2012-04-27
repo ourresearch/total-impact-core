@@ -1,0 +1,20 @@
+<div class="item">
+    <h4><span class="genre">{{ item.genre }}</span>{{ item.aliases['doi'][0] }}</h4>
+    <ul class="biblio">
+        <li class="biblio crossref">
+            <span class="author">{{ item.biblio.author|join(', ') }}</span>
+            <span class="year">{{item.biblio.year}}</span>
+            <a class="url title" href="{{ item.aliases.url[0] }}">{{ item.biblio.title }}</a>
+            <span class="repo">{{ item.biblio.journal }}</span>
+        </li>
+    </ul>
+    <ul class="metrics">
+        {% for metric_name, metric in  item.metrics.iteritems() %}
+        {% if metric.static_meta %}
+        <li>
+            <a href="{{ metric['static_meta']['provenance_url']}}creat ">foo</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+</div>
