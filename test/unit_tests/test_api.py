@@ -123,7 +123,8 @@ class TestItem(ApiTester):
         assert_equals(len(json.loads(response.data)), 32)
         assert_equals(response.mimetype, "application/json")
 
-    def test_item_get_success_fakeid(self):
+    def test_item_get_success_fakeid(self):        
+        
         # First put something in
         response_create = self.client.post('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
         tiid = response_create.data
@@ -193,12 +194,13 @@ class TestItem(ApiTester):
             expected.find('ul', "biblio"))
 
         # in progress... 
-        '''
+
         assert returned.find('ul', "metrics") is not None
+
+
         assert_equals(
             returned.find('ul', "metrics"),
             expected.find('ul', "metrics"))
-        '''
 
 
 
