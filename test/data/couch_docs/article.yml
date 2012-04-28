@@ -33,10 +33,10 @@
           can_embed: 1
           can_aggregate: 1
           other_terms_of_use: unknown
-          provenance_url: http://alm.plos.org/articles/info:doi%2F<doi>?source=Counter&api_key=plos_api_test
+          provenance_url: http://alm.plos.org/articles/info:doi%2F<doi>.html?source=Counter&api_key=plos_api_test
         values:
-          "1234567890.5": 31401
-          "1234569999.9": 32401
+          "1234567890": 31401
+          "1234569999": 32401
       wikipedia:mentions:
         static_meta:
           display_name: mentions
@@ -51,5 +51,5 @@
           other_terms_of_use: NA
           provenance_url: http://en.wikipedia.org/wiki/Special:Search?search=<doi>&go=Go
         values:
-          "1234567890.5": 23
-          "1234569999.9": 33
+          "1234567890": 23
+          "1234569999": 33
