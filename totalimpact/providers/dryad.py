@@ -6,8 +6,8 @@ from xml.dom import minidom
 import requests
 import simplejson
 
-from totalimpact.tilogging import logging
-#logger = logging.getLogger(__name__)
+import logging
+logger = logging.getLogger('providers.dryad')
 
 class Dryad(Provider):  
 
@@ -72,7 +72,7 @@ class Dryad(Provider):
             raise ProviderContentMalformedError("Did not find expected number of matching arr blocks")
         return matching_arrs
 
-    def member_items(self, query_string, query_type, logger):
+    def member_items(self, query_string, query_type):
         enc = urllib.quote(query_string)
 
         url = self.config.member_items["querytype"]["dryad_author"]['url'] % enc
@@ -97,7 +97,7 @@ class Dryad(Provider):
         return [("doi", hit.replace("doi:", "")) for hit in list(set(identifiers))]
 
     
-    def aliases(self, aliases, logger):
+    def aliases(self, aliases):
         # Get a list of the new aliases that can be discovered from the data
         # source.
         id_list = [alias[1] for alias in aliases if self._is_dryad_doi(alias[1])]
@@ -108,7 +108,7 @@ class Dryad(Provider):
         
         return new_aliases
 
-    def get_aliases_for_id(self, id, logger):
+    def get_aliases_for_id(self, id):
         url = self.config.aliases['url'] % id
         logger.debug("attempting to retrieve aliases from " + url)
 
@@ -162,14 +162,14 @@ class Dryad(Provider):
                 return doi
         return None
 
-    def metrics(self, aliases, logger):
+    def metrics(self, aliases):
         id = self._get_dryad_doi(aliases)
         if id is not None:
-            return self._get_metrics_for_id(aliases, logger)
+            return self._get_metrics_for_id(aliases)
         else:
             return None
 
-    def _get_metrics_for_id(self, id, logger):
+    def _get_metrics_for_id(self, id):
         url = self.config.metrics['url'] % id
         logger.debug("attempting to retrieve metrics from " + url)
         
@@ -218,7 +218,7 @@ class Dryad(Provider):
             "dryad:most_downloaded_file": int(max_downloads)
         }
 
-#    def biblio(self, item, logger): 
+#    def biblio(self, item): 
 #        id = self._get_dryad_doi(item)
 #        # Only lookup biblio for items with dryad doi's
 #        if id:

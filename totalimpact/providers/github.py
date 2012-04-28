@@ -6,7 +6,8 @@ import requests
 import simplejson
 import json
 
-from totalimpact.tilogging import logging
+import logging
+logger = logging.getLogger('providers.github')
 
 class Github(Provider):  
 
@@ -26,7 +27,7 @@ class Github(Provider):
         super(Github, self).__init__(config)
         self.id = self.config.id
         
-    def member_items(self, query_string, query_type, logger):
+    def member_items(self, query_string, query_type):
         enc = urllib.quote(query_string)
 
         url = self.config.member_items["querytype"][query_type]['url'] % enc
@@ -42,7 +43,7 @@ class Github(Provider):
 
         return [("github", (query_string, hit)) for hit in list(set(hits))]
     
-    def metrics(self, aliases, logger):
+    def metrics(self, aliases):
 
         if len(aliases) != 1:
             logger.warn("More than 1 github alias found, this should not happen. Will take first item.")

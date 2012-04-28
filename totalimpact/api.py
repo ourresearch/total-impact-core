@@ -341,10 +341,12 @@ if __name__ == "__main__":
     from totalimpact.backend import ctxfilter
     handler = logging.handlers.RotatingFileHandler("logs/total-impact.log")
     handler.level = logging.DEBUG
-    formatter = logging.Formatter("%(asctime)s %(levelname)8s %(name)s %(item)s %(method)s %(provider)s - %(message)s","%y%m%d %H%M%S")
+    #formatter = logging.Formatter("%(asctime)s %(levelname)8s %(name)s %(item)s %(thread)s %(provider)s - %(message)s","%y%m%d %H%M%S")
+    formatter = logging.Formatter("%(asctime)s %(levelname)8s %(item)32s %(thread)s%(provider)s - %(message)s","%y%m%d %H%M%S")
     handler.formatter = formatter
     handler.addFilter(ctxfilter)
     logger.addHandler(handler)
+    ctxfilter.threadInit()
 
     logger.debug("test")
 
