@@ -328,7 +328,7 @@ class ProviderThread(QueueConsumer):
                     logger.info("%s/%s: processing successful" % (self.thread_id, item.id))
 
         # Stop processing an item, remove logging information
-        #local.backend = {}
+        ctxfilter.local.backend = {}
 
         return (success, response)
 

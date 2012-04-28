@@ -99,8 +99,9 @@ class Dryad(Provider):
     
     def aliases(self, aliases, logger):
         # Get a list of the new aliases that can be discovered from the data
-        # source
+        # source.
         id_list = [alias[1] for alias in aliases if self._is_dryad_doi(alias[1])]
+        new_aliases = []
         for doi_id in id_list:
             logger.debug("processing alias %s" % doi_id)
             new_aliases += self.get_aliases_for_id(doi_id)
@@ -162,9 +163,9 @@ class Dryad(Provider):
         return None
 
     def metrics(self, aliases, logger):
-        id = self._get_dryad_doi(item)
+        id = self._get_dryad_doi(aliases)
         if id is not None:
-            return self._get_metrics_for_id(aliases)
+            return self._get_metrics_for_id(aliases, logger)
         else:
             return None
 
