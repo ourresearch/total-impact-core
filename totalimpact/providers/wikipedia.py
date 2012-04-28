@@ -3,7 +3,8 @@ from provider import Provider, ProviderError, ProviderTimeout, ProviderServerErr
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 
-from totalimpact.tilogging import logging
+import logging
+logger = logging.getLogger('providers.wikipedia')
 
 class Wikipedia(Provider):  
     """ Gets numbers of citations for a DOI document from wikipedia using
@@ -24,18 +25,18 @@ class Wikipedia(Provider):
     def __init__(self, config):
         super(Wikipedia, self).__init__(config)
 
-    def metrics(self, aliases, logger):
+    def metrics(self, aliases):
         if len(aliases) != 1:
             logger.warn("More than 1 DOI alias found, this should not happen. Will process first item only.")
         
         (ns,val) = aliases[0] 
 
         logger.debug("looking for mentions of alias %s" % val)
-        new_metrics = self.get_metrics_for_id(val, logger)
+        new_metrics = self.get_metrics_for_id(val)
 
         return new_metrics
     
-    def get_metrics_for_id(self, id, logger):
+    def get_metrics_for_id(self, id):
         # FIXME: urlencoding?
         url = self.config.metrics['url'] % id 
         logger.debug("attempting to retrieve metrics from " + url)
