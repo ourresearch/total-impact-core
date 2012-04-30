@@ -74,7 +74,6 @@ class TestWikipedia(ProviderTestCase):
         ProviderTestCase.setUp(self)
 
         self.simple_item = ItemFactory.make("not a dao", app.config["METRIC_NAMES"])
-        #self.simple_item.aliases.add_initial_alias("doi", TEST_WIKIPEDIA_DOI)
   
     def test_metrics_extract_stats(self):
         f = open(XML_DOC, "r")

@@ -74,7 +74,7 @@ class TestDryad(ProviderTestCase):
         ProviderTestCase.setUp(self)
 
         self.simple_item = ItemFactory.make("not a dao", app.config["METRIC_NAMES"])
-        self.simple_item.aliases.add_initial_alias("doi", TEST_DRYAD_DOI)
+        self.simple_item.aliases.add_alias("doi", TEST_DRYAD_DOI)
 
     def tearDown(self):
         Provider.http_get = self.old_http_get
