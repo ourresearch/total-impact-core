@@ -2,6 +2,7 @@ import time, re, urllib
 from totalimpact.providers.provider import Provider, ProviderError, ProviderTimeout,ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
 from totalimpact.models import Aliases, Biblio
 from xml.dom import minidom 
+from xml.parsers.expat import ExpatError
 
 import requests
 import simplejson
@@ -13,14 +14,16 @@ class Dryad(Provider):
 
     provider_name = "dryad"
     metric_names = ["dryad:package_views", "dryad:total_downloads", "dryad:most_downloaded_file"]
+
+    member_types = ["dryad_author"]
     metric_namespaces = ["doi"]
     alias_namespaces = ["doi"]
-
-    member_types = None
+    biblio_namespaces = ["doi"]
 
     provides_members = False
     provides_aliases = True
     provides_metrics = True
+    provides_biblio = True
 
     def __init__(self, config):
         super(Dryad, self).__init__(config)
@@ -64,7 +67,7 @@ class Dryad(Provider):
             match for the name attribute """
         try:
             doc = minidom.parseString(xml)
-        except minidom.ExpatError, e:
+        except ExpatError, e:
             raise ProviderContentMalformedError("Content parse provider supplied XML document")
         arrs = doc.getElementsByTagName('arr')
         matching_arrs = [elem for elem in arrs if elem.attributes['name'].value == name]
@@ -101,6 +104,10 @@ class Dryad(Provider):
         # Get a list of the new aliases that can be discovered from the data
         # source.
         id_list = [alias[1] for alias in aliases if self._is_dryad_doi(alias[1])]
+
+        if len(id_list) == 0:
+            logger.info("warning, no DOI aliases found in the Dryad domain for this item")
+
         new_aliases = []
         for doi_id in id_list:
             logger.debug("processing alias %s" % doi_id)
@@ -218,59 +225,54 @@ class Dryad(Provider):
             "dryad:most_downloaded_file": int(max_downloads)
         }
 
-#    def biblio(self, item): 
-#        id = self._get_dryad_doi(item)
-#        # Only lookup biblio for items with dryad doi's
-#        if id:
-#            biblio_object = self.get_biblio_for_id(id)
-#            item.biblio = biblio_object
-#        else:
-#            logger.debug("Not checking biblio for %s as no dryad doi" % item.id)
-#        return item
-#
-#    def get_biblio_for_id(self, id):
-#        url = self.config.biblio['url'] % id
-#        logger.debug(self.config.id + ": attempting to retrieve biblio from " + url)
-#        
-#        # try to get a response from the data provider        
-#        response = self.http_get(url, 
-#            timeout=self.config.biblio.get('timeout', None))
-#        
-#        # register the hit, mostly so that anyone copying this remembers to do it,
-#        # - we have overriden this in the DryadState object, so it doesn't do anything
-#        self.state.register_unthrottled_hit()
-#        
-#        # FIXME: we have to observe the Dryad interface for a bit to get a handle
-#        # on these response types - this is just a default approach...
-#        if response.status_code != 200:
-#            if response.status_code >= 500:
-#                raise ProviderServerError(response)
-#            else:
-#                raise ProviderClientError(response)
-#        
-#        # extract the aliases
-#        bibJSON = self._extract_biblio(response.text)
-#        biblio_object = Biblio(bibJSON)
-#
-#        return biblio_object
-#
-#
-#    def _extract_biblio(self, xml):
-#        biblio_dict = {}
-#
-#        try:
-#            title = self._get_named_arr_str_from_xml(xml, 'dc.title_ac')
-#            biblio_dict["title"] = title[0]
-#        except AttributeError:
-#            raise ProviderContentMalformedError("Content does not contain expected text")
-#
-#        try:
-#            year = self._get_named_arr_int_from_xml(xml, 'dc.date.accessioned.year')
-#            biblio_dict["year"] = year[0]
-#        except AttributeError:
-#            raise ProviderContentMalformedError("Content does not contain expected text")
-#
-#        return biblio_dict
+    def biblio(self, aliases): 
+        id = self._get_dryad_doi(aliases)
+        # Only lookup biblio for items with dryad doi's
+        if id:
+            return self.get_biblio_for_id(id)
+        else:
+            logger.info("Not checking biblio as no dryad doi")
+            return None
+
+    def get_biblio_for_id(self, id):
+        url = self.config.biblio['url'] % id
+        logger.debug("attempting to retrieve biblio from " + url)
+        
+        # try to get a response from the data provider        
+        response = self.http_get(url, 
+            timeout=self.config.biblio.get('timeout', None))
+        
+        # register the hit, mostly so that anyone copying this remembers to do it,
+        # - we have overriden this in the DryadState object, so it doesn't do anything
+        self.state.register_unthrottled_hit()
+        
+        # FIXME: we have to observe the Dryad interface for a bit to get a handle
+        # on these response types - this is just a default approach...
+        if response.status_code != 200:
+            if response.status_code >= 500:
+                raise ProviderServerError(response)
+            else:
+                raise ProviderClientError(response)
+        
+        # extract the aliases
+        return self._extract_biblio(response.text)
+
+    def _extract_biblio(self, xml):
+        biblio_dict = {}
+
+        try:
+            title = self._get_named_arr_str_from_xml(xml, 'dc.title_ac')
+            biblio_dict["title"] = title[0]
+        except AttributeError:
+            raise ProviderContentMalformedError("Content does not contain expected text")
+
+        try:
+            year = self._get_named_arr_int_from_xml(xml, 'dc.date.accessioned.year')
+            biblio_dict["year"] = year[0]
+        except AttributeError:
+            raise ProviderContentMalformedError("Content does not contain expected text")
+
+        return biblio_dict
 
 
 class DryadState(ProviderState):

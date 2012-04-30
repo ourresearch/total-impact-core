@@ -46,15 +46,15 @@ class Provider(object):
         self.config = config
 
     def __repr__(self):
-        return "Provider(%s)" % self.name
+        return "Provider(%s)" % self.provider_name
     
     # API Methods
     # These should be filled in by each Provider implementing this signature
 
     def member_items(self, query_string, query_type): raise NotImplementedError()
-    def aliases(self, aliases, logger): raise NotImplementedError()
-    def metrics(self, aliases, logger): raise NotImplementedError()
-    def biblio(self, aliases, logger): raise NotImplementedError()
+    def aliases(self, aliases): raise NotImplementedError()
+    def metrics(self, aliases): raise NotImplementedError()
+    def biblio(self, aliases): raise NotImplementedError()
     
     # Core methods
     # These should be consistent for all providers

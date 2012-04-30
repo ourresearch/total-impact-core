@@ -117,7 +117,6 @@ class Test_Provider(unittest.TestCase):
         # defaults/NotImplementedErrors
         provider = Provider(None)
         
-        assert not provider.provides_metrics()
         self.assertRaises(NotImplementedError, provider.member_items, None, None)
         self.assertRaises(NotImplementedError, provider.aliases, None)
         self.assertRaises(NotImplementedError, provider.metrics, None)
@@ -138,7 +137,7 @@ class Test_Provider(unittest.TestCase):
                 pconf = v
                 break
         provider = ProviderFactory.get_provider(pconf)
-        assert provider.id == "wikipedia"
+        assert provider.provider_name == "wikipedia"
         
     def test_09_get_providers(self):
         providers = ProviderFactory.get_providers(self.provider_configs)

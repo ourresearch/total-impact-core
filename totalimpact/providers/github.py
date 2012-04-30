@@ -1,5 +1,9 @@
 import time, re, urllib
-from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState
+from provider import Provider 
+from provider import ProviderError, ProviderTimeout, ProviderServerError
+from provider import ProviderClientError, ProviderHttpError, ProviderState
+from provider import ProviderContentMalformedError
+
 from totalimpact.models import Aliases
 from BeautifulSoup import BeautifulStoneSoup
 import requests
@@ -13,15 +17,17 @@ class Github(Provider):
 
     provider_name = "github"
     metric_names = ['github:watchers', 'github:forks']
+
     metric_namespaces = ["github"]
     alias_namespaces = []
+    biblio_namespaces = []
 
     member_types = ['github_user']
 
     provides_members = True
     provides_aliases = False
     provides_metrics = True
-
+    provides_biblio = False
 
     def __init__(self, config):
         super(Github, self).__init__(config)
@@ -36,9 +42,12 @@ class Github(Provider):
         # try to get a response from the data provider        
         response = self.http_get(url, timeout=self.config.member_items.get('timeout', None))
         if response.status_code != 200:
-            raise ProviderServerError
+            raise ProviderServerError(response)
 
-        hits = simplejson.loads(response.text)
+        try:
+            hits = simplejson.loads(response.text)
+        except simplejson.JSONDecodeError, e:
+            raise ProviderContentMalformedError
         hits = [hit["name"] for hit in hits]
 
         return [("github", (query_string, hit)) for hit in list(set(hits))]
@@ -58,9 +67,13 @@ class Github(Provider):
         url = self.config.metrics['url'] % val
         response = self.http_get(url)
         if response.status_code != 200:
-            raise ProviderServerError
+            raise ProviderServerError(response)
 
-        data = json.loads(response.text) 
+        try:
+            data = simplejson.loads(response.text) 
+        except simplejson.JSONDecodeError, e:
+            raise ProviderContentMalformedError
+
         return {
             'github:watchers' : data['repository']['watchers'],
             'github:forks' : data['repository']['forks']
