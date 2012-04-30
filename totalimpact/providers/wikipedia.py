@@ -1,51 +1,52 @@
 import time
-from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
+from provider import Provider
+from provider import ProviderError, ProviderTimeout, ProviderServerError
+from provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 
-from totalimpact.tilogging import logging
-logger = logging.getLogger(__name__)
+import logging
+from xml.dom import minidom
+from xml.parsers.expat import ExpatError
+
+logger = logging.getLogger('providers.wikipedia')
 
 class Wikipedia(Provider):  
+    """ Gets numbers of citations for a DOI document from wikipedia using
+        the Wikipedia search interface.
+    """
+
+    provider_name = "wikipedia"
+    metric_names = ['wikipedia:mentions']
+    metric_namespaces = ["doi"]
+    alias_namespaces = None
+    biblio_namespaces = None
+
+    member_types = None
+
+    provides_members = False
+    provides_aliases = False
+    provides_metrics = True
+    provides_biblio = False
 
     def __init__(self, config):
         super(Wikipedia, self).__init__(config)
-        self.id = self.config.id
 
-    def member_items(self, query_string):
-        raise NotImplementedError()
+    def metrics(self, aliases):
+        if len(aliases) != 1:
+            logger.warn("More than 1 DOI alias found, this should not happen. Will process first item only.")
+        
+        (ns,val) = aliases[0] 
+
+        logger.debug("looking for mentions of alias %s" % val)
+        new_metrics = self.get_metrics_for_id(val)
+
+        return new_metrics
     
-    def aliases(self, item): 
-        raise NotImplementedError()
-
-    def provides_metrics(self): return True
-    
-    def metrics(self, item):
-        aliases = item.aliases.get_aliases_list(self.config.supported_namespaces)
-        logger.info("{0}: found {1} good aliases for {2}"
-            .format(self.config.id, len(aliases), item.id))
-
-        if len(aliases) == 0:
-            item.metrics = self._update_metrics_from_dict({"wikipedia:mentions": None}, item.metrics)
-
-        for alias in aliases:
-            logger.debug(self.config.id + ": processing metrics for tiid:" + item.id)
-            logger.debug(self.config.id + ": looking for mentions of alias " + alias[1])
-            new_metrics = self._get_metrics_for_id(alias[1])
-            item.metrics = self._update_metrics_from_dict(new_metrics, item.metrics)
-
-        logger.info("{0}: metrics completed for tiid {1}".format(self.config.id, item.id))
-        return item
-    
-    def _get_metrics_for_id(self, id):
-        #TODO this should take an alias in other Providers (esp. Mendeley),
-        # since there will be different API calls and extract_stats methods
-        # for different alias namespaces. Should actually think about making new
-        # classes/subclasses to do this.
-    
+    def get_metrics_for_id(self, id):
         # FIXME: urlencoding?
         url = self.config.metrics['url'] % id 
-        logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
+        logger.debug("attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
         response = self.http_get(url, timeout=self.config.metrics['timeout'], error_conf=self.config.errors)
@@ -63,20 +64,14 @@ class Wikipedia(Provider):
     
     def _extract_stats(self, content):
         try:
-            soup = BeautifulStoneSoup(content)
-        except:
-            # seems this pretty much never gets called, as soup will happily
-            # try to parse just about anything you throw at it.
-            raise ProviderContentMalformedError("Content cannot be parsed into soup")
-        
-        try:
-            articles = soup.search.findAll(title=True)
-            val = len(articles)
-        except AttributeError:
-            # NOTE: this does not raise a ProviderValidationError, because missing
-            # articles are not indicative of a formatting failure - there just might
-            # not be any articles
-            val = 0
+            doc = minidom.parseString(content)
+        except ExpatError, e:
+            raise ProviderContentMalformedError("Content parse provider supplied XML document")
 
-        return {"wikipedia:mentions": val}
+        searchinfo = doc.getElementsByTagName('searchinfo')
+        if not searchinfo:
+            raise ProviderContentMalformedError("No searchinfo in response document")
+        val = searchinfo[0].attributes['totalhits'].value
+
+        return {"wikipedia:mentions": int(val)}
             

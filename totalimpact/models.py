@@ -102,15 +102,41 @@ class Saveable(object):
         return True
 
 
+class Item(Saveable):
+    """{
+        "id": "<uuid4>",
+        "aliases": "<Aliases object>",
+        "metrics": {
+            "plos:html_views":{
+                "ignore":False,
+                "static_meta": "<static_meta dict from provider>",
+                "values":
+                    12: "1234556789.2",
+                    13: "1234567999.9"
+            },
+            "plos:pdf_views: {...},
+            "dryad:total_downloads: {...},
+            ...
+        },
+        "biblio": "<Biblio object>",
+        "created": 23112412414.234,
+        "last_modified": 12414214.234,
+        "last_requested": 124141245.234
+    }
+    """
+    pass
+
 
 class ItemFactory():
     #TODO this should subclass a SaveableFactory
+
+    item_class = Item
 
     @classmethod
     def get(cls, dao, id, metric_names):
         now = time.time()
         item_doc = dao.get(id)
-        item = Item(dao, id=id)
+        item = cls.item_class(dao, id=id)
 
         if item_doc is None:
             raise LookupError
@@ -163,7 +189,7 @@ class ItemFactory():
     @classmethod
     def make(cls, dao, metric_names):
         now = time.time()
-        item = Item(dao=dao)
+        item = cls.item_class(dao=dao)
         
         # make all the top-level stuff
         item.aliases = Aliases()
@@ -180,30 +206,6 @@ class ItemFactory():
 
         return item
 
-
-class Item(Saveable):
-    """{
-        "id": "<uuid4>",
-        "aliases": "<Aliases object>",
-        "metrics": {
-            "plos:html_views":{
-                "ignore":False,
-                "static_meta": "<static_meta dict from provider>",
-                "values":
-                    12: "1234556789.2",
-                    13: "1234567999.9"
-            },
-            "plos:pdf_views: {...},
-            "dryad:total_downloads: {...},
-            ...
-        },
-        "biblio": "<Biblio object>",
-        "created": 23112412414.234,
-        "last_modified": 12414214.234,
-        "last_requested": 124141245.234
-    }
-    """
-    pass
 
 
 class Error(Saveable):
@@ -328,10 +330,11 @@ class Aliases(object):
     item, since that's what it describes. having it in two places == bad.
     """
     
-    not_aliases = ["created", "last_modified"]
+    not_aliases = ["created", "last_modified", "last_completed"]
     
     def __init__(self, seed=None):
         self.created = time.time() # will get overwritten if need be
+        self.last_completed = None # will get set by the aliases worker once complete
         try:
             for k in seed:
                 setattr(self, k, seed[k])
@@ -361,7 +364,7 @@ class Aliases(object):
         '''
         # if this is a get on everything, just summon up the items
         if namespace_list is None:
-            return [x for x in self.__dict__ if x not in self.not_aliases]
+            namespace_list = self.get_namespace_list()
         
         # if the caller doesn't pass us a list, but just a single value, wrap it
         # up for them
@@ -384,11 +387,14 @@ class Aliases(object):
 
         return ret
 
+    def get_namespace_list(self):
+        return [x for x in self.__dict__ if x not in self.not_aliases]
+
     def clear_aliases(self):
         # Wipe out the aliases and set last_modified. This should be used
         # when an alias update has failed, so that we can dequeue the item
         # without then going on to process metrics incorrectly.
-        for attr in self.get_aliases_list():
+        for attr in self.get_namespace_list():
             delattr(self, attr)
         self.last_modified = time.time()
 

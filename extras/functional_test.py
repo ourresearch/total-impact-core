@@ -8,6 +8,7 @@ import urllib2
 import urllib
 import json
 import time
+from pprint import pprint
 
 class TotalImpactAPI:
     base_url = 'http://localhost:5001/'
@@ -32,21 +33,75 @@ class TotalImpactAPI:
         print url
         req = urllib2.Request(url)
         response = urllib2.urlopen(req)
-        item_id = response.read()
-        print item_id
+        return json.loads(response.read())
+        
 
 
 ti = TotalImpactAPI()
 
-dryad_item = ti.request_item('doi','10.1186/1745-6215-11-32')
+# Request the items to be generated
+dryad_item = ti.request_item('doi','10.5061/dryad.7898')
 wikipedia_item = ti.request_item('doi', '10.1371/journal.pcbi.1000361')
 github_item = ti.request_item('github', 'egonw/gtd')
 
 time.sleep(10)
 
-print ti.request_item_result(dryad_item)
-print ti.request_item_result(wikipedia_item)
-print ti.request_item_result(github_item)
+# Try and get the result
+dryad_data = ti.request_item_result(dryad_item)
+wikipedia_data = ti.request_item_result(wikipedia_item)
+github_data = ti.request_item_result(github_item)
 
+checks = {
+    'wikipedia' : { 
+        'item': wikipedia_item,
+        'data': wikipedia_data,
+        'aliases': ['doi'],
+        'metrics' : {
+            'wikipedia:mentions' : 1
+        }
+    },
+    'github' : { 
+        'item': github_item,
+        'data': github_data,
+        'aliases': ['github'],
+        'metrics' : {
+            'github:forks' : 0,
+            'github:watchers' : 7
+        }
+    },
+    'dryad' : { 
+        'item': dryad_item,
+        'data': dryad_data,
+        'aliases': ['doi'],
+        'metrics' : {
+            'dryad:most_downloaded_file' : 63,
+            'dryad:package_views' : 149,
+            'dryad:total_downloads' : 169
+        }
+    }
+}
+
+
+for provider in checks.keys():
+    item = checks[provider]['item']
+    data = checks[provider]['data']
+    aliases = checks[provider]['aliases']
+    metrics = checks[provider]['metrics']
+
+    print "Checking %s result (%s)..." % (provider, item)
+    
+    # Check aliases are correct
+    alias_result = set(data['aliases'].keys())
+    if alias_result != set(['created','last_modified','last_completed'] + aliases):
+        print "Aliases is not correct, have %s" % alias_result
+
+    # Check we've got some metric values
+    for metric in metrics.keys():
+        metric_data = data['metrics'][metric]['values']
+        if len(metric_data) != 1:
+            print "Incorrect number of metric results for %s - %i" % (metric, len(metric_data))
+        else:
+            if metric_data.values()[0] != metrics[metric]:
+                print "Incorrect metric result for %s - %s" % (metric, metric_data.values()[0])
 
 
