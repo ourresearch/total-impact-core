@@ -34,7 +34,7 @@ function(doc) {
             lastModified = providerNames[name]
             // Check to see if this metric has been updated since
             // the latest compilation of the aliases
-            if ( lastModified < doc.last_modified ) {
+            if ( lastModified < doc.aliases.last_modified ) {
                 emit([name, doc.last_requested, lastModified], doc);
             }
         }
