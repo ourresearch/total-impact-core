@@ -4,7 +4,7 @@ from totalimpact.providers.wikipedia import Wikipedia
 
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.providers.provider import ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError
-from totalimpact.providers.provider import ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
+from totalimpact.providers.provider import ProviderHttpError, ProviderContentMalformedError, ProviderValidationFailedError
 from totalimpact.api import app
 from test.provider import ProviderTestCase
 

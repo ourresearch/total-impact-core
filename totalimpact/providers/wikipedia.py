@@ -1,5 +1,7 @@
 import time
-from provider import Provider, ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
+from provider import Provider
+from provider import ProviderError, ProviderTimeout, ProviderServerError
+from provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
 from BeautifulSoup import BeautifulStoneSoup
 import requests
 

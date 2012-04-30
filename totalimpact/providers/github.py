@@ -1,8 +1,7 @@
 import time, re, urllib
 from provider import Provider 
 from provider import ProviderError, ProviderTimeout, ProviderServerError
-from provider import ProviderClientError, ProviderHttpError, ProviderState
-from provider import ProviderContentMalformedError
+from provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
 
 from totalimpact.models import Aliases
 from BeautifulSoup import BeautifulStoneSoup

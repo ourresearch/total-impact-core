@@ -1,7 +1,10 @@
 import requests, os, unittest, time, threading, json, memcache, sys, traceback
 from test.utils import slow
 
-from totalimpact.providers.provider import Provider, ProviderFactory, ProviderHttpError, ProviderTimeout, ProviderState, ProviderError, ProviderConfigurationError, ProviderClientError, ProviderServerError, ProviderContentMalformedError, ProviderValidationFailedError
+from totalimpact.providers.provider import Provider, ProviderFactory
+from totalimpact.providers.provider import ProviderError, ProviderTimeout, ProviderServerError
+from totalimpact.providers.provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
+from totalimpact.providers.provider import ProviderConfigurationError, ProviderValidationFailedError
 from totalimpact.config import Configuration, StringConfiguration
 from totalimpact.cache import Cache
 from totalimpact import api
@@ -143,28 +146,6 @@ class Test_Provider(unittest.TestCase):
         providers = ProviderFactory.get_providers(self.provider_configs)
         assert len(providers) == len(self.provider_configs)
 
-    def test_10_state_init(self):
-        s = ProviderState()
-        
-        assert s.throttled
-        assert s.time_fixture is None
-        assert s.last_request_time is None
-        assert s.rate_period == 3600
-        assert s.rate_limit == 351
-        assert s.request_count == 0
-        
-        now = time.time()
-        s = ProviderState(rate_period=100, rate_limit=100, 
-                    time_fixture=now, last_request_time=now, request_count=7,
-                    throttled=False)
-        
-        assert not s.throttled
-        assert s.time_fixture == now
-        assert s.last_request_time == now
-        assert s.rate_period == 100
-        assert s.rate_limit == 101
-        assert s.request_count == 7
-        
     def test_18_exceptions_type(self):
         pcoe = ProviderConfigurationError()
         pt = ProviderTimeout()

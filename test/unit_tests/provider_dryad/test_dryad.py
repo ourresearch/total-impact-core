@@ -3,7 +3,7 @@ from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.providers.provider import ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError
-from totalimpact.providers.provider import ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
+from totalimpact.providers.provider import ProviderHttpError, ProviderContentMalformedError, ProviderValidationFailedError
 
 import os, unittest
 import simplejson

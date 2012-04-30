@@ -1,5 +1,7 @@
 import time, re, urllib
-from totalimpact.providers.provider import Provider, ProviderError, ProviderTimeout,ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
+from provider import Provider
+from provider import ProviderError, ProviderTimeout, ProviderServerError
+from provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
 from totalimpact.models import Aliases, Biblio
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
@@ -27,7 +29,6 @@ class Dryad(Provider):
 
     def __init__(self, config):
         super(Dryad, self).__init__(config)
-        self.state = DryadState(config)
         
         self.dryad_doi_rx = re.compile(r"(10\.5061/.*)")
         self.member_items_rx = re.compile(r"(10\.5061/.*)</span")
@@ -123,10 +124,6 @@ class Dryad(Provider):
         response = self.http_get(url, 
             timeout=self.config.aliases.get('timeout', None))
         
-        # register the hit, mostly so that anyone copying this remembers to do it,
-        # - we have overriden this in the DryadState object, so it doesn't do anything
-        self.state.register_unthrottled_hit()
-        
         # FIXME: we have to observe the Dryad interface for a bit to get a handle
         # on these response types - this is just a default approach...
         if response.status_code != 200:
@@ -184,10 +181,6 @@ class Dryad(Provider):
         response = self.http_get(url, 
             timeout=self.config.metrics.get('timeout', None))
 
-        # register the hit, mostly so that anyone copying this remembers to do it,
-        # - we have overriden this in the DryadState object, so it doesn't do anything
-        self.state.register_unthrottled_hit()
-        
         # FIXME: we have to observe the Dryad interface for a bit to get a handle
         # on these response types - this is just a default approach...
         if response.status_code != 200:
@@ -242,10 +235,6 @@ class Dryad(Provider):
         response = self.http_get(url, 
             timeout=self.config.biblio.get('timeout', None))
         
-        # register the hit, mostly so that anyone copying this remembers to do it,
-        # - we have overriden this in the DryadState object, so it doesn't do anything
-        self.state.register_unthrottled_hit()
-        
         # FIXME: we have to observe the Dryad interface for a bit to get a handle
         # on these response types - this is just a default approach...
         if response.status_code != 200:
@@ -273,20 +262,4 @@ class Dryad(Provider):
             raise ProviderContentMalformedError("Content does not contain expected text")
 
         return biblio_dict
-
-
-class DryadState(ProviderState):
-    def __init__(self, config):
-        # need to init the ProviderState object counter
-        if config.rate is not None:        
-            super(DryadState, self).__init__(config.rate['period'], config['limit'])
-        else:
-            super(DryadState, self).__init__(throttled=False)
-            
-    def register_unthrottled_hit(self):
-        # override this method, so it has no actual effect
-        pass
-        
-  
-
 
