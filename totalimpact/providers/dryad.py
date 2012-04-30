@@ -1,20 +1,34 @@
 import time, re, urllib
-from totalimpact.providers.provider import Provider, ProviderError, ProviderTimeout,ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
+from provider import Provider
+from provider import ProviderError, ProviderTimeout, ProviderServerError
+from provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
 from totalimpact.models import Aliases, Biblio
 from xml.dom import minidom 
+from xml.parsers.expat import ExpatError
 
 import requests
 import simplejson
 
-from totalimpact.tilogging import logging
-logger = logging.getLogger(__name__)
+import logging
+logger = logging.getLogger('providers.dryad')
 
 class Dryad(Provider):  
 
+    provider_name = "dryad"
+    metric_names = ["dryad:package_views", "dryad:total_downloads", "dryad:most_downloaded_file"]
+
+    member_types = ["dryad_author"]
+    metric_namespaces = ["doi"]
+    alias_namespaces = ["doi"]
+    biblio_namespaces = ["doi"]
+
+    provides_members = False
+    provides_aliases = True
+    provides_metrics = True
+    provides_biblio = True
+
     def __init__(self, config):
         super(Dryad, self).__init__(config)
-        self.state = DryadState(config)
-        self.id = self.config.id
         
         self.dryad_doi_rx = re.compile(r"(10\.5061/.*)")
         self.member_items_rx = re.compile(r"(10\.5061/.*)</span")
@@ -54,7 +68,7 @@ class Dryad(Provider):
             match for the name attribute """
         try:
             doc = minidom.parseString(xml)
-        except minidom.ExpatError, e:
+        except ExpatError, e:
             raise ProviderContentMalformedError("Content parse provider supplied XML document")
         arrs = doc.getElementsByTagName('arr')
         matching_arrs = [elem for elem in arrs if elem.attributes['name'].value == name]
@@ -66,8 +80,7 @@ class Dryad(Provider):
         enc = urllib.quote(query_string)
 
         url = self.config.member_items["querytype"]["dryad_author"]['url'] % enc
-        logger.debug(self.config.id + ": query type " + query_type)
-        logger.debug(self.config.id + ": attempting to retrieve member items from " + url)
+        logger.debug("attempting to retrieve member items from " + url)
         
         # try to get a response from the data provider        
         response = self.http_get(url, 
@@ -88,43 +101,28 @@ class Dryad(Provider):
         return [("doi", hit.replace("doi:", "")) for hit in list(set(identifiers))]
 
     
-    def aliases(self, item):
-        # get the alias object
-        alias_object = item.aliases
-        logger.info(self.config.id + ": aliases requested for tiid:" + item.id)
-        
+    def aliases(self, aliases):
         # Get a list of the new aliases that can be discovered from the data
-        # source
+        # source.
+        id_list = [alias[1] for alias in aliases if self._is_dryad_doi(alias[1])]
+
+        if len(id_list) == 0:
+            logger.info("warning, no DOI aliases found in the Dryad domain for this item")
+
         new_aliases = []
-        for alias in alias_object.get_aliases_list("doi"):
-            if not self._is_dryad_doi(alias[1]):
-                continue
-            logger.debug(self.config.id + ": processing aliases for tiid:" + item.id)
-            id = alias[1]
-            new_aliases += self.get_aliases_for_id(id)
+        for doi_id in id_list:
+            logger.debug("processing alias %s" % doi_id)
+            new_aliases += self.get_aliases_for_id(doi_id)
         
-        # update the original alias object with new unique aliases
-        alias_object.add_unique(new_aliases)
-        
-        # log our success
-        logger.debug(self.config.id + ": discovered aliases for tiid " + item.id + ": " + str(new_aliases))
-        logger.info(self.config.id + ": aliases completed for tiid:" + item.id)
-        
-        # no need to set the aliases on the item, as everything is by-reference
-        return item
-        
+        return new_aliases
 
     def get_aliases_for_id(self, id):
         url = self.config.aliases['url'] % id
-        logger.debug(self.config.id + ": attempting to retrieve aliases from " + url)
+        logger.debug("attempting to retrieve aliases from " + url)
 
         # try to get a response from the data provider        
         response = self.http_get(url, 
             timeout=self.config.aliases.get('timeout', None))
-        
-        # register the hit, mostly so that anyone copying this remembers to do it,
-        # - we have overriden this in the DryadState object, so it doesn't do anything
-        self.state.register_unthrottled_hit()
         
         # FIXME: we have to observe the Dryad interface for a bit to get a handle
         # on these response types - this is just a default approach...
@@ -162,43 +160,27 @@ class Dryad(Provider):
     def get_show_details_url(self, doi):
         return "http://dx.doi.org/" + doi
 
-    def _get_dryad_doi(self, item):
-        try:
-            for doi in item.aliases.doi:
-                if self._is_dryad_doi(doi):
-                    return doi
-        except (AttributeError, KeyError):
-            return None
+    def _get_dryad_doi(self, aliases):
+        for doi in [res for (ns,res) in aliases if ns == 'doi']:
+            if self._is_dryad_doi(doi):
+                return doi
+        return None
 
-    def metrics(self, item):
-        id = self._get_dryad_doi(item)
+    def metrics(self, aliases):
+        id = self._get_dryad_doi(aliases)
         if id is not None:
-            new_metrics = self._get_metrics_for_id(id)
-            item.metrics = self._update_metrics_from_dict(new_metrics, item.metrics)
+            return self._get_metrics_for_id(id)
         else:
-            new_metrics = {
-                "dryad:package_views": None,
-                "dryad:total_downloads": None,
-                "dryad:most_downloaded_file": None
-            }
-            item.metrics = self._update_metrics_from_dict(new_metrics, item.metrics)
-
-        logger.info("{0}: metrics completed for tiid {1}".format(self.config.id, item.id))
-        return item
-
+            return None
 
     def _get_metrics_for_id(self, id):
         url = self.config.metrics['url'] % id
-        logger.debug(self.config.id + ": attempting to retrieve metrics from " + url)
+        logger.debug("attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
         response = self.http_get(url, 
             timeout=self.config.metrics.get('timeout', None))
 
-        # register the hit, mostly so that anyone copying this remembers to do it,
-        # - we have overriden this in the DryadState object, so it doesn't do anything
-        self.state.register_unthrottled_hit()
-        
         # FIXME: we have to observe the Dryad interface for a bit to get a handle
         # on these response types - this is just a default approach...
         if response.status_code != 200:
@@ -236,32 +218,22 @@ class Dryad(Provider):
             "dryad:most_downloaded_file": int(max_downloads)
         }
 
-
-
-    def provides_biblio(self): 
-        return True
-
-    def biblio(self, item): 
-        id = self._get_dryad_doi(item)
+    def biblio(self, aliases): 
+        id = self._get_dryad_doi(aliases)
         # Only lookup biblio for items with dryad doi's
         if id:
-            biblio_object = self.get_biblio_for_id(id)
-            item.biblio = biblio_object
+            return self.get_biblio_for_id(id)
         else:
-            logger.debug(self.config.id + ": Not checking biblio for %s as no dryad doi" % item.id)
-        return item
+            logger.info("Not checking biblio as no dryad doi")
+            return None
 
     def get_biblio_for_id(self, id):
         url = self.config.biblio['url'] % id
-        logger.debug(self.config.id + ": attempting to retrieve biblio from " + url)
+        logger.debug("attempting to retrieve biblio from " + url)
         
         # try to get a response from the data provider        
         response = self.http_get(url, 
             timeout=self.config.biblio.get('timeout', None))
-        
-        # register the hit, mostly so that anyone copying this remembers to do it,
-        # - we have overriden this in the DryadState object, so it doesn't do anything
-        self.state.register_unthrottled_hit()
         
         # FIXME: we have to observe the Dryad interface for a bit to get a handle
         # on these response types - this is just a default approach...
@@ -272,11 +244,7 @@ class Dryad(Provider):
                 raise ProviderClientError(response)
         
         # extract the aliases
-        bibJSON = self._extract_biblio(response.text)
-        biblio_object = Biblio(bibJSON)
-
-        return biblio_object
-
+        return self._extract_biblio(response.text)
 
     def _extract_biblio(self, xml):
         biblio_dict = {}
@@ -294,20 +262,4 @@ class Dryad(Provider):
             raise ProviderContentMalformedError("Content does not contain expected text")
 
         return biblio_dict
-
-
-class DryadState(ProviderState):
-    def __init__(self, config):
-        # need to init the ProviderState object counter
-        if config.rate is not None:        
-            super(DryadState, self).__init__(config.rate['period'], config['limit'])
-        else:
-            super(DryadState, self).__init__(throttled=False)
-            
-    def register_unthrottled_hit(self):
-        # override this method, so it has no actual effect
-        pass
-        
-  
-
 

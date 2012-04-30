@@ -41,7 +41,7 @@ class InterruptTester(object):
 class ProviderNotImplemented(Provider):
     def __init__(self):
         Provider.__init__(self, None)
-        self.id = None
+        self.provider_name = 'not_implemented'
     def aliases(self, item):
         raise NotImplementedError()
     def metrics(self, item):
@@ -74,15 +74,6 @@ class TestBackend(unittest.TestCase):
             app.config["DB_USERNAME"], app.config["DB_PASSWORD"])
         self.d.create_new_db_and_connect(TEST_DB_NAME)
 
-        self.queue_first = Queue.first
-        Queue.first = first_mock
-        
-        self.queue_save_and_unqueue = Queue.save_and_unqueue
-        Queue.save_and_unqueue = save_and_unqueue_mock
-        
-        self.metrics_queue_save_and_unqueue = MetricsQueue.save_and_unqueue
-        MetricsQueue.save_and_unqueue = save_and_unqueue_mock
-        
         self.get_providers = ProviderFactory.get_providers
         ProviderFactory.get_providers = classmethod(get_providers_mock)
 
@@ -90,10 +81,6 @@ class TestBackend(unittest.TestCase):
         
         
     def tearDown(self):
-        Queue.first = self.queue_first
-        Queue.save_and_unqueue = self.queue_save_and_unqueue
-        MetricsQueue.save_and_unqueue = self.metrics_queue_save_and_unqueue
-        
         # FIXME: check that this doesn't need to be wrapped in a classmethod() call
         ProviderFactory.get_providers = self.get_providers
 
@@ -105,14 +92,14 @@ class TestBackend(unittest.TestCase):
         
     def test_02_init_metrics(self):
         provider = Provider(None)
-        provider.id = "test"
+        provider.provider_name = "test"
         pmt = ProviderMetricsThread(provider, self.d)
         
         assert hasattr(pmt, "stop")
         assert hasattr(pmt, "stopped")
         assert hasattr(pmt, "first")
         assert pmt.queue is not None
-        assert pmt.provider.id == "test"
+        assert pmt.provider.provider_name == "test"
         assert pmt.queue.provider == "test"
         
     def test_03_init_aliases(self):
@@ -178,6 +165,7 @@ class TestBackend(unittest.TestCase):
         
         providers = [ProviderMock()]
         pat = ProvidersAliasThread(providers, self.config)
+        pat.queue = QueueMock()
         
         pat.start()
         pat.stop()
@@ -192,6 +180,7 @@ class TestBackend(unittest.TestCase):
         # relies on Queue.first mock as per setUp
         providers = [ProviderMock()]
         pat = ProvidersAliasThread(providers, self.config)
+        pat.queue = QueueMock()
         
         start = time.time()
         pat.start()
@@ -212,6 +201,7 @@ class TestBackend(unittest.TestCase):
         
         providers = [ProviderNotImplemented()] 
         pat = ProvidersAliasThread(providers, self.d)
+        pat.queue = QueueMock()
         
         start = time.time()
         pat.start()
@@ -232,6 +222,7 @@ class TestBackend(unittest.TestCase):
     def test_12_metrics_stopped(self):
         # relies on Queue.first mock as per setUp
         pmt = ProviderMetricsThread(ProviderMock(), self.d)
+        pmt.queue = QueueMock()
         
         pmt.start()
         pmt.stop()
@@ -245,6 +236,7 @@ class TestBackend(unittest.TestCase):
     def test_13_metrics_running(self):
         # relies on Queue.first mock as per setUp
         pmt = ProviderMetricsThread(ProviderMock(), self.d)
+        pmt.queue = QueueMock()
         
         start = time.time()
         pmt.start()
@@ -400,7 +392,8 @@ class TestBackend(unittest.TestCase):
         # Check that item 1 was processed correctly, after a retry
         self.assertTrue(mock_provider1.aliases_processed.has_key(1))
         self.assertTrue(mock_provider2.aliases_processed.has_key(1))
-        self.assertEqual(pmt.queue.items[1].aliases.get_aliases_list(),['doi'])
+        ns_list = [k for (k,v) in pmt.queue.items[1].aliases.get_aliases_list()]
+        self.assertEqual(set(ns_list),set(['mock','doi']))
         # Check that item 2 failed on the first provider
         self.assertFalse(mock_provider1.aliases_processed.has_key(2))
         self.assertFalse(mock_provider2.aliases_processed.has_key(2))
@@ -412,6 +405,7 @@ class TestBackend(unittest.TestCase):
         # Check that item 4 was processed correctly, after retries
         self.assertTrue(mock_provider1.aliases_processed.has_key(4))
         self.assertTrue(mock_provider2.aliases_processed.has_key(4))
-        self.assertEqual(pmt.queue.items[4].aliases.get_aliases_list(),['doi'])
+        ns_list = [k for (k,v) in pmt.queue.items[4].aliases.get_aliases_list()]
+        self.assertEqual(set(ns_list),set(['mock','doi']))
 
 

@@ -26,7 +26,7 @@ class Queue():
     
     # implement this in inheriting classes if needs to be different
     # Saving the item should solve this for now, as the providers are meant
-    # to update their last_updated as appropriate.
+    # to update their last_modified as appropriate.
     def save_and_unqueue(self, item):
         item.save()
         
@@ -50,7 +50,7 @@ class AliasQueue(Queue):
         return items
 
     def save_and_unqueue(self, item):
-        item.aliases.last_updated = time.time()
+        item.aliases.last_modified = time.time()
         item.save()
 
 class MetricsQueue(Queue):

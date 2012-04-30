@@ -1,11 +1,18 @@
 from totalimpact.models import Aliases, Item, ItemFactory
 from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
-from totalimpact.providers.provider import Provider, ProviderError, ProviderTimeout,ProviderServerError, ProviderClientError, ProviderHttpError, ProviderState, ProviderContentMalformedError, ProviderValidationFailedError
+from totalimpact.providers.provider import Provider, ProviderFactory
+from totalimpact.providers.provider import ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError
+from totalimpact.providers.provider import ProviderHttpError, ProviderContentMalformedError, ProviderValidationFailedError
 
 import os, unittest
 import simplejson
 from nose.tools import nottest, raises, assert_equals
+import collections
+
+from totalimpact.api import app
+
+from test.provider import ProviderTestCase
 
 
 # prepare a monkey patch to override the http_get method of the Provider
@@ -34,21 +41,6 @@ def get_biblio_html_success(self, url, headers=None, timeout=None):
     f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
     return DummyResponse(200, f.read())
 
-def get_nonsense_xml(self, url, headers=None, timeout=None):
-    return DummyResponse(200, '<?xml version="1.0" encoding="UTF-8"?><nothingtoseehere>nonsense</nothingtoseehere>')
-
-def get_nonsense_txt(self, url, headers=None, timeout=None):
-    return DummyResponse(200, "nonsense")
-
-def get_empty(self, url, headers=None, timeout=None):
-    return DummyResponse(200, "")
-
-def get_400(self, url, headers=None, timeout=None):
-    return DummyResponse(400, "")
-
-def get_500(self, url, headers=None, timeout=None):
-    return DummyResponse(500, "")
-
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../data/dryad")
 
@@ -69,249 +61,102 @@ SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir,
 TEST_ALIASES_SEED = {"doi" : [TEST_DRYAD_DOI], "url" : ["http://datadryad.org/handle/10255/dryad.7898"]}
 
 
-class Test_Dryad(unittest.TestCase):
+class TestDryad(ProviderTestCase):
+
+    testitem_members = ("dryad_author", TEST_DRYAD_AUTHOR)
+    testitem_aliases = ("doi", TEST_DRYAD_DOI)
+    testitem_metrics = ("doi", TEST_DRYAD_DOI)
+    testitem_biblio = ("doi", TEST_DRYAD_DOI)
+
+    provider_name = 'dryad'
 
     def setUp(self):
-        self.old_http_get = Provider.http_get
-        self.config = Configuration(DRYAD_CONFIG_FILENAME, False)
-        self.provider = Dryad(self.config)
+        ProviderTestCase.setUp(self)
 
-        a = Aliases()
-        a.add_alias("doi", TEST_DRYAD_DOI)
-        metric_names = [
-            "dryad:package_views",
-            "dryad:total_downloads",
-            "dryad:most_downloaded_file",
-            "foo:bar"
-            ]
-        self.simple_item = ItemFactory.make("not a dao", metric_names)
-        self.simple_item.aliases = a
-
+        self.simple_item = ItemFactory.make("not a dao", app.config["METRIC_NAMES"])
+        self.simple_item.aliases.add_alias("doi", TEST_DRYAD_DOI)
 
     def tearDown(self):
         Provider.http_get = self.old_http_get
-    
 
-    def test_01_init(self):
-        # ensure that the configuration is valid
-        assert self.provider.config is not None
-        assert self.provider.state is not None
-        assert self.provider.id == "dryad"
-        
-
-    def test_02_implements_interface(self):
-        # ensure that the implementation has all the relevant provider methods
-        # must have the four core methods
-        assert hasattr(self.provider, "member_items")
-        assert hasattr(self.provider, "aliases")
-        assert hasattr(self.provider, "metrics")
-        assert hasattr(self.provider, "provides_metrics")
-    
-
-    def test_03_is_relevant_id(self):
+    def test_01_is_relevant_id(self):
         # ensure that it matches an appropriate TEST_DRYAD_DOI
         assert not self.provider._is_relevant_id("11.12354/bib")
-        
         # ensure that it doesn't match an inappropriate TEST_DRYAD_DOI
         assert not self.provider._is_relevant_id(("doi", "11.12354/bib"))
     
-
-    def test_04a_member_items_success(self):
+    def test_02a_member_items_success(self):
         Provider.http_get = get_member_items_html_success
         members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
         assert len(members) == 4, str(members)
         assert_equals(members, [('doi', u'10.5061/dryad.j1fd7'), ('doi', u'10.5061/dryad.mf1sd'), ('doi', u'10.5061/dryad.3td2f'), ('doi', u'10.5061/dryad.j2c4g')])
 
-    def test_04f_member_items_zero_items(self):
+    def test_02b_member_items_zero_items(self):
         Provider.http_get = get_member_items_html_zero_items
         members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
         assert len(members) == 0, str(members)
 
-    @raises(ProviderClientError)
-    def test_04b_member_items_400(self):
-        Provider.http_get = get_400
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
-
-    @raises(ProviderServerError)
-    def test_04c_member_items_500(self):
-        Provider.http_get = get_500
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
-
-    @raises(ProviderContentMalformedError)
-    def test_04d_member_items_empty(self):
-        Provider.http_get = get_empty
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
-
-    @raises(ProviderContentMalformedError)
-    def test_04g_member_items_nonsense_txt(self):
-        Provider.http_get = get_nonsense_txt
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
-        assert len(members) == 0, str(members)
-
-    @raises(ProviderContentMalformedError)
-    def test_04h_member_items_nonsense_xml(self):
-        Provider.http_get = get_nonsense_xml
-        members = self.provider.member_items(TEST_DRYAD_AUTHOR, "dryad_author")
-        assert len(members) == 0, str(members)
-
-    def test_05_extract_aliases(self):
+    def test_03_extract_aliases(self):
         # ensure that the dryad reader can interpret an xml doc appropriately
         f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
         aliases = self.provider._extract_aliases(f.read())
         assert_equals(aliases, [('url', u'http://hdl.handle.net/10255/dryad.7898'), 
             ('title', u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides')])        
 
-    def test_05a_get_aliases_success(self):
+    def test_04a_get_aliases_success(self):
+        """ Test alias expansion on doi:10.5061/dryad.7898 
+            We should get two new aliases found, a url and a title
+        """
         Provider.http_get = get_aliases_html_success
-        item_with_new_aliases = self.provider.aliases(self.simple_item)
+        aliases = self.simple_item.aliases.get_aliases_list(self.provider.alias_namespaces)
+        new_aliases = self.provider.aliases(aliases)
 
-        new_aliases = item_with_new_aliases.aliases
-        assert_equals(
-            set(new_aliases.__dict__.keys()),
-            set(['url', 'created', 'last_modified', 'doi', 'title'])
-            )
-        assert_equals(new_aliases.url, [u'http://hdl.handle.net/10255/dryad.7898'])
-        assert_equals(new_aliases.doi, ['10.5061/dryad.7898'])
-        assert_equals(new_aliases.title, [u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides'])
-        
-    # zero items doesn't make sense for dryad aliases becauase will always have a url if a valid page
-
-    @raises(ProviderClientError)
-    def test_05b_aliases_400(self):
-        Provider.http_get = get_400
-        item_with_new_aliases = self.provider.aliases(self.simple_item)
-
-    @raises(ProviderServerError)
-    def test_05c_aliases_500(self):
-        Provider.http_get = get_500
-        item_with_new_aliases = self.provider.aliases(self.simple_item)
-
-    @raises(ProviderContentMalformedError)
-    def test_05d_aliases_empty(self):
-        Provider.http_get = get_empty
-        item_with_new_aliases = self.provider.aliases(self.simple_item)
-
-    @raises(ProviderContentMalformedError)
-    def test_05g_nonsense_txt(self):
-        Provider.http_get = get_nonsense_txt
-        item_with_new_aliases = self.provider.aliases(self.simple_item)
-        assert len(item_with_new_aliases.aliases.get_aliases_dict().keys()) == 0, str(item_with_new_aliases)
-
-    @raises(ProviderContentMalformedError)
-    def test_05h_nonsense_xml(self):
-        Provider.http_get = get_nonsense_xml
-        item_with_new_aliases = self.provider.aliases(self.simple_item)
-        assert len(item_with_new_aliases.aliases.get_aliases_dict().keys()) == 0, str(item_with_new_aliases)    
+        # Convert from tuple list into dict format (easier to work with here)
+        aliases_dict = collections.defaultdict(list)
+        for (k,v) in new_aliases: aliases_dict[k].append(v)
     
+        assert_equals(set(aliases_dict.keys()), set(['url','title']))
+        assert_equals(aliases_dict['url'], [u'http://hdl.handle.net/10255/dryad.7898'])
+        assert_equals(aliases_dict['title'], [u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides'])
 
-
-    def test_06a_provides_metrics(self):
-        assert self.provider.provides_metrics() == True
-
-    def test_06b_show_details_url(self):
+    def test_05a_show_details_url(self):
         assert self.provider.get_show_details_url(TEST_DRYAD_DOI) == "http://dx.doi.org/" + TEST_DRYAD_DOI
-    
 
-    def test_06c_basic_extract_stats(self):
+    def test_05b_basic_extract_stats(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         ret = self.provider._extract_stats(f.read())
         assert len(ret) == 3, ret
 
-    def test_07a_get_metrics_success(self):
+    def test_06a_get_metrics_success(self):
         Provider.http_get = get_metrics_html_success
-        new_item = self.provider.metrics(self.simple_item)
-        print new_item.__dict__
+        aliases = self.simple_item.aliases.get_aliases_list(self.provider.alias_namespaces)
+        metrics = dict(self.provider.metrics(aliases))
 
-        assert_equals(
-            new_item.metrics['dryad:most_downloaded_file']['values'].values()[0],
-            63
-            )
-        assert_equals(
-            new_item.metrics['dryad:package_views']['values'].values()[0],
-            149
-            )
-        assert_equals(
-            new_item.metrics['dryad:total_downloads']['values'].values()[0],
-            169
-            )
-        # make sure keys are timestamp strings
-        key = new_item.metrics['dryad:total_downloads']['values'].keys()[0]
-        assert_equals(len(key), 10)  
+        metrics_dict = dict(metrics)
+        assert_equals(metrics_dict['dryad:most_downloaded_file'], 63)
+        assert_equals(metrics_dict['dryad:package_views'], 149)
+        assert_equals(metrics_dict['dryad:total_downloads'], 169)
 
-    def test_get_metrics_with_no_aliases(self):
-        del self.simple_item.aliases.doi
-        new_item = self.provider.metrics(self.simple_item)
-        print new_item.__dict__
-        # The provider should have filled in values to have an entry for
-        # the timestamp with None as the value.
-        assert_equals(len(new_item.metrics['dryad:package_views']['values']), 1)
-        ts = new_item.metrics['dryad:package_views']['values'].keys()[0]
-        assert_equals(new_item.metrics['dryad:package_views']['values'][ts], None)
+    def test_06b_get_metrics_with_non_dryad_doi(self):
+        """ test_06b_get_metrics_with_non_dryad_doi
 
-    @raises(ProviderClientError)
-    def test_07b_metrics_400(self):
-        Provider.http_get = get_400
-        item_with_new_metrics = self.provider.metrics(self.simple_item)
+            If the item has a DOI alias but it's not recognised by dryad, 
+            then won't find any metrics. Should get a None returned.
+        """
+        self.simple_item.aliases.doi = ['11.12354/bib']
+        aliases = self.simple_item.aliases.get_aliases_list(self.provider.alias_namespaces)
+        metrics = self.provider.metrics(aliases)
+        assert_equals(metrics, None)
 
-    @raises(ProviderServerError)
-    def test_07c_metrics_500(self):
-        Provider.http_get = get_500
-        item_with_new_metrics = self.provider.metrics(self.simple_item)
-
-    @raises(ProviderContentMalformedError)
-    def test_07d_metrics_empty(self):
-        Provider.http_get = get_empty
-        item_with_new_metrics = self.provider.metrics(self.simple_item)
-
-    @raises(ProviderContentMalformedError)
-    def test_07g_metrics_nonsense_txt(self):
-        Provider.http_get = get_nonsense_txt
-        item_with_new_metrics = self.provider.metrics(self.simple_item)
-        assert_equals(len(item_with_new_metrics.data["bucket"]) == 0)
-
-    @raises(ProviderContentMalformedError)
-    def test_07h_metrics_nonsense_xml(self):
-        Provider.http_get = get_nonsense_xml
-        item_with_new_metrics = self.provider.metrics(self.simple_item)
-        assert_equals(len(item_with_new_metrics.data["bucket"]) == 0)
-
-
-    def test_08_provides_biblio(self):
-        assert self.provider.provides_biblio() == True
-
-    def test_09a_basic_extract_biblio(self):
+    def test_07a_basic_extract_biblio(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
         ret = self.provider._extract_biblio(f.read())
         assert_equals(ret, {'year': u'2010', 'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides'})
 
-    def test_09b_get_biblio_success(self):
+    def test_07b_get_biblio_success(self):
         Provider.http_get = get_biblio_html_success
-        item = self.provider.biblio(self.simple_item)
-        assert_equals(item.biblio.data, {'year': u'2010', 'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides'})
-
-    @raises(ProviderClientError)
-    def test_09c_biblio_400(self):
-        Provider.http_get = get_400
-        biblio_object = self.provider.biblio(self.simple_item)
-
-    @raises(ProviderServerError)
-    def test_09d_biblio_500(self):
-        Provider.http_get = get_500
-        biblio_object = self.provider.biblio(self.simple_item)
-
-    @raises(ProviderContentMalformedError)
-    def test_09e_biblio_empty(self):
-        Provider.http_get = get_empty
-        biblio_object = self.provider.biblio(self.simple_item)
-
-    @raises(ProviderContentMalformedError)
-    def test_09f_biblio_nonsense_txt(self):
-        Provider.http_get = get_nonsense_txt
-        biblio_object = self.provider.biblio(self.simple_item)
-
-    @raises(ProviderContentMalformedError)
-    def test_09g_biblio_nonsense_xml(self):
-        Provider.http_get = get_nonsense_xml
-        biblio_object = self.provider.biblio(self.simple_item)
-        
+        aliases = self.simple_item.aliases.get_aliases_list(self.provider.biblio_namespaces)
+        biblio_data = self.provider.biblio(aliases)
+        assert_equals(biblio_data['year'], u'2010')
+        assert_equals(biblio_data['title'], u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides')
 
