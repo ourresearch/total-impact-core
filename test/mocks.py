@@ -146,7 +146,7 @@ class ProviderMock(Provider):
     provides_metrics = True
     provides_biblio = True
 
-    def __init__(self, provider_name=None, metrics_exceptions=None, aliases_exceptions=None):
+    def __init__(self, provider_name=None, metrics_exceptions=None, aliases_exceptions=None, biblio_exceptions=None):
         Provider.__init__(self, None)
         self.config = base_provider_conf
         if provider_name:
@@ -155,8 +155,10 @@ class ProviderMock(Provider):
             self.provider_name = 'mock_provider'
         self.metrics_exceptions = metrics_exceptions
         self.aliases_exceptions = aliases_exceptions
+        self.biblio_exceptions = biblio_exceptions
         self.metrics_processed = {}
         self.aliases_processed = {}
+        self.biblio_processed = {}
 
     def aliases(self, aliases):
         # If we are supplied a mock item, should have (mock, id) as it's
@@ -203,6 +205,29 @@ class ProviderMock(Provider):
                 self.metrics_processed[item_id] = True
         return {"mock:test_result": 1}
 
-    def provides_metrics(self):
-        return True
+    def biblio(self, aliases):
+        """ Process biblio for the given aliases
+
+            We should probably have been given a mockitem here. If so, then
+            record the alias id under the 'mock' namespace'
+        """
+        # If we are supplied a mock item, should have (mock, id) as it's
+        # primary alias. Record that we have seen the item.
+        # We cannot generate exceptions if it's not a mock as we won't
+        # know what id to generate for.
+        mock_aliases = [(k,v) for (k,v) in aliases if k == 'mock']
+        if mock_aliases:
+            (ns,val) = mock_aliases[0]
+            item_id = int(val)
+            if self.biblio_exceptions:
+                if self.biblio_exceptions.has_key(item_id):
+                    if len(self.biblio_exceptions[item_id]) > 0:
+                        exc = self.biblio_exceptions[item_id].pop(0)
+                        if exc in [ProviderClientError, ProviderServerError]:
+                            raise exc('error')
+                        else:
+                            raise exc
+                self.biblio_processed[item_id] = True
+        return {"title": "mock article name"}
+
         
