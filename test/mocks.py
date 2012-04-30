@@ -60,7 +60,8 @@ class QueueMock(object):
             # Generate a mock item with initial alias ('mock', id)
             item = MockItemFactory.make("not a dao", ['mock:test_result'])
             item.id = self.current_item
-            item.aliases.add_initial_alias('mock',str(item.id))
+            item.aliases.add_alias('mock',str(item.id))
+            print "KCKCK", item.metrics
             self.items[self.current_item] = item
             return item
         else:
@@ -80,6 +81,7 @@ class ItemMock(object):
         self.aliases = Aliases()
         self.metrics = {}
     def __repr__(self):
+        print self.metrics
         return "ItemMock(%s)" % self.id
     def save(self):
         pass

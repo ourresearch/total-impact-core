@@ -330,11 +330,11 @@ class Aliases(object):
     item, since that's what it describes. having it in two places == bad.
     """
     
-    not_aliases = ["created", "last_modified"]
+    not_aliases = ["created", "last_modified", "last_completed"]
     
     def __init__(self, seed=None):
         self.created = time.time() # will get overwritten if need be
-        self.last_modified = None # will get set by the aliases worker once complete
+        self.last_completed = None # will get set by the aliases worker once complete
         try:
             for k in seed:
                 setattr(self, k, seed[k])
@@ -348,10 +348,6 @@ class Aliases(object):
         except AttributeError:
             setattr(self, namespace, [id])
         self.last_modified = time.time()
-
-    def add_initial_alias(self, ns, id):
-        # Don't set last_modified, this will be done by the aliases worker
-        setattr(self, ns, [id])
 
     #FIXME: this should take namespace and id, not a list of them
     def add_unique(self, alias_list):

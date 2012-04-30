@@ -95,7 +95,7 @@ def item_namespace_post(namespace, nid):
     '''
     
     item = ItemFactory.make(mydao, metric_names)
-    item.aliases.add_initial_alias(namespace, nid)
+    item.aliases.add_alias(namespace, nid)
 
     ## FIXME - see issue 86
     ## Should look up this namespace and id and see if we already have a tiid

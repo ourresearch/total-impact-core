@@ -169,7 +169,7 @@ class Dryad(Provider):
     def metrics(self, aliases):
         id = self._get_dryad_doi(aliases)
         if id is not None:
-            return self._get_metrics_for_id(aliases)
+            return self._get_metrics_for_id(id)
         else:
             return None
 

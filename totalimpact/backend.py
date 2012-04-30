@@ -416,6 +416,10 @@ class ProvidersAliasThread(ProviderThread):
                     break
 
             ctxfilter.local.backend['provider'] = ''
+            logger.info("final alias list is %s" % item.aliases.get_aliases_list())
+            item.aliases.last_completed = time.time()
+            item.save()
+        
 
 
 
@@ -451,6 +455,7 @@ class ProviderMetricsThread(ProviderThread):
             else:
                 # The provider returned None for this item. This is either
                 # a non result or a permanent failure
+                print "xx", item
                 for key in self.provider.metric_names:
                     item.metrics[key]['values'][ts] = None
                     item.metrics[key]['static_meta'] = {} #self.provider
