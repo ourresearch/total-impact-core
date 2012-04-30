@@ -95,7 +95,7 @@ def item_namespace_post(namespace, nid):
     '''
     
     item = ItemFactory.make(mydao, metric_names)
-    item.aliases.add_alias(namespace, nid)
+    item.aliases.add_initial_alias(namespace, nid)
 
     ## FIXME - see issue 86
     ## Should look up this namespace and id and see if we already have a tiid
@@ -200,7 +200,7 @@ def provider_memberitems(pid):
     logger.debug("In provider_memberitems with " + query + " " + qtype)
 
     provider = ProviderFactory.get_provider(app.config["PROVIDERS"][pid])
-    logger.debug("provider: " + provider.id)
+    logger.debug("provider: " + provider.provider_name)
 
     memberitems = provider.member_items(query, qtype)
     

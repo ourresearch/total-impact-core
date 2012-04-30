@@ -41,7 +41,7 @@ class InterruptTester(object):
 class ProviderNotImplemented(Provider):
     def __init__(self):
         Provider.__init__(self, None)
-        self.id = None
+        self.provider_name = 'not_implemented'
     def aliases(self, item):
         raise NotImplementedError()
     def metrics(self, item):
@@ -105,14 +105,14 @@ class TestBackend(unittest.TestCase):
         
     def test_02_init_metrics(self):
         provider = Provider(None)
-        provider.id = "test"
+        provider.provider_name = "test"
         pmt = ProviderMetricsThread(provider, self.d)
         
         assert hasattr(pmt, "stop")
         assert hasattr(pmt, "stopped")
         assert hasattr(pmt, "first")
         assert pmt.queue is not None
-        assert pmt.provider.id == "test"
+        assert pmt.provider.provider_name == "test"
         assert pmt.queue.provider == "test"
         
     def test_03_init_aliases(self):
@@ -400,7 +400,8 @@ class TestBackend(unittest.TestCase):
         # Check that item 1 was processed correctly, after a retry
         self.assertTrue(mock_provider1.aliases_processed.has_key(1))
         self.assertTrue(mock_provider2.aliases_processed.has_key(1))
-        self.assertEqual(pmt.queue.items[1].aliases.get_aliases_list(),['doi'])
+        ns_list = [k for (k,v) in pmt.queue.items[1].aliases.get_aliases_list()]
+        self.assertEqual(set(ns_list),set(['mock','doi']))
         # Check that item 2 failed on the first provider
         self.assertFalse(mock_provider1.aliases_processed.has_key(2))
         self.assertFalse(mock_provider2.aliases_processed.has_key(2))
@@ -412,6 +413,7 @@ class TestBackend(unittest.TestCase):
         # Check that item 4 was processed correctly, after retries
         self.assertTrue(mock_provider1.aliases_processed.has_key(4))
         self.assertTrue(mock_provider2.aliases_processed.has_key(4))
-        self.assertEqual(pmt.queue.items[4].aliases.get_aliases_list(),['doi'])
+        ns_list = [k for (k,v) in pmt.queue.items[4].aliases.get_aliases_list()]
+        self.assertEqual(set(ns_list),set(['mock','doi']))
 
 

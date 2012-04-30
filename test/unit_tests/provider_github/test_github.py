@@ -33,66 +33,19 @@ GITHUB_MEMBERITEMS_ORGS_HTML = os.path.join(datadir,
 
 DOI = "10.5061/dryad.7898"
 
-class Test_Github(unittest.TestCase):
+from test.provider import ProviderTestCase
 
-    def setUp(self):
-        self.config = Configuration()
-        self.old_http_get = Provider.http_get
-    
-    def tearDown(self):
-        Provider.http_get = self.old_http_get
-    
-    def test_01_init(self):
-        # first ensure that the configuration is valid
-        assert len(self.config.cfg) > 0
-        
-        # can we get the config file
-        dcfg = None
-        for p in self.config.providers:
-            if p["class"].endswith("github.Github"):
-                dcfg = p["config"]
-        print dcfg
-        assert os.path.isfile(dcfg)
-        
-        # instantiate the configuration
-        dconf = Configuration(dcfg, False)
-        assert len(dconf.cfg) > 0
-        
-        # basic init of provider
-        provider = Github(dconf)
-        assert provider.config is not None
-        
-        ## FIXME implement state
-        #assert provider.state is not None
+class TestGithub(ProviderTestCase):
 
-        assert provider.id == dconf.id
-        
-    def test_02_implements_interface(self):
-        # ensure that the implementation has all the relevant provider methods
-        dcfg = None
-        for p in self.config.providers:
-            if p["class"].endswith("github.Github"):
-                dcfg = p["config"]
-        dconf = Configuration(dcfg, False)
-        provider = Github(dconf)
-        
-        # must have the four core methods
-        assert hasattr(provider, "member_items")
-        assert hasattr(provider, "aliases")
-        assert hasattr(provider, "metrics")
-        assert hasattr(provider, "provides_metrics")
-    
+    testitem_members = ("github_user", "egonw")
+    testitem_aliases = None
+    testitem_metrics = ("doi", DOI)
+    testitem_biblio = None
+
+    provider_name = 'github'
 
     def test_04_member_items(self):        
-        dcfg = None
-        for p in self.config.providers:
-            if p["class"].endswith("github.Github"):
-                dcfg = p["config"]
-        dconf = Configuration(dcfg, False)
-        provider = Github(dconf)
-        
-
         Provider.http_get = get_memberitems_user_html
-        members = provider.member_items("egonw", "github_user")
+        members = self.provider.member_items("egonw", "github_user")
         assert len(members) >= 30, (len(members), members)
 
