@@ -118,7 +118,8 @@ class ContextFilter(logging.Filter):
         # Attempt to get values. Any problems, just assume empty
         item = method = provider = thread = ""
         try:
-            item = self.local.backend['item']
+            # Only get the first 8 chars of item, to keep logs brief
+            item = self.local.backend['item'][:8]
             method = self.local.backend['method']
             provider = self.local.backend['provider']
             thread = self.local.backend['thread']
