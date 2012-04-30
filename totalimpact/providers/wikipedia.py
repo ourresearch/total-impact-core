@@ -4,6 +4,9 @@ from BeautifulSoup import BeautifulStoneSoup
 import requests
 
 import logging
+from xml.dom import minidom
+from xml.parsers.expat import ExpatError
+
 logger = logging.getLogger('providers.wikipedia')
 
 class Wikipedia(Provider):  
@@ -14,13 +17,15 @@ class Wikipedia(Provider):
     provider_name = "wikipedia"
     metric_names = ['wikipedia:mentions']
     metric_namespaces = ["doi"]
-    alias_namespaces = ["doi"]
+    alias_namespaces = None
+    biblio_namespaces = None
 
     member_types = None
 
     provides_members = False
     provides_aliases = False
     provides_metrics = True
+    provides_biblio = False
 
     def __init__(self, config):
         super(Wikipedia, self).__init__(config)
@@ -57,20 +62,14 @@ class Wikipedia(Provider):
     
     def _extract_stats(self, content):
         try:
-            soup = BeautifulStoneSoup(content)
-        except:
-            # seems this pretty much never gets called, as soup will happily
-            # try to parse just about anything you throw at it.
-            raise ProviderContentMalformedError("Content cannot be parsed into soup")
-        
-        try:
-            articles = soup.search.findAll(title=True)
-            val = len(articles)
-        except AttributeError:
-            # NOTE: this does not raise a ProviderValidationError, because missing
-            # articles are not indicative of a formatting failure - there just might
-            # not be any articles
-            val = 0
+            doc = minidom.parseString(content)
+        except ExpatError, e:
+            raise ProviderContentMalformedError("Content parse provider supplied XML document")
 
-        return {"wikipedia:mentions": val}
+        searchinfo = doc.getElementsByTagName('searchinfo')
+        if not searchinfo:
+            raise ProviderContentMalformedError("No searchinfo in response document")
+        val = searchinfo[0].attributes['totalhits'].value
+
+        return {"wikipedia:mentions": int(val)}
             
