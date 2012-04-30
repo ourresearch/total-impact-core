@@ -26,21 +26,21 @@ class TotalImpactBackend(object):
         try:
             self._monitor()
         except (KeyboardInterrupt, SystemExit):
-            log.info("Interrupted ... exiting ...")
+            logger.info("Interrupted ... exiting ...")
             self._cleanup()
     
     def _spawn_threads(self):
         
         for provider in self.providers:
-            if not provider.provides_metrics():
+            if not provider.provides_metrics:
                 continue
-            log.info("Spawning thread for provider " + str(provider.id))
+            logger.info("Spawning thread for provider " + str(provider.provider_name))
             # create and start the metrics threads
             t = ProviderMetricsThread(provider, self.dao)
             t.start()
             self.threads.append(t)
         
-        log.info("Spawning thread for aliases")
+        logger.info("Spawning thread for aliases")
         alias_thread = ProvidersAliasThread(self.providers, self.dao)
         alias_thread.start()
         self.threads.append(alias_thread)
@@ -52,10 +52,10 @@ class TotalImpactBackend(object):
     
     def _cleanup(self):
         for t in self.threads:
-            log.info("Stopping " + t.thread_id)
+            logger.info("Stopping " + t.thread_id)
             t.stop()
             t.join()
-            log.info("... stopped")
+            logger.info("... stopped")
         self.threads = []
     
 
@@ -256,15 +256,16 @@ class ProviderThread(QueueConsumer):
             try:
 
                 if method == 'aliases':
+                # Test and see if this method is supported, or skip
                     if provider.provides_aliases:
                         current_aliases = item.aliases.get_aliases_list(provider.alias_namespaces)
                         if current_aliases:
                             response = provider.aliases(current_aliases)
                         else:
-                            logger.debug("processing item: Skipped, no suitable aliases") 
+                            logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
                             response = []
                     else:
-                        logger.debug("processing item: Skipped, not implemented") 
+                        logger.debug("processing item with provider %s: Skipped, %s not implemented" % (provider, method))
                         response = []
 
                 if method == 'metrics':
@@ -272,6 +273,18 @@ class ProviderThread(QueueConsumer):
                         current_aliases = item.aliases.get_aliases_list(provider.metric_namespaces)
                         if current_aliases:
                             response = provider.metrics(current_aliases)
+                        else:
+                            logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
+                            response = {}
+                    else:
+                        logger.debug("processing item with provider %s: Skipped, %s not implemented" % (provider, method))
+                        response = {}
+
+                if method == 'biblio':
+                    if provider.provides_biblio:
+                        current_aliases = item.aliases.get_aliases_list(provider.biblio_namespaces)
+                        if current_aliases:
+                            response = provider.biblio(current_aliases)
                         else:
                             logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
                             response = {}
@@ -328,10 +341,14 @@ class ProviderThread(QueueConsumer):
                         error_limit_reached = True
                     else:
                         duration = provider.get_sleep_time(error_type, error_counts[error_type])
-                        logger.info("Error processing item, pausing thread for %s" % (error_type, duration))
+                        logger.info("Error processing item: %s, pausing thread for %s" % (error_type, duration))
                         self._interruptable_sleep(duration)
                 elif success:
-                    logger.info("processing successful")
+                    # response may be None for some methods and inputs
+                    if response:
+                        logger.info("processing successful, got %i results" % len(response))
+                    else:
+                        logger.info("processing successful, got 0 results")
 
         return (success, response)
 
@@ -366,7 +383,8 @@ class ProvidersAliasThread(ProviderThread):
                 if success:
                     # Add in the new aliases to the item
                     # response is a list of (k,v) pairs (may be empty)
-                    item.aliases.add_unique(response)
+                    if response:
+                        item.aliases.add_unique(response)
                     item.save()
 
                 else:
@@ -374,7 +392,7 @@ class ProvidersAliasThread(ProviderThread):
                     # total number of retries. Don't process any 
                     # more providers, we abort this item entirely
 
-                    # Wipe out the aliases and set last_updated so that the item
+                    # Wipe out the aliases and set last_modified so that the item
                     # is then removed from the queue. If we don't wipe the aliases
                     # then the aliases list is not complete and will given incorrect
                     # results. We had agreed before to go with no results rather than
@@ -383,11 +401,19 @@ class ProvidersAliasThread(ProviderThread):
                     item.save()
                     break
 
-                #if not self.process_item_for_provider(item, provider, 'biblio'):
-                #    # This provider has failed and exceeded the 
-                #    # total number of retries. Don't process any 
-                #    # more providers, we abort this item entirely
-                #    break
+                (success, response) = self.process_item_for_provider(item, provider, 'biblio')
+                if success:
+                    # Response may be None
+                    if response:
+                        for key in response.keys():
+                            if not item.biblio.has_key('data'):
+                                item.biblio['data'] = {}
+                            item.biblio['data'][key] = response[key]
+                else:
+                    # This provider has failed and exceeded the 
+                    # total number of retries. Don't process any 
+                    # more providers, we abort this item entirely
+                    break
 
             ctxfilter.local.backend['provider'] = ''
 
