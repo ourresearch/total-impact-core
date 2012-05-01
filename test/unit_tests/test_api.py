@@ -203,6 +203,28 @@ class TestItem(ApiTester):
             expected.find('ul', "metrics"))
 
 
+class TestItems(ApiTester):
+
+    def test_post_with_multiple_items(self):
+        items = [
+            ["doi", "10.123"],
+            ["doi", "10.124"],
+            ["doi", "10.125"]
+        ]
+        resp = self.client.post(
+            '/items',
+            data=json.dumps(items),
+            content_type="application/json"
+        )
+        dois = []
+        for tiid in json.loads(resp.data):
+            doc = self.d.get(tiid)
+            dois.append(doc['aliases']['doi'][0])
+
+        expected_dois = [i[1] for i in items]
+        assert_equals(set(expected_dois), set(dois))
+
+
 
 
 
