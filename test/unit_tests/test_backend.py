@@ -132,7 +132,7 @@ class TestBackend(unittest.TestCase):
         start = time.time()
         st._interruptable_sleep(3, 0.1)
         took = time.time() - start
-        assert took < 3.3
+        assert took < 4.3, took
         
         # now try interrupting the sleep (need to use a special wrapper
         # class defined above to get this done)
