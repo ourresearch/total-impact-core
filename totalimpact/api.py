@@ -287,7 +287,11 @@ returns a collection object
 
 POST /collection
 creates new collection
-post payload is a list of item IDs as [namespace, id]
+post payload a dict like:
+    {
+        items:[ [namespace, id],  [namespace, id], ...],
+        title: "this is my title"
+    }
 returns collection_id
 returns 405 or 201
 
@@ -316,12 +320,14 @@ def collection(cid=''):
             # Collection already exists: should call PUT instead
             abort(405)   # Method Not Allowed
         else:
-            if not request.json:
+            try:
+                coll = CollectionFactory.make(mydao)
+                coll.add_items(request.json["items"])
+                coll.title = request.json["title"]
+                coll.save()
+                response_code = 201 # Created
+            except (AttributeError, TypeError): # missing or improperly formated data
                 abort(404)  #what is the right error message for needs arguments?
-            coll = CollectionFactory.make(mydao)
-            coll.add_items(request.json)
-            coll.save()
-            response_code = 201 # Created
 
     elif request.method == "PUT":
         # it exists in the database already, but we're going to overwrite it.

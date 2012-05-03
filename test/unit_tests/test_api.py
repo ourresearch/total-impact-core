@@ -238,7 +238,7 @@ class TestCollection(ApiTester):
     def test_collection_post_new_collection(self):
         response = self.client.post(
             '/collection',
-            data=json.dumps(TEST_COLLECTION_TIID_LIST),
+            data=json.dumps({"items": TEST_COLLECTION_TIID_LIST, "title":"My Title"}),
             content_type="application/json")
 
         print response
@@ -248,15 +248,14 @@ class TestCollection(ApiTester):
         response_loaded = json.loads(response.data)
         assert_equals(
                 set(response_loaded.keys()),
-                set([u'created', u'item_tiids',
-                    u'last_modified', u'id']))
+                set([u'created', u'item_tiids', u'last_modified', u'id', u'title']))
         assert_equals(len(response_loaded["id"]), 6)
 
     def test_collection_put_updated_collection(self):
 
         # Put in an item.  Could mock this out in the future.
         response = self.client.post('/collection',
-                data=json.dumps(TEST_COLLECTION_TIID_LIST),
+                data=json.dumps({"items": TEST_COLLECTION_TIID_LIST, "title":"My Title"}),
                 content_type="application/json")
         response_loaded = json.loads(response.data)
         new_collection_id = response_loaded["id"]
@@ -303,7 +302,7 @@ class TestApi(ApiTester):
     def test_collection_delete_deletes(self):
         # Put in an item.  Could mock this out in the future.
         response = self.client.post('/collection',
-                data=json.dumps(TEST_COLLECTION_TIID_LIST),
+                data=json.dumps({"items": TEST_COLLECTION_TIID_LIST, "title":"My Title"}),
                 content_type="application/json")
         response_loaded = json.loads(response.data)
         new_collection_id = response_loaded["id"]
