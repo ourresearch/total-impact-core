@@ -250,7 +250,7 @@ class TestCollection(ApiTester):
                 set(response_loaded.keys()),
                 set([u'created', u'item_tiids',
                     u'last_modified', u'id']))
-        assert_equals(len(response_loaded["id"]), 32)
+        assert_equals(len(response_loaded["id"]), 6)
 
     def test_collection_put_updated_collection(self):
 

@@ -319,6 +319,11 @@ class TestCollectionFactory():
         self.d.setResponses([None])
         factory = models.CollectionFactory.make(self.d, "AnUnknownCollectionId")
 
+    def test_creates_identifier(self):
+        coll = models.CollectionFactory.make(self.d)
+        assert_equals(len(coll.id), 6)
+
+
 class TestCollection():
 
     def setUp(self):        
