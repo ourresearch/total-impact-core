@@ -326,8 +326,10 @@ def collection(cid=''):
                 coll.title = request.json["title"]
                 coll.save()
                 response_code = 201 # Created
-            except (AttributeError, TypeError): # missing or improperly formated data
-                abort(404)  #what is the right error message for needs arguments?
+            except (AttributeError, TypeError, JSONDecodeError):
+                # we got missing or improperly formated data.
+                # should log the error...
+                abort(404)  #what is the right error message for 'needs arguments'?
 
     elif request.method == "PUT":
         # it exists in the database already, but we're going to overwrite it.
