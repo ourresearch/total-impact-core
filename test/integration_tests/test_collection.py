@@ -46,7 +46,7 @@ class TestCollection(unittest.TestCase):
 
         # Post a new item
         response = self.client.post('/collection', 
-                data=json.dumps(collection_items), 
+                data=json.dumps({"items": collection_items, "title":"My Title"}),
                 content_type="application/json")
         assert_equals(response.status_code, 201)  #Created
         response_loaded = json.loads(response.data)
