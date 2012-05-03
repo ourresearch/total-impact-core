@@ -110,6 +110,10 @@ def create_item(namespace, id):
 
 @app.route('/items', methods=['POST'])
 def items_namespace_post():
+    '''Creates multiple items based on a POSTed list of aliases.
+    
+    Note that this requires the POST content-type be sent as application/json...
+    this could be seen as a bug or feature...'''
     tiids = []
     for alias in request.json:
         tiid = create_item(alias[0], alias[1])

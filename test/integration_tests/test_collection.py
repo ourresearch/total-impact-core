@@ -50,7 +50,7 @@ class TestCollection(unittest.TestCase):
                 content_type="application/json")
         assert_equals(response.status_code, 201)  #Created
         response_loaded = json.loads(response.data)
-        assert_equals(len(response_loaded["id"]), 32)
+        assert_equals(len(response_loaded["id"]), 6)
         new_collection_id = response_loaded["id"]
 
         # Try to get it 
