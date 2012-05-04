@@ -1,7 +1,7 @@
 from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
 from totalimpact.providers.provider import ProviderFactory
-import time, uuid, json, hashlib, inspect, re, copy
+import time, uuid, json, hashlib, inspect, re, copy, string, random
 
 import threading
 from pprint import pprint
@@ -220,8 +220,18 @@ class Error(Saveable):
 
 class CollectionFactory():
 
-    @staticmethod
-    def make(dao, id=None, collection_dict=None):
+    @classmethod
+    def make_id(cls, len=6):
+        '''Make an id string.
+
+        Currently uses only lowercase and digits for better say-ability. Six
+        places gives us around 2B possible values.
+        '''
+        choices = string.ascii_lowercase + string.digits
+        return ''.join(random.choice(choices) for x in range(len))
+
+    @classmethod
+    def make(cls, dao, id=None, collection_dict=None):
 
         if id is not None and collection_dict is not None:
             raise TypeError("you can load from the db or from a dict, but not both")
@@ -230,7 +240,7 @@ class CollectionFactory():
         collection = Collection(dao=dao)
 
         if id is None and collection_dict is None:
-            collection.id = uuid.uuid4().hex
+            collection.id = cls.make_id()
             collection.created = now
             collection.last_modified = now
         else: # load an extant item
