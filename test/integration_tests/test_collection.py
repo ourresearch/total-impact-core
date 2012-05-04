@@ -46,11 +46,11 @@ class TestCollection(unittest.TestCase):
 
         # Post a new item
         response = self.client.post('/collection', 
-                data=json.dumps(collection_items), 
+                data=json.dumps({"items": collection_items, "title":"My Title"}),
                 content_type="application/json")
         assert_equals(response.status_code, 201)  #Created
         response_loaded = json.loads(response.data)
-        assert_equals(len(response_loaded["id"]), 32)
+        assert_equals(len(response_loaded["id"]), 6)
         new_collection_id = response_loaded["id"]
 
         # Try to get it 

@@ -83,19 +83,10 @@ def tiid(ns, nid):
     resp.mimetype = "application/json"
     return resp
 
-
-@app.route('/item/<namespace>/<path:nid>', methods=['POST'])
-def item_namespace_post(namespace, nid):
-    '''Creates a new item using the given namespace and id.
-
-    POST /item/:namespace/:id
-    201 location: {tiid}
-    500?  if fails to create
-    example /item/PMID/234234232
-    '''
-    
+def create_item(namespace, id):
+    '''Utility function to keep DRY in single/multiple item creation endpoins'''
     item = ItemFactory.make(mydao, metric_names)
-    item.aliases.add_alias(namespace, nid)
+    item.aliases.add_alias(namespace, id)
 
     ## FIXME - see issue 86
     ## Should look up this namespace and id and see if we already have a tiid
@@ -109,14 +100,47 @@ def item_namespace_post(namespace, nid):
     if not namespace in known_namespaces:
         abort(501) # "Not Implemented"
     else:
-        item.save()
-        response_code = 201 # Created
+        item.save() 
 
-        if not item.id:
-            abort(500)
-        resp = make_response(json.dumps(item.id), response_code)
-        resp.mimetype = "application/json"
-        return resp
+    try:
+        return item.id
+    except AttributeError:
+        abort(500)     
+
+
+@app.route('/items', methods=['POST'])
+def items_namespace_post():
+    '''Creates multiple items based on a POSTed list of aliases.
+    
+    Note that this requires the POST content-type be sent as application/json...
+    this could be seen as a bug or feature...'''
+    tiids = []
+    for alias in request.json:
+        tiid = create_item(alias[0], alias[1])
+        tiids.append(tiid)
+
+    response_code = 201 # Created
+    resp = make_response(json.dumps(tiids), response_code)
+    resp.mimetype = "application/json"
+    return resp
+
+@app.route('/item/<namespace>/<path:id>', methods=['POST'])
+def item_namespace_post(namespace, id):
+    '''Creates a new item using the given namespace and id.
+
+    POST /item/:namespace/:id
+    201 location: {tiid}
+    500?  if fails to create
+    example /item/PMID/234234232
+    '''
+    tiid = create_item(namespace, id)
+    response_code = 201 # Created
+   
+    resp = make_response(json.dumps(tiid), response_code)
+    resp.mimetype = "application/json"
+    return resp
+
+
 
 def make_item_dict(tiid):
     '''Utility function for /item and /items endpoints
@@ -263,7 +287,11 @@ returns a collection object
 
 POST /collection
 creates new collection
-post payload is a list of item IDs as [namespace, id]
+post payload a dict like:
+    {
+        items:[ [namespace, id],  [namespace, id], ...],
+        title: "this is my title"
+    }
 returns collection_id
 returns 405 or 201
 
@@ -292,12 +320,16 @@ def collection(cid=''):
             # Collection already exists: should call PUT instead
             abort(405)   # Method Not Allowed
         else:
-            if not request.json:
-                abort(404)  #what is the right error message for needs arguments?
-            coll = CollectionFactory.make(mydao)
-            coll.add_items(request.json)
-            coll.save()
-            response_code = 201 # Created
+            try:
+                coll = CollectionFactory.make(mydao)
+                coll.add_items(request.json["items"])
+                coll.title = request.json["title"]
+                coll.save()
+                response_code = 201 # Created
+            except (AttributeError, TypeError, JSONDecodeError):
+                # we got missing or improperly formated data.
+                # should log the error...
+                abort(404)  #what is the right error message for 'needs arguments'?
 
     elif request.method == "PUT":
         # it exists in the database already, but we're going to overwrite it.
