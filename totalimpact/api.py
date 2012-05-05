@@ -91,7 +91,7 @@ def create_item(namespace, id):
     ## FIXME - see issue 86
     ## Should look up this namespace and id and see if we already have a tiid
     ## If so, return its tiid with a 200.
-    # right now this makes a new item every time, creating many dups
+    # right now this makes a new item every time, creating many dupes
 
     # FIXME pull this from Aliases somehow?
     # check to make sure we know this namespace

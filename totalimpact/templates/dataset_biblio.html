@@ -1,5 +1,9 @@
 <div class="biblio">
-    <span class="author">{{ item.biblio.data.author|default([])|join(', ') }}</span>
+    {%- if item.biblio.data.author -%}
+        {%- set author=item.biblio.data.author|join(', ') -%}
+    {%- endif -%}
+        
+    <span class="author">{{ author }}</span>
     <span class="year">{{item.biblio.data.year|default("")}}</span>
     {%- if item.aliases.url -%}
         <a class="url title" href="{{ item.aliases.url[0] }}">{{ item.biblio.data.title|default('no title') -}}</a>
