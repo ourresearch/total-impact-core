@@ -141,7 +141,6 @@ def item_namespace_post(namespace, id):
     return resp
 
 
-
 def make_item_dict(tiid):
     '''Utility function for /item and /items endpoints
     Will cause the request to abort with 404 if item is missing from db'''
@@ -154,12 +153,9 @@ def make_item_dict(tiid):
 
 def make_item_resp(item_dict, format):
     if format == "html":
-        try:
-            template = item_dict["genre"] + ".html"
-        except KeyError:
-            template = "article.html"
-            item_dict['genre'] = "article"
-        resp = make_response(render_template(template, item=item_dict ))
+        #TODO in the future, we need to actually use the article's value for this
+        item_dict['genre'] = "dataset"
+        resp = make_response(render_template("item.html", item=item_dict ))
         resp.content_type = "text/html"
     else:
         resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4))
