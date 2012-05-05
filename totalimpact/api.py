@@ -174,6 +174,7 @@ def make_item_resp(item_dict, format):
 def item(tiid, format=None):
     # TODO check request headers for format as well.
     item_dict = make_item_dict(tiid)
+    print item_dict
     return make_item_resp(item_dict, format)
 
 '''
