@@ -67,11 +67,11 @@ class Provider(object):
         """
         error_conf = self.config.errors
         if error_conf is None:
-            raise Exception("This provider has no config for error handling")
+            raise ProviderConfigurationError("This provider has no config for error handling")
 
         conf = error_conf.get(error_type)
         if conf is None:
-            raise Exception("This provider has no config for error handling for error type %s" % error_type)
+            raise ProviderConfigurationError("This provider has no config for error handling for error type %s" % error_type)
 
         retries = conf.get("retries")
         if retries is None or retries == 0:
@@ -100,11 +100,11 @@ class Provider(object):
     def get_max_retries(self, error_type):
         error_conf = self.config.errors
         if error_conf is None:
-            raise Exception("This provider has no config for error handling")
+            raise ProviderConfigurationError("This provider has no config for error handling")
 
         conf = error_conf.get(error_type)
         if conf is None:
-            raise Exception("This provider has no config for error handling for error type %s" % error_type)
+            raise ProviderConfigurationError("This provider has no config for error handling for error type %s" % error_type)
 
         retries = conf.get("retries")
         if retries is None:
