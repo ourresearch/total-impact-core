@@ -1,11 +1,13 @@
 <li class="item" id="{{item.id}}">
     <h4><span class="genre">{{ item.genre }}</span>{{ item.aliases['doi'][0] }}</h4>
 
-    {% include item.genre ~  "_biblio.html" %}
+    {%- if item.biblio.data -%}
+        {% include item.genre ~  "_biblio.html" %}
+    {%- endif -%}
 
     <ul class="metrics">
         {%- for metric_name, metric in item.metrics.iteritems() -%}
-        {%- if metric.values -%}
+        {%- if metric.values and metric.static_meta -%}
         {% set metric_snap =  metric['values']|dictsort|reverse|first %}
         <li>
             <a href="{{ metric['static_meta']['provenance_url']}}">
