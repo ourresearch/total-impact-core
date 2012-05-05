@@ -37,7 +37,7 @@ class ProvidersCheck:
     # so they can be reported and acted upon
 
     def check_aliases(self, name, result, expected):
-        if result != expected:
+        if expected not in result:
             self.errors['aliases'].append("Aliases error for %s - Result '%s' does not match expected value '%s'" % (
                 name, result, expected ))
 
@@ -55,28 +55,29 @@ class ProvidersCheck:
         # Test reading data from Dryad
         item = ItemFactory.make(self.mydao, app.config["METRIC_NAMES"])
         item.aliases.add_alias('doi', '10.5061/dryad.7898')
+        item_aliases_list = item.aliases.get_aliases_list()
 
         dryad = Dryad(Configuration('totalimpact/providers/dryad.conf.json'))
-        dryad.aliases(item)
-        dryad.metrics(item)
+        new_aliases = dryad.aliases(item_aliases_list)
+        new_metrics = dryad.metrics(item_aliases_list)
 
-        new_aliases = item.aliases
-        self.check_aliases('dryad.url', new_aliases.url, [u'http://hdl.handle.net/10255/dryad.7898'])
-        self.check_aliases('dryad.doi', new_aliases.doi, ['10.5061/dryad.7898'])
-        self.check_aliases('dryad.title', new_aliases.title, [u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides'])
+        self.check_aliases('dryad.url', new_aliases, ("url", 'http://hdl.handle.net/10255/dryad.7898'))
+        self.check_aliases('dryad.doi', new_aliases, ("doi", '10.5061/dryad.7898'))
+        self.check_aliases('dryad.title', new_aliases, ("title", 'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides'))
     
     def checkWikipedia(self):
         # Test reading data from Wikipedia
         item = ItemFactory.make(self.mydao, app.config["METRIC_NAMES"])
         item.aliases.add_alias("doi", "10.1371/journal.pcbi.1000361")
         item.aliases.add_alias("url", "http://cottagelabs.com")
+        item_aliases_list = item.aliases.get_aliases_list()
 
         wikipedia = Wikipedia(Configuration('totalimpact/providers/wikipedia.conf.json'))
         # No aliases for wikipedia
-        #wikipedia.aliases(item)
-        wikipedia.metrics(item)
+        #new_aliases = wikipedia.aliases(item_aliases_list)
+        new_metrics = wikipedia.metrics(item_aliases_list)
 
-        self.check_metric('wikipedia:mentions', item.metrics['wikipedia:mentions']['values'].keys()[0], 1)
+        self.check_metric('wikipedia:mentions', new_metrics['wikipedia:mentions'], 1)
 
     def checkGithub(self):
         item = ItemFactory.make(self.mydao, app.config["METRIC_NAMES"])
@@ -116,10 +117,12 @@ class ProvidersCheck:
              ('github', ('egonw', 'medea_bmc_article'))])
 
         item.aliases.add_alias("github", "egonw/gtd")
-        github.metrics(item)
+        item_aliases_list = item.aliases.get_aliases_list()
 
-        self.check_metric('github:forks', item.metrics['github:forks']['values'].keys()[0], 0)
-        self.check_metric('github:watchers', item.metrics['github:watchers']['values'].keys()[0], 7)
+        new_metrics = github.metrics(item_aliases_list)
+
+        self.check_metric('github:forks', new_metrics['github:forks'], 0)
+        self.check_metric('github:watchers', new_metrics['github:watchers'], 7)
 
     def checkAll(self):
         # This will get appended to by each check if it finds any data mismatches
@@ -134,7 +137,7 @@ class ProvidersCheck:
         if sum([len(self.errors[key]) for key in ['aliases','metrics','members']]) > 0:
             print "Checks complete, the following data inconsistencies were found"
             for key in self.errors.keys():
-                print "== %s ===============================" % key
+                print "\n== %s ===============================" % key
                 for error in self.errors[key]:
                     print error
         else:
