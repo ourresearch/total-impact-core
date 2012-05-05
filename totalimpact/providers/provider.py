@@ -180,11 +180,17 @@ class Provider(object):
 
 class ProviderError(Exception):
     def __init__(self, message="", inner=None):
-        self.message = message
+        self._message = message  # naming it self.message raises DepreciationWarning
         self.inner = inner
         # NOTE: experimental
         self.stack = traceback.format_stack()[:-1]
         
+    # DeprecationWarning: BaseException.message has been deprecated 
+    #   as of Python 2.6 so implement property here
+    @property
+    def message(self): 
+        return (self._message)
+
     def log(self):
         msg = " " + self.message + " " if self.message is not None and self.message != "" else ""
         wraps = "(inner exception: " + repr(self.inner) + ")"
