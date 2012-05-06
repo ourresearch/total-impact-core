@@ -4,6 +4,7 @@ from test.mocks import MockDao
 from copy import deepcopy
 
 from totalimpact import models, default_settings
+from totalimpact.providers import provider
 from totalimpact import dao, api
 
 COLLECTION_DATA = {
@@ -219,7 +220,11 @@ class TestItemFactory():
 
     def test_get(self):
         self.d.setResponses([deepcopy(ITEM_DATA)])
-        item = models.ItemFactory.get(self.d, "123", default_settings.PROVIDERS)
+        item = models.ItemFactory.get(
+            self.d,
+            "123",
+            provider.ProviderFactory.get_provider,
+            default_settings.PROVIDERS)
         
         assert_equals(item.id, ITEM_DATA['_id'])
         assert_equals(item.aliases.__class__.__name__, "Aliases")
@@ -232,12 +237,20 @@ class TestItemFactory():
         del item_data2['metrics']
 
         self.d.setResponses([item_data, item_data2])
-        item = models.ItemFactory.get(self.d, "123", default_settings.PROVIDERS)
+        item = models.ItemFactory.get(
+            self.d,
+            "123",
+            provider.ProviderFactory.get_provider,
+            default_settings.PROVIDERS)
 
         assert_equals(item.metrics["wikipedia:mentions"]['values'][KEY1], VAL1)
 
         # works even if there are no metrics in the db:
-        item2 = models.ItemFactory.get(self.d, "123",  default_settings.PROVIDERS)
+        item2 = models.ItemFactory.get(
+            self.d,
+            "123",
+            provider.ProviderFactory.get_provider,
+            default_settings.PROVIDERS)
         print item2.metrics
         assert_equals(item2.metrics["dryad:package_views"]['values'], {})
 

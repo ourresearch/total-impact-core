@@ -1,6 +1,7 @@
 import time
 from totalimpact import default_settings
 from totalimpact.models import Item, ItemFactory
+from totalimpact.providers.provider import ProviderFactory
 
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
@@ -44,9 +45,9 @@ class AliasQueue(Queue):
 
         items = []
         for row in res["rows"]:
-            my_item = ItemFactory.get(
-                self.dao,
+            my_item = ItemFactory.get(self.dao,
                 row["id"],
+                ProviderFactory.get_provider,
                 default_settings.PROVIDERS)
             items.append(my_item)
 

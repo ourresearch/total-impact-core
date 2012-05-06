@@ -134,7 +134,7 @@ class ItemFactory():
     item_class = Item
 
     @classmethod
-    def get(cls, dao, id, providers_config):
+    def get(cls, dao, id, provider_maker, providers_config):
         now = time.time()
         item_doc = dao.get(id)
         item = cls.item_class(dao, id=id)
@@ -168,27 +168,19 @@ class ItemFactory():
             (provider_name, metric_name) = full_metric_name.split(":")
             my_metric_config = providers_config[provider_name]["metrics"][metric_name]
             metric_static_meta = my_metric_config["static_meta"]
-            metric_provenance_url_template = my_metric_config["provenance_url"]
-            
+
             my_metric["static_meta"] = metric_static_meta
-            provenance_url = cls.make_provenance_url(
-                metric_provenance_url_template,
-                item_doc["aliases"])
-            my_metric['static_meta']['provenance_url'] = provenance_url
-            
+
+            # make the provenance url
+            #aliases_list = item.aliases.get_aliases_list()
+            #provider = provider_maker(provider_name)
+            #provenance_url = provider.provenance_url(metric_name, aliases_list)
+            #my_metric["provenance_url"] = provenance_url
+
             item.metrics[full_metric_name] = my_metric
 
         return item
 
-    @classmethod
-    def make_provenance_url(self, template_url, aliases):
-        return "http://total-impact.org"
-        print template_url
-        res = re.search(r'<([^>]+)>', template_url)
-        alias_token = res.group(0)
-        alias_name = res.group(1)
-        alias_value = aliases[alias_name][0]
-        template_url.replace(alias_token, alias_value)
 
     @classmethod
     def get_metric_names(self, providers_config):

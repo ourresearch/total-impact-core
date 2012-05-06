@@ -1,7 +1,8 @@
 from totalimpact.config import Configuration
 from totalimpact.cache import Cache
 from totalimpact.dao import Dao
-import requests, os, time, threading, sys, traceback
+from totalimpact import providers
+import requests, os, time, threading, sys, traceback, importlib
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
@@ -9,23 +10,16 @@ logger = logging.getLogger(__name__)
 class ProviderFactory(object):
 
     @classmethod
-    def get_provider(cls, provider_definition):
-        #TODO simplify. include conf params in providers, don't lookup paths to instantiate.
+    def get_provider(cls, provider_name):
+        provider_module = importlib.import_module('totalimpact.providers.'+provider_name)
+        provider = getattr(provider_module, provider_name.title())
 
-        """ Create an instance of a Provider object
-        
-            provider_definition is a dictionary which states the class and config file
-            which should be used to create this provider. See totalimpact.conf.json 
+        instance = provider(Configuration("totalimpact/providers/"+provider_name+".conf.json"))
 
-            config is the application configuration
-        """
-        # directly beneath the working directory
-        provider_config_path = os.path.join(os.getcwd(), provider_definition['config'])
-        provider_config = Configuration(provider_config_path, False)
-        provider_class_name = provider_definition['class']
-        provider_class = provider_config.get_class(provider_class_name)
-        inst = provider_class(provider_config)
-        return inst
+
+        return instance
+
+
         
     @classmethod
     def get_providers(cls, config_providers):
@@ -33,7 +27,7 @@ class ProviderFactory(object):
         providers = []
         for provider_name, v in config_providers.iteritems():
             try:
-                prov = ProviderFactory.get_provider(v)
+                prov = ProviderFactory.get_provider(provider_name)
                 prov.name = provider_name
                 providers.append(prov)
             except ProviderConfigurationError:

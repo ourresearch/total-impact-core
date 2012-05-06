@@ -144,7 +144,7 @@ def make_item_dict(tiid):
     '''Utility function for /item and /items endpoints
     Will cause the request to abort with 404 if item is missing from db'''
     try:
-        item = ItemFactory.get(mydao, tiid, app.config["PROVIDERS"])
+        item = ItemFactory.get(mydao, tiid, ProviderFactory.get_provider, app.config["PROVIDERS"])
         item_dict = item.as_dict()
     except LookupError:
         abort(404)
@@ -220,7 +220,7 @@ def provider_memberitems(pid):
 
     logger.debug("In provider_memberitems with " + query + " " + qtype)
 
-    provider = ProviderFactory.get_provider(app.config["PROVIDERS"][pid])
+    provider = ProviderFactory.get_provider(pid)
     logger.debug("provider: " + provider.provider_name)
 
     memberitems = provider.member_items(query, qtype)

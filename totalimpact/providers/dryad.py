@@ -27,6 +27,10 @@ class Dryad(Provider):
     provides_metrics = True
     provides_biblio = True
 
+    # For Dryad the template is the same for all metrics
+    # This template takes a doi
+    provenance_url_template = "http://dx.doi.org/%s"
+
     def __init__(self, config):
         super(Dryad, self).__init__(config)
         
@@ -154,17 +158,22 @@ class Dryad(Provider):
 
         return identifiers
 
-    def provides_metrics(self): 
-        return True
-    
-    def get_show_details_url(self, doi):
-        return "http://dx.doi.org/" + doi
-
     def _get_dryad_doi(self, aliases):
         for doi in [res for (ns,res) in aliases if ns == 'doi']:
             if self._is_dryad_doi(doi):
                 return doi
         return None
+
+    def provenance_urls(self, metric_name, aliases):
+        # Dryad returns the same provenance url for all metrics
+        # so ignoring the metric name
+        dryad_doi = self._get_dryad_doi(aliases)
+        if dryad_doi:
+            provenance_url = self.provenance_url_template % dryad_doi
+        else:
+            provenance_url = None
+            
+        return provenance_url
 
     def metrics(self, aliases):
         id = self._get_dryad_doi(aliases)

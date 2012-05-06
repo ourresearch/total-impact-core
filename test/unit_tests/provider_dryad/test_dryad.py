@@ -119,9 +119,6 @@ class TestDryad(ProviderTestCase):
         assert_equals(aliases_dict['url'], [u'http://hdl.handle.net/10255/dryad.7898'])
         assert_equals(aliases_dict['title'], [u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides'])
 
-    def test_05a_show_details_url(self):
-        assert self.provider.get_show_details_url(TEST_DRYAD_DOI) == "http://dx.doi.org/" + TEST_DRYAD_DOI
-
     def test_05b_basic_extract_stats(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         ret = self.provider._extract_stats(f.read())
@@ -160,3 +157,12 @@ class TestDryad(ProviderTestCase):
         assert_equals(biblio_data['year'], u'2010')
         assert_equals(biblio_data['title'], u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides')
 
+    def test_get_provenance_urls(self):
+        metric_name = "example_metric_name"
+        aliases = self.simple_item.aliases.get_aliases_list(self.provider.biblio_namespaces)
+        response = self.provider.provenance_urls(metric_name, aliases)
+        assert_equals(response, 'http://dx.doi.org/10.5061/dryad.7898')
+
+        # If no doi then return None
+        response = self.provider.provenance_urls(metric_name, [("url", "someurl")])
+        assert_equals(response, None)
