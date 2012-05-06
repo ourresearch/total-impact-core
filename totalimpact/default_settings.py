@@ -40,16 +40,23 @@ CACHE_ENABLED = "1"
 PROVIDERS = {
     "wikipedia":{
         "class" : "totalimpact.providers.wikipedia.Wikipedia",
-        "config" : "totalimpact/providers/wikipedia.conf.json"
+        "config" : "totalimpact/providers/wikipedia.conf.json",
+        "workers" : 10,
     },
     "dryad": {
         "class" : "totalimpact.providers.dryad.Dryad",
-        "config" : "totalimpact/providers/dryad.conf.json"
+        "config" : "totalimpact/providers/dryad.conf.json",
+        "workers" : 10,
     },
     "github": {
         "class" : "totalimpact.providers.github.Github",
-        "config" : "totalimpact/providers/github.conf.json"
+        "config" : "totalimpact/providers/github.conf.json",
+        "workers" : 10,
     }
+}
+
+ALIASES = {
+    "workers" : 10
 }
 
 #TODO this should be created from the providers config item.
