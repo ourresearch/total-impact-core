@@ -37,7 +37,6 @@ def configure_app(app):
             app.config.from_pyfile(config_path)
 
 app = create_app()
-metric_names = app.config["METRIC_NAMES"]
 
 @app.before_request
 def connect_to_db():
@@ -85,7 +84,7 @@ def tiid(ns, nid):
 
 def create_item(namespace, id):
     '''Utility function to keep DRY in single/multiple item creation endpoins'''
-    item = ItemFactory.make(mydao, metric_names)
+    item = ItemFactory.make(mydao, app.config["PROVIDERS"])
     item.aliases.add_alias(namespace, id)
 
     ## FIXME - see issue 86
@@ -145,7 +144,7 @@ def make_item_dict(tiid):
     '''Utility function for /item and /items endpoints
     Will cause the request to abort with 404 if item is missing from db'''
     try:
-        item = ItemFactory.get(mydao, id=tiid, metric_names=metric_names)
+        item = ItemFactory.get(mydao, tiid, app.config["PROVIDERS"])
         item_dict = item.as_dict()
     except LookupError:
         abort(404)

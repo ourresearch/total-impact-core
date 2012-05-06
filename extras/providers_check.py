@@ -53,7 +53,7 @@ class ProvidersCheck:
 
     def checkDryad(self):
         # Test reading data from Dryad
-        item = ItemFactory.make(self.mydao, app.config["METRIC_NAMES"])
+        item = ItemFactory.make(self.mydao, app.config["PROVIDERS"])
         item.aliases.add_alias('doi', '10.5061/dryad.7898')
         item_aliases_list = item.aliases.get_aliases_list()
 
@@ -67,7 +67,7 @@ class ProvidersCheck:
     
     def checkWikipedia(self):
         # Test reading data from Wikipedia
-        item = ItemFactory.make(self.mydao, app.config["METRIC_NAMES"])
+        item = ItemFactory.make(self.mydao, app.config["PROVIDERS"])
         item.aliases.add_alias("doi", "10.1371/journal.pcbi.1000361")
         item.aliases.add_alias("url", "http://cottagelabs.com")
         item_aliases_list = item.aliases.get_aliases_list()
@@ -80,7 +80,7 @@ class ProvidersCheck:
         self.check_metric('wikipedia:mentions', new_metrics['wikipedia:mentions'], 1)
 
     def checkGithub(self):
-        item = ItemFactory.make(self.mydao, app.config["METRIC_NAMES"])
+        item = ItemFactory.make(self.mydao, app.config["PROVIDERS"])
 
         github = Github(Configuration('totalimpact/providers/github.conf.json'))
         members = github.member_items("egonw", "github_user")

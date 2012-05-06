@@ -73,7 +73,7 @@ class TestWikipedia(ProviderTestCase):
     def setUp(self):
         ProviderTestCase.setUp(self)
 
-        self.simple_item = ItemFactory.make("not a dao", app.config["METRIC_NAMES"])
+        self.simple_item = ItemFactory.make("not a dao", app.config["PROVIDERS"])
   
     def test_metrics_extract_stats(self):
         f = open(XML_DOC, "r")
