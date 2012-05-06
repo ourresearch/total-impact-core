@@ -1,5 +1,6 @@
 from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
+from totalimpact import default_settings
 from totalimpact.providers.provider import ProviderFactory
 import time, uuid, json, hashlib, inspect, re, copy, string, random
 
@@ -133,7 +134,7 @@ class ItemFactory():
     item_class = Item
 
     @classmethod
-    def get(cls, dao, id, metric_names):
+    def get(cls, dao, id, providers_config):
         now = time.time()
         item_doc = dao.get(id)
         item = cls.item_class(dao, id=id)
@@ -156,38 +157,50 @@ class ItemFactory():
         # Then we fill these Metric objects's dictionaries with the metricSnaps
         # from the db.
 
-        # first combine all the keys we have. Don't want to overwrite anything.
-        try:
-            metric_names = set(metric_names + item_doc["metrics"].keys() )
-        except KeyError:
-            pass
-
         item.metrics = {}
-        for name in metric_names:
+        metric_names = cls.get_metric_names(providers_config)
+        for full_metric_name in metric_names:
             try:
-                item.metrics[name] = item_doc["metrics"][name]
+                my_metric = item_doc["metrics"][full_metric_name]
             except KeyError: #this metric ain't in the item_doc from the db
-                item.metrics[name] = {'values': {} }
-
-        # create all the provenance urls. should break this off into function, add tests.
-        for name, metric in item.metrics.iteritems():
-            try:
-                url = metric['static_meta']['provenance_url']
-                res =  re.search(r'<([^>]+)>', url)
-                alias_token = res.group(0)
-                alias_name = res.group(1)
-                alias_value = item_doc['aliases'][alias_name][0]
-                metric['static_meta']['provenance_url'] = url.replace(alias_token, alias_value)
-
-            except (KeyError, TypeError):
-                # if metrics are malformed or missing, it's probably just because
-                # we're using test stubs. Doesn't hurt to ignore.
-                pass
+                my_metric = {'values': {} }
+            
+            (provider_name, metric_name) = full_metric_name.split(":")
+            my_metric_config = providers_config[provider_name]["metrics"][metric_name]
+            metric_static_meta = my_metric_config["static_meta"]
+            metric_provenance_url_template = my_metric_config["provenance_url"]
+            
+            my_metric["static_meta"] = metric_static_meta
+            provenance_url = cls.make_provenance_url(
+                metric_provenance_url_template,
+                item_doc["aliases"])
+            my_metric['static_meta']['provenance_url'] = provenance_url
+            
+            item.metrics[full_metric_name] = my_metric
 
         return item
 
     @classmethod
-    def make(cls, dao, metric_names):
+    def make_provenance_url(self, template_url, aliases):
+        return "http://total-impact.org"
+        print template_url
+        res = re.search(r'<([^>]+)>', template_url)
+        alias_token = res.group(0)
+        alias_name = res.group(1)
+        alias_value = aliases[alias_name][0]
+        template_url.replace(alias_token, alias_value)
+
+    @classmethod
+    def get_metric_names(self, providers_config):
+        full_metric_names = []
+        for provider_name, provider in providers_config.iteritems():
+            for metric_name in provider["metrics"]:
+                full_metric_names.append(provider_name+':'+metric_name)
+
+        return full_metric_names
+
+    @classmethod
+    def make(cls, dao, providers_config):
         now = time.time()
         item = cls.item_class(dao=dao)
         
@@ -201,6 +214,7 @@ class ItemFactory():
 
         # make the metrics objects. We have to make all the ones in the config
         # so that Providers will know which ones to update later on.
+        metric_names = cls.get_metric_names(providers_config)
         for name in metric_names:
             item.metrics[name] = {'values': {} }
 

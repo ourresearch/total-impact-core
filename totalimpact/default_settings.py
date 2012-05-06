@@ -71,7 +71,7 @@ PROVIDERS = {
         "member_items_url": "http://datadryad.org/solr/search/select/?q=dc.contributor.author%%3A%%22%s%%22&fl=dc.identifier",
         "metrics": {
             "package_views": {
-                "provinence_url" : "http://dx.doi.org/%s",
+                "provenance_url" : "http://dx.doi.org/%s",
                 "static_meta" : {
                     "display_name": "package views",
                     "provider": "Dryad",
@@ -86,22 +86,7 @@ PROVIDERS = {
                 }
             },
             "total_downloads": {
-                "provinence_url" : "http://dx.doi.org/%s",
-                "static_meta" : {
-                    "display_name": "total downloads",
-                    "provider": "Dryad",
-                    "provider_url": "http:\/\/www.datadryad.org\/",
-                    "description": "Dryad total downloads: combined number of downloads of the data package and data files",
-                    "icon": "http:\/\/datadryad.org\/favicon.ico",
-                    "category": "downloads",
-                    "can_use_commercially": "1",
-                    "can_embed": "1",
-                    "can_aggregate": "1",
-                    "other_terms_of_use": "CC0"
-                  },
-            },
-            "total_downloads": {
-                "provinence_url" : "http://dx.doi.org/%s",
+                "provenance_url" : "http://dx.doi.org/%s",
                 "static_meta":{
                     "display_name": "total downloads",
                     "provider": "Dryad",
@@ -116,7 +101,7 @@ PROVIDERS = {
                 }
             },
             "most_downloaded_file":{
-                "provinence_url" : "http://dx.doi.org/%s",
+                "provenance_url" : "http://dx.doi.org/%s",
                 "static_meta":{
                     "display_name": "most downloaded file",
                     "provider": "Dryad",

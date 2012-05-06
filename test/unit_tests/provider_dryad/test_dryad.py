@@ -73,7 +73,7 @@ class TestDryad(ProviderTestCase):
     def setUp(self):
         ProviderTestCase.setUp(self)
 
-        self.simple_item = ItemFactory.make("not a dao", app.config["METRIC_NAMES"])
+        self.simple_item = ItemFactory.make("not a dao", app.config["PROVIDERS"])
         self.simple_item.aliases.add_alias("doi", TEST_DRYAD_DOI)
 
     def tearDown(self):

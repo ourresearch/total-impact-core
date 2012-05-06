@@ -3,6 +3,7 @@ import sys
 import logging
 import traceback
 
+from totalimpact import default_settings
 from totalimpact.backend import StoppableThread
 from totalimpact.config import Configuration, StringConfiguration
 
@@ -58,7 +59,7 @@ class QueueMock(object):
                 if self.current_item > self.max_items:
                     return None
             # Generate a mock item with initial alias ('mock', id)
-            item = MockItemFactory.make("not a dao", ['mock:test_result'])
+            item = MockItemFactory.make("not a dao", default_settings.PROVIDERS)
             item.id = self.current_item
             item.aliases.add_alias('mock',str(item.id))
             print "KCKCK", item.metrics
@@ -136,7 +137,7 @@ class ProviderMock(Provider):
     """
 
     provider_name = "mock_provider"
-    metric_names = ["mock:test_result"]
+    metric_names = ["wikipedia:mentions"]
 
     member_types = ["mock_type"]
     metric_namespaces = ["mock"]
@@ -205,7 +206,7 @@ class ProviderMock(Provider):
                         else:
                             raise exc
                 self.metrics_processed[item_id] = True
-        return {"mock:test_result": 1}
+        return {"wikipedia:mentions": 1}
 
     def biblio(self, aliases):
         """ Process biblio for the given aliases

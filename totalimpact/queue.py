@@ -1,5 +1,5 @@
 import time
-from totalimpact import default_settings as config
+from totalimpact import default_settings
 from totalimpact.models import Item, ItemFactory
 
 from totalimpact.tilogging import logging
@@ -44,7 +44,10 @@ class AliasQueue(Queue):
 
         items = []
         for row in res["rows"]:
-            my_item = ItemFactory.get(self.dao, row["id"], config.METRIC_NAMES)
+            my_item = ItemFactory.get(
+                self.dao,
+                row["id"],
+                default_settings.PROVIDERS)
             items.append(my_item)
 
         return items
