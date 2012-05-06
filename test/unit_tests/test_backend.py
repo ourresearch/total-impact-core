@@ -253,6 +253,7 @@ class TestBackend(unittest.TestCase):
         
     # FIXME: save_and_unqueue is not yet working, so will need more
     # tests when it is
+    @slow
     def test_14_backend(self):
         watcher = TotalImpactBackend(self.d, self.providers)
         
@@ -262,6 +263,7 @@ class TestBackend(unittest.TestCase):
         watcher._cleanup()
         assert len(watcher.threads) == 0, len(watcher.threads)
 
+    @slow
     def test_15_metrics_exceptions(self):
         """ test_15_metrics_exceptions
 
@@ -334,6 +336,7 @@ class TestBackend(unittest.TestCase):
         # Check that item 2 did not get processed as it exceeded the failure limit
         self.assertFalse(mock_provider.metrics_processed.has_key(2))
 
+    @slow
     def test_17_alias_thread(self):
         """ test_17_alias_thread
 

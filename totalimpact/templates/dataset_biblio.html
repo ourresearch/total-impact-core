@@ -1,0 +1,15 @@
+<div class="biblio">
+    {%- if item.biblio.data.author -%}
+        {%- set author=item.biblio.data.author|join(', ') -%}
+    {%- endif -%}
+        
+    <span class="author">{{ author }}</span>
+    <span class="year">{{item.biblio.data.year|default("")}}</span>
+    {%- if item.aliases.url -%}
+        <a class="url title" href="{{ item.aliases.url[0] }}">{{ item.biblio.data.title|default('no title') -}}</a>
+    {%- else -%}
+       {{ item.biblio.data.title|default('no title') -}}
+    {%- endif -%}
+
+    <span class="repo">{{ item.biblio.data.repo|default("dryad") }}</span>
+</div>

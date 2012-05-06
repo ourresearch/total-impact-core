@@ -1,28 +1,26 @@
-<div class="item">
+<li class="item" id="{{item.id}}">
     <h4><span class="genre">{{ item.genre }}</span>{{ item.aliases['doi'][0] }}</h4>
-    <ul class="biblio">
-        <li class="biblio crossref">
-            <span class="author">{{ item.biblio.author|join(', ') }}</span>
-            <span class="year">{{item.biblio.year}}</span>
-            <a class="url title" href="{{ item.aliases.url[0] }}">{{ item.biblio.title }}</a>
-            <span class="repo">{{ item.biblio.journal }}</span>
-        </li>
-    </ul>
+
+    {%- if item.biblio.data -%}
+        {% include item.genre ~  "_biblio.html" %}
+    {%- endif -%}
+
     <ul class="metrics">
-        {% for metric_name, metric in  item.metrics.iteritems() %}
-        {% if metric.static_meta %}
+        {%- for metric_name, metric in item.metrics.iteritems() -%}
+        {%- if metric.values and metric.static_meta -%}
         {% set metric_snap =  metric['values']|dictsort|reverse|first %}
         <li>
             <a href="{{ metric['static_meta']['provenance_url']}}">
-                <span class="metric-value">{{ metric_snap|last }}</span>
                 <span class="last-update">{{ metric_snap|first }}</span>
+                <span class="metric-value">{{ metric_snap|last }}</span>
+
                 <span class="metric-name-img">
                     <img src="{{ metric['static_meta']['icon'] }}" width="16" height="16" border="0">
                     <span class="metric-name">{{ metric['static_meta']['provider'] }} {{ metric['static_meta']['display_name'] }}</span>
                 </span>
             </a>
         </li>
-        {% endif %}
-        {% endfor %}
+        {%- endif -%}
+        {%- endfor -%}
     </ul>
-</div>
+</li>
