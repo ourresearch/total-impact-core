@@ -12,6 +12,12 @@ import sys
 import pickle
 from pprint import pprint
 
+#request_ids = {"dryad": ('doi','10.5061/dryad.7898'), 
+#                "wikipedia": ('doi', '10.1371/journal.pcbi.1000361'), 
+#                "github": ('github', 'egonw/gtd')}
+
+request_ids = {"dryad": ('doi','10.5061/dryad.7898')} 
+
 class TotalImpactAPI:
     base_url = 'http://localhost:5001/'
 
@@ -27,11 +33,11 @@ class TotalImpactAPI:
         req = urllib2.Request(url)
         data = {} # fake a POST
         response = urllib2.urlopen(req, data)
-        item_id = json.loads(urllib.unquote(response.read()))
-        return item_id
+        tiid = json.loads(urllib.unquote(response.read()))
+        return tiid
 
-    def request_item_result(self, item_id):
-        url = self.base_url + urllib.quote('item/%s' % (item_id))
+    def request_item_result(self, tiid):
+        url = self.base_url + urllib.quote('item/%s' % (tiid))
         req = urllib2.Request(url)
         response = urllib2.urlopen(req)
         return json.loads(response.read())
@@ -40,7 +46,7 @@ class TotalImpactAPI:
 from optparse import OptionParser
 
 
-def checkItem(item, data, item_type, debug=False):
+def checkItem(tiid, api_response, provider, debug=False):
     checks = {
         'wikipedia' : { 
             'aliases': ['doi'],
@@ -65,13 +71,13 @@ def checkItem(item, data, item_type, debug=False):
         }
     }
 
-    aliases = checks[item_type]['aliases']
-    metrics = checks[item_type]['metrics']
+    aliases = checks[provider]['aliases']
+    metrics = checks[provider]['metrics']
 
-    if debug: print "Checking %s result (%s)..." % (item_type, item)
+    if debug: print "Checking %s result (%s)..." % (provider, tiid)
     
     # Check aliases are correct
-    alias_result = set(data['aliases'].keys())
+    alias_result = set(api_response['aliases'].keys())
     expected_result = set(aliases + 
         ['created','last_modified','last_completed'])
     if alias_result != expected_result:
@@ -80,7 +86,7 @@ def checkItem(item, data, item_type, debug=False):
 
     # Check we've got some metric values
     for metric in metrics.keys():
-        metric_data = data['metrics'][metric]['values']
+        metric_data = api_response['metrics'][metric]['values']
         if len(metric_data) != 1:
             if debug: print "Incorrect number of metric results for %s - %i" % (metric, len(metric_data))
             return False
@@ -112,38 +118,50 @@ if __name__ == '__main__':
     dryad_item = wikipedia_item = github_item = []
     dryad_data = wikipedia_data = github_data = []
     complete = {}
-    itemid = {}
-    for item_type in ['dryad','wikipedia','github']:
-        complete[item_type] = {}
-        itemid[item_type] = {}
+    tiids = {}
+    final_responses = {}
+    providers = request_ids.keys()
+
+    for provider in providers:
+        complete[provider] = {}
+        tiids[provider] = {}
+        final_responses[provider] = {}
 
     for idx in range(item_count):
         # Request the items to be generated
-        itemid['dryad'][idx] = ti.request_item('doi','10.5061/dryad.7898')
-        itemid['wikipedia'][idx] = ti.request_item('doi', '10.1371/journal.pcbi.1000361')
-        itemid['github'][idx] = ti.request_item('github', 'egonw/gtd')
+        for provider in providers:
+            (namespace, nid) = request_ids[provider]
+            tiids[provider][idx] = ti.request_item(namespace, nid)
 
     for idx in range(item_count):
-        complete['dryad'][idx] = False
-        complete['wikipedia'][idx] = False
-        complete['github'][idx] = False
+        for provider in providers:
+            (namespace, nid) = request_ids[provider]
+            tiids[provider][idx] = ti.request_item(namespace, nid)
+            complete[provider][idx] = False
 
     while True:
 
         for idx in range(item_count):
-            for item_type in ['dryad','wikipedia','github']:
-                if not complete[item_type][idx]:
+            for provider in providers:
+                if not complete[provider][idx]:
+                    tiid = tiids[provider][idx]
                     if options.missing:
-                        print item_type, idx, itemid[item_type][idx]
-                    complete[item_type][idx] = checkItem(
-                        itemid[item_type][idx],
-                        ti.request_item_result(itemid[item_type][idx]),
-                        item_type, debug=options.missing
+                        print provider, idx, tiid
+                    api_response = ti.request_item_result(tiid)
+                    final_responses[provider][idx] = api_response
+                    complete[provider][idx] = checkItem(
+                        tiid,
+                        api_response,
+                        provider, 
+                        debug=options.missing
                     )
 
-        total = sum([sum(complete[item_type].values()) for item_type in ['dryad','wikipedia','github']])
-        print [(item_type, sum(complete[item_type].values())) for item_type in ['dryad','wikipedia','github']], total
-        if total == item_count * 3:
+
+        total = sum([sum(complete[provider].values()) for provider in providers])
+        print [(provider, sum(complete[provider].values())) for provider in providers], total
+        if total == item_count * len(providers):
+            print tiids
+            print final_responses
             sys.exit(0)    
 
         time.sleep(0.5)

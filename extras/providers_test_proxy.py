@@ -18,9 +18,17 @@ import os
 class ProvidersTestProxy(BaseHTTPRequestHandler):
 
     def do_GET(self):
-        submitted_url = self.path[1:len(self.path)+1]
         datadir = os.path.join(os.path.split(__file__)[0], "sample_provider_pages")
-        sample_provider_page_path = os.path.join(datadir, submitted_url)
+
+        # remove the first character because includes /
+        submitted_url = self.path[1:len(self.path)+1]
+        # separate everything after & because is id
+        try:
+            (url_part, arg_part) = submitted_url.split("&")
+        except ValueError:
+            url_part = submitted_url
+
+        sample_provider_page_path = os.path.join(datadir, url_part)
         print sample_provider_page_path
         try:
             text = open(sample_provider_page_path).read()
