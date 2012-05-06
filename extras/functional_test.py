@@ -56,7 +56,7 @@ def checkItem(item, data, item_type, debug=False):
             }
         },
         'dryad' : { 
-            'aliases': ['doi','url','title'],
+            'aliases': ['doi', 'url', 'title'],
             'metrics' : {
                 'dryad:most_downloaded_file' : 63,
                 'dryad:package_views' : 149,
@@ -72,8 +72,10 @@ def checkItem(item, data, item_type, debug=False):
     
     # Check aliases are correct
     alias_result = set(data['aliases'].keys())
-    if alias_result != set(['created','last_modified','last_completed'] + aliases):
-        if debug: print "Aliases is not correct, have %s" % alias_result
+    expected_result = set(aliases + 
+        ['created','last_modified','last_completed'])
+    if alias_result != expected_result:
+        if debug: print "Aliases is not correct, have %s, want %s" %(alias_result, expected_result)
         return False
 
     # Check we've got some metric values
@@ -83,8 +85,9 @@ def checkItem(item, data, item_type, debug=False):
             if debug: print "Incorrect number of metric results for %s - %i" % (metric, len(metric_data))
             return False
         else:
-            if metric_data.values()[0] != metrics[metric]:
-                if debug: print "Incorrect metric result for %s - %s" % (metric, metric_data.values()[0])
+            # expect the returned value to be equal or larger than reference
+            if metric_data.values()[0] < metrics[metric]:
+                if debug: print "Incorrect metric result for %s - %s, expected at least %s" % (metric, metric_data.values()[0], metrics[metric])
                 return False
 
     return True
@@ -148,5 +151,5 @@ if __name__ == '__main__':
         if total == item_count * 3:
             sys.exit(0)    
 
-        time.sleep(1)
+        time.sleep(0.5)
 
