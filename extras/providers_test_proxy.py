@@ -39,7 +39,9 @@ urlmap = {
     "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='10.5061/dryad.7898'": responses['wikipedia']['10.5061'],
 
     "https://api.github.com/users/egonw/repos": responses['github']['members'],
-    "https://github.com/api/v2/json/repos/show/egonw/gtd": responses['github']['metrics']
+    "https://github.com/api/v2/json/repos/show/egonw/gtd": responses['github']['metrics'],
+
+    "/test": responses['github']['members'],
 }
 
 class ProvidersTestProxy(BaseHTTPRequestHandler):
