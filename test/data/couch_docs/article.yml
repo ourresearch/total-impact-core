@@ -10,16 +10,17 @@
       url:
         - http://dx.doi.org/10.1371/journal.pbio.0050082
     biblio:
-      title: "Environmental Shotgun Sequencing: Its Potential and Challenges
-              for Studying the Hidden World of Microbes"
-      journal: PLoS Biology
-      author:
-        - Eisen, M.
-      collection: NA
-      volume: NA
-      id: NA
-      year: 2007
-      pages: NA
+      data:
+        title: "Environmental Shotgun Sequencing: Its Potential and Challenges
+                for Studying the Hidden World of Microbes"
+        journal: PLoS Biology
+        author:
+          - Eisen, M.
+        collection: NA
+        volume: NA
+        id: NA
+        year: 2007
+        pages: NA
     metrics:
       plos:html_views:
         static_meta:
