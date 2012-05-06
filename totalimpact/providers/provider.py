@@ -42,8 +42,10 @@ class ProviderFactory(object):
         
 class Provider(object):
 
-    def __init__(self, config):
+    def __init__(self, config, max_cache_duration=86400, max_retries=999):
         self.config = config
+        self.max_cache_duration = max_cache_duration
+        self.max_retries = max_retries
 
     def __repr__(self):
         return "Provider(%s)" % self.provider_name
@@ -60,56 +62,34 @@ class Provider(object):
     # These should be consistent for all providers
 
     def get_sleep_time(self, error_type, retry_count):
-        """ Find out how long we should sleep for the given error type and count
+        """ How long we should sleep for the given error type and count
  
             error_type - timeout, http_error, ... should match config
             retry_count - this will be our n-th retry (first retry is 1)
         """
-        error_conf = self.config.errors
-        if error_conf is None:
-            raise ProviderConfigurationError("This provider has no config for error handling")
 
-        conf = error_conf.get(error_type)
-        if conf is None:
-            raise ProviderConfigurationError("This provider has no config for error handling for error type %s" % error_type)
-
-        retries = conf.get("retries")
-        if retries is None or retries == 0:
-            raise exception
-
-        delay = conf.get("retry_delay", 0)
-        delay_cap = conf.get("delay_cap", -1)
-        retry_type = conf.get("retry_type", "linear")
+        max_retries = self.get_max_retries(error_type)
 
         # Check we haven't reached max retries
-        if retry_count > retries and retries != -1:
+        if retry_count > max_retries:
             raise ValueError("Exceeded max retries for %s" % error_type)
 
-        # Linear or exponential delay
-        if retry_type == 'linear':
-            delay_time = delay
-        else:
-            delay_time = delay * 2**(retry_count-1)
-
-        # Apply delay cap, which limits how long we can sleep
-        if delay_cap != -1:
-            delay_time = min(delay_cap, delay_time)
+        # exponential delay
+        initial_delay = 1  # number of seconds for initial delay
+        delay_time = initial_delay * 2**(retry_count-1)
 
         return delay_time
     
     def get_max_retries(self, error_type):
-        error_conf = self.config.errors
-        if error_conf is None:
-            raise ProviderConfigurationError("This provider has no config for error handling")
-
-        conf = error_conf.get(error_type)
-        if conf is None:
-            raise ProviderConfigurationError("This provider has no config for error handling for error type %s" % error_type)
-
-        retries = conf.get("retries")
-        if retries is None:
-            return 0
-        return retries
+        # give up right away if a content_malformed error
+        if error_type in ["content_malformed"]:
+            max_retries = 0
+        else:  
+            # For other error types, try as up to max_retries times.
+            # Other errors include timeout, http_error, client_server_error, 
+            #    rate_limit_reached, validation_failed
+            max_retries = self.max_retries
+        return max_retries
 
     def sleep_time(self, dead_time=0):
         return 0
@@ -130,9 +110,7 @@ class Provider(object):
         # first thing is to try to retrieve from cache
         cache_data = None
         if app.config["CACHE_ENABLED"]:
-            c = Cache(
-                self.config.cache['max_cache_duration']
-            )
+            c = Cache(self.max_cache_duration)
             cache_data = c.get_cache_entry(url)
         if cache_data:
             # Return a stripped down equivalent of requests.models.Response

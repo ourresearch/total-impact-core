@@ -22,9 +22,5 @@
                 "url": "https://api.github.com/users/%s/repos"
             }
         }
-    },
-
-    "cache" : {
-        "max_cache_duration" : 86400
     }
 }
