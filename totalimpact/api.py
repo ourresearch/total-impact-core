@@ -154,7 +154,8 @@ def make_item_dict(tiid):
 def make_item_resp(item_dict, format):
     if format == "html":
         #TODO in the future, we need to actually use the article's value for this
-        item_dict['genre'] = "dataset"
+        if not item_dict.has_key('genre'):
+            item_dict['genre'] = "article"
         resp = make_response(render_template("item.html", item=item_dict ))
         resp.content_type = "text/html"
     else:

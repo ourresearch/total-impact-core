@@ -184,14 +184,13 @@ class TestItem(ApiTester):
         returned = BeautifulSoup(response.data)
         expected = BeautifulSoup(RENDERED_ARTICLE)
 
-
         assert returned.find('h4') is not None
         assert_equals(returned('h4'), expected('h4'))     
 
-        assert returned.find('ul', "biblio") is not None
+        assert returned.find('div', "biblio") is not None
         assert_equals(
-            returned.find('ul', "biblio"),
-            expected.find('ul', "biblio"))
+            returned.find('div', "biblio").soup,
+            expected.find('div', "biblio").soup)
 
         # in progress... 
 
@@ -199,8 +198,8 @@ class TestItem(ApiTester):
 
 
         assert_equals(
-            returned.find('ul', "metrics"),
-            expected.find('ul', "metrics"))
+            returned.find('ul', "metrics").soup,
+            expected.find('ul', "metrics").soup)
 
 
 class TestItems(ApiTester):
