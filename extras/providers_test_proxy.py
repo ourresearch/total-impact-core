@@ -14,47 +14,28 @@ from optparse import OptionParser
 import logging
 import os
 
-responses = {'dryad':{},'wikipedia':{},'github':{}}
-
-def load_test_data(provider, filename):
-    datadir = os.path.join(os.path.split(__file__)[0], "../test/data/", provider)
-    return open(os.path.join(datadir, filename)).read()
-
-responses['dryad']['aliases'] = load_test_data('dryad', 'sample_extract_aliases_page.xml')
-responses['dryad']['metrics'] = load_test_data('dryad', 'sample_extract_metrics_page.html')
-responses['dryad']['10.5061'] = load_test_data('dryad', 'dryad_info_10.5061.xml')
-responses['wikipedia']['metrics'] = load_test_data('wikipedia', 'wikipedia_response.xml')
-responses['wikipedia']['10.1186'] = load_test_data('wikipedia', 'wikipedia_10.1186_response.xml')
-responses['wikipedia']['10.5061'] = load_test_data('wikipedia', 'wikipedia_10.5061_response.xml')
-responses['github']['members'] = load_test_data('github', 'egonw_gtd_member_response.json')
-responses['github']['metrics'] = load_test_data('github', 'egonw_gtd_metric_response.json')
-
-urlmap = {
-    "http://datadryad.org/solr/search/select/?q=dc.identifier:10.5061/dryad.7898&fl=dc.identifier.uri,dc.title": responses['dryad']['aliases'],
-    "http://datadryad.org/solr/search/select/?q=dc.identifier:10.5061/dryad.7898&fl=dc.date.accessioned.year,dc.identifier.uri,dc.title_ac,dc.contributor.author_ac" : responses['dryad']['10.5061'],
-    "http://dx.doi.org/10.5061/dryad.7898": responses['dryad']['metrics'],
-
-    "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='10.1371/journal.pcbi.1000361'": responses['wikipedia']['metrics'],
-    "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='10.1186/1745-6215-11-32'": responses['wikipedia']['10.1186'],
-    "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='10.5061/dryad.7898'": responses['wikipedia']['10.5061'],
-
-    "https://api.github.com/users/egonw/repos": responses['github']['members'],
-    "https://github.com/api/v2/json/repos/show/egonw/gtd": responses['github']['metrics'],
-
-    "/test": responses['github']['members'],
-}
+providers_test_proxy now serves sample pages from simple descriptive urls
 
 class ProvidersTestProxy(BaseHTTPRequestHandler):
 
     def do_GET(self):
-        if urlmap.has_key(self.path):
-            print "Found:", self.path
+        submitted_url = self.path[1:len(self.path)+1]
+        datadir = os.path.join(os.path.split(__file__)[0], "sample_provider_pages")
+        sample_provider_page_path = os.path.join(datadir, submitted_url)
+        print sample_provider_page_path
+        try:
+            text = open(sample_provider_page_path).read()
+            print text
+            print "Found:", submitted_url
             self.send_response(200)
             self.end_headers()
-            self.wfile.write(urlmap[self.path])
-        else: 
-            print "Not Found:", self.path
+            self.wfile.write(text)
+        except IOError:
+            print "Not Found:", submitted_url
             self.send_response(500, "Test Proxy: Unknown URL")
+        print "done with do_GET"
+
+
 
 if __name__ == '__main__':
 
