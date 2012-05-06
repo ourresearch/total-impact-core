@@ -41,89 +41,104 @@ PROVIDERS = {
     "wikipedia": {
         "class" : "totalimpact.providers.wikipedia.Wikipedia",
         "config" : "totalimpact/providers/wikipedia.conf.json",
-        "url" : "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'",
-        "timeout" : 5,
-        "provenance_url" : "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go",
-        "static_meta" : {
-            "display_name": "mentions",
-            "provider": "Wikipedia",
-            "provider_url": "http://www.wikipedia.org/",
-            "description": "Wikipedia is the free encyclopedia that anyone can edit.",
-            "icon": "http://wikipedia.org/favicon.ico",
-            "category": "NA",
-            "can_use_commercially": "NA",
-            "can_embed": "NA",
-            "can_aggregate": "NA",
-            "other_terms_of_use": "NA"
+        "metrics_url": "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'",
+        "timeout": 5,
+        "metrics": {
+            "mentions": {
+                "provenance_url" : "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go",
+                "static_meta" : {
+                    "display_name": "mentions",
+                    "provider": "Wikipedia",
+                    "provider_url": "http://www.wikipedia.org/",
+                    "description": "Wikipedia is the free encyclopedia that anyone can edit.",
+                    "icon": "http://wikipedia.org/favicon.ico",
+                    "category": "NA",
+                    "can_use_commercially": "NA",
+                    "can_embed": "NA",
+                    "can_aggregate": "NA",
+                    "other_terms_of_use": "NA"
+                }
+            }
         }
     },
     "dryad": {
         "class" : "totalimpact.providers.dryad.Dryad",
         "config" : "totalimpact/providers/dryad.conf.json",
         "supported_namespaces" : ["doi"],
-        "provinence_url" : "http://dx.doi.org/%s",
         "timeout" : 5,
         "aliases_url" : "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.identifier.uri,dc.title",
         "biblio_url" : "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.date.accessioned.year,dc.identifier.uri,dc.title_ac,dc.contributor.author_ac",
-        "member_items_url" : {
-            "querytype" : {
-                "dryad_author": {
-                    "url": "http://datadryad.org/solr/search/select/?q=dc.contributor.author%%3A%%22%s%%22&fl=dc.identifier"
+        "member_items_url": "http://datadryad.org/solr/search/select/?q=dc.contributor.author%%3A%%22%s%%22&fl=dc.identifier",
+        "metrics": {
+            "package_views": {
+                "provinence_url" : "http://dx.doi.org/%s",
+                "static_meta" : {
+                    "display_name": "package views",
+                    "provider": "Dryad",
+                    "provider_url": "http:\/\/www.datadryad.org\/",
+                    "description": "Dryad package views: number of views of the main package page",
+                    "icon": "http:\/\/datadryad.org\/favicon.ico",
+                    "category": "views",
+                    "can_use_commercially": "1",
+                    "can_embed": "1",
+                    "can_aggregate": "1",
+                    "other_terms_of_use": "CC0"
+                }
+            },
+            "total_downloads": {
+                "provinence_url" : "http://dx.doi.org/%s",
+                "static_meta" : {
+                    "display_name": "total downloads",
+                    "provider": "Dryad",
+                    "provider_url": "http:\/\/www.datadryad.org\/",
+                    "description": "Dryad total downloads: combined number of downloads of the data package and data files",
+                    "icon": "http:\/\/datadryad.org\/favicon.ico",
+                    "category": "downloads",
+                    "can_use_commercially": "1",
+                    "can_embed": "1",
+                    "can_aggregate": "1",
+                    "other_terms_of_use": "CC0"
+                  },
+            },
+            "total_downloads": {
+                "provinence_url" : "http://dx.doi.org/%s",
+                "static_meta":{
+                    "display_name": "total downloads",
+                    "provider": "Dryad",
+                    "provider_url": "http:\/\/www.datadryad.org\/",
+                    "description": "Dryad total downloads: combined number of downloads of the data package and data files",
+                    "icon": "http:\/\/datadryad.org\/favicon.ico",
+                    "category": "downloads",
+                    "can_use_commercially": "1",
+                    "can_embed": "1",
+                    "can_aggregate": "1",
+                    "other_terms_of_use": "CC0"
+                }
+            },
+            "most_downloaded_file":{
+                "provinence_url" : "http://dx.doi.org/%s",
+                "static_meta":{
+                    "display_name": "most downloaded file",
+                    "provider": "Dryad",
+                    "provider_url": "http:\/\/www.datadryad.org\/",
+                    "description": "Dryad most downloaded file: number of downloads of the most commonly downloaded data package component",
+                    "icon": "http:\/\/datadryad.org\/favicon.ico",
+                    "category": "downloads",
+                    "can_use_commercially": "1",
+                    "can_embed": "1",
+                    "can_aggregate": "1",
+                    "other_terms_of_use": "CC0"
                 }
             }
-        },
-        "static_meta" : {
-            "dryad:package_views": {
-                "display_name": "package views",
-                "provider": "Dryad",
-                "provider_url": "http:\/\/www.datadryad.org\/",
-                "description": "Dryad package views: number of views of the main package page",
-                "icon": "http:\/\/datadryad.org\/favicon.ico",
-                "category": "views",
-                "can_use_commercially": "1",
-                "can_embed": "1",
-                "can_aggregate": "1",
-                "other_terms_of_use": "CC0"
-              },
-            "dryad:total_downloads": {
-                "display_name": "total downloads",
-                "provider": "Dryad",
-                "provider_url": "http:\/\/www.datadryad.org\/",
-                "description": "Dryad total downloads: combined number of downloads of the data package and data files",
-                "icon": "http:\/\/datadryad.org\/favicon.ico",
-                "category": "downloads",
-                "can_use_commercially": "1",
-                "can_embed": "1",
-                "can_aggregate": "1",
-                "other_terms_of_use": "CC0"
-              },
-              "dryad:most_downloaded_file": {
-                "display_name": "most downloaded file",
-                "provider": "Dryad",
-                "provider_url": "http:\/\/www.datadryad.org\/",
-                "description": "Dryad most downloaded file: number of downloads of the most commonly downloaded data package component",
-                "icon": "http:\/\/datadryad.org\/favicon.ico",
-                "category": "downloads",
-                "can_use_commercially": "1",
-                "can_embed": "1",
-                "can_aggregate": "1",
-                "other_terms_of_use": "CC0"
-              }
         }
     },
-    "github": {
+    "github":{
         "class" : "totalimpact.providers.github.Github",
         "config" : "totalimpact/providers/github.conf.json",
         "supported_namespaces" : ["github"],
+        "member_items_url" : "https://api.github.com/users/%s/repos",
         "metrics_url" : "https://github.com/api/v2/json/repos/show/%s",
-        "member_items_url" : {
-            "querytype" : {
-                "github_user": {
-                    "url": "https://api.github.com/users/%s/repos"
-                }
-            }
-        }
-
+        "metrics": {}
     }
 }
 
