@@ -71,7 +71,6 @@ PROVIDERS = {
         "member_items_url": "http://datadryad.org/solr/search/select/?q=dc.contributor.author%%3A%%22%s%%22&fl=dc.identifier",
         "metrics": {
             "package_views": {
-                "provenance_url" : "http://dx.doi.org/%s",
                 "static_meta" : {
                     "display_name": "package views",
                     "provider": "Dryad",
@@ -86,7 +85,6 @@ PROVIDERS = {
                 }
             },
             "total_downloads": {
-                "provenance_url" : "http://dx.doi.org/%s",
                 "static_meta":{
                     "display_name": "total downloads",
                     "provider": "Dryad",
@@ -101,7 +99,6 @@ PROVIDERS = {
                 }
             },
             "most_downloaded_file":{
-                "provenance_url" : "http://dx.doi.org/%s",
                 "static_meta":{
                     "display_name": "most downloaded file",
                     "provider": "Dryad",

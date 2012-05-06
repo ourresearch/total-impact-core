@@ -8,6 +8,7 @@ from totalimpact.providers.provider import ProviderConfigurationError, ProviderV
 from totalimpact.config import Configuration, StringConfiguration
 from totalimpact.cache import Cache
 from totalimpact import api
+from nose.tools import assert_equals
 
 CWD, _ = os.path.split(__file__)
 
@@ -133,18 +134,13 @@ class Test_Provider(unittest.TestCase):
     # has been implemented
     
     def test_08_get_provider(self):
-        pconf = None
-        print self.provider_configs
-        for provider_name, v in self.provider_configs.iteritems():
-            if v["class"].endswith("wikipedia.Wikipedia"):
-                pconf = v
-                break
-        provider = ProviderFactory.get_provider(pconf)
-        assert provider.provider_name == "wikipedia"
+        provider = ProviderFactory.get_provider("wikipedia")
+        assert_equals(provider.__class__.__name__, "Wikipedia")
         
     def test_09_get_providers(self):
         providers = ProviderFactory.get_providers(self.provider_configs)
         assert len(providers) == len(self.provider_configs)
+        pass
 
     def test_18_exceptions_type(self):
         pcoe = ProviderConfigurationError()

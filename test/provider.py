@@ -80,7 +80,7 @@ class ProviderTestCase:
         """
 
     def setUp(self):
-        self.provider = ProviderFactory.get_provider(app.config["PROVIDERS"][self.provider_name])
+        self.provider = ProviderFactory.get_provider(self.provider_name)
         self.old_http_get = Provider.http_get
 
     def tearDown(self):
@@ -95,13 +95,6 @@ class ProviderTestCase:
         assert hasattr(self, "testitem_metrics")
         assert hasattr(self, "testitem_biblio")
 
-    def test_0002_provider_base_setup(self):
-        """ test_provider_base_setup
-             
-            ensure that the configuration is valid
-        """
-        assert self.provider.config is not None
-        assert self.provider.provider_name is not None
 
     def test_0003_provider_interface(self):
         """ test_provider_interface

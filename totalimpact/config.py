@@ -1,4 +1,5 @@
 import os, uuid, sys, json
+from nose.tools import assert_equals
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class Configuration(object):
         try:
             mod = __import__(modpath, fromlist=[classname])
             klazz = getattr(mod, classname)
+
             return klazz
         except ImportError as e:
             # in this case it's possible that it's just a context thing, and

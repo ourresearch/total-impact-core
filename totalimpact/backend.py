@@ -452,18 +452,15 @@ class ProviderMetricsThread(ProviderThread):
             if metrics:
                 for key in metrics.keys():
                     item.metrics[key]['values'][ts] = metrics[key]
-                    item.metrics[key]['static_meta'] = {} #self.provider
             else:
                 # The provider returned None for this item. This is either
                 # a non result or a permanent failure
                 print "xx", item
                 for key in self.provider.metric_names:
                     item.metrics[key]['values'][ts] = None
-                    item.metrics[key]['static_meta'] = {} #self.provider
         else:
             # metrics failed, write None values in for the metric
             # values so we don't attempt to reprocess this item
             for key in self.provider.metric_names:
                 item.metrics[key]['values'][ts] = None
-                item.metrics[key]['static_meta'] = {} #self.provider
         item.save()
