@@ -29,6 +29,8 @@ class Wikipedia(Provider):
     provides_metrics = True
     provides_biblio = False
 
+    provenance_url_template = "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go"
+
     def __init__(self, config):
         super(Wikipedia, self).__init__(config)
 
@@ -75,3 +77,14 @@ class Wikipedia(Provider):
 
         return {"wikipedia:mentions": int(val)}
             
+    def provenance_url(self, metric_name, aliases):
+        # Wikipedia returns the same provenance url for all metrics
+        # so ignoring the metric name
+        (ns, id) = aliases[0]
+
+        if id:
+            provenance_url = self.provenance_url_template % id
+        else:
+            provenance_url = None
+
+        return provenance_url

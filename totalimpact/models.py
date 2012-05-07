@@ -172,10 +172,11 @@ class ItemFactory():
             my_metric["static_meta"] = metric_static_meta
 
             # make the provenance url
-            #aliases_list = item.aliases.get_aliases_list()
-            #provider = provider_maker(provider_name)
-            #provenance_url = provider.provenance_url(metric_name, aliases_list)
-            #my_metric["provenance_url"] = provenance_url
+            aliases_list = item.aliases.get_aliases_list()
+            provider = provider_maker(provider_name)
+
+            provenance_url = provider.provenance_url(metric_name, aliases_list)
+            my_metric["provenance_url"] = provenance_url
 
             item.metrics[full_metric_name] = my_metric
 

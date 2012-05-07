@@ -164,7 +164,7 @@ class Dryad(Provider):
                 return doi
         return None
 
-    def provenance_urls(self, metric_name, aliases):
+    def provenance_url(self, metric_name, aliases):
         # Dryad returns the same provenance url for all metrics
         # so ignoring the metric name
         dryad_doi = self._get_dryad_doi(aliases)
