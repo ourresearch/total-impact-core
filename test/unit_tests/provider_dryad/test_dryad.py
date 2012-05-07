@@ -57,7 +57,7 @@ SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE_ZERO_ITEMS = os.path.join(datadir,
     "sample_extract_member_items_page_zero_items.xml")
 SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, 
     "sample_extract_biblio_page.xml")
-
+EXPECTED_PROVENANCE_URL = "http://dx.doi.org/10.5061/dryad.7898"
 TEST_ALIASES_SEED = {"doi" : [TEST_DRYAD_DOI], "url" : ["http://datadryad.org/handle/10255/dryad.7898"]}
 
 
@@ -67,6 +67,7 @@ class TestDryad(ProviderTestCase):
     testitem_aliases = ("doi", TEST_DRYAD_DOI)
     testitem_metrics = ("doi", TEST_DRYAD_DOI)
     testitem_biblio = ("doi", TEST_DRYAD_DOI)
+    testitem_provenance_url = "http://dx.doi.org/10.5061/dryad.7898"
 
     provider_name = 'dryad'
 
@@ -157,12 +158,12 @@ class TestDryad(ProviderTestCase):
         assert_equals(biblio_data['year'], u'2010')
         assert_equals(biblio_data['title'], u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides')
 
-    def test_get_provenance_urls(self):
+    def test_get_provenance_url(self):
         metric_name = "example_metric_name"
         aliases = self.simple_item.aliases.get_aliases_list(self.provider.biblio_namespaces)
-        response = self.provider.provenance_urls(metric_name, aliases)
-        assert_equals(response, 'http://dx.doi.org/10.5061/dryad.7898')
+        response = self.provider.provenance_url(metric_name, aliases)
+        assert_equals(response, self.testitem_provenance_url)
 
         # If no doi then return None
-        response = self.provider.provenance_urls(metric_name, [("url", "someurl")])
+        response = self.provider.provenance_url(metric_name, [("url", "someurl")])
         assert_equals(response, None)

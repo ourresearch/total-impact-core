@@ -254,6 +254,41 @@ class TestItemFactory():
         print item2.metrics
         assert_equals(item2.metrics["dryad:package_views"]['values'], {})
 
+    def test_adds_static_meta(self):
+        self.d.setResponses([deepcopy(ITEM_DATA)])
+        item = models.ItemFactory.get(
+            self.d,
+            "123",
+            provider.ProviderFactory.get_provider,
+            default_settings.PROVIDERS)
+
+        expected = {
+                    "display_name": "package views",
+                    "provider": "Dryad",
+                    "provider_url": "http:\/\/www.datadryad.org\/",
+                    "description": "Dryad package views: number of views of the main package page",
+                    "icon": "http:\/\/datadryad.org\/favicon.ico",
+                    "category": "views",
+                    "can_use_commercially": "1",
+                    "can_embed": "1",
+                    "can_aggregate": "1",
+                    "other_terms_of_use": "CC0"
+                }
+        assert_equals(item.metrics["dryad:package_views"]["static_meta"], expected)
+
+    def test_adds_provenance_url(self):
+        self.d.setResponses([deepcopy(ITEM_DATA)])
+        item = models.ItemFactory.get(
+            self.d,
+            "123",
+            provider.ProviderFactory.get_provider,
+            default_settings.PROVIDERS)
+
+        print item.metrics
+        
+        assert_equals(item.metrics["wikipedia:mentions"]["provenance_url"],
+            "http://en.wikipedia.org/wiki/Special:Search?search='10.1371/journal.pmed.0020124'&go=Go")
+
 
 '''
     @raises(LookupError)

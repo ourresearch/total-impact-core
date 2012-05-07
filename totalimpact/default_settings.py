@@ -45,7 +45,6 @@ PROVIDERS = {
         "timeout": 5,
         "metrics": {
             "mentions": {
-                "provenance_url" : "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go",
                 "static_meta" : {
                     "display_name": "mentions",
                     "provider": "Wikipedia",
