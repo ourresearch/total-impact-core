@@ -36,6 +36,7 @@ class MockDao(object):
 
 
 class InterruptTester(object):
+
     def run(self, stop_after=0):
         st = StoppableThread()
         st.start()
@@ -51,6 +52,7 @@ class QueueMock(object):
         self.current_item = 0
         self.max_items = max_items
         self.items = {}
+        self.thread_id = 'Queue Mock'
 
     def first(self):
         if self.none_count >= 3:
@@ -68,9 +70,14 @@ class QueueMock(object):
             self.none_count += 1
             return None
 
+    def dequeue(self):
+        item = self.first()
+        if item:
+            self.current_item += 1
+        return item
+
     def save_and_unqueue(self, item):
         logging.debug("Unqueue item %s" % item.id)
-        self.current_item += 1
 
 
 class ItemMock(object):
