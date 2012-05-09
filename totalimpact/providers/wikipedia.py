@@ -39,13 +39,16 @@ class Wikipedia(Provider):
         (ns,val) = aliases[0] 
 
         logger.debug("looking for mentions of alias %s" % val)
-        new_metrics = self.get_metrics_for_id(val)
+        new_metrics = self._get_metrics_for_id(val)
 
         return new_metrics
+
+    def _get_metrics_for_id(self, 
+            id, 
+            provider_url_template="http://localhost:8080/wikipedia/metrics&%s"):
+        #url = self.config.metrics['url'] % id
+        url = provider_url_template % id
     
-    def get_metrics_for_id(self, id):
-        # FIXME: urlencoding?
-        url = self.config.metrics['url'] % id 
         logger.debug("attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
