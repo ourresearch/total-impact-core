@@ -14,7 +14,6 @@ from optparse import OptionParser
 import logging
 import os
 
-providers_test_proxy now serves sample pages from simple descriptive urls
 
 class ProvidersTestProxy(BaseHTTPRequestHandler):
 
