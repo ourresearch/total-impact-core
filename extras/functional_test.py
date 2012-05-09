@@ -12,11 +12,9 @@ import sys
 import pickle
 from pprint import pprint
 
-#request_ids = {"dryad": ('doi','10.5061/dryad.7898'), 
-#                "wikipedia": ('doi', '10.1371/journal.pcbi.1000361'), 
-#                "github": ('github', 'egonw/gtd')}
-
-request_ids = {"dryad": ('doi','10.5061/dryad.7898')} 
+request_ids = {"dryad": ('doi','10.5061/dryad.7898'), 
+                "wikipedia": ('doi', '10.1371/journal.pcbi.1000361'), 
+                "github": ('github', 'egonw/gtd')}
 
 class TotalImpactAPI:
     base_url = 'http://localhost:5001/'
@@ -50,12 +48,14 @@ def checkItem(tiid, api_response, provider, debug=False):
     checks = {
         'wikipedia' : { 
             'aliases': ['doi'],
+            'biblio': [],
             'metrics' : {
                 'wikipedia:mentions' : 1
             }
         },
         'github' : { 
-            'aliases': ['github'],
+            'aliases': ['github', 'url', 'title'],
+            'biblio': [u'last_push_date', u'create_date', u'description', u'title', u'url', u'owner'],
             'metrics' : {
                 'github:forks' : 0,
                 'github:watchers' : 7
@@ -63,6 +63,7 @@ def checkItem(tiid, api_response, provider, debug=False):
         },
         'dryad' : { 
             'aliases': ['doi', 'url', 'title'],
+            'biblio': ['title', 'year'],
             'metrics' : {
                 'dryad:most_downloaded_file' : 63,
                 'dryad:package_views' : 149,
@@ -73,6 +74,7 @@ def checkItem(tiid, api_response, provider, debug=False):
 
     aliases = checks[provider]['aliases']
     metrics = checks[provider]['metrics']
+    biblio = checks[provider]['biblio']
 
     if debug: print "Checking %s result (%s)..." % (provider, tiid)
     
@@ -81,19 +83,36 @@ def checkItem(tiid, api_response, provider, debug=False):
     expected_result = set(aliases + 
         ['created','last_modified','last_completed'])
     if alias_result != expected_result:
-        if debug: print "Aliases is not correct, have %s, want %s" %(alias_result, expected_result)
+        if debug: 
+            print "Aliases is not correct, have %s, want %s" %(alias_result, expected_result)
+        return False
+
+    # Check biblio are correct
+    if api_response['biblio']:
+        biblio_result = set(api_response['biblio']['data'].keys())
+    else:
+        biblio_result = set([])
+    expected_result = set(biblio)
+
+    if biblio_result != expected_result:
+        if debug: 
+            print "Biblio is not correct, have %s, want %s" %(biblio_result, expected_result)
         return False
 
     # Check we've got some metric values
     for metric in metrics.keys():
         metric_data = api_response['metrics'][metric]['values']
         if len(metric_data) != 1:
-            if debug: print "Incorrect number of metric results for %s - %i" % (metric, len(metric_data))
+            if debug: 
+                print "Incorrect number of metric results for %s - %i" % (metric, len(metric_data))
+                print api_response['metrics']
             return False
         else:
             # expect the returned value to be equal or larger than reference
             if metric_data.values()[0] < metrics[metric]:
-                if debug: print "Incorrect metric result for %s - %s, expected at least %s" % (metric, metric_data.values()[0], metrics[metric])
+                if debug: 
+                    print "Incorrect metric result for %s - %s, expected at least %s" % (metric, metric_data.values()[0], metrics[metric])
+                print api_response['metrics']                    
                 return False
 
     return True
@@ -174,7 +193,7 @@ if __name__ == '__main__':
         print [(provider, sum(complete[provider].values())) for provider in providers], total
         if total == item_count * len(providers):
             print tiids
-            print final_responses
+            pprint(final_responses)
             sys.exit(0)    
 
         time.sleep(0.5)
