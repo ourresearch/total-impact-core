@@ -167,14 +167,6 @@ if __name__ == '__main__':
                 if not complete[provider][idx]:
                     tiid = tiids[provider][idx]
                     if options.missing:
-<<<<<<< HEAD
-                        print item_type, idx, itemid[item_type][idx]
-                    
-                    itemdata = ti.request_item_result(itemid[item_type][idx])
-                    complete[item_type][idx] = checkItem(
-                        itemid[item_type][idx], itemdata,
-                        item_type, debug=options.missing
-=======
                         print provider, idx, tiid
                     api_response = ti.request_item_result(tiid)
                     final_responses[provider][idx] = api_response
@@ -183,10 +175,9 @@ if __name__ == '__main__':
                         api_response,
                         provider, 
                         debug=options.missing
->>>>>>> functional_tests use sample_provider_pages for dryad
                     )
-                    if complete[item_type][idx] and options.printdata:
-                        pprint(itemdata)
+                    if complete[provider][idx] and options.printdata:
+                        pprint(api_response)
 
 
         total = sum([sum(complete[provider].values()) for provider in providers])
