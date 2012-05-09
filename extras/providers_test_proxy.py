@@ -28,6 +28,10 @@ class ProvidersTestProxy(BaseHTTPRequestHandler):
         except ValueError:
             url_part = submitted_url
 
+        # don't try to serve up the favicon, just exit
+        if url_part == "favicon.ico":
+            return
+
         sample_provider_page_path = os.path.join(datadir, url_part)
         print sample_provider_page_path
         try:
