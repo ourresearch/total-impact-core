@@ -83,7 +83,7 @@ class Dryad(Provider):
             provider_url_template="http://localhost:8080/dryad/members&%s"):
         enc = urllib.quote(query_string)
 
-        #url = self.config.member_items["querytype"]["dryad_author"]['url'] % enc
+        #url = self.config.member_items["querytype"][query_type]['url'] % enc
         url = provider_url_template % enc
         logger.debug("attempting to retrieve member items from " + url)
         
