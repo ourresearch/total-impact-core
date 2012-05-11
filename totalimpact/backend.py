@@ -136,17 +136,29 @@ class ContextFilter(logging.Filter):
 ctxfilter = ContextFilter()
 
 class QueueConsumer(StoppableThread):
+    
+    thread_id = 'Queue Consumer'
 
     def __init__(self, queue):
         StoppableThread.__init__(self)
         self.queue = queue
-    
+
     def first(self):
+        item = None
+        while item is None and not self.stopped():
+            item = self.queue.first()
+            if item is None:
+                # if the queue is empty, wait 0.5 seconds before checking
+                # again
+                time.sleep(0.5)
+        return item
+        
+    def dequeue(self):
         # get the first item on the queue (waiting until there is
         # such a thing if necessary)
         item = None
         while item is None and not self.stopped():
-            item = self.queue.first()
+            item = self.queue.dequeue()
             if item is None:
                 # if the queue is empty, wait 0.5 seconds before checking
                 # again
@@ -201,7 +213,7 @@ class ProviderThread(QueueConsumer):
             # get the first item on the queue - this waits until
             # there is something to return
             logger.debug("%s - waiting for queue item" % self.thread_id)
-            item = self.first()
+            item = self.dequeue()
             
             # Check we have an item, if we have been signalled to stop, then
             # item may be None
@@ -219,6 +231,7 @@ class ProviderThread(QueueConsumer):
                 # as we don't process it again a second time.
                 logger.debug("Processing Complete: Unqueue Item =====================")
                 self.queue.save_and_unqueue(item)
+                logger.debug("item unqueued")
                 ctxfilter.local.backend['item'] = ''
 
             # Flag for testing. We should finish the run loop as soon
@@ -356,9 +369,9 @@ class ProviderThread(QueueConsumer):
 
 class ProvidersAliasThread(ProviderThread):
     
-    def __init__(self, providers, dao):
+    def __init__(self, providers, dao, queueid=None):
         self.providers = providers
-        queue = AliasQueue(dao)
+        queue = AliasQueue(dao, queueid)
         ProviderThread.__init__(self, dao, queue)
         self.providers = providers
         self.thread_id = "AliasThread"
@@ -418,8 +431,10 @@ class ProvidersAliasThread(ProviderThread):
 
             ctxfilter.local.backend['provider'] = ''
             logger.info("final alias list is %s" % item.aliases.get_aliases_list())
-            item.aliases.last_completed = time.time()
-            item.save()
+
+            # Update last completed time to remove thread from the queue
+            #item.aliases.last_completed = time.time()
+            #item.save()
         
 
 
@@ -455,7 +470,6 @@ class ProviderMetricsThread(ProviderThread):
             else:
                 # The provider returned None for this item. This is either
                 # a non result or a permanent failure
-                print "xx", item
                 for key in self.provider.metric_names:
                     item.metrics[key]['values'][ts] = None
         else:

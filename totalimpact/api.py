@@ -38,11 +38,13 @@ def configure_app(app):
 
 app = create_app()
 
+mydao = None
+
 @app.before_request
 def connect_to_db():
     '''sets up the db. this has to happen before every request, so that
     we can pass in alternate config values for testing'''
-    global mydao #ick
+    global mydao
     mydao = dao.Dao(
         app.config["DB_NAME"],
         app.config["DB_URL"],
@@ -74,7 +76,8 @@ def tiid(ns, nid):
     viewname = 'queues/by_alias'
     res = mydao.view(viewname)
     rows = res["rows"]
-    tiids = [row["id"] for row in rows]
+    print rows
+    tiids = [row["id"] for row in rows if row['key'] == [ns,nid]]
 
     if not tiids:
         abort(404)
@@ -369,48 +372,6 @@ if __name__ == "__main__":
 
     logger = logging.getLogger()
 
-    # Adding this by handle. fileConfig doesn't allow filters to be added
-    from totalimpact.backend import ctxfilter
-    handler = logging.handlers.RotatingFileHandler("logs/total-impact.log")
-    handler.level = logging.DEBUG
-    #formatter = logging.Formatter("%(asctime)s %(levelname)8s %(name)s %(item)s %(thread)s %(provider)s - %(message)s","%y%m%d %H%M%S")
-    formatter = logging.Formatter("%(asctime)s %(levelname)8s %(item)8s %(thread)s%(provider)s - %(message)s","%y%m%d %H%M%S")
-    handler.formatter = formatter
-    handler.addFilter(ctxfilter)
-    logger.addHandler(handler)
-    ctxfilter.threadInit()
-
-    logger.debug("test")
-
-    from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
-    from totalimpact.providers.provider import Provider, ProviderFactory
-
-    # Start all of the backend processes
-    print "Starting alias retrieval thread"
-    providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
-    alias_thread = ProvidersAliasThread(providers, mydao)
-    alias_thread.start()
-
-    # Start each of the metric providers
-    metrics_threads = []
-    for provider in providers:
-        thread = ProviderMetricsThread(provider, mydao)
-        metrics_threads.append(thread)
-        thread.start()
-
     # run it
     app.run(host='0.0.0.0', port=5001, debug=False)
-
-    print "Stopping alias thread"
-    alias_thread.stop()
-    print "Stopping metric threads"
-    for thread in metrics_threads:
-        thread.stop()
-    print "Waiting on metric threads"
-    for thread in metrics_threads:
-        thread.join()
-    print "Waiting on alias thread"
-    alias_thread.join()
-    print "All stopped"
-
 
