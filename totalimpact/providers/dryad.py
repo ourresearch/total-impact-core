@@ -80,10 +80,15 @@ class Dryad(Provider):
             raise ProviderContentMalformedError("Did not find expected number of matching arr blocks")
         return matching_arrs
 
-    def member_items(self, query_string, query_type):
+
+    def member_items(self, 
+            query_string, 
+            query_type, 
+            provider_url_template="http://localhost:8080/dryad/members&%s"):
         enc = urllib.quote(query_string)
 
-        url = self.config.member_items["querytype"]["dryad_author"]['url'] % enc
+        #url = self.config.member_items["querytype"][query_type]['url'] % enc
+        url = provider_url_template % enc
         logger.debug("attempting to retrieve member items from " + url)
         
         # try to get a response from the data provider        
@@ -120,8 +125,12 @@ class Dryad(Provider):
         
         return new_aliases
 
-    def get_aliases_for_id(self, id):
-        url = self.config.aliases['url'] % id
+    def get_aliases_for_id(self, 
+            id,
+            provider_url_template="http://localhost:8080/dryad/aliases&%s"):
+        #url = self.config.aliases['url'] % id
+        url = provider_url_template % id
+
         logger.debug("attempting to retrieve aliases from " + url)
 
         # try to get a response from the data provider        
@@ -182,8 +191,12 @@ class Dryad(Provider):
         else:
             return None
 
-    def _get_metrics_for_id(self, id):
-        url = self.config.metrics['url'] % id
+    def _get_metrics_for_id(self, 
+            id, 
+            provider_url_template="http://localhost:8080/dryad/metrics&%s"):
+        #url = self.config.metrics['url'] % id
+        url = provider_url_template % id
+
         logger.debug("attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
@@ -236,8 +249,12 @@ class Dryad(Provider):
             logger.info("Not checking biblio as no dryad doi")
             return None
 
-    def get_biblio_for_id(self, id):
-        url = self.config.biblio['url'] % id
+    def get_biblio_for_id(self, 
+            id, 
+            provider_url_template="http://localhost:8080/dryad/biblio&%s"):
+        #url = self.config.biblio['url'] % id
+        url = provider_url_template % id
+
         logger.debug("attempting to retrieve biblio from " + url)
         
         # try to get a response from the data provider        
