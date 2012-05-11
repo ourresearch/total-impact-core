@@ -102,6 +102,8 @@ if __name__ == '__main__':
                       help="Number of simultaneous requests to make")
     parser.add_option("-m", "--missing", dest="missing", default=False, action="store_true",
                       help="Display any outstanding items")
+    parser.add_option("-p", "--printdata", dest="printdata", default=False, action="store_true",
+                      help="Display item data")
     (options, args) = parser.parse_args()
 
 
@@ -135,11 +137,14 @@ if __name__ == '__main__':
                 if not complete[item_type][idx]:
                     if options.missing:
                         print item_type, idx, itemid[item_type][idx]
+                    
+                    itemdata = ti.request_item_result(itemid[item_type][idx])
                     complete[item_type][idx] = checkItem(
-                        itemid[item_type][idx],
-                        ti.request_item_result(itemid[item_type][idx]),
+                        itemid[item_type][idx], itemdata,
                         item_type, debug=options.missing
                     )
+                    if complete[item_type][idx] and options.printdata:
+                        pprint(itemdata)
 
         total = sum([sum(complete[item_type].values()) for item_type in ['dryad','wikipedia','github']])
         print [(item_type, sum(complete[item_type].values())) for item_type in ['dryad','wikipedia','github']], total

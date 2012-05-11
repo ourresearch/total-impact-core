@@ -9,27 +9,48 @@ from pprint import pprint
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
-db_write_lock = threading.Lock()
 
-def todict(obj, classkey=None):
+import logging
+logger = logging.getLogger('models')
+
+def todict(obj, classkey=None, ignore=None):
     """ Convert an object to a diff representation 
         Recipe from http://stackoverflow.com/questions/1036409/recursively-convert-python-object-graph-to-dictionary
+        Added in an extra parameter 'ignore' as 
+        copying the dao is horribly horribly slow
     """
     if isinstance(obj, dict):
         for k in obj.keys():
-            obj[k] = todict(obj[k], classkey)
+            obj[k] = todict(obj[k], classkey, ignore)
         return obj
     elif hasattr(obj, "__iter__"):
         return [todict(v, classkey) for v in obj]
     elif hasattr(obj, "__dict__"):
-        data = dict([(key, todict(value, classkey)) 
+        data = dict([(key, todict(value, classkey, ignore)) 
             for key, value in obj.__dict__.iteritems() 
-            if not callable(value) and not key.startswith('_')])
+            if not callable(value) and not key.startswith('_')
+            and not key in ignore])
         if classkey is not None and hasattr(obj, "__class__"):
             data[classkey] = obj.__class__.__name__
         return data
     else:
         return obj
+
+class GlobalItemLock:
+
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.itemLock = {}
+
+    def getItemLock(self, item_id):
+        self.lock.acquire()
+        if not self.itemLock.has_key(item_id):
+            self.itemLock[item_id] = threading.Lock()
+        self.lock.release()
+        return self.itemLock[item_id]
+ 
+
+itemlock = GlobalItemLock()
 
 
 class Saveable(object):
@@ -46,9 +67,8 @@ class Saveable(object):
         ''' Recursively convert this object's members into a dictionary structure for 
             serialisation to the database.
         '''
-        dict_repr = todict(self)
-        # We don't want to store the dao object
-        del dict_repr["dao"]
+        start_time = time.time()
+        dict_repr = todict(self,ignore=['dao'])
         return dict_repr
 
     def _update_dict(self, input, my_dict=None):
@@ -73,7 +93,7 @@ class Saveable(object):
                 new_my_dict = my_dict.setdefault(k, {})
                 self._update_dict(v, new_my_dict)
 
-            except AttributeError:
+            except AttributeError, e:
                 if not my_dict[k]:
                     my_dict[k] = v
         
@@ -83,18 +103,28 @@ class Saveable(object):
         """ Save the object to the database, handling merging of data 
             should the object have already been updated elsewhere """
         # Blocking call to acquire a lock for this section
-        try:
-            db_write_lock.acquire(True)
-            new_dict = self.dao.get(self.id)
-            dict_to_save = self._update_dict(new_dict)
-            # If we are updating an object, then we should
-            # set _rev from the object we have just read so
-            # we don't get conflict errors on commit.
-            if new_dict:
-                dict_to_save['_rev'] = new_dict['_rev']
-            res = self.dao.save_and_commit(dict_to_save)
-        finally:
-            db_write_lock.release()
+        retry = True
+        import couchdb
+
+        # Get the lock for this item for write
+        lock = itemlock.getItemLock(self.id)
+        lock.acquire()
+        while retry:
+            try:
+                # Find the current state of the item in the database
+                # which we will update
+                new_dict = self.dao.get(self.id)
+                dict_to_save = self._update_dict(new_dict)
+                # If we are updating an object, then we should
+                # set _rev from the object we have just read so
+                # we don't get conflict errors on commit.
+                if new_dict:
+                    dict_to_save['_rev'] = new_dict['_rev']
+                res = self.dao.save_and_commit(dict_to_save)
+                retry = False
+            except couchdb.ResourceConflict, e:
+                logger.info("Couch conflict, will retry")
+        lock.release()
 
         return res
 

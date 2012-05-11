@@ -184,6 +184,7 @@ class TestItem(ApiTester):
         returned = BeautifulSoup(response.data)
         expected = BeautifulSoup(RENDERED_ARTICLE)
 
+
         assert returned.find('h4') is not None
         assert_equals(returned('h4'), expected('h4'))     
 
