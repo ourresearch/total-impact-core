@@ -14,7 +14,6 @@ logger = logging.getLogger('providers.github')
 
 class Github(Provider):  
 
-    provider_name = "github"
     metric_names = ['github:watchers', 'github:forks']
 
     metric_namespaces = ["github"]
@@ -28,24 +27,34 @@ class Github(Provider):
     provides_metrics = True
     provides_biblio = True
 
+    member_items_url_template = "https://api.github.com/users/%s/repos"
+    biblio_url_template = "https://github.com/api/v2/json/repos/show/%s"
+    aliases_url_template = "https://github.com/api/v2/json/repos/show/%s"
+    metrics_url_template = "https://github.com/api/v2/json/repos/show/%s"
+
     def __init__(self, config):
         super(Github, self).__init__(config)
         self.id = self.config.id
 
     def get_github_id(self, aliases):
-        matching_id = [id for (namespace, id) in aliases if namespace=="github"]
-        if matching_id:
-            return(matching_id[0][0])
-        else:
-            return None
+        matching_id = None
+        for alias in aliases:
+            if alias:
+                (namespace, id) = alias
+                if namespace == "github":
+                    matching_id = id[0]
+        print aliases, matching_id
+        return matching_id
 
     def member_items(self, 
             query_string, 
             query_type, 
-            provider_url_template="http://localhost:8080/github/members&%s"):
+            provider_url_template=None):
+        if not provider_url_template:
+            provider_url_template = self.member_items_url_template
+
         enc = urllib.quote(query_string)
 
-        #url = self.config.member_items["querytype"][query_type]['url'] % enc
         url = provider_url_template % enc
 
         logger.debug("attempting to retrieve member items from " + url)
@@ -65,7 +74,10 @@ class Github(Provider):
 
     def biblio(self, 
             aliases,             
-            provider_url_template="http://localhost:8080/github/biblio&%s"):
+            provider_url_template=None):
+
+        if not provider_url_template:
+            provider_url_template = self.biblio_url_template
 
         id = self.get_github_id(aliases)
 
@@ -73,7 +85,6 @@ class Github(Provider):
             logger.info("Not checking biblio as no github id")
             return None
 
-        #url = self.config.biblio['url'] % id
         url = provider_url_template % id
         logger.debug("attempting to retrieve biblio from " + url)
         
@@ -107,11 +118,13 @@ class Github(Provider):
 
     def aliases(self, 
             aliases, 
-            provider_url_template="http://localhost:8080/github/aliases&%s"):
+            provider_url_template=None):
+
+        if not provider_url_template:
+            provider_url_template = self.aliases_url_template
 
         id = self.get_github_id(aliases)
 
-        #url = self.config.aliases['url'] % id
         url = provider_url_template % id
 
         logger.debug("hi heather attempting to retrieve aliases from " + url)
@@ -150,11 +163,13 @@ class Github(Provider):
 
     def metrics(self, 
             aliases, 
-            provider_url_template="http://localhost:8080/github/metrics&%s"):
+            provider_url_template=None):
+
+        if not provider_url_template:
+            provider_url_template = self.metrics_url_template
 
         id = self.get_github_id(aliases)
 
-        #url = self.config.metrics['url'] % id
         url = provider_url_template % id
 
         logger.debug("attempting to retrieve metrics from " + url)

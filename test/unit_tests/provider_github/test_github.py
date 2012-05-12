@@ -37,10 +37,10 @@ from test.provider import ProviderTestCase
 
 class TestGithub(ProviderTestCase):
 
-    testitem_members = ("github_user", "egonw")
-    testitem_aliases = None
-    testitem_metrics = ("doi", DOI)
-    testitem_biblio = None
+    testitem_members = ("github", "egonw")
+    testitem_aliases = ("github", "egonw")
+    testitem_metrics = ("github", "egonw")
+    testitem_biblio = ("github", "egonw")
 
     provider_name = 'github'
 

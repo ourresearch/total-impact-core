@@ -18,12 +18,6 @@ SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir,
     "sample_extract_aliases_page.xml")
 
 
-# prepare a monkey patch to override the http_get method of the Provider
-class DummyResponse(object):
-    def __init__(self, status, content):
-        self.status_code = status
-        self.text = content
-
 def get_aliases_html_success(self, url, headers=None, timeout=None):
     if ("dc.contributor" in url):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
@@ -46,15 +40,10 @@ class TestAliasQueue(unittest.TestCase):
         self.app.config["DB_NAME"] = self.testing_db_name
         self.d = dao.Dao(self.testing_db_name, self.app.config["DB_URL"],
             self.app.config["DB_USERNAME"], self.app.config["DB_PASSWORD"])
-
-        # monkey patch http_get
-        self.old_http_get = Provider.http_get
-        Provider.http_get = get_aliases_html_success
        
         
     def tearDown(self):
         self.app.config["DB_NAME"] = self.old_db_name
-        Provider.http_get = self.old_http_get
 
     def test_alias_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
@@ -104,5 +93,5 @@ class TestAliasQueue(unittest.TestCase):
             "data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides"
             )
         print resp_dict
-        assert_equals(resp_dict["biblio"]['data']["year"], "2010")
+        assert_equals(resp_dict["biblio"]["data"]["year"], "2010")
 

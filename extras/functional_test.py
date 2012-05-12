@@ -105,14 +105,14 @@ def checkItem(tiid, api_response, provider, debug=False):
         if len(metric_data) != 1:
             if debug: 
                 print "Incorrect number of metric results for %s - %i" % (metric, len(metric_data))
-                print api_response['metrics']
+                pprint(api_response['metrics'])
             return False
         else:
             # expect the returned value to be equal or larger than reference
             if metric_data.values()[0] < metrics[metric]:
                 if debug: 
                     print "Incorrect metric result for %s - %s, expected at least %s" % (metric, metric_data.values()[0], metrics[metric])
-                print api_response['metrics']                    
+                pprint(api_response['metrics'])
                 return False
 
     return True
@@ -136,8 +136,6 @@ if __name__ == '__main__':
     
     ti = TotalImpactAPI()
 
-    dryad_item = wikipedia_item = github_item = []
-    dryad_data = wikipedia_data = github_data = []
     complete = {}
     tiids = {}
     final_responses = {}

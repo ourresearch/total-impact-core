@@ -28,7 +28,7 @@ class ProviderFactory(object):
         for provider_name, v in config_providers.iteritems():
             try:
                 prov = ProviderFactory.get_provider(provider_name)
-                prov.name = provider_name
+                prov.provider_name = provider_name
                 providers.append(prov)
             except ProviderConfigurationError:
                 logger.error("Unable to configure provider ... skipping " + str(v))
@@ -40,6 +40,7 @@ class Provider(object):
         self.config = config
         self.max_cache_duration = max_cache_duration
         self.max_retries = max_retries
+        self.provider_name = self.__class__.__name__.lower()
 
     def __repr__(self):
         return "Provider(%s)" % self.provider_name
