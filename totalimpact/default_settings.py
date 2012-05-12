@@ -32,7 +32,7 @@ DB_PASSWORD = ""
 PROXY = ""
 
 # Memcache server enabled
-CACHE_ENABLED = "1"
+CACHE_ENABLED = True
 
 # List of desired providers and their configuration files
 # Alias methods will be called in the order of this list
@@ -41,7 +41,6 @@ PROVIDERS = {
     "wikipedia": {
         "class" : "totalimpact.providers.wikipedia.Wikipedia",
         "config" : "totalimpact/providers/wikipedia.conf.json",
-        "metrics_url": "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'",
         "timeout": 5,
 	"workers": 10,
         "metrics": {
@@ -67,9 +66,6 @@ PROVIDERS = {
         "supported_namespaces" : ["doi"],
         "timeout" : 5,
 	"workers":10,
-        "aliases_url" : "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.identifier.uri,dc.title",
-        "biblio_url" : "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.date.accessioned.year,dc.identifier.uri,dc.title_ac,dc.contributor.author_ac",
-        "member_items_url": "http://datadryad.org/solr/search/select/?q=dc.contributor.author%%3A%%22%s%%22&fl=dc.identifier",
         "metrics": {
             "package_views": {
                 "static_meta" : {
@@ -120,8 +116,6 @@ PROVIDERS = {
         "config" : "totalimpact/providers/github.conf.json",
         "supported_namespaces" : ["github"],
 	"workers":10,
-        "member_items_url" : "https://api.github.com/users/%s/repos",
-        "metrics_url" : "https://github.com/api/v2/json/repos/show/%s",
         "metrics": {}
     }
 }

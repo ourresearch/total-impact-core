@@ -3,6 +3,7 @@
 from flask import Flask, jsonify, json, request, redirect, abort, make_response
 from flask import render_template, flash
 import os, json, time
+from pprint import pprint
 
 from totalimpact import dao
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
@@ -76,7 +77,7 @@ def tiid(ns, nid):
     viewname = 'queues/by_alias'
     res = mydao.view(viewname)
     rows = res["rows"]
-    print rows
+    pprint(rows)
     tiids = [row["id"] for row in rows if row['key'] == [ns,nid]]
 
     if not tiids:
@@ -176,7 +177,7 @@ def make_item_resp(item_dict, format):
 def item(tiid, format=None):
     # TODO check request headers for format as well.
     item_dict = make_item_dict(tiid)
-    print item_dict
+    pprint(item_dict)
     return make_item_resp(item_dict, format)
 
 '''

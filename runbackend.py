@@ -59,7 +59,7 @@ if __name__ == "__main__":
     metrics_threads = []
     for provider in providers:
         providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
-        thread_count = app.config["PROVIDERS"][provider.provider_name]["workers"]
+        thread_count = app.config["PROVIDERS"][provider.name]["workers"]
         print "  ", provider.provider_name
         for idx in range(thread_count):
             thread = ProviderMetricsThread(provider, mydao)

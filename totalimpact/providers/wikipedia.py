@@ -16,7 +16,6 @@ class Wikipedia(Provider):
         the Wikipedia search interface.
     """
 
-    provider_name = "wikipedia"
     metric_names = ['wikipedia:mentions']
     metric_namespaces = ["doi"]
     alias_namespaces = None
@@ -30,25 +29,30 @@ class Wikipedia(Provider):
     provides_biblio = False
 
     provenance_url_template = "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go"
+    metrics_url_template = "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'"
+
 
     def __init__(self, config):
         super(Wikipedia, self).__init__(config)
 
-    def metrics(self, aliases):
+    def metrics(self, 
+            aliases,             
+            provider_url_template=None):
+
+        if not provider_url_template:
+            provider_url_template = self.metrics_url_template
+
         if len(aliases) != 1:
             logger.warn("More than 1 DOI alias found, this should not happen. Will process first item only.")
         
         (ns,val) = aliases[0] 
 
         logger.debug("looking for mentions of alias %s" % val)
-        new_metrics = self._get_metrics_for_id(val)
+        new_metrics = self._get_metrics_for_id(val, provider_url_template)
 
         return new_metrics
 
-    def _get_metrics_for_id(self, 
-            id, 
-            provider_url_template="http://localhost:8080/wikipedia/metrics&%s"):
-        #url = self.config.metrics['url'] % id
+    def _get_metrics_for_id(self, id, provider_url_template):
         url = provider_url_template % id
     
         logger.debug("attempting to retrieve metrics from " + url)

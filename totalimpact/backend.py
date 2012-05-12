@@ -267,6 +267,7 @@ class ProviderThread(QueueConsumer):
         while not error_limit_reached and not success and not self.stopped():
 
             error_type = None
+
             try:
 
                 if method == 'aliases':
@@ -274,7 +275,11 @@ class ProviderThread(QueueConsumer):
                     if provider.provides_aliases:
                         current_aliases = item.aliases.get_aliases_list(provider.alias_namespaces)
                         if current_aliases:
-                            response = provider.aliases(current_aliases)
+                            try:
+                                url = api.app.config["PROVIDERS"][provider.provider_name]["aliases_url"]
+                            except KeyError:
+                                url = None
+                            response = provider.aliases(current_aliases, url)
                         else:
                             logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
                             response = []
@@ -286,7 +291,11 @@ class ProviderThread(QueueConsumer):
                     if provider.provides_metrics:
                         current_aliases = item.aliases.get_aliases_list(provider.metric_namespaces)
                         if current_aliases:
-                            response = provider.metrics(current_aliases)
+                            try:
+                                url = api.app.config["PROVIDERS"][provider.provider_name]["metrics_url"]
+                            except KeyError:
+                                url = None
+                            response = provider.metrics(current_aliases, url)
                         else:
                             logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
                             response = {}
@@ -298,7 +307,11 @@ class ProviderThread(QueueConsumer):
                     if provider.provides_biblio:
                         current_aliases = item.aliases.get_aliases_list(provider.biblio_namespaces)
                         if current_aliases:
-                            response = provider.biblio(current_aliases)
+                            try:
+                                url = api.app.config["PROVIDERS"][provider.provider_name]["biblio_url"]
+                            except KeyError:
+                                url = None
+                            response = provider.biblio(current_aliases, url)
                         else:
                             logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
                             response = {}
