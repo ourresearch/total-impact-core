@@ -32,7 +32,7 @@ GITHUB_MEMBERITEMS_ORGS_HTML = os.path.join(datadir,
 
 DOI = "10.5061/dryad.7898"
 
-from test.provider import ProviderTestCase
+from test.unit_tests.providers.test_common import ProviderTestCase
 
 class TestGithub(ProviderTestCase):
 
