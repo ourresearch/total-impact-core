@@ -1,0 +1,8 @@
+# Everything and anything that's secret goes in here.
+# Use build-config.sh to create an encrypted version of this that can go in version control
+Mendeley_key = <Mendeley_key>
+PLoS_key = <PLoS_key>
+Slideshare_key = <Slideshare_key>
+Slideshare_secret = <Slideshare_secret>
+Topsy_key = <Topsy_key>
+
