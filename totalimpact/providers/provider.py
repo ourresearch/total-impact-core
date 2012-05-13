@@ -21,6 +21,7 @@ class ProviderFactory(object):
         """
         # directly beneath the working directory
         provider_config_path = os.path.join(os.getcwd(), provider_definition['config'])
+	print "Config path", provider_config_path
         provider_config = Configuration(provider_config_path, False)
         provider_class_name = provider_definition['class']
         provider_class = provider_config.get_class(provider_class_name)
@@ -67,11 +68,11 @@ class Provider(object):
         """
         error_conf = self.config.errors
         if error_conf is None:
-            raise ProviderConfigurationError("This provider has no config for error handling")
+            raise ProviderConfigurationError("Provider %s has no config for error handling" % self.provider_name)
 
         conf = error_conf.get(error_type)
         if conf is None:
-            raise ProviderConfigurationError("This provider has no config for error handling for error type %s" % error_type)
+            raise ProviderConfigurationError("Provider %s has no config for error handling for error type %s" % (self.provider_name, error_type))
 
         retries = conf.get("retries")
         if retries is None or retries == 0:
@@ -100,11 +101,11 @@ class Provider(object):
     def get_max_retries(self, error_type):
         error_conf = self.config.errors
         if error_conf is None:
-            raise ProviderConfigurationError("This provider has no config for error handling")
+            raise ProviderConfigurationError("Provider %s has no config for error handling" % self.provider_name)
 
         conf = error_conf.get(error_type)
         if conf is None:
-            raise ProviderConfigurationError("This provider has no config for error handling for error type %s" % error_type)
+            raise ProviderConfigurationError("Provider %s has no config for error handling for error type %s" % (self.provider_name, error_type))
 
         retries = conf.get("retries")
         if retries is None:
@@ -192,6 +193,10 @@ class ProviderError(Exception):
         msg = " " + self.message + " " if self.message is not None and self.message != "" else ""
         wraps = "(inner exception: " + repr(self.inner) + ")"
         return self.__class__.__name__ + ":" + msg + wraps
+
+    def __str__(self):
+        return repr(self._message)
+
 
 class ProviderConfigurationError(ProviderError):
     pass
