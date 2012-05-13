@@ -12,6 +12,11 @@ from totalimpact.providers.provider import ProviderConfigurationError, ProviderT
 from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
 from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
 
+import daemon
+import lockfile
+from totalimpact.common import PidFile
+
+
 logger = logging.getLogger('backend')
 
 class TotalImpactBackend(object):
@@ -491,7 +496,7 @@ from totalimpact.tilogging import logging
 from totalimpact import default_settings
 
 
-if __name__ == "__main__":
+def main ():
 
     logger = logging.getLogger()
 
@@ -565,4 +570,18 @@ if __name__ == "__main__":
         at.join()
     print "All stopped"
 
+ 
+ 
+if __name__ == "__main__":
+
+    rootdir = os.path.dirname(os.path.realpath(__file__))
+    print "Running from", rootdir
+    context = daemon.DaemonContext()
+    output = open(os.path.join(rootdir, 'logs/backend.log'),'a+')
+    context.stderr = output
+    context.stdout = output
+    context.pidfile = PidFile(os.path.join(rootdir, 'backend.pid'))
+    context.working_directory = rootdir
+    with context:
+        main()
 
