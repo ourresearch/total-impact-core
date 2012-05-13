@@ -32,8 +32,8 @@ class Wikipedia(Provider):
     metrics_url_template = "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'"
 
 
-    def __init__(self, config):
-        super(Wikipedia, self).__init__(config)
+    def __init__(self):
+        super(Wikipedia, self).__init__()
 
     def metrics(self, 
             aliases,             
@@ -58,7 +58,7 @@ class Wikipedia(Provider):
         logger.debug("attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url, timeout=self.config.metrics['timeout'], error_conf=self.config.errors)
+        response = self.http_get(url)
         
         # client errors and server errors are not retried, as they usually 
         # indicate a permanent failure

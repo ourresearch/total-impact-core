@@ -1,6 +1,5 @@
 import threading, time, sys
 import traceback
-from totalimpact.config import Configuration
 from totalimpact import dao, api
 from totalimpact.queue import AliasQueue, MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError

@@ -1,4 +1,3 @@
-from totalimpact.config import Configuration
 from totalimpact.cache import Cache
 from totalimpact.dao import Dao
 from totalimpact import providers
@@ -14,7 +13,7 @@ class ProviderFactory(object):
         provider_module = importlib.import_module('totalimpact.providers.'+provider_name)
         provider = getattr(provider_module, provider_name.title())
 
-        instance = provider(Configuration("totalimpact/providers/"+provider_name+".conf.json"))
+        instance = provider()
 
 
         return instance
@@ -36,8 +35,7 @@ class ProviderFactory(object):
         
 class Provider(object):
 
-    def __init__(self, config, max_cache_duration=86400, max_retries=999):
-        self.config = config
+    def __init__(self, max_cache_duration=86400, max_retries=999):
         self.max_cache_duration = max_cache_duration
         self.max_retries = max_retries
         self.provider_name = self.__class__.__name__.lower()
@@ -139,16 +137,6 @@ class Provider(object):
         if app.config["CACHE_ENABLED"]:
             c.set_cache_entry(url, {'text' : r.text, 'status_code' : r.status_code})
         return r
-
-    def _update_metrics_from_dict(self, new_metrics, old_metrics):
-        now_str = str(int(time.time()))
-        for metric_name, metric_val in new_metrics.iteritems():
-            old_metrics[metric_name]['values'][now_str] = metric_val
-
-            #TODO config should have different static_meta sections keyed by metric.
-            old_metrics[metric_name]['static_meta'] = self.config.static_meta
-
-        return old_metrics # now updated
 
 
 class ProviderError(Exception):

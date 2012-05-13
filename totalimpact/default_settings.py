@@ -40,7 +40,6 @@ CACHE_ENABLED = True
 PROVIDERS = {
     "wikipedia": {
         "class" : "totalimpact.providers.wikipedia.Wikipedia",
-        "config" : "totalimpact/providers/wikipedia.conf.json",
         "timeout": 5,
 	"workers": 10,
         "metrics": {
@@ -62,7 +61,6 @@ PROVIDERS = {
     },
     "dryad": {
         "class" : "totalimpact.providers.dryad.Dryad",
-        "config" : "totalimpact/providers/dryad.conf.json",
         "supported_namespaces" : ["doi"],
         "timeout" : 5,
 	"workers":10,
@@ -113,7 +111,6 @@ PROVIDERS = {
     },
     "github":{
         "class" : "totalimpact.providers.github.Github",
-        "config" : "totalimpact/providers/github.conf.json",
         "supported_namespaces" : ["github"],
 	"workers":10,
         "metrics": {}

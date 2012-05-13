@@ -145,18 +145,8 @@ See the API documentation for full details of each of these methods, but here is
 
 Each Provider that runs must be declared in the main TI configuration file, so before you can get yours to execute you must update
 
-    config/totalimpact.conf.json
-    
-and include the classname of your provider and the route to the providers configuration file.  You add it to the "providers" config option, thus:
-
-    "providers" : [
-        {
-            "class" : "totalimpact.providers.myprovider.MyWonderfulProvider",
-            "config" : "totalimpact/providers/myprovider.conf.json"
-        },
-        ... other providers ...
-    ],
-    
+    default_settings.py
+        
 When the TI application starts, all the providers will be loaded from configuration, and those which return True on provides_metrics() will be given their own worker thread, and will be passed items from the Queue to process the metrics for.  They will also be added to an aliasing worker thread which will pass them items for which to obtain aliases.  There is no need for individual providers to know about threading - they should operate as pure client libraries joining TI to the data source.
 
 It is not possible to provide a generic recipe for constructing a provider, as each data source will have its own idioms and approaches.  Instead, we can describe the features that the super-class has to support the implementation, and the error handling which is implemented in the thread.

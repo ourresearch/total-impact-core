@@ -237,50 +237,48 @@ def provider_memberitems(pid):
     return resp
 
 # For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5001/provider/Dryad/aliases/10.5061%2Fdryad.7898
-@app.route('/provider/<pid>/aliases/<id>', methods=['GET'] )
-def provider_aliases(pid,id):
+# Example: http://127.0.0.1:5001/provider/dryad/aliases/10.5061/dryad.7898
+@app.route('/provider/<pid>/aliases/<path:id>', methods=['GET'] )
+def provider_aliases(pid, id):
 
-    for prov in providers:
-        if prov.id == pid:
-            provider = prov
-            break
+    provider = ProviderFactory.get_provider(pid)
 
-    aliases = provider.get_aliases_for_id(id.replace("%", "/"))
+    aliases = provider._get_aliases_for_id(id)
 
     resp = make_response( json.dumps(aliases, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
 
 # For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5001/provider/Dryad/metrics/10.5061%2Fdryad.7898
-@app.route('/provider/<pid>/metrics/<id>', methods=['GET'] )
-def metric_snaps(pid,id):
+# Example: http://127.0.0.1:5001/provider/dryad/metrics/10.5061/dryad.7898
+@app.route('/provider/<pid>/metrics/<path:id>', methods=['GET'] )
+def metric_snaps(pid, id):
 
-    for prov in providers:
-        if prov.id == pid:
-            provider = prov
-            break
+    provider = ProviderFactory.get_provider(pid)
 
-    metrics = provider.get_metrics_for_id(id.replace("%", "/"))
+    metrics = provider._get_metrics_for_id(id)
 
-    resp = make_response( json.dumps(metrics.data, sort_keys=True, indent=4) )
+    resp = make_response( json.dumps(metrics, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
 
 # For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5001/provider/Dryad/biblio/10.5061%2Fdryad.7898
-@app.route('/provider/<pid>/biblio/<id>', methods=['GET'] )
-def provider_biblio(pid,id):
+# Example: http://127.0.0.1:5001/provider/dryad/biblio/10.5061/dryad.7898
+@app.route('/provider/<provider_name>/biblio/<path:id>', methods=['GET'] )
+def provider_biblio(provider_name, id=None):
 
-    for prov in providers:
-        if prov.id == pid:
-            provider = prov
-            break
 
-    biblio = provider.get_biblio_for_id(id.replace("%", "/"))
+    provider = ProviderFactory.get_provider(provider_name)
 
-    resp = make_response( json.dumps(biblio.data, sort_keys=True, indent=4) )
+    if id=="example":
+        url = "http://localhost:8080/" + provider_name + "/biblio&%s"
+        app.config["PROVIDERS"][provider_name]["biblio_url"] = url
+        ## FIXME should pull from provider.testid or something
+        id = "10.5061/dryad.7898"
+
+    biblio = provider._get_biblio_for_id(id)
+
+    resp = make_response( json.dumps(biblio, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
 

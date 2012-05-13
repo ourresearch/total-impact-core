@@ -5,7 +5,6 @@ from nose.tools import nottest, assert_equals
 from BeautifulSoup import BeautifulSoup
 
 from totalimpact import api, dao
-from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
 import os, yaml
 

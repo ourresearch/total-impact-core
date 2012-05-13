@@ -3,7 +3,6 @@ from urllib import quote_plus
 from nose.tools import nottest, assert_equals
 from copy import deepcopy
 
-from totalimpact.config import Configuration
 from totalimpact import dao, api
 from totalimpact.tilogging import logging
 

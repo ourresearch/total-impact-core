@@ -64,9 +64,7 @@ class TestBackend(unittest.TestCase):
 
         TEST_DB_NAME = "test_backend"
         TEST_PROVIDER_CONFIG = {
-            "wikipedia": {
-                "class" : "totalimpact.providers.wikipedia.Wikipedia",
-                "config" : "totalimpact/providers/wikipedia.conf.json"
+            "wikipedia": {}
             }
         }
 
