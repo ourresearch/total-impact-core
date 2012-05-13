@@ -26,6 +26,9 @@ class Dryad(Provider):
     provides_metrics = True
     provides_biblio = True
 
+    example_id = ("doi", "10.5061/dryad.7898")
+
+
     # For Dryad the template is the same for all metrics
     # This template takes a doi
     provenance_url_template = "http://dx.doi.org/%s"

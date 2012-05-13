@@ -32,6 +32,8 @@ class Github(Provider):
     aliases_url_template = "https://github.com/api/v2/json/repos/show/%s"
     metrics_url_template = "https://github.com/api/v2/json/repos/show/%s"
 
+    example_id = ("github", "egonw")
+
     def __init__(self):
         super(Github, self).__init__()
 

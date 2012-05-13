@@ -24,7 +24,7 @@ class ProvidersTestProxy(BaseHTTPRequestHandler):
         submitted_url = self.path[1:len(self.path)+1]
         # separate everything after & because is id
         try:
-            (url_part, arg_part) = submitted_url.split("&")
+            (url_part, arg_part) = submitted_url.split("?")
         except ValueError:
             url_part = submitted_url
 
