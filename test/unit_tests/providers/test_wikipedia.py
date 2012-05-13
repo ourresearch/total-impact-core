@@ -5,7 +5,7 @@ from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.providers.provider import ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError
 from totalimpact.providers.provider import ProviderHttpError, ProviderContentMalformedError, ProviderValidationFailedError
 from totalimpact.api import app
-from test.provider import ProviderTestCase
+from test.unit_tests.providers.test_common import ProviderTestCase
 
 from nose.tools import assert_equals, raises
 import os, unittest, json, re, time

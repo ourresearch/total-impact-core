@@ -11,7 +11,7 @@ import collections
 
 from totalimpact.api import app
 
-from test.provider import ProviderTestCase
+from test.unit_tests.providers.test_common import ProviderTestCase
 
 
 # prepare a monkey patch to override the http_get method of the Provider
