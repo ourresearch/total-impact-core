@@ -65,7 +65,6 @@ class TestBackend(unittest.TestCase):
         TEST_DB_NAME = "test_backend"
         TEST_PROVIDER_CONFIG = {
             "wikipedia": {}
-            }
         }
 
         self.d = dao.Dao(TEST_DB_NAME, app.config["DB_URL"],
