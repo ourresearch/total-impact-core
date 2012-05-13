@@ -113,15 +113,12 @@ class Provider(object):
 
     def sleep_time(self, dead_time=0):
         return 0
-    
-    def http_get(self, url, headers=None, timeout=None, error_conf=None):
-        return self.do_get(url, headers, timeout)
 
     @staticmethod
     def filter_aliases(aliases, supported_namespaces):
         aliases = ((ns,v) for (ns,v) in aliases if k == 'github')
     
-    def do_get(self, url, headers=None, timeout=None):
+    def http_get(self, url, headers=None, timeout=Non):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
