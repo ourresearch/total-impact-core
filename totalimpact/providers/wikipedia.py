@@ -49,7 +49,7 @@ class Wikipedia(Provider):
         logger.debug("attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url, timeout=self.config.metrics['timeout'], error_conf=self.config.errors)
+        response = self.http_get(url, timeout=self.config.metrics['timeout'])
         
         # client errors and server errors are not retried, as they usually 
         # indicate a permanent failure
