@@ -12,12 +12,15 @@ import sys
 import pickle
 from pprint import pprint
 
-request_ids = {"dryad": ('doi','10.5061/dryad.7898'), 
-                "wikipedia": ('doi', '10.1371/journal.pcbi.1000361'), 
-                "github": ('github', 'egonw/gtd')}
+request_ids = {"dryad": ('doi','10.5061/dryad.7898')} 
+#                "wikipedia": ('doi', '10.1371/journal.pcbi.1000361'), 
+#                "github": ('github', 'egonw/gtd')}
+
+PORT = 5001
 
 class TotalImpactAPI:
-    base_url = 'http://localhost:5001/'
+    base_url = 'http://localhost:' + str(PORT) + '/'
+    ###base_url = '/'
 
     def request_item(self, namespace, nid):
         """ Attempt to obtain an item from the server using the given
@@ -27,24 +30,44 @@ class TotalImpactAPI:
         """
 
         url = self.base_url + urllib.quote('item/%s/%s' % (namespace, nid))
-        print url
         req = urllib2.Request(url)
         data = {} # fake a POST
+
         response = urllib2.urlopen(req, data)
         tiid = json.loads(urllib.unquote(response.read()))
+        ###response = client.post(url)
+        ###tiid = json.loads(response.data)
+
         return tiid
 
     def request_item_result(self, tiid):
         url = self.base_url + urllib.quote('item/%s' % (tiid))
         req = urllib2.Request(url)
         response = urllib2.urlopen(req)
-        return json.loads(response.read())
+        result = json.loads(response.read())
+
+        ###response = client.get(url)
+        ###result = json.loads(response.data)
+
+        return result
         
+
+    def request_provider_item(self, provider, section, nid):
+        url = self.base_url + urllib.quote('provider/%s/%s/%s' % (provider, section, nid))
+        print url
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+        result = json.loads(response.read())
+
+        ###response = client.get(url)
+        ###result = json.loads(response.data)
+
+        return result
 
 from optparse import OptionParser
 
 
-def checkItem(tiid, api_response, provider, debug=False):
+def checkItem(section, id, api_response, provider, debug=False):
     checks = {
         'wikipedia' : { 
             'aliases': ['doi'],
@@ -72,47 +95,45 @@ def checkItem(tiid, api_response, provider, debug=False):
         }
     }
 
-    aliases = checks[provider]['aliases']
-    metrics = checks[provider]['metrics']
-    biblio = checks[provider]['biblio']
 
-    if debug: print "Checking %s result (%s)..." % (provider, tiid)
+    if debug: 
+        print "Checking %s result (%s)..." % (provider, id)
     
     # Check aliases are correct
-    alias_result = set(api_response['aliases'].keys())
-    expected_result = set(aliases + 
-        ['created','last_modified','last_completed'])
-    if alias_result != expected_result:
-        if debug: 
-            print "Aliases is not correct, have %s, want %s" %(alias_result, expected_result)
-        return False
+    if section=="aliases":
+        aliases = checks[provider]['aliases']
+        alias_result = set([namespace for (namespace, nid) in api_response])
+        expected_result = set(aliases + 
+            ['created','last_modified','last_completed'])
+        if alias_result != expected_result:
+            if debug: 
+                print "Aliases is not correct, have %s, want %s" %(alias_result, expected_result)
+            return False
 
     # Check biblio are correct
-    if api_response['biblio']:
-        biblio_result = set(api_response['biblio']['data'].keys())
-    else:
-        biblio_result = set([])
-    expected_result = set(biblio)
+    if section=="biblio":
+        biblio = checks[provider]['biblio']    
+        if api_response:
+            biblio_result = set(api_response.keys())
+        else:
+            biblio_result = set([])
+        expected_result = set(biblio)
 
-    if biblio_result != expected_result:
-        if debug: 
-            print "Biblio is not correct, have %s, want %s" %(biblio_result, expected_result)
-        return False
+        if biblio_result != expected_result:
+            if debug: 
+                print "Biblio is not correct, have %s, want %s" %(biblio_result, expected_result)
+            return False
 
     # Check we've got some metric values
-    for metric in metrics.keys():
-        metric_data = api_response['metrics'][metric]['values']
-        if len(metric_data) != 1:
-            if debug: 
-                print "Incorrect number of metric results for %s - %i" % (metric, len(metric_data))
-                pprint(api_response['metrics'])
-            return False
-        else:
+    if section=="metrics":
+        metrics = checks[provider]['metrics']
+        for metric in metrics.keys():
+            metric_data = api_response[metric]
             # expect the returned value to be equal or larger than reference
-            if metric_data.values()[0] < metrics[metric]:
+            if metric_data < metrics[metric]:
                 if debug: 
-                    print "Incorrect metric result for %s - %s, expected at least %s" % (metric, metric_data.values()[0], metrics[metric])
-                pprint(api_response['metrics'])
+                    print "Incorrect metric result for %s - %s, expected at least %s" % (metric, metric_data, metrics[metric])
+                pprint(api_response)
                 return False
 
     return True
@@ -132,58 +153,49 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
 
-    item_count = int(options.simultaneous)
-    
     ti = TotalImpactAPI()
-
     complete = {}
-    tiids = {}
     final_responses = {}
     providers = request_ids.keys()
 
+    ###from totalimpact import api
+    ###app = api.app
+    ###app.testing = True
+    ###client = app.test_client()
+    
+    #### setup the database
+    ###testing_db_name = "functional_test"
+    ###app.config["DB_NAME"] = testing_db_name
+    ###for provider in providers:
+    ###    for template_type in ["metrics", "members", "aliases", "biblio"]:
+    ###        url = "http://localhost:8080/" + provider + "/" + template_type + "?%s"
+    ###        app.config["PROVIDERS"][provider][template_type+"_url"] = url
+
     for provider in providers:
         complete[provider] = {}
-        tiids[provider] = {}
         final_responses[provider] = {}
-
-    for idx in range(item_count):
-        # Request the items to be generated
-        for provider in providers:
-            (namespace, nid) = request_ids[provider]
-            tiids[provider][idx] = ti.request_item(namespace, nid)
-
-    for idx in range(item_count):
-        for provider in providers:
-            (namespace, nid) = request_ids[provider]
-            tiids[provider][idx] = ti.request_item(namespace, nid)
-            complete[provider][idx] = False
-
-    while True:
-
-        for idx in range(item_count):
-            for provider in providers:
-                if not complete[provider][idx]:
-                    tiid = tiids[provider][idx]
-                    if options.missing:
-                        print provider, idx, tiid
-                    api_response = ti.request_item_result(tiid)
-                    final_responses[provider][idx] = api_response
-                    complete[provider][idx] = checkItem(
-                        tiid,
-                        api_response,
-                        provider, 
-                        debug=options.missing
-                    )
-                    if complete[provider][idx] and options.printdata:
-                        pprint(api_response)
+        (namespace, nid) = request_ids[provider]
+        complete[provider] = {}
+        if options.missing:
+            print provider, nid
+        for section in ["biblio", "aliases", "metrics"]:
+            api_response = ti.request_provider_item(provider, section, nid)
+            final_responses[provider][section] = api_response
+            complete[provider][section] = checkItem(section,
+                nid,
+                api_response,
+                provider, 
+                debug=options.missing
+            )
+            if complete[provider] and options.printdata:
+                pprint(api_response)
 
 
-        total = sum([sum(complete[provider].values()) for provider in providers])
-        print [(provider, sum(complete[provider].values())) for provider in providers], total
-        if total == item_count * len(providers):
-            print tiids
-            pprint(final_responses)
-            sys.exit(0)    
+        #total = sum([sum(complete[provider].values()) for provider in providers])
+        #print [(provider, sum(complete[provider].values())) for provider in providers], total
+        #if total == item_count * len(providers):
+        #    pprint(final_responses)
+        #    sys.exit(0)    
 
         time.sleep(0.5)
 

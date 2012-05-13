@@ -31,6 +31,7 @@ class Wikipedia(Provider):
     provenance_url_template = "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go"
     metrics_url_template = "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'"
 
+    example_id = ("doi", "10.1371/journal.pcbi.1000361")
 
     def __init__(self):
         super(Wikipedia, self).__init__()
