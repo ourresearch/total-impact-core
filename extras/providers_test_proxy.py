@@ -14,6 +14,10 @@ from optparse import OptionParser
 import logging
 import os
 
+import daemon
+import lockfile
+from totalimpact.common import PidFile
+
 responses = {'dryad':{},'wikipedia':{},'github':{}}
 
 def load_test_data(provider, filename):
@@ -76,7 +80,7 @@ class ProvidersTestProxy(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if urlmap.has_key(self.path):
-            print "Found:", self.path
+            #print "Found:", self.path
             self.send_response(200)
             self.end_headers()
             self.wfile.write(urlmap[self.path])
@@ -93,19 +97,47 @@ if __name__ == '__main__':
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
                       help="print debugging output")
+    parser.add_option("-d", "--daemon",
+                      action="store_true", dest="daemon", default=False,
+                      help="run as a daemon")
+    parser.add_option("-q", "--quiet",
+                      action="store_true", dest="quiet", default=False,
+                      help="Only print errors on failures")
 
     (options, args) = parser.parse_args()
 
-    if not options.verbose:
+    if options.verbose:
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        # Nicer formatting to show different providers
+        formatter = logging.Formatter('  %(name)s - %(message)s')
+        ch.setFormatter(formatter)
+        logger = logging.getLogger('')
+        logger.addHandler(ch)
+    else:
         logger = logging.getLogger('totalimpact.providers')
         logger.setLevel(logging.WARNING)
 
     class ReuseServer(SocketServer.TCPServer):
         allow_reuse_address = True
 
-    handler = ProvidersTestProxy
-    httpd = ReuseServer(("", int(options.port)), handler)
-    print "listening on port", options.port
-    httpd.serve_forever()
+    if not options.daemon:
+        handler = ProvidersTestProxy
+        httpd = ReuseServer(("", int(options.port)), handler)
+        print "listening on port", options.port
+        httpd.serve_forever()
+    else:
+        rootdir = os.path.dirname(os.path.dirname(__file__))
+        context = daemon.DaemonContext()
+        output = open('logs/proxy.log','w+')
+        context.stderr = output
+        context.stdout = output
+        context.pidfile = PidFile(os.path.join(rootdir, 'proxy.pid'))
+        context.working_directory = rootdir
+        with context:
+            handler = ProvidersTestProxy
+            httpd = ReuseServer(("", int(options.port)), handler)
+            print "listening on port", options.port
+            httpd.serve_forever()
 
 
