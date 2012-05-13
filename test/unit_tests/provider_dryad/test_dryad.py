@@ -1,5 +1,4 @@
 from totalimpact.models import Aliases, Item, ItemFactory
-from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.providers.provider import ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError
@@ -44,7 +43,6 @@ def get_biblio_html_success(self, url, headers=None, timeout=None):
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../data/dryad")
 
-DRYAD_CONFIG_FILENAME = "totalimpact/providers/dryad.conf.json"
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
 TEST_DRYAD_AUTHOR = "Piwowar, Heather A."
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, 

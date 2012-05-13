@@ -1,5 +1,4 @@
 from totalimpact.models import Item, ItemFactory, Aliases
-from totalimpact.config import Configuration
 from totalimpact.providers.wikipedia import Wikipedia
 
 from totalimpact.providers.provider import Provider, ProviderFactory
@@ -39,7 +38,6 @@ class Item(object):
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../data/wikipedia")
 
-CONFIG_FILENAME = "totalimpact/providers/wikipedia.conf.json"
 TEST_URL = "http://www.example.com"
 XML_DOC = os.path.join(datadir, 
     "wikipedia_response.xml")

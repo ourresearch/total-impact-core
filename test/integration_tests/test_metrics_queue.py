@@ -4,7 +4,6 @@ from urllib import quote_plus
 from nose.plugins.skip import SkipTest
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
-from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact import dao, api
@@ -16,7 +15,6 @@ GITHUB_TEST_ID = "homebrew"
 
 datadir = os.path.join(os.path.split(__file__)[0], "../data/dryad")
 
-DRYAD_CONFIG_FILENAME = "totalimpact/providers/dryad.conf.json"
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
 TEST_DRYAD_AUTHOR = "Piwowar, Heather A."
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, 
@@ -31,21 +29,6 @@ def get_metrics_html_success(self, url, headers=None, timeout=None):
 def get_aliases_html_success(self, url, headers=None, timeout=None):
     f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
     return DummyResponse(200, f.read())
-
-PROVIDERS = { 
-    "dryad": {
-        "class" : "totalimpact.providers.dryad.Dryad",
-        "config" : "totalimpact/providers/dryad.conf.json"
-    },
-    "wikipedia":{
-        "class" : "totalimpact.providers.wikipedia.Wikipedia",
-        "config" : "totalimpact/providers/wikipedia.conf.json"
-    },
-    "github": {
-        "class" : "totalimpact.providers.github.Github",
-        "config" : "totalimpact/providers/github.conf.json"
-    }
-}
 
 class TestMetricsQueue(unittest.TestCase):
 
@@ -62,8 +45,7 @@ class TestMetricsQueue(unittest.TestCase):
         self.d = dao.Dao(self.testing_db_name, self.app.config["DB_URL"],
             self.app.config["DB_USERNAME"], self.app.config["DB_PASSWORD"])
 
-        provider_configs = PROVIDERS
-        self.providers = ProviderFactory.get_providers(provider_configs)
+        self.providers = ProviderFactory.get_providers(self.app.config["PROVIDERS"])
 
 
     def tearDown(self):

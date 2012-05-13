@@ -32,9 +32,8 @@ class Github(Provider):
     aliases_url_template = "https://github.com/api/v2/json/repos/show/%s"
     metrics_url_template = "https://github.com/api/v2/json/repos/show/%s"
 
-    def __init__(self, config):
-        super(Github, self).__init__(config)
-        self.id = self.config.id
+    def __init__(self):
+        super(Github, self).__init__()
 
     def get_github_id(self, aliases):
         matching_id = None
@@ -60,7 +59,7 @@ class Github(Provider):
         logger.debug("attempting to retrieve member items from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url, timeout=5)
+        response = self.http_get(url)
         if response.status_code != 200:
             raise ProviderServerError(response)
 
@@ -89,7 +88,7 @@ class Github(Provider):
         logger.debug("attempting to retrieve biblio from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url, timeout=5)
+        response = self.http_get(url)
         
         if response.status_code != 200:
             if response.status_code >= 500:

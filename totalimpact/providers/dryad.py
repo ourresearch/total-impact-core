@@ -35,8 +35,8 @@ class Dryad(Provider):
     biblio_url_template = "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.date.accessioned.year,dc.identifier.uri,dc.title_ac,dc.contributor.author_ac"
     metrics_url_template = "http://dx.doi.org/%s"
 
-    def __init__(self, config):
-        super(Dryad, self).__init__(config)
+    def __init__(self):
+        super(Dryad, self).__init__()
         
         self.dryad_doi_rx = re.compile(r"(10\.5061/.*)")
         self.member_items_rx = re.compile(r"(10\.5061/.*)</span")
@@ -63,13 +63,11 @@ class Dryad(Provider):
 
         enc = urllib.quote(query_string)
 
-        #url = self.config.member_items["querytype"][query_type]['url'] % enc
         url = provider_url_template % enc
         logger.debug("attempting to retrieve member items from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url, 
-            timeout=self.config.member_items.get('timeout', None))
+        response = self.http_get(url)
 
         if response.status_code != 200:
             if response.status_code >= 500:
@@ -103,18 +101,21 @@ class Dryad(Provider):
         new_aliases = []
         for doi_id in id_list:
             logger.debug("processing alias %s" % doi_id)
-            new_aliases += self.get_aliases_for_id(doi_id, provider_url_template)
+            new_aliases += self._get_aliases_for_id(doi_id, provider_url_template)
         
         return new_aliases
 
-    def get_aliases_for_id(self, id, provider_url_template):
+    def _get_aliases_for_id(self, id, provider_url_template=None):
+
+        if not provider_url_template:
+            provider_url_template = self.aliases_url_template
+
         url = provider_url_template % id
 
         logger.debug("attempting to retrieve aliases from " + url)
 
         # try to get a response from the data provider        
-        response = self.http_get(url, 
-            timeout=self.config.aliases.get('timeout', None))
+        response = self.http_get(url) 
         
         # FIXME: we have to observe the Dryad interface for a bit to get a handle
         # on these response types - this is just a default approach...
@@ -131,7 +132,7 @@ class Dryad(Provider):
         # extract the aliases
         new_aliases = self._extract_aliases(response.text)
         if new_aliases is not None:
-            logger.debug(self.config.id + ": found aliases: " + str(new_aliases))
+            logger.debug("Found aliases: " + str(new_aliases))
             return new_aliases
         return []
 
@@ -176,14 +177,17 @@ class Dryad(Provider):
         else:
             return None
 
-    def _get_metrics_for_id(self, id, provider_url_template):
+    def _get_metrics_for_id(self, id, provider_url_template=None):
+
+        if not provider_url_template:
+            provider_url_template = self.metrics_url_template
+
         url = provider_url_template % id
 
         logger.debug("attempting to retrieve metrics from " + url)
         
         # try to get a response from the data provider        
-        response = self.http_get(url, 
-            timeout=self.config.metrics.get('timeout', None))
+        response = self.http_get(url)
 
         # FIXME: we have to observe the Dryad interface for a bit to get a handle
         # on these response types - this is just a default approach...
@@ -232,12 +236,15 @@ class Dryad(Provider):
         id = self._get_dryad_doi(aliases)
         # Only lookup biblio for items with dryad doi's
         if id:
-            return self.get_biblio_for_id(id, provider_url_template)
+            return self._get_biblio_for_id(id, provider_url_template)
         else:
             logger.info("Not checking biblio as no dryad doi")
             return None
 
-    def get_biblio_for_id(self, id, provider_url_template):
+    def _get_biblio_for_id(self, id, provider_url_template=None):
+
+        if not provider_url_template:
+            provider_url_template = self.biblio_url_template
 
         url = provider_url_template % id
 

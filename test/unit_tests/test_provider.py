@@ -5,7 +5,6 @@ from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.providers.provider import ProviderError, ProviderTimeout, ProviderServerError
 from totalimpact.providers.provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
 from totalimpact.providers.provider import ProviderConfigurationError, ProviderValidationFailedError
-from totalimpact.config import Configuration, StringConfiguration
 from totalimpact.cache import Cache
 from totalimpact import api
 from nose.tools import assert_equals
@@ -50,32 +49,6 @@ class InterruptableSleepThread2(threading.Thread):
     def _interruptable_sleep(self, snooze, duration):
         time.sleep(snooze)
 
-ERROR_CONF = json.loads('''
-{
-    "timeout" : { "retries" : 3, "retry_delay" : 0.1, "retry_type" : "linear", "delay_cap" : -1 },
-    "http_error" : { "retries" : 3, "retry_delay" : 0.1, "retry_type" : "linear", "delay_cap" : -1 },
-    
-    "client_server_error" : { },
-    "rate_limit_reached" : { "retries" : -1, "retry_delay" : 1, "retry_type" : "incremental_back_off", "delay_cap" : 256 },
-    "content_malformed" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
-    "validation_failed" : { },
-    
-    "no_retries" : { "retries": 0 },
-    "none_retries" : {},
-    "one_retry" : { "retries" : 1 },
-    "delay_2" : { "retries" : 2, "retry_delay" : 2 },
-    "example_timeout" : { "retries" : 3, "retry_delay" : 1, "retry_type" : "linear", "delay_cap" : -1 }
-}
-''')
-
-BASE_PROVIDER_CONF = StringConfiguration('''
-{
-    "cache" : {
-        "max_cache_duration" : 86400
-    }
-}
-''')
-
 
 class Test_Provider(unittest.TestCase):
 
@@ -96,7 +69,6 @@ class Test_Provider(unittest.TestCase):
         
         # Create a base config which provides necessary settings
         # which all providers should at least implement
-        self.base_provider_config = BASE_PROVIDER_CONF
         self.provider_configs = api.app.config["PROVIDERS"]
     
     def tearDown(self):

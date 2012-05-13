@@ -1,5 +1,4 @@
 from totalimpact.models import Aliases, Item, ItemFactory
-from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.providers.provider import ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError
 from totalimpact.providers.provider import ProviderHttpError, ProviderContentMalformedError, ProviderValidationFailedError

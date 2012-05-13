@@ -5,7 +5,6 @@
 # This is currently a very basic check for providers
 #
 
-from totalimpact.config import Configuration
 from totalimpact.dao import Dao
 from totalimpact.models import Item, ItemFactory, Aliases
 
@@ -57,7 +56,7 @@ class ProvidersCheck:
         item.aliases.add_alias('doi', '10.5061/dryad.7898')
         item_aliases_list = item.aliases.get_aliases_list()
 
-        dryad = Dryad(Configuration('totalimpact/providers/dryad.conf.json'))
+        dryad = Dryad()
         new_aliases = dryad.aliases(item_aliases_list)
         new_metrics = dryad.metrics(item_aliases_list)
 
@@ -72,7 +71,7 @@ class ProvidersCheck:
         item.aliases.add_alias("url", "http://cottagelabs.com")
         item_aliases_list = item.aliases.get_aliases_list()
 
-        wikipedia = Wikipedia(Configuration('totalimpact/providers/wikipedia.conf.json'))
+        wikipedia = Wikipedia()
         # No aliases for wikipedia
         #new_aliases = wikipedia.aliases(item_aliases_list)
         new_metrics = wikipedia.metrics(item_aliases_list)
@@ -82,7 +81,7 @@ class ProvidersCheck:
     def checkGithub(self):
         item = ItemFactory.make(self.mydao, app.config["PROVIDERS"])
 
-        github = Github(Configuration('totalimpact/providers/github.conf.json'))
+        github = Github()
         members = github.member_items("egonw", "github_user")
         self.check_members('github.github_user', members, 
             [('github', ('egonw', 'blueobelisk.debian')),

@@ -1,5 +1,4 @@
 from totalimpact.models import Aliases
-from totalimpact.config import Configuration
 from totalimpact.providers.github import Github
 from totalimpact.providers.provider import Provider, ProviderClientError, ProviderServerError
 

@@ -3,7 +3,6 @@ from nose.tools import nottest, assert_equals
 from test.utils import slow
 
 from totalimpact import dao, api
-from totalimpact.config import Configuration
 
 
 GITHUB_TEST_USER = "egonw"
@@ -21,7 +20,6 @@ class TestMemberItems(unittest.TestCase):
         self.testing_db_name = "memberitems_test"
         self.old_db_name = self.app.config["DB_NAME"]
         self.app.config["DB_NAME"] = self.testing_db_name
-        self.config = Configuration()
         self.d = dao.Dao(self.testing_db_name, self.app.config["DB_URL"],
             self.app.config["DB_USERNAME"], self.app.config["DB_PASSWORD"])
 
