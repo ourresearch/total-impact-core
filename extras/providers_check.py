@@ -82,7 +82,7 @@ class ProvidersCheck:
         item = ItemFactory.make(self.mydao, app.config["PROVIDERS"])
 
         github = Github()
-        members = github.member_items("egonw", "github_user")
+        members = github.member_items("egonw")
         self.check_members('github.github_user', members, 
             [('github', ('egonw', 'blueobelisk.debian')),
              ('github', ('egonw', 'ron')),

@@ -9,12 +9,10 @@ from totalimpact.tilogging import logging
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
 
-datadir = os.path.join(os.path.split(__file__)[0], "../data/dryad")
+datadir = os.path.join(os.path.split(__file__)[0], "../../extras/sample_provider_pages/dryad")
+SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, "aliases")
+SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
 
-SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, 
-    "sample_extract_biblio_page.xml")
-SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, 
-    "sample_extract_aliases_page.xml")
 
 
 def get_aliases_html_success(self, url, headers=None, timeout=None):

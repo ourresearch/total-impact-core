@@ -122,7 +122,6 @@ class ProviderMock(Provider):
     provider_name = "mock_provider"
     metric_names = ["wikipedia:mentions"]
 
-    member_types = ["mock_type"]
     metric_namespaces = ["mock"]
     alias_namespaces = ["mock"]
     biblio_namespaces = ["mock"]

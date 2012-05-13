@@ -1,14 +1,8 @@
-import time
-from provider import Provider
-from provider import ProviderError, ProviderTimeout, ProviderServerError
-from provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
-from BeautifulSoup import BeautifulStoneSoup
-import requests
-
-import logging
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 
+import logging
 logger = logging.getLogger('providers.wikipedia')
 
 class Wikipedia(Provider):  
@@ -20,8 +14,6 @@ class Wikipedia(Provider):
     metric_namespaces = ["doi"]
     alias_namespaces = None
     biblio_namespaces = None
-
-    member_types = None
 
     provides_members = False
     provides_aliases = False
@@ -36,45 +28,18 @@ class Wikipedia(Provider):
     def __init__(self):
         super(Wikipedia, self).__init__()
 
-    def metrics(self, 
-            aliases,             
-            provider_url_template=None):
+    def _is_relevant_id(self, aliases):
+        # right now wikipedia looks up everything
+        return(True)
 
-        if not provider_url_template:
-            provider_url_template = self.metrics_url_template
+    def get_best_id(self, aliases):
+        # Wikipedia has no best id, so just return the first one
+        (namespace, id) = aliases[0]
+        return(id)
 
-        if len(aliases) != 1:
-            logger.warn("More than 1 DOI alias found, this should not happen. Will process first item only.")
-        
-        (ns,val) = aliases[0] 
-
-        logger.debug("looking for mentions of alias %s" % val)
-        new_metrics = self._get_metrics_for_id(val, provider_url_template)
-
-        return new_metrics
-
-    def _get_metrics_for_id(self, id, provider_url_template):
-        url = provider_url_template % id
-    
-        logger.debug("attempting to retrieve metrics from " + url)
-        
-        # try to get a response from the data provider        
-        response = self.http_get(url)
-        
-        # client errors and server errors are not retried, as they usually 
-        # indicate a permanent failure
-        if response.status_code != 200:
-            if response.status_code >= 500:
-                raise ProviderServerError(response)
-            else:
-                raise ProviderClientError(response)
-                    
-        return self._extract_stats(response.text)
-
-    
-    def _extract_stats(self, content):
+    def _extract_metrics(self, page, id=None):
         try:
-            doc = minidom.parseString(content)
+            doc = minidom.parseString(page)
         except ExpatError, e:
             raise ProviderContentMalformedError("Content parse provider supplied XML document")
 
@@ -83,16 +48,8 @@ class Wikipedia(Provider):
             raise ProviderContentMalformedError("No searchinfo in response document")
         val = searchinfo[0].attributes['totalhits'].value
 
-        return {"wikipedia:mentions": int(val)}
+        metrics_dict = {"wikipedia:mentions": int(val)}
+
+        return metrics_dict
             
-    def provenance_url(self, metric_name, aliases):
-        # Wikipedia returns the same provenance url for all metrics
-        # so ignoring the metric name
-        (ns, id) = aliases[0]
 
-        if id:
-            provenance_url = self.provenance_url_template % id
-        else:
-            provenance_url = None
-
-        return provenance_url

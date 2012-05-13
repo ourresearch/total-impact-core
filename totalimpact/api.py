@@ -223,14 +223,13 @@ returns dictionary with metrics object and biblio object
 @app.route('/provider/<provider_name>/memberitems', methods=['GET'])
 def provider_memberitems(provider_name):
     query = request.values.get('query','')
-    qtype = request.values.get('type','')
 
-    logger.debug("In provider_memberitems with " + query + " " + qtype)
+    logger.debug("In provider_memberitems with " + query)
 
     provider = ProviderFactory.get_provider(provider_name)
     logger.debug("provider: " + provider.provider_name)
 
-    memberitems = provider.member_items(query, qtype)
+    memberitems = provider.member_items(query, cache_enabled=False)
     
     resp = make_response( json.dumps(memberitems, sort_keys=True, indent=4), 200 )
     resp.mimetype = "application/json"
@@ -244,11 +243,11 @@ def provider_aliases(provider_name, id):
     provider = ProviderFactory.get_provider(provider_name)
     if id=="example":
         id = provider.example_id[1]
-        url = "http://localhost:8080/" + provider_name + "/aliases&%s"
+        url = "http://localhost:8080/" + provider_name + "/aliases?%s"
     else:
         url = None
 
-    aliases = provider._get_aliases_for_id(id, url)
+    aliases = provider._get_aliases_for_id(id, url, cache_enabled=False)
 
     resp = make_response( json.dumps(aliases, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
@@ -262,11 +261,11 @@ def provider_metrics(provider_name, id):
     provider = ProviderFactory.get_provider(provider_name)
     if id=="example":
         id = provider.example_id[1]
-        url = "http://localhost:8080/" + provider_name + "/metrics&%s"
+        url = "http://localhost:8080/" + provider_name + "/metrics?%s"
     else:
         url = None
 
-    metrics = provider._get_metrics_for_id(id, url)
+    metrics = provider.get_metrics_for_id(id, url, cache_enabled=False)
 
     resp = make_response( json.dumps(metrics, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
@@ -280,11 +279,11 @@ def provider_biblio(provider_name, id):
     provider = ProviderFactory.get_provider(provider_name)
     if id=="example":
         id = provider.example_id[1]
-        url = "http://localhost:8080/" + provider_name + "/biblio&%s"
+        url = "http://localhost:8080/" + provider_name + "/biblio?%s"
     else:
         url = None
 
-    biblio = provider._get_biblio_for_id(id, url)
+    biblio = provider.get_biblio_for_id(id, url, cache_enabled=False)
     resp = make_response( json.dumps(biblio, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp

@@ -13,23 +13,6 @@ PLOS_TEST_DOI = "10.1371/journal.pone.0004803"
 DRYAD_TEST_DOI = "10.5061/dryad.7898"
 GITHUB_TEST_ID = "homebrew"
 
-datadir = os.path.join(os.path.split(__file__)[0], "../data/dryad")
-
-TEST_DRYAD_DOI = "10.5061/dryad.7898"
-TEST_DRYAD_AUTHOR = "Piwowar, Heather A."
-SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, 
-    "sample_extract_metrics_page.html")
-SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, 
-    "sample_extract_aliases_page.xml")
-
-
-def get_metrics_html_success(self, url, headers=None, timeout=None):
-    f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
-    return DummyResponse(200, f.read())
-def get_aliases_html_success(self, url, headers=None, timeout=None):
-    f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
-    return DummyResponse(200, f.read())
-
 class TestMetricsQueue(unittest.TestCase):
 
     def setUp(self):
