@@ -82,25 +82,6 @@ class Test_Provider(unittest.TestCase):
         # Clear memcache in case we have stored anything
         #mc = memcache.Client(['127.0.0.1:11211'])
         #mc.flush_all()
-
-    def test_01_init(self):
-        # since the provider is really abstract, this doen't
-        # make much sense, but we do it anyway
-        provider = Provider(None)
-
-    def test_02_interface(self):
-        # check that the interface is defined, and has appropriate
-        # defaults/NotImplementedErrors
-        provider = Provider(None)
-        
-        self.assertRaises(NotImplementedError, provider.member_items, None, None)
-        self.assertRaises(NotImplementedError, provider.aliases, None)
-        self.assertRaises(NotImplementedError, provider.metrics, None)
-        self.assertRaises(NotImplementedError, provider.biblio, None)
-        
-    def test_03_error(self):
-        # FIXME: will need to test this when the error handling is written
-        pass
         
     # FIXME: we will also need tests to cover the cacheing when that
     # has been implemented
@@ -114,21 +95,6 @@ class Test_Provider(unittest.TestCase):
         assert len(providers) == len(self.provider_configs)
         pass
 
-    def test_18_exceptions_type(self):
-        pcoe = ProviderConfigurationError()
-        pt = ProviderTimeout()
-        phe = ProviderHttpError()
-        pcle = ProviderClientError(None)
-        pse = ProviderServerError(None)
-        pcme = ProviderContentMalformedError()
-        pvfe = ProviderValidationFailedError()
-        
-        assert isinstance(pcoe, ProviderError)
-        assert isinstance(pt, ProviderError)
-        assert isinstance(phe, ProviderError)
-        assert isinstance(pcle, ProviderError)
-        assert isinstance(pse, ProviderError)
-        assert isinstance(pcme, ProviderError)
-        assert isinstance(pvfe, ProviderError)
+
     
         

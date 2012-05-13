@@ -38,7 +38,7 @@ rendered_article_loc = os.path.join(
     '../rendered_views/article.html')
 RENDERED_ARTICLE = open(rendered_article_loc, "r").read()
 
-def MOCK_member_items(self, a, b, url=None):
+def MOCK_member_items(self, query_string, url=None, cache_enabled=True):
     return(GOLD_MEMBER_ITEM_CONTENT) 
 
 

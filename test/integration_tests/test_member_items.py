@@ -35,7 +35,7 @@ class TestMemberItems(unittest.TestCase):
     def test_member_items(self):
 
         # Test github org member_items
-        response = self.client.get('/provider/github/memberitems?query=' + GITHUB_TEST_USER + '&type=github_user')
+        response = self.client.get('/provider/github/memberitems?query=' + GITHUB_TEST_USER)
         resp_list = json.loads(response.data)
 
         assert len(resp_list) > 12, len(resp_list)

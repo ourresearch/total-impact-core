@@ -114,7 +114,7 @@ To create a new provider, the first thing to do is sub-class the Provider and in
         def provides_metrics(self): 
             return False
         
-        def member_items(self, query_string, query_type): 
+        def member_items(self, query_string):
             raise NotImplementedError()
             
         def aliases(self, item): 

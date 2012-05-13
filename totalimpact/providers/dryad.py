@@ -1,27 +1,24 @@
-import time, re, urllib
-from provider import Provider
-from provider import ProviderError, ProviderTimeout, ProviderServerError
-from provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
-from totalimpact.models import Aliases, Biblio
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
-
-import requests
-import simplejson
+import re
 
 import logging
 logger = logging.getLogger('providers.dryad')
 
 class Dryad(Provider):  
 
-    metric_names = ["dryad:package_views", "dryad:total_downloads", "dryad:most_downloaded_file"]
+    metric_names = [
+        "dryad:package_views", 
+        "dryad:total_downloads", 
+        "dryad:most_downloaded_file"
+        ]
 
-    member_types = ["dryad_author"]
     metric_namespaces = ["doi"]
     alias_namespaces = ["doi"]
     biblio_namespaces = ["doi"]
 
-    provides_members = False
+    provides_members = True
     provides_aliases = True
     provides_metrics = True
     provides_biblio = True
@@ -53,221 +50,45 @@ class Dryad(Provider):
 
     def _is_relevant_id(self, alias):
         return self._is_dryad_doi(alias[1])
-    
-
-
-
-    def member_items(self, 
-            query_string, 
-            query_type, 
-            provider_url_template=None):
-        if not provider_url_template:
-            provider_url_template = self.member_items_url_template
-
-        enc = urllib.quote(query_string)
-
-        url = provider_url_template % enc
-        logger.debug("attempting to retrieve member items from " + url)
-        
-        # try to get a response from the data provider        
-        response = self.http_get(url)
-
-        if response.status_code != 200:
-            if response.status_code >= 500:
-                raise ProviderServerError(response)
-            else:
-                raise ProviderClientError(response)
-
-        # did we get a page back that seems mostly valid?
-        if ("response" not in response.text):
-            raise ProviderContentMalformedError("Content does not contain expected text")
-
-        identifiers = self._get_named_arr_str_from_xml(response.text, "dc.identifier", is_expected=False)
-
-        return [("doi", hit.replace("doi:", "")) for hit in list(set(identifiers))]
-
-    
-    def aliases(self, 
-            aliases, 
-            provider_url_template=None):
-
-        if not provider_url_template:
-            provider_url_template = self.aliases_url_template
-
-        # Get a list of the new aliases that can be discovered from the data
-        # source.
-        id_list = [alias[1] for alias in aliases if self._is_dryad_doi(alias[1])]
-
-        if len(id_list) == 0:
-            logger.info("warning, no DOI aliases found in the Dryad domain for this item")
-
-        new_aliases = []
-        for doi_id in id_list:
-            logger.debug("processing alias %s" % doi_id)
-            new_aliases += self._get_aliases_for_id(doi_id, provider_url_template)
-        
-        return new_aliases
-
-    def _get_aliases_for_id(self, id, provider_url_template=None):
-
-        if not provider_url_template:
-            provider_url_template = self.aliases_url_template
-
-        url = provider_url_template % id
-
-        logger.debug("attempting to retrieve aliases from " + url)
-
-        # try to get a response from the data provider        
-        response = self.http_get(url) 
-        
-        # FIXME: we have to observe the Dryad interface for a bit to get a handle
-        # on these response types - this is just a default approach...
-        if response.status_code != 200:
-            if response.status_code >= 500:
-                raise ProviderServerError(response)
-            else:
-                raise ProviderClientError(response)
-
-        # did we get a page back that seems mostly valid?
-        if ("response" not in response.text):
-            raise ProviderContentMalformedError("Content does not contain expected text")
-        
-        # extract the aliases
-        new_aliases = self._extract_aliases(response.text)
-        if new_aliases is not None:
-            logger.debug("Found aliases: " + str(new_aliases))
-            return new_aliases
-        return []
-
-
-    def _extract_aliases(self, xml):
-        identifiers = []
-        url_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.identifier.uri')
-        identifiers += [("url", url) for url in url_identifiers]
-
-        title_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.title')
-        identifiers += [("title", title) for title in title_identifiers]
-
-        return identifiers
 
     def _get_dryad_doi(self, aliases):
-        for doi in [res for (ns,res) in aliases if ns == 'doi']:
+        for doi in [nid for (namespace, nid) in aliases if namespace == 'doi']:
             if self._is_dryad_doi(doi):
                 return doi
         return None
+    
+    def get_best_id(self, aliases):
+        return(self._get_dryad_doi(aliases))
 
-    def provenance_url(self, metric_name, aliases):
-        # Dryad returns the same provenance url for all metrics
-        # so ignoring the metric name
-        dryad_doi = self._get_dryad_doi(aliases)
-        if dryad_doi:
-            provenance_url = self.provenance_url_template % dryad_doi
-        else:
-            provenance_url = None
-            
-        return provenance_url
+    def known_aliases(self, aliases):
+        id_list = [nid for (namespace, nid) in aliases if self._is_dryad_doi(nid)]
+        return id_list
 
-    def metrics(self, 
-            aliases,
-            provider_url_template=None):
 
-        if not provider_url_template:
-            provider_url_template = self.metrics_url_template
 
-        id = self._get_dryad_doi(aliases)
-        if id is not None:
-            return self._get_metrics_for_id(id, provider_url_template)
-        else:
-            return None
-
-    def _get_metrics_for_id(self, id, provider_url_template=None):
-
-        if not provider_url_template:
-            provider_url_template = self.metrics_url_template
-
-        url = provider_url_template % id
-
-        logger.debug("attempting to retrieve metrics from " + url)
-        
-        # try to get a response from the data provider        
-        response = self.http_get(url)
-
-        # FIXME: we have to observe the Dryad interface for a bit to get a handle
-        # on these response types - this is just a default approach...
-        if response.status_code != 200:
-            if response.status_code >= 500:
-                raise ProviderServerError(response)
-            else:
-                raise ProviderClientError(response)
-        
-        # did we get a page back that seems mostly valid?
-        if ("Dryad" not in response.text):
+    def _extract_members(self, page, query_string=None):
+        if '<result name="response"' not in page:
             raise ProviderContentMalformedError("Content does not contain expected text")
 
-        # extract the aliases
-        return self._extract_stats(response.text)
+        identifiers = self._get_named_arr_str_from_xml(page, "dc.identifier", is_expected=False)
+
+        members = [("doi", hit.replace("doi:", "")) for hit in list(set(identifiers))]
+
+        return(members)
 
 
-    def _extract_stats(self, content):
-        view_matches_package = self.DRYAD_VIEWS_PACKAGE_PATTERN.search(content)
-        try:
-            view_package = view_matches_package.group("views")
-        except ValueError:
-            raise ProviderContentMalformedError("Content does not contain expected text")
-        
-        download_matches = self.DRYAD_DOWNLOADS_PATTERN.finditer(content)
-        try:
-            downloads = [int(download_match.group("downloads")) for download_match in download_matches]
-            total_downloads = sum(downloads)
-            max_downloads = max(downloads)
-        except ValueError:
-            raise ProviderClientError(content)            
+    def _extract_aliases(self, xml, id=None):
+        aliases = []
+        url_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.identifier.uri')
+        aliases += [("url", url) for url in url_identifiers]
 
-        return {
-            "dryad:package_views": int(view_package),
-            "dryad:total_downloads": int(total_downloads),
-            "dryad:most_downloaded_file": int(max_downloads)
-        }
+        title_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.title')
+        aliases += [("title", title) for title in title_identifiers]
 
-    def biblio(self, 
-            aliases,
-            provider_url_template=None):
+        return aliases
 
-        if not provider_url_template:
-            provider_url_template = self.biblio_url_template
 
-        id = self._get_dryad_doi(aliases)
-        # Only lookup biblio for items with dryad doi's
-        if id:
-            return self._get_biblio_for_id(id, provider_url_template)
-        else:
-            logger.info("Not checking biblio as no dryad doi")
-            return None
-
-    def _get_biblio_for_id(self, id, provider_url_template=None):
-
-        if not provider_url_template:
-            provider_url_template = self.biblio_url_template
-
-        url = provider_url_template % id
-
-        logger.debug("attempting to retrieve biblio from " + url)
-
-        # try to get a response from the data provider        
-        response = self.http_get(url)
-        
-        # FIXME: we have to observe the Dryad interface for a bit to get a handle
-        # on these response types - this is just a default approach...
-        if response.status_code != 200:
-            if response.status_code >= 500:
-                raise ProviderServerError(response)
-            else:
-                raise ProviderClientError(response)
-        
-        # extract the aliases
-        return self._extract_biblio(response.text)
-
-    def _extract_biblio(self, xml):
+    def _extract_biblio(self, xml, id=None):
         biblio_dict = {}
 
         try:
@@ -283,6 +104,31 @@ class Dryad(Provider):
             raise ProviderContentMalformedError("Content does not contain expected text")
 
         return biblio_dict
+
+
+    def _extract_metrics(self, page, id=None):
+        view_matches_package = self.DRYAD_VIEWS_PACKAGE_PATTERN.search(page)
+        try:
+            view_package = view_matches_package.group("views")
+        except (ValueError, AttributeError):
+            raise ProviderContentMalformedError("Content does not contain expected text")
+        
+        download_matches = self.DRYAD_DOWNLOADS_PATTERN.finditer(page)
+        try:
+            downloads = [int(download_match.group("downloads")) for download_match in download_matches]
+            total_downloads = sum(downloads)
+            max_downloads = max(downloads)
+        except (ValueError, AttributeError):
+            raise ProviderContentMalformedError("Content does not contain expected text")            
+
+        metrics_dict = {
+            "dryad:package_views": int(view_package),
+            "dryad:total_downloads": int(total_downloads),
+            "dryad:most_downloaded_file": int(max_downloads)
+        }
+
+        return metrics_dict
+
 
     def _get_named_arr_int_from_xml(self, xml, name, is_expected=True):
         """ Find the first node in the XML <arr> sections which are of node type <int>

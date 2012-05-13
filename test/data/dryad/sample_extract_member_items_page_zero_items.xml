@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<response>
-<lst name="responseHeader"><int name="status">0</int><int name="QTime">0</int><lst name="params"><str name="fl">dc.identifier</str><str name="q">dc.contributor.author:"Piwowar, Heather A."</str></lst></lst><result name="response" numFound="0" start="0"></result>
-</response>
