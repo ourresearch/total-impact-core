@@ -119,7 +119,7 @@ class Provider(object):
     def filter_aliases(aliases, supported_namespaces):
         aliases = ((ns,v) for (ns,v) in aliases if k == 'github')
     
-    def http_get(self, url, headers=None, timeout=Non):
+    def http_get(self, url, headers=None, timeout=None):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
