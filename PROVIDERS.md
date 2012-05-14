@@ -67,7 +67,7 @@ loops.
 
 The supplied list of aliases will only contain aliases in the namespaces which were defined in
 alias_namespaces
-  
+
 * metrics
 
 This method is supplied a list of aliases for which to obtain metric information. The supplied 
@@ -91,6 +91,14 @@ metric_names.
 Should a single metric not exist for an item, you should return a None value for the metric. If
 no metrics exist all, you can return None instead of a dict.
 
+Some providers will never deal with more than a single alias at any time, due to the nature
+of the provider. For example, the wikipedia provider only expects a single DOI entry. In this
+case, simply read the first item, and if multiple are passed log a warning in the logs.
+
+    def metrics(self, aliases):
+        if len(aliases) != 1:
+            logger.warn("More than 1 DOI alias found, this should not happen. Will process first item only.")
+  
   
 * biblio
 
