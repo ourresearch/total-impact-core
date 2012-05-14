@@ -49,7 +49,7 @@ def checkItem(item, data, item_type, debug=False):
             }
         },
         'github' : { 
-            'aliases': ['github'],
+            'aliases': ['github', 'url', 'title'],
             'metrics' : {
                 'github:forks' : 0,
                 'github:watchers' : 7

@@ -1,0 +1,94 @@
+#!/bin/bash
+#
+# chkconfig: 35 90 12
+# description: API server
+#
+
+# Find the absolute path for the current script
+_my_name=`basename $0`
+if [ "`echo $0 | cut -c1`" = "/" ]; then
+  _my_path=`dirname $0`
+else
+  _my_path=`pwd`/`echo $0 | sed -e s/$_my_name//`
+fi
+
+# Find the root of the totalimpact directory
+ROOTDIR=`dirname $_my_path`
+
+# Change these to match your config
+STATEDIR=$ROOTDIR/run
+export TOTALIMPACT_CONFIG=$ROOTDIR/config/staging.cfg
+
+start() {
+    echo -n "Starting api server: "
+    is_running
+    return_val=$?
+    if [ $return_val -eq 0 ]; then
+        cd $ROOTDIR
+        gunicorn -w 4 totalimpact.api:app -D -p $STATEDIR/api.pid -b 0.0.0.0:5001
+        echo "Started"
+    else
+        echo "Already running"
+    fi
+    echo
+}
+
+stop() {
+    echo -n "Stopping API server: "
+	if [ -f $STATEDIR/api.pid ]; then
+        PID=`cat $STATEDIR/api.pid`
+		kill $PID
+		rm $STATEDIR/api.pid
+        while [ -e /proc/$PID ]; do sleep 0.1; done
+		echo "Stopped"
+	else 
+		echo "Not running"	
+	fi
+	echo
+}
+
+is_running() {
+    if [ -f $STATEDIR/api.pid ]; then
+        ps `cat $STATEDIR/api.pid` > /dev/null
+        if [ $? -ne 0 ]; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        return 0
+    fi
+}
+
+status() {
+	if [ -f $STATEDIR/api.pid ]; then
+		ps `cat $STATEDIR/api.pid` > /dev/null
+		if [ $? -ne 0 ]; then
+			echo "Stopped"
+		else 	
+			echo "Running"
+		fi
+	else
+		echo "Stopped"
+	fi
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  status)
+        status 
+        ;;
+  restart|reload|condrestart)
+        stop
+        start
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|restart|reload|status}"
+        exit 1
+esac
+exit 0

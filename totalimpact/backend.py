@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import threading, time, sys
 import traceback
 from totalimpact import dao, api
@@ -10,6 +12,13 @@ from totalimpact.tilogging import logging
 from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
 from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
 from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
+
+import daemon
+import lockfile
+from totalimpact.pidsupport import PidFile
+
+from optparse import OptionParser
+import os
 
 logger = logging.getLogger('backend')
 
@@ -337,8 +346,8 @@ class ProviderThread(QueueConsumer):
                 # All other fatal errors. These are probably some form of
                 # logic error. We consider these to be fatal.
                 tb = sys.exc_info()[2]
-                self.log_error(item, 'unknown_error', str(e), tb)
-                logger.error("Error processing item for provider %s: Unknown exception %s, aborting" % (provider, e))
+                self.log_error(item, 'unknown_error on %s %s' % (provider, method), str(e), tb)
+                logger.error("Error processing item for provider %s %s: Unknown exception %s, aborting" % (provider, method, e))
                 logger.debug(traceback.format_tb(tb))
                 error_limit_reached = True
 
@@ -350,25 +359,25 @@ class ProviderThread(QueueConsumer):
                 if error_type:
                     # Log the error and it's traceback
                     tb = sys.exc_info()[2]
-                    self.log_error(item, error_type, error_msg, tb)
+                    self.log_error(item, error_type + ' on %s %s' % (provider, method), error_msg, tb)
 
                     error_counts[error_type] += 1
 
                     max_retries = provider.get_max_retries(error_type)
                     if error_counts[error_type] > max_retries and max_retries != -1:
-                        logger.info("Error processing item: %s, error limit reached (%i/%i), aborting" % (
-                            error_type, error_counts[error_type], max_retries))
+                        logger.info("Error processing item: %s, error limit reached (%i/%i), aborting %s %s" % (
+                            error_type, error_counts[error_type], max_retries, provider, method))
                         error_limit_reached = True
                     else:
                         duration = provider.get_sleep_time(error_type, error_counts[error_type])
-                        logger.info("Error processing item: %s, pausing thread for %s" % (error_type, duration))
+                        logger.info("Error processing item: %s, pausing thread for %s, %s %s" % (error_type, duration, provider, method))
                         self._interruptable_sleep(duration)
                 elif success:
                     # response may be None for some methods and inputs
                     if response:
-                        logger.info("processing successful, got %i results" % len(response))
+                        logger.info("processing %s %s successful, got %i results" % (provider, method, len(response)))
                     else:
-                        logger.info("processing successful, got 0 results")
+                        logger.info("processing %s %s successful, got 0 results" % (provider, method))
 
         return (success, response)
 
@@ -484,3 +493,147 @@ class ProviderMetricsThread(ProviderThread):
             for key in self.provider.metric_names:
                 item.metrics[key]['values'][ts] = None
         item.save()
+
+
+
+from totalimpact import dao
+from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
+from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
+from totalimpact.tilogging import logging
+from totalimpact import default_settings
+from totalimpact.api import app
+
+
+def main(logfile=None):
+
+    logger = logging.getLogger()
+
+    mydao = dao.Dao(
+        app.config["DB_NAME"],
+        app.config["DB_URL"],
+        app.config["DB_USERNAME"],
+        app.config["DB_PASSWORD"]
+    ) 
+
+    # Adding this by handle. fileConfig doesn't allow filters to be added
+    from totalimpact.backend import ctxfilter
+    handler = logging.handlers.RotatingFileHandler(logfile)
+    handler.level = logging.DEBUG
+    formatter = logging.Formatter("%(asctime)s %(levelname)8s %(item)8s %(thread)s%(provider)s - %(message)s")#,"%H:%M:%S,%f")
+    handler.formatter = formatter
+    handler.addFilter(ctxfilter)
+    logger.addHandler(handler)
+    ctxfilter.threadInit()
+
+    logger.debug("test")
+
+    from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
+    from totalimpact.providers.provider import Provider, ProviderFactory
+
+    # Start all of the backend processes
+    print "Starting alias retrieval thread"
+    providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
+
+    alias_threads = []
+    thread_count = app.config["ALIASES"]["workers"]
+    for idx in range(thread_count):
+        at = ProvidersAliasThread(providers, mydao, idx)
+        at.thread_id = 'AliasThread(%i)' % idx
+        at.start()
+        alias_threads.append(at)
+
+    print "Starting metric retrieval threads..."
+    # Start each of the metric providers
+    metrics_threads = []
+    for provider in providers:
+        providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
+        thread_count = app.config["PROVIDERS"][provider.provider_name]["workers"]
+        print "  ", provider.provider_name
+        for idx in range(thread_count):
+            thread = ProviderMetricsThread(provider, mydao)
+            metrics_threads.append(thread)
+            thread.thread_id = thread.thread_id + '(%i)' % idx
+            thread.start()
+
+    # Install a signal handler so we'll break out of the main loop
+    # on receipt of relevant signals
+    class ExitSignal(Exception):
+        pass
+ 
+    def kill_handler(signum, frame):
+        raise ExitSignal()
+
+    import signal
+    signal.signal(signal.SIGTERM, kill_handler)
+
+    try:
+        while True:
+            time.sleep(1)
+    except (KeyboardInterrupt, ExitSignal), e:
+        pass
+
+    from totalimpact.queue import alias_queue_seen
+    from totalimpact.queue import metric_queue_seen
+
+    print "Stopping alias threads"
+    for at in alias_threads:
+        at.stop()
+    print "Stopping metric threads"
+    for thread in metrics_threads:
+        thread.stop()
+    print "Waiting on metric threads"
+    for thread in metrics_threads:
+        thread.join()
+    print "Waiting on alias thread"
+    for at in alias_threads:
+        at.join()
+    print "All stopped"
+
+ 
+if __name__ == "__main__":
+
+    parser = OptionParser()
+    parser.add_option("-p", "--pid",
+                      action="store", dest="pid", default=None,
+                      help="pid file")
+    parser.add_option("-s", "--startup-log",
+                      action="store", dest="startup_log", default=None,
+                      help="startup log")
+    parser.add_option("-l", "--log",
+                      action="store", dest="log", default=None,
+                      help="runtime log")
+    parser.add_option("-d", "--daemon",
+                      action="store_true", dest="daemon", default=False,
+                      help="run as a daemon")
+
+    (options, args) = parser.parse_args()
+    # Root of the totalimpact directory
+    rootdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+    if options.log:
+        logfile = options.log
+    else:
+        logfile = os.path.join(rootdir, 'logs', 'backend.log')
+
+    if options.daemon:
+        context = daemon.DaemonContext()
+
+        if options.startup_log:
+            output = open(options.startup_log,'a+')
+        else:
+            output = open(os.path.join(rootdir, 'logs', 'backend-startup.log'),'a+')
+
+        context.stderr = output
+        context.stdout = output
+        if options.pid:
+            context.pidfile = PidFile(options.pid)
+        else: 
+            context.pidfile = PidFile(os.path.join(rootdir, 'run', 'backend.pid'))
+        context.working_directory = rootdir
+        with context:
+            main(logfile)
+
+    else:
+        main(logfile)
+    
+

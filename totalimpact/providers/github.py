@@ -22,9 +22,9 @@ class Github(Provider):
     provides_biblio = True
 
     member_items_url_template = "https://api.github.com/users/%s/repos"
-    biblio_url_template = "https://github.com/api/v2/json/repos/show/%s"
-    aliases_url_template = "https://github.com/api/v2/json/repos/show/%s"
-    metrics_url_template = "https://github.com/api/v2/json/repos/show/%s"
+    biblio_url_template = "https://github.com/api/v2/json/repos/show/%s/%s"
+    aliases_url_template = "https://github.com/api/v2/json/repos/show/%s/%s"
+    metrics_url_template = "https://github.com/api/v2/json/repos/show/%s/%s"
 
     provenance_url_templates = {
         "watchers" : "https://github.com/%s/%s/watchers",
@@ -54,7 +54,16 @@ class Github(Provider):
     def _is_relevant_id(self, alias):
         return("github" == alias[0])
 
-    def _extract_members(self, page, query_string):
+    #override because need to break up id
+    def _get_templated_url(self, template, id, method=None):
+        if (method == "members"):
+            url = template % id
+        else:
+            (user, repo) = id.split(",")
+            url = template % (user, repo)
+        return(url)
+
+    def _extract_members(self, page, query_string):        
         try:
             hits = simplejson.loads(page)
         except simplejson.JSONDecodeError, e:
@@ -114,9 +123,10 @@ class Github(Provider):
         id = self.get_best_id(aliases)
         if not id:
             return None
+        try:
+            (user, repo) = id.split(",")
+        except ValueError:
+            return None
 
-        print "aliases: ", aliases
-        (user, repo) = id.split(",")
         provenance_url = self.provenance_url_templates[metric_name] % (user, repo)
-
         return provenance_url
