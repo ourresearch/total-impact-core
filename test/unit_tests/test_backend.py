@@ -148,7 +148,7 @@ class TestBackend(unittest.TestCase):
         start = time.time()
         item = q.first()
         took = time.time() - start
-        assert took > 1.5, took
+        assert took > 1.25, took
         assert took < 2.0, took
         
     def test_08_stopped_queue(self):

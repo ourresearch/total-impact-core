@@ -186,14 +186,14 @@ class ProviderTestCase:
         new_aliases = self.provider.aliases([self.testitem_aliases])
 
     @raises(ProviderContentMalformedError)
-    def test_provider_nonsense_txt(self):
+    def test_provider_aliases_nonsense_txt(self):
         if not self.provider.provides_aliases:
             raise SkipTest
         Provider.http_get = get_nonsense_txt
         new_aliases = self.provider.aliases([self.testitem_aliases])
 
     @raises(ProviderContentMalformedError)
-    def test_provider_nonsense_xml(self):
+    def test_provider_aliases_nonsense_xml(self):
         if not self.provider.provides_aliases:
             raise SkipTest
         Provider.http_get = get_nonsense_xml

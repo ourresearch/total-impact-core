@@ -13,14 +13,9 @@ class ProviderFactory(object):
     def get_provider(cls, provider_name):
         provider_module = importlib.import_module('totalimpact.providers.'+provider_name)
         provider = getattr(provider_module, provider_name.title())
-
         instance = provider()
-
-
         return instance
 
-
-        
     @classmethod
     def get_providers(cls, config_providers):
         """ config is the application configuration """
@@ -55,13 +50,17 @@ class Provider(object):
             error = ProviderClientError
         return(error)
     
+    def _get_templated_url(self, template, id, method=None):
+        url = template % id
+        return(url)
+
     # default method; providers can override    
     def provenance_url(self, metric_name, aliases):
         # Returns the same provenance url for all metrics
         id = self.get_best_id(aliases)
 
         if id:
-            provenance_url = self.provenance_url_template % id
+            provenance_url = self._get_templated_url(self.provenance_url_template, id)
         else:
             provenance_url = None
 
@@ -82,7 +81,7 @@ class Provider(object):
             provider_url_template = self.member_items_url_template
 
         enc = urllib.quote(query_string)
-        url = provider_url_template % enc
+        url = self._get_templated_url(provider_url_template, enc, "members")
         logger.debug("attempting to retrieve member items from " + url)
         
         # try to get a response from the data provider  
@@ -130,7 +129,7 @@ class Provider(object):
 
         if not provider_url_template:
             provider_url_template = self.biblio_url_template
-        url = provider_url_template % id
+        url = self._get_templated_url(provider_url_template, id)
         logger.debug("attempting to retrieve biblio from " + url)
 
         # try to get a response from the data provider        
@@ -150,6 +149,7 @@ class Provider(object):
             aliases, 
             provider_url_template=None):
 
+        print "in aliases"
         if not self.provides_aliases:
             raise NotImplementedError()
 
@@ -157,22 +157,27 @@ class Provider(object):
         id_list = self.known_aliases(aliases)
 
         if not id_list:
-            logger.info("Not checking aliases because no relevant id for %s", provider.provider_name)
+            logger.info("Not checking aliases because no relevant id for %s", self.provider_name)
             return None
 
-        new_aliases = []
+        new_aliases = aliases
         for id in id_list:
             logger.debug("processing alias %s" % id)
+            print("processing alias %s" % id)
+            print new_aliases
             new_aliases += self._get_aliases_for_id(id, provider_url_template)
+            print new_aliases
         
-        return new_aliases
-
+        new_aliases_unique = list(set(new_aliases))
+        return new_aliases_unique
 
     # default method; providers can override
     def _get_aliases_for_id(self, 
             id, 
             provider_url_template=None, 
             cache_enabled=True):
+
+        print "in _get_aliases_for_id"
 
         if not self.provides_aliases:
             raise NotImplementedError()
@@ -181,7 +186,7 @@ class Provider(object):
 
         if not provider_url_template:
             provider_url_template = self.aliases_url_template
-        url = provider_url_template % id
+        url = self._get_templated_url(provider_url_template, id)
         logger.debug("attempting to retrieve aliases from " + url)
 
         # try to get a response from the data provider        
@@ -231,7 +236,7 @@ class Provider(object):
 
         if not provider_url_template:
             provider_url_template = self.metrics_url_template
-        url = provider_url_template % id
+        url = self._get_templated_url(provider_url_template, id)
         logger.debug("attempting to retrieve metrics from " + url)
 
         # try to get a response from the data provider        
@@ -281,33 +286,20 @@ class Provider(object):
 
     def sleep_time(self, dead_time=0):
         return 0
-    
-    def http_get(self, 
-            url, 
-            headers=None, 
-            timeout=None, 
-            error_conf=None, 
-            cache_enabled=True):
-
-        # Cache can be disabled by argument or by config parameter    
-        from totalimpact.api import app
-        use_cache = cache_enabled and app.config["CACHE_ENABLED"]
-
-        return self.do_get(url, 
-                headers=headers, 
-                timeout=timeout, 
-                use_cache=use_cache)
 
     @staticmethod
     def filter_aliases(aliases, supported_namespaces):
         aliases = ((ns,v) for (ns,v) in aliases if k == 'github')
     
-    def do_get(self, url, headers=None, timeout=None, use_cache=True):
+    def http_get(self, url, headers=None, timeout=None, cache_enabled=True):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
+        from totalimpact.api import app
 
         # first thing is to try to retrieve from cache
+        # use the cache if the config parameter is set and the arg allows it
+        use_cache = app.config["CACHE_ENABLED"] and cache_enabled
         cache_data = None
         if use_cache:
             c = Cache(self.max_cache_duration)
@@ -364,6 +356,10 @@ class ProviderError(Exception):
         msg = " " + self.message + " " if self.message is not None and self.message != "" else ""
         wraps = "(inner exception: " + repr(self.inner) + ")"
         return self.__class__.__name__ + ":" + msg + wraps
+
+    def __str__(self):
+        return repr(self._message)
+
 
 class ProviderConfigurationError(ProviderError):
     pass

@@ -11,91 +11,83 @@ import time
 import sys
 import pickle
 from pprint import pprint
+
+class TotalImpactAPI:
+    base_url = 'http://localhost:5001/'
+
+    def request_item(self, namespace, nid):
+        """ Attempt to obtain an item from the server using the given
+            namespace and namespace id. For example, 
+              namespace = 'pubmed', nid = '234234232'
+            Will request the item related to pubmed item 234234232
+        """
+
+        url = self.base_url + urllib.quote('item/%s/%s' % (namespace, nid))
+        print url
+        req = urllib2.Request(url)
+        data = {} # fake a POST
+        response = urllib2.urlopen(req, data)
+        item_id = json.loads(urllib.unquote(response.read()))
+        return item_id
+
+    def request_item_result(self, item_id):
+        url = self.base_url + urllib.quote('item/%s' % (item_id))
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+        return json.loads(response.read())
+        
+
 from optparse import OptionParser
 
-REQUEST_IDS = [("dryad", ('doi','10.5061/dryad.18')), 
-                ("dryad", ('doi','example'))
-#                "wikipedia": ('doi', '10.1371/journal.pcbi.1000361'), 
-#                "github": ('github', 'egonw,cdk')
-]
 
-GOLD_RESPONSES = {
-    'wikipedia' : { 
-        'aliases': ['doi'],
-        'biblio': [],
-        'metrics' : {
-            'wikipedia:mentions' : 1
-        }
-    },
-    'github' : { 
-        'aliases': ['github', 'url', 'title'],
-        'biblio': [u'last_push_date', u'create_date', u'description', u'title', u'url', u'owner'],
-        'metrics' : {
-            'github:forks' : 0,
-            'github:watchers' : 7
-        }
-    },
-    'dryad' : { 
-        'aliases': ['doi', 'url', 'title'],
-        'biblio': ['title', 'year'],
-        'metrics' : {
-            'dryad:most_downloaded_file' : 63,
-            'dryad:package_views' : 149,
-            'dryad:total_downloads' : 169
+def checkItem(item, data, item_type, debug=False):
+    checks = {
+        'wikipedia' : { 
+            'aliases': ['doi'],
+            'metrics' : {
+                'wikipedia:mentions' : 1
+            }
+        },
+        'github' : { 
+            'aliases': ['github', 'url', 'title'],
+            'metrics' : {
+                'github:forks' : 0,
+                'github:watchers' : 7
+            }
+        },
+        'dryad' : { 
+            'aliases': ['doi', 'url', 'title'],
+            'metrics' : {
+                'dryad:most_downloaded_file' : 63,
+                'dryad:package_views' : 149,
+                'dryad:total_downloads' : 169
+            }
         }
     }
-}
 
+    aliases = checks[item_type]['aliases']
+    metrics = checks[item_type]['metrics']
 
-def request_provider_item(provider, nid, section):
-    base_url = 'http://localhost:5001/'
-    url = base_url + urllib.quote('provider/%s/%s/%s' % (provider, section, nid))
-    req = urllib2.Request(url)
-    response = urllib2.urlopen(req)
-    result = json.loads(response.read())
-
-    return result
-
-
-def checkItem(provider, id, section, api_response, debug=False):
-    if debug: 
-        print "Checking %s result (%s)..." % (provider, id)
+    if debug: print "Checking %s result (%s)..." % (item_type, item)
     
     # Check aliases are correct
-    if section=="aliases":
-        aliases = GOLD_RESPONSES[provider]['aliases']
-        alias_result = set([namespace for (namespace, nid) in api_response])
-        expected_result = set(aliases + 
-            ['created','last_modified','last_completed'])
-        if alias_result != expected_result:
-            if debug: 
-                print "Aliases is not correct, have %s, want %s" %(alias_result, expected_result)
-            return False
-
-    # Check biblio are correct
-    elif section=="biblio":
-        biblio = GOLD_RESPONSES[provider]['biblio']    
-        if api_response:
-            biblio_result = set(api_response.keys())
-        else:
-            biblio_result = set([])
-        expected_result = set(biblio)
-
-        if biblio_result != expected_result:
-            if debug: 
-                print "Biblio is not correct, have %s, want %s" %(biblio_result, expected_result)
-            return False
+    alias_result = set(data['aliases'].keys())
+    expected_result = set(aliases + 
+        ['created','last_modified','last_completed'])
+    if alias_result != expected_result:
+        if debug: print "Aliases is not correct, have %s, want %s" %(alias_result, expected_result)
+        return False
 
     # Check we've got some metric values
-    elif section=="metrics":
-        metrics = GOLD_RESPONSES[provider]['metrics']
-        for metric in metrics.keys():
-            metric_data = api_response[metric]
+    for metric in metrics.keys():
+        metric_data = data['metrics'][metric]['values']
+        if len(metric_data) != 1:
+            if debug: print "Incorrect number of metric results for %s - %i" % (metric, len(metric_data))
+            return False
+        else:
             # expect the returned value to be equal or larger than reference
-            if metric_data < metrics[metric]:
-                if debug: 
-                    print "Incorrect metric result for %s - %s, expected at least %s" % (metric, metric_data, metrics[metric])
-                pprint(api_response)
+            if metric_data.values()[0] < metrics[metric]:
+                if debug: print "Incorrect metric result for %s - %s, expected at least %s" % (metric, metric_data.values()[0], metrics[metric])
                 return False
 
     return True
@@ -115,28 +107,49 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
 
-    complete = {}
-    final_responses = {}
+    item_count = int(options.simultaneous)
+    
+    ti = TotalImpactAPI()
 
-    for (provider, alias) in REQUEST_IDS:
-        (namespace, nid) = alias
-        complete[provider] = {}
-        final_responses[provider] = {}
-        complete[provider] = {}
-        if options.missing:
-            print provider, nid
-        for section in ["biblio", "aliases", "metrics"]:
-            api_response = request_provider_item(provider, nid, section)
-            final_responses[provider][section] = api_response
-            complete[provider][section] = checkItem(provider,
-                nid, 
-                section,
-                api_response,
-                debug=options.missing
-            )
-            if complete[provider] and options.printdata:
-                pprint(api_response)
- 
+    dryad_item = wikipedia_item = github_item = []
+    dryad_data = wikipedia_data = github_data = []
+    complete = {}
+    itemid = {}
+    for item_type in ['dryad','wikipedia','github']:
+        complete[item_type] = {}
+        itemid[item_type] = {}
+
+    for idx in range(item_count):
+        # Request the items to be generated
+        itemid['dryad'][idx] = ti.request_item('doi','10.5061/dryad.7898')
+        itemid['wikipedia'][idx] = ti.request_item('doi', '10.1371/journal.pcbi.1000361')
+        itemid['github'][idx] = ti.request_item('github', 'egonw,gtd')
+
+    for idx in range(item_count):
+        complete['dryad'][idx] = False
+        complete['wikipedia'][idx] = False
+        complete['github'][idx] = False
+
+    while True:
+
+        for idx in range(item_count):
+            for item_type in ['dryad','wikipedia','github']:
+                if not complete[item_type][idx]:
+                    if options.missing:
+                        print item_type, idx, itemid[item_type][idx]
+                    
+                    itemdata = ti.request_item_result(itemid[item_type][idx])
+                    complete[item_type][idx] = checkItem(
+                        itemid[item_type][idx], itemdata,
+                        item_type, debug=options.missing
+                    )
+                    if complete[item_type][idx] and options.printdata:
+                        pprint(itemdata)
+
+        total = sum([sum(complete[item_type].values()) for item_type in ['dryad','wikipedia','github']])
+        print [(item_type, sum(complete[item_type].values())) for item_type in ['dryad','wikipedia','github']], total
+        if total == item_count * 3:
+            sys.exit(0)    
 
         time.sleep(0.5)
 
