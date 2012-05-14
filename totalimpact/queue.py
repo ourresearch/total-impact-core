@@ -143,7 +143,10 @@ class MetricsQueue(Queue):
         metric_queue_lock.release()
 
         if found:
-            return ItemFactory.get(self.dao, item_id, config.METRIC_NAMES)
+            return ItemFactory.get(self.dao, 
+                          item_id, 
+                          ProviderFactory.get_provider, 
+                          default_settings.PROVIDERS)
         else:
             return None
 
@@ -168,7 +171,10 @@ class MetricsQueue(Queue):
         # using reversed() as a hack...we actually want to use the couchdb
         # descending=true param to get the oldest stuff first, but
         for id in res:
-            my_item = ItemFactory.get(self.dao, id, config.METRIC_NAMES)
+            my_item = ItemFactory.get(self.dao, 
+                          item_id, 
+                          ProviderFactory.get_provider, 
+                          default_settings.PROVIDERS)
             items.append(my_item)
         return items
 
