@@ -115,7 +115,7 @@ class ProvidersCheck:
              ('github', ('egonw', 'bioclipse.ons')),
              ('github', ('egonw', 'medea_bmc_article'))])
 
-        item.aliases.add_alias("github", "egonw/gtd")
+        item.aliases.add_alias("github", "egonw,gtd")
         item_aliases_list = item.aliases.get_aliases_list()
 
         new_metrics = github.metrics(item_aliases_list)

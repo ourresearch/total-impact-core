@@ -16,7 +16,7 @@ from optparse import OptionParser
 REQUEST_IDS = [("dryad", ('doi','10.5061/dryad.18')), 
                 ("dryad", ('doi','example'))
 #                "wikipedia": ('doi', '10.1371/journal.pcbi.1000361'), 
-#                "github": ('github', 'egonw/gtd')
+#                "github": ('github', 'egonw,cdk')
 ]
 
 GOLD_RESPONSES = {
