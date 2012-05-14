@@ -26,7 +26,12 @@ class Github(Provider):
     aliases_url_template = "https://github.com/api/v2/json/repos/show/%s"
     metrics_url_template = "https://github.com/api/v2/json/repos/show/%s"
 
-    example_id = ("github", "egonw")
+    provenance_url_templates = {
+        "watchers" : "https://github.com/%s/%s/watchers",
+        "forks" : "https://github.com/%s/%s/network/members"
+        }
+
+    example_id = ("github", "egonw,cdk")
 
     def __init__(self):
         super(Github, self).__init__()
@@ -37,8 +42,7 @@ class Github(Provider):
             if alias:
                 (namespace, id) = alias
                 if namespace == "github":
-                    matching_id = id[0]
-        print aliases, matching_id
+                    matching_id = id
         return matching_id
 
     def get_best_id(self, aliases):
@@ -104,3 +108,15 @@ class Github(Provider):
 
         return metrics_dict
 
+    # default method; providers can override    
+    def provenance_url(self, metric_name, aliases):
+        # Returns the same provenance url for all metrics
+        id = self.get_best_id(aliases)
+        if not id:
+            return None
+
+        print "aliases: ", aliases
+        (user, repo) = id.split(",")
+        provenance_url = self.provenance_url_templates[metric_name] % (user, repo)
+
+        return provenance_url

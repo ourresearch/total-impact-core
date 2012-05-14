@@ -211,7 +211,7 @@ class TotalImpactTest:
             # Request the items to be generated
             self.itemid['dryad'][idx] = self.ti.request_item('doi','10.5061/dryad.7898')
             self.itemid['wikipedia'][idx] = self.ti.request_item('doi', '10.1371/journal.pcbi.1000361')
-            self.itemid['github'][idx] = self.ti.request_item('github', 'egonw/gtd')
+            self.itemid['github'][idx] = self.ti.request_item('github', 'egonw,cdk')
 
 
 

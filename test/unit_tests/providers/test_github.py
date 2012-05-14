@@ -20,9 +20,9 @@ class TestGithub(ProviderTestCase):
     provider_name = "github"
 
     testitem_members = "egonw"
-    testitem_aliases = ("github", "egonw")
-    testitem_metrics = ("github", "egonw")
-    testitem_biblio = ("github", "egonw")
+    testitem_aliases = ("github", "egonw,cdk")
+    testitem_metrics = ("github", "egonw,cdk")
+    testitem_biblio = ("github", "egonw,cdk")
 
     def setUp(self):
         ProviderTestCase.setUp(self)
@@ -44,4 +44,13 @@ class TestGithub(ProviderTestCase):
         members = self.provider._extract_members(f.read(), self.testitem_members)
         assert len(members) >= 30, (len(members), members)
 
+    def test_provenance_url(self):
+        provenance_url = self.provider.provenance_url("forks", 
+            [self.testitem_aliases])
+        assert_equals(provenance_url, "https://github.com/egonw/cdk/network/members")
+
+        # Not the same as above
+        provenance_url = self.provider.provenance_url("watchers", 
+            [self.testitem_aliases])
+        assert_equals(provenance_url, "https://github.com/egonw/cdk/watchers")
 
