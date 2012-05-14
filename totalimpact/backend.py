@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import threading, time, sys
 import traceback
 from totalimpact.config import Configuration
@@ -16,6 +18,8 @@ import daemon
 import lockfile
 from totalimpact.common import PidFile
 
+from optparse import OptionParser
+import os
 
 logger = logging.getLogger('backend')
 
@@ -494,9 +498,10 @@ from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
+from totalimpact.api import app
 
 
-def main ():
+def main(logfile=None):
 
     logger = logging.getLogger()
 
@@ -509,7 +514,7 @@ def main ():
 
     # Adding this by handle. fileConfig doesn't allow filters to be added
     from totalimpact.backend import ctxfilter
-    handler = logging.handlers.RotatingFileHandler("logs/total-impact.log")
+    handler = logging.handlers.RotatingFileHandler(logfile)
     handler.level = logging.DEBUG
     formatter = logging.Formatter("%(asctime)s %(levelname)8s %(item)8s %(thread)s%(provider)s - %(message)s")#,"%H:%M:%S,%f")
     handler.formatter = formatter
@@ -547,10 +552,21 @@ def main ():
             thread.thread_id = thread.thread_id + '(%i)' % idx
             thread.start()
 
+    # Install a signal handler so we'll break out of the main loop
+    # on receipt of relevant signals
+    class ExitSignal(Exception):
+        pass
+ 
+    def kill_handler(signum, frame):
+        raise ExitSignal()
+
+    import signal
+    signal.signal(signal.SIGTERM, kill_handler)
+
     try:
         while True:
             time.sleep(1)
-    except KeyboardInterrupt, e:
+    except (KeyboardInterrupt, ExitSignal), e:
         pass
 
     from totalimpact.queue import alias_queue_seen
@@ -571,17 +587,50 @@ def main ():
     print "All stopped"
 
  
- 
 if __name__ == "__main__":
 
-    rootdir = os.path.dirname(os.path.realpath(__file__))
-    print "Running from", rootdir
-    context = daemon.DaemonContext()
-    output = open(os.path.join(rootdir, 'logs/backend.log'),'a+')
-    context.stderr = output
-    context.stdout = output
-    context.pidfile = PidFile(os.path.join(rootdir, 'backend.pid'))
-    context.working_directory = rootdir
-    with context:
-        main()
+    parser = OptionParser()
+    parser.add_option("-p", "--pid",
+                      action="store", dest="pid", default=None,
+                      help="pid file")
+    parser.add_option("-s", "--startup-log",
+                      action="store", dest="startup_log", default=None,
+                      help="startup log")
+    parser.add_option("-l", "--log",
+                      action="store", dest="log", default=None,
+                      help="runtime log")
+    parser.add_option("-d", "--daemon",
+                      action="store_true", dest="daemon", default=False,
+                      help="run as a daemon")
+
+    (options, args) = parser.parse_args()
+    # Root of the totalimpact directory
+    rootdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+    if options.log:
+        logfile = options.log
+    else:
+        logfile = os.path.join(rootdir, 'logs', 'backend.log')
+
+    if options.daemon:
+        context = daemon.DaemonContext()
+
+        if options.startup_log:
+            output = open(options.startup_log,'a+')
+        else:
+            output = open(os.path.join(rootdir, 'logs', 'backend-startup.log'),'a+')
+
+        context.stderr = output
+        context.stdout = output
+        if options.pid:
+            context.pidfile = PidFile(options.pid)
+        else: 
+            context.pidfile = PidFile(os.path.join(rootdir, 'run', 'backend.pid'))
+        context.working_directory = rootdir
+        with context:
+            main(logfile)
+
+    else:
+        main(logfile)
+    
 

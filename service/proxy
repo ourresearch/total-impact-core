@@ -1,0 +1,91 @@
+#!/bin/bash
+#
+# chkconfig: 35 90 12
+# description: Totalimpact proxy server
+#
+
+# Find the absolute path for the current script
+_my_name=`basename $0`
+if [ "`echo $0 | cut -c1`" = "/" ]; then
+  _my_path=`dirname $0`
+else
+  _my_path=`pwd`/`echo $0 | sed -e s/$_my_name//`
+fi
+
+# Find the root of the totalimpact directory
+ROOTDIR=`dirname $_my_path`
+
+# Change these to match your config
+STATEDIR=$ROOTDIR/run
+TOTALIMPACT_CONFIG=$ROOTDIR/config/testenv.cfg
+PROXY_LOG=$ROOTDIR/logs/proxy.log
+export PYTHONPATH=.:$PYTHONPATH
+
+start() {
+    echo -n "Starting proxy server: "
+    is_running 
+    return_val=$?
+    if [ $return_val -eq 0 ]; then
+        cd $ROOTDIR
+        ./extras/providers_test_proxy.py -d --log=$PROXY_LOG --pid=$STATEDIR/proxy.pid
+        echo "Started"
+    else
+        echo "Already running"
+    fi
+    echo
+}
+
+stop() {
+    echo -n "Stopping proxy server: "
+    if [ -f $STATEDIR/proxy.pid ]; then
+        PID=`cat $STATEDIR/proxy.pid`
+		kill $PID
+        while [ -e /proc/$PID ]; do sleep 0.1; done
+		echo "Stopped"
+	else 
+		echo "Not running"	
+	fi
+	echo
+}
+
+is_running() { 
+	if [ -f $STATEDIR/proxy.pid ]; then
+		ps `cat $STATEDIR/proxy.pid` > /dev/null
+		if [ $? -ne 0 ]; then
+            return 0
+		else 	
+            return 1
+		fi
+	else
+        return 0
+	fi
+}
+
+status() {
+    is_running
+    if [ $? -eq 1 ]; then
+        echo "Running"
+    else
+		echo "Stopped"
+	fi
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  status)
+        status 
+        ;;
+  restart|reload|condrestart)
+        stop
+        start
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|restart|reload|status}"
+        exit 1
+esac
+exit 0

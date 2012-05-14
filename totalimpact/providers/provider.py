@@ -21,7 +21,6 @@ class ProviderFactory(object):
         """
         # directly beneath the working directory
         provider_config_path = os.path.join(os.getcwd(), provider_definition['config'])
-	print "Config path", provider_config_path
         provider_config = Configuration(provider_config_path, False)
         provider_class_name = provider_definition['class']
         provider_class = provider_config.get_class(provider_class_name)
