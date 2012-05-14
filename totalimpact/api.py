@@ -157,7 +157,8 @@ def make_item_dict(tiid):
         abort(404)
     return item_dict
 
-def make_item_resp(item_dict, format):
+def make_item_resp(tiid, item_dict, format):
+    item_dict["tiid"] = tiid;
     if format == "html":
         #TODO in the future, we need to actually use the article's value for this
         if not item_dict.has_key('genre'):
@@ -178,7 +179,7 @@ def item(tiid, format=None):
     # TODO check request headers for format as well.
     item_dict = make_item_dict(tiid)
     pprint(item_dict)
-    return make_item_resp(item_dict, format)
+    return make_item_resp(tiid, item_dict, format)
 
 '''
 GET /items/:tiid,:tiid,...

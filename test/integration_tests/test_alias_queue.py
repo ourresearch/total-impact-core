@@ -59,8 +59,8 @@ class TestAliasQueue(unittest.TestCase):
         resp_dict = json.loads(response.data)
         assert_equals(
             set(resp_dict.keys()),
-            set([u'created', u'last_requested', u'metrics', u'last_modified', 
-                u'biblio', u'id', u'aliases'])
+            set([u'tiid', u'created', u'last_requested', u'metrics', 
+                u'last_modified', u'biblio', u'id', u'aliases'])
             )
         assert_equals(unicode(TEST_DRYAD_DOI), resp_dict["aliases"]["doi"][0])
 
