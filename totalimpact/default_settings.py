@@ -40,8 +40,7 @@ CACHE_ENABLED = True
 PROVIDERS = {
     "wikipedia": {
         "class" : "totalimpact.providers.wikipedia.Wikipedia",
-        "timeout": 5,
-	"workers": 10,
+	    "workers": 10,
         "metrics": {
             "mentions": {
                 "static_meta" : {
@@ -62,8 +61,7 @@ PROVIDERS = {
     "dryad": {
         "class" : "totalimpact.providers.dryad.Dryad",
         "supported_namespaces" : ["doi"],
-        "timeout" : 5,
-	"workers":10,
+	    "workers":10,
         "metrics": {
             "package_views": {
                 "static_meta" : {
@@ -112,8 +110,37 @@ PROVIDERS = {
     "github":{
         "class" : "totalimpact.providers.github.Github",
         "supported_namespaces" : ["github"],
-	"workers":10,
-        "metrics": {}
+	    "workers":10,
+        "metrics": {
+            "watchers": {
+                "static_meta" : {
+                    "display_name": "watchers",
+                    "provider": "GitHub",
+                    "provider_url": "http://github.com",
+                    "description": "The number of people who are watching the GitHub repository",
+                    "icon": "https://github.com/fluidicon.png",
+                    "category": "views",
+                    "can_use_commercially": "",
+                    "can_embed": "",
+                    "can_aggregate": "",
+                    "other_terms_of_use": ""
+                }
+            },
+            "forks": {
+                "static_meta" : {
+                    "display_name": "forks",
+                    "provider": "GitHub",
+                    "provider_url": "http://github.com",
+                    "description": "The number of people who have forked the GitHub repository",
+                    "icon": "https://github.com/fluidicon.png",
+                    "category": "reuse",
+                    "can_use_commercially": "",
+                    "can_embed": "",
+                    "can_aggregate": "",
+                    "other_terms_of_use": ""
+                }
+            }
+        }        
     }
 }
 
@@ -121,15 +148,6 @@ ALIASES = {
     "workers" : 10
 }
 
-#TODO this should be created from the providers config item.
-METRIC_NAMES = [
-    "wikipedia:mentions",
-    "dryad:package_views",
-    "dryad:total_downloads",
-    "dryad:most_downloaded_file",
-    "github:watchers",
-    "github:forks",
-]
 
 # used by the class-loader to explore alternative paths from which to load
 # classes depending on the context in which the configuration is used
