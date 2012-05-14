@@ -14,9 +14,8 @@ from pprint import pprint
 from optparse import OptionParser
 
 REQUEST_IDS = [("dryad", ('doi','10.5061/dryad.18')), 
-                ("dryad", ('doi','example'))
-#                "wikipedia": ('doi', '10.1371/journal.pcbi.1000361'), 
-#                "github": ('github', 'egonw,cdk')
+                ("wikipedia", ('doi', '10.1371/journal.pcbi.1000361')), 
+                ("github", ('github', 'egonw,cdk'))
 ]
 
 GOLD_RESPONSES = {
@@ -50,9 +49,14 @@ GOLD_RESPONSES = {
 def request_provider_item(provider, nid, section):
     base_url = 'http://localhost:5001/'
     url = base_url + urllib.quote('provider/%s/%s/%s' % (provider, section, nid))
+    if debug:
+        print url
     req = urllib2.Request(url)
-    response = urllib2.urlopen(req)
-    result = json.loads(response.read())
+    try:
+        response = urllib2.urlopen(req)
+        result = json.loads(response.read())
+    except urllib2.HTTPError:
+        result = []
 
     return result
 
@@ -104,6 +108,7 @@ def checkItem(provider, id, section, api_response, debug=False):
 
 
 if __name__ == '__main__':
+    debug = True
 
     parser = OptionParser()
     parser.add_option("-s", "--simultaneous", dest="simultaneous", default=1,
