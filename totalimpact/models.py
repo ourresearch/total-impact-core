@@ -196,17 +196,22 @@ class ItemFactory():
                 my_metric = {'values': {} }
             
             (provider_name, metric_name) = full_metric_name.split(":")
-            my_metric_config = providers_config[provider_name]["metrics"][metric_name]
-            metric_static_meta = my_metric_config["static_meta"]
-
-            my_metric["static_meta"] = metric_static_meta
 
             # make the provenance url
+            # FIXME problem if alias needed for provenance url not obtained yet?
             aliases_list = item.aliases.get_aliases_list()
             provider = provider_maker(provider_name)
 
             provenance_url = provider.provenance_url(metric_name, aliases_list)
             my_metric["provenance_url"] = provenance_url
+
+            # populate the static_meta only if it has a provenance url
+            if provenance_url:
+                metric_static_meta = providers_config[provider_name]["metrics"][metric_name]["static_meta"]
+                my_metric["static_meta"] = metric_static_meta
+            else:
+                my_metric["static_meta"] = {}
+
 
             item.metrics[full_metric_name] = my_metric
 

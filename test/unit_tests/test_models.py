@@ -262,19 +262,8 @@ class TestItemFactory():
             provider.ProviderFactory.get_provider,
             default_settings.PROVIDERS)
 
-        expected = {
-                    "display_name": "package views",
-                    "provider": "Dryad",
-                    "provider_url": "http:\/\/www.datadryad.org\/",
-                    "description": "Dryad package views: number of views of the main package page",
-                    "icon": "http:\/\/datadryad.org\/favicon.ico",
-                    "category": "views",
-                    "can_use_commercially": "1",
-                    "can_embed": "1",
-                    "can_aggregate": "1",
-                    "other_terms_of_use": "CC0"
-                }
-        assert_equals(item.metrics["dryad:package_views"]["static_meta"], expected)
+        expected = {'category': 'NA', 'provider_url': 'http://www.wikipedia.org/', 'display_name': 'mentions', 'description': 'Wikipedia is the free encyclopedia that anyone can edit.', 'provider': 'Wikipedia', 'other_terms_of_use': 'NA', 'can_embed': 'NA', 'can_use_commercially': 'NA', 'can_aggregate': 'NA', 'icon': 'http://wikipedia.org/favicon.ico'}
+        assert_equals(item.metrics["wikipedia:mentions"]["static_meta"], expected)
 
     def test_adds_provenance_url(self):
         self.d.setResponses([deepcopy(ITEM_DATA)])
