@@ -74,7 +74,7 @@ class Provider(object):
         id = self.get_best_id(aliases)
 
         if id:
-            provenance_url = self._get_templated_url(self.provenance_url_template, id)
+            provenance_url = self._get_templated_url(self.provenance_url_template, id, "provenance")
         else:
             provenance_url = None
 
@@ -143,7 +143,7 @@ class Provider(object):
 
         if not provider_url_template:
             provider_url_template = self.biblio_url_template
-        url = self._get_templated_url(provider_url_template, id)
+        url = self._get_templated_url(provider_url_template, id, "biblio")
         logger.debug("attempting to retrieve biblio from " + url)
 
         # try to get a response from the data provider        
@@ -195,7 +195,7 @@ class Provider(object):
 
         if not provider_url_template:
             provider_url_template = self.aliases_url_template
-        url = self._get_templated_url(provider_url_template, id)
+        url = self._get_templated_url(provider_url_template, id, "aliases")
         logger.debug("attempting to retrieve aliases from " + url)
 
         # try to get a response from the data provider        
@@ -244,7 +244,7 @@ class Provider(object):
 
         if not provider_url_template:
             provider_url_template = self.metrics_url_template
-        url = self._get_templated_url(provider_url_template, id)
+        url = self._get_templated_url(provider_url_template, id, "metrics")
         logger.debug("attempting to retrieve metrics from " + url)
 
         # try to get a response from the data provider        

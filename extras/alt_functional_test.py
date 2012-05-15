@@ -15,6 +15,7 @@ from optparse import OptionParser
 
 REQUEST_IDS = [("dryad", ('doi','10.5061/dryad.18')), 
                 ("wikipedia", ('doi', '10.1371/journal.pcbi.1000361')), 
+                ("mendeley", ('doi', '10.1371/journal.pcbi.1000361')), 
                 ("github", ('github', 'egonw,cdk'))
 ]
 
@@ -32,6 +33,14 @@ GOLD_RESPONSES = {
         'metrics' : {
             'github:forks' : 0,
             'github:watchers' : 7
+        }
+    },
+    'mendeley' : { 
+        'aliases': [u'url', u'doi', u'title'],
+        'biblio': [u'authors', u'journal', u'year', u'title'],
+        'metrics' : {
+            'mendeley:readers' : 50,
+            'mendeley:groups' : 4
         }
     },
     'dryad' : { 
@@ -72,7 +81,10 @@ def checkItem(provider, id, section, api_response, debug=False):
         aliases = GOLD_RESPONSES[provider]['aliases']
         alias_result = set([namespace for (namespace, nid) in api_response])
         expected_result = set(aliases)
-        if alias_result != expected_result:
+        if (alias_result == expected_result):
+            if debug: 
+                print "Aliases correct! %s" %(alias_result)
+        else:
             if debug: 
                 print "Aliases is not correct, have %s, want %s" %(alias_result, expected_result)
             return False
@@ -86,7 +98,10 @@ def checkItem(provider, id, section, api_response, debug=False):
             biblio_result = set([])
         expected_result = set(biblio)
 
-        if biblio_result != expected_result:
+        if (biblio_result == expected_result):
+            if debug: 
+                print "Biblio correct! %s" %(biblio_result)
+        else:
             if debug: 
                 print "Biblio is not correct, have %s, want %s" %(biblio_result, expected_result)
             return False
@@ -102,6 +117,10 @@ def checkItem(provider, id, section, api_response, debug=False):
                     print "Incorrect metric result for %s - %s, expected at least %s" % (metric, metric_data, metrics[metric])
                 pprint(api_response)
                 return False
+            else:
+                if debug: 
+                    print "Metrics correct! %s" %(metric_data)
+
 
     return True
 
