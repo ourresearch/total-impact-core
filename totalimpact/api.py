@@ -162,7 +162,7 @@ def make_item_resp(tiid, item_dict, format):
     if format == "html":
         #TODO in the future, we need to actually use the article's value for this
         if not item_dict.has_key('genre'):
-            item_dict['genre'] = "article"
+            item_dict['genre'] = "dataset"
         resp = make_response(render_template("item.html", item=item_dict ))
         resp.content_type = "text/html"
     else:
@@ -178,7 +178,6 @@ def make_item_resp(tiid, item_dict, format):
 def item(tiid, format=None):
     # TODO check request headers for format as well.
     item_dict = make_item_dict(tiid)
-    pprint(item_dict)
     return make_item_resp(tiid, item_dict, format)
 
 '''
