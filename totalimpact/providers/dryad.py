@@ -87,6 +87,8 @@ class Dryad(Provider):
     def _extract_biblio(self, xml, id=None):
         biblio_dict = {}
 
+        biblio_dict["repository"] = "Dryad Digital Repository"
+
         try:
             title = self._get_named_arr_str_from_xml(xml, 'dc.title_ac')
             biblio_dict["title"] = title[0]
@@ -96,6 +98,21 @@ class Dryad(Provider):
         try:
             year = self._get_named_arr_int_from_xml(xml, 'dc.date.accessioned.year')
             biblio_dict["year"] = year[0]
+        except AttributeError:
+            raise ProviderContentMalformedError("Content does not contain expected text")
+
+        try:
+            arrs = self._get_named_arrs_from_xml(xml, 'dc.contributor.author_ac')
+
+            authors = []
+            for arr in arrs:
+                node = arr.getElementsByTagName('str')
+                for author in node:
+                    full_name = author.firstChild.nodeValue
+                    last_name = full_name.split(",")[0]
+                    authors.append(last_name)
+
+            biblio_dict["authors"] = (", ").join(authors)
         except AttributeError:
             raise ProviderContentMalformedError("Content does not contain expected text")
 

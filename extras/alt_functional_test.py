@@ -45,7 +45,7 @@ GOLD_RESPONSES = {
     },
     'dryad' : { 
         'aliases': ['doi', 'url', 'title'],
-        'biblio': ['title', 'year'],
+        'biblio': [u'authors', u'year', u'repository', u'title'],
         'metrics' : {
             'dryad:most_downloaded_file' : 63,
             'dryad:package_views' : 149,

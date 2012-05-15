@@ -61,7 +61,7 @@ class TestDryad(ProviderTestCase):
     def test_extract_biblio(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
         ret = self.provider._extract_biblio(f.read())
-        assert_equals(ret, {'year': u'2010', 'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides'})
+        assert_equals(ret, {'authors': u'Ally, Ritland, Otto', 'year': u'2010', 'repository': 'Dryad Digital Repository', 'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides'})
 
     def test_extract_stats(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
