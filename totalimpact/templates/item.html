@@ -1,5 +1,5 @@
 <li class="item" id="{{item.id}}">
-    <h4><span class="genre">{{ item.genre }}</span>{{ item.tiid }}</h4>
+    <h4><span class="genre"></span></h4>
 
     <div class="biblio">
         {%- if item.biblio.data -%}
@@ -11,6 +11,7 @@
         {%- for metric_name, metric in item.metrics.iteritems() -%}
         {%- if metric.values and metric.static_meta -%}
         {% set metric_snap =  metric['values']|dictsort|reverse|first %}
+        {% if metric_snap|last != 0 %}
         <li>
             <a href="{{ metric['static_meta']['provenance_url']}}">
                 <span class="last-update">{{ metric_snap|first }}</span>
@@ -22,6 +23,7 @@
                 </span>
             </a>
         </li>
+        {%- endif -%}
         {%- endif -%}
         {%- endfor -%}
     </ul>

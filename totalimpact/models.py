@@ -134,27 +134,6 @@ class Saveable(object):
 
 
 class Item(Saveable):
-    """{
-        "id": "<uuid4>",
-        "aliases": "<Aliases object>",
-        "metrics": {
-            "plos:html_views":{
-                "ignore":False,
-                "static_meta": "<static_meta dict from provider>",
-                "values":
-                    12: "1234556789.2",
-                    13: "1234567999.9"
-            },
-            "plos:pdf_views: {...},
-            "dryad:total_downloads: {...},
-            ...
-        },
-        "biblio": "<Biblio object>",
-        "created": 23112412414.234,
-        "last_modified": 12414214.234,
-        "last_requested": 124141245.234
-    }
-    """
     pass
 
 
