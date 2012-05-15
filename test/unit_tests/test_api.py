@@ -185,7 +185,7 @@ class TestItem(ApiTester):
 
 
         assert returned.find('h4') is not None
-        assert_equals(returned('h4'), expected('h4'))     
+        assert_equals(returned('h4'), expected('h4'))  
 
         assert returned.find('div', "biblio") is not None
         assert_equals(
