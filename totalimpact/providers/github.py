@@ -22,9 +22,9 @@ class Github(Provider):
     provides_biblio = True
 
     member_items_url_template = "https://api.github.com/users/%s/repos"
-    biblio_url_template = "https://github.com/api/v2/json/repos/show/%s/%s"
-    aliases_url_template = "https://github.com/api/v2/json/repos/show/%s/%s"
-    metrics_url_template = "https://github.com/api/v2/json/repos/show/%s/%s"
+    biblio_url_template = "https://github.com/api/v2/json/repos/show/%s"
+    aliases_url_template = "https://github.com/api/v2/json/repos/show/%s"
+    metrics_url_template = "https://github.com/api/v2/json/repos/show/%s"
 
     provenance_url_templates = {
         "watchers" : "https://github.com/%s/%s/watchers",
@@ -36,7 +36,8 @@ class Github(Provider):
     def __init__(self):
         super(Github, self).__init__()
 
-    def get_github_id(self, aliases):
+
+    def _get_github_id(self, aliases):
         matching_id = None
         for alias in aliases:
             if alias:
@@ -45,22 +46,16 @@ class Github(Provider):
                     matching_id = id
         return matching_id
 
-    def get_best_id(self, aliases):
-        return self.get_github_id(aliases)
+    def is_relevant_alias(self, alias):
+        (namespace, nid) = alias
+        return("github" == namespace)
 
-    def known_aliases(self, aliases):
-        return [self.get_github_id(aliases)]
 
-    def _is_relevant_id(self, alias):
-        return("github" == alias[0])
 
     #override because need to break up id
     def _get_templated_url(self, template, id, method=None):
-        if (method == "members"):
-            url = template % id
-        else:
-            (user, repo) = id.split(",")
-            url = template % (user, repo)
+        id_with_slashes = id.replace(",", "/")
+        url = template % id_with_slashes
         return(url)
 
     def _extract_members(self, page, query_string):        

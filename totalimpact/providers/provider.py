@@ -31,7 +31,7 @@ class ProviderFactory(object):
         
 class Provider(object):
 
-    def __init__(self, max_cache_duration=86400, max_retries=999):
+    def __init__(self, max_cache_duration=86400, max_retries=3):
         self.max_cache_duration = max_cache_duration
         self.max_retries = max_retries
         self.provider_name = self.__class__.__name__.lower()
@@ -53,6 +53,20 @@ class Provider(object):
     def _get_templated_url(self, template, id, method=None):
         url = template % id
         return(url)
+
+    def relevant_aliases(self, aliases):
+        filtered = [alias for alias in aliases 
+                        if self.is_relevant_alias(alias)]
+        return filtered
+
+    def get_best_id(self, aliases):
+        filtered = self.relevant_aliases(aliases)
+        if filtered:
+            alias = filtered[0]
+            (namespace, nid) = alias
+        else:
+            nid = None
+        return(nid)
 
     # default method; providers can override    
     def provenance_url(self, metric_name, aliases):
@@ -149,24 +163,21 @@ class Provider(object):
             aliases, 
             provider_url_template=None):
 
-        print "in aliases"
         if not self.provides_aliases:
             raise NotImplementedError()
 
         # Get a list of relevant aliases
-        id_list = self.known_aliases(aliases)
+        relevant_aliases = self.relevant_aliases(aliases)
 
-        if not id_list:
+        if not relevant_aliases:
             logger.info("Not checking aliases because no relevant id for %s", self.provider_name)
             return None
 
         new_aliases = aliases
-        for id in id_list:
-            logger.debug("processing alias %s" % id)
-            print("processing alias %s" % id)
-            print new_aliases
-            new_aliases += self._get_aliases_for_id(id, provider_url_template)
-            print new_aliases
+        for alias in relevant_aliases:
+            (namespace, nid) = alias
+            logger.debug("processing alias %s" % str(alias))
+            new_aliases += self._get_aliases_for_id(nid, provider_url_template)
         
         new_aliases_unique = list(set(new_aliases))
         return new_aliases_unique
@@ -176,8 +187,6 @@ class Provider(object):
             id, 
             provider_url_template=None, 
             cache_enabled=True):
-
-        print "in _get_aliases_for_id"
 
         if not self.provides_aliases:
             raise NotImplementedError()
@@ -196,7 +205,6 @@ class Provider(object):
             error = self._get_error(response)
             raise error(response)
         
-        # extract the aliases
         new_aliases = self._extract_aliases(response.text, id)
 
         return new_aliases

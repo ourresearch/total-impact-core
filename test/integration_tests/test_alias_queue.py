@@ -1,4 +1,5 @@
-import os, unittest, time, json, yaml
+import os, unittest, time, json, yaml, json
+from urllib import quote_plus
 from nose.tools import nottest, assert_equals
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
@@ -47,13 +48,13 @@ class TestAliasQueue(unittest.TestCase):
 
         providers = ProviderFactory.get_providers(self.app.config["PROVIDERS"])
 
-        response = self.client.post('/item/doi/' + TEST_DRYAD_DOI.replace("/", "%2F"))
-        tiid = response.data
+        response = self.client.post('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
+        tiid = json.loads(response.data)
 
 
         # now get it back out
-        tiid = tiid.replace('"', '')
         response = self.client.get('/item/' + tiid)
+        print tiid
         assert_equals(response.status_code, 200)
         
         resp_dict = json.loads(response.data)
@@ -85,6 +86,8 @@ class TestAliasQueue(unittest.TestCase):
         # get the item back out again and bask in the awesome
         response = self.client.get('/item/' + tiid)
         resp_dict = json.loads(response.data)
+        print tiid
+        print response.data
         assert_equals(
             resp_dict["aliases"]["title"][0],
             "data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides"

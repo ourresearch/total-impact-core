@@ -31,11 +31,11 @@ class TestDryad(ProviderTestCase):
     def setUp(self):
         ProviderTestCase.setUp(self)
 
-    def test_is_relevant_id(self):
+    def test_is_relevant_alias(self):
         # ensure that it matches an appropriate TEST_DRYAD_DOI
-        assert_equals(self.provider._is_relevant_id(self.testitem_aliases), True)
+        assert_equals(self.provider.is_relevant_alias(self.testitem_aliases), True)
         # ensure that it doesn't match an inappropriate TEST_DRYAD_DOI
-        assert_equals(self.provider._is_relevant_id(("doi", "11.12354/NOTDRYADDOI")), False)
+        assert_equals(self.provider.is_relevant_alias(("doi", "11.12354/NOTDRYADDOI")), False)
     
     def test_extract_members(self):
         f = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r")

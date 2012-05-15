@@ -27,11 +27,11 @@ class TestGithub(ProviderTestCase):
     def setUp(self):
         ProviderTestCase.setUp(self)
 
-    def test_is_relevant_id(self):
+    def test_is_relevant_alias(self):
         # ensure that it matches an appropriate ids
-        assert_equals(self.provider._is_relevant_id(self.testitem_aliases), True)
+        assert_equals(self.provider.is_relevant_alias(self.testitem_aliases), True)
 
-        assert_equals(self.provider._is_relevant_id(("doi", "NOT A GITHUB ID")), False)
+        assert_equals(self.provider.is_relevant_alias(("doi", "NOT A GITHUB ID")), False)
   
     def test_extract_metrics_success(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")

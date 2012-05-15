@@ -28,14 +28,12 @@ class Wikipedia(Provider):
     def __init__(self):
         super(Wikipedia, self).__init__()
 
-    def _is_relevant_id(self, aliases):
-        # right now wikipedia looks up everything
-        return(True)
-
-    def get_best_id(self, aliases):
-        # Wikipedia has no best id, so just return the first one
-        (namespace, id) = aliases[0]
-        return(id)
+    def is_relevant_alias(self, alias):
+        if not alias:
+            return False
+        (namespace, nid) = alias
+        is_relevant = (namespace=="doi")
+        return is_relevant
 
     def _extract_metrics(self, page, id=None):
         try:

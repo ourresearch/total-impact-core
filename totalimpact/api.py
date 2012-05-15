@@ -248,9 +248,14 @@ def provider_aliases(provider_name, id):
     else:
         url = None
 
-    aliases = provider._get_aliases_for_id(id, url, cache_enabled=False)
+    try:
+        new_aliases = provider._get_aliases_for_id(id, url, cache_enabled=False)
+    except NotImplementedError:
+        new_aliases = []
+        
+    all_aliases = [(provider.example_id[0], id)] + new_aliases
 
-    resp = make_response( json.dumps(aliases, sort_keys=True, indent=4) )
+    resp = make_response( json.dumps(all_aliases, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
 

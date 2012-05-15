@@ -35,36 +35,32 @@ class Dryad(Provider):
     biblio_url_template = "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.date.accessioned.year,dc.identifier.uri,dc.title_ac,dc.contributor.author_ac"
     metrics_url_template = "http://dx.doi.org/%s"
 
+    DRYAD_DOI_PATTERN = re.compile(r"(10\.5061/.*)")
+    DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+)\W*views<span", re.DOTALL)
+    DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+)\W*downloads</span", re.DOTALL)
+
     def __init__(self):
         super(Dryad, self).__init__()
         
-        self.dryad_doi_rx = re.compile(r"(10\.5061/.*)")
-        self.member_items_rx = re.compile(r"(10\.5061/.*)</span")
-
-        self.DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+)\W*views<span", re.DOTALL)
-        self.DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+)\W*downloads</span", re.DOTALL)
-
     def _is_dryad_doi(self, doi):
-        response = self.dryad_doi_rx.search(doi)
-        return response is not None
-
-    def _is_relevant_id(self, alias):
-        return self._is_dryad_doi(alias[1])
+        response = self.DRYAD_DOI_PATTERN.search(doi)
+        if response:
+            return(True)
+        else:
+            return(False)
 
     def _get_dryad_doi(self, aliases):
         for doi in [nid for (namespace, nid) in aliases if namespace == 'doi']:
             if self._is_dryad_doi(doi):
                 return doi
         return None
-    
-    def get_best_id(self, aliases):
-        return(self._get_dryad_doi(aliases))
 
-    def known_aliases(self, aliases):
-        id_list = [nid for (namespace, nid) in aliases if self._is_dryad_doi(nid)]
-        return id_list
-
-
+    def is_relevant_alias(self, alias):
+        if not alias:
+            return False
+        (namespace, nid) = alias
+        is_relevant = (namespace=="doi" and self._is_dryad_doi(nid))
+        return is_relevant
 
     def _extract_members(self, page, query_string=None):
         if '<result name="response"' not in page:

@@ -56,7 +56,9 @@ def request_provider_item(provider, nid, section):
         response = urllib2.urlopen(req)
         result = json.loads(response.read())
     except urllib2.HTTPError:
-        result = []
+        if debug:
+            print("HTTPError on %s %s %s, could be not implemented" % (provider, section, nid))
+        result = {}
 
     return result
 
@@ -69,8 +71,7 @@ def checkItem(provider, id, section, api_response, debug=False):
     if section=="aliases":
         aliases = GOLD_RESPONSES[provider]['aliases']
         alias_result = set([namespace for (namespace, nid) in api_response])
-        expected_result = set(aliases + 
-            ['created','last_modified','last_completed'])
+        expected_result = set(aliases)
         if alias_result != expected_result:
             if debug: 
                 print "Aliases is not correct, have %s, want %s" %(alias_result, expected_result)
@@ -105,6 +106,19 @@ def checkItem(provider, id, section, api_response, debug=False):
     return True
 
 
+def make_call(namespace, nid, provider, options):
+    if debug:
+        print provider, nid
+    for section in ["biblio", "aliases", "metrics"]:
+        api_response = request_provider_item(provider, nid, section)
+        check_response = checkItem(provider,
+            nid, 
+            section,
+            api_response,
+            debug=options.missing
+        )
+        if check_response and options.printdata:
+            pprint(api_response)  
 
 
 if __name__ == '__main__':
@@ -119,29 +133,18 @@ if __name__ == '__main__':
                       help="Display item data")
     (options, args) = parser.parse_args()
 
-
-    complete = {}
-    final_responses = {}
+    if options.missing:
+        debug=True
 
     for (provider, alias) in REQUEST_IDS:
-        (namespace, nid) = alias
-        complete[provider] = {}
-        final_responses[provider] = {}
-        complete[provider] = {}
-        if options.missing:
-            print provider, nid
-        for section in ["biblio", "aliases", "metrics"]:
-            api_response = request_provider_item(provider, nid, section)
-            final_responses[provider][section] = api_response
-            complete[provider][section] = checkItem(provider,
-                nid, 
-                section,
-                api_response,
-                debug=options.missing
-            )
-            if complete[provider] and options.printdata:
-                pprint(api_response)
- 
+        print "\r\n****PROVIDER:", provider
 
+        (namespace, nid) = alias
+        print "LIVE DATA"
+        make_call(namespace, nid, provider, options)
+
+        print "CANNED DATA"
+        make_call(namespace, "example", provider, options)
+ 
         time.sleep(0.5)
 
