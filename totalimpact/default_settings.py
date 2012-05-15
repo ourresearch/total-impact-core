@@ -107,6 +107,41 @@ PROVIDERS = {
             }
         }
     },
+    "mendeley":{
+        "class" : "totalimpact.providers.mendeley.Mendeley",
+        "supported_namespaces" : ["doi"],
+        "workers":10,
+        "metrics": {
+            "readers": {
+                "static_meta" : {
+                    "display_name": "watchers",
+                    "provider": "Mendeley",
+                    "provider_url": "http://www.mendeley.com/",
+                    "description": "The number of readers who have added the article to their libraries",
+                    "icon": "http://www.mendeley.com/favicon.ico",
+                    "category": "views",
+                    "can_use_commercially": "",
+                    "can_embed": "",
+                    "can_aggregate": "",
+                    "other_terms_of_use": ""
+                }
+            },    
+            "groups": {
+                "static_meta" : {
+                    "display_name": "watchers",
+                    "provider": "Mendeley",
+                    "provider_url": "http://www.mendeley.com/",
+                    "description": "The number of groups who have added the article to their libraries",
+                    "icon": "http://www.mendeley.com/favicon.ico",
+                    "category": "views",
+                    "can_use_commercially": "",
+                    "can_embed": "",
+                    "can_aggregate": "",
+                    "other_terms_of_use": ""
+                }
+            },  
+        }
+    },  
     "github":{
         "class" : "totalimpact.providers.github.Github",
         "supported_namespaces" : ["github"],
