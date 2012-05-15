@@ -27,9 +27,9 @@ class TestWikipedia(ProviderTestCase):
     def setUp(self):
         ProviderTestCase.setUp(self)
 
-    def test_is_relevant_id(self):
+    def test_is_relevant_alias(self):
         # ensure that it matches an appropriate ids
-        assert_equals(self.provider._is_relevant_id(self.testitem_aliases), True)
+        assert_equals(self.provider.is_relevant_alias(self.testitem_aliases), True)
 
         ### Is there anything that wikipedia shouldn't match? 
   
