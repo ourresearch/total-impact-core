@@ -96,14 +96,9 @@ def create_item(namespace, id):
     ## If so, return its tiid with a 200.
     # right now this makes a new item every time, creating many dupes
 
-    # FIXME pull this from Aliases somehow?
-    # check to make sure we know this namespace
-    #known_namespace = namespace in Aliases().get_valid_namespaces() #implement
-    known_namespaces = ["doi", "github", "url"]  # hack in the meantime
-    if not namespace in known_namespaces:
-        abort(501) # "Not Implemented"
-    else:
-        item.save() 
+    # does not filter by whether we actually can process the namespace, since
+    # we may be able to someday soon. It's user's job to not pass in junk.
+    item.save()
 
     try:
         return item.id
