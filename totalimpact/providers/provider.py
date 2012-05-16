@@ -45,9 +45,9 @@ class Provider(object):
     # default method; providers can override
     def _get_error(self, response):
         if response.status_code >= 500:
-            error = ProviderServerError
+            error = ProviderServerError(response)
         else:
-            error = ProviderClientError
+            error = ProviderClientError(response)
         return(error)
     
     def _get_templated_url(self, template, id, method=None):
@@ -102,8 +102,10 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
 
         if response.status_code != 200:
-            error = self._get_error(response)
-            raise error(response)
+            if response.status_code == 404:
+                return {}
+            else:
+                raise(self._get_error(response))
 
         # extract the member ids
         members = self._extract_members(response.text, query_string)
@@ -150,8 +152,10 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
         
         if response.status_code != 200:
-            error = self._get_error(response)
-            raise error(response)
+            if response.status_code == 404:
+                return {}
+            else:
+                raise(self._get_error(response))
         
         # extract the aliases
         biblio_dict = self._extract_biblio(response.text, id)
@@ -202,8 +206,10 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
 
         if response.status_code != 200:
-            error = self._get_error(response)
-            raise error(response)
+            if response.status_code == 404:
+                return []
+            else:
+                raise(self._get_error(response))
         
         new_aliases = self._extract_aliases(response.text, id)
 
@@ -247,12 +253,14 @@ class Provider(object):
         url = self._get_templated_url(provider_url_template, id, "metrics")
         logger.debug("attempting to retrieve metrics from " + url)
 
-        # try to get a response from the data provider        
+        # try to get a response from the data provider                
         response = self.http_get(url, cache_enabled=cache_enabled)
-        
+
         if response.status_code != 200:
-            error = self._get_error(response)
-            raise error(response)
+            if response.status_code == 404:
+                return {}
+            else:
+                raise(self._get_error(response))
         
         # extract the metrics
         metrics_dict = self._extract_metrics(response.text, id)
