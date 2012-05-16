@@ -161,7 +161,8 @@ class TestItem(ApiTester):
 
     def test_item_post_unknown_namespace(self):
         response = self.client.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
-        assert_equals(response.status_code, 501)  # "Not implemented"
+        # cheerfully creates items whether we know their namespaces or not.
+        assert_equals(response.status_code, 201)
 
     def test_returns_json_default(self): 
         # upload the item manually...there's no api call to do this.
