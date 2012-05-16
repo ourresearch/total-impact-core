@@ -1,6 +1,7 @@
 import time
-from totalimpact import default_settings as config
+from totalimpact import default_settings
 from totalimpact.models import Item, ItemFactory
+from totalimpact.providers.provider import ProviderFactory
 
 from totalimpact.tilogging import logging
 log = logging.getLogger(__name__)
@@ -69,7 +70,10 @@ class AliasQueue(Queue):
         res = self.queueids
         items = []
         for id in res:
-            my_item = ItemFactory.get(self.dao, id, config.METRIC_NAMES)
+            my_item = ItemFactory.get(self.dao, 
+		                  id, 
+		                  ProviderFactory.get_provider, 
+		                  default_settings.PROVIDERS)
             items.append(my_item)
 
         return items
@@ -93,7 +97,12 @@ class AliasQueue(Queue):
         alias_queue_lock.release()
 
         if found:
-            return ItemFactory.get(self.dao, item_id, config.METRIC_NAMES)
+            my_item = ItemFactory.get(self.dao, 
+                          item_id, 
+                          ProviderFactory.get_provider, 
+                          default_settings.PROVIDERS)
+
+            return my_item
         else:
             return None
 
@@ -134,7 +143,10 @@ class MetricsQueue(Queue):
         metric_queue_lock.release()
 
         if found:
-            return ItemFactory.get(self.dao, item_id, config.METRIC_NAMES)
+            return ItemFactory.get(self.dao, 
+                          item_id, 
+                          ProviderFactory.get_provider, 
+                          default_settings.PROVIDERS)
         else:
             return None
 
@@ -159,7 +171,10 @@ class MetricsQueue(Queue):
         # using reversed() as a hack...we actually want to use the couchdb
         # descending=true param to get the oldest stuff first, but
         for id in res:
-            my_item = ItemFactory.get(self.dao, id, config.METRIC_NAMES)
+            my_item = ItemFactory.get(self.dao, 
+                          item_id, 
+                          ProviderFactory.get_provider, 
+                          default_settings.PROVIDERS)
             items.append(my_item)
         return items
 

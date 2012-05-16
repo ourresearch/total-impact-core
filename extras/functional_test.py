@@ -49,7 +49,7 @@ def checkItem(item, data, item_type, debug=False):
             }
         },
         'github' : { 
-            'aliases': ['github'],
+            'aliases': ['github', 'url', 'title'],
             'metrics' : {
                 'github:forks' : 0,
                 'github:watchers' : 7
@@ -123,7 +123,7 @@ if __name__ == '__main__':
         # Request the items to be generated
         itemid['dryad'][idx] = ti.request_item('doi','10.5061/dryad.7898')
         itemid['wikipedia'][idx] = ti.request_item('doi', '10.1371/journal.pcbi.1000361')
-        itemid['github'][idx] = ti.request_item('github', 'egonw/gtd')
+        itemid['github'][idx] = ti.request_item('github', 'egonw,gtd')
 
     for idx in range(item_count):
         complete['dryad'][idx] = False

@@ -1,48 +1,148 @@
-import time, re, urllib
-from provider import Provider
-from provider import ProviderError, ProviderTimeout, ProviderServerError
-from provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
-from totalimpact.models import Aliases, Biblio
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
-
-import requests
-import simplejson
+import re
 
 import logging
 logger = logging.getLogger('providers.dryad')
 
 class Dryad(Provider):  
 
-    provider_name = "dryad"
-    metric_names = ["dryad:package_views", "dryad:total_downloads", "dryad:most_downloaded_file"]
+    metric_names = [
+        "dryad:package_views", 
+        "dryad:total_downloads", 
+        "dryad:most_downloaded_file"
+        ]
 
-    member_types = ["dryad_author"]
     metric_namespaces = ["doi"]
     alias_namespaces = ["doi"]
     biblio_namespaces = ["doi"]
 
-    provides_members = False
+    provides_members = True
     provides_aliases = True
     provides_metrics = True
     provides_biblio = True
 
-    def __init__(self, config):
-        super(Dryad, self).__init__(config)
+    example_id = ("doi", "10.5061/dryad.7898")
+
+
+    # For Dryad the template is the same for all metrics
+    # This template takes a doi
+    provenance_url_template = "http://dx.doi.org/%s"
+
+    member_items_url_template = "http://datadryad.org/solr/search/select/?q=dc.contributor.author%%3A%%22%s%%22&fl=dc.identifier"
+    aliases_url_template = "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.identifier.uri,dc.title"
+    biblio_url_template = "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.date.accessioned.year,dc.identifier.uri,dc.title_ac,dc.contributor.author_ac"
+    metrics_url_template = "http://dx.doi.org/%s"
+
+    DRYAD_DOI_PATTERN = re.compile(r"(10\.5061/.*)")
+    DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+)\W*views<span", re.DOTALL)
+    DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+)\W*downloads</span", re.DOTALL)
+
+    def __init__(self):
+        super(Dryad, self).__init__()
         
-        self.dryad_doi_rx = re.compile(r"(10\.5061/.*)")
-        self.member_items_rx = re.compile(r"(10\.5061/.*)</span")
-
-        self.DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+)\W*views<span", re.DOTALL)
-        self.DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+)\W*downloads</span", re.DOTALL)
-
     def _is_dryad_doi(self, doi):
-        response = self.dryad_doi_rx.search(doi)
-        return response is not None
+        response = self.DRYAD_DOI_PATTERN.search(doi)
+        if response:
+            return(True)
+        else:
+            return(False)
 
-    def _is_relevant_id(self, alias):
-        return self._is_dryad_doi(alias[1])
-    
+    def _get_dryad_doi(self, aliases):
+        for doi in [nid for (namespace, nid) in aliases if namespace == 'doi']:
+            if self._is_dryad_doi(doi):
+                return doi
+        return None
+
+    def is_relevant_alias(self, alias):
+        if not alias:
+            return False
+        (namespace, nid) = alias
+        is_relevant = (namespace=="doi" and self._is_dryad_doi(nid))
+        return is_relevant
+
+    def _extract_members(self, page, query_string=None):
+        if '<result name="response"' not in page:
+            raise ProviderContentMalformedError("Content does not contain expected text")
+
+        identifiers = self._get_named_arr_str_from_xml(page, "dc.identifier", is_expected=False)
+
+        members = [("doi", hit.replace("doi:", "")) for hit in list(set(identifiers))]
+
+        return(members)
+
+
+    def _extract_aliases(self, xml, id=None):
+        aliases = []
+        url_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.identifier.uri')
+        aliases += [("url", url) for url in url_identifiers]
+
+        title_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.title')
+        aliases += [("title", title) for title in title_identifiers]
+
+        return aliases
+
+
+    def _extract_biblio(self, xml, id=None):
+        biblio_dict = {}
+
+        biblio_dict["repository"] = "Dryad Digital Repository"
+
+        try:
+            title = self._get_named_arr_str_from_xml(xml, 'dc.title_ac')
+            biblio_dict["title"] = title[0]
+        except AttributeError:
+            raise ProviderContentMalformedError("Content does not contain expected text")
+
+        try:
+            year = self._get_named_arr_int_from_xml(xml, 'dc.date.accessioned.year')
+            biblio_dict["year"] = year[0]
+        except AttributeError:
+            raise ProviderContentMalformedError("Content does not contain expected text")
+
+        try:
+            arrs = self._get_named_arrs_from_xml(xml, 'dc.contributor.author_ac')
+
+            authors = []
+            for arr in arrs:
+                node = arr.getElementsByTagName('str')
+                for author in node:
+                    full_name = author.firstChild.nodeValue
+                    last_name = full_name.split(",")[0]
+                    authors.append(last_name)
+
+            biblio_dict["authors"] = (", ").join(authors)
+        except AttributeError:
+            raise ProviderContentMalformedError("Content does not contain expected text")
+
+        return biblio_dict
+
+
+    def _extract_metrics(self, page, id=None):
+        view_matches_package = self.DRYAD_VIEWS_PACKAGE_PATTERN.search(page)
+        try:
+            view_package = view_matches_package.group("views")
+        except (ValueError, AttributeError):
+            raise ProviderContentMalformedError("Content does not contain expected text")
+        
+        download_matches = self.DRYAD_DOWNLOADS_PATTERN.finditer(page)
+        try:
+            downloads = [int(download_match.group("downloads")) for download_match in download_matches]
+            total_downloads = sum(downloads)
+            max_downloads = max(downloads)
+        except (ValueError, AttributeError):
+            raise ProviderContentMalformedError("Content does not contain expected text")            
+
+        metrics_dict = {
+            "dryad:package_views": int(view_package),
+            "dryad:total_downloads": int(total_downloads),
+            "dryad:most_downloaded_file": int(max_downloads)
+        }
+
+        return metrics_dict
+
+
     def _get_named_arr_int_from_xml(self, xml, name, is_expected=True):
         """ Find the first node in the XML <arr> sections which are of node type <int>
             and return their text values. """
@@ -58,6 +158,7 @@ class Dryad(Provider):
             and return their text values. """
         identifiers = []
         arrs = self._get_named_arrs_from_xml(xml, name, is_expected)
+
         for arr in arrs:
             node = arr.getElementsByTagName('str')[0]
             identifiers.append(node.firstChild.nodeValue)
@@ -74,192 +175,6 @@ class Dryad(Provider):
         matching_arrs = [elem for elem in arrs if elem.attributes['name'].value == name]
         if (is_expected and (len(matching_arrs) == 0)):
             raise ProviderContentMalformedError("Did not find expected number of matching arr blocks")
+
         return matching_arrs
-
-    def member_items(self, query_string, query_type):
-        enc = urllib.quote(query_string)
-
-        url = self.config.member_items["querytype"]["dryad_author"]['url'] % enc
-        logger.debug("attempting to retrieve member items from " + url)
-        
-        # try to get a response from the data provider        
-        response = self.http_get(url, 
-            timeout=self.config.member_items.get('timeout', None))
-
-        if response.status_code != 200:
-            if response.status_code >= 500:
-                raise ProviderServerError(response)
-            else:
-                raise ProviderClientError(response)
-
-        # did we get a page back that seems mostly valid?
-        if ("response" not in response.text):
-            raise ProviderContentMalformedError("Content does not contain expected text")
-
-        identifiers = self._get_named_arr_str_from_xml(response.text, "dc.identifier", is_expected=False)
-
-        return [("doi", hit.replace("doi:", "")) for hit in list(set(identifiers))]
-
-    
-    def aliases(self, aliases):
-        # Get a list of the new aliases that can be discovered from the data
-        # source.
-        id_list = [alias[1] for alias in aliases if self._is_dryad_doi(alias[1])]
-
-        if len(id_list) == 0:
-            logger.info("warning, no DOI aliases found in the Dryad domain for this item")
-
-        new_aliases = []
-        for doi_id in id_list:
-            logger.debug("processing alias %s" % doi_id)
-            new_aliases += self.get_aliases_for_id(doi_id)
-        
-        return new_aliases
-
-    def get_aliases_for_id(self, id):
-        url = self.config.aliases['url'] % id
-        logger.debug("attempting to retrieve aliases from " + url)
-
-        # try to get a response from the data provider        
-        response = self.http_get(url, 
-            timeout=self.config.aliases.get('timeout', None))
-        
-        # FIXME: we have to observe the Dryad interface for a bit to get a handle
-        # on these response types - this is just a default approach...
-        if response.status_code != 200:
-            if response.status_code >= 500:
-                raise ProviderServerError(response)
-            else:
-                raise ProviderClientError(response)
-
-        # did we get a page back that seems mostly valid?
-        if ("response" not in response.text):
-            raise ProviderContentMalformedError("Content does not contain expected text")
-        
-        # extract the aliases
-        new_aliases = self._extract_aliases(response.text)
-        if new_aliases is not None:
-            logger.debug(self.config.id + ": found aliases: " + str(new_aliases))
-            return new_aliases
-        return []
-
-
-    def _extract_aliases(self, xml):
-        identifiers = []
-        url_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.identifier.uri')
-        identifiers += [("url", url) for url in url_identifiers]
-
-        title_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.title')
-        identifiers += [("title", title) for title in title_identifiers]
-
-        return identifiers
-
-    def provides_metrics(self): 
-        return True
-    
-    def get_show_details_url(self, doi):
-        return "http://dx.doi.org/" + doi
-
-    def _get_dryad_doi(self, aliases):
-        for doi in [res for (ns,res) in aliases if ns == 'doi']:
-            if self._is_dryad_doi(doi):
-                return doi
-        return None
-
-    def metrics(self, aliases):
-        id = self._get_dryad_doi(aliases)
-        if id is not None:
-            return self._get_metrics_for_id(id)
-        else:
-            return None
-
-    def _get_metrics_for_id(self, id):
-        url = self.config.metrics['url'] % id
-        logger.debug("attempting to retrieve metrics from " + url)
-        
-        # try to get a response from the data provider        
-        response = self.http_get(url, 
-            timeout=self.config.metrics.get('timeout', None))
-
-        # FIXME: we have to observe the Dryad interface for a bit to get a handle
-        # on these response types - this is just a default approach...
-        if response.status_code != 200:
-            if response.status_code >= 500:
-                raise ProviderServerError(response)
-            else:
-                raise ProviderClientError(response)
-        
-        # did we get a page back that seems mostly valid?
-        if ("Dryad" not in response.text):
-            raise ProviderContentMalformedError("Content does not contain expected text")
-
-        # extract the aliases
-        return self._extract_stats(response.text)
-
-
-    def _extract_stats(self, content):
-        view_matches_package = self.DRYAD_VIEWS_PACKAGE_PATTERN.search(content)
-        try:
-            view_package = view_matches_package.group("views")
-        except ValueError:
-            raise ProviderContentMalformedError("Content does not contain expected text")
-        
-        download_matches = self.DRYAD_DOWNLOADS_PATTERN.finditer(content)
-        try:
-            downloads = [int(download_match.group("downloads")) for download_match in download_matches]
-            total_downloads = sum(downloads)
-            max_downloads = max(downloads)
-        except ValueError:
-            raise ProviderClientError(content)            
-
-        return {
-            "dryad:package_views": int(view_package),
-            "dryad:total_downloads": int(total_downloads),
-            "dryad:most_downloaded_file": int(max_downloads)
-        }
-
-    def biblio(self, aliases): 
-        id = self._get_dryad_doi(aliases)
-        # Only lookup biblio for items with dryad doi's
-        if id:
-            return self.get_biblio_for_id(id)
-        else:
-            logger.info("Not checking biblio as no dryad doi")
-            return None
-
-    def get_biblio_for_id(self, id):
-        url = self.config.biblio['url'] % id
-        logger.debug("attempting to retrieve biblio from " + url)
-        
-        # try to get a response from the data provider        
-        response = self.http_get(url, 
-            timeout=self.config.biblio.get('timeout', None))
-        
-        # FIXME: we have to observe the Dryad interface for a bit to get a handle
-        # on these response types - this is just a default approach...
-        if response.status_code != 200:
-            if response.status_code >= 500:
-                raise ProviderServerError(response)
-            else:
-                raise ProviderClientError(response)
-        
-        # extract the aliases
-        return self._extract_biblio(response.text)
-
-    def _extract_biblio(self, xml):
-        biblio_dict = {}
-
-        try:
-            title = self._get_named_arr_str_from_xml(xml, 'dc.title_ac')
-            biblio_dict["title"] = title[0]
-        except AttributeError:
-            raise ProviderContentMalformedError("Content does not contain expected text")
-
-        try:
-            year = self._get_named_arr_int_from_xml(xml, 'dc.date.accessioned.year')
-            biblio_dict["year"] = year[0]
-        except AttributeError:
-            raise ProviderContentMalformedError("Content does not contain expected text")
-
-        return biblio_dict
 

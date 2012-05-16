@@ -3,6 +3,7 @@
 from flask import Flask, jsonify, json, request, redirect, abort, make_response
 from flask import render_template, flash
 import os, json, time
+from pprint import pprint
 
 from totalimpact import dao
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
@@ -37,7 +38,6 @@ def configure_app(app):
             app.config.from_pyfile(config_path)
 
 app = create_app()
-metric_names = app.config["METRIC_NAMES"]
 
 mydao = None
 
@@ -77,7 +77,7 @@ def tiid(ns, nid):
     viewname = 'queues/by_alias'
     res = mydao.view(viewname)
     rows = res["rows"]
-    print rows
+    pprint(rows)
     tiids = [row["id"] for row in rows if row['key'] == [ns,nid]]
 
     if not tiids:
@@ -88,7 +88,7 @@ def tiid(ns, nid):
 
 def create_item(namespace, id):
     '''Utility function to keep DRY in single/multiple item creation endpoins'''
-    item = ItemFactory.make(mydao, metric_names)
+    item = ItemFactory.make(mydao, app.config["PROVIDERS"])
     item.aliases.add_alias(namespace, id)
 
     ## FIXME - see issue 86
@@ -96,14 +96,9 @@ def create_item(namespace, id):
     ## If so, return its tiid with a 200.
     # right now this makes a new item every time, creating many dupes
 
-    # FIXME pull this from Aliases somehow?
-    # check to make sure we know this namespace
-    #known_namespace = namespace in Aliases().get_valid_namespaces() #implement
-    known_namespaces = ["doi", "github", "url"]  # hack in the meantime
-    if not namespace in known_namespaces:
-        abort(501) # "Not Implemented"
-    else:
-        item.save() 
+    # does not filter by whether we actually can process the namespace, since
+    # we may be able to someday soon. It's user's job to not pass in junk.
+    item.save()
 
     try:
         return item.id
@@ -148,17 +143,21 @@ def make_item_dict(tiid):
     '''Utility function for /item and /items endpoints
     Will cause the request to abort with 404 if item is missing from db'''
     try:
-        item = ItemFactory.get(mydao, id=tiid, metric_names=metric_names)
+        item = ItemFactory.get(mydao,
+            tiid,
+            ProviderFactory.get_provider,
+            app.config["PROVIDERS"])
         item_dict = item.as_dict()
     except LookupError:
         abort(404)
     return item_dict
 
-def make_item_resp(item_dict, format):
+def make_item_resp(tiid, item_dict, format):
+    item_dict["tiid"] = tiid;
     if format == "html":
         #TODO in the future, we need to actually use the article's value for this
         if not item_dict.has_key('genre'):
-            item_dict['genre'] = "article"
+            item_dict['genre'] = "dataset"
         resp = make_response(render_template("item.html", item=item_dict ))
         resp.content_type = "text/html"
     else:
@@ -174,8 +173,7 @@ def make_item_resp(item_dict, format):
 def item(tiid, format=None):
     # TODO check request headers for format as well.
     item_dict = make_item_dict(tiid)
-    print item_dict
-    return make_item_resp(item_dict, format)
+    return make_item_resp(tiid, item_dict, format)
 
 '''
 GET /items/:tiid,:tiid,...
@@ -217,67 +215,76 @@ returns dictionary with metrics object and biblio object
 # external APIs should go to /item routes
 # should return list of member ID {namespace:id} k/v pairs
 # if > 100 memberitems, return 100 and response code indicates truncated
-@app.route('/provider/<pid>/memberitems', methods=['GET'])
-def provider_memberitems(pid):
+@app.route('/provider/<provider_name>/memberitems', methods=['GET'])
+def provider_memberitems(provider_name):
     query = request.values.get('query','')
-    qtype = request.values.get('type','')
 
-    logger.debug("In provider_memberitems with " + query + " " + qtype)
+    logger.debug("In provider_memberitems with " + query)
 
-    provider = ProviderFactory.get_provider(app.config["PROVIDERS"][pid])
+    provider = ProviderFactory.get_provider(provider_name)
     logger.debug("provider: " + provider.provider_name)
 
-    memberitems = provider.member_items(query, qtype)
+    memberitems = provider.member_items(query, cache_enabled=False)
     
     resp = make_response( json.dumps(memberitems, sort_keys=True, indent=4), 200 )
     resp.mimetype = "application/json"
     return resp
 
 # For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5001/provider/Dryad/aliases/10.5061%2Fdryad.7898
-@app.route('/provider/<pid>/aliases/<id>', methods=['GET'] )
-def provider_aliases(pid,id):
+# Example: http://127.0.0.1:5001/provider/dryad/aliases/10.5061/dryad.7898
+@app.route('/provider/<provider_name>/aliases/<path:id>', methods=['GET'] )
+def provider_aliases(provider_name, id):
 
-    for prov in providers:
-        if prov.id == pid:
-            provider = prov
-            break
+    provider = ProviderFactory.get_provider(provider_name)
+    if id=="example":
+        id = provider.example_id[1]
+        url = "http://localhost:8080/" + provider_name + "/aliases?%s"
+    else:
+        url = None
 
-    aliases = provider.get_aliases_for_id(id.replace("%", "/"))
+    try:
+        new_aliases = provider._get_aliases_for_id(id, url, cache_enabled=False)
+    except NotImplementedError:
+        new_aliases = []
+        
+    all_aliases = [(provider.example_id[0], id)] + new_aliases
 
-    resp = make_response( json.dumps(aliases, sort_keys=True, indent=4) )
+    resp = make_response( json.dumps(all_aliases, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
 
 # For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5001/provider/Dryad/metrics/10.5061%2Fdryad.7898
-@app.route('/provider/<pid>/metrics/<id>', methods=['GET'] )
-def metric_snaps(pid,id):
+# Example: http://127.0.0.1:5001/provider/dryad/metrics/10.5061/dryad.7898
+@app.route('/provider/<provider_name>/metrics/<path:id>', methods=['GET'] )
+def provider_metrics(provider_name, id):
 
-    for prov in providers:
-        if prov.id == pid:
-            provider = prov
-            break
+    provider = ProviderFactory.get_provider(provider_name)
+    if id=="example":
+        id = provider.example_id[1]
+        url = "http://localhost:8080/" + provider_name + "/metrics?%s"
+    else:
+        url = None
 
-    metrics = provider.get_metrics_for_id(id.replace("%", "/"))
+    metrics = provider.get_metrics_for_id(id, url, cache_enabled=False)
 
-    resp = make_response( json.dumps(metrics.data, sort_keys=True, indent=4) )
+    resp = make_response( json.dumps(metrics, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
 
 # For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5001/provider/Dryad/biblio/10.5061%2Fdryad.7898
-@app.route('/provider/<pid>/biblio/<id>', methods=['GET'] )
-def provider_biblio(pid,id):
+# Example: http://127.0.0.1:5001/provider/dryad/biblio/10.5061/dryad.7898
+@app.route('/provider/<provider_name>/biblio/<path:id>', methods=['GET'] )
+def provider_biblio(provider_name, id):
 
-    for prov in providers:
-        if prov.id == pid:
-            provider = prov
-            break
+    provider = ProviderFactory.get_provider(provider_name)
+    if id=="example":
+        id = provider.example_id[1]
+        url = "http://localhost:8080/" + provider_name + "/biblio?%s"
+    else:
+        url = None
 
-    biblio = provider.get_biblio_for_id(id.replace("%", "/"))
-
-    resp = make_response( json.dumps(biblio.data, sort_keys=True, indent=4) )
+    biblio = provider.get_biblio_for_id(id, url, cache_enabled=False)
+    resp = make_response( json.dumps(biblio, sort_keys=True, indent=4) )
     resp.mimetype = "application/json"
     return resp
 

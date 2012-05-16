@@ -1,81 +1,127 @@
-import time, re, urllib
-from provider import Provider 
-from provider import ProviderError, ProviderTimeout, ProviderServerError
-from provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-from totalimpact.models import Aliases
-from BeautifulSoup import BeautifulStoneSoup
-import requests
 import simplejson
-import json
 
 import logging
 logger = logging.getLogger('providers.github')
 
 class Github(Provider):  
 
-    provider_name = "github"
-    metric_names = ['github:watchers', 'github:forks']
+    metric_names = [
+        'github:watchers', 
+        'github:forks'
+        ]
 
     metric_namespaces = ["github"]
-    alias_namespaces = []
-    biblio_namespaces = []
-
-    member_types = ['github_user']
+    alias_namespaces = ["github"]
+    biblio_namespaces = ["github"]
 
     provides_members = True
-    provides_aliases = False
+    provides_aliases = True
     provides_metrics = True
-    provides_biblio = False
+    provides_biblio = True
 
-    def __init__(self, config):
-        super(Github, self).__init__(config)
-        self.id = self.config.id
-        
-    def member_items(self, query_string, query_type):
-        enc = urllib.quote(query_string)
+    member_items_url_template = "https://api.github.com/users/%s/repos"
+    biblio_url_template = "https://github.com/api/v2/json/repos/show/%s"
+    aliases_url_template = "https://github.com/api/v2/json/repos/show/%s"
+    metrics_url_template = "https://github.com/api/v2/json/repos/show/%s"
 
-        url = self.config.member_items["querytype"][query_type]['url'] % enc
-        logger.debug("attempting to retrieve member items from " + url)
-        
-        # try to get a response from the data provider        
-        response = self.http_get(url, timeout=self.config.member_items.get('timeout', None))
-        if response.status_code != 200:
-            raise ProviderServerError(response)
+    provenance_url_templates = {
+        "watchers" : "https://github.com/%s/%s/watchers",
+        "forks" : "https://github.com/%s/%s/network/members"
+        }
 
+    example_id = ("github", "egonw,cdk")
+
+    def __init__(self):
+        super(Github, self).__init__()
+
+
+    def _get_github_id(self, aliases):
+        matching_id = None
+        for alias in aliases:
+            if alias:
+                (namespace, id) = alias
+                if namespace == "github":
+                    matching_id = id
+        return matching_id
+
+    def is_relevant_alias(self, alias):
+        (namespace, nid) = alias
+        return("github" == namespace)
+
+
+
+    #override because need to break up id
+    def _get_templated_url(self, template, id, method=None):
+        id_with_slashes = id.replace(",", "/")
+        url = template % id_with_slashes
+        return(url)
+
+    def _extract_members(self, page, query_string):        
         try:
-            hits = simplejson.loads(response.text)
+            hits = simplejson.loads(page)
         except simplejson.JSONDecodeError, e:
             raise ProviderContentMalformedError
+
         hits = [hit["name"] for hit in hits]
+        members = [("github", (query_string, hit)) for hit in list(set(hits))]
+        return(members)
 
-        return [("github", (query_string, hit)) for hit in list(set(hits))]
-    
-    def metrics(self, aliases):
-
-        if len(aliases) != 1:
-            logger.warn("More than 1 github alias found, this should not happen. Will take first item.")
-
-        # Just take the first alias. As I understand, we shouldn't find an item
-        # with aliases for a repo, as these will not by the same Item
-        alias = aliases[0]
-        (namespace, val) = alias
-
-        logger.debug("looking for mentions of alias (%s,%s)" % (namespace, val))
-
-        url = self.config.metrics['url'] % val
-        response = self.http_get(url)
-        if response.status_code != 200:
-            raise ProviderServerError(response)
-
+    def _extract_biblio(self, page, id=None):
         try:
-            data = simplejson.loads(response.text) 
+            data = simplejson.loads(page) 
         except simplejson.JSONDecodeError, e:
             raise ProviderContentMalformedError
 
-        return {
+        # extract the biblio
+        biblio_dict = {
+            'title' : data['repository']['name'],
+            'description' : data['repository']['description'],
+            'owner' : data['repository']['owner'],
+            'url' : data['repository']['url'],
+            'last_push_date' : data['repository']['pushed_at'],
+            'create_date' : data['repository']['created_at']
+        }
+
+        return biblio_dict    
+       
+    def _extract_aliases(self, page, id=None):
+        try:
+            data = simplejson.loads(page) 
+        except simplejson.JSONDecodeError, e:
+            raise ProviderContentMalformedError
+        
+        # extract the aliases
+        aliases_list = [
+                    ("url", data['repository']['url']), 
+                    ("title", data['repository']['name'])]
+
+        return aliases_list
+
+    def _extract_metrics(self, page, id=None):
+        try:
+            data = simplejson.loads(page) 
+        except simplejson.JSONDecodeError, e:
+            raise ProviderContentMalformedError
+
+        metrics_dict = {
             'github:watchers' : data['repository']['watchers'],
             'github:forks' : data['repository']['forks']
         }
 
+        return metrics_dict
 
+    # default method; providers can override    
+    def provenance_url(self, metric_name, aliases):
+        # Returns the same provenance url for all metrics
+        id = self.get_best_id(aliases)
+        if not id:
+            return None
+        try:
+            (user, repo) = id.split(",")
+        except ValueError:
+            return None
+
+        provenance_url = self.provenance_url_templates[metric_name] % (user, repo)
+        return provenance_url

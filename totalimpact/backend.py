@@ -2,7 +2,6 @@
 
 import threading, time, sys
 import traceback
-from totalimpact.config import Configuration
 from totalimpact import dao, api
 from totalimpact.queue import AliasQueue, MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
@@ -16,7 +15,7 @@ from totalimpact.providers.provider import ProviderValidationFailedError, Provid
 
 import daemon
 import lockfile
-from totalimpact.common import PidFile
+from totalimpact.pidsupport import PidFile
 
 from optparse import OptionParser
 import os
@@ -276,6 +275,13 @@ class ProviderThread(QueueConsumer):
         while not error_limit_reached and not success and not self.stopped():
 
             error_type = None
+
+            # Get a replacement provider access template_url if in config
+            try:
+                template_url = api.app.config["PROVIDERS"][provider.provider_name][method+"_url"]
+            except KeyError:
+                template_url = None
+
             try:
 
                 if method == 'aliases':
@@ -283,7 +289,7 @@ class ProviderThread(QueueConsumer):
                     if provider.provides_aliases:
                         current_aliases = item.aliases.get_aliases_list(provider.alias_namespaces)
                         if current_aliases:
-                            response = provider.aliases(current_aliases)
+                            response = provider.aliases(current_aliases, template_url)
                         else:
                             logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
                             response = []
@@ -295,7 +301,7 @@ class ProviderThread(QueueConsumer):
                     if provider.provides_metrics:
                         current_aliases = item.aliases.get_aliases_list(provider.metric_namespaces)
                         if current_aliases:
-                            response = provider.metrics(current_aliases)
+                            response = provider.metrics(current_aliases, template_url)
                         else:
                             logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
                             response = {}
@@ -307,7 +313,7 @@ class ProviderThread(QueueConsumer):
                     if provider.provides_biblio:
                         current_aliases = item.aliases.get_aliases_list(provider.biblio_namespaces)
                         if current_aliases:
-                            response = provider.biblio(current_aliases)
+                            response = provider.biblio(current_aliases, template_url)
                         else:
                             logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
                             response = {}
@@ -340,8 +346,8 @@ class ProviderThread(QueueConsumer):
                 # All other fatal errors. These are probably some form of
                 # logic error. We consider these to be fatal.
                 tb = sys.exc_info()[2]
-                self.log_error(item, 'unknown_error', str(e), tb)
-                logger.error("Error processing item for provider %s: Unknown exception %s, aborting" % (provider, e))
+                self.log_error(item, 'unknown_error on %s %s' % (provider, method), str(e), tb)
+                logger.error("Error processing item for provider %s %s: Unknown exception %s, aborting" % (provider, method, e))
                 logger.debug(traceback.format_tb(tb))
                 error_limit_reached = True
 
@@ -353,25 +359,25 @@ class ProviderThread(QueueConsumer):
                 if error_type:
                     # Log the error and it's traceback
                     tb = sys.exc_info()[2]
-                    self.log_error(item, error_type, error_msg, tb)
+                    self.log_error(item, error_type + ' on %s %s' % (provider, method), error_msg, tb)
 
                     error_counts[error_type] += 1
 
                     max_retries = provider.get_max_retries(error_type)
                     if error_counts[error_type] > max_retries and max_retries != -1:
-                        logger.info("Error processing item: %s, error limit reached (%i/%i), aborting" % (
-                            error_type, error_counts[error_type], max_retries))
+                        logger.info("Error processing item: %s, error limit reached (%i/%i), aborting %s %s" % (
+                            error_type, error_counts[error_type], max_retries, provider, method))
                         error_limit_reached = True
                     else:
                         duration = provider.get_sleep_time(error_type, error_counts[error_type])
-                        logger.info("Error processing item: %s, pausing thread for %s" % (error_type, duration))
+                        logger.info("Error processing item: %s, pausing thread for %s, %s %s" % (error_type, duration, provider, method))
                         self._interruptable_sleep(duration)
                 elif success:
                     # response may be None for some methods and inputs
                     if response:
-                        logger.info("processing successful, got %i results" % len(response))
+                        logger.info("processing %s %s successful, got %i results" % (provider, method, len(response)))
                     else:
-                        logger.info("processing successful, got 0 results")
+                        logger.info("processing %s %s successful, got 0 results" % (provider, method))
 
         return (success, response)
 
@@ -476,19 +482,16 @@ class ProviderMetricsThread(ProviderThread):
             if metrics:
                 for key in metrics.keys():
                     item.metrics[key]['values'][ts] = metrics[key]
-                    item.metrics[key]['static_meta'] = {} #self.provider
             else:
                 # The provider returned None for this item. This is either
                 # a non result or a permanent failure
                 for key in self.provider.metric_names:
                     item.metrics[key]['values'][ts] = None
-                    item.metrics[key]['static_meta'] = {} #self.provider
         else:
             # metrics failed, write None values in for the metric
             # values so we don't attempt to reprocess this item
             for key in self.provider.metric_names:
                 item.metrics[key]['values'][ts] = None
-                item.metrics[key]['static_meta'] = {} #self.provider
         item.save()
 
 

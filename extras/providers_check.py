@@ -5,7 +5,6 @@
 # This is currently a very basic check for providers
 #
 
-from totalimpact.config import Configuration
 from totalimpact.dao import Dao
 from totalimpact.models import Item, ItemFactory, Aliases
 
@@ -54,11 +53,11 @@ class ProvidersCheck:
 
     def checkDryad(self):
         # Test reading data from Dryad
-        item = ItemFactory.make(self.mydao, app.config["METRIC_NAMES"])
+        item = ItemFactory.make(self.mydao, app.config["PROVIDERS"])
         item.aliases.add_alias('doi', '10.5061/dryad.7898')
         item_aliases_list = item.aliases.get_aliases_list()
 
-        dryad = Dryad(Configuration('totalimpact/providers/dryad.conf.json'))
+        dryad = Dryad()
         new_aliases = dryad.aliases(item_aliases_list)
         new_metrics = dryad.metrics(item_aliases_list)
 
@@ -67,13 +66,13 @@ class ProvidersCheck:
     
     def checkWikipedia(self):
         # Test reading data from Wikipedia
-        item = ItemFactory.make(self.mydao, app.config["METRIC_NAMES"])
+        item = ItemFactory.make(self.mydao, app.config["PROVIDERS"])
         item.aliases.add_alias("doi", "10.1371/journal.pcbi.1000361")
         #item.aliases.add_alias("url", "http://cottagelabs.com")
 
         item_aliases_list = item.aliases.get_aliases_list()
 
-        wikipedia = Wikipedia(Configuration('totalimpact/providers/wikipedia.conf.json'))
+        wikipedia = Wikipedia()
         # No aliases for wikipedia
         #new_aliases = wikipedia.aliases(item_aliases_list)
         new_metrics = wikipedia.metrics(item_aliases_list)
@@ -81,10 +80,10 @@ class ProvidersCheck:
         self.check_metric('wikipedia:mentions', new_metrics['wikipedia:mentions'], 1)
 
     def checkGithub(self):
-        item = ItemFactory.make(self.mydao, app.config["METRIC_NAMES"])
+        item = ItemFactory.make(self.mydao, app.config["PROVIDERS"])
 
-        github = Github(Configuration('totalimpact/providers/github.conf.json'))
-        members = github.member_items("egonw", "github_user")
+        github = Github()
+        members = github.member_items("egonw")
         self.check_members('github.github_user', members, 
             [('github', ('egonw', 'blueobelisk.debian')),
              ('github', ('egonw', 'ron')),
@@ -117,7 +116,7 @@ class ProvidersCheck:
              ('github', ('egonw', 'bioclipse.ons')),
              ('github', ('egonw', 'medea_bmc_article'))])
 
-        item.aliases.add_alias("github", "egonw/gtd")
+        item.aliases.add_alias("github", "egonw,gtd")
         item_aliases_list = item.aliases.get_aliases_list()
 
         new_metrics = github.metrics(item_aliases_list)

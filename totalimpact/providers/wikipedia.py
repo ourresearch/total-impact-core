@@ -1,14 +1,8 @@
-import time
-from provider import Provider
-from provider import ProviderError, ProviderTimeout, ProviderServerError
-from provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
-from BeautifulSoup import BeautifulStoneSoup
-import requests
-
-import logging
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 
+import logging
 logger = logging.getLogger('providers.wikipedia')
 
 class Wikipedia(Provider):  
@@ -16,55 +10,34 @@ class Wikipedia(Provider):
         the Wikipedia search interface.
     """
 
-    provider_name = "wikipedia"
     metric_names = ['wikipedia:mentions']
     metric_namespaces = ["doi"]
     alias_namespaces = None
     biblio_namespaces = None
-
-    member_types = None
 
     provides_members = False
     provides_aliases = False
     provides_metrics = True
     provides_biblio = False
 
-    def __init__(self, config):
-        super(Wikipedia, self).__init__(config)
+    provenance_url_template = "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go"
+    metrics_url_template = "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'"
 
-    def metrics(self, aliases):
-        if len(aliases) != 1:
-            logger.warn("More than 1 DOI alias found, this should not happen. Will process first item only.")
-        
-        (ns,val) = aliases[0] 
+    example_id = ("doi", "10.1371/journal.pcbi.1000361")
 
-        logger.debug("looking for mentions of alias %s" % val)
-        new_metrics = self.get_metrics_for_id(val)
+    def __init__(self):
+        super(Wikipedia, self).__init__()
 
-        return new_metrics
-    
-    def get_metrics_for_id(self, id):
-        # FIXME: urlencoding?
-        url = self.config.metrics['url'] % id 
-        logger.debug("attempting to retrieve metrics from " + url)
-        
-        # try to get a response from the data provider        
-        response = self.http_get(url, timeout=self.config.metrics['timeout'])
-        
-        # client errors and server errors are not retried, as they usually 
-        # indicate a permanent failure
-        if response.status_code != 200:
-            if response.status_code >= 500:
-                raise ProviderServerError(response)
-            else:
-                raise ProviderClientError(response)
-                    
-        return self._extract_stats(response.text)
+    def is_relevant_alias(self, alias):
+        if not alias:
+            return False
+        (namespace, nid) = alias
+        is_relevant = (namespace=="doi")
+        return is_relevant
 
-    
-    def _extract_stats(self, content):
+    def _extract_metrics(self, page, id=None):
         try:
-            doc = minidom.parseString(content)
+            doc = minidom.parseString(page)
         except ExpatError, e:
             raise ProviderContentMalformedError("Content parse provider supplied XML document")
 
@@ -73,5 +46,8 @@ class Wikipedia(Provider):
             raise ProviderContentMalformedError("No searchinfo in response document")
         val = searchinfo[0].attributes['totalhits'].value
 
-        return {"wikipedia:mentions": int(val)}
+        metrics_dict = {"wikipedia:mentions": int(val)}
+
+        return metrics_dict
             
+
