@@ -11,9 +11,9 @@
         {%- for metric_name, metric in item.metrics.iteritems() -%}
         {%- if metric.values and metric.static_meta -%}
         {% set metric_snap =  metric['values']|dictsort|reverse|first %}
-        {% if metric_snap|last != 0 %}
+        {% if metric_snap|last %}
         <li>
-            <a href="{{ metric['static_meta']['provenance_url']}}">
+            <a href="{{ metric['provenance_url']}}">
                 <span class="last-update">{{ metric_snap|first }}</span>
                 <span class="metric-value">{{ metric_snap|last }}</span>
 
