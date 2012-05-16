@@ -82,9 +82,19 @@ class Mendeley(Provider):
         except simplejson.JSONDecodeError, e:
             raise ProviderContentMalformedError
 
+        try:
+            readers = data['stats']['readers']
+        except KeyError:
+            readers = None
+
+        try:
+            groups = len(data['groups'])
+        except KeyError:
+            groups = None
+
         metrics_dict = {
-            'mendeley:readers' : data['stats']['readers'],
-            'mendeley:groups' : len(data['groups'])
+            'mendeley:readers' : readers,
+            'mendeley:groups' : groups
         }
         return metrics_dict
 
