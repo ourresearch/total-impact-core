@@ -58,22 +58,24 @@ GOLD_RESPONSES = {
 def request_provider_item(provider, nid, section):
     base_url = 'http://localhost:5001/'
     url = base_url + urllib.quote('provider/%s/%s/%s' % (provider, section, nid))
-    if debug:
-        print url
+    if options.debug:
+        print "\n", url
     req = urllib2.Request(url)
     try:
         response = urllib2.urlopen(req)
         result = json.loads(response.read())
     except urllib2.HTTPError:
-        if debug:
-            print("HTTPError on %s %s %s, could be not implemented" % (provider, section, nid))
+        if options.debug:
+            print("HTTPError on %s %s %s, perhaps not implemented" % (provider, section, nid))
         result = {}
+    if options.debug:
+        print result
 
     return result
 
 
-def checkItem(provider, id, section, api_response, debug=False):
-    if debug: 
+def checkItem(provider, id, section, api_response, options):
+    if options.debug:
         print "Checking %s result (%s)..." % (provider, id)
     
     # Check aliases are correct
@@ -82,11 +84,11 @@ def checkItem(provider, id, section, api_response, debug=False):
         alias_result = set([namespace for (namespace, nid) in api_response])
         expected_result = set(aliases)
         if (alias_result == expected_result):
-            if debug: 
-                print "Aliases correct! %s" %(alias_result)
+            if options.debug:
+                print "ALIASES CORRECT! %s" %(alias_result)
         else:
-            if debug: 
-                print "Aliases is not correct, have %s, want %s" %(alias_result, expected_result)
+            if options.debug:
+                print "ALIASES **NOT** CORRECT, have %s, want %s" %(alias_result, expected_result)
             return False
 
     # Check biblio are correct
@@ -99,11 +101,11 @@ def checkItem(provider, id, section, api_response, debug=False):
         expected_result = set(biblio)
 
         if (biblio_result == expected_result):
-            if debug: 
-                print "Biblio correct! %s" %(biblio_result)
+            if options.debug:
+                print "BIBLIO CORRECT! %s" %(biblio_result)
         else:
-            if debug: 
-                print "Biblio is not correct, have %s, want %s" %(biblio_result, expected_result)
+            if options.debug:
+                print "BIBLIO **NOT** CORRECT, have %s, want %s" %(biblio_result, expected_result)
             return False
 
     # Check we've got some metric values
@@ -112,58 +114,68 @@ def checkItem(provider, id, section, api_response, debug=False):
         for metric in metrics.keys():
             metric_data = api_response[metric]
             # expect the returned value to be equal or larger than reference
-            if metric_data < metrics[metric]:
-                if debug: 
-                    print "Incorrect metric result for %s - %s, expected at least %s" % (metric, metric_data, metrics[metric])
+            if metric_data >= metrics[metric]:
+                if options.debug:
+                    print "METRICS CORRECT! %s" %(metric_data)
+            else:
+                if options.debug:
+                    print "METRICS **NOT** CORRECT for %s - %s, expected at least %s" % (metric, metric_data, metrics[metric])
                 pprint(api_response)
                 return False
-            else:
-                if debug: 
-                    print "Metrics correct! %s" %(metric_data)
 
 
     return True
 
 
-def make_call(namespace, nid, provider, options):
-    if debug:
-        print provider, nid
+def make_call(nid, provider, options):
+    all_successful = True
     for section in ["biblio", "aliases", "metrics"]:
         api_response = request_provider_item(provider, nid, section)
-        check_response = checkItem(provider,
+        is_response_correct = checkItem(provider,
             nid, 
             section,
             api_response,
-            debug=options.missing
+            options
         )
-        if check_response and options.printdata:
-            pprint(api_response)  
+        if is_response_correct:
+            if not options.quiet:            
+                print "happy %s" % section
+        else:
+            if not options.quiet:            
+                print "INCORRECT %s" % section
+            all_successful = False
+        if options.printdata:
+            pprint(api_response)
+            print("\n")  
+    return(all_successful)
 
 
 if __name__ == '__main__':
-    debug = True
-
     parser = OptionParser()
     parser.add_option("-s", "--simultaneous", dest="simultaneous", default=1,
                       help="Number of simultaneous requests to make")
-    parser.add_option("-m", "--missing", dest="missing", default=False, action="store_true",
-                      help="Display any outstanding items")
-    parser.add_option("-p", "--printdata", dest="printdata", default=False, action="store_true",
-                      help="Display item data")
+    parser.add_option("-q", "--quiet", dest="quiet", default=False, action="store_true", help="Print less output")
+    parser.add_option("-v", "--debug", dest="debug", default=False, action="store_true", help="Print debug output")
+    parser.add_option("-p", "--printdata", dest="printdata", default=False, 
+        action="store_true", help="Display item data")
     (options, args) = parser.parse_args()
 
-    if options.missing:
-        debug=True
-
+    all_successful = True
     for (provider, alias) in REQUEST_IDS:
-        print "\r\n****PROVIDER:", provider
+        print "\n**** %s *****" %(provider.upper())
 
         (namespace, nid) = alias
-        print "LIVE DATA"
-        make_call(namespace, nid, provider, options)
+        print "\nCANNED DATA"
+        canned_success = make_call("example", provider, options)
 
-        print "CANNED DATA"
-        make_call(namespace, "example", provider, options)
+        print "\nLIVE DATA with item (%s, %s)" %(namespace, nid)
+        live_success = make_call(nid, provider, options)
  
+        all_successful = all_successful and canned_success and live_success
+
         time.sleep(0.5)
+    if all_successful:
+        print "\nAll provider responses were HAPPY."
+    else:
+        print "\nSome provider responses had errors"
 
