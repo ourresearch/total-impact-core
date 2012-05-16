@@ -77,7 +77,6 @@ def tiid(ns, nid):
     viewname = 'queues/by_alias'
     res = mydao.view(viewname)
     rows = res["rows"]
-    pprint(rows)
     tiids = [row["id"] for row in rows if row['key'] == [ns,nid]]
 
     if not tiids:
@@ -110,11 +109,19 @@ def create_item(namespace, id):
 def items_namespace_post():
     '''Creates multiple items based on a POSTed list of aliases.
     
-    Note that this requires the POST content-type be sent as application/json...
+    Note that this requires the POST content-type be sent as application/json..
     this could be seen as a bug or feature...'''
+
+    # get aliases into tuples instead of lists so can hash into a set
+    aliases_list = [(namespace, nid) for [namespace, nid] in request.json]
+    logger.debug("In api /items with aliases " + str(aliases_list))
+
+    unique_aliases = list(set(aliases_list))
     tiids = []
-    for alias in request.json:
+    for alias in unique_aliases:
+        logger.debug("In api /items with alias " + str(alias))
         tiid = create_item(alias[0], alias[1])
+        logger.debug("... created with tiid " + tiid)
         tiids.append(tiid)
 
     response_code = 201 # Created
