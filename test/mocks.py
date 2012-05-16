@@ -3,8 +3,8 @@ import sys
 import logging
 import traceback
 
+from totalimpact import default_settings
 from totalimpact.backend import StoppableThread
-from totalimpact.config import Configuration, StringConfiguration
 
 from totalimpact.providers.provider import Provider
 from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
@@ -60,7 +60,7 @@ class QueueMock(object):
                 if self.current_item > self.max_items:
                     return None
             # Generate a mock item with initial alias ('mock', id)
-            item = MockItemFactory.make("not a dao", ['mock:test_result'])
+            item = MockItemFactory.make("not a dao", default_settings.PROVIDERS)
             item.id = self.current_item
             item.aliases.add_alias('mock',str(item.id))
             print "KCKCK", item.metrics
@@ -100,29 +100,6 @@ class MockItemFactory(ItemFactory):
 
 
 
-base_provider_conf = StringConfiguration('''
-{
-    "errors" : {
-        "http_timeout" : { "retries" : 3, "retry_delay" : 0.1, "retry_type" : "linear", "delay_cap" : -1 },
-        "http_error" : { "retries" : 3, "retry_delay" : 0.1, "retry_type" : "linear", "delay_cap" : -1 },
-        "client_server_error" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
-        "rate_limit_reached" : { "retries" : -1, "retry_delay" : 1, "retry_type" : "incremental_back_off", "delay_cap" : 256 },
-        "content_malformed" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
-        "validation_failed" : { "retries" : 0, "retry_delay" : 0, "retry_type" : "linear", "delay_cap" : -1 },
-        
-        "no_retries" : { "retries": 0 },
-        "none_retries" : {},
-        "one_retry" : { "retries" : 1 },
-        "delay_2" : { "retries" : 2, "retry_delay" : 2 },
-        "example_timeout" : { "retries" : 3, "retry_delay" : 1, "retry_type" : "linear", "delay_cap" : -1 }
-    },
-
-    "cache" : {
-        "max_cache_duration" : 86400
-    }
-}
-''')
-
 class ProviderMock(Provider):
     """ Mock object to simulate a provider for testing 
     
@@ -143,9 +120,8 @@ class ProviderMock(Provider):
     """
 
     provider_name = "mock_provider"
-    metric_names = ["mock:test_result"]
+    metric_names = ["wikipedia:mentions"]
 
-    member_types = ["mock_type"]
     metric_namespaces = ["mock"]
     alias_namespaces = ["mock"]
     biblio_namespaces = ["mock"]
@@ -157,7 +133,6 @@ class ProviderMock(Provider):
 
     def __init__(self, provider_name=None, metrics_exceptions=None, aliases_exceptions=None, biblio_exceptions=None):
         Provider.__init__(self, None)
-        self.config = base_provider_conf
         if provider_name:
             self.provider_name = provider_name
         else:
@@ -169,7 +144,7 @@ class ProviderMock(Provider):
         self.aliases_processed = {}
         self.biblio_processed = {}
 
-    def aliases(self, aliases):
+    def aliases(self, aliases, url=None):
         # If we are supplied a mock item, should have (mock, id) as it's
         # primary alias. Record that we have seen the item.
         # We cannot generate exceptions if it's not a mock as we won't
@@ -189,7 +164,7 @@ class ProviderMock(Provider):
             self.aliases_processed[item_id] = True
         return[('doi','test_alias')]
 
-    def metrics(self, aliases):
+    def metrics(self, aliases, url=None):
         """ Process metrics for the given aliases
 
             We should probably have been given a mockitem here. If so, then
@@ -212,9 +187,9 @@ class ProviderMock(Provider):
                         else:
                             raise exc
                 self.metrics_processed[item_id] = True
-        return {"mock:test_result": 1}
+        return {"wikipedia:mentions": 1}
 
-    def biblio(self, aliases):
+    def biblio(self, aliases, url=None):
         """ Process biblio for the given aliases
 
             We should probably have been given a mockitem here. If so, then

@@ -2,11 +2,9 @@ import unittest, json, uuid
 from copy import deepcopy
 from urllib import quote_plus
 from nose.tools import nottest, assert_equals
-from nose.plugins.skip import SkipTest
 from BeautifulSoup import BeautifulSoup
 
 from totalimpact import api, dao
-from totalimpact.config import Configuration
 from totalimpact.providers.dryad import Dryad
 import os, yaml
 
@@ -40,7 +38,7 @@ rendered_article_loc = os.path.join(
     '../rendered_views/article.html')
 RENDERED_ARTICLE = open(rendered_article_loc, "r").read()
 
-def MOCK_member_items(self, a, b):
+def MOCK_member_items(self, query_string, url=None, cache_enabled=True):
     return(GOLD_MEMBER_ITEM_CONTENT) 
 
 
@@ -140,7 +138,7 @@ class TestItem(ApiTester):
         assert_equals(response.status_code, 200)
         assert_equals(
             set(json.loads(response.data).keys()),
-            set([u'aliases', u'biblio', u'created', u'id', u'last_modified',
+            set([u'tiid', u'aliases', u'biblio', u'created', u'id', u'last_modified',
                 u'last_requested', u'metrics'])
             )
         assert_equals(response.mimetype, "application/json")
@@ -163,7 +161,8 @@ class TestItem(ApiTester):
 
     def test_item_post_unknown_namespace(self):
         response = self.client.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
-        assert_equals(response.status_code, 501)  # "Not implemented"
+        # cheerfully creates items whether we know their namespaces or not.
+        assert_equals(response.status_code, 201)
 
     def test_returns_json_default(self): 
         # upload the item manually...there's no api call to do this.
@@ -177,9 +176,6 @@ class TestItem(ApiTester):
         assert_equals(response.headers[0][1], 'text/html') 
 
     def test_returns_html_view(self):
-        # Currently this test is broken, appears to be fixed on the newproviders
-        # branch. Will disable for now
-        raise SkipTest
         print self.d.save(ARTICLE_ITEM)
         response = self.client.get('item/{0}.html'.format(ARTICLE_ITEM['id']))
 
@@ -190,13 +186,12 @@ class TestItem(ApiTester):
 
 
         assert returned.find('h4') is not None
-        assert_equals(returned('h4'), expected('h4'))     
+        assert_equals(returned('h4'), expected('h4'))  
 
-        print response.data
-        assert returned.find('ul', "biblio") is not None
+        assert returned.find('div', "biblio") is not None
         assert_equals(
-            returned.find('ul', "biblio"),
-            expected.find('ul', "biblio"))
+            returned.find('div', "biblio").soup,
+            expected.find('div', "biblio").soup)
 
         # in progress... 
 
@@ -204,8 +199,8 @@ class TestItem(ApiTester):
 
 
         assert_equals(
-            returned.find('ul', "metrics"),
-            expected.find('ul', "metrics"))
+            returned.find('ul', "metrics").soup,
+            expected.find('ul', "metrics").soup)
 
 
 class TestItems(ApiTester):

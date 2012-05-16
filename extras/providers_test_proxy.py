@@ -16,7 +16,7 @@ import os
 
 import daemon
 import lockfile
-from totalimpact.common import PidFile
+from totalimpact.pidsupport import PidFile
 
 responses = {'dryad':{},'wikipedia':{},'github':{}}
 
@@ -63,7 +63,7 @@ urlmap = {
 
     # member_items results for egonw
     "https://api.github.com/users/egonw/repos": responses['github']['members'],
-    # metrics results for ('github', 'egonw/gtd')
+    # metrics results for ('github', 'egonw,gtd')
     "https://github.com/api/v2/json/repos/show/egonw/gtd": responses['github']['metrics'],
 
     ###################################################################################

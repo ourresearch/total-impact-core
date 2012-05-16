@@ -1,4 +1,5 @@
-import os, unittest, time, json, yaml
+import os, unittest, time, json, yaml, json
+from urllib import quote_plus
 from nose.tools import nottest, assert_equals
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
@@ -9,20 +10,11 @@ from totalimpact.tilogging import logging
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
 
-datadir = os.path.join(os.path.split(__file__)[0], "../data/dryad")
-
-DRYAD_CONFIG_FILENAME = "totalimpact/providers/dryad.conf.json"
-SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, 
-    "sample_extract_biblio_page.xml")
-SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, 
-    "sample_extract_aliases_page.xml")
+datadir = os.path.join(os.path.split(__file__)[0], "../../extras/sample_provider_pages/dryad")
+SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, "aliases")
+SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
 
 
-# prepare a monkey patch to override the http_get method of the Provider
-class DummyResponse(object):
-    def __init__(self, status, content):
-        self.status_code = status
-        self.text = content
 
 def get_aliases_html_success(self, url, headers=None, timeout=None):
     if ("dc.contributor" in url):
@@ -46,35 +38,30 @@ class TestAliasQueue(unittest.TestCase):
         self.app.config["DB_NAME"] = self.testing_db_name
         self.d = dao.Dao(self.testing_db_name, self.app.config["DB_URL"],
             self.app.config["DB_USERNAME"], self.app.config["DB_PASSWORD"])
-
-        # monkey patch http_get
-        self.old_http_get = Provider.http_get
-        Provider.http_get = get_aliases_html_success
        
         
     def tearDown(self):
         self.app.config["DB_NAME"] = self.old_db_name
-        Provider.http_get = self.old_http_get
 
     def test_alias_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
 
         providers = ProviderFactory.get_providers(self.app.config["PROVIDERS"])
 
-        response = self.client.post('/item/doi/' + TEST_DRYAD_DOI.replace("/", "%2F"))
-        tiid = response.data
+        response = self.client.post('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
+        tiid = json.loads(response.data)
 
 
         # now get it back out
-        tiid = tiid.replace('"', '')
         response = self.client.get('/item/' + tiid)
+        print tiid
         assert_equals(response.status_code, 200)
         
         resp_dict = json.loads(response.data)
         assert_equals(
             set(resp_dict.keys()),
-            set([u'created', u'last_requested', u'metrics', u'last_modified', 
-                u'biblio', u'id', u'aliases'])
+            set([u'tiid', u'created', u'last_requested', u'metrics', 
+                u'last_modified', u'biblio', u'id', u'aliases'])
             )
         assert_equals(unicode(TEST_DRYAD_DOI), resp_dict["aliases"]["doi"][0])
 
@@ -99,10 +86,12 @@ class TestAliasQueue(unittest.TestCase):
         # get the item back out again and bask in the awesome
         response = self.client.get('/item/' + tiid)
         resp_dict = json.loads(response.data)
+        print tiid
+        print response.data
         assert_equals(
             resp_dict["aliases"]["title"][0],
             "data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides"
             )
         print resp_dict
-        assert_equals(resp_dict["biblio"]['data']["year"], "2010")
+        assert_equals(resp_dict["biblio"]["data"]["year"], "2010")
 

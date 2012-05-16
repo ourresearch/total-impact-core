@@ -16,7 +16,8 @@ setup(
         "simplejson",
         "python-memcached",
         "PyYAML",
-        "negotiate"
+        "negotiate",
+        "importlib"
     ],
     url = '',
     author = 'total-impact',

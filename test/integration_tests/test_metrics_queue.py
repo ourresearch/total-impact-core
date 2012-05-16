@@ -4,7 +4,6 @@ from urllib import quote_plus
 from nose.plugins.skip import SkipTest
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
-from totalimpact.config import Configuration
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact import dao, api
@@ -13,44 +12,6 @@ from totalimpact.tilogging import logging
 PLOS_TEST_DOI = "10.1371/journal.pone.0004803"
 DRYAD_TEST_DOI = "10.5061/dryad.7898"
 GITHUB_TEST_ID = "homebrew"
-
-datadir = os.path.join(os.path.split(__file__)[0], "../data/dryad")
-
-DRYAD_CONFIG_FILENAME = "totalimpact/providers/dryad.conf.json"
-TEST_DRYAD_DOI = "10.5061/dryad.7898"
-TEST_DRYAD_AUTHOR = "Piwowar, Heather A."
-SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, 
-    "sample_extract_metrics_page.html")
-SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, 
-    "sample_extract_aliases_page.xml")
-
-# prepare a monkey patch to override the http_get method of the Provider
-class DummyResponse(object):
-    def __init__(self, status, content):
-        self.status_code = status
-        self.text = content
-
-def get_metrics_html_success(self, url, headers=None, timeout=None):
-    f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
-    return DummyResponse(200, f.read())
-def get_aliases_html_success(self, url, headers=None, timeout=None):
-    f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
-    return DummyResponse(200, f.read())
-
-PROVIDERS = { 
-    "dryad": {
-        "class" : "totalimpact.providers.dryad.Dryad",
-        "config" : "totalimpact/providers/dryad.conf.json"
-    },
-    "wikipedia":{
-        "class" : "totalimpact.providers.wikipedia.Wikipedia",
-        "config" : "totalimpact/providers/wikipedia.conf.json"
-    },
-    "github": {
-        "class" : "totalimpact.providers.github.Github",
-        "config" : "totalimpact/providers/github.conf.json"
-    }
-}
 
 class TestMetricsQueue(unittest.TestCase):
 
@@ -67,16 +28,11 @@ class TestMetricsQueue(unittest.TestCase):
         self.d = dao.Dao(self.testing_db_name, self.app.config["DB_URL"],
             self.app.config["DB_USERNAME"], self.app.config["DB_PASSWORD"])
 
-        provider_configs = PROVIDERS
-        self.providers = ProviderFactory.get_providers(provider_configs)
-
-        # monkey patch http_get
-        self.old_http_get = Provider.http_get
+        self.providers = ProviderFactory.get_providers(self.app.config["PROVIDERS"])
 
 
     def tearDown(self):
         self.app.config["DB_NAME"] = self.old_db_name
-        Provider.http_get = self.old_http_get
 
     def test_metrics_queue(self):
         """ Test that the metrics queue works
@@ -140,22 +96,18 @@ class TestMetricsQueue(unittest.TestCase):
         assert_equals(len(github_metrics_queue.queue), 
                 number_of_item_api_calls) 
 
-        # run the aliases to get ready for the metrics
-        Provider.http_get = get_aliases_html_success
 
         alias_thread = ProvidersAliasThread(self.providers, self.d)
         alias_thread.run(run_only_once=True)
 
         # now run just the dryad metrics thread.
         metrics_thread = ProviderMetricsThread(self.providers[0], self.d)
-        Provider.http_get = get_metrics_html_success
         metrics_thread.run(run_only_once=True)  
         metrics_thread.run(run_only_once=True)
         metrics_thread.run(run_only_once=True)
 
         # test the dryad doi
         dryad_resp = self.client.get('/item/' + dryad_tiid.replace('"', ''))
-        Provider.http_get = self.old_http_get
 
         resp_dict = json.loads(dryad_resp.data)
         print json.dumps(resp_dict, sort_keys=True, indent=4) 

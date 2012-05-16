@@ -1,16 +1,19 @@
 <li class="item" id="{{item.id}}">
-    <h4><span class="genre">{{ item.genre }}</span>{{ item.aliases['doi'][0] }}</h4>
+    <h4><span class="genre"></span></h4>
 
-    {%- if item.biblio.data -%}
-        {% include item.genre ~  "_biblio.html" %}
-    {%- endif -%}
+    <div class="biblio">
+        {%- if item.biblio.data -%}
+            {% include item.genre ~  "_biblio.html" %}
+        {%- endif -%}
+    </div>
 
     <ul class="metrics">
         {%- for metric_name, metric in item.metrics.iteritems() -%}
         {%- if metric.values and metric.static_meta -%}
         {% set metric_snap =  metric['values']|dictsort|reverse|first %}
+        {% if metric_snap|last %}
         <li>
-            <a href="{{ metric['static_meta']['provenance_url']}}">
+            <a href="{{ metric['provenance_url']}}">
                 <span class="last-update">{{ metric_snap|first }}</span>
                 <span class="metric-value">{{ metric_snap|last }}</span>
 
@@ -20,6 +23,7 @@
                 </span>
             </a>
         </li>
+        {%- endif -%}
         {%- endif -%}
         {%- endfor -%}
     </ul>
