@@ -175,12 +175,12 @@ class ProviderTestCase:
         Provider.http_get = get_500
         new_aliases = self.provider.aliases([self.testitem_aliases])
 
-    @raises(ProviderContentMalformedError)
     def test_provider_aliases_empty(self):
         if not self.provider.provides_aliases:
             raise SkipTest
         Provider.http_get = get_empty
-        new_aliases = self.provider.aliases([self.testitem_aliases])
+        aliases = self.provider.aliases([self.testitem_aliases])
+        assert_equals(aliases, [self.testitem_aliases])
 
     @raises(ProviderContentMalformedError)
     def test_provider_aliases_nonsense_txt(self):
