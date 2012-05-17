@@ -176,6 +176,69 @@ PROVIDERS = {
                 }
             }
         }        
+    },
+    "peerev":{
+        "class" : "totalimpact.providers.peerev.Peerev",
+        "supported_namespaces" : ["doi"],
+        "workers":10,
+        "metrics": {
+            "views": {
+                "static_meta" : {
+                    "display_name": "views",
+                    "provider": "Peerev",
+                    "provider_url": "http://peerevaluation.org/",
+                    "description": "Number of views on peerev.org",
+                    "icon": "http://peerev.surstar3.com/img/peerev.gif",
+                    "category": "views",
+                    "can_use_commercially": "",
+                    "can_embed": "",
+                    "can_aggregate": "",
+                    "other_terms_of_use": ""
+                }
+            },    
+            "downloads": {
+                "static_meta" : {
+                    "display_name": "downloads",
+                    "provider": "Peerev",
+                    "provider_url": "http://peerevaluation.org/",
+                    "description": "Number of downloads on peerev.org",
+                    "icon": "http://peerev.surstar3.com/img/peerev.gif",
+                    "category": "downloads",
+                    "can_use_commercially": "",
+                    "can_embed": "",
+                    "can_aggregate": "",
+                    "other_terms_of_use": ""
+                }
+            },    
+            "comments": {
+                "static_meta" : {
+                    "display_name": "comments",
+                    "provider": "Peerev",
+                    "provider_url": "http://peerevaluation.org/",
+                    "description": "Number of comments on peerev.org",
+                    "icon": "http://peerev.surstar3.com/img/peerev.gif",
+                    "category": "comments",
+                    "can_use_commercially": "",
+                    "can_embed": "",
+                    "can_aggregate": "",
+                    "other_terms_of_use": ""
+                }
+            },    
+            "bookmarks": {
+                "static_meta" : {
+                    "display_name": "bookmarks",
+                    "provider": "Peerev",
+                    "provider_url": "http://peerevaluation.org/",
+                    "description": "Number of times this item was bookmarked on peerev.org",
+                    "icon": "http://peerev.surstar3.com/img/peerev.gif",
+                    "category": "bookmarks",
+                    "can_use_commercially": "",
+                    "can_embed": "",
+                    "can_aggregate": "",
+                    "other_terms_of_use": ""
+                }
+            }
+        }
     }
 }
 
