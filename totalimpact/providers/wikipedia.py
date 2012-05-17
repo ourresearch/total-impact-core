@@ -15,11 +15,6 @@ class Wikipedia(Provider):
     alias_namespaces = None
     biblio_namespaces = None
 
-    provides_members = False
-    provides_aliases = False
-    provides_metrics = True
-    provides_biblio = False
-
     provenance_url_template = "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go"
     metrics_url_template = "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'"
 
@@ -35,7 +30,15 @@ class Wikipedia(Provider):
         is_relevant = (namespace=="doi")
         return is_relevant
 
-    def _extract_metrics(self, page, id=None):
+    def _extract_metrics(self, page, status_code=200, id=None):
+        logger.info("_extract_metrics with %s, %i,\n%s\n" % (id, status_code, page))
+
+        if status_code != 200:
+            if (status_code == 404):
+                return {}
+            else:
+                raise(self._get_error(status_code))
+
         try:
             doc = minidom.parseString(page)
         except ExpatError, e:
@@ -47,6 +50,7 @@ class Wikipedia(Provider):
         val = searchinfo[0].attributes['totalhits'].value
 
         metrics_dict = {"wikipedia:mentions": int(val)}
+        logger.info("_extract_metrics returns metrics_dict %s" % (str(metrics_dict)))
 
         return metrics_dict
             

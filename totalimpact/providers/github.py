@@ -16,11 +16,6 @@ class Github(Provider):
     alias_namespaces = ["github"]
     biblio_namespaces = ["github"]
 
-    provides_members = True
-    provides_aliases = True
-    provides_metrics = True
-    provides_biblio = True
-
     member_items_url_template = "https://api.github.com/users/%s/repos"
     biblio_url_template = "https://github.com/api/v2/json/repos/show/%s"
     aliases_url_template = "https://github.com/api/v2/json/repos/show/%s"
@@ -69,46 +64,43 @@ class Github(Provider):
         return(members)
 
     def _extract_biblio(self, page, id=None):
-        try:
-            data = simplejson.loads(page) 
-        except simplejson.JSONDecodeError, e:
-            raise ProviderContentMalformedError
-
-        # extract the biblio
-        biblio_dict = {
-            'title' : data['repository']['name'],
-            'description' : data['repository']['description'],
-            'owner' : data['repository']['owner'],
-            'url' : data['repository']['url'],
-            'last_push_date' : data['repository']['pushed_at'],
-            'create_date' : data['repository']['created_at']
+        dict_of_keylists = {
+            'title' : ['repository', 'name'],
+            'description' : ['repository', 'description'],
+            'owner' : ['repository', 'owner'],
+            'url' : ['repository', 'url'],
+            'last_push_date' : ['repository', 'pushed_at'],
+            'create_date' : ['repository', 'created_at']
         }
+        biblio_dict = self._extract_from_json(page, dict_of_keylists)
 
         return biblio_dict    
        
     def _extract_aliases(self, page, id=None):
-        try:
-            data = simplejson.loads(page) 
-        except simplejson.JSONDecodeError, e:
-            raise ProviderContentMalformedError
-        
-        # extract the aliases
-        aliases_list = [
-                    ("url", data['repository']['url']), 
-                    ("title", data['repository']['name'])]
+        dict_of_keylists = {"url": ["repository", "url"], 
+                            "title" : ["repository", "name"]}
 
+        aliases_dict = self._extract_from_json(page, dict_of_keylists)
+        if aliases_dict:
+            aliases_list = [(namespace, nid) for (namespace, nid) in aliases_dict.iteritems()]
+        else:
+            aliases_list = None
         return aliases_list
 
-    def _extract_metrics(self, page, id=None):
-        try:
-            data = simplejson.loads(page) 
-        except simplejson.JSONDecodeError, e:
-            raise ProviderContentMalformedError
 
-        metrics_dict = {
-            'github:watchers' : data['repository']['watchers'],
-            'github:forks' : data['repository']['forks']
+    def _extract_metrics(self, page, status_code=200, id=None):
+        if status_code != 200:
+            if status_code == 404:
+                return {}
+            else:
+                raise(self._get_error(status_code))
+
+        dict_of_keylists = {
+            'github:watchers' : ['repository', 'watchers'],
+            'github:forks' : ['repository', 'forks']
         }
+
+        metrics_dict = self._extract_from_json(page, dict_of_keylists)
 
         return metrics_dict
 

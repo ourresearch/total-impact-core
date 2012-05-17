@@ -5,21 +5,17 @@ import traceback
 from totalimpact import dao, api
 from totalimpact.queue import AliasQueue, MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
+from totalimpact.providers.provider import ProviderError
 from totalimpact.models import Error
-
-from totalimpact.tilogging import logging
-
-from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
-from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
-from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
+from totalimpact.pidsupport import PidFile
 
 import daemon
 import lockfile
-from totalimpact.pidsupport import PidFile
 
 from optparse import OptionParser
 import os
 
+from totalimpact.tilogging import logging
 logger = logging.getLogger('backend')
 
 class TotalImpactBackend(object):
@@ -194,14 +190,13 @@ class ProviderThread(QueueConsumer):
         self.thread_id = "BaseProviderThread"
         self.run_once = False
 
-    def log_error(self, item, error_type, error_msg, tb):
+    def log_error(self, item, error_msg, tb):
         # This method is called to record any errors which we obtain when
         # trying process an item.
-        logger.error("exception for item(%s): %s (%s)" % (item.id, error_msg, error_type))
+        logger.error("exception for item(%s): %s" % (item.id, error_msg))
         
         e = Error(self.dao)
         e.message = error_msg
-        e.error_type = error_type
         e.id = item.id
         e.provider = self.thread_id
         e.stack_trace = "".join(traceback.format_tb(tb))
@@ -227,7 +222,7 @@ class ProviderThread(QueueConsumer):
             # item may be None
             if item:
                 # if we get to here, an item has been popped off the queue and we
-                # now want to calculate it's metrics. 
+                # now want to calculate its metrics. 
                 # Repeatedly process this item until we hit the error limit
                 # or we successfully process it         
                 ctxfilter.local.backend['item'] = item.id
@@ -247,137 +242,104 @@ class ProviderThread(QueueConsumer):
             if run_only_once:
                 return
 
-    def process_item_for_provider(self, item, provider, method):
-        """ Run the given method for the given provider on the given item
-        
-            method should either be 'aliases', 'biblio', or 'metrics'
+    def call_provider_method(self, 
+            provider, 
+            method_name, 
+            aliases, 
+            cache_enabled=True):
 
+        logger.info("call_provider_method %s %s %s" % (provider, method_name, str(aliases)))
+
+        if not aliases:
+            logger.debug("Skipping item with provider %s: Missing aliases for %s" % (provider, method_name))
+            return None
+
+        method_to_call = getattr(provider, method_name)
+        if not method_to_call:
+            logger.debug("Skipping item with provider %s: Missing method for %s" % (provider, method_name))
+            return None
+
+        try:
+            override_template_url = api.app.config["PROVIDERS"][provider.provider_name][method_name + "_url"]
+        except KeyError:
+            # No problem, the provider will use the template_url it knows about
+            override_template_url = None
+
+        logger.info("CALLING %s %s with aliases %s" % (provider, method_name, str(aliases)))
+        try:
+            response = method_to_call(aliases, override_template_url)
+            logger.info("finished CALLING %s %s with aliases %s" % (provider, method_name, str(aliases)))
+            logger.info("response: %s" %(str(response)))
+        except NotImplementedError:
+            response = None
+        return response
+
+
+    def process_item_for_provider(self, item, provider, method_name):
+        """ Run the given method for the given provider on the given item
             This will deal with retries and sleep / backoff as per the 
             configuration for the given provider. We will return true if
-            the given method passes, or if it's not implemented.
+            the given method passes, or if it is not implemented.
         """
-        if method not in ('aliases', 'biblio', 'metrics'):
-            raise NotImplementedError("Unknown method %s for provider class" % method)
+        if method_name not in ('aliases', 'biblio', 'metrics'):
+            raise NotImplementedError("Unknown method %s for provider class" % method_name)
         
-        logger.info("processing %s for provider %s" % (method, provider))
-        error_counts = {
-            'http_timeout':0,
-            'content_malformed':0,
-            'validation_failed':0,
-            'client_server_error':0,
-            'rate_limit_reached':0,
-            'http_error':0
-        }
+        logger.info("processing %s for provider %s" % (method_name, provider))
+        error_counts = 0
         success = False
-        response = None
         error_limit_reached = False
+        error_msg = False
+        max_retries = provider.get_max_retries()
+        response = None
 
         while not error_limit_reached and not success and not self.stopped():
-
-            error_type = None
-
-            # Get a replacement provider access template_url if in config
-            try:
-                template_url = api.app.config["PROVIDERS"][provider.provider_name][method+"_url"]
-            except KeyError:
-                template_url = None
+            response = None
 
             try:
+                cache_enabled = (error_counts == 0)
 
-                if method == 'aliases':
-                # Test and see if this method is supported, or skip
-                    if provider.provides_aliases:
-                        current_aliases = item.aliases.get_aliases_list(provider.alias_namespaces)
-                        if current_aliases:
-                            response = provider.aliases(current_aliases, template_url)
-                        else:
-                            logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
-                            response = []
-                    else:
-                        logger.debug("processing item with provider %s: Skipped, %s not implemented" % (provider, method))
-                        response = []
-
-                if method == 'metrics':
-                    if provider.provides_metrics:
-                        current_aliases = item.aliases.get_aliases_list(provider.metric_namespaces)
-                        if current_aliases:
-                            response = provider.metrics(current_aliases, template_url)
-                        else:
-                            logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
-                            response = {}
-                    else:
-                        logger.debug("processing item with provider %s: Skipped, %s not implemented" % (provider, method))
-                        response = {}
-
-                if method == 'biblio':
-                    if provider.provides_biblio:
-                        current_aliases = item.aliases.get_aliases_list(provider.biblio_namespaces)
-                        if current_aliases:
-                            response = provider.biblio(current_aliases, template_url)
-                        else:
-                            logger.debug("processing item with provider %s: Skipped, no suitable aliases for %s" % (provider, method))
-                            response = {}
-                    else:
-                        logger.debug("processing item with provider %s: Skipped, %s not implemented" % (provider, method))
-                        response = {}
-
+                response = self.call_provider_method(
+                    provider, 
+                    method_name, 
+                    item.aliases.get_aliases_list(), 
+                    cache_enabled=cache_enabled)
                 success = True
 
-            except ProviderTimeout, e:
-                error_type = 'http_timeout'
-                error_msg = str(e)
-            except ProviderRateLimitError, e:
-                error_type = 'rate_limit_reached'
-                error_msg = str(e)
-            except ProviderHttpError, e:
-                error_type = 'http_error'
-                error_msg = str(e)
-            except (ProviderClientError,ProviderServerError,ProviderConfigurationError), e:
-                error_type = 'client_server_error'
-                error_msg = str(e)
-            except ProviderContentMalformedError, e:
-                error_type = 'content_malformed'
-                error_msg = str(e)
-            except ProviderValidationFailedError, e:
-                error_type = 'validation_failed'
+            except ProviderError, e:
                 error_msg = str(e)
 
             except Exception, e:
                 # All other fatal errors. These are probably some form of
                 # logic error. We consider these to be fatal.
+                error_msg = "unknown error"
+                logger.error("process_item_for_provider %s %s %s: Unknown exception %s, aborting" % (item.id, provider, method_name, e))
                 tb = sys.exc_info()[2]
-                self.log_error(item, 'unknown_error on %s %s' % (provider, method), str(e), tb)
-                logger.error("Error processing item for provider %s %s: Unknown exception %s, aborting" % (provider, method, e))
                 logger.debug(traceback.format_tb(tb))
                 error_limit_reached = True
 
-            finally:
+            if error_msg:
                 # If we had any errors, update the error counts and sleep if 
-                # we need to do so, before retrying. If we exceed the error limit
-                # for the given error type, set error_limit_reached to be true
+                # we need to do so, before retrying. 
+                tb = sys.exc_info()[2]
+                self.log_error(item, '%s on %s %s' % (error_msg, provider, method_name), tb)
 
-                if error_type:
-                    # Log the error and it's traceback
-                    tb = sys.exc_info()[2]
-                    self.log_error(item, error_type + ' on %s %s' % (provider, method), error_msg, tb)
+                error_counts += 1
 
-                    error_counts[error_type] += 1
+                if ((error_counts > max_retries) and (max_retries != -1)):
+                    logger.error("process_item_for_provider: error limit reached (%i/%i) for %s, aborting %s %s" % (
+                        error_counts, max_retries, item.id, provider, method_name))
+                    error_limit_reached = True
+                else:
+                    duration = provider.get_sleep_time(error_counts)
+                    logger.warning("process_item_for_provider: error, pausing thread for %i %s %s, %s" % (duration, item.id, provider, method_name))
+                    self._interruptable_sleep(duration)                
 
-                    max_retries = provider.get_max_retries(error_type)
-                    if error_counts[error_type] > max_retries and max_retries != -1:
-                        logger.info("Error processing item: %s, error limit reached (%i/%i), aborting %s %s" % (
-                            error_type, error_counts[error_type], max_retries, provider, method))
-                        error_limit_reached = True
-                    else:
-                        duration = provider.get_sleep_time(error_type, error_counts[error_type])
-                        logger.info("Error processing item: %s, pausing thread for %s, %s %s" % (error_type, duration, provider, method))
-                        self._interruptable_sleep(duration)
-                elif success:
-                    # response may be None for some methods and inputs
-                    if response:
-                        logger.info("processing %s %s successful, got %i results" % (provider, method, len(response)))
-                    else:
-                        logger.info("processing %s %s successful, got 0 results" % (provider, method))
+        if success:
+            # response may be None for some methods and inputs
+            if response:
+                logger.info("processing %s %s %s successful, got %i results" % (item.id, provider, method_name, len(response)))
+            else:
+                logger.info("processing %s %s %s successful, got 0 results" % (item.id, provider, method_name))
 
         return (success, response)
 
@@ -398,22 +360,15 @@ class ProvidersAliasThread(ProviderThread):
         ctxfilter.local.backend['thread'] = self.thread_id
         
     def process_item(self, item):
-        """ Process the given item, obtaining it's metrics.
-
-            This method will retry for the appropriate number of times, sleeping
-            if required according to the config settings.
-        """
         if not self.stopped():
             for provider in self.providers: 
 
                 ctxfilter.local.backend['provider'] = ':' + provider.provider_name
 
-                (success, response) = self.process_item_for_provider(item, provider, 'aliases')
+                (success, new_aliases) = self.process_item_for_provider(item, provider, 'aliases')
                 if success:
-                    # Add in the new aliases to the item
-                    # response is a list of (k,v) pairs (may be empty)
-                    if response:
-                        item.aliases.add_unique(response)
+                    if new_aliases:
+                        item.aliases.add_unique(new_aliases)
                     item.save()
 
                 else:
@@ -424,20 +379,19 @@ class ProvidersAliasThread(ProviderThread):
                     # Wipe out the aliases and set last_modified so that the item
                     # is then removed from the queue. If we don't wipe the aliases
                     # then the aliases list is not complete and will given incorrect
-                    # results. We had agreed before to go with no results rather than
+                    # results. We'd rather have no results rather than
                     # incorrect.
                     item.aliases.clear_aliases()
                     item.save()
                     break
 
-                (success, response) = self.process_item_for_provider(item, provider, 'biblio')
+                (success, biblio) = self.process_item_for_provider(item, provider, 'biblio')
                 if success:
-                    # Response may be None
-                    if response:
-                        for key in response.keys():
+                    if biblio:
+                        for key in biblio.keys():
                             if not item.biblio.has_key('data'):
                                 item.biblio['data'] = {}
-                            item.biblio['data'][key] = response[key]
+                            item.biblio['data'][key] = biblio[key]
                 else:
                     # This provider has failed and exceeded the 
                     # total number of retries. Don't process any 
@@ -519,7 +473,7 @@ def main(logfile=None):
     from totalimpact.backend import ctxfilter
     handler = logging.handlers.RotatingFileHandler(logfile)
     handler.level = logging.DEBUG
-    formatter = logging.Formatter("%(asctime)s %(levelname)8s %(item)8s %(thread)s%(provider)s - %(message)s")#,"%H:%M:%S,%f")
+    formatter = logging.Formatter("%(asctime)s %(levelname)8s %(item)8s %(thread)s%(provider)s - %(message)s", datefmt="%y/%m/%d %H:%M:%S")
     handler.formatter = formatter
     handler.addFilter(ctxfilter)
     logger.addHandler(handler)

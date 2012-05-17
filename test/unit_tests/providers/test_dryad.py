@@ -75,5 +75,5 @@ class TestDryad(ProviderTestCase):
         # If the item has a DOI alias but it's not recognised by dryad, 
         #    then won't find any metrics. Should get a None returned.
         metrics = self.provider.metrics([("doi", "10.9999/NOTADRYADDOI")])
-        assert_equals(metrics, None)
+        assert_equals(metrics, {})
 
