@@ -58,7 +58,7 @@ class Provider(object):
     def relevant_aliases(self, aliases):
         filtered = [alias for alias in aliases 
                         if self.is_relevant_alias(alias)]
-        logger.info("relevant_aliases for %s are %s given %s" % (self.provider_name, str(filtered), str(aliases)))
+        #logger.info("relevant_aliases for %s are %s given %s" % (self.provider_name, str(filtered), str(aliases)))
 
         return filtered
 
