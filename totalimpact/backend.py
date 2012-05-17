@@ -195,7 +195,7 @@ class ProviderThread(QueueConsumer):
         # trying process an item.
         logger.error("exception for item(%s): %s" % (item.id, error_msg))
         
-        e = Error(self.dao)
+        e = Error()
         e.message = error_msg
         e.id = item.id
         e.provider = self.thread_id
@@ -203,7 +203,6 @@ class ProviderThread(QueueConsumer):
         
         logger.debug(str(e.stack_trace))
         
-        #e.save()
 
     def startup(self):
         # Ensure logs for this thread are marked correctly
