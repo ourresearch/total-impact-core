@@ -105,6 +105,7 @@ class ProviderTestCase:
         assert hasattr(self.provider, "member_items")
         assert hasattr(self.provider, "aliases")
         assert hasattr(self.provider, "metrics")
+        assert hasattr(self.provider, "biblio")
 
         # Class members for provider definition
         assert hasattr(self.provider, "provides_members")
@@ -114,10 +115,6 @@ class ProviderTestCase:
 
         assert hasattr(self.provider, "provider_name")
         assert hasattr(self.provider, "metric_names")
-
-        assert hasattr(self.provider, "metric_namespaces")
-        assert hasattr(self.provider, "alias_namespaces")
-        assert hasattr(self.provider, "biblio_namespaces")
 
     ###################################################################
     ##
