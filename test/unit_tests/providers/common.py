@@ -1,3 +1,4 @@
+from totalimpact.providers import provider
 from totalimpact.models import Aliases, Item, ItemFactory
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.providers.provider import ProviderError, ProviderTimeout, ProviderServerError, ProviderClientError
@@ -78,22 +79,17 @@ class ProviderTestCase:
         provider.http_get safely in your tests, if required.
         """
 
+    # overwrite in providers for supported methods
+    testitem_aliases = ()
+    testitem_metrics = ()
+    testitem_biblio = ()
+
     def setUp(self):
         self.provider = ProviderFactory.get_provider(self.provider_name)
         self.old_http_get = Provider.http_get
 
     def tearDown(self):
         Provider.http_get = self.old_http_get
-
-    def test_0001_testcase_interface(self):
-        """ test_provider_testcase_interface
-
-            Ensure that this class has defined everything needed.
-        """
-        assert hasattr(self, "testitem_aliases")
-        assert hasattr(self, "testitem_metrics")
-        assert hasattr(self, "testitem_biblio")
-
 
     def test_0003_provider_interface(self):
         """ test_provider_interface
@@ -182,6 +178,7 @@ class ProviderTestCase:
         aliases = self.provider.aliases([self.testitem_aliases])
         assert_equals(aliases, [self.testitem_aliases])
 
+    @nottest
     @raises(ProviderContentMalformedError)
     def test_provider_aliases_nonsense_txt(self):
         if not self.provider.provides_aliases:
@@ -189,6 +186,7 @@ class ProviderTestCase:
         Provider.http_get = get_nonsense_txt
         new_aliases = self.provider.aliases([self.testitem_aliases])
 
+    @nottest
     @raises(ProviderContentMalformedError)
     def test_provider_aliases_nonsense_xml(self):
         if not self.provider.provides_aliases:
@@ -255,6 +253,7 @@ class ProviderTestCase:
         Provider.http_get = get_500
         biblio = self.provider.biblio([self.testitem_biblio])
 
+    @nottest
     @raises(ProviderContentMalformedError)
     def test_provider_biblio_empty(self):
         if not self.provider.provides_biblio:
@@ -262,6 +261,7 @@ class ProviderTestCase:
         Provider.http_get = get_empty
         biblio = self.provider.biblio([self.testitem_biblio])
 
+    @nottest
     @raises(ProviderContentMalformedError)
     def test_provider_biblio_nonsense_txt(self):
         if not self.provider.provides_biblio:
@@ -269,6 +269,7 @@ class ProviderTestCase:
         Provider.http_get = get_nonsense_txt
         biblio = self.provider.biblio([self.testitem_biblio])
 
+    @nottest
     @raises(ProviderContentMalformedError)
     def test_provider_biblio_nonsense_xml(self):
         if not self.provider.provides_biblio:

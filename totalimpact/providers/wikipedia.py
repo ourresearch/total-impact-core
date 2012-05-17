@@ -1,3 +1,4 @@
+from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
@@ -11,9 +12,6 @@ class Wikipedia(Provider):
     """
 
     metric_names = ['wikipedia:mentions']
-    metric_namespaces = ["doi"]
-    alias_namespaces = None
-    biblio_namespaces = None
 
     provenance_url_template = "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go"
     metrics_url_template = "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'"

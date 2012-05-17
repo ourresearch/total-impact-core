@@ -1,3 +1,4 @@
+from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
@@ -13,10 +14,6 @@ class Dryad(Provider):
         "dryad:total_downloads", 
         "dryad:most_downloaded_file"
         ]
-
-    metric_namespaces = ["doi"]
-    alias_namespaces = ["doi"]
-    biblio_namespaces = ["doi"]
 
     example_id = ("doi", "10.5061/dryad.7898")
 

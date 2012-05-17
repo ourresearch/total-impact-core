@@ -24,16 +24,9 @@ which state what functionality the provide supports.
 
         provider_name = "new_provider"
         metric_names = ['new_provider:mentions']
-        metric_namespaces = ["doi"]
-        alias_namespaces = None
-        biblio_namespaces = None
 
         member_types = None
 
-        provides_members = False
-        provides_aliases = False
-        provides_metrics = True
-        provides_biblio = False
 
 The x_namespaces and x_name attributes are filters. These will ensure that your provider isn't passed
 any data which it cannot deal with. These will be explained shortly.
