@@ -12,7 +12,7 @@ class Topsy(Provider):
 
     metric_names = [
         'topsy:tweets', 
-        'topsy:influential_tweeets'
+        'topsy:influential_tweets'
         ]
 
     metrics_url_template = "http://otter.topsy.com/stats.json?url=%s&apikey=" + Topsy_key
