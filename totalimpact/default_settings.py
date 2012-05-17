@@ -60,7 +60,6 @@ PROVIDERS = {
     },
     "dryad": {
         "class" : "totalimpact.providers.dryad.Dryad",
-        "supported_namespaces" : ["doi"],
 	    "workers":10,
         "metrics": {
             "package_views": {
@@ -109,7 +108,6 @@ PROVIDERS = {
     },
     "mendeley":{
         "class" : "totalimpact.providers.mendeley.Mendeley",
-        "supported_namespaces" : ["doi"],
         "workers":10,
         "metrics": {
             "readers": {
@@ -142,9 +140,13 @@ PROVIDERS = {
             },  
         }
     },  
+    "crossref":{
+        "class" : "totalimpact.providers.crossref.Crossref",
+        "workers":10,
+        "metrics": {}
+    },
     "github":{
         "class" : "totalimpact.providers.github.Github",
-        "supported_namespaces" : ["github"],
 	    "workers":10,
         "metrics": {
             "watchers": {

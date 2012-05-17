@@ -37,7 +37,9 @@ class Provider(object):
     def __init__(self, 
             max_cache_duration=86400, 
             max_retries=3, 
-            tool_email="totalimpactdev@gmail.com"):
+            tool_email="mytotalimpact@gmail.com"): 
+        # FIXME change email to totalimpactdev@gmail.com after registering it with crossref
+    
         self.max_cache_duration = max_cache_duration
         self.max_retries = max_retries
         self.tool_email = tool_email
@@ -314,10 +316,6 @@ class Provider(object):
     def get_max_retries(self):
         return self.max_retries
 
-
-    @staticmethod
-    def filter_aliases(aliases, supported_namespaces):
-        aliases = ((ns,v) for (ns,v) in aliases if k == 'github')
     
     def http_get(self, url, headers=None, timeout=None, cache_enabled=True):
         """ Returns a requests.models.Response object or raises exception
@@ -440,7 +438,7 @@ def _extract_from_json(page, dict_of_keylists):
     return response
 
 
-def _lookup_xml(soup, keylist):
+def _lookup_xml(soup, keylist):    
     smaller_bowl_of_soup = soup
     for mykey in keylist:
         if not smaller_bowl_of_soup:
@@ -451,7 +449,10 @@ def _lookup_xml(soup, keylist):
         except KeyError:
             return None
             
-    response = smaller_bowl_of_soup.text
+    if smaller_bowl_of_soup:      
+        response = smaller_bowl_of_soup.text
+    else:
+        response = None
     return(response)
 
 
