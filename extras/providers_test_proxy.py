@@ -92,8 +92,8 @@ if __name__ == '__main__':
 
     parser = OptionParser()
     parser.add_option("-p", "--port",
-                      action="store", dest="port", default=8080,
-                      help="Port to run the server on (default 8080)")
+                      action="store", dest="port", default=8081,
+                      help="Port to run the server on (default 8081)")
     parser.add_option("-i", "--pid",
                       action="store", dest="pid", default=None,
                       help="pid file")
