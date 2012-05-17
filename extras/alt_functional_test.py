@@ -14,12 +14,18 @@ from pprint import pprint
 from optparse import OptionParser
 
 REQUEST_IDS = [("dryad", ('doi','10.5061/dryad.18')), 
+                ("crossref", ('doi', '10.1371/journal.pcbi.1000361')), 
                 ("wikipedia", ('doi', '10.1371/journal.pcbi.1000361')), 
                 ("mendeley", ('doi', '10.1371/journal.pcbi.1000361')), 
                 ("github", ('github', 'egonw,cdk'))
 ]
 
 GOLD_RESPONSES = {
+    'crossref' : { 
+        'aliases': ['doi', "title", "url"],
+        'biblio': [u'authors', u'journal', u'year', u'title'],
+        'metrics' : {}
+    },
     'wikipedia' : { 
         'aliases': ['doi'],
         'biblio': [],
