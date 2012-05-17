@@ -18,11 +18,6 @@ class Dryad(Provider):
     alias_namespaces = ["doi"]
     biblio_namespaces = ["doi"]
 
-    provides_members = True
-    provides_aliases = True
-    provides_metrics = True
-    provides_biblio = True
-
     example_id = ("doi", "10.5061/dryad.7898")
 
 
@@ -119,7 +114,13 @@ class Dryad(Provider):
         return biblio_dict
 
 
-    def _extract_metrics(self, page, id=None):
+    def _extract_metrics(self, page, status_code=200, id=None):
+        if status_code != 200:
+            if status_code == 404:
+                return {}
+            else:
+                raise(self._get_error(status_code))
+
         view_matches_package = self.DRYAD_VIEWS_PACKAGE_PATTERN.search(page)
         try:
             view_package = view_matches_package.group("views")
