@@ -1,3 +1,4 @@
+from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
 import simplejson
@@ -11,10 +12,6 @@ class Github(Provider):
         'github:watchers', 
         'github:forks'
         ]
-
-    metric_namespaces = ["github"]
-    alias_namespaces = ["github"]
-    biblio_namespaces = ["github"]
 
     member_items_url_template = "https://api.github.com/users/%s/repos"
     biblio_url_template = "https://github.com/api/v2/json/repos/show/%s"
@@ -72,7 +69,7 @@ class Github(Provider):
             'last_push_date' : ['repository', 'pushed_at'],
             'create_date' : ['repository', 'created_at']
         }
-        biblio_dict = self._extract_from_json(page, dict_of_keylists)
+        biblio_dict = provider._extract_from_json(page, dict_of_keylists)
 
         return biblio_dict    
        
@@ -80,7 +77,7 @@ class Github(Provider):
         dict_of_keylists = {"url": ["repository", "url"], 
                             "title" : ["repository", "name"]}
 
-        aliases_dict = self._extract_from_json(page, dict_of_keylists)
+        aliases_dict = provider._extract_from_json(page, dict_of_keylists)
         if aliases_dict:
             aliases_list = [(namespace, nid) for (namespace, nid) in aliases_dict.iteritems()]
         else:
@@ -100,13 +97,13 @@ class Github(Provider):
             'github:forks' : ['repository', 'forks']
         }
 
-        metrics_dict = self._extract_from_json(page, dict_of_keylists)
+        metrics_dict = provider._extract_from_json(page, dict_of_keylists)
 
         return metrics_dict
 
-    # default method; providers can override    
+
+    # overriding default because different provenance url for each metric
     def provenance_url(self, metric_name, aliases):
-        # Returns the same provenance url for all metrics
         id = self.get_best_id(aliases)
         if not id:
             return None
@@ -115,5 +112,6 @@ class Github(Provider):
         except ValueError:
             return None
 
+        # Returns a different provenance url for each metric
         provenance_url = self.provenance_url_templates[metric_name] % (user, repo)
         return provenance_url

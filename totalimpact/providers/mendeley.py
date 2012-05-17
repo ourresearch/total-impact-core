@@ -1,3 +1,4 @@
+from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from totalimpact.providers.secrets import Mendeley_key
 
@@ -12,10 +13,6 @@ class Mendeley(Provider):
         'mendeley:readers', 
         'mendeley:groups'
         ]
-
-    metric_namespaces = ["doi"]
-    alias_namespaces = ["doi"]
-    biblio_namespaces = ["doi"]
 
     everything_url_template = "http://api.mendeley.com/oapi/documents/details/%s?type=doi&consumer_key=" + Mendeley_key
     biblio_url_template = everything_url_template
@@ -47,7 +44,7 @@ class Mendeley(Provider):
             'journal' : ['publication_outlet'],
             'authors' : ["authors"]
         }
-        biblio_dict = self._extract_from_json(page, dict_of_keylists)
+        biblio_dict = provider._extract_from_json(page, dict_of_keylists)
 
         # return authors as a string of last names
         try:
@@ -63,7 +60,7 @@ class Mendeley(Provider):
         dict_of_keylists = {"url": ["website"], 
                             "title" : ["title"]}
 
-        aliases_dict = self._extract_from_json(page, dict_of_keylists)
+        aliases_dict = provider._extract_from_json(page, dict_of_keylists)
         if aliases_dict:
             aliases_list = [(namespace, nid) for (namespace, nid) in aliases_dict.iteritems()]
         else:
@@ -81,7 +78,7 @@ class Mendeley(Provider):
         dict_of_keylists = {"mendeley:readers": ["stats", "readers"], 
                             "mendeley:groups" : ["groups"]}
 
-        metrics_dict = self._extract_from_json(page, dict_of_keylists)
+        metrics_dict = provider._extract_from_json(page, dict_of_keylists)
 
         # get count of groups
         try:

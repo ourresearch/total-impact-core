@@ -1,100 +1,58 @@
-import requests, os, unittest, time, threading, json, memcache, sys, traceback
-from test.utils import slow
-
+from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderFactory
-from totalimpact.providers.provider import ProviderError, ProviderTimeout, ProviderServerError
-from totalimpact.providers.provider import ProviderClientError, ProviderHttpError, ProviderContentMalformedError
-from totalimpact.providers.provider import ProviderConfigurationError, ProviderValidationFailedError
-from totalimpact.cache import Cache
-from totalimpact import api
-from nose.tools import assert_equals
+from nose.tools import assert_equals, nottest
 
-CWD, _ = os.path.split(__file__)
+import simplejson, BeautifulSoup
+import os
 
-def successful_get(url, headers=None, timeout=None):
-    return url
-def timeout_get(url, headers=None, timeout=None):
-    raise requests.exceptions.Timeout()
-def error_get(url, headers=None, timeout=None):
-    raise requests.exceptions.RequestException()
+sampledir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/")
 
-def mock_get_cache_entry(self, url):
-    return None
-def mock_set_cache_entry_null(self, url, data):
-    pass
+class Test_Provider():
 
-class InterruptableSleepThread(threading.Thread):
-    def run(self):
-        provider = Provider(None)
-        provider._interruptable_sleep(0.5)
+    TEST_PROVIDER_CONFIG = {
+        "wikipedia": {},
+        "mendeley": {}
+    }
     
-    def _interruptable_sleep(self, snooze, duration):
-        time.sleep(0.5)
+    TEST_JSON = """{"repository":{"homepage":"","watchers":7,"has_downloads":true,"fork":false,"language":"Java","has_issues":true,"has_wiki":true,"forks":0,"size":4480,"private":false,"created_at":"2008/09/29 04:26:42 -0700","name":"gtd","owner":"egonw","description":"Git-based ToDo tool.","open_issues":2,"url":"https://github.com/egonw/gtd","pushed_at":"2012/02/28 10:21:26 -0800"}}"""
 
-class InterruptableSleepThread2(threading.Thread):
-    def __init__(self, method, *args):
-        super(InterruptableSleepThread2, self).__init__()
-        self.method = method
-        self.args = args
-        self.failed = False
-        self.exception = None
-        
-    def run(self):
-        try:
-            self.method(*self.args)
-        except Exception as e:
-            self.failed = True
-            self.exception = e
-    
-    def _interruptable_sleep(self, snooze, duration):
-        time.sleep(snooze)
+    TEST_XML = open(os.path.join(sampledir, "crossref", "aliases")).read()
 
-
-class Test_Provider(unittest.TestCase):
-
-    def setUp(self):
-        self.old_http_get = requests.get
-        self.old_get_cache_entry = Cache.get_cache_entry
-        self.old_set_cache_entry = Cache.set_cache_entry
-        
-        Cache.get_cache_entry = mock_get_cache_entry
-        Cache.set_cache_entry = mock_set_cache_entry_null
-        
-        # FIXME: this belongs in a cache testing class, rather than here
-        # in this unit we'll just mock out the cache
-        #
-        # Clear memcache so we have an empty cache for testing
-        #mc = memcache.Client(['127.0.0.1:11211'])
-        #mc.flush_all()
-        
-        # Create a base config which provides necessary settings
-        # which all providers should at least implement
-        self.provider_configs = api.app.config["PROVIDERS"]
-    
-    def tearDown(self):
-        requests.get = self.old_http_get
-        Cache.get_cache_entry = self.old_get_cache_entry
-        Cache.set_cache_entry = self.old_set_cache_entry
-        
-        # FIXME: this belongs in a cache testing class, rather than here
-        # in this unit we'll just mock out the cache
-        #
-        # Clear memcache in case we have stored anything
-        #mc = memcache.Client(['127.0.0.1:11211'])
-        #mc.flush_all()
-        
-    # FIXME: we will also need tests to cover the cacheing when that
-    # has been implemented
-    
-    def test_08_get_provider(self):
+    def test_get_provider(self):
         provider = ProviderFactory.get_provider("wikipedia")
         assert_equals(provider.__class__.__name__, "Wikipedia")
         
-    def test_09_get_providers(self):
-        providers = ProviderFactory.get_providers(self.provider_configs)
-        assert len(providers) == len(self.provider_configs)
-        pass
+    def test_get_providers(self):
+        providers = ProviderFactory.get_providers(self.TEST_PROVIDER_CONFIG)
+        provider_names = [provider.__class__.__name__ for provider in providers]
+        assert_equals(set(provider_names), set(['Mendeley', 'Wikipedia']))
 
+    def test_lookup_json(self):
+        page = self.TEST_JSON
+        data = simplejson.loads(page)
+        response = provider._lookup_json(data, ['repository', 'name'])
+        assert_equals(response, u'gtd')
 
+    def test_extract_json(self):
+        page = self.TEST_JSON
+        dict_of_keylists = {
+            'title' : ['repository', 'name'],
+            'description' : ['repository', 'description']}
+
+        response = provider._extract_from_json(page, dict_of_keylists)
+        assert_equals(response, {'description': u'Git-based ToDo tool.', 'title': u'gtd'})
     
-        
+    def test_lookup_xml(self):
+        page = self.TEST_XML
+        soup = BeautifulSoup.BeautifulStoneSoup(page)
+        response = provider._lookup_xml(soup, ['title'])
+        assert_equals(response, u'Sharing Detailed Research Data Is Associated with Increased Citation Rate')
+
+    def test_extract_xml(self):
+        page = self.TEST_XML
+        dict_of_keylists = {
+            'title' : ['doi_record', 'title'],
+            'year' : ['doi_record', 'year']}
+
+        response = provider._extract_from_xml(page, dict_of_keylists)
+        assert_equals(response, {'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'year': u'2007'})        

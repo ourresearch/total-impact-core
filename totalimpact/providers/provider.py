@@ -4,9 +4,11 @@ from totalimpact import providers
 
 import requests, os, time, threading, sys, traceback, importlib, urllib
 import simplejson
+import BeautifulSoup
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
+
 
 class ProviderFactory(object):
 
@@ -32,9 +34,13 @@ class ProviderFactory(object):
         
 class Provider(object):
 
-    def __init__(self, max_cache_duration=86400, max_retries=3):
+    def __init__(self, 
+            max_cache_duration=86400, 
+            max_retries=3, 
+            tool_email="totalimpactdev@gmail.com"):
         self.max_cache_duration = max_cache_duration
         self.max_retries = max_retries
+        self.tool_email = tool_email
         self.provider_name = self.__class__.__name__.lower()
 
     def __repr__(self):
@@ -292,28 +298,6 @@ class Provider(object):
     # Core methods
     # These should be consistent for all providers
 
-    def _lookup_json(self, data, keylist):
-        for mykey in keylist:
-            try:
-                data = data[mykey]
-            except KeyError:
-                data = None
-                continue
-        return(data)
-
-    def _extract_from_json(self, page, dict_of_keylists):
-        try:
-            data = simplejson.loads(page) 
-        except simplejson.JSONDecodeError, e:
-            raise ProviderContentMalformedError
-
-        response = {}
-        if dict_of_keylists:
-            for (metric, keylist) in dict_of_keylists.iteritems():
-                response[metric] = self._lookup_json(data, keylist)
-        return response
-
-
     def get_sleep_time(self, retry_count):
         max_retries = self.get_max_retries()
 
@@ -435,3 +419,50 @@ class ProviderValidationFailedError(ProviderError):
 class ProviderRateLimitError(ProviderError):
     pass
 
+def _lookup_json(data, keylist):
+    for mykey in keylist:
+        try:
+            data = data[mykey]
+        except KeyError:
+            return None
+    return(data)
+
+def _extract_from_json(page, dict_of_keylists):
+    try:
+        data = simplejson.loads(page) 
+    except simplejson.JSONDecodeError, e:
+        raise ProviderContentMalformedError
+
+    response = {}
+    if dict_of_keylists:
+        for (metric, keylist) in dict_of_keylists.iteritems():
+            response[metric] = _lookup_json(data, keylist)
+    return response
+
+
+def _lookup_xml(soup, keylist):
+    smaller_bowl_of_soup = soup
+    for mykey in keylist:
+        if not smaller_bowl_of_soup:
+            return None
+
+        try:
+            smaller_bowl_of_soup = smaller_bowl_of_soup.find(mykey)
+        except KeyError:
+            return None
+            
+    response = smaller_bowl_of_soup.text
+    return(response)
+
+
+def _extract_from_xml(page, dict_of_keylists):
+    # FIXME needs to be in a try block.  What kind of error?
+    soup = BeautifulSoup.BeautifulStoneSoup(page) 
+    if not soup:
+        raise ProviderContentMalformedError
+
+    response = {}
+    if dict_of_keylists:
+        for (metric, keylist) in dict_of_keylists.iteritems():
+            response[metric] = _lookup_xml(soup, keylist)
+    return response
