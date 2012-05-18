@@ -1,9 +1,90 @@
+# totalimpact.common
+# A collection of independent classes and routines which will be useful 
+# throughout the codebase. 
+
+import fcntl
+import threading
+import time
+import os
+import logging
+
+class ContextFilter(logging.Filter):
+    """ Filter to add contextual information regarding items to logs
+
+        This filter will check the thread local storage to see if we have
+        recorded that we are processing an item. If so, we will add this 
+        into the formatter so that the logs print it.
+    """
+    def __init__(self):
+        # Check thread local storage
+        self.local = threading.local()
+
+    def threadInit(self):
+        """ All threads should call this to set up the context object """
+        self.local.backend = {
+            'item': '',
+            'method': '',
+            'provider': '',
+            'thread': ''
+        }
+
+    def filter(self, record):
+    
+        # Attempt to get values. Any problems, just assume empty
+        item = method = provider = thread = ""
+        try:
+            # Only get the first 8 chars of item, to keep logs brief
+            item = self.local.backend['item'][:8]
+            method = self.local.backend['method']
+            provider = self.local.backend['provider']
+            thread = self.local.backend['thread']
+        except (AttributeError, KeyError), e:
+            pass
+
+        # Store context information for logger to print
+        record.item = item
+        record.method = method
+        record.provider = provider
+        record.thread = thread
+        return True
+
+ctxfilter = ContextFilter()
+
+
+class StoppableThread(threading.Thread):
+    def __init__(self):
+        super(StoppableThread, self).__init__()
+        self._stop = threading.Event()
+        self.sleeping = False
+
+    def run(self):
+        # NOTE: subclasses MUST override this - this behaviour is
+        # only for testing purposes
+
+        # go into a restless but persistent sleep (in 60 second
+        # batches)
+        while not self.stopped():
+            self._interruptable_sleep(60)
+
+    def stop(self):
+        self._stop.set()
+
+    def stopped(self):
+        return self._stop.isSet()
+
+    def _interruptable_sleep(self, duration, increment=0.5):
+        self.sleeping = True
+        if duration <= 0:
+            return
+        slept = 0
+        while not self.stopped() and slept < duration:
+            snooze = increment if duration - slept > increment else duration - slept
+            time.sleep(snooze)
+            slept += snooze
+        self.sleeping = False
 
 # PidFile recipe for python-daemon
 # Courtesy of http://code.activestate.com/recipes/577911-context-manager-for-a-daemon-pid-file/
-
-import fcntl
-import os
 
 class PidFile(object):
     """Context manager that locks a pid file.  Implemented as class
