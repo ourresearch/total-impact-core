@@ -1,3 +1,4 @@
+from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from totalimpact.providers.secrets import Mendeley_key
 
@@ -12,15 +13,6 @@ class Mendeley(Provider):
         'mendeley:readers', 
         'mendeley:groups'
         ]
-
-    metric_namespaces = ["doi"]
-    alias_namespaces = ["doi"]
-    biblio_namespaces = ["doi"]
-
-    provides_members = False
-    provides_aliases = True
-    provides_metrics = True
-    provides_biblio = True
 
     everything_url_template = "http://api.mendeley.com/oapi/documents/details/%s?type=doi&consumer_key=" + Mendeley_key
     biblio_url_template = everything_url_template
@@ -44,62 +36,65 @@ class Mendeley(Provider):
         query_url = template % double_encoded_id    
         return(query_url)
 
+
     def _extract_biblio(self, page, id=None):
-        try:
-            data = simplejson.loads(page) 
-        except simplejson.JSONDecodeError, e:
-            raise ProviderContentMalformedError
-
-        author_list = data["authors"]
-        authors = ", ".join([author["surname"] for author in author_list])
-
-        # extract the biblio
-        biblio_dict = {
-            'title' : data['title'],
-            'year' : data['year'],
-            'journal' : data['publication_outlet'],
-            'authors' : authors
+        dict_of_keylists = {
+            'title' : ['title'],
+            'year' : ['year'],
+            'journal' : ['publication_outlet'],
+            'authors' : ["authors"]
         }
+        biblio_dict = provider._extract_from_json(page, dict_of_keylists)
+
+        # return authors as a string of last names
+        try:
+            author_list = biblio_dict["authors"]
+            author_string = ", ".join([author["surname"] for author in author_list])
+            biblio_dict["authors"] = author_string
+        except TypeError:
+            biblio_dict["authors"] = None
+
         return biblio_dict    
        
     def _extract_aliases(self, page, id=None):
-        try:
-            data = simplejson.loads(page) 
-        except simplejson.JSONDecodeError, e:
-            raise ProviderContentMalformedError
+        dict_of_keylists = {"url": ["website"], 
+                            "title" : ["title"]}
 
-        # extract the aliases
-        aliases_list = [
-                    ("url", data['website']), 
-                    ('title', data['title'])]
-
+        aliases_dict = provider._extract_from_json(page, dict_of_keylists)
+        if aliases_dict:
+            aliases_list = [(namespace, nid) for (namespace, nid) in aliases_dict.iteritems()]
+        else:
+            aliases_list = []
         return aliases_list
 
 
-    def _extract_metrics(self, page, id=None):
-        try:
-            data = simplejson.loads(page) 
-        except simplejson.JSONDecodeError, e:
-            raise ProviderContentMalformedError
+    def _extract_metrics(self, page, status_code=200, id=None):
+        if status_code != 200:
+            if status_code == 404:
+                return {}
+            else:
+                raise(self._get_error(status_code))
 
-        try:
-            readers = data['stats']['readers']
-        except KeyError:
-            readers = None
+        dict_of_keylists = {"mendeley:readers": ["stats", "readers"], 
+                            "mendeley:groups" : ["groups"]}
 
-        try:
-            groups = len(data['groups'])
-        except KeyError:
-            groups = None
+        metrics_dict = provider._extract_from_json(page, dict_of_keylists)
 
-        metrics_dict = {
-            'mendeley:readers' : readers,
-            'mendeley:groups' : groups
-        }
+        # get count of groups
+        try:
+            metrics_dict["mendeley:groups"] = len(metrics_dict["mendeley:groups"])
+        except TypeError:
+            metrics_dict["mendeley:groups"] = 0
+
         return metrics_dict
+
 
     # default method; providers can override    
     def provenance_url(self, metric_name, aliases):
+
+        # temp fix because this is getting called in all the wrong places.
+        return "http://www.google.com"
+
         id = self.get_best_id(aliases)     
         if not id:
             # not relevant to Mendeley

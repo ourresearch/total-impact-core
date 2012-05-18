@@ -14,12 +14,19 @@ from pprint import pprint
 from optparse import OptionParser
 
 REQUEST_IDS = [("dryad", ('doi','10.5061/dryad.18')), 
+                ("crossref", ('doi', '10.1371/journal.pcbi.1000361')), 
                 ("wikipedia", ('doi', '10.1371/journal.pcbi.1000361')), 
                 ("mendeley", ('doi', '10.1371/journal.pcbi.1000361')), 
-                ("github", ('github', 'egonw,cdk'))
+                ("github", ('github', 'egonw,cdk')),
+                ("topsy", ('url', 'http://total-impact.org'))
 ]
 
 GOLD_RESPONSES = {
+    'crossref' : { 
+        'aliases': ['doi', "title", "url"],
+        'biblio': [u'authors', u'journal', u'year', u'title'],
+        'metrics' : {}
+    },
     'wikipedia' : { 
         'aliases': ['doi'],
         'biblio': [],
@@ -50,6 +57,14 @@ GOLD_RESPONSES = {
             'dryad:most_downloaded_file' : 63,
             'dryad:package_views' : 149,
             'dryad:total_downloads' : 169
+        }
+    },
+    'topsy' : { 
+        'aliases': ["url"],
+        'biblio': [],
+        'metrics' : {
+            'topsy:tweets' : 282,
+            'topsy:influential_tweets' : 26
         }
     }
 }

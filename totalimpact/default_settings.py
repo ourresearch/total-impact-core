@@ -60,7 +60,6 @@ PROVIDERS = {
     },
     "dryad": {
         "class" : "totalimpact.providers.dryad.Dryad",
-        "supported_namespaces" : ["doi"],
 	    "workers":10,
         "metrics": {
             "package_views": {
@@ -109,7 +108,6 @@ PROVIDERS = {
     },
     "mendeley":{
         "class" : "totalimpact.providers.mendeley.Mendeley",
-        "supported_namespaces" : ["doi"],
         "workers":10,
         "metrics": {
             "readers": {
@@ -142,9 +140,47 @@ PROVIDERS = {
             },  
         }
     },  
+    "crossref":{
+        "class" : "totalimpact.providers.crossref.Crossref",
+        "workers":10,
+        "metrics": {}
+    },
+    "topsy":{
+        "class" : "totalimpact.providers.topsy.Topsy",
+        "workers":10,
+        "metrics": {
+            "tweets": {
+                "static_meta" : {
+                    "display_name": "tweets",
+                    "provider": "Topsy",
+                    "provider_url": "http://www.topsy.com/",
+                    "description": "Tweets via Topsy, real-time search for the social web" + ", <a href='http://topsy.com'><img src='http://cdn.topsy.com/img/powered.png'/></a>", #part of otter terms of use to include this http://modules.topsy.com/app-terms/
+                    "icon": "http://twitter.com/phoenix/favicon.ico" ,
+                    "category": "",
+                    "can_use_commercially": "",
+                    "can_embed": "",
+                    "can_aggregate": "",
+                    "other_terms_of_use": ""
+                }
+            },    
+            "influential_tweets": {
+                "static_meta" : {
+                    "display_name": "influencial tweets",
+                    "provider": "Topsy",
+                    "provider_url": "http://www.topsy.com/",
+                    "description": "Influential tweets via Topsy,Real-time search for the social web" + ", <a href='http://topsy.com'><img src='http://cdn.topsy.com/img/powered.png'/></a>", #part of otter terms of use to include this http://modules.topsy.com/app-terms/
+                    "icon": "http://twitter.com/phoenix/favicon.ico" ,
+                    "category": "",
+                    "can_use_commercially": "",
+                    "can_embed": "",
+                    "can_aggregate": "",
+                    "other_terms_of_use": ""
+                }
+            }
+        }
+    },            
     "github":{
         "class" : "totalimpact.providers.github.Github",
-        "supported_namespaces" : ["github"],
 	    "workers":10,
         "metrics": {
             "watchers": {
