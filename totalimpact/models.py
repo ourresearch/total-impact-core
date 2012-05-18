@@ -229,16 +229,6 @@ class ItemFactory():
 
 
 
-class Error(Saveable):
-    """{
-        "error_type": "http_timeout",
-        "message": "Error opening file",
-        "provider": "github_provider",
-        "id": "uuid4-goes-here",
-        "stack_trace": "Python Stacktrace"
-    }"""
-    pass
-
 class CollectionFactory():
 
     @classmethod
@@ -433,4 +423,7 @@ class Aliases(object):
     def as_dict(self):
         return self.__dict__
 
+# could make these saveable into the DB if we wanted, in the future
+class Error():
+    pass
 

@@ -3,9 +3,12 @@ from totalimpact.dao import Dao
 from totalimpact import providers
 
 import requests, os, time, threading, sys, traceback, importlib, urllib
+import simplejson
+import BeautifulSoup
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger(__name__)
+
 
 class ProviderFactory(object):
 
@@ -31,9 +34,15 @@ class ProviderFactory(object):
         
 class Provider(object):
 
-    def __init__(self, max_cache_duration=86400, max_retries=3):
+    def __init__(self, 
+            max_cache_duration=86400, 
+            max_retries=3, 
+            tool_email="mytotalimpact@gmail.com"): 
+        # FIXME change email to totalimpactdev@gmail.com after registering it with crossref
+    
         self.max_cache_duration = max_cache_duration
         self.max_retries = max_retries
+        self.tool_email = tool_email
         self.provider_name = self.__class__.__name__.lower()
 
     def __repr__(self):
@@ -43,8 +52,8 @@ class Provider(object):
     # These should be filled in by each Provider implementing this signature
 
     # default method; providers can override
-    def _get_error(self, response):
-        if response.status_code >= 500:
+    def _get_error(self, status_code, response=None):
+        if status_code >= 500:
             error = ProviderServerError(response)
         else:
             error = ProviderClientError(response)
@@ -57,6 +66,8 @@ class Provider(object):
     def relevant_aliases(self, aliases):
         filtered = [alias for alias in aliases 
                         if self.is_relevant_alias(alias)]
+        #logger.info("relevant_aliases for %s are %s given %s" % (self.provider_name, str(filtered), str(aliases)))
+
         return filtered
 
     def get_best_id(self, aliases):
@@ -67,6 +78,22 @@ class Provider(object):
         else:
             nid = None
         return(nid)
+
+    @property
+    def provides_members(self):
+         return ("_extract_members" in dir(self))
+
+    @property
+    def provides_aliases(self):
+         return ("_extract_aliases" in dir(self))
+
+    @property
+    def provides_biblio(self):
+         return ("_extract_biblio" in dir(self))
+
+    @property
+    def provides_metrics(self):
+         return ("_extract_metrics" in dir(self))
 
     # default method; providers can override    
     def provenance_url(self, metric_name, aliases):
@@ -89,7 +116,7 @@ class Provider(object):
         if not self.provides_members:
             raise NotImplementedError()
 
-        logger.debug("Getting members for %s, %s" % (self.provider_name, query_string))
+        logger.info("member_items with %s, %s" % (self.provider_name, query_string))
 
         if not provider_url_template:
             provider_url_template = self.member_items_url_template
@@ -105,7 +132,7 @@ class Provider(object):
             if response.status_code == 404:
                 return {}
             else:
-                raise(self._get_error(response))
+                raise(self._get_error(response.status_code, response))
 
         # extract the member ids
         members = self._extract_members(response.text, query_string)
@@ -115,7 +142,8 @@ class Provider(object):
     # default method; providers can override
     def biblio(self, 
             aliases,
-            provider_url_template=None):
+            provider_url_template=None,
+            cache_enabled=True):
 
         if not self.provides_biblio:
             raise NotImplementedError()
@@ -130,7 +158,7 @@ class Provider(object):
         if not provider_url_template:
             provider_url_template = self.biblio_url_template
 
-        return self.get_biblio_for_id(id, provider_url_template)
+        return self.get_biblio_for_id(id, provider_url_template, cache_enabled)
 
     # default method; providers can override
     def get_biblio_for_id(self, 
@@ -139,14 +167,13 @@ class Provider(object):
             cache_enabled=True):
 
         if not self.provides_biblio:
-            raise NotImplementedError()
+            return {}
 
-        logger.debug("Getting biblio for %s, %s" % (self.provider_name, id))
+        logger.info("get_biblio_for_id for %s, %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.biblio_url_template
         url = self._get_templated_url(provider_url_template, id, "biblio")
-        logger.debug("attempting to retrieve biblio from " + url)
 
         # try to get a response from the data provider        
         response = self.http_get(url, cache_enabled=cache_enabled)
@@ -155,7 +182,7 @@ class Provider(object):
             if response.status_code == 404:
                 return {}
             else:
-                raise(self._get_error(response))
+                raise(self._get_error(response.status_code, response))
         
         # extract the aliases
         biblio_dict = self._extract_biblio(response.text, id)
@@ -165,7 +192,8 @@ class Provider(object):
     # default method; providers can override
     def aliases(self, 
             aliases, 
-            provider_url_template=None):
+            provider_url_template=None,
+            cache_enabled=True):            
 
         if not self.provides_aliases:
             raise NotImplementedError()
@@ -175,15 +203,16 @@ class Provider(object):
 
         if not relevant_aliases:
             logger.info("Not checking aliases because no relevant id for %s", self.provider_name)
-            return None
+            return []
 
         new_aliases = aliases
         for alias in relevant_aliases:
             (namespace, nid) = alias
-            logger.debug("processing alias %s" % str(alias))
-            new_aliases += self._get_aliases_for_id(nid, provider_url_template)
+            logger.info("processing alias %s" % str(alias))
+            new_aliases += self._get_aliases_for_id(nid, provider_url_template, cache_enabled)
         
         new_aliases_unique = list(set(new_aliases))
+
         return new_aliases_unique
 
     # default method; providers can override
@@ -193,33 +222,37 @@ class Provider(object):
             cache_enabled=True):
 
         if not self.provides_aliases:
-            raise NotImplementedError()
+            return []
 
-        logger.debug("Getting aliases for %s, %s" % (self.provider_name, id))
+        logger.info("_get_aliases_for_id for %s, %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.aliases_url_template
         url = self._get_templated_url(provider_url_template, id, "aliases")
-        logger.debug("attempting to retrieve aliases from " + url)
 
-        # try to get a response from the data provider        
+        logger.info("_get_aliases_for_id getting %s" % url)
+
+        # try to get a response from the data provider                
         response = self.http_get(url, cache_enabled=cache_enabled)
-
+        
         if response.status_code != 200:
             if response.status_code == 404:
                 return []
             else:
-                raise(self._get_error(response))
+                raise(self._get_error(response.status_code, response))
         
-        new_aliases = self._extract_aliases(response.text, id)
+        if not response.text:
+            return []
 
+        new_aliases = self._extract_aliases(response.text, id)
         return new_aliases
 
 
     # default method; providers can override
     def metrics(self, 
             aliases,
-            provider_url_template=None):
+            provider_url_template=None, 
+            cache_enabled=True):
 
         if not self.provides_metrics:
             raise NotImplementedError()
@@ -229,12 +262,12 @@ class Provider(object):
         # Only lookup metrics for items with appropriate ids
         if not id:
             logger.info("Not checking metrics because no relevant id for %s", self.provider_name)
-            return None
+            return {}
 
         if not provider_url_template:
             provider_url_template = self.metrics_url_template
 
-        return self.get_metrics_for_id(id, provider_url_template)
+        return self.get_metrics_for_id(id, provider_url_template, cache_enabled)
 
 
     # default method; providers can override
@@ -244,44 +277,35 @@ class Provider(object):
             cache_enabled=True):
 
         if not self.provides_metrics:
-            raise NotImplementedError()
+            return {}
 
-        logger.debug("Getting metrics for %s, %s" % (self.provider_name, id))
+        logger.info("get_metrics_for_id with %s, %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.metrics_url_template
         url = self._get_templated_url(provider_url_template, id, "metrics")
-        logger.debug("attempting to retrieve metrics from " + url)
+        logger.debug("get_metrics_for_id getting %s" % url)
 
         # try to get a response from the data provider                
         response = self.http_get(url, cache_enabled=cache_enabled)
 
-        if response.status_code != 200:
-            if response.status_code == 404:
-                return {}
-            else:
-                raise(self._get_error(response))
+        logger.debug("get_metrics_for_id response.status_code %i" % response.status_code)
         
         # extract the metrics
-        metrics_dict = self._extract_metrics(response.text, id)
+        metrics_dict = self._extract_metrics(response.text, response.status_code, id=id)
+        logger.info("get_metrics_for_id with %s, %s got metrics_dict %s" % (self.provider_name, id, str(metrics_dict)))
         return metrics_dict
 
 
     # Core methods
     # These should be consistent for all providers
 
-    def get_sleep_time(self, error_type, retry_count):
-        """ How long we should sleep for the given error type and count
- 
-            error_type - timeout, http_error, ... should match config
-            retry_count - this will be our n-th retry (first retry is 1)
-        """
-
-        max_retries = self.get_max_retries(error_type)
+    def get_sleep_time(self, retry_count):
+        max_retries = self.get_max_retries()
 
         # Check we haven't reached max retries
         if retry_count > max_retries:
-            raise ValueError("Exceeded max retries for %s" % error_type)
+            raise ValueError("Exceeded max retries %i" %max_retries)
 
         # exponential delay
         initial_delay = 1  # number of seconds for initial delay
@@ -289,23 +313,9 @@ class Provider(object):
 
         return delay_time
     
-    def get_max_retries(self, error_type):
-        # give up right away if a content_malformed error
-        if error_type in ["content_malformed"]:
-            max_retries = 0
-        else:  
-            # For other error types, try as up to max_retries times.
-            # Other errors include timeout, http_error, client_server_error, 
-            #    rate_limit_reached, validation_failed
-            max_retries = self.max_retries
-        return max_retries
+    def get_max_retries(self):
+        return self.max_retries
 
-    def sleep_time(self, dead_time=0):
-        return 0
-
-    @staticmethod
-    def filter_aliases(aliases, supported_namespaces):
-        aliases = ((ns,v) for (ns,v) in aliases if k == 'github')
     
     def http_get(self, url, headers=None, timeout=None, cache_enabled=True):
         """ Returns a requests.models.Response object or raises exception
@@ -316,6 +326,8 @@ class Provider(object):
         # first thing is to try to retrieve from cache
         # use the cache if the config parameter is set and the arg allows it
         use_cache = app.config["CACHE_ENABLED"] and cache_enabled
+        logger.info("http_get on %s with use_cache %i" %(url, use_cache))
+
         cache_data = None
         if use_cache:
             c = Cache(self.max_cache_duration)
@@ -405,3 +417,53 @@ class ProviderValidationFailedError(ProviderError):
 class ProviderRateLimitError(ProviderError):
     pass
 
+def _lookup_json(data, keylist):
+    for mykey in keylist:
+        try:
+            data = data[mykey]
+        except KeyError:
+            return None
+    return(data)
+
+def _extract_from_json(page, dict_of_keylists):
+    try:
+        data = simplejson.loads(page) 
+    except simplejson.JSONDecodeError, e:
+        raise ProviderContentMalformedError
+
+    response = {}
+    if dict_of_keylists:
+        for (metric, keylist) in dict_of_keylists.iteritems():
+            response[metric] = _lookup_json(data, keylist)
+    return response
+
+
+def _lookup_xml(soup, keylist):    
+    smaller_bowl_of_soup = soup
+    for mykey in keylist:
+        if not smaller_bowl_of_soup:
+            return None
+
+        try:
+            smaller_bowl_of_soup = smaller_bowl_of_soup.find(mykey)
+        except KeyError:
+            return None
+            
+    if smaller_bowl_of_soup:      
+        response = smaller_bowl_of_soup.text
+    else:
+        response = None
+    return(response)
+
+
+def _extract_from_xml(page, dict_of_keylists):
+    # FIXME needs to be in a try block.  What kind of error?
+    soup = BeautifulSoup.BeautifulStoneSoup(page) 
+    if not soup:
+        raise ProviderContentMalformedError
+
+    response = {}
+    if dict_of_keylists:
+        for (metric, keylist) in dict_of_keylists.iteritems():
+            response[metric] = _lookup_xml(soup, keylist)
+    return response
