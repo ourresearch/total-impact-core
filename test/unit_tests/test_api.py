@@ -224,6 +224,25 @@ class TestItems(ApiTester):
         expected_dois = [i[1] for i in items]
         assert_equals(set(expected_dois), set(dois))
 
+    def test_get_csv(self):
+
+        # put some items in the db
+        items = [
+            ["doi", "10.123"],
+            ["doi", "10.124"],
+            ["doi", "10.125"]
+        ]
+        resp = self.client.post(
+            '/items',
+            data=json.dumps(items),
+            content_type="application/json"
+        )
+        tiids = json.loads(resp.data)
+        tiids_str = ','.join(tiids)
+        resp = self.client.get('/items/'+tiids_str+'.csv')
+        rows = resp.data.split("\n")
+        print rows
+        assert_equals(len(rows), 4) # header plus 3 items
 
 
 
