@@ -417,6 +417,13 @@ class ProviderValidationFailedError(ProviderError):
 class ProviderRateLimitError(ProviderError):
     pass
 
+def _load_json(page):
+    try:
+        data = simplejson.loads(page) 
+    except simplejson.JSONDecodeError, e:
+        raise ProviderContentMalformedError
+    return(data)
+
 def _lookup_json(data, keylist):
     for mykey in keylist:
         try:
@@ -426,11 +433,8 @@ def _lookup_json(data, keylist):
     return(data)
 
 def _extract_from_json(page, dict_of_keylists):
-    try:
-        data = simplejson.loads(page) 
-    except simplejson.JSONDecodeError, e:
-        raise ProviderContentMalformedError
-
+    data = _load_json(page)
+    
     response = {}
     if dict_of_keylists:
         for (metric, keylist) in dict_of_keylists.iteritems():
