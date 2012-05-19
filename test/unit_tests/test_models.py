@@ -262,7 +262,7 @@ class TestItemFactory():
             provider.ProviderFactory.get_provider,
             default_settings.PROVIDERS)
 
-        expected = {'category': 'NA', 'provider_url': 'http://www.wikipedia.org/', 'display_name': 'mentions', 'description': 'Wikipedia is the free encyclopedia that anyone can edit.', 'provider': 'Wikipedia', 'other_terms_of_use': 'NA', 'can_embed': 'NA', 'can_use_commercially': 'NA', 'can_aggregate': 'NA', 'icon': 'http://wikipedia.org/favicon.ico'}
+        expected = {'provider_url': 'http://www.wikipedia.org/', 'icon': 'http://wikipedia.org/favicon.ico', 'display_name': 'mentions', 'description': 'Wikipedia is the free encyclopedia that anyone can edit.', 'provider': 'Wikipedia'}
         assert_equals(item.metrics["wikipedia:mentions"]["static_meta"], expected)
 
     def test_adds_provenance_url(self):
