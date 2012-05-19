@@ -10,6 +10,7 @@ from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
+import csv, StringIO
 
 
 # set up logging
@@ -188,6 +189,7 @@ returns a json list of item objects (100 max)
 404 unless all tiids return items from db
 '''
 @app.route('/items/<tiids>', methods=['GET'])
+@app.route('/items/<tiids>.<format>', methods=['GET'])
 def items(tiids, format=None):
     items = []
 
@@ -195,8 +197,31 @@ def items(tiids, format=None):
         if index > 99: break    # weak, change
         items.append(make_item_dict(tiid))
 
-    resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4))
-    resp.mimetype = "application/json"
+    if format == "csv":
+        # make the header
+        csv = "tiid," + ','.join(sorted(items[0]['metrics'])) + "\n"
+        for item in items:
+            row = ''
+            row = row + item["id"]
+            for metric_name in sorted(item["metrics"]):
+                row = row + ","
+                try:
+                    latest_key = sorted(
+                        item['metrics'][metric_name]['values'],
+                        reverse=True)[0]
+                    val_to_add = item['metrics'][metric_name]['values'][latest_key]
+                except IndexError:
+                    val_to_add = "NA"
+
+                row = row + val_to_add
+
+            csv =  csv + row + "\n"
+        resp = make_response(csv[0:-2]) # remove trailing "\n"
+        resp.mimetype = "text/csv"
+    else:
+        resp = make_response(json.dumps(items, sort_keys=True, indent=4))
+        resp.mimetype = "application/json"
+
     return resp
         
 
