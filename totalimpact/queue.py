@@ -1,6 +1,7 @@
 import time
 from totalimpact import default_settings
 from totalimpact.models import Item, ItemFactory
+from totalimpact.pidsupport import StoppableThread, ctxfilter
 from totalimpact.providers.provider import ProviderFactory
 
 from totalimpact.tilogging import logging
@@ -33,89 +34,127 @@ class Queue():
         item.save()
         
 
-######################################################
-#
-# In-memory queue datastructures
-#
-# These are used to track the which items in the couchdb views which we have
-# already seen, and avoid repeat processing of them. The aliases queue purely
-# stores itemid, whereas the metrics queue needs to store (itemid, provider)
-# as we do this on a per provider basis
-# 
+class QueueMonitor(StoppableThread):
+    """ Worker to watch couch for newly requested items, and place them
+        onto the aliases queue. 
+    """
 
-alias_queue_seen = {}
-alias_queue_lock = threading.Lock()
+    def __init__(self, dao):
+        self.dao = dao
+        StoppableThread.__init__(self)
 
-metric_queue_seen = {}
-metric_queue_lock = threading.Lock()
+    def run(self, runonce=False):
+        """ runonce is for the test suite """
+        ctxfilter.threadInit()
+        ctxfilter.local.backend['thread'] = 'QueueMonitor'
 
-#######################################################
-        
+        while not self.stopped():
+            viewname = 'queues/requested'
+            res = self.dao.view(viewname)
+
+            for res in res["rows"]:
+                item_id = res["id"]
+                ctxfilter.local.backend['item'] = item_id
+                log.info("Item Requsted")
+                item = ItemFactory.get(self.dao, 
+                    item_id, 
+                    ProviderFactory.get_provider,
+                    default_settings.PROVIDERS)
+                # In case clocks are out between processes, use min to ensure queued >= requested
+                item.last_queued = max(item.last_requested, time.time()) 
+                item.save()
+                # Now add the item to the in-memory queue
+                AliasQueue.enqueue(item_id)
+
+            if runonce:
+                break
+            self._interruptable_sleep(0.5)
+    
+
 
 class AliasQueue(Queue):
+    # This is a FIFO queue, add new item ids to the end of this list
+    # to queue, remove from the head
+    queued_items = []
+    queue_lock = threading.Lock()
     
-    def __init__(self, dao, queueid=None):
+    def __init__(self, dao):
         self.dao = dao
-        self.queueid = queueid
 
-    @property
-    def queueids(self):
-        viewname = 'queues/aliases'
-        res = self.dao.view(viewname)
-        return [row["id"] for row in res["rows"]]
+    @classmethod
+    def enqueue(cls, item_id):
+        # Synchronised section
+        cls.queue_lock.acquire()
+        # Add to the end of the queue
+        cls.queued_items.append(item_id)
+        cls.queue_lock.release()
 
-    @property
-    def queue(self):
-        # due to error in couchdb this reads from json output - see dao view
-        res = self.queueids
-        items = []
-        for id in res:
-            my_item = ItemFactory.get(self.dao, 
-		                  id, 
-		                  ProviderFactory.get_provider, 
-		                  default_settings.PROVIDERS)
-            items.append(my_item)
+    def first(self):
+        """ Only used in the test suite now """
+        self.queue_lock.acquire()
+        item_id = None
+        if len(self.queued_items) > 0:
+            item_id = self.queued_items[0]
+        self.queue_lock.release()
 
-        return items
+        if item_id:
+            return ItemFactory.get(self.dao, 
+                    item_id, 
+			        ProviderFactory.get_provider,
+                    default_settings.PROVIDERS)
+        else:
+            return None
 
     def dequeue(self):
-        item_ids = self.queueids
-        found = None
-    
         # Synchronised section
-        # This will the the item out of the queue by recording that we
-        # have seen the item.
-        alias_queue_lock.acquire()
+        self.queue_lock.acquire()
+    
+        item_id = None
+        if len(self.queued_items) > 0:
+            # Take from the head of the queue
+            item_id = self.queued_items[0]
+            log.debug("found item %s" % item_id)
+            del self.queued_items[0]
 
-        for item_id in item_ids:
-            if not alias_queue_seen.has_key(item_id):
-                log.debug("found item %s" % item_id)
-                alias_queue_seen[item_id] = True
-                found = item_id
-                break
+        self.queue_lock.release()
 
-        alias_queue_lock.release()
-
-        if found:
-            my_item = ItemFactory.get(self.dao, 
-                          item_id, 
-                          ProviderFactory.get_provider, 
-                          default_settings.PROVIDERS)
-
-            return my_item
+        if item_id:
+            return ItemFactory.get(self.dao, 
+                item_id, 
+                ProviderFactory.get_provider,
+                default_settings.PROVIDERS)
         else:
             return None
 
     def save_and_unqueue(self, item):
-        item.aliases.last_completed = time.time()
+        # Add the item to the metrics queue
+        from totalimpact.api import app
+        providers = app.config["PROVIDERS"].keys()
+        for provider in providers:
+            MetricsQueue.enqueue(item.id, provider)
         item.save()
 
+
 class MetricsQueue(Queue):
+
+    # This is a FIFO queue, add new item ids to the end of this list
+    # to queue, remove from the head. For this queue, we have a
+    # dictionary as we have a queue per provider
+    queued_items = {}
+    queue_lock = threading.Lock()
     
     def __init__(self, dao, prov=None):
         self.dao = dao
         self._provider = prov
-    
+        if not prov:
+            raise ValueError("You must supply a provider name")
+        self.init_queue(prov)
+
+    @classmethod
+    def init_queue(cls, provider):
+        if not cls.queued_items.has_key(provider):
+            cls.queued_items[provider] = []
+        
     @property
     def provider(self):
         return self._provider
@@ -124,60 +163,52 @@ class MetricsQueue(Queue):
     def provider(self, _provider):
         self._provider = _provider
 
-    def dequeue(self):
-        item_ids = self.queueids
-        found = None
-
+    @classmethod
+    def enqueue(cls, item_id, provider):
         # Synchronised section
-        # This will the the item out of the queue by recording that we
-        # have seen the item.
-        metric_queue_lock.acquire()
+        cls.queue_lock.acquire()
+        # Add to the end of the queue
+        cls.queued_items[provider].append(item_id)
+        cls.queue_lock.release()
 
-        for item_id in item_ids:
-            if not metric_queue_seen.has_key((item_id, self.provider)):
-                log.debug("found item %s" % item_id)
-                metric_queue_seen[(item_id, self.provider)] = True
-                found = item_id
-                break;
+    def first(self):
+        """ Only used in the test suite now """
+        self.queue_lock.acquire()
+        item_id = None
+        if len(self.queued_items[self.provider]) > 0:
+            item_id = self.queued_items[self.provider][0]
+        self.queue_lock.release()
 
-        metric_queue_lock.release()
-
-        if found:
+        if item_id:
             return ItemFactory.get(self.dao, 
-                          item_id, 
-                          ProviderFactory.get_provider, 
-                          default_settings.PROVIDERS)
+                item_id, 
+                ProviderFactory.get_provider,
+                default_settings.PROVIDERS)
         else:
             return None
 
-    @property
-    def queueids(self):
-        # change this for live
-        viewname = 'queues/metrics'
-        if self._provider:
-            res = self.dao.view(
-                viewname,
-                startkey=[self.provider,None,None],
-                endkey=[self.provider,u'\ufff0',u'\ufff0']
-                )
-        else:
-            res = self.dao.view(viewname)
-        return [row["id"] for row in res["rows"]]
+    def dequeue(self):
+        # Synchronised section
+        self.queue_lock.acquire()
+    
+        item_id = None
+        if len(self.queued_items[self.provider]) > 0:
+            # Take from the head of the queue
+            item_id = self.queued_items[self.provider][0]
+            log.debug("found item %s" % item_id)
+            del self.queued_items[self.provider][0]
 
-    @property
-    def queue(self):
-        res = self.queueids
-        items = []
-        # using reversed() as a hack...we actually want to use the couchdb
-        # descending=true param to get the oldest stuff first, but
-        for id in res:
-            my_item = ItemFactory.get(self.dao, 
-                          item_id, 
-                          ProviderFactory.get_provider, 
-                          default_settings.PROVIDERS)
-            items.append(my_item)
-        return items
+        self.queue_lock.release()
+
+        if item_id:
+            return ItemFactory.get(self.dao, 
+                item_id, 
+                ProviderFactory.get_provider,
+                default_settings.PROVIDERS)
+        else:
+            return None
 
     def save_and_unqueue(self, item):
         item.save()
+    
 

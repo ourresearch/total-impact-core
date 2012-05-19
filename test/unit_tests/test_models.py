@@ -22,7 +22,6 @@ ALIAS_DATA = {
     "doi": ["10.1371/journal.pmed.0020124"],
     "created": 12345.111,
     "last_modified": 12346.222,
-    "last_completed": 12346.222
     }
 
 ALIAS_CANONICAL_DATA = {
@@ -421,7 +420,7 @@ class TestAliases(unittest.TestCase):
         
         # check the data structure is correct
         expected = {"foo":["id1", "id2"], "bar":["id1"]}
-        del a.last_modified, a.created, a.last_completed
+        del a.last_modified, a.created
         assert a.__dict__ == expected, a
 
     def test_add_unique(self):
@@ -442,7 +441,7 @@ class TestAliases(unittest.TestCase):
         expected = {"foo":["id1", "id2", "id3"], 
                     "bar":["id1"], 
                     "baz" : ["id1", "id2"]}
-        del a.last_modified, a.created, a.last_completed
+        del a.last_modified, a.created
         assert_equals(a.__dict__, expected)
 
         
