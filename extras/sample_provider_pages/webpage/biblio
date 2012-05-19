@@ -1,0 +1,659 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head>
+<meta name="verify-v1" content="GS+/viRkucakeGoXpaqgoKiZ2Vik6aaoIpjFsFZu/so=" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<meta http-equiv="Pragma" content="no-cache" /> 
+<meta http-equiv="Refresh" content="300" />
+
+<title>NESCent: The National Evolutionary Synthesis Center</title>
+
+<meta http-equiv="Content-Language" content="en-us" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Style-Type" content="text/css"/>
+<meta http-equiv="content-script-type"  content="applicationx-javascript"/>
+
+<!--Futura Fonts-->
+<script type="text/javascript" src="http://fast.fonts.com/jsapi/945a5566-272e-404d-b831-73f880c7dd6e.js"></script>
+<link href="http://fast.fonts.com/cssapi/945a5566-272e-404d-b831-73f880c7dd6e.css" rel="stylesheet" type="text/css" />
+
+ <!--[if IE 6]>
+   <link href="/scripts/styleie6.css" rel="stylesheet" type="text/css"  />
+<![endif]-->
+<!--[if IE 7]>
+   <link href="/scripts/styleie7.css" rel="stylesheet" type="text/css"  />
+<![endif]-->
+<!--[if IE 8]>   
+    <link href="/scripts/style.css" rel="stylesheet" type="text/css"  />
+<![endif]-->
+<!--[if IE 9]>   
+    <link href="/scripts/style.css" rel="stylesheet" type="text/css"  />
+<![endif]-->    
+
+<!--[if !IE]><!-->       
+   <link href="/scripts/style.css" rel="stylesheet"  type="text/css" media="screen" />
+<!--<![endif]-->  
+
+<!--[if lt IE 7]>
+<script defer type="text/javascript" src="/scripts/pngfix.js"></script>
+<![endif]-->
+
+
+
+     <link href="/include/lightbox.css" rel="stylesheet"  type="text/css" media="screen" /> 
+     <script type="text/javascript" src="/include/lightbox.js"></script>
+	<link rel="stylesheet" type="text/css" href="/include/home/engine2/home.css" media="screen" />
+	<style type="text/css">a#vlb{display:none}</style>
+	<script type="text/javascript" src="/include/jquery.js"></script>
+
+   
+
+<link rel="stylesheet" href="/scripts/print.css" type="text/css" media="print" />
+
+<!--[if lt IE 7]><link href="/scripts/style_ie.css" rel="stylesheet" type="text/css" media="screen" /><![endif]-->
+
+<script type="text/javascript"> 
+  <!--
+  document.write('<style type="text/css">.no_js {display:none;}<\/style>');
+  / -->
+</script>
+
+        <link rel="stylesheet" type="text/css" href="/scripts/superfish.css" media="screen"/>
+		<script type="text/javascript" src="/scripts/hoverIntent.js"></script>
+
+		<script type="text/javascript" src="/scripts/superfish.js"></script>
+		<script type="text/javascript">
+
+			jQuery(function(){
+			jQuery('ul.sf-menu').superfish();
+		});
+</script>
+
+
+<link rel="alternate" type="application/rss+xml" title="NESCent Events (RSS 2.0)" href="rss.php" />
+</head>
+<body id="home">
+<br />
+<div id="pagewrapper">
+    <div id="logo_wrap">
+    	<br /><!-- add some space-->
+        <div id="topbar">
+		    <!--Page header for all pages JNewman AIBS NESCent Re-design 7-2011-->   
+<form name="header_search" action="http://www.google.com/search" method="get">
+<!--Label for Search-->
+  <input class="form_text" style="height:20px;margin-right:-5px;border:1px solid #BBBBBB;" id="as_q" name="as_q" type="text"  alt="Search Box" value="search NESCent site" size="24" onfocus="this.value=''"/> <a href="#" name="searchButtonSubmit" onclick="document.forms.header_search.submit(); return false;"><img src="/images/go_button.gif" width="28" height="24"border="0" alt="SEARCH" /></a>
+<!--end label -->
+
+  <input type="hidden" name="num" value="80" />
+  <input type="hidden" name="as_sitesearch" value="www.nescent.org" />
+</form>
+<br />
+<!--Top Navbar-->
+<!--<div id="topbar">-->
+    <ul>
+		<li><a href="/about/">about</a></li>
+		<li><a href="/dir/">people</a></li>
+		<li><a href="/news/">news</a></li>
+		<li><a href="/about/contact.php">contact</a></li>
+		<li><a href=" http://www.gifts.duke.edu/nescent"><span style="color:red;">donate</span></a></li>
+		<!--<li><a href="/sitemap.php">search</a></li>-->
+	</ul>
+	<div id="topbar_line">	<!--empty--></div>
+<!--</div>-->
+<!--<div style="clear:both;">&nbsp;</div>-->
+
+<!--End TopNav bar-->
+
+
+
+
+	    </div>
+		<div id="logo_left">
+		   <a href="/"><img id="logo" src="/images/logo.png" alt="The National Evolutionary Synthesis Center" /></a>
+			</div>
+	</div>	
+	<div class="clear"></div>
+	<a name="welcome_block"></a>
+	<div id="home_welcome">
+        <!-- Wellcome message-->
+        <h1>WELCOME</h1>
+        WE ARE ADDRESSING<br />
+        FUNDAMENTAL CHALLENGES IN <br />
+        EVOLUTIONARY SCIENCE<br />
+        <!-- Slide show -->
+       <div id="home_image_gallery">
+		   	<!-- Start WOWSlider.com BODY section -->
+	<div id="wowslider-container2">
+		<div class="ws_images">
+			<!--<a href="http://www.eurekalert.org/pub_releases/2011-03/du-arg030711.php" target="_blank"><img src="/include/home/data2/images/ICY-15-AUG-06-KRC-VECELLIO-2-2.jpg" alt="Learn why human aging might not be so unique after all" title="Learn why human aging might not be so unique after all" id="wows0"/></a>-->
+			<!--<a href="http://www.eurekalert.org/pub_releases/2011-03/nesc-ftf032911.php" target="_blank"><img src="/include/home/data2/images/dendrobates_leucomelas_para_press_release1_copia2-2.jpg" alt="Treadmill tests for poison frogs prove toxic species are more physically fit" title="Treadmill tests for poison frogs prove toxic species are more physically fit" id="wows1"/></a>-->
+			<!--<a href="http://www.eurekalert.org/pub_releases/2011-11/nesc-bba110811.php" target="_blank"><img src="/images/mourning dove_croppedhome.jpg" alt="Bigger birds are harder hit by human noise" title="Bigger birds are harder hit by human noise" id="wows4"/></a>-->
+			<!--<a href="http://www.eurekalert.org/pub_releases/2011-11/nesc-hdg112311.php" target="_blank"><img src="/images/South Africa grassland_home.jpg" alt="How drought-tolerant grasses came to be" title="How drought-tolerant grasses came to be" id="wows5"/></a>-->
+			<!--<a href="http://www.eurekalert.org/pub_releases/2012-02/nesc-dbp020212.php" target="_blank"><img src="/images/Finch_homepage.jpg" alt="Deadly bird parasite evolves at exceptionally fast rate" title="Deadly bird parasite evolves at exceptionally fast rate" id="wows2"/></a>-->
+			<!--<a href="http://www.eurekalert.org/pub_releases/2012-02/nesc-iac022712.php" target="_blank"><img src="/images/Coyote_homepage.jpg" alt="Ice Age coyotes were supersized compared to coyotes today" title="Ice Age coyotes were supersized compared to coyotes today" id="wows3"/></a>-->
+			<a href="https://academy.nescent.org/wiki/Main_Page" target="_blank"><img src="/include/home/data2/images/informatics5-2.jpg" alt="Apply now for courses in the 2012 NESCent Academy" title="Apply now for courses in the 2012 NESCent Academy" id="wows0"/></a>
+			<a href="http://datadryad.org" target="_blank"><img src="/include/home/data2/images/dryad990-2.jpg" alt="Publish and preserve your data" title="Publish and preserve your data" id="wows1"/></a>
+			<a href="http://www.eurekalert.org/pub_releases/2012-03/nesc-njf031412.php" target="_blank"><img src="/images/pinyon_tree_homepage.jpg" alt="Not just for the birds: man-made noise has ripple effects on plants, too" title="Not just for the birds: man-made noise has ripple effects on plants, too" id="wows2"/></a>
+			<a href="http://www.eurekalert.org/pub_releases/2012-04/nesc-nst041612.php" target="_blank"><img src="/images/mammals_homepage.jpg" alt="Tracing the evolutionary history of what mammals eat" title="Tracing the evolutionary history of what mammals eat" id="wows3"/></a>
+			<a href="http://roadshow.nescent.org/" target="_blank"><img src="/include/home/data2/images/darwinday1-2.jpg" alt="NESCent takes Darwin Day on the road" title="NESCent takes Darwin Day on the road" id="wows4"/></a>
+			<a href="http://ambassadors.nescent.org/" target="_blank"><img src="/include/home/data2/images/ambassador1-2.jpg" alt="Enabling scientists worldwide to make the most of their data"  title="Enabling scientists worldwide to make the most of their data" id="wows5"/></a></div>
+			<div class="ws_bullets"><div>
+			<a href="#wows0" title="Apply now for courses in the 2012 NESCent Academy">1</a>
+			<a href="#wows1" title="Publish and preserve your data">2</a>
+			<a href="#wows2" title="Not just for the birds: man-made noise has ripple effects on plants, too">3</a>
+			<a href="#wows3" style="color:#ff7f00;" title="Tracing the evolutionary history of what mammals eat">4</a>
+			<a href="#wows4" title="NESCent takes Darwin Day on the road">5</a>
+			<a href="#wows5" title="Enabling scientists worldwide to make the most of their data">6</a>
+			</div></div>
+	  </div>
+	<script type="text/javascript" src="/include/home/engine2/home.js"></script>
+	<!-- End WOWSlider.com BODY section -->
+	   </div><!--end home image gallery-->
+	 </div><!--end home_welcome-->  
+  	<a name="startcontent"></a>
+  	<div id="content">
+  	    <div id="home_nav">
+  	    	<table cellpadding="0" cellspacing="0">
+  	    	   <tr> 	    	        
+  	    	   		<th width="328" onclick="document.location.href='/science/'" style="cursor:pointer;cursor:hand;background-color:#ff7f00;text-align:left;">
+  	    	   		     SCIENCE
+  	    	   		</th>
+   	    	   		<th width="328"  onclick="document.location.href='/informatics/'" style="cursor:pointer;cursor:hand;background-color:#00a330;border-right:1px solid #ffffff;border-left:1px solid #ffffff;text-align:left;">
+  	    	   		     INFORMATICS
+  	    	   		</th>
+  	    	   		<th width="328"  onclick="document.location.href='/eog/'" style="cursor:pointer;cursor:hand;background-color:#333399;text-align:left;">
+  	    	   		     EDUCATION &amp; OUTREACH
+  	    	   		</th>
+  	    	 </tr>
+  	    	 <tr>  		 
+  	    	   		<td width="328" bgcolor="#ff7f00"  onclick="document.location.href='/science/'" style="cursor:pointer;cursor:hand;">
+  	    	   		     <img src="/images/science.png" alt="Science Pic" style="float:left;padding-right:4px;" />
+  	    	   		    <br /> Transforming evolutionary science<br />&nbsp;
+  	    	   		    <a href="/science/" target="_self" title="Science" ><img src="/images/science-more-button.png" border="0" alt="find out more" style="display:block;float:right;z-index:5;margin-right:20px;margin-top:30px;"/></a>  
+  	    	   		 </td>
+  	    	   		<td width="328" bgcolor="#00A330"  onclick="document.location.href='/informatics/'" style="cursor:pointer;cursor:hand;border-right:1px solid #ffffff;border-left:1px solid #ffffff;">
+  	    	   		     <img src="/images/informatics.png" alt="Informatics Pic" style="float:left;padding-right:4px;" />
+  	    	   		     <br />Removing barriers to accessing, sharing, and interpreting data
+  	    	   		    <a href="/informatics/" target="_self" title="Informatics" ><img src="/images/info-more-button.png" border="0" alt="find out more" style="display:block;float:right;z-index:5;margin-right:20px;margin-top:10px;"/></a>  
+                    </td>
+  	    	   		<td width="328" bgcolor="#333399"  onclick="document.location.href='/eog/'" style="cursor:pointer;cursor:hand;">
+  	    	   		     <img src="/images/eog.png" alt="Education and Outreach" style="float:left;padding-right:4px;" />
+                          <br />Connecting people with evolutionary research<br />&nbsp;
+                   	    <a href="/eog/" target="_self" title="Education &amp; OutreachScience" ><img src="/images/ed-more-button.png" alt="find out more" border="0" style="display:block;float:right;z-index:5;margin-right:20px;margin-top:30px;"/></a>  
+                   </td>  	    	   		  	    	   		 	    	   		
+  	    	   </tr>
+  	    	</table>
+  		</div><!--end home_nav-->
+  		<!-- Start of editable content-->
+  		<div id="home_impact">
+  			<h3>Our Impact</h3>
+  		    <div id="home_impact_line"><!--empty--></div>
+  		    <a href="/images/GlobalMap.jpg" rel="lightbox" title="NESCent has hosted nearly 4200 visitors from more than 50 countries"><img class="shadow"  src="/images/GlobalMap.jpg" height="192" width="329" style="float:left;margin-top:20px;margin-right:10px;" alt="map of the world" /></a>
+  		    <h4>NESCent by the numbers</h4>
+  		    <div id="home_impact_subtitle">Posted September 10, 2011 by NESCent</div>
+  		     <p><b>NESCent has hosted nearly 4200 visitors from more than 51 countries</b></p>
+  		     <p style="align-text:right;"><a href="https://www.nescent.org/wg/public_documents/images/b/bd/AnnualReport_Yr7.pdf">READ MORE&gt;&gt;</a></p>
+  		     <p>&nbsp;</p><p>&nbsp;</p> <p>&nbsp;</p><p>&nbsp;</p><br /><br />   
+  		     <table cellpadding="0" cellspacing="0" border="0">	    
+  		      <tr><td width="210" > 
+  		             <br /><br />
+  		             <p style="font-family:'FuturaW01-MediumCondens';font-size:26px;font-weight:999;">
+  		               <a style="text-decoration:none;" href="/cal">NESCent Upcoming Events</a>  
+  		         
+  		             </p>
+  		          </td><td valign="top" width="180">
+  		            <a href="/cal" title="NESCent Calendar of Events"><img  style="margin-left:5px;margin-top:10px;" src="/images/cal.png" width="60%" height="60%" alt="Image of a calendar" border="0" /></a>
+  		         </td>
+  		         <td valign="middle">
+  		             <br />
+            	 </td>
+  		       </tr>
+          </table><br /><br />
+	  </div><!--end home impact block-->
+  		<div id="home_deadlines">
+  			<h3>Proposal Deadlines</h3>
+  			<div id="home_deadlines_line"><!--empty--></div>
+  			<div id="home_deadlines_scroller">
+				 <table cellpadding="0" cellspacing="0">
+				 	<!--<tr>
+				 		<td width="49">
+				 		  <img class="shadow" src="/images/calendar-bullet.png" alt="calendar"/>
+				          <div class="home_deadline_month" style="margin-left:15px;">DEC</div>
+				          <div class="home_deadline_date" style="margin-left:13px;">1</div>
+				 		</td>
+				 		<td>
+				 	      <a href="/science/postdoctoral.php" >Postdoctoral Fellowships</a>
+				 	      				 		</td>
+				 	</tr>
+				 	<tr>
+                    	<td colspan="2" align="center"><div class="home_deadlines_item">&nbsp;</div></td>				 
+				    </tr> -->
+					<!--<tr>
+				 		<td width="49">
+				 		  <img class="shadow" src="/images/calendar-bullet.png" alt="calendar"/>
+				          <div class="home_deadline_month" style="margin-left:15px;">APR</div>
+				          <div class="home_deadline_date" style="margin-left:13px;">1</div>
+				          <!--<div style="clear:left">&nbsp;</div>
+				          <img class="shadow" src="/images/calendar-bullet.png" alt="calendar"/>
+				          <div class="home_deadline_month" style="margin-left:15px;f">APR</div>
+				          <div class="home_deadline_date" style="margin-left:13px;">1</div>			          
+				          <div style="clear:left">&nbsp;</div>
+						  <img class="shadow" src="/images/calendar-bullet.png" alt="calendar"/>
+				          <div class="home_deadline_month" style="margin-left:15px;">JULY</div>
+				          <div class="home_deadline_date" style="margin-left:13px;">1</div>
+				          <div style="clear:left">&nbsp;</div>
+				          <img class="shadow" src="/images/calendar-bullet.png" alt="calendar"/>
+				          <div class="home_deadline_month" style="margin-left:15px;">SEPT</div>
+				          <div class="home_deadline_date" style="margin-left:13px;">1</div>			          
+				    	</td>
+				 		<td>
+				 			<a href="/science/short_term_visitors.php">Short Term Visitors</a>
+				 			<div class='countdown'><b>COUNTDOWN</b></div><center><b>0 days 0 hours left </b></center>				 		</td>
+				 	</tr>
+				 	<tr>
+                    	<td colspan="2" align="center"><div class="home_deadlines_item">&nbsp;</div></td>				 
+				    </tr>
+				    </tr> -->
+					<tr>
+						<td width="49">
+				 		  <img class="shadow" src="/images/calendar-bullet.png" alt="calendar"/>
+				          <div  class="home_deadline_month" style="margin-left:15px;">JUL</div>
+				          <div  class="home_deadline_date" style="margin-left:13px;">1</div>
+				          <!--<div style="clear:left">&nbsp;</div>
+				          <img class="shadow" src="/images/calendar-bullet.png" alt="calendar"/>
+				          <div  class="home_deadline_month" style="margin-left:15px;">JULY</div>
+				          <div  class="home_deadline_date" style="margin-left:13px;">1</div>-->			          
+				 		</td>
+				 		<td>
+ 							<a href="/science/GraduateFellowships.php">Graduate Fellowships,</a> and
+							<a href="/science/short_term_visitors.php">Short Term Visitors</a>
+ 							<div class='countdown'><b>COUNTDOWN</b></div><center><b>45 days 1 hours left </b></center>				 		</td>
+				 	</tr>
+				 	<tr>
+                    	<td colspan="2" align="center"><div class="home_deadlines_item">&nbsp;</div></td>				 
+				    </tr>
+				 	<!--<tr>
+				 		<td width="49">
+				 		  <img class="shadow" src="/images/calendar-bullet.png" alt="calendar="/>
+				          <div  class="home_deadline_month" style="margin-left:15px;">JAN</div>
+				          <div class="home_deadline_date"  style="margin-left:13px;">1</div>
+				 		</td>
+				 		<td>
+				 	      <a href="/news/newsdetail.php?id=229">Targeted  proposals in K-12 evolution education</a>
+				 	      <div class='countdown'><b>COUNTDOWN</b></div><center><b>0 days 0 hours left </b></center>				 		</td>
+				 	</tr>
+				 	<tr>
+                    	<td colspan="2" align="center"><div class="home_deadlines_item">&nbsp;</div></td>				 
+				    </tr>
+				 	<tr>
+				 		<td width="49">
+				 		  <img class="shadow" src="/images/calendar-bullet.png" alt="calendar"/>
+				          <div  class="home_deadline_month" style="margin-left:15px;">JAN</div>
+				          <div  class="home_deadline_date" style="margin-left:13px;">1</div>
+				 		</td>
+				 		<td>
+				 	      <a href="/news/newsdetail.php?id=225">Targeted proposals in evolution and the social sciences (next deadline</a>
+				 	      <div class='countdown'><b>COUNTDOWN</b></div><center><b>0 days 0 hours left </b></center>				 		</td>
+				 	</tr>
+				 	<tr>
+                    	<td colspan="2" align="center"><div class="home_deadlines_item">&nbsp;</div></td>				 
+				    </tr>-->
+				 	<tr>
+				 		<td width="49">
+				 		  <img class="shadow" src="/images/calendar-bullet.png" alt="calendar"/>
+				          <div class="home_deadline_month" style="margin-left:15px;">JULY</div>
+				          <div class="home_deadline_date" style="margin-left:2px;">10</div>
+				          <!--<div style="clear:left">&nbsp;</div>
+				          <img class="shadow" src="/images/calendar-bullet.png" alt="calendar"/>
+				          <div class="home_deadline_month" style="margin-left:15px;">DEC</div>
+				          <div class="home_deadline_date" style="margin-left:13px;">1</div>			          
+				 		</td>-->
+				 		<td>
+				 	      <a href="/science/halfsabbatical.php" >Sabbaticals</a>,
+				 	      <a href="/science/workinggroup.php" >Working Groups</a>,
+				 	      <a href="/science/meetings.php">Catalysis Meetings</a>, and
+						  <a href="/science/postdoctoral.php" >Postdoctoral Fellowships</a>
+				 	      <div class='countdown'><b>COUNTDOWN</b></div><center><b>54 days 1 hours left </b></center>				 		</td>
+				 	</tr>
+				 	<tr>
+                    	<td colspan="2" align="center"><div class="home_deadlines_item">&nbsp;</div></td>				 
+				    </tr>
+				 	<tr>
+				 		<td width="49">
+				 		  <img class="shadow" src="/images/calendar-bullet.png" alt="calendar"/>
+				          <div  class="home_deadline_month" style="margin-left:15px;">JUL</div>
+				          <div  class="home_deadline_date" style="margin-left:2px;">10</div>
+				 		</td>
+				 		<td>
+				 	      <a href="/science/Journalist-in-residence.php">Journalists-in-residence</a>
+				 	      <div class='countdown'><b>COUNTDOWN</b></div><center><b>54 days 1 hours left </b></center>				 		</td>
+				 	</tr>
+				 	<tr>
+                    	<td colspan="2" align="center"><div class="home_deadlines_item">&nbsp;</div></td>				 
+				    </tr>
+				 	<tr>
+				 		<td colspan="2" align="center">
+				 	      <a href="informatics/whitepapers.php">Informatics White Papers</a><br /> are accepted at any time.
+				 		</td>
+				 	</tr>
+				 	<tr>
+                    	<td colspan="2" align="center"><div class="home_deadlines_item">&nbsp;</div></td>				 
+				    </tr>
+				 	<tr>
+				 		<td colspan="2" align="center">
+				 	        <a style="font-size:20px;" href="/science/proposals.php">Call for Proposals</a>.
+				 		</td>
+				 	</tr>
+			 </table>
+					
+		</div><!--end home dealines scroller-->
+  	</div><!--end propoal deadlines block-->
+  
+  	<div id="home_newsletter_signup">
+  		<h4>Stay Informed</h4>
+  		<div id="home_newsletter_signup_line"><!--empty--></div>
+  		<div id="home_newsletter_signup_box">
+  			Subscribe to our quarterly newsletter by entering your email in the box below.
+  			<br /><br />
+  			<form action="/about/contact.php" method="post" name="newsletter_signup" style="margin-bottom: 0">
+  			<!--Label for Search-->
+			  <input class="form_text" style="height:20px;margin-right:-5px;border:1px solid #bbbbbb;" id="email" name="email" type="text"  alt="Newsletter Sign Up" value="Email Address" size="20" onfocus="this.value=''"/> <a href="#" name="emailButtonSubmit" onclick="document.forms.newsletter_signup.submit(); return false;"><img src="/images/subscribe.gif" width="54" height="24"border="0" alt="Newsletter Sign Up"  /></a>
+			<!--end label -->
+			 </form>
+  		</div><!--end home newsletter signup box-->
+  	</div><!--end home newsletter signup-->
+  	<div id="home_awards">
+	    <h4>Award Winners</h4>
+	    <div id="home_awards_line"><!--empty--></div>
+	    <div id="home_awards_scroller">
+	       <table cellpadding="0" cellspacing="0">
+          <tr>
+													<!--    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:10px;"><img src="/images/bio_photo.jpg" width="70" height="70" alt="bio photo place holder"/> </div>
+                               <div style=" display:block;width:225px;float:right;margin-top:-70px;margin-left:75px;">
+                                     <span style="font-family:'Arial Black';color:#ff7f00;"></span><br />
+							          <a href="awards_summary.php?id=" ></a>
+							  </div>
+						</td>-->
+                        
+                                                		
+	            <!-- Non Dynamic version for the lauch of website-->
+	                    <!-- Postdoctoral Fellows-->
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Hertweck.jpg"  alt="photo Kate Hertweck"/> </div>
+                               <div style="dispaly:block;width:225px;float:right;margin-top:-57px;margin-left:75px;">
+                                      Postdoctoral Fellow<br /> 
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Kate Hertweck (University of Missouri)</span><br />
+							          <a href="/science/awards_summary.php?id=295" >Comparative biology of transposable element proliferation</a>
+							  </div>
+						</td>
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Han.jpg"  alt="photo Mira Han"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-70px;margin-left:75px;">
+                                      Postdoctoral Fellow<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Mira Han (Indiana University-Bloomington)</span><br />
+							          <a href="/science/awards_summary.php?id=296" >Gene evolution in genomic context:  Integrating genomic location into gene evolution models</a>
+							  </div>
+						</td>
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Cruickshank.jpg" alt="photo Tami Cruickshank"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-51px;margin-left:75px;">
+                                      Postdoctoral Fellow<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Tami Cruickshank (University of Indiana)</span><br />
+							          <a href="/science/awards_summary.php?id=297" >Population genetics of maternal effects and their influence on molecular evolution</a>
+							  </div>
+						</td>
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Lanfear.jpg" alt="photo Robert Lanfear"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-92px;margin-left:75px;">
+                                      Postdoctoral Fellow<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Robert Lanfear (Australian National University)</span><br />
+							          <a href="/science/awards_summary.php?id=298" >Synthesising methods and data to understand the mutational processes that shape genomes</a>
+							  </div>
+						</td>
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/bio_photo.jpg" height="70" width="70"  alt="photo Elizabeth Sbrocco"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-70px;margin-left:75px;">
+                                      Postdoctoral Fellow<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Elizabeth Sbrocco (Boston University)</span><br />
+							          <a href="/science/awards_summary.php?id=283" >Exploring environmental correlates of range limits across a marine biodiveristy hotspot</a>
+							  </div>
+						</td>
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/adam_smith.jpg" height="70" width="70"  alt="photo Adam Smith"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-70px;margin-left:75px;">
+                                      Postdoctoral Fellow<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Adam Smith (University of Texas, Austin) </span><br />
+							          <a href="/science/awards_summary.php?id=284" >Evaluating effects of temporal distribution of fossil calibrations on divergence analyses</a>
+							  </div>
+						</td>
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Harnik.jpg"  alt="photo Paul Harnik"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-96px;margin-left:75px;">
+                                      Postdoctoral Fellow<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Paul Harnik (Stanford University)</span><br />
+							          <a href="/science/awards_summary.php?id=293" >Ecological controls on evolutionary rates in marine systems</a>
+							  </div>
+						</td>
+						<!--Catalysis Meetings-->
+						<td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:0px;"><img src="/images/Liberles.jpg"  alt="photo David Liberles"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-90px;margin-left:75px;">
+                                     Catalysis Meeting<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">David Liberles (University of Wyoming)</span><br />
+							          <a href="/science/awards_summary.php?id=288" >Modeling protein structural and energetic constraints on sequence evolution</a>
+							  </div>
+						</td>
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Groover.jpg"  alt="photo Andrew Groover"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-80px;margin-left:75px;">
+                                     Catalysis Meeting<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Andrew Groover (US Forest Service and University of California-Davis)</span><br />
+							          <a href="/science/awards_summary.php?id=287" >Evolutionary origins and development of woody plants</a>
+							  </div>
+						</td>
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Wolf.jpg"  alt="photo Jason Wolf"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-49px;margin-left:75px;">
+                                     Catalysis Meeting<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Jason Wolf (University of Bath, UK)</span><br />
+							          <a href="/science/awards_summary.php?id=289" >An integrative understanding of the evolution of genomic imprinting</a>
+							  </div>
+						</td>
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Crandall.jpg"  alt="photo Eric Crandall"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-50px;margin-left:75px;">
+                                     Catalysis Meeting<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Eric Crandall (University of California-Santa Cruz)</span><br />
+							          <a href="/science/awards_summary.php?id=290" >An integrative understanding of the evolution of genomic imprinting</a>
+							  </div>
+						</td>
+                        <!--Working Groups-->
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Bachtrog.jpg"  alt="photo Doris Bachtrog"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-91px;margin-left:75px;">
+                                     Working Group<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Doris Bachtrog (University of California, Berkeley)</span><br />
+							          <a href="/science/awards_summary.php?id=291" >The tree of sex &ndash; a comprehensive synthesis of sex determination systems in eukaryotes</a>
+							  </div>
+						</td>
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/fewell.jpg"  alt="photo Jennifer Fewell"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-87px;margin-left:75px;">
+                                     Working Group<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Jennifer Fewell (Arizona State University)</span><br />
+							          <a href="/science/awards_summary.php?id=285" >Large-scale demographic, network and behavioral trait analyses of sociality</a>
+							  </div>
+						</td>
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Stoltzfus.jpg"  alt="photo Arlin Stoltzfus"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-48px;margin-left:75px;">
+                                     Working Group<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Arlin Stoltzfus (Center for Advanced Research in Biotechnology)</span><br />
+							          <a href="/science/awards_summary.php?id=294" >HIP: Hackathons, Interoperability, Phylogenies</a>
+							  </div>
+						</td>
+                         <!--Long-term Sabbatical Scholars-->
+					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/caruso.jpg"  alt="photo Christina Caruso"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-95px;margin-left:75px;">
+                                     Long-term Sabbatical Scholar<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Christina Caruso (University of Guelph, Canada)</span><br />
+							          <a href="/science/awards_summary.php?id=302" >The evolutionary ecology of genetic conflict in plants</a>
+							  </div>
+						</td>
+ 					    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Smith.jpg"  alt="photo Dena Smith"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-78px;margin-left:75px;">
+                                     Long-term Sabbatical Scholar<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Dena Smith (University of Colorado, Boulder)</span><br />
+							          <a href="/science/awards_summary.php?id=292" >Evolution of the Coleoptera: A paleontological perspective</a>
+							  </div>
+						</td>
+                	    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Wade_M.jpg"  alt="photo Michael Wade"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-102px;margin-left:75px;">
+                                     Long-term Sabbatical Scholar<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Michael Wade (Indiana University, Bloomington)</span><br />
+							          <a href="/science/awards_summary.php?id=301" >A critical synthesis of indirect genetic effects in adaptive evolution</a>
+							  </div>
+						</td>
+                        <!--Short-term Sabbatical Scholars-->
+                	    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/soltis.jpg"  alt="photo Douglas Soltis"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-50px;margin-left:75px;">
+                                     Short-term Sabbatical Scholar<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Douglas Soltis (University of Florida), Pamela Soltis (University of Florida)</span><br />
+							          <a href="/science/awards_summary.php?id=279" >Reconstructing the Great Tree of Life</a>
+							  </div>
+						</td>
+                	    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/Safran.jpg"  alt="photo Rebecca Safran"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-108px;margin-left:75px;">
+                                     Short-term Sabbatical Scholar<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Rebecca Safran (University of Colorado)</span><br />
+							          <a href="/science/awards_summary.php?id=280" >An integrative evolutionary approach to examine sexual selection as a mechanism of speciation</a>
+							  </div>
+						</td>
+                       <!--Triangle Scholars-->
+                	    <td width="300" style="border-right:2px solid #d9d9d9;">
+						      <div style="float:left;margin-top:5px;"><img src="/images/curtain_new.png.jpg"  alt="photo Tyler Curtain"/> </div>
+                               <div style="display:block;width:225px;float:right;margin-top:-98px;margin-left:75px;">
+                                     Triangle Scholar<br />
+                                     <span style="font-family:'Arial Black';color:#ff7f00;">Tyler Curtain (University of North Carolina, Chapel Hill)</span><br />
+							          <a href="/science/awards_summary.php?id=303" >Darwin and Nietzsche: evolutionary thought within literary theory</a>
+							  </div>
+						</td>
+
+               </tr>
+			</table>	
+
+  
+	    </div>
+	</div><!--end home awards-->
+</div><!--end content-->
+<!-- End Editialbe content-->  
+  <div id="footer">
+	   <!--Table for footer navigation-->
+<table border="0" cellpadding="0" cellspacing="10" style="padding-left:50px;padding-right:40px;">
+	<tr>
+		<td width="870">
+		<h3>Main Navigation</h3>
+		<hr />
+		</td>
+	</tr>
+	<tr>
+		<td valign="top">
+			<table border="0" cellpadding="0" cellspacing="0">
+				<tr>
+					<td valign="top" width="250">
+						<div class="footerth">About</div>
+						<a href="/dir/" title="NESCent People">NESCent People</a><br/>
+						<a href="/about/" title="About the Center">About the Center</a><br/>
+						<a href="/about/contact.php" title="Contact Us">Contact Us</a><br/>
+						<a href="/news/" title="NESCent News">News</a><br />
+						<a href="/cal/" title="NESCent Calendar">Calendar</a><br />
+						<a href="/sitemap.php" title="Sitemap">Sitemap</a><br />
+						<a href=" http://www.gifts.duke.edu/nescent"><span style="color:red;">Donate</span></a>	</td>
+						
+					<td valign="top" width="250">
+						<div class="footerth">Science</div>
+						<a href="/science/overview.php" title="Overview">Overview</a><br />
+						<a href="/science/proposals.php" title="Call for Proposals">Call for proposals</a><br/>
+						<a href="/science/awards.php" title="Supported projects">Supported projects</a><br/>
+						<a href="/science/products.php" title="Products">Products</a><br/>
+						<b><i><font color="#33399">Quick jumps</font></i></b><br />
+						<a href="http://kaboodle.nescent.org/" title="Kaboodle" target="_blank">Kaboodle</a><br/>
+						<a href="/science/sos.php" title="Science of Science Project">Science of Science Project</a>
+					</td>
+					<td valign="top" width="250">
+						<div class="footerth">Informatics</div>
+						<a href="/informatics/initiatives.php" title="Informatics Major Initiatives">Major initiatives</a><br/>
+						<a href="/informatics/whitepapers.php" title="Informatics White Papers">White papers</a><br/>
+						<a href="/informatics/policies.php" title="Informatics Polices">Polices</a><br/>
+						<a href="/informatics/products.php" title="Informatics Software and Databases">Software and Databases</a><br/>
+						<b><i><font color="#333399">Quick Jumps</font></i></b><br />
+						<a href="http://datadryad.org" target="_blank" title="Dryad Data Repository">Dryad Data Repository</a><br/>
+						<a href="https://www.nescent.org/phenoscape/Main_Page" target="_blank" title="Phenoscape">Phenoscape</a><br/>
+						<a href="http://www.gmod.org/wiki/Main_Page" target="_blank" title="Generic Model Organism Database project">Generic Model Organism Database project</a><br/>
+						<a href="https://www.nescent.org/wg_garli/Main_Page" target="_blank"title="Garli">GARLI</a><br/>
+						<a href="https://www.nescent.org/wg_phyloinformatics/Phyloinformatics_Summer_of_Code_2011" target="_blank" title="Google Summer of Code Program">Google Summer of Code Program</a><br/>
+					</td>	
+					<td valign="top" width="250">
+						<div class="footerth">Education &amp; Outreach</div>
+						<a href="/eog/overview.php" title="Overview">Overview</a><br />
+						<a href="/eog/initiatives.php" title="Education and Outreach Initiatives">Initiatives</a><br/>
+						<a href="/eog/resources.php" title="Education and Outreach Resources">Education resources</a><br/>
+						<a href="/eog/products.php" title="Products">Products</a><br />
+						<a href="/courses/" title="Courses">Courses</a><br/>
+						<a href="/courses/proposals/" title="Call for course proposals">Call for course proposals</a><br/>
+						<b><i><font color="#33399">Quick Jumps</font></i></b><br />
+						<a href="https://academy.nescent.org/wiki/Main_Page" target="_blank" title="NESCent Academy">NESCent Academy</a><br/>
+						<a href="http://filmfestival.nescent.org" target="_blank" title="Education and Outreach NESCent Evolution Film Festival">NESCent Evolution Film Festival</a><br/>
+						<a href="http://ambassadors.nescent.org"  target="_blank" title="NESCent Ambassador Programs">NESCent Ambassador Program</a><br />
+						<a href="http://roadshow.nescent.org" target="_blank"title="Datrwin Day Roadshow">Darwin Day Roadshow</a><br />
+						<a href="http://blogcontest.nescent.org" target="_blank" title="Evolution Blog Contest">Evolution Blog Contest</a>
+					</td>
+					<td valign="top" width="120">
+						<div class="footerth">Intranet</div>
+						<a href="/wikis" title="NESCENT Wikis Index Page" >Wikis</a><br/>
+						<a href="http://nead.nescent.org/" title="NEAD" target="_blank">NEAD</a><br/>
+						<a href="/quicklinks.php" title="Quick Links">Quick Links</a>
+					</td>				
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+
+<div id="sociallinks">
+	<a href="http://twitter.com/NESCent" target="_blank" title="NESCent on Twitter"><img src="/images/twitter.jpg" height="35"  border="0" alt="Twitter icon"/></a>
+	<a href="http://www.facebook.com/search/?q=nescent&init=quick#/group.php?gid=8339009297&ref=search&sid=100000627004606.1798786586..1" target="_blank" title="NESCent on Facebook"><img src="/images/facebook.jpg" height="35"  border="0" alt="Facebook Icon"/></a>
+	<a href="http://www.youtube.com/user/NESCentMedia" target="_blank" title="NESCent Channel on Youtube"><img src="/images/youtube.png" height="35"  border="0" alt="YouTube Icon"/></a>
+	<a href='/rss.php'><img src='/images/rss.png'  height="35" border="0" alt="RSS Icon" /></a>
+</div>
+<div id="madepossible">
+	<div class="footerth" style="margin-bottom:5px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Made possible by</div>
+	<a href="http://www.duke.edu/" target="_blank" title="Duke University">Duke</a>&nbsp;&nbsp;&nbsp;
+	<a href="http://www.unc.edu/index.htm" target="_blank" title="University of North Carolina">UNC</a>&nbsp;&nbsp;&nbsp;
+	<a href="http://www.ncsu.edu/" target="_blank" title="North Carolina State University">NCSU</a>&nbsp;&nbsp;&nbsp;
+	<a href="http://www.nsf.gov/" target="_blank" title="National Science Foundation">NSF</a>
+</div>
+<br /><br />
+
+    
+    
+  </div><!--End Footer-->
+
+</div><!--End Pagewrapper-->
+ <br /><br /> <br /><br /> 
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script>
+<script type="text/javascript">
+_uacct = "UA-396493-1";
+urchinTracker();
+</script>
+ <br /><br />
+</body>
+</html>
