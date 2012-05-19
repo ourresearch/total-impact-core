@@ -4,7 +4,7 @@ from nose.tools import nottest, assert_equals
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
 from totalimpact.providers.provider import Provider, ProviderFactory
-from totalimpact.queue import Queue, AliasQueue, MetricsQueue
+from totalimpact.queue import Queue, AliasQueue, MetricsQueue, QueueMonitor
 from totalimpact import dao, api
 from totalimpact.tilogging import logging
 
@@ -61,19 +61,22 @@ class TestAliasQueue(unittest.TestCase):
         assert_equals(
             set(resp_dict.keys()),
             set([u'tiid', u'created', u'last_requested', u'metrics', 
-                u'last_modified', u'biblio', u'id', u'aliases'])
+                u'last_modified', u'biblio', u'id', u'aliases', u'last_queued'])
             )
         assert_equals(unicode(TEST_DRYAD_DOI), resp_dict["aliases"]["doi"][0])
+        print resp_dict
 
         # test the view works
-        res = self.d.view("aliases")
+        res = self.d.view("requested")
         assert len(res["rows"]) == 1, res
-        assert_equals(TEST_DRYAD_DOI, res["rows"][0]["value"]["aliases"]["doi"][0])
+        assert_equals(resp_dict['id'], res["rows"][0]['id'])
+
+        # Run the QueueMonitor 
+        qm = QueueMonitor(self.d)
+        qm.run(runonce=True)
 
         # see if the item is on the queue
         my_alias_queue = AliasQueue(self.d)
-        assert isinstance(my_alias_queue.queue, list)
-        assert_equals(len(my_alias_queue.queue), 1)
         
         # get our item from the queue
         my_item = my_alias_queue.first()

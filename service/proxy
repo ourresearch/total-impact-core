@@ -32,7 +32,6 @@ start() {
     else
         echo "Already running"
     fi
-    echo
 }
 
 stop() {
@@ -45,7 +44,6 @@ stop() {
 	else 
 		echo "Not running"	
 	fi
-	echo
 }
 
 is_running() { 
