@@ -106,10 +106,6 @@ class Mendeley(Provider):
             return None
 
         page = response.text
-        try:
-            data = simplejson.loads(page) 
-        except simplejson.JSONDecodeError, e:
-            raise ProviderContentMalformedError
-
+        data = provider._load_json(page)
         provenance_url = data['mendeley_url']
         return provenance_url

@@ -50,13 +50,9 @@ class Github(Provider):
         url = template % id_with_slashes
         return(url)
 
-    def _extract_members(self, page, query_string):        
-        try:
-            hits = simplejson.loads(page)
-        except simplejson.JSONDecodeError, e:
-            raise ProviderContentMalformedError
-
-        hits = [hit["name"] for hit in hits]
+    def _extract_members(self, page, query_string): 
+        data = provider._load_json(page)
+        hits = [hit["name"] for hit in data]
         members = [("github", (query_string, hit)) for hit in list(set(hits))]
         return(members)
 
