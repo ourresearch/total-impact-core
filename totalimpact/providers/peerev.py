@@ -70,10 +70,10 @@ class Peerev(Provider):
             bookmarks = None
 
         metrics_dict = {
-            'mendeley:views' : views,
-            'mendeley:downloads' : downloads,
-            'mendeley:comments' : comments,
-            'mendeley:bookmarks' : bookmarks
+            'peerev:views' : views,
+            'peerev:downloads' : downloads,
+            'peerev:comments' : comments,
+            'peerev:bookmarks' : bookmarks
         }
         return metrics_dict
 
