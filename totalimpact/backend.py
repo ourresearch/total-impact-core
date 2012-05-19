@@ -2,20 +2,27 @@
 
 import threading, time, sys
 import traceback
+from totalimpact.config import Configuration
 from totalimpact import dao, api
 from totalimpact.queue import AliasQueue, MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
-from totalimpact.providers.provider import ProviderError
 from totalimpact.models import Error
-from totalimpact.pidsupport import PidFile
+from totalimpact.pidsupport import StoppableThread, ctxfilter
+
+from totalimpact.tilogging import logging
+
+from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
+from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
+from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
+from totalimpact.providers.provider import ProviderError
 
 import daemon
 import lockfile
+from totalimpact.common import PidFile
 
 from optparse import OptionParser
 import os
 
-from totalimpact.tilogging import logging
 logger = logging.getLogger('backend')
 
 class TotalImpactBackend(object):
@@ -63,81 +70,6 @@ class TotalImpactBackend(object):
         self.threads = []
     
 
-           
-class StoppableThread(threading.Thread):
-    def __init__(self):
-        super(StoppableThread, self).__init__()
-        self._stop = threading.Event()
-        self.sleeping = False
-
-    def run(self):
-        # NOTE: subclasses MUST override this - this behaviour is
-        # only for testing purposes
-        
-        # go into a restless but persistent sleep (in 60 second
-        # batches)
-        while not self.stopped():
-            self._interruptable_sleep(60)
-
-    def stop(self):
-        self._stop.set()
-
-    def stopped(self):
-        return self._stop.isSet()
-    
-    def _interruptable_sleep(self, duration, increment=0.5):
-        self.sleeping = True
-        if duration <= 0:
-            return
-        slept = 0
-        while not self.stopped() and slept < duration:
-            snooze = increment if duration - slept > increment else duration - slept
-            time.sleep(snooze)
-            slept += snooze
-        self.sleeping = False
-
-
-class ContextFilter(logging.Filter):
-    """ Filter to add contextual information regarding items to logs
-
-        This filter will check the thread local storage to see if we have
-        recorded that we are processing an item. If so, we will add this 
-        into the formatter so that the logs print it.
-    """
-    def __init__(self):
-        # Check thread local storage
-        self.local = threading.local()
-
-    def threadInit(self):
-        """ All threads should call this to set up the context object """
-        self.local.backend = {
-            'item': '',
-            'method': '',
-            'provider': '',
-            'thread': ''
-        }
-
-    def filter(self, record):
-    
-        # Attempt to get values. Any problems, just assume empty
-        item = method = provider = thread = ""
-        try:
-            # Only get the first 8 chars of item, to keep logs brief
-            item = self.local.backend['item'][:8]
-            method = self.local.backend['method']
-            provider = self.local.backend['provider']
-            thread = self.local.backend['thread']
-        except (AttributeError, KeyError), e:
-            pass
-
-        # Store context information for logger to print
-        record.item = item
-        record.method = method
-        record.provider = provider
-        record.thread = thread
-        return True
-
-ctxfilter = ContextFilter()
 
 class QueueConsumer(StoppableThread):
     
@@ -221,7 +153,7 @@ class ProviderThread(QueueConsumer):
             # item may be None
             if item:
                 # if we get to here, an item has been popped off the queue and we
-                # now want to calculate its metrics. 
+                # now want to calculate it's metrics. 
                 # Repeatedly process this item until we hit the error limit
                 # or we successfully process it         
                 ctxfilter.local.backend['item'] = item.id
@@ -345,9 +277,9 @@ class ProviderThread(QueueConsumer):
 
 class ProvidersAliasThread(ProviderThread):
     
-    def __init__(self, providers, dao, queueid=None):
+    def __init__(self, providers, dao):
         self.providers = providers
-        queue = AliasQueue(dao, queueid)
+        queue = AliasQueue(dao)
         ProviderThread.__init__(self, dao, queue)
         self.providers = providers
         self.thread_id = "AliasThread"
@@ -400,9 +332,6 @@ class ProvidersAliasThread(ProviderThread):
             ctxfilter.local.backend['provider'] = ''
             logger.info("final alias list is %s" % item.aliases.get_aliases_list())
 
-            # Update last completed time to remove thread from the queue
-            #item.aliases.last_completed = time.time()
-            #item.save()
         
 
 
@@ -438,6 +367,7 @@ class ProviderMetricsThread(ProviderThread):
                         item.metrics[key] = {}
                         item.metrics[key]['values'] = {}
                     item.metrics[key]['values'][ts] = metrics[key]
+                    item.metrics[key]['static_meta'] = {} #self.provider
             else:
                 # The provider returned None for this item. This is either
                 # a non result or a permanent failure
@@ -446,6 +376,7 @@ class ProviderMetricsThread(ProviderThread):
                         item.metrics[key] = {}
                         item.metrics[key]['values'] = {}
                     item.metrics[key]['values'][ts] = None
+                    item.metrics[key]['static_meta'] = {} #self.provider
         else:
             # metrics failed, write None values in for the metric
             # values so we don't attempt to reprocess this item
@@ -454,6 +385,7 @@ class ProviderMetricsThread(ProviderThread):
                     item.metrics[key] = {}
                     item.metrics[key]['values'] = {}
                 item.metrics[key]['values'][ts] = None
+                item.metrics[key]['static_meta'] = {} #self.provider
         item.save()
 
 
@@ -461,6 +393,7 @@ class ProviderMetricsThread(ProviderThread):
 from totalimpact import dao
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
+from totalimpact.queue import QueueMonitor
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
 from totalimpact.api import app
@@ -481,7 +414,7 @@ def main(logfile=None):
     from totalimpact.backend import ctxfilter
     handler = logging.handlers.RotatingFileHandler(logfile)
     handler.level = logging.DEBUG
-    formatter = logging.Formatter("%(asctime)s %(levelname)8s %(item)8s %(thread)s%(provider)s - %(message)s", datefmt="%y/%m/%d %H:%M:%S")
+    formatter = logging.Formatter("%(asctime)s %(levelname)8s %(item)8s %(thread)s%(provider)s - %(message)s")#,"%H:%M:%S,%f")
     handler.formatter = formatter
     handler.addFilter(ctxfilter)
     logger.addHandler(handler)
@@ -496,10 +429,17 @@ def main(logfile=None):
     print "Starting alias retrieval thread"
     providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
 
+    # Start the queue monitor
+    # This will watch for newly created items appearing in the couchdb
+    # which were requested through the API. It then queues them for the
+    # worker processes to handle
+    qm = QueueMonitor(mydao)
+    qm.start()
+
     alias_threads = []
     thread_count = app.config["ALIASES"]["workers"]
     for idx in range(thread_count):
-        at = ProvidersAliasThread(providers, mydao, idx)
+        at = ProvidersAliasThread(providers, mydao)
         at.thread_id = 'AliasThread(%i)' % idx
         at.start()
         alias_threads.append(at)
@@ -508,7 +448,6 @@ def main(logfile=None):
     # Start each of the metric providers
     metrics_threads = []
     for provider in providers:
-        providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
         thread_count = app.config["PROVIDERS"][provider.provider_name]["workers"]
         print "  ", provider.provider_name
         for idx in range(thread_count):
@@ -534,8 +473,15 @@ def main(logfile=None):
     except (KeyboardInterrupt, ExitSignal), e:
         pass
 
-    from totalimpact.queue import alias_queue_seen
-    from totalimpact.queue import metric_queue_seen
+    from totalimpact.queue import AliasQueue
+    from totalimpact.queue import MetricsQueue
+    print "Items on Alias Queue:", AliasQueue.queued_items
+    print "Items on Metrics Queue:", MetricsQueue.queued_items
+
+    print "Stopping queue monitor"
+    qm.stop()
+    print "Waiting on queue monitor"
+    qm.join()
 
     print "Stopping alias threads"
     for at in alias_threads:
