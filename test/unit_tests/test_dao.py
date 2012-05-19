@@ -25,7 +25,7 @@ class TestDAO(unittest.TestCase):
         self.d.create_db(TEST_DB_NAME)
         design_doc = self.d.db.get("_design/queues")
         assert_equals(set(design_doc["views"].keys()), 
-            set([u'metrics', u'by_alias', u'aliases']))
+            set([u'requested', u'by_alias']))
 
     def test_db_exists(self):
         self.d.create_db(TEST_DB_NAME)
@@ -83,21 +83,6 @@ class TestDAO(unittest.TestCase):
         self.d.create_db(TEST_DB_NAME)
         self.d.connect_db(TEST_DB_NAME)
         res = self.d.view('_all_docs')
-        print res
-        self.assertTrue( isinstance(res['rows'],list), res )
-
-
-    def test_view_queues_aliases(self):
-        self.d.create_db(TEST_DB_NAME)
-        self.d.connect_db(TEST_DB_NAME)
-        res = self.d.view('queues/aliases')
-        print res
-        self.assertTrue( isinstance(res['rows'],list), res )
-
-    def test_view_queues_metrics(self):
-        self.d.create_db(TEST_DB_NAME)
-        self.d.connect_db(TEST_DB_NAME)
-        res = self.d.view('queues/metrics')
         print res
         self.assertTrue( isinstance(res['rows'],list), res )
 

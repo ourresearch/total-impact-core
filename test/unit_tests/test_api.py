@@ -139,7 +139,7 @@ class TestItem(ApiTester):
         assert_equals(
             set(json.loads(response.data).keys()),
             set([u'tiid', u'aliases', u'biblio', u'created', u'id', u'last_modified',
-                u'last_requested', u'metrics'])
+                u'last_requested', u'metrics', u'last_queued'])
             )
         assert_equals(response.mimetype, "application/json")
 

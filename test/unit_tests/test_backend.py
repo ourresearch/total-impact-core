@@ -248,8 +248,6 @@ class TestBackend(unittest.TestCase):
         assert took > 2.0
         assert took < 2.5
         
-    # FIXME: save_and_unqueue is not yet working, so will need more
-    # tests when it is
     @slow
     def test_14_backend(self):
         watcher = TotalImpactBackend(self.d, self.providers)

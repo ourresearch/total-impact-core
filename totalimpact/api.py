@@ -7,6 +7,7 @@ from pprint import pprint
 
 from totalimpact import dao
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
+from totalimpact.queue import MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
@@ -38,7 +39,13 @@ def configure_app(app):
         if os.path.exists(config_path):
             app.config.from_pyfile(config_path)
 
+
 app = create_app()
+
+# Set up in-memory queue datastructures for each provider
+providers = app.config["PROVIDERS"].keys()
+for provider in providers:
+    MetricsQueue.init_queue(provider)
 
 mydao = None
 

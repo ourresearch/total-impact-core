@@ -217,6 +217,7 @@ class ItemFactory():
         item.biblio = {}
         item.last_modified = now
         item.last_requested = now
+        item.last_queued = None
         item.created = now
 
         # make the metrics objects. We have to make all the ones in the config
@@ -351,11 +352,10 @@ class Aliases(object):
     item, since that's what it describes. having it in two places == bad.
     """
     
-    not_aliases = ["created", "last_modified", "last_completed"]
+    not_aliases = ["created", "last_modified"]
     
     def __init__(self, seed=None):
         self.created = time.time() # will get overwritten if need be
-        self.last_completed = None # will get set by the aliases worker once complete
         try:
             for k in seed:
                 setattr(self, k, seed[k])
