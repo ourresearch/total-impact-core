@@ -10,17 +10,20 @@ import json
 import time
 import sys
 import pickle
+import urlparse
 from pprint import pprint
 from optparse import OptionParser
 
-REQUEST_IDS = [("dryad", ('doi','10.5061/dryad.18')), 
+
+REQUEST_IDS = [
                 ("crossref", ('doi', '10.1371/journal.pcbi.1000361')), 
-                ("wikipedia", ('doi', '10.1371/journal.pcbi.1000361')), 
-                ("mendeley", ('doi', '10.1371/journal.pcbi.1000361')), 
-                ("github", ('github', 'egonw,cdk')),
                 ("delicious", ('url', 'http://total-impact.org/')),
+                ("dryad", ('doi','10.5061/dryad.18')), 
+                ("github", ('github', 'egonw,cdk')),
+                ("mendeley", ('doi', '10.1371/journal.pcbi.1000361')), 
+                ("topsy", ('url', 'http://total-impact.org')),
                 ("webpage", ('url', 'http://nescent.org/')),
-                ("topsy", ('url', 'http://total-impact.org'))
+                ("wikipedia", ('doi', '10.1371/journal.pcbi.1000361')) 
 ]
 
 GOLD_RESPONSES = {
@@ -86,6 +89,7 @@ GOLD_RESPONSES = {
 
 def request_provider_item(provider, nid, section):
     base_url = 'http://localhost:5001/'
+    nid = urlparse.unquote(nid)
     url = base_url + urllib.quote('provider/%s/%s/%s' % (provider, section, nid))
     if options.debug:
         print "\n", url
@@ -141,7 +145,14 @@ def checkItem(provider, id, section, api_response, options):
     elif section=="metrics":
         metrics = GOLD_RESPONSES[provider]['metrics']
         for metric in metrics.keys():
-            metric_data = api_response[metric]
+            try:
+                metric_data = api_response[metric]
+            except KeyError:
+                # didn't return anything.  problem!
+                print "METRICS **NOT** CORRECT for %s: metric missing" % (metric)
+                pprint(api_response)
+                return False
+
             # expect the returned value to be equal or larger than reference
             if metric_data >= metrics[metric]:
                 if options.debug:
