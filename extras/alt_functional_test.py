@@ -18,6 +18,8 @@ REQUEST_IDS = [("dryad", ('doi','10.5061/dryad.18')),
                 ("wikipedia", ('doi', '10.1371/journal.pcbi.1000361')), 
                 ("mendeley", ('doi', '10.1371/journal.pcbi.1000361')), 
                 ("github", ('github', 'egonw,cdk')),
+                ("delicious", ('url', 'http://total-impact.org/')),
+                ("webpage", ('url', 'http://nescent.org/')),
                 ("topsy", ('url', 'http://total-impact.org'))
 ]
 
@@ -27,13 +29,22 @@ GOLD_RESPONSES = {
         'biblio': [u'authors', u'journal', u'year', u'title'],
         'metrics' : {}
     },
-    'wikipedia' : { 
-        'aliases': ['doi'],
+    'delicious' : { 
+        'aliases': ["url"],
         'biblio': [],
         'metrics' : {
-            'wikipedia:mentions' : 1
+            'delicious:bookmarks' : 65
         }
     },
+    'dryad' : { 
+        'aliases': ['doi', 'url', 'title'],
+        'biblio': [u'authors', u'year', u'repository', u'title'],
+        'metrics' : {
+            'dryad:most_downloaded_file' : 63,
+            'dryad:package_views' : 149,
+            'dryad:total_downloads' : 169
+        }
+    },    
     'github' : { 
         'aliases': ['github', 'url', 'title'],
         'biblio': [u'last_push_date', u'create_date', u'description', u'title', u'url', u'owner'],
@@ -50,21 +61,24 @@ GOLD_RESPONSES = {
             'mendeley:groups' : 4
         }
     },
-    'dryad' : { 
-        'aliases': ['doi', 'url', 'title'],
-        'biblio': [u'authors', u'year', u'repository', u'title'],
-        'metrics' : {
-            'dryad:most_downloaded_file' : 63,
-            'dryad:package_views' : 149,
-            'dryad:total_downloads' : 169
-        }
-    },
     'topsy' : { 
         'aliases': ["url"],
         'biblio': [],
         'metrics' : {
             'topsy:tweets' : 282,
             'topsy:influential_tweets' : 26
+        }
+    },
+    'webpage' : { 
+        'aliases': ['url'],
+        'biblio': [u'title', "h1"],
+        'metrics' : {}
+    },
+    'wikipedia' : { 
+        'aliases': ['doi'],
+        'biblio': [],
+        'metrics' : {
+            'wikipedia:mentions' : 1
         }
     }
 }
