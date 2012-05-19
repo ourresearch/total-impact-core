@@ -140,7 +140,7 @@ class ProviderMock(Provider):
         self.aliases_processed = {}
         self.biblio_processed = {}
 
-    def aliases(self, aliases, url=None):
+    def aliases(self, aliases, url=None, cache_enabled=True):
         # If we are supplied a mock item, should have (mock, id) as it's
         # primary alias. Record that we have seen the item.
         # We cannot generate exceptions if it's not a mock as we won't
@@ -160,7 +160,7 @@ class ProviderMock(Provider):
             self.aliases_processed[item_id] = True
         return[('doi','test_alias')]
 
-    def metrics(self, aliases, url=None):
+    def metrics(self, aliases, url=None, cache_enabled=True):
         """ Process metrics for the given aliases
 
             We should probably have been given a mockitem here. If so, then
@@ -185,7 +185,7 @@ class ProviderMock(Provider):
                 self.metrics_processed[item_id] = True
         return {"wikipedia:mentions": 1}
 
-    def biblio(self, aliases, url=None):
+    def biblio(self, aliases, url=None, cache_enabled=True):
         """ Process biblio for the given aliases
 
             We should probably have been given a mockitem here. If so, then
