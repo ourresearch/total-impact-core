@@ -18,7 +18,7 @@ from totalimpact.providers.provider import ProviderError
 
 import daemon
 import lockfile
-from totalimpact.common import PidFile
+from totalimpact.pidsupport import PidFile
 
 from optparse import OptionParser
 import os
