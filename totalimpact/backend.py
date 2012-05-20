@@ -45,28 +45,62 @@ class TotalImpactBackend(object):
         for provider in self.providers:
             if not provider.provides_metrics:
                 continue
-            logger.info("Spawning thread for provider " + str(provider.provider_name))
+            thread_count = app.config["PROVIDERS"][provider.provider_name]["workers"]
+            logger.info("Spawning threads for provider %s (%i)" % (provider.provider_name, thread_count)) 
             # create and start the metrics threads
-            t = ProviderMetricsThread(provider, self.dao)
-            t.start()
-            self.threads.append(t)
+            for idx in range(thread_count):
+                t = ProviderMetricsThread(provider, self.dao)
+                t.thread_id = t.thread_id + '(%i)' % idx
+                t.start()
+                self.threads.append(t)
         
-        logger.info("Spawning thread for aliases")
-        alias_thread = ProvidersAliasThread(self.providers, self.dao)
-        alias_thread.start()
-        self.threads.append(alias_thread)
+        thread_count = app.config["ALIASES"]["workers"]
+        logger.info("Spawning threads for aliases (%i)" % thread_count)
+        for idx in range(thread_count):
+            t = ProvidersAliasThread(self.providers, self.dao)
+            t.start()
+            t.thread_id = 'AliasThread(%i)' % idx
+            self.threads.append(t)
+
+        logger.info("Spawning thread for queue monitor")
+        # Start the queue monitor
+        # This will watch for newly created items appearing in the couchdb
+        # which were requested through the API. It then queues them for the
+        # worker processes to handle
+        t = QueueMonitor(self.dao)
+        t.start()
+        t.thread_id = 'QueueMonitor'
+        self.threads.append(t)
         
     def _monitor(self):        
-        while True:
-            # just spin our wheels waiting for interrupts
-            time.sleep(1)
+        # Install a signal handler so we'll break out of the main loop
+        # on receipt of relevant signals
+        class ExitSignal(Exception):
+            pass
+     
+        def kill_handler(signum, frame):
+            raise ExitSignal()
+
+        import signal
+        signal.signal(signal.SIGTERM, kill_handler)
+
+        try:
+            while True:
+                # just spin our wheels waiting for interrupts
+                time.sleep(1)
+        except (KeyboardInterrupt, ExitSignal), e:
+            pass
     
     def _cleanup(self):
+        
         for t in self.threads:
-            logger.info("Stopping " + t.thread_id)
+            logger.info("Stopping %s" % t.thread_id)
             t.stop()
+        for t in self.threads:
+            logger.info("Waiting on %s" % t.thread_id)
             t.join()
             logger.info("... stopped")
+
         self.threads = []
     
 
@@ -411,6 +445,9 @@ def main(logfile=None):
     ) 
 
     # Adding this by handle. fileConfig doesn't allow filters to be added
+    # We need the fiter on the root logger, so that our log settings work,
+    # as we're trying to add in thread details to there in the formatter.
+    # Without the filter, those details don't exist and logging will fail.
     from totalimpact.backend import ctxfilter
     handler = logging.handlers.RotatingFileHandler(logfile)
     handler.level = logging.DEBUG
@@ -420,82 +457,20 @@ def main(logfile=None):
     logger.addHandler(handler)
     ctxfilter.threadInit()
 
-    logger.debug("test")
-
     from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
     from totalimpact.providers.provider import Provider, ProviderFactory
 
     # Start all of the backend processes
-    print "Starting alias retrieval thread"
     providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
-
-    # Start the queue monitor
-    # This will watch for newly created items appearing in the couchdb
-    # which were requested through the API. It then queues them for the
-    # worker processes to handle
-    qm = QueueMonitor(mydao)
-    qm.start()
-
-    alias_threads = []
-    thread_count = app.config["ALIASES"]["workers"]
-    for idx in range(thread_count):
-        at = ProvidersAliasThread(providers, mydao)
-        at.thread_id = 'AliasThread(%i)' % idx
-        at.start()
-        alias_threads.append(at)
-
-    print "Starting metric retrieval threads..."
-    # Start each of the metric providers
-    metrics_threads = []
-    for provider in providers:
-        thread_count = app.config["PROVIDERS"][provider.provider_name]["workers"]
-        print "  ", provider.provider_name
-        for idx in range(thread_count):
-            thread = ProviderMetricsThread(provider, mydao)
-            metrics_threads.append(thread)
-            thread.thread_id = thread.thread_id + '(%i)' % idx
-            thread.start()
-
-    # Install a signal handler so we'll break out of the main loop
-    # on receipt of relevant signals
-    class ExitSignal(Exception):
-        pass
- 
-    def kill_handler(signum, frame):
-        raise ExitSignal()
-
-    import signal
-    signal.signal(signal.SIGTERM, kill_handler)
-
-    try:
-        while True:
-            time.sleep(1)
-    except (KeyboardInterrupt, ExitSignal), e:
-        pass
-
+    backend = TotalImpactBackend(mydao, providers)
+    backend._spawn_threads()
+    backend._monitor()
+    backend._cleanup()
+        
     from totalimpact.queue import AliasQueue
     from totalimpact.queue import MetricsQueue
-    print "Items on Alias Queue:", AliasQueue.queued_items
-    print "Items on Metrics Queue:", MetricsQueue.queued_items
-
-    print "Stopping queue monitor"
-    qm.stop()
-    print "Waiting on queue monitor"
-    qm.join()
-
-    print "Stopping alias threads"
-    for at in alias_threads:
-        at.stop()
-    print "Stopping metric threads"
-    for thread in metrics_threads:
-        thread.stop()
-    print "Waiting on metric threads"
-    for thread in metrics_threads:
-        thread.join()
-    print "Waiting on alias thread"
-    for at in alias_threads:
-        at.join()
-    print "All stopped"
+    logger.debug("Items on Alias Queue: %s" % (AliasQueue.queued_items,))
+    logger.debug("Items on Metrics Queue: %s" % (MetricsQueue.queued_items,))
 
  
 if __name__ == "__main__":
