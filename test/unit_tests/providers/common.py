@@ -108,9 +108,9 @@ class ProviderTestCase:
         assert hasattr(self.provider, "provides_aliases")
         assert hasattr(self.provider, "provides_metrics")
         assert hasattr(self.provider, "provides_biblio")
+        assert hasattr(self.provider, "provides_static_meta")
 
         assert hasattr(self.provider, "provider_name")
-        assert hasattr(self.provider, "metric_names")
 
     ###################################################################
     ##

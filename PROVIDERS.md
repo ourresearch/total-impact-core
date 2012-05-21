@@ -22,11 +22,6 @@ which state what functionality the provide supports.
 
     class NewProvider(Provider):  
 
-        provider_name = "new_provider"
-        metric_names = ['new_provider:mentions']
-
-        member_types = None
-
 
 The x_namespaces and x_name attributes are filters. These will ensure that your provider isn't passed
 any data which it cannot deal with. These will be explained shortly.

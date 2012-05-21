@@ -11,12 +11,21 @@ class Wikipedia(Provider):
         the Wikipedia search interface.
     """
 
-    metric_names = ['wikipedia:mentions']
+    example_id = ("doi", "10.1371/journal.pcbi.1000361")
 
     provenance_url_template = "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go"
     metrics_url_template = "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'"
 
-    example_id = ("doi", "10.1371/journal.pcbi.1000361")
+    static_meta_dict = {
+        "mentions": {
+            "display_name": "mentions",
+            "provider": "Wikipedia",
+            "provider_url": "http://www.wikipedia.org/",
+            "description": "Wikipedia is the free encyclopedia that anyone can edit.",
+            "icon": "http://wikipedia.org/favicon.ico",
+        }
+    }
+
 
     def __init__(self):
         super(Wikipedia, self).__init__()

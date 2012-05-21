@@ -118,7 +118,6 @@ class ProviderMock(Provider):
     """
 
     provider_name = "mock_provider"
-    metric_names = ["wikipedia:mentions"]
 
     provides_members = True
     provides_aliases = True
@@ -137,6 +136,9 @@ class ProviderMock(Provider):
         self.metrics_processed = {}
         self.aliases_processed = {}
         self.biblio_processed = {}
+
+    def metric_names(self):
+        return(["wikipedia:mentions"])
 
     def aliases(self, aliases, url=None, cache_enabled=True):
         # If we are supplied a mock item, should have (mock, id) as it's

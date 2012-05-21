@@ -95,6 +95,27 @@ class Provider(object):
     def provides_metrics(self):
          return ("_extract_metrics" in dir(self))
 
+    @property
+    def provides_static_meta(self):
+         return ("static_meta_dict" in dir(self))
+
+
+    # default method; providers can override    
+    def metric_names(self):
+        try:
+            metric_names = self.static_meta_dict.keys()
+        except AttributeError:
+            metric_names = []
+        return(metric_names)
+
+    # default method; providers can override    
+    def static_meta(self, metric_name):
+        if not self.provides_static_meta:
+            raise NotImplementedError()
+
+        return(self.static_meta_dict[metric_name])
+        
+
     # default method; providers can override    
     def provenance_url(self, metric_name, aliases):
         # Returns the same provenance url for all metrics

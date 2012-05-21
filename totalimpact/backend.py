@@ -396,30 +396,30 @@ class ProviderMetricsThread(ProviderThread):
 
         if success:
             if metrics:
-                for key in metrics.keys():
-                    if not item.metrics.has_key(key):
-                        item.metrics[key] = {}
-                        item.metrics[key]['values'] = {}
-                    item.metrics[key]['values'][ts] = metrics[key]
-                    item.metrics[key]['static_meta'] = {} #self.provider
+                for metric_name in metrics.keys():
+                    if not item.metrics.has_key(metric_name):
+                        item.metrics[metric_name] = {}
+                        item.metrics[metric_name]['values'] = {}
+                    item.metrics[metric_name]['values'][ts] = metrics[metric_name]
+                    item.metrics[metric_name]['static_meta'] = {} #self.provider
             else:
                 # The provider returned None for this item. This is either
                 # a non result or a permanent failure
-                for key in self.provider.metric_names:
-                    if not item.metrics.has_key(key):
-                        item.metrics[key] = {}
-                        item.metrics[key]['values'] = {}
-                    item.metrics[key]['values'][ts] = None
-                    item.metrics[key]['static_meta'] = {} #self.provider
+                for metric_name in self.provider.metric_names():
+                    if not item.metrics.has_key(metric_name):
+                        item.metrics[metric_name] = {}
+                        item.metrics[metric_name]['values'] = {}
+                    item.metrics[metric_name]['values'][ts] = None
+                    item.metrics[metric_name]['static_meta'] = {} #self.provider
         else:
             # metrics failed, write None values in for the metric
             # values so we don't attempt to reprocess this item
-            for key in self.provider.metric_names:
-                if not item.metrics.has_key(key):
-                    item.metrics[key] = {}
-                    item.metrics[key]['values'] = {}
-                item.metrics[key]['values'][ts] = None
-                item.metrics[key]['static_meta'] = {} #self.provider
+            for metric_name in self.provider.metric_names():
+                if not item.metrics.has_key(metric_name):
+                    item.metrics[metric_name] = {}
+                    item.metrics[metric_name]['values'] = {}
+                item.metrics[metric_name]['values'][ts] = None
+                item.metrics[metric_name]['static_meta'] = {} #self.provider
         item.save()
 
 

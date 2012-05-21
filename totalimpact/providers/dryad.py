@@ -9,24 +9,38 @@ logger = logging.getLogger('providers.dryad')
 
 class Dryad(Provider):  
 
-    metric_names = [
-        "dryad:package_views", 
-        "dryad:total_downloads", 
-        "dryad:most_downloaded_file"
-        ]
-
     example_id = ("doi", "10.5061/dryad.7898")
 
-
-    # For Dryad the template is the same for all metrics
-    # This template takes a doi
     provenance_url_template = "http://dx.doi.org/%s"
-
     member_items_url_template = "http://datadryad.org/solr/search/select/?q=dc.contributor.author%%3A%%22%s%%22&fl=dc.identifier"
     aliases_url_template = "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.identifier.uri,dc.title"
     biblio_url_template = "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.date.accessioned.year,dc.identifier.uri,dc.title_ac,dc.contributor.author_ac"
     metrics_url_template = "http://dx.doi.org/%s"
 
+    static_meta_dict = {
+        "package_views": {
+            "display_name": "package views",
+            "provider": "Dryad",
+            "provider_url": "http:\/\/www.datadryad.org\/",
+            "description": "Dryad package views: number of views of the main package page",
+            "icon": "http:\/\/datadryad.org\/favicon.ico",
+        },
+        "total_downloads": {
+            "display_name": "total downloads",
+            "provider": "Dryad",
+            "provider_url": "http:\/\/www.datadryad.org\/",
+            "description": "Dryad total downloads: combined number of downloads of the data package and data files",
+            "icon": "http:\/\/datadryad.org\/favicon.ico",
+        },
+        "most_downloaded_file":{
+            "display_name": "most downloaded file",
+            "provider": "Dryad",
+            "provider_url": "http:\/\/www.datadryad.org\/",
+            "description": "Dryad most downloaded file: number of downloads of the most commonly downloaded data package component",
+            "icon": "http:\/\/datadryad.org\/favicon.ico",
+        }
+    }
+        
     DRYAD_DOI_PATTERN = re.compile(r"(10\.5061/.*)")
     DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+)\W*views<span", re.DOTALL)
     DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+)\W*downloads</span", re.DOTALL)

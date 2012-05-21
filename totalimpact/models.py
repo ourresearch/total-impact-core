@@ -186,11 +186,9 @@ class ItemFactory():
 
             # populate the static_meta only if it has a provenance url
             if provenance_url:
-                metric_static_meta = providers_config[provider_name]["metrics"][metric_name]["static_meta"]
-                my_metric["static_meta"] = metric_static_meta
-            else:
                 my_metric["static_meta"] = {}
-
+                if provider.provides_static_meta:
+                    my_metric["static_meta"] = provider.static_meta(metric_name)
 
             item.metrics[full_metric_name] = my_metric
 
@@ -200,10 +198,11 @@ class ItemFactory():
     @classmethod
     def get_metric_names(self, providers_config):
         full_metric_names = []
-        for provider_name, provider in providers_config.iteritems():
-            for metric_name in provider["metrics"]:
-                full_metric_names.append(provider_name+':'+metric_name)
-
+        providers = ProviderFactory.get_providers(providers_config)
+        for provider in providers:
+            metric_names = provider.metric_names()
+            for metric_name in metric_names:
+                full_metric_names.append(provider.provider_name + ':' + metric_name)
         return full_metric_names
 
     @classmethod
