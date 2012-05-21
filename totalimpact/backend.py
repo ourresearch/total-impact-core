@@ -271,15 +271,12 @@ class ProviderThread(QueueConsumer):
                 success = True
 
             except ProviderError, e:
-                error_msg = str(e)
+                error_msg = repr(e)
 
             except Exception, e:
                 # All other fatal errors. These are probably some form of
                 # logic error. We consider these to be fatal.
-                error_msg = "unknown error"
-                logger.error("process_item_for_provider %s %s %s: Unknown exception %s, aborting" % (item.id, provider, method_name, e))
-                tb = sys.exc_info()[2]
-                logger.debug(traceback.format_tb(tb))
+                error_msg = repr(e)
                 error_limit_reached = True
 
             if error_msg:
