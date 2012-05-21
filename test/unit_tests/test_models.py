@@ -285,6 +285,9 @@ class TestItemFactory():
         response = models.ItemFactory.get_metric_names(TEST_PROVIDER_CONFIG)
         assert_equals(response, ['wikipedia:mentions'])
 
+    def test_decide_genre(self):
+        assert True
+
 
 '''
     @raises(LookupError)
