@@ -7,6 +7,7 @@ from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue, QueueMonitor
 from totalimpact import dao, api
 from totalimpact.tilogging import logging
+from totalimpact.queue import AliasQueue, MetricsQueue
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
 
@@ -42,6 +43,9 @@ class TestAliasQueue(unittest.TestCase):
         
     def tearDown(self):
         self.app.config["DB_NAME"] = self.old_db_name
+        # Clear the queues of any items we have left around
+        AliasQueue.clear()
+        MetricsQueue.clear()
 
     def test_alias_queue(self):
         self.d.create_new_db_and_connect(self.testing_db_name)
