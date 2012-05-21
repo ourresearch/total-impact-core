@@ -253,8 +253,8 @@ class TestBackend(unittest.TestCase):
         watcher = TotalImpactBackend(self.d, self.providers)
         
         watcher._spawn_threads()
-        assert len(watcher.threads) == len(self.providers)+1, len(watcher.threads)
-        
+        assert len(watcher.threads) >= len(self.providers)+2, len(watcher.threads)
+       
         watcher._cleanup()
         assert len(watcher.threads) == 0, len(watcher.threads)
 
