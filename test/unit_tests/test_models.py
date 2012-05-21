@@ -276,7 +276,7 @@ class TestItemFactory():
             provider.ProviderFactory.get_provider,
             default_settings.PROVIDERS)
 
-        assert_equals(item.genre, "article")
+        assert_equals(item.biblio['genre'], "article")
 
 
     def test_adds_provenance_url(self):
