@@ -82,6 +82,11 @@ class AliasQueue(Queue):
         self.dao = dao
 
     @classmethod
+    def clear(cls):
+        """ This is only used from the test suite, normally not needed """
+        cls.queued_items = []
+
+    @classmethod
     def enqueue(cls, item_id):
         # Synchronised section
         cls.queue_lock.acquire()
@@ -149,6 +154,12 @@ class MetricsQueue(Queue):
         if not prov:
             raise ValueError("You must supply a provider name")
         self.init_queue(prov)
+
+    @classmethod
+    def clear(cls):
+        """ This is only used from the test suite, normally not needed """
+        for provider in cls.queued_items.keys():
+            cls.queued_items[provider] = []
 
     @classmethod
     def init_queue(cls, provider):
