@@ -163,7 +163,7 @@ class ItemFactory():
         item.aliases = Aliases(seed=item_doc['aliases'])
 
         # determine and set the item's genre
-        item.genre = cls.decide_genre(item_doc['aliases'])
+        item.biblio['genre'] = cls.decide_genre(item_doc['aliases'])
 
         # make the Metric objects. We have to make keys for each metric in the config
         # so that Providers will know which metrics to update later on.
