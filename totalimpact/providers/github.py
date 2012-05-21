@@ -8,10 +8,7 @@ logger = logging.getLogger('providers.github')
 
 class Github(Provider):  
 
-    metric_names = [
-        'github:watchers', 
-        'github:forks'
-        ]
+    example_id = ("github", "egonw,cdk")
 
     member_items_url_template = "https://api.github.com/users/%s/repos"
     biblio_url_template = "https://github.com/api/v2/json/repos/show/%s"
@@ -23,7 +20,22 @@ class Github(Provider):
         "forks" : "https://github.com/%s/%s/network/members"
         }
 
-    example_id = ("github", "egonw,cdk")
+    static_meta_dict = {
+        "watchers": {
+            "display_name": "watchers",
+            "provider": "GitHub",
+            "provider_url": "http://github.com",
+            "description": "The number of people who are watching the GitHub repository",
+            "icon": "https://github.com/fluidicon.png",
+        },
+        "forks": {
+            "display_name": "forks",
+            "provider": "GitHub",
+            "provider_url": "http://github.com",
+            "description": "The number of people who have forked the GitHub repository",
+            "icon": "https://github.com/fluidicon.png",
+            }
+    }     
 
     def __init__(self):
         super(Github, self).__init__()

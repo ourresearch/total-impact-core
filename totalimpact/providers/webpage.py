@@ -6,12 +6,11 @@ logger = logging.getLogger('providers.webpage')
 
 class Webpage(Provider):  
 
-    metric_names = []
+    example_id = ("url", "http://total-impact.org/")
 
     biblio_url_template = "%s"
     provenance_url_template = "%s"
 
-    example_id = ("url", "http://total-impact.org/")
 
     def __init__(self):
         super(Webpage, self).__init__()

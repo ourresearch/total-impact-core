@@ -10,15 +10,28 @@ logger = logging.getLogger('providers.topsy')
 
 class Topsy(Provider):  
 
-    metric_names = [
-        'topsy:tweets', 
-        'topsy:influential_tweets'
-        ]
+    example_id = ("url", "http://total-impact.org")
 
     metrics_url_template = "http://otter.topsy.com/stats.json?url=%s&apikey=" + Topsy_key
     provenance_url_template = "http://topsy.com/%s/?utm_source=otter"
 
-    example_id = ("url", "http://total-impact.org")
+    static_meta_dict =  {
+        "tweets": {
+            "display_name": "tweets",
+            "provider": "Topsy",
+            "provider_url": "http://www.topsy.com/",
+            "description": "Tweets via Topsy, real-time search for the social web" + ", <a href='http://topsy.com'><img src='http://cdn.topsy.com/img/powered.png'/></a>", #part of otter terms of use to include this http://modules.topsy.com/app-terms/
+            "icon": "http://twitter.com/phoenix/favicon.ico" ,
+        },    
+        "influential_tweets": {
+            "display_name": "influencial tweets",
+            "provider": "Topsy",
+            "provider_url": "http://www.topsy.com/",
+            "description": "Influential tweets via Topsy,Real-time search for the social web" + ", <a href='http://topsy.com'><img src='http://cdn.topsy.com/img/powered.png'/></a>", #part of otter terms of use to include this http://modules.topsy.com/app-terms/
+            "icon": "http://twitter.com/phoenix/favicon.ico" ,
+        }
+    }
+    
 
     def __init__(self):
         super(Topsy, self).__init__()

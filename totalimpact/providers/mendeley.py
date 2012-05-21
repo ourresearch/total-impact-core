@@ -9,10 +9,7 @@ logger = logging.getLogger('providers.mendeley')
 
 class Mendeley(Provider):  
 
-    metric_names = [
-        'mendeley:readers', 
-        'mendeley:groups'
-        ]
+    example_id = ("doi", "10.1371/journal.pcbi.1000361")
 
     everything_url_template = "http://api.mendeley.com/oapi/documents/details/%s?type=doi&consumer_key=" + Mendeley_key
     biblio_url_template = everything_url_template
@@ -20,7 +17,23 @@ class Mendeley(Provider):
     metrics_url_template = everything_url_template
     provenance_url_template = everything_url_template
 
-    example_id = ("doi", "10.1371/journal.pcbi.1000361")
+    static_meta_dict = {
+        "readers": {
+            "display_name": "watchers",
+            "provider": "Mendeley",
+            "provider_url": "http://www.mendeley.com/",
+            "description": "The number of readers who have added the article to their libraries",
+            "icon": "http://www.mendeley.com/favicon.ico",
+        },    
+        "groups": {
+            "display_name": "watchers",
+            "provider": "Mendeley",
+            "provider_url": "http://www.mendeley.com/",
+            "description": "The number of groups who have added the article to their libraries",
+            "icon": "http://www.mendeley.com/favicon.ico",
+        }
+    }
+
 
     def __init__(self):
         super(Mendeley, self).__init__()

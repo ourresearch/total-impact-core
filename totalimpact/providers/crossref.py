@@ -10,7 +10,6 @@ class Crossref(Provider):
     example_id = ("doi", "10.1371/journal.pcbi.1000361")
     biblio_url_template = None  #set in init
     aliases_url_template = None  #set in init
-    metric_names = []
 
     def __init__(self):
         super(Crossref, self).__init__()

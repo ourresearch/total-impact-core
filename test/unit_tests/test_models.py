@@ -113,7 +113,11 @@ ITEM_DATA = {
     },
     "biblio": BIBLIO_DATA
 }
-    
+
+TEST_PROVIDER_CONFIG = {
+    "wikipedia": {}
+}
+
 TEST_DB_NAME = "test_models"
 
 
@@ -276,6 +280,10 @@ class TestItemFactory():
         
         assert_equals(item.metrics["wikipedia:mentions"]["provenance_url"],
             "http://en.wikipedia.org/wiki/Special:Search?search='10.1371/journal.pmed.0020124'&go=Go")
+
+    def test_get_metric_names(self):
+        response = models.ItemFactory.get_metric_names(TEST_PROVIDER_CONFIG)
+        assert_equals(response, ['wikipedia:mentions'])
 
 
 '''
@@ -483,7 +491,6 @@ class TestAliases(unittest.TestCase):
     def test_dict(self):
         a = models.Aliases(seed=ALIAS_DATA)
         assert a.as_dict() == ALIAS_DATA
-
 
 
 
