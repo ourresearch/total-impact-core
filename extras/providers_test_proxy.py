@@ -16,23 +16,26 @@ import os
 
 import daemon
 import lockfile
+import re
 from totalimpact.pidsupport import PidFile
 
-responses = {'dryad':{},'wikipedia':{},'github':{}}
+responses = {'dryad':{},'wikipedia':{},'github':{},'mendeley':{},'crossref':{}}
 
 def load_test_data(provider, filename):
     datadir = os.path.join(os.path.split(__file__)[0], "../test/data/", provider)
     return open(os.path.join(datadir, filename)).read()
 
-responses['dryad']['aliases'] = load_test_data('dryad', 'sample_extract_aliases_page.xml')
-responses['dryad']['metrics'] = load_test_data('dryad', 'sample_extract_metrics_page.html')
-responses['dryad']['10.5061'] = load_test_data('dryad', 'dryad_info_10.5061.xml')
-responses['wikipedia']['metrics'] = load_test_data('wikipedia', 'wikipedia_response.xml')
-responses['wikipedia']['10.1186'] = load_test_data('wikipedia', 'wikipedia_10.1186_response.xml')
-responses['wikipedia']['10.5061'] = load_test_data('wikipedia', 'wikipedia_10.5061_response.xml')
-responses['wikipedia']['cottagelabs'] = load_test_data('wikipedia', 'wikipedia_cottagelabs.xml')
-responses['github']['members'] = load_test_data('github', 'egonw_gtd_member_response.json')
-responses['github']['metrics'] = load_test_data('github', 'egonw_gtd_metric_response.json')
+responses['dryad']['aliases'] = (200, load_test_data('dryad', 'sample_extract_aliases_page.xml'))
+responses['dryad']['metrics'] = (200, load_test_data('dryad', 'sample_extract_metrics_page.html'))
+responses['dryad']['10.5061'] = (200, load_test_data('dryad', 'dryad_info_10.5061.xml'))
+responses['wikipedia']['metrics'] = (200, load_test_data('wikipedia', 'wikipedia_response.xml'))
+responses['wikipedia']['10.1186'] = (200, load_test_data('wikipedia', 'wikipedia_10.1186_response.xml'))
+responses['wikipedia']['10.5061'] = (200, load_test_data('wikipedia', 'wikipedia_10.5061_response.xml'))
+responses['wikipedia']['cottagelabs'] = (200, load_test_data('wikipedia', 'wikipedia_cottagelabs.xml'))
+responses['github']['members'] = (200, load_test_data('github', 'egonw_gtd_member_response.json'))
+responses['github']['metrics'] = (200, load_test_data('github', 'egonw_gtd_metric_response.json'))
+responses['mendeley']['aliases-10.5061'] = (404, load_test_data('mendeley', 'mendeley-aliases-10.5061'))
+responses['crossref']['aliases-10.5061'] = (200, load_test_data('crossref', 'crossref-aliases-10.5061'))
 
 urlmap = {
 
@@ -68,6 +71,20 @@ urlmap = {
 
     ###################################################################################
     ##
+    ## Mendeley Provider
+    ##
+
+    re.compile(r"http://api.mendeley.com/oapi/documents/details/10.5061%252Fdryad.7898\?type=doi&consumer_key=.*"): responses['mendeley']['aliases-10.5061'],
+
+    ###################################################################################
+    ##
+    ## Crossref Provider
+    ##
+
+    re.compile(r"http://doi.crossref.org/servlet/query\?pid=(.*)&qdata=10.5061/dryad.7898&format=unixref"): responses["crossref"]['aliases-10.5061'],
+
+    ###################################################################################
+    ##
     ## Test Item
     ##
     ## This is just so you can check http://proxy:port/test to see if this is running ok
@@ -79,11 +96,21 @@ urlmap = {
 class ProvidersTestProxy(BaseHTTPRequestHandler):
 
     def do_GET(self):
-        if urlmap.has_key(self.path):
+        # Find match, including regex
+        match = None
+        for key in urlmap.keys():
+            if isinstance(key, str):
+                if self.path == key:
+                    match = key
+            else:
+                if key.match(self.path):
+                    match = key
+        if match:
             print "Found:", self.path
-            self.send_response(200)
+            (code, response) = urlmap[match]
+            self.send_response(code)
             self.end_headers()
-            self.wfile.write(urlmap[self.path])
+            self.wfile.write(response)
         else: 
             print "Not Found:", self.path
             self.send_response(500, "Test Proxy: Unknown URL")
