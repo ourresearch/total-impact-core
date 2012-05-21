@@ -149,6 +149,7 @@ class ItemFactory():
         item = cls.item_class(dao, id=id)
 
         if item_doc is None:
+            logger.warning("Unable to load item %s" % id)
             raise LookupError
 
         item.last_requested = now

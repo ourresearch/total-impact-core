@@ -42,9 +42,9 @@ class ProviderNotImplemented(Provider):
     def __init__(self):
         Provider.__init__(self, None)
         self.provider_name = 'not_implemented'
-    def aliases(self, item):
+    def aliases(self, item, provider_url_template=None, cache_enabled=True):
         raise NotImplementedError()
-    def metrics(self, item):
+    def metrics(self, item, provider_url_template=None, cache_enabled=True):
         raise NotImplementedError()
 
 def first_mock(self):
@@ -251,7 +251,7 @@ class TestBackend(unittest.TestCase):
     @slow
     def test_14_backend(self):
         watcher = TotalImpactBackend(self.d, self.providers)
-        
+
         watcher._spawn_threads()
         assert len(watcher.threads) >= len(self.providers)+2, len(watcher.threads)
        
