@@ -167,28 +167,16 @@ def make_item_dict(tiid):
         abort(404)
     return item_dict
 
-def make_item_resp(tiid, item_dict, format):
-    item_dict["tiid"] = tiid;
-    if format == "html":
-        #TODO in the future, we need to actually use the article's value for this
-        if not item_dict.has_key('genre'):
-            item_dict['genre'] = "dataset"
-        resp = make_response(render_template("item.html", item=item_dict ))
-        resp.content_type = "text/html"
-    else:
-        resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4))
-        resp.mimetype = "application/json"
-    return resp
-
 '''GET /item/:tiid
 404 if tiid not found in db
 '''
 @app.route('/item/<tiid>', methods=['GET'])
-@app.route('/item/<tiid>.<format>', methods=['GET'])
 def item(tiid, format=None):
     # TODO check request headers for format as well.
     item_dict = make_item_dict(tiid)
-    return make_item_resp(tiid, item_dict, format)
+    resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4))
+    resp.mimetype = "application/json"
+    return resp
 
 '''
 GET /items/:tiid,:tiid,...

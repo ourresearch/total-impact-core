@@ -138,7 +138,7 @@ class TestItem(ApiTester):
         assert_equals(response.status_code, 200)
         assert_equals(
             set(json.loads(response.data).keys()),
-            set([u'tiid', u'aliases', u'biblio', u'created', u'id', u'last_modified',
+            set([u'aliases', u'biblio', u'created', u'id', u'last_modified',
                 u'last_requested', u'metrics', u'last_queued', u'genre'])
             )
         assert_equals(response.mimetype, "application/json")
@@ -169,38 +169,6 @@ class TestItem(ApiTester):
         print self.d.save(ARTICLE_ITEM)
         response = self.client.get('/item/' + ARTICLE_ITEM['id'])
         assert_equals(response.headers[0][1], 'application/json')
-
-    def test_returns_html_mimetype(self):
-        print self.d.save(ARTICLE_ITEM) 
-        response = self.client.get('item/{0}.html'.format(ARTICLE_ITEM['id']))
-        assert_equals(response.headers[0][1], 'text/html') 
-
-    def test_returns_html_view(self):
-        print self.d.save(ARTICLE_ITEM)
-        response = self.client.get('item/{0}.html'.format(ARTICLE_ITEM['id']))
-
-        # parsing makes debugging much easier...impossible   to visually compare
-        # the raw markup strings when not pretty-printed.
-        returned = BeautifulSoup(response.data)
-        expected = BeautifulSoup(RENDERED_ARTICLE)
-
-
-        assert returned.find('h4') is not None
-        assert_equals(returned('h4'), expected('h4'))  
-
-        assert returned.find('div', "biblio") is not None
-        assert_equals(
-            returned.find('div', "biblio").soup,
-            expected.find('div', "biblio").soup)
-
-        # in progress... 
-
-        assert returned.find('ul', "metrics") is not None
-
-
-        assert_equals(
-            returned.find('ul', "metrics").soup,
-            expected.find('ul', "metrics").soup)
 
 
 class TestItems(ApiTester):
