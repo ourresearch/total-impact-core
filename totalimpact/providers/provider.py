@@ -205,7 +205,7 @@ class Provider(object):
             logger.info("Not checking aliases because no relevant id for %s", self.provider_name)
             return []
 
-        new_aliases = aliases
+        new_aliases = aliases[:]
         for alias in relevant_aliases:
             (namespace, nid) = alias
             logger.info("processing alias %s" % str(alias))
