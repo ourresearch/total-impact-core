@@ -195,6 +195,9 @@ class ItemFactory():
 
         return item
 
+    @classmethod
+    def decide_genre(self, alias_dict):
+        pass
 
     @classmethod
     def get_metric_names(self, providers_config):
