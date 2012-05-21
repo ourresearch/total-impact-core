@@ -162,6 +162,9 @@ class ItemFactory():
         # the aliases property needs to be an Aliases obj, not a dict.
         item.aliases = Aliases(seed=item_doc['aliases'])
 
+        # determine and set the item's genre
+        item.genre = cls.decide_genre(item_doc['aliases'])
+
         # make the Metric objects. We have to make keys for each metric in the config
         # so that Providers will know which metrics to update later on.
         # Then we fill these Metric objects's dictionaries with the metricSnaps
@@ -197,7 +200,25 @@ class ItemFactory():
 
     @classmethod
     def decide_genre(self, alias_dict):
-        pass
+        '''Uses available aliases to decide the item's genre'''
+
+        if "doi" in alias_dict:
+            if "10.5061/dryad." in "".join(alias_dict["doi"]):
+                return "dataset"
+            else:
+                return "article"
+        elif "pmid" in alias_dict:
+            return "article"
+        elif "url" in alias_dict:
+            joined_urls = "".join(alias_dict["url"])
+            if "slideshare.net" in joined_urls:
+                return "slides"
+            elif "github.com" in joined_urls:
+                return "software"
+            else:
+                return "webpage"
+        else:
+            return "unknown"
 
     @classmethod
     def get_metric_names(self, providers_config):

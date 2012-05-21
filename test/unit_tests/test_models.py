@@ -268,6 +268,17 @@ class TestItemFactory():
         expected = {'provider_url': 'http://www.wikipedia.org/', 'icon': 'http://wikipedia.org/favicon.ico', 'display_name': 'mentions', 'description': 'Wikipedia is the free encyclopedia that anyone can edit.', 'provider': 'Wikipedia'}
         assert_equals(item.metrics["wikipedia:mentions"]["static_meta"], expected)
 
+    def test_adds_genre(self):
+        self.d.setResponses([deepcopy(ITEM_DATA)])
+        item = models.ItemFactory.get(
+            self.d,
+            "123",
+            provider.ProviderFactory.get_provider,
+            default_settings.PROVIDERS)
+
+        assert_equals(item.genre, "article")
+
+
     def test_adds_provenance_url(self):
         self.d.setResponses([deepcopy(ITEM_DATA)])
         item = models.ItemFactory.get(
@@ -285,21 +296,43 @@ class TestItemFactory():
         response = models.ItemFactory.get_metric_names(TEST_PROVIDER_CONFIG)
         assert_equals(response, ['wikipedia:mentions'])
 
-    def test_decide_genre(self):
-        assert True
+    def test_decide_genre_article_doi(self):
+        aliases = {"doi":["10:123", "10:456"]}
+        genre = models.ItemFactory.decide_genre(aliases)
+        assert_equals(genre, "article")
+
+    def test_decide_genre_article_pmid(self):
+        aliases = {"pmid":["12345678"]}
+        genre = models.ItemFactory.decide_genre(aliases)
+        assert_equals(genre, "article")
+
+    def test_decide_genre_slides(self):
+        aliases = {"url":["http://www.slideshare.net/jason/my-slides"]}
+        genre = models.ItemFactory.decide_genre(aliases)
+        assert_equals(genre, "slides")
+
+    def test_decide_genre_software(self):
+        aliases = {"url":["http://www.github.com/jasonpriem/my-sofware"]}
+        genre = models.ItemFactory.decide_genre(aliases)
+        assert_equals(genre, "software")
+
+    def test_decide_genre_dataset(self):
+        aliases = {"doi":["10.5061/dryad.18"]}
+        genre = models.ItemFactory.decide_genre(aliases)
+        assert_equals(genre, "dataset")
+
+    def test_decide_genre_webpage(self):
+        aliases = {"url":["http://www.google.com"]}
+        genre = models.ItemFactory.decide_genre(aliases)
+        assert_equals(genre, "webpage")
+
+    def test_decide_genre_unknown(self):
+        aliases = {"unknown_namespace":["myname"]}
+        genre = models.ItemFactory.decide_genre(aliases)
+        assert_equals(genre, "unknown")
 
 
-'''
-    @raises(LookupError)
-    def test_load_with_nonexistant_item_fails(self):
-        self.d.setResponses([None])
-        item = models.ItemFactory.make(self.d, "123")
 
-    def test_factory_loads_all_metrics_objects(self):
-        self.d.setResponses([deepcopy(ITEM_DATA)])
-        item = models.ItemFactory.make(self.d, "123")
-        #assert_equals(item.metrics["foo:views"])
-'''
 
 class TestItem():
 
