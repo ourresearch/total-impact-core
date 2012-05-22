@@ -349,10 +349,8 @@ class ProvidersAliasThread(ProviderThread):
                 (success, biblio) = self.process_item_for_provider(item, provider, 'biblio')
                 if success:
                     if biblio:
-                        for key in biblio.keys():
-                            if not item.biblio.has_key('data'):
-                                item.biblio['data'] = {}
-                            item.biblio['data'][key] = biblio[key]
+                        # merge old biblio with new, favoring old in cases of conflict
+                        item.biblio = dict(biblio.items() + item.biblio.items())
                 else:
                     # This provider has failed and exceeded the 
                     # total number of retries. Don't process any 

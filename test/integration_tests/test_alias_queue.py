@@ -100,5 +100,5 @@ class TestAliasQueue(unittest.TestCase):
             "data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides"
             )
         print resp_dict
-        assert_equals(resp_dict["biblio"]["data"]["year"], "2010")
+        assert_equals(resp_dict["biblio"]["year"], "2010")
 
