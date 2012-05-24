@@ -206,13 +206,15 @@ def items(tiids, format=None):
                         reverse=True)[0]
                     val_to_add = item['metrics'][metric_name]['values'][latest_key]
                 except IndexError:
-                    val_to_add = "NA"
+                    val_to_add = ""
 
                 row = row + str(val_to_add)
 
             csv =  csv + row + "\n"
+            
         resp = make_response(csv[0:-2]) # remove trailing "\n"
         resp.mimetype = "text/csv"
+        resp.headers.add("Content-Disposition", "attachment; filename=ti.csv")
     else:
         resp = make_response(json.dumps(items, sort_keys=True, indent=4))
         resp.mimetype = "application/json"
