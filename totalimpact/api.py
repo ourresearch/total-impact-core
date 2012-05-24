@@ -208,7 +208,7 @@ def items(tiids, format=None):
                 except IndexError:
                     val_to_add = "NA"
 
-                row = row + val_to_add
+                row = row + str(val_to_add)
 
             csv =  csv + row + "\n"
         resp = make_response(csv[0:-2]) # remove trailing "\n"

@@ -349,7 +349,7 @@ class ProvidersAliasThread(ProviderThread):
                 (success, biblio) = self.process_item_for_provider(item, provider, 'biblio')
                 if success:
                     if biblio:
-                        # merge old biblio with new, favoring old in cases of conflict
+                        # merge old biblio with new, favoring old in cases of conflicts
                         item.biblio = dict(biblio.items() + item.biblio.items())
                 else:
                     # This provider has failed and exceeded the 
