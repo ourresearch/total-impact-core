@@ -39,32 +39,32 @@ CACHE_ENABLED = True
 #
 PROVIDERS = {
     "crossref":{
-        "workers":10
+        "workers":1
     },
     "delicious":{
-        "workers":10
+        "workers":1
    },   
     "dryad": {
-        "workers":10
+        "workers":1
     },            
     "github":{
-        "workers":10   
+        "workers":1   
     },
     "mendeley":{
-        "workers":10
+        "workers":1
     },  
     "topsy":{
-        "workers":10
+        "workers":1
     },  
     "webpage":{
-        "workers":10
+        "workers":1
     },
     "wikipedia": {
-        "workers": 10
+        "workers": 1
     }
 }
 
 ALIASES = {
-    "workers" : 10
+    "workers" : 1
 }
 
