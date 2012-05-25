@@ -106,6 +106,8 @@ class Saveable(object):
         retry = True
         import couchdb
 
+        logger.info("IN SAVE with item %s" %self.id)
+
         # Get the lock for this item for write
         lock = itemlock.getItemLock(self.id)
         lock.acquire()

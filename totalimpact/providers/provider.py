@@ -7,7 +7,7 @@ import simplejson
 import BeautifulSoup
 
 from totalimpact.tilogging import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("provider")
 
 
 class ProviderFactory(object):
@@ -137,14 +137,14 @@ class Provider(object):
         if not self.provides_members:
             raise NotImplementedError()
 
-        logger.info("member_items with %s, %s" % (self.provider_name, query_string))
+        logger.debug("%20s getting member_items for %s" % (self.provider_name, query_string))
 
         if not provider_url_template:
             provider_url_template = self.member_items_url_template
 
         enc = urllib.quote(query_string)
         url = self._get_templated_url(provider_url_template, enc, "members")
-        logger.debug("attempting to retrieve member items from " + url)
+        #logger.debug("attempting to retrieve member items from " + url)
         
         # try to get a response from the data provider  
         response = self.http_get(url, cache_enabled=cache_enabled)
@@ -173,7 +173,7 @@ class Provider(object):
 
         # Only lookup biblio for items with appropriate ids
         if not id:
-            logger.info("Not checking biblio because no relevant id for %s", self.provider_name)
+            logger.info("%20s not checking biblio, no relevant alias" % (self.provider_name))
             return None
 
         if not provider_url_template:
@@ -190,7 +190,7 @@ class Provider(object):
         if not self.provides_biblio:
             return {}
 
-        logger.info("get_biblio_for_id for %s, %s" % (self.provider_name, id))
+        logger.debug("%20s getting biblio for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.biblio_url_template
@@ -223,13 +223,12 @@ class Provider(object):
         relevant_aliases = self.relevant_aliases(aliases)
 
         if not relevant_aliases:
-            logger.info("Not checking aliases because no relevant id for %s", self.provider_name)
+            logger.info("%20s not checking aliases, no relevant alias" % (self.provider_name))
             return []
 
         new_aliases = aliases[:]
         for alias in relevant_aliases:
             (namespace, nid) = alias
-            logger.info("processing alias %s" % str(alias))
             new_aliases += self._get_aliases_for_id(nid, provider_url_template, cache_enabled)
         
         new_aliases_unique = list(set(new_aliases))
@@ -245,13 +244,11 @@ class Provider(object):
         if not self.provides_aliases:
             return []
 
-        logger.info("_get_aliases_for_id for %s, %s" % (self.provider_name, id))
+        logger.debug("%20s getting aliases for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.aliases_url_template
         url = self._get_templated_url(provider_url_template, id, "aliases")
-
-        logger.info("_get_aliases_for_id getting %s" % url)
 
         # try to get a response from the data provider                
         response = self.http_get(url, cache_enabled=cache_enabled)
@@ -282,7 +279,7 @@ class Provider(object):
 
         # Only lookup metrics for items with appropriate ids
         if not id:
-            logger.info("Not checking metrics because no relevant id for %s", self.provider_name)
+            logger.info("%20s not checking metrics, no relevant alias" % (self.provider_name))
             return {}
 
         if not provider_url_template:
@@ -300,21 +297,19 @@ class Provider(object):
         if not self.provides_metrics:
             return {}
 
-        logger.info("get_metrics_for_id with %s, %s" % (self.provider_name, id))
+        logger.debug("%20s getting metrics for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.metrics_url_template
         url = self._get_templated_url(provider_url_template, id, "metrics")
-        logger.debug("get_metrics_for_id getting %s" % url)
 
         # try to get a response from the data provider                
         response = self.http_get(url, cache_enabled=cache_enabled)
 
-        logger.debug("get_metrics_for_id response.status_code %i" % response.status_code)
+        #logger.debug("get_metrics_for_id response.status_code %i" % response.status_code)
         
         # extract the metrics
         metrics_dict = self._extract_metrics(response.text, response.status_code, id=id)
-        logger.info("get_metrics_for_id with %s, %s got metrics_dict %s" % (self.provider_name, id, str(metrics_dict)))
         return metrics_dict
 
 
@@ -347,7 +342,7 @@ class Provider(object):
         # first thing is to try to retrieve from cache
         # use the cache if the config parameter is set and the arg allows it
         use_cache = app.config["CACHE_ENABLED"] and cache_enabled
-        logger.info("http_get on %s with use_cache %i" %(url, use_cache))
+        #logger.debug("http_get on %s with use_cache %i" %(url, use_cache))
 
         cache_data = None
         if use_cache:

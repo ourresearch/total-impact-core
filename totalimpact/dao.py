@@ -93,6 +93,7 @@ class Dao(object):
         """ returns (id, rev) tuple of the save document
             raises exceptions on failure """
         doc["_id"] = doc["id"]
+        logger.info("IN DAO SAVE WITH ID %s" %(doc["id"]))
         return self.db.save(doc)
 
     def save_and_commit(self, doc):
