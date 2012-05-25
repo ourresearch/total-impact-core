@@ -59,7 +59,7 @@ class Saveable(object):
         self.dao = dao
 
         if id is None:
-            self.id = uuid.uuid4().hex
+            self.id = uuid.uuid1().hex
         else:
             self.id = id
 
