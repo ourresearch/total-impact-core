@@ -22,6 +22,7 @@ class TotalImpactAPI:
             Will request the item related to pubmed item 234234232
         """
 
+        print alias
         (namespace, nid) = alias
         url = self.base_url + urllib.quote('item/%s/%s' % (namespace, nid))
         print url
@@ -42,83 +43,56 @@ class TotalImpactAPI:
 from optparse import OptionParser
 
 TEST_ITEMS = {
-#                ('doi', '10.1371/journal.pcbi.1000361')), 
-#                ("delicious", ('url', 'http://total-impact.org/')),
-                ('doi','10.5061/dryad.18') : 
-                    { 
-                        'aliases': ['doi', 'url', 'title'],
-                        'biblio': [u'authors', u'year', u'repository', u'title'],
-                        'metrics' : {
-                            'dryad:most_downloaded_file' : 63,
-                            'dryad:package_views' : 149,
-                            'dryad:total_downloads' : 169
-                        }
-                    }
-#                ("github", ('github', 'egonw,cdk')),
-#                ("mendeley", ('doi', '10.1371/journal.pcbi.1000361')), 
-#                ("topsy", ('url', 'http://total-impact.org')),
-#                ("webpage", ('url', 'http://nescent.org/')),
-#                ("wikipedia", ('doi', '10.1371/journal.pcbi.1000361')) 
-}
-
-GOLD_RESPONSES = {
-    'crossref' : { 
-        'aliases': ['doi', "title", "url"],
-        'biblio': [u'authors', u'journal', u'year', u'title'],
-        'metrics' : {}
-    },
-    'delicious' : { 
-        'aliases': ["url"],
-        'biblio': [],
-        'metrics' : {
-            'delicious:bookmarks' : 65
-        }
-    },
-    'dryad' : { 
-        'aliases': ['doi', 'url', 'title'],
-        'biblio': [u'authors', u'year', u'repository', u'title'],
-        'metrics' : {
-            'dryad:most_downloaded_file' : 63,
-            'dryad:package_views' : 149,
-            'dryad:total_downloads' : 169
-        }
-    },    
-    'github' : { 
-        'aliases': ['github', 'url', 'title'],
-        'biblio': [u'last_push_date', u'create_date', u'description', u'title', u'url', u'owner'],
-        'metrics' : {
-            'github:forks' : 0,
-            'github:watchers' : 7
-        }
-    },
-    'mendeley' : { 
-        'aliases': [u'url', u'doi', u'title'],
-        'biblio': [u'authors', u'journal', u'year', u'title'],
-        'metrics' : {
-            'mendeley:readers' : 50,
-            'mendeley:groups' : 4
-        }
-    },
-    'topsy' : { 
-        'aliases': ["url"],
-        'biblio': [],
-        'metrics' : {
-            'topsy:tweets' : 282,
-            'topsy:influential_tweets' : 26
-        }
-    },
-    'webpage' : { 
-        'aliases': ['url'],
-        'biblio': [u'title', "h1"],
-        'metrics' : {}
-    },
-    'wikipedia' : { 
-        'aliases': ['doi', "url"],
-        'biblio': [],
-        'metrics' : {
-            'wikipedia:mentions' : 1
-        }
-    }
+    ('doi', '10.1371/journal.pcbi.1000361') :
+        { 
+            'aliases': ['doi', "title", "url"],
+            'biblio': [u'authors', u'journal', u'year', u'title'],
+            'metrics' : {
+                'wikipedia:mentions' : 1
+            }
+        },
+#    ('url', 'http://total-impact.org/') : #note trailing slash
+#        { 
+#            'aliases': ["url"],
+#            'biblio': [],
+#            'metrics' : {
+#                'delicious:bookmarks' : 65
+#            }
+#        },
+#    ('url', 'http://total-impact.org'): #no trailing slash
+#        { 
+#            'aliases': ["url"],
+#            'biblio': [],
+#            'metrics' : {
+#                'topsy:tweets' : 282,
+#                'topsy:influential_tweets' : 26
+#            }
+#        },                    
+#    ('doi', '10.5061/dryad.18') : 
+#        { 
+#            'aliases': ['doi', 'url', 'title'],
+#            'biblio': [u'authors', u'year', u'repository', u'title'],
+#            'metrics' : {
+#                'dryad:most_downloaded_file' : 63,
+#                'dryad:package_views' : 149,
+#                'dryad:total_downloads' : 169
+#            }
+#        },
+    ('github', 'egonw,cdk') :
+        { 
+            'aliases': ['github', 'url', 'title'],
+            'biblio': [u'last_push_date', u'create_date', u'description', u'title', u'url', u'owner'],
+            'metrics' : {
+                'github:forks' : 0,
+                'github:watchers' : 7
+            }
+        },                    
+#    ('url', 'http://nescent.org/'):
+#        { 
+#            'aliases': ['url'],
+#            'biblio': [u'title', "h1"],
+#            'metrics' : {}
+#        }
 }
 
 
@@ -144,7 +118,6 @@ def checkItemSection(alias, id, section, api_response, options):
     # Check aliases are correct
     if section=="aliases":
         aliases = TEST_ITEMS[alias]['aliases']
-        print api_response
         alias_result = set(api_response.keys())
         expected_result = set(aliases + [u'last_modified', u'created'])
         if (alias_result == expected_result):
@@ -152,7 +125,7 @@ def checkItemSection(alias, id, section, api_response, options):
                 print "ALIASES CORRECT! %s" %(alias_result)
         else:
             if options.debug:
-                print "ALIASES **NOT** CORRECT, have %s, want %s" %(alias_result, expected_result)
+                print "ALIASES **NOT** CORRECT, for %s, %s, have %s, want %s" %(alias, id, alias_result, expected_result)
             return False
 
     # Check biblio are correct
@@ -181,7 +154,6 @@ def checkItemSection(alias, id, section, api_response, options):
             except KeyError:
                 # didn't return anything.  problem!
                 print "METRICS **NOT** CORRECT for %s: metric missing" % (metric)
-                pprint(api_response)
                 return False
 
             # expect the returned value to be equal or larger than reference
@@ -191,7 +163,6 @@ def checkItemSection(alias, id, section, api_response, options):
             else:
                 if options.debug:
                     print "METRICS **NOT** CORRECT for %s - %s, expected at least %s" % (metric, metric_data, metrics[metric])
-                pprint(api_response)
                 return False
 
 
