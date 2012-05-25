@@ -65,6 +65,5 @@ PROVIDERS = {
 }
 
 ALIASES = {
-    "workers" : 1
 }
 

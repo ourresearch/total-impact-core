@@ -45,30 +45,27 @@ class TotalImpactBackend(object):
             if not provider.provides_metrics:
                 continue
             thread_count = app.config["PROVIDERS"][provider.provider_name]["workers"]
-            logger.info("Spawning threads for provider %s (%i)" % (provider.provider_name, thread_count)) 
+            logger.info("%20s: spawning, n=%i" % (provider.provider_name, thread_count)) 
             # create and start the metrics threads
             for idx in range(thread_count):
                 t = ProviderMetricsThread(provider, self.dao)
-                t.thread_id = t.thread_id + '(%i)' % idx
+                t.thread_id = t.thread_id + '[%i]' % idx
                 t.start()
                 self.threads.append(t)
         
-        thread_count = app.config["ALIASES"]["workers"]
-        logger.info("Spawning threads for aliases (%i)" % thread_count)
-        for idx in range(thread_count):
-            t = ProvidersAliasThread(self.providers, self.dao)
-            t.start()
-            t.thread_id = 'AliasThread(%i)' % idx
-            self.threads.append(t)
+        logger.info("%20s: spawning" % ("aliases"))
+        t = ProvidersAliasThread(self.providers, self.dao)
+        t.start()
+        self.threads.append(t)
 
-        logger.info("Spawning thread for queue monitor")
+        logger.info("%20s: spawning" % ("monitor_thread"))
         # Start the queue monitor
         # This will watch for newly created items appearing in the couchdb
         # which were requested through the API. It then queues them for the
         # worker processes to handle
         t = QueueMonitor(self.dao)
         t.start()
-        t.thread_id = 'QueueMonitor'
+        t.thread_id = 'monitor_thread'
         self.threads.append(t)
         
     def _monitor(self):        
@@ -93,12 +90,12 @@ class TotalImpactBackend(object):
     def _cleanup(self):
         
         for t in self.threads:
-            logger.info("Stopping %s" % t.thread_id)
+            logger.info("%20s: stopping" % (t.thread_id))
             t.stop()
         for t in self.threads:
-            logger.info("Waiting on %s" % t.thread_id)
+            logger.info("%20s: waiting to stop" % (t.thread_id))
             t.join()
-            logger.info("... stopped")
+            logger.info("%20s: stopped" % (t.thread_id))
 
         self.threads = []
     
@@ -179,7 +176,7 @@ class ProviderThread(QueueConsumer):
         while not self.stopped():
             # get the first item on the queue - this waits until
             # there is something to return
-            logger.debug("%s - waiting for queue item" % self.thread_id)
+            logger.debug("%20s: waiting for queue item" % self.thread_id)
             item = self.dequeue()
             
             # Check we have an item, if we have been signalled to stop, then
@@ -312,7 +309,7 @@ class ProvidersAliasThread(ProviderThread):
         queue = AliasQueue(dao)
         ProviderThread.__init__(self, dao, queue)
         self.providers = providers
-        self.thread_id = "AliasThread"
+        self.thread_id = "alias_thread"
 
     def startup(self):
         # Ensure logs for this thread are marked correctly
@@ -321,6 +318,8 @@ class ProvidersAliasThread(ProviderThread):
         ctxfilter.local.backend['thread'] = self.thread_id
         
     def process_item(self, item):
+        logger.info("initial alias list is %s" % item.aliases.get_aliases_list())
+
         if not self.stopped():
             for provider in self.providers: 
 
@@ -373,7 +372,7 @@ class ProviderMetricsThread(ProviderThread):
         self.provider = provider
         queue = MetricsQueue(dao, provider.provider_name)
         ProviderThread.__init__(self, dao, queue)
-        self.thread_id = "MetricsThread:" + str(self.provider.provider_name)
+        self.thread_id = str(self.provider.provider_name) + "_thread"
 
     def startup(self):
         # Ensure logs for this thread are marked correctly
@@ -444,7 +443,7 @@ def main(logfile=None):
     # Without the filter, those details don't exist and logging will fail.
     from totalimpact.backend import ctxfilter
     handler = logging.handlers.RotatingFileHandler(logfile)
-    handler.level = logging.DEBUG
+    handler.level = logging.ERROR
     formatter = logging.Formatter("%(asctime)s %(levelname)8s %(item)8s %(thread)s%(provider)s - %(message)s")#,"%H:%M:%S,%f")
     handler.formatter = formatter
     handler.addFilter(ctxfilter)
