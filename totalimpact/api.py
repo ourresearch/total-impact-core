@@ -44,9 +44,6 @@ app = create_app()
 
 # Set up in-memory queue datastructures for each provider
 provider_names = app.config["PROVIDERS"].keys()
-for provider_name in provider_names:
-    MetricsQueue.init_queue(provider_name)
-
 mydao = None
 
 @app.before_request

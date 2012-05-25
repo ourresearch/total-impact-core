@@ -3,7 +3,7 @@ from nose.tools import nottest, assert_equals
 from urllib import quote_plus
 from nose.plugins.skip import SkipTest
 
-from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
+from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact import dao, api

@@ -75,8 +75,11 @@ class QueueMock(object):
             self.current_item += 1
         return item
 
-    def save_and_unqueue(self, item):
-        logging.debug("Unqueue item %s" % item.id)
+    def save(self, item):
+        logging.debug("Saving item %s" % item.id)
+
+    def add_to_metrics_queues(self, item):
+        pass
 
 
 class ItemMock(object):

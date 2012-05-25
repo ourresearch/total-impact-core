@@ -2,7 +2,7 @@ import os, unittest, time
 from nose.tools import nottest, assert_equals
 from test.utils import slow
 
-from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
+from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact import dao, api
@@ -87,26 +87,6 @@ class TestBackend(unittest.TestCase):
         assert len(watcher.threads) == 0
         assert len(watcher.providers) == len(self.providers), len(watcher.providers)
         
-    def test_02_init_metrics(self):
-        provider = Provider(None)
-        provider.provider_name = "test"
-        pmt = ProviderMetricsThread(provider, self.d)
-        
-        assert hasattr(pmt, "stop")
-        assert hasattr(pmt, "stopped")
-        assert hasattr(pmt, "first")
-        assert pmt.queue is not None
-        assert pmt.provider.provider_name == "test"
-        assert pmt.queue.provider == "test"
-        
-    def test_03_init_aliases(self):
-        providers = ProviderFactory.get_providers(self.config)
-        pat = ProvidersAliasThread(providers, self.d)
-        
-        assert hasattr(pat, "stop")
-        assert hasattr(pat, "stopped")
-        assert hasattr(pat, "first")
-        assert pat.queue is not None
         
     def test_05_run_stop(self):
         st = StoppableThread()
@@ -137,25 +117,6 @@ class TestBackend(unittest.TestCase):
         InterruptTester().run(2)
         took = time.time() - start
         assert took < 3 # taking into account all the sleep delays
-
-    @slow
-    def test_07_queue_consumer(self):
-        q = QueueConsumer(QueueMock())
-        
-        # the QueueMock will return None 3 times before giving
-        # an item, so this operation should take more than 1.5
-        # seconds
-        start = time.time()
-        item = q.first()
-        took = time.time() - start
-        assert took > 1.25, took
-        assert took < 2.0, took
-        
-    def test_08_stopped_queue(self):
-        q = QueueConsumer(QueueMock())
-        q.stop()
-        item = q.first()
-        assert item is None
         
     def test_09_alias_stopped(self):
         # relies on Queue.first mock as per setUp

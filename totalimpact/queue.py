@@ -5,7 +5,7 @@ from totalimpact.pidsupport import StoppableThread, ctxfilter
 from totalimpact.providers.provider import ProviderFactory
 
 from totalimpact.tilogging import logging
-log = logging.getLogger(__name__)
+log = logging.getLogger("queue")
 
 import threading
 
@@ -27,12 +27,10 @@ class Queue():
             return None
         return None
 
-    # implement this in inheriting classes if needs to be different
-    # Saving the item should solve this for now, as the providers are meant
-    # to update their last_modified as appropriate.
-    def save_and_unqueue(self, item):
-        item.save()
-        
+    # alias should override this
+    def add_to_metrics_queues(self, item):
+        pass        
+
 
 class QueueMonitor(StoppableThread):
     """ Worker to watch couch for newly requested items, and place them
@@ -55,16 +53,22 @@ class QueueMonitor(StoppableThread):
             for res in res["rows"]:
                 item_id = res["id"]
                 ctxfilter.local.backend['item'] = item_id
-                log.info("Item Requsted")
+                log.info("%20s detected on request queue: item %s" 
+                    % ("QueueMonitor", item_id))
                 item = ItemFactory.get(self.dao, 
                     item_id, 
                     ProviderFactory.get_provider,
                     default_settings.PROVIDERS)
                 # In case clocks are out between processes, use min to ensure queued >= requested
                 item.last_queued = max(item.last_requested, time.time()) 
-                item.save()
+
                 # Now add the item to the in-memory queue
                 AliasQueue.enqueue(item_id)
+
+                # now save back the updated last_queued information
+                item.save()
+                log.info("%20s saving item %s to update last_queued information" 
+                    % ("QueueMonitor", item_id))
 
             if runonce:
                 break
@@ -88,6 +92,9 @@ class AliasQueue(Queue):
 
     @classmethod
     def enqueue(cls, item_id):
+        log.info("%20s enqueuing alias %s"
+            % ("AliasQueue", item_id))
+
         # Synchronised section
         cls.queue_lock.acquire()
         # Add to the end of the queue
@@ -118,7 +125,7 @@ class AliasQueue(Queue):
         if len(self.queued_items) > 0:
             # Take from the head of the queue
             item_id = self.queued_items[0]
-            log.debug("found item %s" % item_id)
+            log.info("%20s dequeuing item %s from alias" % ("AliasQueue", item_id))
             del self.queued_items[0]
 
         self.queue_lock.release()
@@ -131,13 +138,16 @@ class AliasQueue(Queue):
         else:
             return None
 
-    def save_and_unqueue(self, item):
+    def add_to_metrics_queues(self, item):
         # Add the item to the metrics queue
-        from totalimpact.api import app
-        providers = app.config["PROVIDERS"].keys()
+        log.info("%20s adding item %s to metrics queues" 
+            % ("AliasQueue", item.id))
+
+        providers_config = default_settings.PROVIDERS
+        providers = ProviderFactory.get_providers(providers_config)
         for provider in providers:
-            MetricsQueue.enqueue(item.id, provider)
-        item.save()
+            if provider.provides_metrics:
+                MetricsQueue.enqueue(item.id, provider.provider_name)
 
 
 class MetricsQueue(Queue):
@@ -176,6 +186,9 @@ class MetricsQueue(Queue):
 
     @classmethod
     def enqueue(cls, item_id, provider):
+        log.info("%20s enqueuing item %s to %s" 
+            % ("MetricsQueue", item_id, provider))
+
         # Synchronised section
         cls.queue_lock.acquire()
         # Add to the end of the queue
@@ -206,7 +219,8 @@ class MetricsQueue(Queue):
         if len(self.queued_items[self.provider]) > 0:
             # Take from the head of the queue
             item_id = self.queued_items[self.provider][0]
-            log.debug("found item %s" % item_id)
+            log.info("%20s dequeuing item %s from %s" 
+                % ("MetricsQueue", item_id, self.provider))
             del self.queued_items[self.provider][0]
 
         self.queue_lock.release()
@@ -219,7 +233,4 @@ class MetricsQueue(Queue):
         else:
             return None
 
-    def save_and_unqueue(self, item):
-        item.save()
-    
 
