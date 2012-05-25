@@ -93,7 +93,7 @@ class TestTiid(ApiTester):
 
     def test_item_get_unknown_tiid(self):
         # pick a random ID, very unlikely to already be something with this ID
-        response = self.client.get('/item/' + str(uuid.uuid4()))
+        response = self.client.get('/item/' + str(uuid.uuid1()))
         assert_equals(response.status_code, 404)  # Not Found
 
     def test_item_post_known_tiid(self):
@@ -109,7 +109,7 @@ class TestTiid(ApiTester):
 
     def test_item_get_unknown_tiid(self):
         # pick a random ID, very unlikely to already be something with this ID
-        response = self.client.get('/item/' + str(uuid.uuid4()))
+        response = self.client.get('/item/' + str(uuid.uuid1()))
         assert_equals(response.status_code, 404)  # Not Found
 
 class TestItem(ApiTester):
