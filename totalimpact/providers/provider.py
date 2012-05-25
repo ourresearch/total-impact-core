@@ -5,6 +5,9 @@ from totalimpact import providers
 import requests, os, time, threading, sys, traceback, importlib, urllib
 import simplejson
 import BeautifulSoup
+from xml.dom import minidom 
+from xml.parsers.expat import ExpatError
+
 
 from totalimpact.tilogging import logging
 logger = logging.getLogger("provider")
@@ -458,7 +461,26 @@ def _extract_from_json(page, dict_of_keylists):
     return response
 
 
-def _lookup_xml(soup, keylist):    
+
+def _lookup_xml_from_dom(doc, keylist):    
+    for mykey in keylist:
+        if not doc:
+            return None
+
+        try:
+            doc_list = doc.getElementsByTagName(mykey)
+            # just takes the first one for now
+            doc = doc_list[0]
+        except KeyError:
+            return None
+            
+    if doc:      
+        response = doc.firstChild.data
+    else:
+        response = None
+    return(response)
+
+def _lookup_xml_from_soup(soup, keylist):    
     smaller_bowl_of_soup = soup
     for mykey in keylist:
         if not smaller_bowl_of_soup:
@@ -475,15 +497,24 @@ def _lookup_xml(soup, keylist):
         response = None
     return(response)
 
-
 def _extract_from_xml(page, dict_of_keylists):
-    # FIXME needs to be in a try block.  What kind of error?
-    soup = BeautifulSoup.BeautifulStoneSoup(page) 
-    if not soup:
+    try:
+        doc = minidom.parseString(page.strip())
+        lookup_function = _lookup_xml_from_dom
+    except ExpatError, e:
+        doc = BeautifulSoup.BeautifulStoneSoup(page) 
+        lookup_function = _lookup_xml_from_soup
+
+    if not doc:
         raise ProviderContentMalformedError
 
     response = {}
     if dict_of_keylists:
         for (metric, keylist) in dict_of_keylists.iteritems():
-            response[metric] = _lookup_xml(soup, keylist)
+            response[metric] = lookup_function(doc, keylist)
     return response
+
+
+
+
+

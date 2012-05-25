@@ -1,6 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderFactory
 from nose.tools import assert_equals, nottest
+from xml.dom import minidom 
 
 import simplejson, BeautifulSoup
 import os
@@ -42,11 +43,17 @@ class Test_Provider():
         response = provider._extract_from_json(page, dict_of_keylists)
         assert_equals(response, {'description': u'Git-based ToDo tool.', 'title': u'gtd'})
     
-    def test_lookup_xml(self):
+    def test_lookup_xml_from_dom(self):
         page = self.TEST_XML
-        soup = BeautifulSoup.BeautifulStoneSoup(page)
-        response = provider._lookup_xml(soup, ['title'])
+        doc = minidom.parseString(page.strip())
+        response = provider._lookup_xml_from_dom(doc, ['title'])
         assert_equals(response, u'Sharing Detailed Research Data Is Associated with Increased Citation Rate')
+
+    def test_lookup_xml_from_soup(self):
+        page = self.TEST_XML
+        doc = BeautifulSoup.BeautifulStoneSoup(page) 
+        response = provider._lookup_xml_from_soup(doc, ['title'])
+        assert_equals(response, u'Sharing Detailed Research Data Is Associated with Increased Citation Rate')        
 
     def test_extract_xml(self):
         page = self.TEST_XML
