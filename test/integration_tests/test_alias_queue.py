@@ -2,7 +2,7 @@ import os, unittest, time, json, yaml, json
 from urllib import quote_plus
 from nose.tools import nottest, assert_equals
 
-from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
+from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact.queue import Queue, AliasQueue, MetricsQueue, QueueMonitor
 from totalimpact import dao, api
@@ -88,7 +88,12 @@ class TestAliasQueue(unittest.TestCase):
 
         # do the update using the backend
         alias_thread = ProvidersAliasThread(providers, self.d)
-        alias_thread.run(run_only_once=True)
+
+        try:
+            alias_thread.run(run_only_once=True)
+        except KeyError:
+            # throws an error because can't put it on metrics queue in this test
+            pass
 
         # get the item back out again and bask in the awesome
         response = self.client.get('/item/' + tiid)

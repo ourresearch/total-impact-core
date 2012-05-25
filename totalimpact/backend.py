@@ -101,39 +101,8 @@ class TotalImpactBackend(object):
     
 
 
-class QueueConsumer(StoppableThread):
-    
-    thread_id = 'Queue Consumer'
 
-    def __init__(self, queue):
-        StoppableThread.__init__(self)
-        self.queue = queue
-
-    def first(self):
-        item = None
-        while item is None and not self.stopped():
-            item = self.queue.first()
-            if item is None:
-                # if the queue is empty, wait 0.5 seconds before checking
-                # again
-                time.sleep(0.5)
-        return item
-        
-    def dequeue(self):
-        # get the first item on the queue (waiting until there is
-        # such a thing if necessary)
-        item = None
-        while item is None and not self.stopped():
-            item = self.queue.dequeue()
-            if item is None:
-                # if the queue is empty, wait 0.5 seconds before checking
-                # again
-                time.sleep(0.5)
-        return item
-
-
-
-class ProviderThread(QueueConsumer):
+class ProviderThread(StoppableThread):
     """ This is the basis for the threads processing items for a provider
 
         Subclasses should implement process_item to define how they want
@@ -148,9 +117,10 @@ class ProviderThread(QueueConsumer):
 
     def __init__(self, dao, queue):
         self.dao = dao
-        QueueConsumer.__init__(self, queue)
+        StoppableThread.__init__(self)
         self.thread_id = "BaseProviderThread"
         self.run_once = False
+        self.queue = queue
 
     def log_error(self, item, error_msg, tb):
         # This method is called to record any errors which we obtain when
@@ -176,26 +146,24 @@ class ProviderThread(QueueConsumer):
         while not self.stopped():
             # get the first item on the queue - this waits until
             # there is something to return
-            logger.debug("%20s: waiting for queue item" % self.thread_id)
-            item = self.dequeue()
+            #logger.debug("%20s: waiting for queue item" % self.thread_id)
+            item = self.queue.dequeue()
             
             # Check we have an item, if we have been signalled to stop, then
             # item may be None
             if item:
+                logger.debug("%20s: got an item!  dequeued %s" % (self.thread_id, item.id))
                 # if we get to here, an item has been popped off the queue and we
-                # now want to calculate it's metrics. 
+                # now want to calculate its metrics. 
                 # Repeatedly process this item until we hit the error limit
                 # or we successfully process it         
                 ctxfilter.local.backend['item'] = item.id
-                logger.debug("Processing New Item ===================================")
+                logger.debug("%20s: processing item %s" % (self.thread_id, item.id))
+
+                # process item saves the item back to the db as necessary
+                # also puts alias items on metrics queue when done
                 self.process_item(item) 
 
-                # Either this item was successfully process, or we failed for 
-                # an excessive number of retries. Either way, update the item
-                # as we don't process it again a second time.
-                logger.debug("Processing Complete: Unqueue Item =====================")
-                self.queue.save_and_unqueue(item)
-                logger.debug("item unqueued")
                 ctxfilter.local.backend['item'] = ''
 
             # Flag for testing. We should finish the run loop as soon
@@ -203,21 +171,27 @@ class ProviderThread(QueueConsumer):
             if run_only_once:
                 return
 
+            if not item:
+                time.sleep(0.5)
+
+
+
     def call_provider_method(self, 
             provider, 
             method_name, 
             aliases, 
+            tiid,
             cache_enabled=True):
 
-        logger.info("call_provider_method %s %s %s" % (provider, method_name, str(aliases)))
-
         if not aliases:
-            logger.debug("Skipping item with provider %s: Missing aliases for %s" % (provider, method_name))
+            logger.debug("%20s: skipping %s %s %s for %s, no aliases" 
+                % (self.thread_id, provider, method_name, str(aliases), tiid))
             return None
 
         method_to_call = getattr(provider, method_name)
         if not method_to_call:
-            logger.debug("Skipping item with provider %s: Missing method for %s" % (provider, method_name))
+            logger.debug("%20s: skipping %s %s %s for %s, no method" 
+                % (self.thread_id, provider, method_name, str(aliases), tiid))
             return None
 
         try:
@@ -226,11 +200,11 @@ class ProviderThread(QueueConsumer):
             # No problem, the provider will use the template_url it knows about
             override_template_url = None
 
-        logger.info("CALLING %s %s with aliases %s" % (provider, method_name, str(aliases)))
+        logger.debug("%20s: calling %s %s for %s" % (self.thread_id, provider, method_name, tiid))
         try:
             response = method_to_call(aliases, override_template_url)
-            logger.info("finished CALLING %s %s with aliases %s" % (provider, method_name, str(aliases)))
-            logger.info("response: %s" %(str(response)))
+            #logger.debug("%20s: response from %s %s %s for %s, %s" 
+            #    % (self.thread_id, provider, method_name, str(aliases), tiid, str(response)))
         except NotImplementedError:
             response = None
         return response
@@ -244,8 +218,10 @@ class ProviderThread(QueueConsumer):
         """
         if method_name not in ('aliases', 'biblio', 'metrics'):
             raise NotImplementedError("Unknown method %s for provider class" % method_name)
-        
-        logger.info("processing %s for provider %s" % (method_name, provider))
+
+        tiid = item.id
+        #logger.debug("%20s: processing %s %s for %s" 
+        #    % (self.thread_id, provider, method_name, tiid))
         error_counts = 0
         success = False
         error_limit_reached = False
@@ -263,6 +239,7 @@ class ProviderThread(QueueConsumer):
                     provider, 
                     method_name, 
                     item.aliases.get_aliases_list(), 
+                    item.id,
                     cache_enabled=cache_enabled)
                 success = True
 
@@ -295,9 +272,11 @@ class ProviderThread(QueueConsumer):
         if success:
             # response may be None for some methods and inputs
             if response:
-                logger.info("processing %s %s %s successful, got %i results" % (item.id, provider, method_name, len(response)))
+                logger.debug("%20s: success %s %s for %s, got %i results" 
+                    % (self.thread_id, provider, method_name, tiid, len(response)))
             else:
-                logger.info("processing %s %s %s successful, got 0 results" % (item.id, provider, method_name))
+                logger.debug("%20s: success %s %s for %s, got 0 results" 
+                    % (self.thread_id, provider, method_name, tiid))
 
         return (success, response)
 
@@ -318,7 +297,8 @@ class ProvidersAliasThread(ProviderThread):
         ctxfilter.local.backend['thread'] = self.thread_id
         
     def process_item(self, item):
-        logger.info("initial alias list is %s" % item.aliases.get_aliases_list())
+        logger.info("%20s: initial alias list for %s is %s" 
+                    % (self.thread_id, item.id, item.aliases.get_aliases_list()))
 
         if not self.stopped():
             for provider in self.providers: 
@@ -329,7 +309,11 @@ class ProvidersAliasThread(ProviderThread):
                 if success:
                     if new_aliases:
                         item.aliases.add_unique(new_aliases)
-                    item.save()
+                        # don't save unless new aliases
+                        item.save()
+                        logger.info("%20s: **SAVE** in process_item %s provider %s" 
+                            % (self.thread_id, item.id, provider.provider_name))
+
 
                 else:
                     # This provider has failed and exceeded the 
@@ -343,6 +327,9 @@ class ProvidersAliasThread(ProviderThread):
                     # incorrect.
                     item.aliases.clear_aliases()
                     item.save()
+                    logger.info("%20s: **SAVE** in process_item %s clear aliases provider %s" 
+                        % (self.thread_id, item.id, provider.provider_name))
+
                     break
 
                 (success, biblio) = self.process_item_for_provider(item, provider, 'biblio')
@@ -350,6 +337,9 @@ class ProvidersAliasThread(ProviderThread):
                     if biblio:
                         # merge old biblio with new, favoring old in cases of conflicts
                         item.biblio = dict(biblio.items() + item.biblio.items())
+                        logger.info("%20s: **SAVE** in process_item biblio %s provider %s" 
+                            % (self.thread_id, item.id, provider.provider_name))
+
                 else:
                     # This provider has failed and exceeded the 
                     # total number of retries. Don't process any 
@@ -357,11 +347,14 @@ class ProvidersAliasThread(ProviderThread):
                     break
 
             ctxfilter.local.backend['provider'] = ''
-            logger.info("final alias list is %s" % item.aliases.get_aliases_list())
+            logger.info("%20s: final alias list for %s is %s" 
+                    % (self.thread_id, item.id, item.aliases.get_aliases_list()))
 
-        
+            # Time to add this to the metrics queue
+            self.queue.add_to_metrics_queues(item)
+            logger.debug("%20s: added to metrics queues complete for item %s " % (self.thread_id, item.id))
 
-
+    
 
 class ProviderMetricsThread(ProviderThread):
     """ The provider metrics thread will handle obtaining metrics for all
@@ -395,6 +388,10 @@ class ProviderMetricsThread(ProviderThread):
                         item.metrics[metric_name]['values'] = {}
                     item.metrics[metric_name]['values'][ts] = metrics[metric_name]
                     item.metrics[metric_name]['static_meta'] = {} #self.provider
+                item.save()
+                logger.info("%20s: **SAVE** in process_item %s" 
+                        % (self.thread_id, item.id))
+
             else:
                 # The provider returned None for this item. This is either
                 # a non result or a permanent failure
@@ -413,7 +410,10 @@ class ProviderMetricsThread(ProviderThread):
                     item.metrics[metric_name]['values'] = {}
                 item.metrics[metric_name]['values'][ts] = None
                 item.metrics[metric_name]['static_meta'] = {} #self.provider
-        item.save()
+            item.save()
+            logger.info("%20s: **SAVE** in process_item %s" 
+                    % (self.thread_id, item.id))
+
 
 
 
@@ -450,7 +450,7 @@ def main(logfile=None):
     logger.addHandler(handler)
     ctxfilter.threadInit()
 
-    from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread, QueueConsumer
+    from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
     from totalimpact.providers.provider import Provider, ProviderFactory
 
     # Start all of the backend processes
