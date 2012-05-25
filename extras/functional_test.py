@@ -11,35 +11,6 @@ import time
 import sys
 import pickle
 from pprint import pprint
-
-class TotalImpactAPI:
-    base_url = 'http://localhost:5001/'
-
-    def request_item(self, alias):
-        """ Attempt to obtain an item from the server using the given
-            namespace and namespace id. For example, 
-              namespace = 'pubmed', nid = '234234232'
-            Will request the item related to pubmed item 234234232
-        """
-
-        print alias
-        (namespace, nid) = alias
-        url = self.base_url + urllib.quote('item/%s/%s' % (namespace, nid))
-        print url
-        req = urllib2.Request(url)
-        data = {} # fake a POST
-        response = urllib2.urlopen(req, data)
-        item_id = json.loads(urllib.unquote(response.read()))
-        return item_id
-
-    def request_item_result(self, item_id):
-        url = self.base_url + urllib.quote('item/%s' % (item_id))
-        req = urllib2.Request(url)
-        response = urllib2.urlopen(req)
-        return json.loads(response.read())
-        
-
-
 from optparse import OptionParser
 
 TEST_ITEMS = {
@@ -51,33 +22,33 @@ TEST_ITEMS = {
                 'wikipedia:mentions' : 1
             }
         },
-#    ('url', 'http://total-impact.org/') : #note trailing slash
-#        { 
-#            'aliases': ["url"],
-#            'biblio': [],
-#            'metrics' : {
-#                'delicious:bookmarks' : 65
-#            }
-#        },
-#    ('url', 'http://total-impact.org'): #no trailing slash
-#        { 
-#            'aliases': ["url"],
-#            'biblio': [],
-#            'metrics' : {
-#                'topsy:tweets' : 282,
-#                'topsy:influential_tweets' : 26
-#            }
-#        },                    
-#    ('doi', '10.5061/dryad.18') : 
-#        { 
-#            'aliases': ['doi', 'url', 'title'],
-#            'biblio': [u'authors', u'year', u'repository', u'title'],
-#            'metrics' : {
-#                'dryad:most_downloaded_file' : 63,
-#                'dryad:package_views' : 149,
-#                'dryad:total_downloads' : 169
-#            }
-#        },
+    ('url', 'http://total-impact.org/') : #note trailing slash
+        { 
+            'aliases': ["url"],
+            'biblio': [],
+            'metrics' : {
+                'delicious:bookmarks' : 65
+            }
+        },
+    ('url', 'http://total-impact.org'): #no trailing slash
+        { 
+            'aliases': ["url"],
+            'biblio': [],
+            'metrics' : {
+                'topsy:tweets' : 282,
+                'topsy:influential_tweets' : 26
+            }
+        },                    
+    ('doi', '10.5061/dryad.18') : 
+        { 
+            'aliases': ['doi', 'url', 'title'],
+            'biblio': [u'authors', u'year', u'repository', u'title'],
+            'metrics' : {
+                'dryad:most_downloaded_file' : 63,
+                'dryad:package_views' : 149,
+                'dryad:total_downloads' : 169
+            }
+        },
     ('github', 'egonw,cdk') :
         { 
             'aliases': ['github', 'url', 'title'],
@@ -87,37 +58,65 @@ TEST_ITEMS = {
                 'github:watchers' : 7
             }
         },                    
-#    ('url', 'http://nescent.org/'):
-#        { 
-#            'aliases': ['url'],
-#            'biblio': [u'title', "h1"],
-#            'metrics' : {}
-#        }
+    ('url', 'http://nescent.org/'):
+        { 
+            'aliases': ['url'],
+            'biblio': [u'title', "h1"],
+            'metrics' : {}
+        }
 }
 
+class TotalImpactAPI:
+    base_url = 'http://localhost:5001/'
 
+    def request_item(self, alias):
+        """ Attempt to obtain an item from the server using the given
+            namespace and namespace id. For example, 
+              namespace = 'pubmed', nid = '234234232'
+            Will request the item related to pubmed item 234234232
+        """
 
+        (namespace, nid) = alias
+        url = self.base_url + urllib.quote('item/%s/%s' % (namespace, nid))
+        req = urllib2.Request(url)
+        data = {} # fake a POST
+        response = urllib2.urlopen(req, data)
+        tiid = json.loads(urllib.unquote(response.read()))
+        print "tiid %s for %s" %(tiid, alias)
+        return tiid
 
-def checkItem(item, data, alias, options):
-    debug = options.debug
-    if debug: print "Checking %s result (%s)..." % (alias, item)
+    def request_item_result(self, item_id):
+        url = self.base_url + urllib.quote('item/%s' % (item_id))
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+        return json.loads(response.read())
+        
+
+def checkItem(item, data, alias, items_for_use, options):
+    if options.debug: 
+        print "Checking %s result (%s)..." % (alias, item)
     
         # Check aliases are correct
 #    for section in ["biblio", "aliases", "metrics"]:
     for section in ["aliases"]:
 
-        result = checkItemSection(alias, item, section, data[section], options)
+        result = checkItemSection(alias, 
+                item, 
+                section, 
+                data[section], 
+                items_for_use, 
+                options)
         if not result:
             return False
     return True
 
-def checkItemSection(alias, id, section, api_response, options):
+def checkItemSection(alias, id, section, api_response, items_for_use, options):
     if options.debug:
         print "Checking %s result (%s)..." % (alias, id)
 
     # Check aliases are correct
     if section=="aliases":
-        aliases = TEST_ITEMS[alias]['aliases']
+        aliases = items_for_use[alias]['aliases']
         alias_result = set(api_response.keys())
         expected_result = set(aliases + [u'last_modified', u'created'])
         if (alias_result == expected_result):
@@ -130,7 +129,7 @@ def checkItemSection(alias, id, section, api_response, options):
 
     # Check biblio are correct
     elif section=="biblio":
-        biblio = TEST_ITEMS[alias]['biblio']    
+        biblio = items_for_use[alias]['biblio']    
         if api_response:
             biblio_result = set(api_response.keys())
         else:
@@ -147,13 +146,14 @@ def checkItemSection(alias, id, section, api_response, options):
 
     # Check we've got some metric values
     elif section=="metrics":
-        metrics = TEST_ITEMS[alias]['metrics']
+        metrics = items_for_use[alias]['metrics']
         for metric in metrics.keys():
             try:
                 metric_data = api_response[metric]
             except KeyError:
                 # didn't return anything.  problem!
-                print "METRICS **NOT** CORRECT for %s: metric missing" % (metric)
+                if options.debug:
+                    print "METRICS **NOT** CORRECT for %s: metric missing" % (metric)
                 return False
 
             # expect the returned value to be equal or larger than reference
@@ -169,55 +169,38 @@ def checkItemSection(alias, id, section, api_response, options):
     return True
 
 
-def make_call(nid, alias, options):
-    all_successful = True
-    for section in ["biblio", "aliases", "metrics"]:
-        api_response = request_alias_item(alias, nid, section)
-
-        is_response_correct = checkItem(alias,
-            nid, 
-            section,
-            api_response,
-            options
-        )
-        if is_response_correct:
-            if not options.quiet:            
-                print "happy %s" % section
-        else:
-            if not options.quiet:            
-                print "INCORRECT %s" % section
-            all_successful = False
-        if options.printdata:
-            pprint(api_response)
-            print("\n")  
-    return(all_successful)
-
-
-
-
 
 
 if __name__ == '__main__':
 
+
     parser = OptionParser()
-    parser.add_option("-s", "--simultaneous", dest="simultaneous", default=1,
-                      help="Number of simultaneous requests to make")
-    parser.add_option("-m", "--missing", dest="missing", default=False, action="store_true",
-                      help="Display any outstanding items")
-    parser.add_option("-p", "--printdata", dest="printdata", default=False, action="store_true",
-                      help="Display item data")
-    parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true",
-                      help="Display item data")
+    parser.add_option("-n", "--numrepeats", dest="numrepeats", 
+            default=1, help="Number of repeated requests to make")
+    parser.add_option("-i", "--items", dest="numdiverseitems", 
+            default=999, 
+            help="Number of diverse items to use (up to max defined)")
+    parser.add_option("-m", "--missing", dest="missing", 
+            default=False, action="store_true", 
+            help="Display any outstanding items")
+    parser.add_option("-p", "--printdata", dest="printdata", 
+            default=False, action="store_true", help="Display item data")
+    parser.add_option("-v", "--verbose", dest="debug", 
+            default=False, action="store_true", help="Display verbose debug data")
     (options, args) = parser.parse_args()
 
 
-    item_count = int(options.simultaneous)
+    item_count = int(options.numrepeats)
+    num_diverse_items = min(len(TEST_ITEMS), int(options.numdiverseitems))
+    aliases = TEST_ITEMS.keys()[0:num_diverse_items]
+    items_for_use = dict((alias, TEST_ITEMS[alias]) for alias in aliases)
     
     ti = TotalImpactAPI()
 
     complete = {}
     itemid = {}
-    aliases = TEST_ITEMS.keys()
+
+
 
     for alias in aliases:
         complete[alias] = {}
@@ -240,13 +223,21 @@ if __name__ == '__main__':
                         itemid[alias][idx], 
                         itemdata,
                         alias, 
+                        items_for_use,
                         options
                     )
                     if complete[alias][idx] and options.printdata:
                         pprint(itemdata)
 
         total = sum([sum(complete[alias].values()) for alias in aliases])
-        print [(alias, sum(complete[alias].values())) for alias in aliases], total
+        print "%i of %i responses are complete" %(total, item_count * len(aliases))
+        if options.debug:
+            for alias in aliases:
+                print alias,
+                if complete[alias]:
+                    print " +"
+                else:
+                    print " -"
         if total == item_count * len(aliases):
             sys.exit(0)    
 
