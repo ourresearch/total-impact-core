@@ -5,7 +5,7 @@ from test.utils import slow
 from totalimpact import dao, api
 
 
-GITHUB_TEST_USER = "egonw"
+GITHUB_TEST_USER = "total-impact"
 
 class TestMemberItems(unittest.TestCase):
     
@@ -38,7 +38,7 @@ class TestMemberItems(unittest.TestCase):
         response = self.client.get('/provider/github/memberitems?query=' + GITHUB_TEST_USER)
         resp_list = json.loads(response.data)
 
-        assert len(resp_list) > 12, len(resp_list)
+        assert len(resp_list) >= 2, len(resp_list)
 
         # comes back looking like this
         """
@@ -52,6 +52,9 @@ class TestMemberItems(unittest.TestCase):
         assert_equals(set(users), set([GITHUB_TEST_USER]))
 
         projects = [entry[1][1] for entry in resp_list]
-        assert "blueobelisk.debian" in projects
+        print resp_list
+        print projects
+        assert "total-impact-core" in projects
+
 
         
