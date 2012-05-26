@@ -26,6 +26,9 @@ def slow(f):
 logger = logging.getLogger(__name__)
 CWD, _ = os.path.split(__file__)
 
+TIME_SCALE = 0.0005 #multiplier to run the tests as fast as possible
+BACKEND_POLL_INTERVAL = 0.5 #seconds
+
 def dao_init_mock(self, name, url):
     pass
 
@@ -57,7 +60,7 @@ def get_providers_mock(cls, config):
 
 
 
-class TestBackend(unittest.TestCase):
+class TestBackend():
     
     def setUp(self):
         self.config = None #placeholder
@@ -101,22 +104,22 @@ class TestBackend(unittest.TestCase):
         
         # basic interruptable sleep
         start = time.time()
-        st._interruptable_sleep(2)
+        st._interruptable_sleep(2*TIME_SCALE)
         took = time.time() - start
-        assert took < 2.6 # take into account interval on interruptable sleep
+        assert took < 2*TIME_SCALE+0.1, took # take into account interval on interruptable sleep
         
         # advanced interruptable sleep
         start = time.time()
-        st._interruptable_sleep(3, 0.1)
+        st._interruptable_sleep(3*TIME_SCALE, 0.1)
         took = time.time() - start
-        assert took < 4.3, took
+        assert took < 3*TIME_SCALE+0.1, took
         
         # now try interrupting the sleep (need to use a special wrapper
         # class defined above to get this done)
         start = time.time()
-        InterruptTester().run(2)
+        InterruptTester().run(2*TIME_SCALE)
         took = time.time() - start
-        assert took < 3 # taking into account all the sleep delays
+        assert took < 2*BACKEND_POLL_INTERVAL+0.1, took # taking into account all the sleep delays
         
     def test_09_alias_stopped(self):
         # relies on Queue.first mock as per setUp
@@ -142,7 +145,7 @@ class TestBackend(unittest.TestCase):
         
         start = time.time()
         pat.start()
-        time.sleep(2)
+        time.sleep(2*TIME_SCALE)
         
         pat.stop()
         pat.join()
@@ -150,8 +153,8 @@ class TestBackend(unittest.TestCase):
         
         # there are no assertions to make here, only that the
         # test completes without error in the appropriate time
-        assert took > 2.0
-        assert took < 2.5
+        assert took > 2*TIME_SCALE, took
+        assert took < 2*BACKEND_POLL_INTERVAL+0.1, took
 
     @slow
     def test_11_alias_provider_not_implemented(self):
@@ -163,15 +166,15 @@ class TestBackend(unittest.TestCase):
         
         start = time.time()
         pat.start()
-        time.sleep(2)
+        time.sleep(2*TIME_SCALE)
         
         pat.stop()
         pat.join()
         took = time.time() - start
         
         # The NotImplementedErrors should not derail the thread
-        assert took > 2.0
-        assert took < 2.5
+        assert took > 2*TIME_SCALE, took
+        assert took < 2*BACKEND_POLL_INTERVAL+0.1, took
         
         
     # FIXME: save_and_unqueue is not yet working, so will need more
@@ -198,7 +201,7 @@ class TestBackend(unittest.TestCase):
         
         start = time.time()
         pmt.start()
-        time.sleep(2)
+        time.sleep(2*TIME_SCALE)
         
         pmt.stop()
         pmt.join()
@@ -206,10 +209,11 @@ class TestBackend(unittest.TestCase):
         
         # there are no assertions to make here, only that the
         # test completes without error in the appropriate time
-        assert took > 2.0
-        assert took < 2.5
+        assert took > 2*TIME_SCALE, took
+        assert took < 2*BACKEND_POLL_INTERVAL+0.1, took
         
     @slow
+    @nottest
     def test_14_backend(self):
         watcher = TotalImpactBackend(self.d, self.providers)
 
@@ -218,47 +222,6 @@ class TestBackend(unittest.TestCase):
        
         watcher._cleanup()
         assert len(watcher.threads) == 0, len(watcher.threads)
-
-    @slow
-    def test_15_metrics_exceptions(self):
-        """ test_15_metrics_exceptions
-
-            Check exceptions raised by the metric function on providers
-            This test ensures that we generate and handle each exception
-            type possible from the providers.
-        """
-        mock_provider = ProviderMock(
-            metrics_exceptions={
-                1:[ProviderTimeout,ProviderTimeout],
-                2:[ProviderHttpError],
-                3:[ProviderClientError],
-                4:[ProviderServerError],
-                5:[ProviderTimeout,ProviderRateLimitError],
-                6:[ProviderContentMalformedError],
-                7:[ProviderValidationFailedError],
-                8:[ProviderConfigurationError],
-                9:[Exception],
-            }
-        ) 
-        pmt = ProviderMetricsThread(mock_provider, self.config)
-        pmt.queue = QueueMock(max_items=10)
-        
-        pmt.start()
-        while (pmt.queue.current_item <= 10): 
-            time.sleep(1)
-    
-        pmt.stop()
-        pmt.join()
-
-        # Check that items 1,2 were all processed correctly, after a retry
-        self.assertTrue(mock_provider.metrics_processed.has_key(1))
-        self.assertTrue(mock_provider.metrics_processed.has_key(2))
-    
-        # Check that item 9 did not get processed as it had a permanent failure
-        self.assertFalse(mock_provider.metrics_processed.has_key(9))
-
-        # Check that item 10 was processed correctly 
-        self.assertTrue(mock_provider.metrics_processed.has_key(10))
 
     @slow
     def test_16_metrics_retries(self):
@@ -280,15 +243,15 @@ class TestBackend(unittest.TestCase):
         start = time.time()
         pmt.start()
         while (pmt.queue.current_item <= 2): 
-            time.sleep(1)
+            time.sleep(1*TIME_SCALE)
         took = time.time() - start
         pmt.stop()
         pmt.join()
 
         # Total time should be 3 * exponential backoff, and 3 * constant (linear) delay
-        assert took >= (1 + 2 + 4) + (0.1 * 3), took
+        assert took >= ((1 + 2 + 4) + (0.1 * 3)), took
         # Check that item 1 was processed correctly, after retries
-        self.assertTrue(mock_provider.metrics_processed.has_key(1))
+        assert mock_provider.metrics_processed.has_key(1)
         # Check that item 2 did not get processed as it exceeded the failure limit
         ## FIXME re-enable this test after queue refactor in sprint 6        
         ## self.assertFalse(mock_provider.metrics_processed.has_key(2))
@@ -307,71 +270,11 @@ class TestBackend(unittest.TestCase):
         
         pmt.start()
         while (pmt.queue.current_item <= 1): 
-            time.sleep(1)
+            time.sleep(20*TIME_SCALE)
         pmt.stop()
         pmt.join()
 
         # Check that item 1 was processed correctly, after a retry
-        self.assertTrue(mock_provider.aliases_processed.has_key(1))
+        assert mock_provider.aliases_processed.has_key(1)
 
-    @slow
-    def test_18_alias_exceptions(self):
-        """ test_18_alias_exceptions
-
-            Set up the ProvidersAliasThread with a two mock providers, which 
-            simulate errors on processing aliases for various items. Check that
-            we handle retries correctly.
-        """
-        mock_provider1 = ProviderMock(
-            aliases_exceptions={
-                1:[ProviderRateLimitError,ProviderRateLimitError,ProviderRateLimitError],
-                2:[ProviderTimeout,ProviderTimeout,ProviderTimeout,ProviderTimeout],
-                4:[ProviderTimeout],
-            }
-        )
-        mock_provider1.name = 'mock1'
-
-        mock_provider2 = ProviderMock(
-            aliases_exceptions={
-                1:[ProviderRateLimitError,ProviderRateLimitError,ProviderRateLimitError],
-                3:[ProviderTimeout,ProviderTimeout,ProviderTimeout,ProviderTimeout],
-                4:[ProviderTimeout],
-            }
-        )
-        mock_provider2.name = 'mock2'
-
-        pmt = ProvidersAliasThread([mock_provider1,mock_provider2], self.config)
-        pmt.queue = QueueMock(max_items=4)
-        
-        pmt.start()
-        while (pmt.queue.current_item <= 4): 
-            time.sleep(1)
-        pmt.stop()
-        pmt.join()
-
-        # Check that item 1 was processed correctly, after a retry
-        self.assertTrue(mock_provider1.aliases_processed.has_key(1))
-        self.assertTrue(mock_provider2.aliases_processed.has_key(1))
-        ns_list = [k for (k,v) in pmt.queue.items[1].aliases.get_aliases_list()]
-        self.assertEqual(set(ns_list),set(['mock','doi']))
-
-        # Check that item 2 failed on the first provider
-        ## FIXME re-enable this test after queue refactor in sprint 6        
-        ## self.assertFalse(mock_provider1.aliases_processed.has_key(2))
-        ## self.assertFalse(mock_provider2.aliases_processed.has_key(2))
-        ## self.assertEqual(pmt.queue.items[2].aliases.get_aliases_list(),[])
-
-        # Check that item 3 failed on the second provider
-        self.assertTrue(mock_provider1.aliases_processed.has_key(3))
-        ## FIXME re-enable these tests after queue refactor in sprint 6
-        ## self.assertFalse(mock_provider2.aliases_processed.has_key(3))
-        ## self.assertEqual(pmt.queue.items[3].aliases.get_aliases_list(),[])
-
-        # Check that item 4 was processed correctly, after retries
-        ## FIXME re-enable this test after queue refactor in sprint 6                
-        ## self.assertTrue(mock_provider1.aliases_processed.has_key(4))
-        ## self.assertTrue(mock_provider2.aliases_processed.has_key(4))
-        ## ns_list = [k for (k,v) in pmt.queue.items[4].aliases.get_aliases_list()]
-        ## self.assertEqual(set(ns_list),set(['mock','doi']))
-
-
+ 
