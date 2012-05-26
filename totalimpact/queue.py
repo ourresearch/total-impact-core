@@ -12,25 +12,6 @@ import threading
 # some data useful for testing
 # d = {"doi" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "url" : ["http://cottagelabs.com"]}
 
-class Queue():
-        
-    # return next item from this queue (e.g. whatever is on the top of the list)
-    # and remove the item from the queue in the process
-    def first(self):
-        # We catch an exception here, as it's possible the queue is updated in
-        # between the call to len and self.queue (and somewhat likely due to 
-        # our modes of operation).
-        try:
-            if len(self.queue) > 0:
-                return self.queue[0]
-        except IndexError:
-            return None
-        return None
-
-    # alias should override this
-    def add_to_metrics_queues(self, item):
-        pass        
-
 
 class QueueMonitor(StoppableThread):
     """ Worker to watch couch for newly requested items, and place them
@@ -74,7 +55,8 @@ class QueueMonitor(StoppableThread):
                 break
             self._interruptable_sleep(0.5)
     
-
+class Queue():
+    pass
 
 class AliasQueue(Queue):
     # This is a FIFO queue, add new item ids to the end of this list
@@ -101,24 +83,9 @@ class AliasQueue(Queue):
         cls.queued_items.append(item_id)
         cls.queue_lock.release()
 
-    def first(self):
-        """ Only used in the test suite now """
-        self.queue_lock.acquire()
-        item_id = None
-        if len(self.queued_items) > 0:
-            item_id = self.queued_items[0]
-        self.queue_lock.release()
-
-        if item_id:
-            return ItemFactory.get(self.dao, 
-                    item_id, 
-			        ProviderFactory.get_provider,
-                    default_settings.PROVIDERS)
-        else:
-            return None
-
     def dequeue(self):
         # Synchronised section
+
         self.queue_lock.acquire()
     
         item_id = None
@@ -195,23 +162,9 @@ class MetricsQueue(Queue):
         cls.queued_items[provider].append(item_id)
         cls.queue_lock.release()
 
-    def first(self):
-        """ Only used in the test suite now """
-        self.queue_lock.acquire()
-        item_id = None
-        if len(self.queued_items[self.provider]) > 0:
-            item_id = self.queued_items[self.provider][0]
-        self.queue_lock.release()
-
-        if item_id:
-            return ItemFactory.get(self.dao, 
-                item_id, 
-                ProviderFactory.get_provider,
-                default_settings.PROVIDERS)
-        else:
-            return None
 
     def dequeue(self):
+
         # Synchronised section
         self.queue_lock.acquire()
     
