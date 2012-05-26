@@ -69,7 +69,7 @@ class TestMetricsQueue(unittest.TestCase):
             )
         
         # get our item from the queue
-        my_item = all_metrics_queue.first() 
+        my_item = all_metrics_queue.dequeue() 
         assert_equals(my_item.metrics["dryad:package_views"]['values'], {})
         assert(my_item.created - time.time() < 30)
 

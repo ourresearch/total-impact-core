@@ -82,10 +82,6 @@ class TestAliasQueue(unittest.TestCase):
         # see if the item is on the queue
         my_alias_queue = AliasQueue(self.d)
         
-        # get our item from the queue
-        my_item = my_alias_queue.first()
-        assert_equals(my_item.aliases.doi[0], TEST_DRYAD_DOI)
-
         # do the update using the backend
         alias_thread = ProvidersAliasThread(providers, self.d)
 
