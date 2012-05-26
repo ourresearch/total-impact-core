@@ -471,7 +471,7 @@ def _lookup_xml_from_dom(doc, keylist):
             doc_list = doc.getElementsByTagName(mykey)
             # just takes the first one for now
             doc = doc_list[0]
-        except KeyError:
+        except (KeyError, IndexError):
             return None
             
     if doc:      
@@ -499,7 +499,7 @@ def _lookup_xml_from_soup(soup, keylist):
 
 def _extract_from_xml(page, dict_of_keylists):
     try:
-        doc = minidom.parseString(page.strip())
+        doc = minidom.parseString(page.strip().encode('utf-8'))
         lookup_function = _lookup_xml_from_dom
     except ExpatError, e:
         doc = BeautifulSoup.BeautifulStoneSoup(page) 
