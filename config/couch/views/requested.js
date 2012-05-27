@@ -3,7 +3,7 @@ function(doc) {
     if (typeof doc.last_requested != "undefined") {
         if (typeof doc.last_queued == "undefined") {
             // Item has never been queued
-            emit(doc.last_queued, [doc.id, "x"]);
+            emit(doc.last_queued, doc);
         } else { 
             // Item has been queued before, but we have re-requested it
             if (doc.last_queued < doc.last_requested) {
