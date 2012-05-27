@@ -188,6 +188,13 @@ class ProviderThread(StoppableThread):
                 % (self.thread_id, provider, method_name, str(aliases), tiid))
             return None
 
+        provides_method_name = "provides_" + method_name
+        provides_method_to_call = getattr(provider, provides_method_name)
+        if not provides_method_to_call:
+            logger.debug("%20s: skipping %s %s %s for %s, does not provide" 
+                % (self.thread_id, provider, method_name, str(aliases), tiid))
+            return None
+
         method_to_call = getattr(provider, method_name)
         if not method_to_call:
             logger.debug("%20s: skipping %s %s %s for %s, no method" 
@@ -384,7 +391,7 @@ class ProviderMetricsThread(ProviderThread):
                         snap["created"] = time.time()
                         snap["value"] = metrics[metric_name]
                         snap["drilldown_url"] = "TBD"
-                        print "HERE IS MY SNAP"
+                        #print "HERE IS MY SNAP"
                         print snap
                         self.dao.save(snap)
 

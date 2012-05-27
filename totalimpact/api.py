@@ -91,7 +91,7 @@ def tiid(ns, nid):
 
 def create_item(namespace, id):
     '''Utility function to keep DRY in single/multiple item creation endpoins'''
-    item = ItemFactory.make(mydao, app.config["PROVIDERS"])
+    item = ItemFactory.make_simple(mydao)
     item.aliases.add_alias(namespace, id)
 
     ## FIXME - see issue 86

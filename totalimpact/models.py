@@ -71,64 +71,9 @@ class Saveable(object):
         dict_repr = todict(self, ignore=['dao'])
         return dict_repr
 
-    def _update_dict(self, input, my_dict=None):
-        '''Use another dict to recursively add list or dict items not in this.
-        
-        This object's value wins all conflicts, but new values in lists and 
-        dictionaries are added. Used to update from the db before saving.
-        I think this might should go in the dao...not sure.
-
-        returns - dict
-        '''
-        if my_dict is None:
-            my_dict = self.as_dict()
-
-        if input is None:
-            return my_dict
-
-        for k, v in input.iteritems():
-            try:
-                #get the dict here...whenever
-                
-                new_my_dict = my_dict.setdefault(k, {})
-                self._update_dict(v, new_my_dict)
-
-            except AttributeError, e:
-                if not my_dict[k]:
-                    my_dict[k] = v
-        
-        return my_dict
 
     def save(self):
-        """ Save the object to the database, handling merging of data 
-            should the object have already been updated elsewhere """
-        # Blocking call to acquire a lock for this section
-        retry = True
-        import couchdb
-
-        logger.info("IN SAVE with item %s" %self.id)
-
-        # Get the lock for this item for write
-        lock = itemlock.getItemLock(self.id)
-        lock.acquire()
-        while retry:
-            try:
-                # Find the current state of the item in the database
-                # which we will update
-                new_dict = self.dao.get(self.id)
-                dict_to_save = self._update_dict(new_dict)
-                # If we are updating an object, then we should
-                # set _rev from the object we have just read so
-                # we don't get conflict errors on commit.
-                if new_dict:
-                    dict_to_save['_rev'] = new_dict['_rev']
-                res = self.dao.save_and_commit(dict_to_save)
-                retry = False
-            except couchdb.ResourceConflict, e:
-                logger.info("Couch conflict, will retry")
-        lock.release()
-
-        return res
+        return self.save_simple()
 
     def save_simple(self):
         retry = True
@@ -161,21 +106,14 @@ class ItemFactory():
     all_static_meta = ProviderFactory.get_all_static_meta()
 
     @classmethod
-    def get_simple_item(cls, dao, tiid):
-        res = dao.view("by_tiid_with_snaps", 
-                startkey=[tiid,0], 
-                endkey=[tiid,1])
-        rows = res["rows"]
-        if not rows:
-            return None
-        stored_item = rows[0]["value"]
-        snaps = [row["value"] for row in rows[1:]]
+    def build_item(cls, item_doc, snaps):
         item = {}
-        item["id"] = stored_item["_id"]
-        item["aliases"] = stored_item["aliases"]
-        item["biblio"] = stored_item["biblio"]
-        item["created"] = stored_item["created"]
-        item["last_modified"] = stored_item["last_modified"]
+        item["id"] = item_doc["_id"]
+        item["aliases"] = item_doc["aliases"]
+        item["biblio"] = item_doc["biblio"]
+        item["biblio"]['genre'] = cls.decide_genre(item_doc['aliases'])
+        item["created"] = item_doc["created"]
+        item["last_modified"] = item_doc["last_modified"]
         item["metrics"] = {} #not using what is in stored item for this
         for snap in snaps:
             metric_name = snap["metric_name"]
@@ -183,19 +121,31 @@ class ItemFactory():
             item["metrics"][metric_name]["values"] = {}
             item["metrics"][metric_name]["values"][snap["created"]] = snap["value"]
             item["metrics"][metric_name]["provenance_url"] = snap["drilldown_url"]
-            item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]
+            item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
         return item
 
     @classmethod
-    def get_from_item_doc(cls, dao, item_doc, provider_maker, providers_config):
+    def get_simple_item(cls, dao, tiid):
+        res = dao.view("by_tiid_with_snaps", 
+                startkey=[tiid,0], 
+                endkey=[tiid,1])
+        rows = res["rows"]
+        if not rows:
+            return None
+        item_doc = rows[0]["value"]
+        snaps = [row["value"] for row in rows[1:]]
+        item = cls.build_item(item_doc, snaps)
+        return item
+
+    @classmethod
+    def get_item_object_from_item_doc(cls, dao, item_doc):
         item = Item(dao, id=item_doc["_id"])
 
-        now = time.time()
         if item_doc is None:
             logger.warning("Unable to load item %s" % id)
             raise LookupError
 
-        item.last_requested = now
+        item.last_requested = time.time()
 
         # first, just copy everything from the item_doc the DB gave us
         for k in item_doc:
@@ -204,51 +154,8 @@ class ItemFactory():
 
         # the aliases property needs to be an Aliases obj, not a dict.
         item.aliases = Aliases(seed=item_doc['aliases'])
-
-        # determine and set the item's genre
-        item.biblio['genre'] = cls.decide_genre(item_doc['aliases'])
-
-        # make the Metric objects. We have to make keys for each metric in the config
-        # so that Providers will know which metrics to update later on.
-        # Then we fill these Metric objects's dictionaries with the metricSnaps
-        # from the db.
-
-        item.metrics = {}
-        metric_names = cls.get_metric_names(providers_config)
-        for full_metric_name in metric_names:
-            try:
-                my_metric = item_doc["metrics"][full_metric_name]
-            except KeyError: #this metric ain't in the item_doc from the db
-                my_metric = {'values': {} }
-            
-            (provider_name, metric_name) = full_metric_name.split(":")
-
-            # make the provenance url
-            # FIXME problem if alias needed for provenance url not obtained yet?
-            aliases_list = item.aliases.get_aliases_list()
-            provider = provider_maker(provider_name)
-
-            provenance_url = provider.provenance_url(metric_name, aliases_list)
-            my_metric["provenance_url"] = provenance_url
-
-            # populate the static_meta only if it has a provenance url
-            if provenance_url:
-                my_metric["static_meta"] = {}
-                if provider.provides_static_meta:
-                    my_metric["static_meta"] = provider.static_meta(metric_name)
-
-            item.metrics[full_metric_name] = my_metric
-
         return item
 
-
-    @classmethod
-    def get(cls, dao, id, provider_maker, providers_config):
-        item_doc = dao.get(id)
-        if item_doc:
-            return (cls.get_from_item_doc(dao, item_doc, provider_maker, providers_config))
-        else:
-            return None
 
 
     @classmethod
@@ -284,27 +191,19 @@ class ItemFactory():
         return full_metric_names
 
     @classmethod
-    def make(cls, dao, providers_config):
+    def make_simple(cls, dao):
         now = time.time()
         item = cls.item_class(dao=dao)
         
         # make all the top-level stuff
         item.aliases = Aliases()
-        item.metrics = {}
         item.biblio = {}
         item.last_modified = now
         item.last_requested = now
         item.last_queued = None
         item.created = now
 
-        # make the metrics objects. We have to make all the ones in the config
-        # so that Providers will know which ones to update later on.
-        metric_names = cls.get_metric_names(providers_config)
-        for name in metric_names:
-            item.metrics[name] = {'values': {} }
-
         return item
-
 
 
 class CollectionFactory():
