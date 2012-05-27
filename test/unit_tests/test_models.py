@@ -151,60 +151,6 @@ class TestSaveable():
 
         assert_equals(s.as_dict()['constituent_dict']['foo_obj']['bar'], foo.bar)
 
-    def test__update_dict(self):
-        '''Test that items can update their values from an input dict.
-
-        These tests are more naturalistic because they use the objects
-        we're using. but next time, would do differently...toy objects are way
-        easier to work with and grok later.
-        '''
-
-        item_response = deepcopy(ITEM_DATA) 
-        item_response2 = deepcopy(ITEM_DATA)
-
-        dao = MockDao()
-        dao.setResponses([item_response])
-
-        # simulate pulling an item out of the db
-        item = models.ItemFactory.make(dao, default_settings.PROVIDERS)
-
-        # note the item has an 'id' but not an '_id' attr
-        assert_equals(len(item.id), 32)
-        assert_equals(item.aliases.__class__.__name__, "Aliases")
-
-        # now let's simulate adding some stuff to this object
-        # change a string 
-        now = "99999999999.9" # it's the future!
-        item.last_modified = now
-
-        # add a value to an existing metric object
-        item.metrics["wikipedia:mentions"]['values'][111] = "added value to extant metric"
-
-        item_response2["metrics"]["wikipedia:mentions"]["values"] \
-            [777] = "while you were away, new vals on an old metric"
-
-        output = item._update_dict(item_response2) 
-
-        # things that are common to both dicts are preserved
-        assert_equals(output["aliases"]['doi'], item_response2["aliases"]['doi'])
-
-        # when strings differ, the object's version takes priority
-        assert_equals(output["last_modified"], now)
-
-        # plos:html_views should have one snap initially, +1 we added right
-        # away, + 1 back from the database = 3
-        assert_equals(len(output["metrics"]["wikipedia:mentions"]["values"]), 4)
-
-        # locally and remotely added metric values are preserved
-        assert_equals(output["metrics"]["wikipedia:mentions"]["values"] \
-            [777], "while you were away, new vals on an old metric")
-        assert_equals(output["metrics"]["wikipedia:mentions"]["values"] \
-            [111], "added value to extant metric")
-
-        def save(self):
-            # not much to test here, unless we want to use the real dao.
-            pass
-
 
 
 class TestItemFactory():
@@ -214,83 +160,15 @@ class TestItemFactory():
 
     def test_make_new(self):
         '''create an item from scratch.'''
-        item = models.ItemFactory.make(self.d,  default_settings.PROVIDERS)
+        item = models.ItemFactory.make_simple(self.d)
         assert_equals(len(item.id), 32)
         assert item.created < time.time
-
         assert_equals(item.aliases.__class__.__name__, "Aliases")
-        assert_equals(item.metrics["wikipedia:mentions"]['values'], {})
-
-    def test_get(self):
-        self.d.setResponses([deepcopy(ITEM_DATA)])
-        item = models.ItemFactory.get(
-            self.d,
-            "123",
-            provider.ProviderFactory.get_provider,
-            default_settings.PROVIDERS)
-        
-        assert_equals(item.id, ITEM_DATA['_id'])
-        assert_equals(item.aliases.__class__.__name__, "Aliases")
-        assert_equals(item.as_dict()["aliases"], ITEM_DATA["aliases"])
-
-        
-    def test_get_creates_metrics(self):
-        item_data = deepcopy(ITEM_DATA)
-        item_data2 = deepcopy(ITEM_DATA)
-        del item_data2['metrics']
-
-        self.d.setResponses([item_data, item_data2])
-        item = models.ItemFactory.get(
-            self.d,
-            "123",
-            provider.ProviderFactory.get_provider,
-            default_settings.PROVIDERS)
-
-        assert_equals(item.metrics["wikipedia:mentions"]['values'][KEY1], VAL1)
-
-        # works even if there are no metrics in the db:
-        item2 = models.ItemFactory.get(
-            self.d,
-            "123",
-            provider.ProviderFactory.get_provider,
-            default_settings.PROVIDERS)
-        print item2.metrics
-        assert_equals(item2.metrics["dryad:package_views"]['values'], {})
-
-    def test_adds_static_meta(self):
-        self.d.setResponses([deepcopy(ITEM_DATA)])
-        item = models.ItemFactory.get(
-            self.d,
-            "123",
-            provider.ProviderFactory.get_provider,
-            default_settings.PROVIDERS)
-
-        expected = {'provider_url': 'http://www.wikipedia.org/', 'icon': 'http://wikipedia.org/favicon.ico', 'display_name': 'mentions', 'description': 'Wikipedia is the free encyclopedia that anyone can edit.', 'provider': 'Wikipedia'}
-        assert_equals(item.metrics["wikipedia:mentions"]["static_meta"], expected)
 
     def test_adds_genre(self):
         self.d.setResponses([deepcopy(ITEM_DATA)])
-        item = models.ItemFactory.get(
-            self.d,
-            "123",
-            provider.ProviderFactory.get_provider,
-            default_settings.PROVIDERS)
-
-        assert_equals(item.biblio['genre'], "article")
-
-
-    def test_adds_provenance_url(self):
-        self.d.setResponses([deepcopy(ITEM_DATA)])
-        item = models.ItemFactory.get(
-            self.d,
-            "123",
-            provider.ProviderFactory.get_provider,
-            default_settings.PROVIDERS)
-
-        print item.metrics
-        
-        assert_equals(item.metrics["wikipedia:mentions"]["provenance_url"],
-            "http://en.wikipedia.org/wiki/Special:Search?search='10.1371/journal.pmed.0020124'&go=Go")
+        item = models.ItemFactory.build_item(deepcopy(ITEM_DATA), [])
+        assert_equals(item["biblio"]['genre'], "article")
 
     def test_get_metric_names(self):
         response = models.ItemFactory.get_metric_names(TEST_PROVIDER_CONFIG)

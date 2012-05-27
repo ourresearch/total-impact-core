@@ -37,10 +37,8 @@ class QueueMonitor(StoppableThread):
             for row in rows["rows"]:
                 item_doc = copy.deepcopy(row["value"])
 
-                item = ItemFactory.get_from_item_doc(self.dao, 
-                        item_doc, 
-                        ProviderFactory.get_provider,
-                        default_settings.PROVIDERS)
+                item = ItemFactory.get_item_object_from_item_doc(self.dao, 
+                        item_doc)
 
                 tiid = item.id
                 ctxfilter.local.backend['item'] = tiid

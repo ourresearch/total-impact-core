@@ -31,8 +31,8 @@ class MockDao(object):
     def save(self, doc):
         self.save.append(doc)
 
-
-
+    def view(self, viewname, **kwargs):
+        return None
 
 
 class InterruptTester(object):
@@ -61,7 +61,7 @@ class QueueMock(object):
                 if self.current_item > self.max_items:
                     return None
             # Generate a mock item with initial alias ('mock', id)
-            item = MockItemFactory.make("not a dao", default_settings.PROVIDERS)
+            item = MockItemFactory.make_simple("not a dao")
             item.id = self.current_item
             item.aliases.add_alias('mock',str(item.id))
             self.items[self.current_item] = item
