@@ -51,5 +51,5 @@ class TestMendeley(ProviderTestCase):
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("readers", 
             [self.testitem_aliases])
-        assert_equals(provenance_url, "http://www.google.com") #temp
+        assert_equals(provenance_url, "http://api.mendeley.com/research/adventures-in-semantic-publishing-exemplar-semantic-enhancements-of-a-research-article/")
 

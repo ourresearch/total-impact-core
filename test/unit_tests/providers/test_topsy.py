@@ -36,7 +36,7 @@ class TestTopsy(ProviderTestCase):
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("tweets", 
             [self.testitem_aliases])
-        expected = "http://topsy.com/total-impact.org/?utm_source=otter"
+        expected = "http://topsy.com/total-impact.org?utm_source=otter"
         assert_equals(provenance_url, expected)
 
 

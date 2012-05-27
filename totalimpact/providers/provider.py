@@ -313,7 +313,13 @@ class Provider(object):
         if not provider_url_template:
             provider_url_template = self.metrics_url_template
 
-        return self.get_metrics_for_id(id, provider_url_template, cache_enabled)
+        metrics = self.get_metrics_for_id(id, provider_url_template, cache_enabled)
+        metrics_and_drilldown = {}
+        for metric_name in metrics:
+            drilldown_url = self.provenance_url(metric_name, aliases)
+            metrics_and_drilldown[metric_name] = (metrics[metric_name], drilldown_url)
+
+        return metrics_and_drilldown  
 
 
     # default method; providers can override
@@ -338,6 +344,7 @@ class Provider(object):
         
         # extract the metrics
         metrics_dict = self._extract_metrics(response.text, response.status_code, id=id)
+
         return metrics_dict
 
 
