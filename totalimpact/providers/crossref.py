@@ -37,7 +37,8 @@ class Crossref(Provider):
 
         authors_list = soup.findAll(contributor_role="author")
         authors = ", ".join([str(author.surname.text) for author in authors_list if author.surname])
-        biblio_dict["authors"] = authors
+        if authors:
+            biblio_dict["authors"] = authors
 
         return biblio_dict    
        
@@ -50,6 +51,6 @@ class Crossref(Provider):
         if aliases_dict:
             aliases_list = [(namespace, nid) for (namespace, nid) in aliases_dict.iteritems()]
         else:
-            aliases_list = None
+            aliases_list = []
         return aliases_list
 

@@ -35,6 +35,7 @@ class Delicious(Provider):
         return(url)
 
     def _extract_metrics(self, page, status_code=200, id=None):
+        metrics_dict = {}
         if status_code != 200:
             if status_code == 404:
                 return {}
@@ -43,9 +44,10 @@ class Delicious(Provider):
 
         data = provider._load_json(page)
         number_of_bookmarks = len(data)
-        metrics_dict = {
-            'delicious:bookmarks' : number_of_bookmarks
-        }
+        if number_of_bookmarks:
+            metrics_dict = {
+                'delicious:bookmarks' : number_of_bookmarks
+            }
 
         return metrics_dict
 

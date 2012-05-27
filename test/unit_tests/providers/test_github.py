@@ -37,7 +37,6 @@ class TestGithub(ProviderTestCase):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         metrics_dict = self.provider._extract_metrics(f.read())
         assert_equals(metrics_dict["github:watchers"], 7)
-        assert_equals(metrics_dict["github:forks"], 0)
 
     def test_extract_members_success(self):        
         f = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r")

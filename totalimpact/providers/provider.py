@@ -467,11 +467,15 @@ def _lookup_json(data, keylist):
 def _extract_from_json(page, dict_of_keylists):
     data = _load_json(page)
     
-    response = {}
+    return_dict = {}
     if dict_of_keylists:
         for (metric, keylist) in dict_of_keylists.iteritems():
-            response[metric] = _lookup_json(data, keylist)
-    return response
+            value = _lookup_json(data, keylist)
+
+            # only set metrics for non-zero and non-null metrics
+            if value:
+                return_dict[metric] = value
+    return return_dict
 
 
 
@@ -521,11 +525,16 @@ def _extract_from_xml(page, dict_of_keylists):
     if not doc:
         raise ProviderContentMalformedError
 
-    response = {}
+    return_dict = {}
     if dict_of_keylists:
         for (metric, keylist) in dict_of_keylists.iteritems():
-            response[metric] = lookup_function(doc, keylist)
-    return response
+            value = lookup_function(doc, keylist)
+
+            # only set metrics for non-zero and non-null metrics
+            if value:
+                return_dict[metric] = value
+
+    return return_dict
 
 
 

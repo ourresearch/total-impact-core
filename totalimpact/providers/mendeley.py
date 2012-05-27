@@ -63,9 +63,10 @@ class Mendeley(Provider):
         try:
             author_list = biblio_dict["authors"]
             author_string = ", ".join([author["surname"] for author in author_list])
-            biblio_dict["authors"] = author_string
+            if author_string:
+                biblio_dict["authors"] = author_string
         except TypeError:
-            biblio_dict["authors"] = None
+            pass
 
         return biblio_dict    
        
@@ -97,7 +98,8 @@ class Mendeley(Provider):
         try:
             metrics_dict["mendeley:groups"] = len(metrics_dict["mendeley:groups"])
         except TypeError:
-            metrics_dict["mendeley:groups"] = 0
+            # don't add null or zero metrics
+            pass
 
         return metrics_dict
 
@@ -120,7 +122,7 @@ class Mendeley(Provider):
         response = self.http_get(url)
         if response.status_code != 200:
             # not in Mendeley database
-            return None
+            return []
 
         page = response.text
         data = provider._load_json(page)
