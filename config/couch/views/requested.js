@@ -7,7 +7,7 @@ function(doc) {
         } else { 
             // Item has been queued before, but we have re-requested it
             if (doc.last_queued < doc.last_requested) {
-                emit(doc.last_requested, [doc.id, doc.last_queued]);
+                emit(doc.last_requested, doc);
             }
         }
     }

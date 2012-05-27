@@ -122,33 +122,14 @@ class TestItem(ApiTester):
         assert_equals(len(json.loads(response.data)), 32)
         assert_equals(response.mimetype, "application/json")
 
-    def test_item_get_success_fakeid(self):        
-        
-        # First put something in
-        response_create = self.client.post('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
-        tiid = response_create.data
-        print tiid
-
-        # Now try to get it out
-        # Strip off leading and trailing quotation marks
-        tiid = tiid.replace('"', '')
-        response = self.client.get('/item/' + tiid)
-        print response
-        print response.data
-        assert_equals(response.status_code, 200)
-        assert_equals(
-            set(json.loads(response.data).keys()),
-            set([u'aliases', u'biblio', u'created', u'id', u'last_modified',
-                u'last_requested', u'metrics', u'last_queued'])
-            )
-        assert_equals(response.mimetype, "application/json")
-
-    def test_item_post_urldecodes(self):
+    def test_item_post_success(self):
         resp = self.client.post('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
-        tiid = resp.data.replace('"', '')
+        tiid = json.loads(resp.data)
 
-        resp = self.client.get('/item/' + tiid)
-        saved_item = json.loads(resp.data)
+        response = self.client.get('/item/' + tiid)
+        assert_equals(response.status_code, 200)
+        assert_equals(response.mimetype, "application/json")
+        saved_item = json.loads(response.data)
 
         assert_equals([unicode(TEST_DRYAD_DOI)], saved_item["aliases"]["doi"])
 
@@ -164,11 +145,6 @@ class TestItem(ApiTester):
         # cheerfully creates items whether we know their namespaces or not.
         assert_equals(response.status_code, 201)
 
-    def test_returns_json_default(self): 
-        # upload the item manually...there's no api call to do this.
-        print self.d.save(ARTICLE_ITEM)
-        response = self.client.get('/item/' + ARTICLE_ITEM['id'])
-        assert_equals(response.headers[0][1], 'application/json')
 
 
 class TestItems(ApiTester):
@@ -196,9 +172,9 @@ class TestItems(ApiTester):
 
         # put some items in the db
         items = [
-            ["doi", "10.123"],
-            ["doi", "10.124"],
-            ["doi", "10.125"]
+            ["url", "http://google.com"],
+            ["url", "http://nescent.org"],
+            ["url", "http://total-impact.org"]
         ]
         resp = self.client.post(
             '/items',
@@ -285,26 +261,6 @@ class TestApi(ApiTester):
 
         super(TestApi, self).setUp()
 
-
-    def test_collection_delete_deletes(self):
-        # Put in an item.  Could mock this out in the future.
-        response = self.client.post('/collection',
-                data=json.dumps({"items": TEST_COLLECTION_TIID_LIST, "title":"My Title"}),
-                content_type="application/json")
-        response_loaded = json.loads(response.data)
-        new_collection_id = response_loaded["id"]
-
-        # it's in there
-        response1 = self.client.get('/collection/' + new_collection_id)
-        assert_equals(response1.status_code, 200) #OK
-
-        # lightning bolt! lightning bolt!
-        response = self.client.delete('/collection/' + new_collection_id)
-        assert_equals(response.status_code, 204)
-
-        # is it gone?
-        response2 = self.client.get('/collection/' + new_collection_id)
-        assert_equals(response2.status_code, 404)  #Not found
         
     def test_tiid_get_with_unknown_alias(self):
         # try to retrieve tiid id for something that doesn't exist yet

@@ -4,7 +4,6 @@ from test.utils import slow
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
 from totalimpact.providers.provider import Provider, ProviderFactory
-from totalimpact.queue import Queue, AliasQueue, MetricsQueue
 from totalimpact import dao, api
 from totalimpact.tilogging import logging
 
@@ -237,7 +236,7 @@ class TestBackend():
                 2:[ProviderTimeout,ProviderTimeout,ProviderTimeout,ProviderTimeout, ProviderTimeout, ProviderTimeout],
             }
         ) 
-        pmt = ProviderMetricsThread(mock_provider, self.config)
+        pmt = ProviderMetricsThread(mock_provider, self.d)
         pmt.queue = QueueMock(max_items=2)
         
         start = time.time()
@@ -265,7 +264,7 @@ class TestBackend():
             it processes the item ok.
         """
         mock_provider = ProviderMock() 
-        pmt = ProvidersAliasThread([mock_provider], self.config)
+        pmt = ProvidersAliasThread([mock_provider], self.d)
         pmt.queue = QueueMock(max_items=1)
         
         pmt.start()

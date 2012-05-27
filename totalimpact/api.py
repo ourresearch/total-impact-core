@@ -7,7 +7,6 @@ from pprint import pprint
 
 from totalimpact import dao
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
-from totalimpact.queue import MetricsQueue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
@@ -86,7 +85,7 @@ def tiid(ns, nid):
 
     if not tiids:
         abort(404)
-    resp = make_response( json.dumps(tiids, sort_keys=True, indent=4 ), 303) 
+    resp = make_response(json.dumps(tiids, sort_keys=True, indent=4 ), 303) 
     resp.mimetype = "application/json"
     return resp
 
@@ -151,26 +150,21 @@ def item_namespace_post(namespace, id):
     return resp
 
 
-def make_item_dict(tiid):
-    '''Utility function for /item and /items endpoints
-    Will cause the request to abort with 404 if item is missing from db'''
-    try:
-        item = ItemFactory.get(mydao,
-            tiid,
-            ProviderFactory.get_provider,
-            app.config["PROVIDERS"])
-        item_dict = item.as_dict()
-    except LookupError:
-        abort(404)
-    return item_dict
-
 '''GET /item/:tiid
 404 if tiid not found in db
 '''
 @app.route('/item/<tiid>', methods=['GET'])
 def item(tiid, format=None):
     # TODO check request headers for format as well.
-    item_dict = make_item_dict(tiid)
+
+    try:
+        item_dict = ItemFactory.get_simple_item(mydao, tiid)
+    except (LookupError, AttributeError):
+        abort(404)
+
+    if not item_dict:
+        abort(404)
+        
     resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4))
     resp.mimetype = "application/json"
     return resp
@@ -187,7 +181,16 @@ def items(tiids, format=None):
 
     for index,tiid in enumerate(tiids.split(',')):
         if index > 99: break    # weak, change
-        items.append(make_item_dict(tiid))
+
+        try:
+            item_dict = ItemFactory.get_simple_item(mydao, tiid)
+        except (LookupError, AttributeError):
+            abort(404)
+
+        if not item_dict:
+            abort(404)
+
+        items.append(item_dict)
 
     if format == "csv":
         # make the header
@@ -335,12 +338,13 @@ overwrites whatever was there before.
 returns 404 or 200
 (see http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete)
 
+# We don't want to support delete yet, too risky.  Taken out for now.
 DELETE /collection/:collection
 returns 404 or 204
 (see http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete)
 '''
 @app.route('/collection', methods = ['POST'])
-@app.route('/collection/<cid>', methods = ['GET', 'PUT', 'DELETE'])
+@app.route('/collection/<cid>', methods = ['GET', 'PUT'])
 def collection(cid=''):
     response_code = None
 
