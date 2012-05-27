@@ -82,10 +82,10 @@ class Dryad(Provider):
     def _extract_aliases(self, xml, id=None):
         aliases = []
         url_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.identifier.uri')
-        aliases += [("url", url) for url in url_identifiers]
+        aliases += [("url", url) for url in url_identifiers if url]
 
         title_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.title')
-        aliases += [("title", title) for title in title_identifiers]
+        aliases += [("title", title) for title in title_identifiers if title]
 
         return aliases
 
@@ -97,13 +97,15 @@ class Dryad(Provider):
 
         try:
             title = self._get_named_arr_str_from_xml(xml, 'dc.title_ac')
-            biblio_dict["title"] = title[0]
+            if title:
+                biblio_dict["title"] = title[0]
         except AttributeError:
             raise ProviderContentMalformedError("Content does not contain expected text")
 
         try:
             year = self._get_named_arr_int_from_xml(xml, 'dc.date.accessioned.year')
-            biblio_dict["year"] = year[0]
+            if year:
+                biblio_dict["year"] = year[0]
         except AttributeError:
             raise ProviderContentMalformedError("Content does not contain expected text")
 
@@ -118,7 +120,8 @@ class Dryad(Provider):
                     last_name = full_name.split(",")[0]
                     authors.append(last_name)
 
-            biblio_dict["authors"] = (", ").join(authors)
+            if authors:
+                biblio_dict["authors"] = (", ").join(authors)
         except AttributeError:
             raise ProviderContentMalformedError("Content does not contain expected text")
 

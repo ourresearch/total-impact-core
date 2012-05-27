@@ -89,7 +89,7 @@ class Github(Provider):
         if aliases_dict:
             aliases_list = [(namespace, nid) for (namespace, nid) in aliases_dict.iteritems()]
         else:
-            aliases_list = None
+            aliases_list = []
         return aliases_list
 
 
