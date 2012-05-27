@@ -107,9 +107,6 @@ class Mendeley(Provider):
     # default method; providers can override    
     def provenance_url(self, metric_name, aliases):
 
-        # temp fix because this is getting called in all the wrong places.
-        return "http://www.google.com"
-
         id = self.get_best_id(aliases)     
         if not id:
             # not relevant to Mendeley

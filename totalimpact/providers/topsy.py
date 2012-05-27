@@ -13,7 +13,7 @@ class Topsy(Provider):
     example_id = ("url", "http://total-impact.org")
 
     metrics_url_template = "http://otter.topsy.com/stats.json?url=%s&apikey=" + Topsy_key
-    provenance_url_template = "http://topsy.com/%s/?utm_source=otter"
+    provenance_url_template = "http://topsy.com/%s?utm_source=otter"
 
     static_meta_dict =  {
         "tweets": {

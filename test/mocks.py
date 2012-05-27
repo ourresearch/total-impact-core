@@ -189,7 +189,7 @@ class ProviderMock(Provider):
                         else:
                             raise exc
                 self.metrics_processed[item_id] = True
-        return {"wikipedia:mentions": 1}
+        return {"wikipedia:mentions": (1, "http://drilldownurl.org")}
 
     def biblio(self, aliases, url=None, cache_enabled=True):
         """ Process biblio for the given aliases

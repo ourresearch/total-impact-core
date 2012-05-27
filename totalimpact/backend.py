@@ -242,6 +242,10 @@ class ProviderThread(StoppableThread):
             try:
                 cache_enabled = (error_counts == 0)
 
+                if not cache_enabled:
+                    logger.debug("%20s: cache NOT enabled %s %s for %s"
+                        % (self.thread_id, provider, method_name, tiid))
+
                 response = self.call_provider_method(
                     provider, 
                     method_name, 
@@ -389,10 +393,11 @@ class ProviderMetricsThread(ProviderThread):
                         # FIXME when webapp updated to handle it
                         #snap["created"] = datetime.datetime.now().isoformat()
                         snap["created"] = time.time()
-                        snap["value"] = metrics[metric_name]
-                        snap["drilldown_url"] = "TBD"
+                        (value, drilldown_url) = metrics[metric_name]
+                        snap["value"] = value
+                        snap["drilldown_url"] = drilldown_url
                         #print "HERE IS MY SNAP"
-                        print snap
+                        print snap, "\n"
                         self.dao.save(snap)
 
 

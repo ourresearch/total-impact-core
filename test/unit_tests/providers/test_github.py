@@ -44,12 +44,12 @@ class TestGithub(ProviderTestCase):
         assert len(members) >= 30, (len(members), members)
 
     def test_provenance_url(self):
-        provenance_url = self.provider.provenance_url("forks", 
+        provenance_url = self.provider.provenance_url("github:forks", 
             [self.testitem_aliases])
         assert_equals(provenance_url, "https://github.com/egonw/cdk/network/members")
 
         # Not the same as above
-        provenance_url = self.provider.provenance_url("watchers", 
+        provenance_url = self.provider.provenance_url("github:watchers", 
             [self.testitem_aliases])
         assert_equals(provenance_url, "https://github.com/egonw/cdk/watchers")
 

@@ -16,8 +16,8 @@ class Github(Provider):
     metrics_url_template = "https://github.com/api/v2/json/repos/show/%s"
 
     provenance_url_templates = {
-        "watchers" : "https://github.com/%s/%s/watchers",
-        "forks" : "https://github.com/%s/%s/network/members"
+        "github:watchers" : "https://github.com/%s/%s/watchers",
+        "github:forks" : "https://github.com/%s/%s/network/members"
         }
 
     static_meta_dict = {
