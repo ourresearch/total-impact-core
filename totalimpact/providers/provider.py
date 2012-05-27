@@ -71,10 +71,16 @@ class Provider(object):
     def _get_error(self, status_code, response=None):
         if status_code >= 500:
             error = ProviderServerError(response)
+            logger.info("%20s ProviderServerError status code=%i, %s" 
+                % (self.provider_name, status_code, str(response)))
         else:
             error = ProviderClientError(response)
-        return(error)
-    
+            logger.info("%20s ProviderClientError status code=%i, %s" 
+                % (self.provider_name, status_code, str(response)))
+
+        raise(error)
+        return error
+
     def _get_templated_url(self, template, id, method=None):
         url = template % id
         return(url)
@@ -166,10 +172,12 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
 
         if response.status_code != 200:
+            logger.warning("%20s WARNING, status_code=%i getting %s" 
+                % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
                 return {}
             else:
-                raise(self._get_error(response.status_code, response))
+                self._get_error(response.status_code, response)
 
         # extract the member ids
         members = self._extract_members(response.text, query_string)
@@ -216,10 +224,12 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
         
         if response.status_code != 200:
+            logger.warning("%20s WARNING, status_code=%i getting %s" 
+                % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
                 return {}
             else:
-                raise(self._get_error(response.status_code, response))
+                self._get_error(response.status_code, response)
         
         # extract the aliases
         biblio_dict = self._extract_biblio(response.text, id)
@@ -270,10 +280,12 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
         
         if response.status_code != 200:
+            logger.warning("%20s WARNING, status_code=%i getting %s" 
+                % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
                 return []
             else:
-                raise(self._get_error(response.status_code, response))
+                self._get_error(response.status_code, response)
         
         if not response.text:
             return []

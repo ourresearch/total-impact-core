@@ -97,7 +97,7 @@ class Mendeley(Provider):
         # get count of groups
         try:
             metrics_dict["mendeley:groups"] = len(metrics_dict["mendeley:groups"])
-        except TypeError:
+        except (TypeError, KeyError):
             # don't add null or zero metrics
             pass
 
