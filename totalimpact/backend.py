@@ -386,9 +386,7 @@ class ProviderMetricsThread(ProviderThread):
                         snap = {}
                         snap["metric_name"] = metric_name
                         snap["tiid"] = item.id
-                        # FIXME when webapp updated to handle it
-                        #snap["created"] = datetime.datetime.now().isoformat()
-                        snap["created"] = time.time()
+                        snap["created"] = datetime.datetime.now().isoformat()
                         snap["value"] = metrics[metric_name]
                         snap["drilldown_url"] = "TBD"
                         #print "HERE IS MY SNAP"
