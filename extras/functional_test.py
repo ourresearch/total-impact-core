@@ -231,13 +231,6 @@ if __name__ == '__main__':
 
         total = sum([sum(complete[alias].values()) for alias in aliases])
         print "%i of %i responses are complete" %(total, item_count * len(aliases))
-        if options.debug:
-            for alias in aliases:
-                print alias,
-                if complete[alias]:
-                    print " +"
-                else:
-                    print " -"
         if total == item_count * len(aliases):
             sys.exit(0)    
 

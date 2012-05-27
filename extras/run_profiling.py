@@ -1,10 +1,12 @@
-import yappi
+# in ipython or similar
 
+import yappi
 import os
+from totalimpact import backend
+
 rootdir = "."
 logfile = os.path.join(rootdir, 'logs', 'total-impact.log')
 
-from totalimpact import backend
 
 yappi.clear_stats()
 yappi.start()
