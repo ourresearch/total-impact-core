@@ -28,9 +28,14 @@ class Webpage(Provider):
         #    'h1' : ['h1']
         #}
 
-        parsed_html = lxml.html.document_fromstring(page)
+        parsed_html = lxml.html.document_fromstring(page.encode("utf-8"))
         title = parsed_html.find(".//title").text
         h1 = parsed_html.find(".//h1").text
 
-        biblio_dict = {'title':title, 'h1':h1}
+        biblio_dict = {}
+        if title:
+            biblio_dict["title"] = title
+        if h1:
+            biblio_dict["h1"] = h1
+
         return biblio_dict    
