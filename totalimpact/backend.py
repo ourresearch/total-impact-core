@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import threading, time, sys
+import threading, time, sys, copy, datetime, pprint
 import traceback
 from totalimpact import dao, api
-from totalimpact.queue import AliasQueue, MetricsQueue
+from totalimpact.queue import Queue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.models import Error
 from totalimpact.pidsupport import StoppableThread, ctxfilter
@@ -285,10 +285,11 @@ class ProvidersAliasThread(ProviderThread):
     
     def __init__(self, providers, dao):
         self.providers = providers
-        queue = AliasQueue(dao)
+        queue = Queue("aliases")
         ProviderThread.__init__(self, dao, queue)
         self.providers = providers
         self.thread_id = "alias_thread"
+        self.dao = dao
 
     def startup(self):
         # Ensure logs for this thread are marked correctly
@@ -309,25 +310,9 @@ class ProvidersAliasThread(ProviderThread):
                 if success:
                     if new_aliases:
                         item.aliases.add_unique(new_aliases)
-                        # don't save unless new aliases
-                        item.save()
-                        logger.info("%20s: **SAVE** in process_item %s provider %s" 
-                            % (self.thread_id, item.id, provider.provider_name))
-
-
                 else:
-                    # This provider has failed and exceeded the 
-                    # total number of retries. Don't process any 
-                    # more providers, we abort this item entirely
-
-                    # Wipe out the aliases and set last_modified so that the item
-                    # is then removed from the queue. If we don't wipe the aliases
-                    # then the aliases list is not complete and will given incorrect
-                    # results. We'd rather have no results rather than
-                    # incorrect.
                     item.aliases.clear_aliases()
-                    item.save()
-                    logger.info("%20s: **SAVE** in process_item %s clear aliases provider %s" 
+                    logger.info("%20s: NOT SUCCESS in process_item %s clear aliases provider %s" 
                         % (self.thread_id, item.id, provider.provider_name))
 
                     break
@@ -337,7 +322,7 @@ class ProvidersAliasThread(ProviderThread):
                     if biblio:
                         # merge old biblio with new, favoring old in cases of conflicts
                         item.biblio = dict(biblio.items() + item.biblio.items())
-                        logger.info("%20s: **SAVE** in process_item biblio %s provider %s" 
+                        logger.info("%20s: in process_item biblio %s provider %s" 
                             % (self.thread_id, item.id, provider.provider_name))
 
                 else:
@@ -345,6 +330,10 @@ class ProvidersAliasThread(ProviderThread):
                     # total number of retries. Don't process any 
                     # more providers, we abort this item entirely
                     break
+                logger.info("%20s: interm aliases for item %s after %s: %s" 
+                    % (self.thread_id, item.id, provider.provider_name, str(item.aliases.get_aliases_list())))
+                logger.info("%20s: interm biblio for item %s after %s: %s" 
+                    % (self.thread_id, item.id, provider.provider_name, str(item.biblio)))
 
             ctxfilter.local.backend['provider'] = ''
             logger.info("%20s: final alias list for %s is %s" 
@@ -352,7 +341,11 @@ class ProvidersAliasThread(ProviderThread):
 
             # Time to add this to the metrics queue
             self.queue.add_to_metrics_queues(item)
+            logger.info("%20s: FULL ITEM on metrics queue %s %s"
+                % (self.thread_id, item.id, pprint.pprint(item.as_dict())))
             logger.debug("%20s: added to metrics queues complete for item %s " % (self.thread_id, item.id))
+            self.dao.save(item.as_dict())
+
 
     
 
@@ -363,9 +356,10 @@ class ProviderMetricsThread(ProviderThread):
     """
     def __init__(self, provider, dao):
         self.provider = provider
-        queue = MetricsQueue(dao, provider.provider_name)
+        queue = Queue(provider.provider_name)
         ProviderThread.__init__(self, dao, queue)
-        self.thread_id = str(self.provider.provider_name) + "_thread"
+        self.thread_id = self.provider.provider_name + "_thread"
+        self.dao = dao
 
     def startup(self):
         # Ensure logs for this thread are marked correctly
@@ -378,41 +372,22 @@ class ProviderMetricsThread(ProviderThread):
         (success, metrics) = self.process_item_for_provider(item, 
             self.provider, 'metrics')
         
-        ts = str(time.time())
-
         if success:
             if metrics:
                 for metric_name in metrics.keys():
-                    if not item.metrics.has_key(metric_name):
-                        item.metrics[metric_name] = {}
-                        item.metrics[metric_name]['values'] = {}
-                    item.metrics[metric_name]['values'][ts] = metrics[metric_name]
-                    item.metrics[metric_name]['static_meta'] = {} #self.provider
-                item.save()
-                logger.info("%20s: **SAVE** in process_item %s" 
-                        % (self.thread_id, item.id))
+                    if metrics[metric_name]:
+                        snap = {}
+                        snap["metric_name"] = metric_name
+                        snap["tiid"] = item.id
+                        # FIXME when webapp updated to handle it
+                        #snap["created"] = datetime.datetime.now().isoformat()
+                        snap["created"] = time.time()
+                        snap["value"] = metrics[metric_name]
+                        snap["drilldown_url"] = "TBD"
+                        print "HERE IS MY SNAP"
+                        print snap
+                        self.dao.save(snap)
 
-            else:
-                # The provider returned None for this item. This is either
-                # a non result or a permanent failure
-                for metric_name in self.provider.metric_names():
-                    if not item.metrics.has_key(metric_name):
-                        item.metrics[metric_name] = {}
-                        item.metrics[metric_name]['values'] = {}
-                    item.metrics[metric_name]['values'][ts] = None
-                    item.metrics[metric_name]['static_meta'] = {} #self.provider
-        else:
-            # metrics failed, write None values in for the metric
-            # values so we don't attempt to reprocess this item
-            for metric_name in self.provider.metric_names():
-                if not item.metrics.has_key(metric_name):
-                    item.metrics[metric_name] = {}
-                    item.metrics[metric_name]['values'] = {}
-                item.metrics[metric_name]['values'][ts] = None
-                item.metrics[metric_name]['static_meta'] = {} #self.provider
-            item.save()
-            logger.info("%20s: **SAVE** in process_item %s" 
-                    % (self.thread_id, item.id))
 
 
 
@@ -460,10 +435,9 @@ def main(logfile=None):
     backend._monitor()
     backend._cleanup()
         
-    from totalimpact.queue import AliasQueue
-    from totalimpact.queue import MetricsQueue
-    logger.debug("Items on Alias Queue: %s" % (AliasQueue.queued_items,))
-    logger.debug("Items on Metrics Queue: %s" % (MetricsQueue.queued_items,))
+    from totalimpact.queue import Queue
+    logger.debug("Items on Queues: %s" 
+        % (str([queue_name + " : " + str(Queue.queued_items_ids(queue_name)) for queue_name in Queue.queued_items.keys()]),))
 
  
 if __name__ == "__main__":

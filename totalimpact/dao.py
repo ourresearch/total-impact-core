@@ -1,4 +1,4 @@
-import pdb, json, uuid, couchdb, time
+import pdb, json, uuid, couchdb, time, copy
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
 
@@ -65,6 +65,7 @@ class Dao(object):
                     "views": {
                         "requested": {},
                         "by_alias": {},
+                        "by_tiid_with_snaps": {},
                         } 
                     }
         for view_name in view["views"]:
@@ -90,11 +91,25 @@ class Dao(object):
             return None
 
     def save(self, doc):
-        """ returns (id, rev) tuple of the save document
-            raises exceptions on failure """
-        doc["_id"] = doc["id"]
-        logger.info("IN DAO SAVE WITH ID %s" %(doc["id"]))
-        return self.db.save(doc)
+        try:
+            doc["_id"] = doc["id"]
+            del doc["id"]
+        except KeyError:
+            doc["_id"] = uuid.uuid1().hex
+            logger.info("IN DAO MINTING A NEW ID ID %s" %(doc["_id"]))
+        logger.info("IN DAO SAVING ID %s" %(doc["_id"]))
+        retry = True
+        while retry:
+            try:
+                response = self.db.save(doc)
+                retry = False
+            except couchdb.ResourceConflict, e:
+                logger.info("Couch conflict %s, will retry" %(e))
+                newer_doc = self.get(doc["_id"])
+                doc["_rev"] = newer_doc["_rev"]
+                time.sleep(0.1)
+        logger.info("IN DAO SAVED ID %s" %(doc["_id"]))
+        return response
 
     def save_and_commit(self, doc):
         ret = self.save(doc)
@@ -120,10 +135,17 @@ class Dao(object):
         for key,val in kwargs.iteritems():
             if not fullpath.endswith('&'): fullpath += '&'
             fullpath += key + '=' + urllib.quote_plus(json.dumps(val))
+
+        #logger.info("IN DAO VIEW, HOST %s" %(host))
+        #logger.info("IN DAO VIEW, FULLPATH %s" %(fullpath))
+
         c =  httplib.HTTPConnection(host)
         c.request('GET', fullpath)
         result = c.getresponse()
         result_json = json.loads(result.read())
+
+        #logger.info("IN DAO VIEW, LEN RESPONSE %i" %(len(result_json)))
+        #logger.info("IN DAO VIEW, RESPONSE KEYS %s" %(str(result_json.keys())))
 
         if (u'reason', u'missing_named_view') in result_json.items():
             raise LookupError
@@ -138,7 +160,7 @@ class Dao(object):
         return self.update_item()
         
     def delete(self, id):
-        doc = self.db[id]
+        doc = self.db.get(id)
         self.db.delete(doc)
         return True
 

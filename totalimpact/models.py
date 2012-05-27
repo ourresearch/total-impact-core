@@ -68,7 +68,7 @@ class Saveable(object):
             serialisation to the database.
         '''
         start_time = time.time()
-        dict_repr = todict(self,ignore=['dao'])
+        dict_repr = todict(self, ignore=['dao'])
         return dict_repr
 
     def _update_dict(self, input, my_dict=None):
@@ -130,6 +130,21 @@ class Saveable(object):
 
         return res
 
+    def save_simple(self):
+        retry = True
+        import couchdb
+
+        logger.info("IN SIMPLE SAVE with item %s" %self.id)
+
+        while retry:
+            try:
+                res = self.dao.save_and_commit(self.as_dict())
+                retry = False
+            except couchdb.ResourceConflict, e:
+                logger.info("Couch conflict, will retry")
+
+        return res        
+
     def delete(self):
         self.dao.delete(self.id)
         return True
@@ -143,13 +158,39 @@ class ItemFactory():
     #TODO this should subclass a SaveableFactory
 
     item_class = Item
+    all_static_meta = ProviderFactory.get_all_static_meta()
 
     @classmethod
-    def get(cls, dao, id, provider_maker, providers_config):
-        now = time.time()
-        item_doc = dao.get(id)
-        item = cls.item_class(dao, id=id)
+    def get_simple_item(cls, dao, tiid):
+        res = dao.view("by_tiid_with_snaps", 
+                startkey=[tiid,0], 
+                endkey=[tiid,1])
+        rows = res["rows"]
+        if not rows:
+            return None
+        stored_item = rows[0]["value"]
+        snaps = [row["value"] for row in rows[1:]]
+        item = {}
+        item["id"] = stored_item["_id"]
+        item["aliases"] = stored_item["aliases"]
+        item["biblio"] = stored_item["biblio"]
+        item["created"] = stored_item["created"]
+        item["last_modified"] = stored_item["last_modified"]
+        item["metrics"] = {} #not using what is in stored item for this
+        for snap in snaps:
+            metric_name = snap["metric_name"]
+            item["metrics"][metric_name] = {}
+            item["metrics"][metric_name]["values"] = {}
+            item["metrics"][metric_name]["values"][snap["created"]] = snap["value"]
+            item["metrics"][metric_name]["provenance_url"] = snap["drilldown_url"]
+            item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]
+        return item
 
+    @classmethod
+    def get_from_item_doc(cls, dao, item_doc, provider_maker, providers_config):
+        item = Item(dao, id=item_doc["_id"])
+
+        now = time.time()
         if item_doc is None:
             logger.warning("Unable to load item %s" % id)
             raise LookupError
@@ -199,6 +240,16 @@ class ItemFactory():
             item.metrics[full_metric_name] = my_metric
 
         return item
+
+
+    @classmethod
+    def get(cls, dao, id, provider_maker, providers_config):
+        item_doc = dao.get(id)
+        if item_doc:
+            return (cls.get_from_item_doc(dao, item_doc, provider_maker, providers_config))
+        else:
+            return None
+
 
     @classmethod
     def decide_genre(self, alias_dict):

@@ -1,6 +1,7 @@
 from totalimpact.cache import Cache
 from totalimpact.dao import Dao
 from totalimpact import providers
+from totalimpact import default_settings
 
 import requests, os, time, threading, sys, traceback, importlib, urllib
 import simplejson
@@ -34,6 +35,18 @@ class ProviderFactory(object):
             except ProviderConfigurationError:
                 logger.error("Unable to configure provider ... skipping " + str(v))
         return providers
+
+    @classmethod
+    def get_all_static_meta(cls, config_providers=default_settings.PROVIDERS):
+        all_static_meta = {}
+        providers = cls.get_providers(config_providers)
+        for provider in providers:
+            if provider.provides_metrics:
+                for metric_name in provider.static_meta_dict:
+                    full_metric_name = provider.provider_name + ":" + metric_name
+                    all_static_meta[full_metric_name] = provider.static_meta_dict[metric_name]
+        return(all_static_meta)
+
         
 class Provider(object):
 

@@ -1,13 +1,16 @@
 import time
+import threading
+import simplejson
+import copy
 from totalimpact import default_settings
 from totalimpact.models import Item, ItemFactory
 from totalimpact.pidsupport import StoppableThread, ctxfilter
 from totalimpact.providers.provider import ProviderFactory
+import default_settings
 
 from totalimpact.tilogging import logging
 log = logging.getLogger("queue")
 
-import threading
 
 # some data useful for testing
 # d = {"doi" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "url" : ["http://cottagelabs.com"]}
@@ -29,161 +32,110 @@ class QueueMonitor(StoppableThread):
 
         while not self.stopped():
             viewname = 'queues/requested'
-            res = self.dao.view(viewname)
+            rows = self.dao.view(viewname)
 
-            for res in res["rows"]:
-                item_id = res["id"]
-                ctxfilter.local.backend['item'] = item_id
+            for row in rows["rows"]:
+                item_doc = copy.deepcopy(row["value"])
+
+                item = ItemFactory.get_from_item_doc(self.dao, 
+                        item_doc, 
+                        ProviderFactory.get_provider,
+                        default_settings.PROVIDERS)
+
+                tiid = item.id
+                ctxfilter.local.backend['item'] = tiid
                 log.info("%20s detected on request queue: item %s" 
-                    % ("QueueMonitor", item_id))
-                item = ItemFactory.get(self.dao, 
-                    item_id, 
-                    ProviderFactory.get_provider,
-                    default_settings.PROVIDERS)
+                    % ("QueueMonitor", tiid))
                 # In case clocks are out between processes, use min to ensure queued >= requested
                 item.last_queued = max(item.last_requested, time.time()) 
-
-                # Now add the item to the in-memory queue
-                AliasQueue.enqueue(item_id)
+                item_doc["last_queued"] = item.last_queued
 
                 # now save back the updated last_queued information
-                item.save()
+                # do this before putting on queue, so that no one has changed it.
+                log.info("%20s UPDATING last_queued date in db: item %s" 
+                    % ("QueueMonitor", tiid))
+
+                item_doc["id"] = item.id
+                self.dao.save(item_doc)
+
+                # Now add the item to the in-memory queue
+                Queue.init_queue("aliases")
+                Queue.enqueue("aliases", item)
+
+
+                #item.save()
                 log.info("%20s saving item %s to update last_queued information" 
-                    % ("QueueMonitor", item_id))
+                    % ("QueueMonitor", tiid))
 
             if runonce:
                 break
             self._interruptable_sleep(0.5)
     
 class Queue():
-    pass
-
-class AliasQueue(Queue):
     # This is a FIFO queue, add new item ids to the end of this list
     # to queue, remove from the head
-    queued_items = []
+    queued_items = {}
     queue_lock = threading.Lock()
     
-    def __init__(self, dao):
-        self.dao = dao
+
+    def __init__(self, queue_name):
+        self.queue_name = queue_name
+        self.init_queue(queue_name)
 
     @classmethod
     def clear(cls):
         """ This is only used from the test suite, normally not needed """
-        cls.queued_items = []
+        for queue_name in cls.queued_items.keys():
+            cls.queued_items[queue_name] = []
 
     @classmethod
-    def enqueue(cls, item_id):
-        log.info("%20s enqueuing alias %s"
-            % ("AliasQueue", item_id))
+    def init_queue(cls, queue_name):
+        if not cls.queued_items.has_key(queue_name):
+            cls.queued_items[queue_name] = []
+
+    @classmethod
+    def queued_items_ids(cls, queue_name):
+        return ([item.id for item in cls.queued_items[queue_name]])
+
+    @classmethod
+    def enqueue(cls, queue_name, item):
+        log.info("%20s enqueuing item %s"
+            % ("Queue " + queue_name, item.id))
 
         # Synchronised section
         cls.queue_lock.acquire()
         # Add to the end of the queue
-        cls.queued_items.append(item_id)
+        cls.queued_items[queue_name].append(copy.deepcopy(item))
         cls.queue_lock.release()
 
     def dequeue(self):
         # Synchronised section
-
+        item = None
         self.queue_lock.acquire()
-    
-        item_id = None
-        if len(self.queued_items) > 0:
+        if len(self.queued_items[self.queue_name]) > 0:
             # Take from the head of the queue
-            item_id = self.queued_items[0]
-            log.info("%20s dequeuing item %s from alias" % ("AliasQueue", item_id))
-            del self.queued_items[0]
-
+            item = copy.deepcopy(self.queued_items[self.queue_name][0])
+            log.info("%20s dequeuing item %s" 
+                % ("Queue " + self.queue_name, item.id))
+            del self.queued_items[self.queue_name][0]
         self.queue_lock.release()
+        return item
 
-        if item_id:
-            return ItemFactory.get(self.dao, 
-                item_id, 
-                ProviderFactory.get_provider,
-                default_settings.PROVIDERS)
-        else:
-            return None
-
+    @classmethod
     def add_to_metrics_queues(self, item):
         # Add the item to the metrics queue
-        log.info("%20s adding item %s to metrics queues" 
-            % ("AliasQueue", item.id))
+        log.info("%20s adding item %s to all metrics queues" 
+            % ("Queue", item.id))
 
         providers_config = default_settings.PROVIDERS
         providers = ProviderFactory.get_providers(providers_config)
         for provider in providers:
             if provider.provides_metrics:
-                MetricsQueue.enqueue(item.id, provider.provider_name)
+                Queue.enqueue(provider.provider_name, item)
 
-
-class MetricsQueue(Queue):
-
-    # This is a FIFO queue, add new item ids to the end of this list
-    # to queue, remove from the head. For this queue, we have a
-    # dictionary as we have a queue per provider
-    queued_items = {}
-    queue_lock = threading.Lock()
-    
-    def __init__(self, dao, prov=None):
-        self.dao = dao
-        self._provider = prov
-        if not prov:
-            raise ValueError("You must supply a provider name")
-        self.init_queue(prov)
-
-    @classmethod
-    def clear(cls):
-        """ This is only used from the test suite, normally not needed """
-        for provider in cls.queued_items.keys():
-            cls.queued_items[provider] = []
-
-    @classmethod
-    def init_queue(cls, provider):
-        if not cls.queued_items.has_key(provider):
-            cls.queued_items[provider] = []
-        
     @property
     def provider(self):
-        return self._provider
-        
-    @provider.setter
-    def provider(self, _provider):
-        self._provider = _provider
+        return self.queue_name
 
-    @classmethod
-    def enqueue(cls, item_id, provider):
-        log.info("%20s enqueuing item %s to %s" 
-            % ("MetricsQueue", item_id, provider))
-
-        # Synchronised section
-        cls.queue_lock.acquire()
-        # Add to the end of the queue
-        cls.queued_items[provider].append(item_id)
-        cls.queue_lock.release()
-
-
-    def dequeue(self):
-
-        # Synchronised section
-        self.queue_lock.acquire()
-    
-        item_id = None
-        if len(self.queued_items[self.provider]) > 0:
-            # Take from the head of the queue
-            item_id = self.queued_items[self.provider][0]
-            log.info("%20s dequeuing item %s from %s" 
-                % ("MetricsQueue", item_id, self.provider))
-            del self.queued_items[self.provider][0]
-
-        self.queue_lock.release()
-
-        if item_id:
-            return ItemFactory.get(self.dao, 
-                item_id, 
-                ProviderFactory.get_provider,
-                default_settings.PROVIDERS)
-        else:
-            return None
 
 

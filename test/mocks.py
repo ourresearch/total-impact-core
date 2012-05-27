@@ -53,6 +53,7 @@ class QueueMock(object):
         self.max_items = max_items
         self.items = {}
         self.thread_id = 'Queue Mock'
+        self.queue_name = "Queue Mock"
 
     def first(self):
         if self.none_count >= 3:
@@ -93,6 +94,8 @@ class ItemMock(object):
         return "ItemMock(%s)" % self.id
     def save(self):
         pass
+    def as_dict(self):
+        return {}
 
 from totalimpact.models import ItemFactory
 
