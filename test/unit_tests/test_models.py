@@ -1,5 +1,5 @@
 from nose.tools import raises, assert_equals, nottest
-import os, unittest, json, time
+import os, unittest, json, time, datetime
 from test.mocks import MockDao
 from copy import deepcopy
 
@@ -162,7 +162,7 @@ class TestItemFactory():
         '''create an item from scratch.'''
         item = models.ItemFactory.make_simple(self.d)
         assert_equals(len(item.id), 32)
-        assert item.created < time.time
+        assert item.created < datetime.datetime.now().isoformat()
         assert_equals(item.aliases.__class__.__name__, "Aliases")
 
     def test_adds_genre(self):
@@ -338,7 +338,7 @@ class TestAliases(unittest.TestCase):
         a.add_alias("foo", "id2")
         a.add_alias("bar", "id1")
 
-        assert a.last_modified < time.time()
+        assert a.last_modified < datetime.datetime.now().isoformat()
         
         # check the data structure is correct
         expected = {"foo":["id1", "id2"], "bar":["id1"]}

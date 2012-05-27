@@ -1,4 +1,4 @@
-import time
+import time, datetime
 import threading
 import simplejson
 import copy
@@ -45,7 +45,7 @@ class QueueMonitor(StoppableThread):
                 log.info("%20s detected on request queue: item %s" 
                     % ("QueueMonitor", tiid))
                 # In case clocks are out between processes, use min to ensure queued >= requested
-                item.last_queued = max(item.last_requested, time.time()) 
+                item.last_queued = max(item.last_requested, datetime.datetime.now().isoformat()) 
                 item_doc["last_queued"] = item.last_queued
 
                 # now save back the updated last_queued information

@@ -2,7 +2,7 @@ from werkzeug import generate_password_hash, check_password_hash
 import totalimpact.dao as dao
 from totalimpact import default_settings
 from totalimpact.providers.provider import ProviderFactory
-import time, uuid, json, hashlib, inspect, re, copy, string, random
+import time, uuid, json, hashlib, inspect, re, copy, string, random, datetime
 
 import threading
 from pprint import pprint
@@ -67,7 +67,7 @@ class Saveable(object):
         ''' Recursively convert this object's members into a dictionary structure for 
             serialisation to the database.
         '''
-        start_time = time.time()
+        start_time = datetime.datetime.now().isoformat()
         dict_repr = todict(self, ignore=['dao'])
         return dict_repr
 
@@ -145,7 +145,7 @@ class ItemFactory():
             logger.warning("Unable to load item %s" % id)
             raise LookupError
 
-        item.last_requested = time.time()
+        item.last_requested = datetime.datetime.now().isoformat()
 
         # first, just copy everything from the item_doc the DB gave us
         for k in item_doc:
@@ -192,7 +192,7 @@ class ItemFactory():
 
     @classmethod
     def make_simple(cls, dao):
-        now = time.time()
+        now = datetime.datetime.now().isoformat()
         item = cls.item_class(dao=dao)
         
         # make all the top-level stuff
@@ -200,7 +200,6 @@ class ItemFactory():
         item.biblio = {}
         item.last_modified = now
         item.last_requested = now
-        item.last_queued = None
         item.created = now
 
         return item
@@ -224,7 +223,7 @@ class CollectionFactory():
         if id is not None and collection_dict is not None:
             raise TypeError("you can load from the db or from a dict, but not both")
 
-        now = time.time()
+        now = datetime.datetime.now().isoformat()
         collection = Collection(dao=dao)
 
         if id is None and collection_dict is None:
@@ -331,7 +330,7 @@ class Aliases(object):
     not_aliases = ["created", "last_modified"]
     
     def __init__(self, seed=None):
-        self.created = time.time() # will get overwritten if need be
+        self.created = datetime.datetime.now().isoformat() # will get overwritten if need be
         try:
             for k in seed:
                 setattr(self, k, seed[k])
@@ -344,14 +343,14 @@ class Aliases(object):
             attr.append(id)
         except AttributeError:
             setattr(self, namespace, [id])
-        self.last_modified = time.time()
+        self.last_modified = datetime.datetime.now().isoformat()
 
     #FIXME: this should take namespace and id, not a list of them
     def add_unique(self, alias_list):
         for ns, id in alias_list:
             if id not in getattr(self, ns, []):
                 self.add_alias(ns, id)
-        self.last_modified = time.time()
+        self.last_modified = datetime.datetime.now().isoformat()
     
     def get_aliases_list(self, namespace_list=None): 
         ''' 
@@ -393,7 +392,7 @@ class Aliases(object):
         # without then going on to process metrics incorrectly.
         for attr in self.get_namespace_list():
             delattr(self, attr)
-        self.last_modified = time.time()
+        self.last_modified = datetime.datetime.now().isoformat()
 
     # FIXME I don't think we need this any more?
     def as_dict(self):
