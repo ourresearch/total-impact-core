@@ -112,6 +112,19 @@ class TestTiid(ApiTester):
         response = self.client.get('/item/' + str(uuid.uuid1()))
         assert_equals(response.status_code, 404)  # Not Found
 
+class TestProvider(ApiTester):
+
+        def test_exists(self):
+            resp = self.client.get("/provider")
+            assert resp
+
+        def test_gets_delicious_static_meta(self):
+            resp = self.client.get("/provider")
+            md = json.loads(resp.data)
+            print md["delicious"]
+            assert md["delicious"]['metrics']["bookmarks"]["description"]
+
+
 class TestItem(ApiTester):
 
     def test_item_post_unknown_tiid(self):
@@ -261,7 +274,6 @@ class TestApi(ApiTester):
 
         super(TestApi, self).setUp()
 
-        
     def test_tiid_get_with_unknown_alias(self):
         # try to retrieve tiid id for something that doesn't exist yet
         plos_no_tiid_resp = self.client.get('/tiid/doi/' + 
