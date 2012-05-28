@@ -8,7 +8,7 @@ import collections
 from nose.tools import assert_equals, raises, nottest
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/plosalm")
-SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics1")
+SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
 
 TEST_DOI = "10.1371/journal.pcbi.1000361"
 
