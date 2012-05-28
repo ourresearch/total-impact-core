@@ -134,7 +134,10 @@ class ItemFactory():
             return None
         item_doc = rows[0]["value"]
         snaps = [row["value"] for row in rows[1:]]
-        item = cls.build_item(item_doc, snaps)
+        try:
+            item = cls.build_item(item_doc, snaps)
+        except Exception:
+            logger.error("Unable to build item %s, %s" % (tiid, str(item_doc), str(snaps)))
         return item
 
     @classmethod

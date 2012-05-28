@@ -19,7 +19,18 @@ TEST_ITEMS = {
             'aliases': ['doi', "title", "url"],
             'biblio': [u'authors', u'journal', u'year', u'title'],
             'metrics' : {
-                'wikipedia:mentions' : 1
+                'wikipedia:mentions' : 1,
+                u'plosalm:crossref': 133,
+                 'plosalm:html_views': 17455,
+                 'plosalm:pdf_views': 2106,
+                 u'plosalm:pmc_abstract': 19,
+                 u'plosalm:pmc_figure': 71,
+                 u'plosalm:pmc_full-text': 1092,
+                 u'plosalm:pmc_pdf': 419,
+                 u'plosalm:pmc_supp-data': 157,
+                 u'plosalm:pmc_unique-ip': 963,
+                 u'plosalm:pubmed_central': 102,
+                 u'plosalm:scopus': 218
             }
         },
     ('url', 'http://total-impact.org/') : #note trailing slash
