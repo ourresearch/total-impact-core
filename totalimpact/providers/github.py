@@ -10,6 +10,8 @@ class Github(Provider):
 
     example_id = ("github", "egonw,cdk")
 
+    url = "http://github.com"
+    descr = "A social, online repository for open-source software."
     member_items_url_template = "https://api.github.com/users/%s/repos"
     biblio_url_template = "https://github.com/api/v2/json/repos/show/%s"
     aliases_url_template = "https://github.com/api/v2/json/repos/show/%s"

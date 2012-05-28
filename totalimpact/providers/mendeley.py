@@ -11,6 +11,8 @@ class Mendeley(Provider):
 
     example_id = ("doi", "10.1371/journal.pcbi.1000361")
 
+    url = "http://www.mendeley.com"
+    descr = " A research management tool for desktop and web."
     everything_url_template = "http://api.mendeley.com/oapi/documents/details/%s?type=doi&consumer_key=" + Mendeley_key
     biblio_url_template = everything_url_template
     aliases_url_template = everything_url_template

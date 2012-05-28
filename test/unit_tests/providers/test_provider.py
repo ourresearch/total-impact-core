@@ -74,5 +74,6 @@ class TestProviderFactory():
         md = ProviderFactory.get_all_metadata()
         print md["delicious"]
         assert md["delicious"]['metrics']["bookmarks"]["description"]
+        #assert_equals(md["delicious"]['url'], "http://www.delicious.com")
 
 
