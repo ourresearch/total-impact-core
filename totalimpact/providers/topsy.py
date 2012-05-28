@@ -22,14 +22,14 @@ class Topsy(Provider):
             "display_name": "tweets",
             "provider": "Topsy",
             "provider_url": "http://www.topsy.com/",
-            "description": "Tweets via Topsy, real-time search for the social web" + ", <a href='http://topsy.com'><img src='http://cdn.topsy.com/img/powered.png'/></a>", #part of otter terms of use to include this http://modules.topsy.com/app-terms/
+            "description": "Number of times the item has been tweeted",
             "icon": "http://twitter.com/phoenix/favicon.ico" ,
         },    
         "influential_tweets": {
             "display_name": "influencial tweets",
             "provider": "Topsy",
             "provider_url": "http://www.topsy.com/",
-            "description": "Influential tweets via Topsy,Real-time search for the social web" + ", <a href='http://topsy.com'><img src='http://cdn.topsy.com/img/powered.png'/></a>", #part of otter terms of use to include this http://modules.topsy.com/app-terms/
+            "description": "Number of times the item has been tweeted by influential tweeters",
             "icon": "http://twitter.com/phoenix/favicon.ico" ,
         }
     }
