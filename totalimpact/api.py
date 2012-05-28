@@ -41,8 +41,6 @@ def configure_app(app):
 
 app = create_app()
 
-# Set up in-memory queue datastructures for each provider
-provider_names = app.config["PROVIDERS"].keys()
 mydao = None
 
 @app.before_request
@@ -222,6 +220,14 @@ def items(tiids, format=None):
     return resp
         
 
+@app.route('/provider', methods=['GET'])
+def provider():
+
+    ret = ProviderFactory.get_all_metadata()
+    resp = make_response( json.dumps(ret, sort_keys=True, indent=4), 200 )
+    resp.mimetype = "application/json"
+
+    return resp
 
 
 '''

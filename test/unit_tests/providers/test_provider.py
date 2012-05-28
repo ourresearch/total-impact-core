@@ -63,3 +63,16 @@ class Test_Provider():
 
         response = provider._extract_from_xml(page, dict_of_keylists)
         assert_equals(response, {'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'year': u'2007'})        
+
+class TestProviderFactory():
+
+    def test_get_all_static_meta(self):
+        sm = ProviderFactory.get_all_static_meta()
+        assert sm["delicious:bookmarks"]["description"], sm["delicious:bookmarks"]
+
+    def test_get_all_metadata(self):
+        md = ProviderFactory.get_all_metadata()
+        print md["delicious"]
+        assert md["delicious"]['metrics']["bookmarks"]["description"]
+
+

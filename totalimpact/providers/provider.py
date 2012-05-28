@@ -47,6 +47,27 @@ class ProviderFactory(object):
                     all_static_meta[full_metric_name] = provider.static_meta_dict[metric_name]
         return(all_static_meta)
 
+    @classmethod
+    def get_all_metadata(cls, config_providers=default_settings.PROVIDERS):
+        ret = {}
+        providers = cls.get_providers(config_providers)
+        for provider in providers:
+            provider_data = {}
+            provider_data["provides_metrics"] = provider.provides_metrics
+            provider_data["provides_aliases"] = provider.provides_aliases
+
+            try:
+                provider_data["metrics"] = provider.static_meta_dict
+            except AttributeError:
+                pass
+
+            provider_name = provider.__class__.__name__.lower()
+
+            ret[provider_name] = provider_data
+
+        return ret
+
+
         
 class Provider(object):
 
