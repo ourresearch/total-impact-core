@@ -56,6 +56,8 @@ class ProviderFactory(object):
             provider_data = {}
             provider_data["provides_metrics"] = provider.provides_metrics
             provider_data["provides_aliases"] = provider.provides_aliases
+            provider_data["url"] = provider.url
+            provider_data["descr"] = provider.descr
 
             try:
                 provider_data["metrics"] = provider.static_meta_dict

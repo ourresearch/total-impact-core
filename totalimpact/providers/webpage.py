@@ -11,6 +11,8 @@ class Webpage(Provider):
 
     biblio_url_template = "%s"
     provenance_url_template = "%s"
+    descr = "Information scraped from webpages by total-impact"
+    url = "http://total-impact.org"
 
 
     def __init__(self):
