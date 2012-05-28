@@ -59,6 +59,9 @@ PROVIDERS = {
         "workers":3
     },
     # don't-have-biblio providers go here
+    "plosalm":{
+        "workers":3
+    },  
     "delicious":{
         "workers":3
    },   
