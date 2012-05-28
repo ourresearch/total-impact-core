@@ -222,7 +222,6 @@ def items(tiids, format=None):
 
 @app.route('/provider', methods=['GET'])
 def provider():
-
     ret = ProviderFactory.get_all_metadata()
     resp = make_response( json.dumps(ret, sort_keys=True, indent=4), 200 )
     resp.mimetype = "application/json"

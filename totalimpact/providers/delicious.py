@@ -11,6 +11,8 @@ class Delicious(Provider):
     example_id = ("url", "http://total-impact.org")
     metrics_url_template = "http://feeds.delicious.com/v2/json/url/%s?count=100"
     provenance_url_template = "http://www.delicious.com/url/%s"
+    url = "http://www.delicious.com"
+    descr = "Online social bookmarking service"
     static_meta_dict = {
         "bookmarks": {
             "display_name": "bookmarks",

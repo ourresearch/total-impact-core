@@ -11,6 +11,8 @@ class Dryad(Provider):
 
     example_id = ("doi", "10.5061/dryad.7898")
 
+    descr = "An international repository of data underlying peer-reviewed articles in the basic and applied biology."
+    url = "http://www.datadryad.org"
     provenance_url_template = "http://dx.doi.org/%s"
     member_items_url_template = "http://datadryad.org/solr/search/select/?q=dc.contributor.author%%3A%%22%s%%22&fl=dc.identifier"
     aliases_url_template = "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.identifier.uri,dc.title"

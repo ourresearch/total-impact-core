@@ -16,12 +16,14 @@ class Wikipedia(Provider):
     provenance_url_template = "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go"
     metrics_url_template = "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'"
 
+    url = "http://www.wikipedia.org/"
+    descr = "The free encyclopedia that anyone can edit."
     static_meta_dict = {
         "mentions": {
             "display_name": "mentions",
             "provider": "Wikipedia",
             "provider_url": "http://www.wikipedia.org/",
-            "description": "Wikipedia is the free encyclopedia that anyone can edit.",
+            "description": "The number of Wikipedia articles that mentioned this object.",
             "icon": "http://wikipedia.org/favicon.ico",
         }
     }

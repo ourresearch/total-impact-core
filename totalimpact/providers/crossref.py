@@ -8,6 +8,8 @@ logger = logging.getLogger('providers.crossref')
 class Crossref(Provider):  
 
     example_id = ("doi", "10.1371/journal.pcbi.1000361")
+    url = "http://www.crossref.org/"
+    descr = "An official Digital Object Identifier (DOI) Registration Agency of the International DOI Foundation."
     biblio_url_template = None  #set in init
     aliases_url_template = None  #set in init
 
