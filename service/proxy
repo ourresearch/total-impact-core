@@ -18,7 +18,7 @@ ROOTDIR=`dirname $_my_path`
 # Change these to match your config
 STATEDIR=$ROOTDIR/run
 TOTALIMPACT_CONFIG=$ROOTDIR/config/testenv.cfg
-PROXY_LOG=$ROOTDIR/logs/proxy.log
+PROXY_LOG='/tmp/total-impact_proxy.log'
 export PYTHONPATH=.:$PYTHONPATH
 
 start() {

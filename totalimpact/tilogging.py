@@ -1,6 +1,8 @@
 import logging, os
 import logging.config
 
+
+
 config_search_paths = []
 
 # logging file in the totalimpact config directory
