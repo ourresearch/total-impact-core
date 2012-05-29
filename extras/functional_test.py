@@ -19,13 +19,24 @@ TEST_ITEMS = {
             'aliases': ['doi', "title", "url"],
             'biblio': [u'authors', u'journal', u'year', u'title'],
             'metrics' : {
-                'wikipedia:mentions' : 1
+                'wikipedia:mentions' : 1,
+                u'plosalm:crossref': 133,
+                 'plosalm:html_views': 17455,
+                 'plosalm:pdf_views': 2106,
+                 u'plosalm:pmc_abstract': 19,
+                 u'plosalm:pmc_figure': 71,
+                 u'plosalm:pmc_full-text': 1092,
+                 u'plosalm:pmc_pdf': 419,
+                 u'plosalm:pmc_supp-data': 157,
+                 u'plosalm:pmc_unique-ip': 963,
+                 u'plosalm:pubmed_central': 102,
+                 u'plosalm:scopus': 218
             }
         },
     ('url', 'http://total-impact.org/') : #note trailing slash
         { 
             'aliases': ["url"],
-            'biblio': [],
+            'biblio': ['title'],
             'metrics' : {
                 'delicious:bookmarks' : 65
             }
@@ -33,7 +44,7 @@ TEST_ITEMS = {
     ('url', 'http://total-impact.org'): #no trailing slash
         { 
             'aliases': ["url"],
-            'biblio': [],
+            'biblio': ['title'],
             'metrics' : {
                 'topsy:tweets' : 282,
                 'topsy:influential_tweets' : 26
@@ -52,7 +63,7 @@ TEST_ITEMS = {
     ('github', 'egonw,cdk') :
         { 
             'aliases': ['github', 'url', 'title'],
-            'biblio': [u'last_push_date', u'create_date', u'description', u'title', u'url', u'owner'],
+            'biblio': [u'last_push_date', u'create_date', u'description', u'title', u'url', u'owner', 'h1'],
             'metrics' : {
                 'github:forks' : 0,
                 'github:watchers' : 7
@@ -63,6 +74,16 @@ TEST_ITEMS = {
             'aliases': ['url'],
             'biblio': [u'title', "h1"],
             'metrics' : {}
+        },
+    ('url', 'http://www.slideshare.net/cavlec/manufacturing-serendipity-12176916') :
+        {
+            'aliases' : ['url', 'title'],
+            'biblio': [u'username', u'repository', u'created', u'h1', u'genre', u'title'],
+            'metrics' : {
+                'slideshare:downloads' : 4,
+                'slideshare:views' : 337,
+                'slideshare:favorites' : 2
+            }
         }
 }
 
@@ -96,45 +117,44 @@ def checkItem(item, data, alias, items_for_use, options):
     if options.debug: 
         print "Checking %s result (%s)..." % (alias, item)
     
-        # Check aliases are correct
-#    for section in ["biblio", "aliases", "metrics"]:
-    for section in ["aliases"]:
-
+    success = True
+    for section in ["biblio", "aliases", "metrics"]:
         result = checkItemSection(alias, 
                 item, 
                 section, 
                 data[section], 
-                items_for_use, 
+                items_for_use[alias], 
                 options)
         if not result:
-            return False
-    return True
+            success = False
+    return success
 
-def checkItemSection(alias, id, section, api_response, items_for_use, options):
+def checkItemSection(alias, id, section, api_response, gold_item, options):
+    success = True
     if options.debug:
         print "Checking %s result (%s)..." % (alias, id)
 
     # Check aliases are correct
     if section=="aliases":
-        aliases = items_for_use[alias]['aliases']
+        gold_aliases = gold_item['aliases']
         alias_result = set(api_response.keys())
-        expected_result = set(aliases + [u'last_modified', u'created'])
+        expected_result = set(gold_aliases + [u'last_modified', u'created'])
         if (alias_result == expected_result):
             if options.debug:
                 print "ALIASES CORRECT! %s" %(alias_result)
         else:
             if options.debug:
                 print "ALIASES **NOT** CORRECT, for %s, %s, have %s, want %s" %(alias, id, alias_result, expected_result)
-            return False
+            success = False
 
     # Check biblio are correct
     elif section=="biblio":
-        biblio = items_for_use[alias]['biblio']    
+        gold_biblio = gold_item['biblio']    
         if api_response:
             biblio_result = set(api_response.keys())
         else:
             biblio_result = set([])
-        expected_result = set(biblio)
+        expected_result = set(gold_biblio + ['genre'])
 
         if (biblio_result == expected_result):
             if options.debug:
@@ -142,31 +162,34 @@ def checkItemSection(alias, id, section, api_response, items_for_use, options):
         else:
             if options.debug:
                 print "BIBLIO **NOT** CORRECT, have %s, want %s" %(biblio_result, expected_result)
-            return False
+            success = False
 
     # Check we've got some metric values
     elif section=="metrics":
-        metrics = items_for_use[alias]['metrics']
-        for metric in metrics.keys():
+        gold_metrics = gold_item['metrics']
+        for metric in gold_metrics.keys():
             try:
-                metric_data = api_response[metric]
+                metric_data = api_response[metric].values()[0]
             except KeyError:
                 # didn't return anything.  problem!
                 if options.debug:
                     print "METRICS **NOT** CORRECT for %s: metric missing" % (metric)
-                return False
+                success = False
 
             # expect the returned value to be equal or larger than reference
-            if metric_data >= metrics[metric]:
-                if options.debug:
-                    print "METRICS CORRECT! %s" %(metric_data)
-            else:
-                if options.debug:
-                    print "METRICS **NOT** CORRECT for %s - %s, expected at least %s" % (metric, metric_data, metrics[metric])
-                return False
+            if success:
+                if metric_data >= gold_metrics:
+                    if options.debug:
+                        print "METRICS CORRECT! %s" %(metric_data)
+                else:
+                    if options.debug:
+                        print "METRICS **NOT** CORRECT for %s - %s, expected at least %s" % (metric, metric_data, gold_metrics)
+                    return False
 
+    if options.debug:
+        print #blank line
 
-    return True
+    return success
 
 
 

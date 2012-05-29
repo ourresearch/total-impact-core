@@ -387,15 +387,7 @@ class ProviderMetricsThread(ProviderThread):
             if metrics:
                 for metric_name in metrics.keys():
                     if metrics[metric_name]:
-                        snap = {}
-                        snap["metric_name"] = metric_name
-                        snap["tiid"] = item.id
-                        snap["created"] = datetime.datetime.now().isoformat()
-                        (value, drilldown_url) = metrics[metric_name]
-                        snap["value"] = value
-                        snap["drilldown_url"] = drilldown_url
-                        #print "HERE IS MY SNAP"
-                        print snap, "\n"
+                        snap = ItemFactory.build_snap(item.id, metrics[metric_name], metric_name)
                         self.dao.save(snap)
 
 

@@ -38,30 +38,39 @@ CACHE_ENABLED = True
 # Alias methods will be called in the order of this list
 #
 PROVIDERS = {
+    # best biblio providers go here, in order with best first
     "crossref":{
         "workers":3
     },
-    "delicious":{
-        "workers":3
-   },   
     "dryad":{
         "workers":3
     },            
     "github":{
         "workers":3
     },
-    "mendeley":{
+    "slideshare":{
         "workers":3
-    },  
-    "topsy":{
+    },
+    # if-need-be biblio providers go here
+    "mendeley":{
         "workers":3
     },  
     "webpage":{
         "workers":3
     },
+    # don't-have-biblio providers go here
+    "plosalm":{
+        "workers":3
+    },  
+    "delicious":{
+        "workers":3
+   },   
+    "topsy":{
+        "workers":3
+    },  
     "wikipedia":{
         "workers":3
-    }
+    },
 }
 
 ALIASES = {

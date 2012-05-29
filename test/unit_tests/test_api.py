@@ -294,7 +294,7 @@ class TestApi(ApiTester):
         plos_lookup_tiids = json.loads(plos_lookup_tiid_resp.data)
 
         # check that the tiids are the same
-        assert_equals(plos_create_tiid, plos_lookup_tiids[0])
+        assert_equals(plos_create_tiid, plos_lookup_tiids)
 
     def test_tiid_get_tiids_for_multiple_known_aliases(self):
         # create two new items with the same plos alias
@@ -306,12 +306,5 @@ class TestApi(ApiTester):
                 quote_plus(PLOS_TEST_DOI))
         second_plos_create_tiid = json.loads(second_plos_create_tiid_resp.data)
 
-        # retrieve the plos tiid using tiid api
-        plos_lookup_tiid_resp = self.client.get('/tiid/doi/' + 
-                quote_plus(PLOS_TEST_DOI))
-        assert_equals(plos_lookup_tiid_resp.status_code, 303)  
-        plos_lookup_tiids = json.loads(plos_lookup_tiid_resp.data)
-
         # check that the tiid lists are the same
-        assert_equals(sorted(plos_lookup_tiids), 
-            sorted([first_plos_create_tiid, second_plos_create_tiid]))
+        assert_equals(first_plos_create_tiid, second_plos_create_tiid)
