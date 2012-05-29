@@ -68,6 +68,17 @@ def hello():
     resp.mimetype = "application/json"
     return resp
 
+def get_tiid_by_alias(ns, nid):
+    viewname = 'queues/by_alias'
+    res = mydao.view(viewname, key=[ns,nid])
+    rows = res["rows"]
+    if rows:
+        if (len(rows) > 1):
+            logger.warning("More than one tiid for alias (%s, %s)" %(ns, nid))
+        tiid = rows[0]["id"]
+    else:
+        tiid = None
+    return tiid
 
 '''
 GET /tiid/:namespace/:id
@@ -76,14 +87,11 @@ GET /tiid/:namespace/:id
 '''
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
 def tiid(ns, nid):
-    viewname = 'queues/by_alias'
-    res = mydao.view(viewname)
-    rows = res["rows"]
-    tiids = [row["id"] for row in rows if row['key'] == [ns,nid]]
+    tiid = get_tiid_by_alias(ns, nid)
 
-    if not tiids:
+    if not tiid:
         abort(404)
-    resp = make_response(json.dumps(tiids, sort_keys=True, indent=4 ), 303) 
+    resp = make_response(json.dumps(tiid, sort_keys=True, indent=4 ), 303) 
     resp.mimetype = "application/json"
     return resp
 
@@ -121,9 +129,15 @@ def items_namespace_post():
     unique_aliases = list(set(aliases_list))
     tiids = []
     for alias in unique_aliases:
+        (namespace, nid) = alias
         logger.debug("In api /items with alias " + str(alias))
-        tiid = create_item(alias[0], alias[1])
-        logger.debug("... created with tiid " + tiid)
+        existing_tiid = get_tiid_by_alias(namespace, nid)
+        if existing_tiid:
+            tiid = existing_tiid
+            logger.debug("... found with tiid " + tiid)
+        else:
+            tiid = create_item(namespace, nid)
+            logger.debug("... created with tiid " + tiid)
         tiids.append(tiid)
 
     response_code = 201 # Created
@@ -131,16 +145,22 @@ def items_namespace_post():
     resp.mimetype = "application/json"
     return resp
 
-@app.route('/item/<namespace>/<path:id>', methods=['POST'])
-def item_namespace_post(namespace, id):
+@app.route('/item/<namespace>/<path:nid>', methods=['POST'])
+def item_namespace_post(namespace, nid):
     '''Creates a new item using the given namespace and id.
 
-    POST /item/:namespace/:id
+    POST /item/:namespace/:nid
     201 location: {tiid}
     500?  if fails to create
     example /item/PMID/234234232
     '''
-    tiid = create_item(namespace, id)
+    tiid = get_tiid_by_alias(namespace, nid)
+    if tiid:
+        logger.debug("... found with tiid " + tiid)
+    else:
+        tiid = create_item(namespace, nid)
+        logger.debug("... created with tiid " + tiid)
+
     response_code = 201 # Created
    
     resp = make_response(json.dumps(tiid), response_code)

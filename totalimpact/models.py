@@ -108,6 +108,7 @@ class ItemFactory():
     @classmethod
     def build_item(cls, item_doc, snaps):
         item = {}
+        item["type"] = "item"
         item["id"] = item_doc["_id"]
         item["aliases"] = item_doc["aliases"]
         item["biblio"] = item_doc["biblio"]
@@ -125,6 +126,35 @@ class ItemFactory():
         return item
 
     @classmethod
+    def build_snap(cls, tiid, metric_value_drilldown, metric_name):
+        snap = {}
+        snap["type"] = "metric_snap"
+        snap["metric_name"] = metric_name
+        snap["tiid"] = tiid
+        snap["created"] = datetime.datetime.now().isoformat()
+        (value, drilldown_url) = metric_value_drilldown
+        snap["value"] = value
+        snap["drilldown_url"] = drilldown_url
+        #print "HERE IS MY SNAP"
+        print snap, "\n"
+        return snap        
+
+    @classmethod
+    def make_simple(cls, dao):
+        now = datetime.datetime.now().isoformat()
+        item = cls.item_class(dao=dao)
+        
+        # make all the top-level stuff
+        item.aliases = Aliases()
+        item.biblio = {}
+        item.last_modified = now
+        item.last_requested = now
+        item.created = now
+
+        return item
+
+        
+    @classmethod
     def get_simple_item(cls, dao, tiid):
         res = dao.view("by_tiid_with_snaps", 
                 startkey=[tiid,0], 
@@ -134,7 +164,10 @@ class ItemFactory():
             return None
         item_doc = rows[0]["value"]
         snaps = [row["value"] for row in rows[1:]]
-        item = cls.build_item(item_doc, snaps)
+        try:
+            item = cls.build_item(item_doc, snaps)
+        except Exception:
+            logger.error("Unable to build item %s, %s" % (tiid, str(item_doc), str(snaps)))
         return item
 
     @classmethod
@@ -190,19 +223,7 @@ class ItemFactory():
                 full_metric_names.append(provider.provider_name + ':' + metric_name)
         return full_metric_names
 
-    @classmethod
-    def make_simple(cls, dao):
-        now = datetime.datetime.now().isoformat()
-        item = cls.item_class(dao=dao)
-        
-        # make all the top-level stuff
-        item.aliases = Aliases()
-        item.biblio = {}
-        item.last_modified = now
-        item.last_requested = now
-        item.created = now
 
-        return item
 
 
 class CollectionFactory():
