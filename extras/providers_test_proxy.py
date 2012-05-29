@@ -165,7 +165,7 @@ if __name__ == '__main__':
         if options.log:
             logfile = options.log
         else:
-            logfile = os.path.join(rootdir, 'logs', 'proxy.log')
+            logfile = 'tmp/total-impact_proxy.log'
         output = open(logfile,'w+')
         context.stderr = output
         context.stdout = output
