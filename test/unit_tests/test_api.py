@@ -224,7 +224,7 @@ class TestCollection(ApiTester):
         response_loaded = json.loads(response.data)
         assert_equals(
                 set(response_loaded.keys()),
-                set([u'created', u'item_tiids', u'last_modified', u'id', u'title']))
+                set([u'created', u'item_tiids', u'last_modified', u'title', u'type', u'id']))
         assert_equals(len(response_loaded["id"]), 6)
 
     def test_collection_put_updated_collection(self):

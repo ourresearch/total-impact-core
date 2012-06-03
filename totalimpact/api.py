@@ -4,6 +4,7 @@ from flask import Flask, jsonify, json, request, redirect, abort, make_response
 from flask import render_template, flash
 import os, json, time
 from pprint import pprint
+import datetime
 
 from totalimpact import dao
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
@@ -99,6 +100,7 @@ def create_item(namespace, nid):
     logger.debug("In create_item with alias" + str((namespace, nid)))
     item = ItemFactory.make_simple(mydao)
     item.aliases.add_alias(namespace, nid)
+    item.needs_aliases = datetime.datetime.now().isoformat()
     item.save()
 
     try:
@@ -110,8 +112,9 @@ def update_item(tiid):
     logger.debug("In update_item with tiid" + tiid)
     item_doc = mydao.get(tiid)
 
+    # set the needs_aliases timestamp so it will go on queue for update
     item = ItemFactory.get_item_object_from_item_doc(mydao, item_doc)
-    delattr(item, "last_queued")
+    item.needs_aliases = datetime.datetime.now().isoformat()
     item.save()
 
     try:

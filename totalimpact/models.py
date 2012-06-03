@@ -140,15 +140,15 @@ class ItemFactory():
 
     @classmethod
     def make_simple(cls, dao):
-        now = datetime.datetime.now().isoformat()
         item = cls.item_class(dao=dao)
         
         # make all the top-level stuff
+        now = datetime.datetime.now().isoformat()
         item.aliases = Aliases()
         item.biblio = {}
         item.last_modified = now
-        item.last_requested = now
         item.created = now
+        item.type = "item"
 
         return item
 
@@ -165,8 +165,9 @@ class ItemFactory():
         snaps = [row["value"] for row in rows[1:]]
         try:
             item = cls.build_item(item_doc, snaps)
-        except Exception:
-            logger.error("Unable to build item %s, %s" % (tiid, str(item_doc), str(snaps)))
+        except Exception, e:
+            item = None
+            logger.error("Exception %s: Unable to build item %s, %s, %s" % (e, tiid, str(item_doc), str(snaps)))
         return item
 
     @classmethod
@@ -176,8 +177,6 @@ class ItemFactory():
         if item_doc is None:
             logger.warning("Unable to load item %s" % id)
             raise LookupError
-
-        item.last_requested = datetime.datetime.now().isoformat()
 
         # first, just copy everything from the item_doc the DB gave us
         for k in item_doc:
@@ -250,6 +249,7 @@ class CollectionFactory():
             collection.id = cls.make_id()
             collection.created = now
             collection.last_modified = now
+            collection.type = "collection"
         else: # load an extant item
             if collection_dict is None:
                 collection_dict = dao.get(id)
