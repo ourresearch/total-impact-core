@@ -55,6 +55,9 @@ PROVIDERS = {
     "mendeley":{
         "workers":3
     },  
+    "bibtex":{
+        "workers":3
+    },  
     "webpage":{
         "workers":3
     },
