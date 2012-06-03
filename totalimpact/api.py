@@ -95,18 +95,23 @@ def tiid(ns, nid):
     resp.mimetype = "application/json"
     return resp
 
-def create_item(namespace, id):
-    '''Utility function to keep DRY in single/multiple item creation endpoins'''
+def create_item(namespace, nid):
+    logger.debug("In create_item with alias" + str((namespace, nid)))
     item = ItemFactory.make_simple(mydao)
-    item.aliases.add_alias(namespace, id)
+    item.aliases.add_alias(namespace, nid)
+    item.save()
 
-    ## FIXME - see issue 86
-    ## Should look up this namespace and id and see if we already have a tiid
-    ## If so, return its tiid with a 200.
-    # right now this makes a new item every time, creating many dupes
+    try:
+        return item.id
+    except AttributeError:
+        abort(500)     
 
-    # does not filter by whether we actually can process the namespace, since
-    # we may be able to someday soon. It's user's job to not pass in junk.
+def update_item(tiid):
+    logger.debug("In update_item with tiid" + tiid)
+    item_doc = mydao.get(tiid)
+
+    item = ItemFactory.get_item_object_from_item_doc(mydao, item_doc)
+    delattr(item, "last_queued")
     item.save()
 
     try:
@@ -115,15 +120,28 @@ def create_item(namespace, id):
         abort(500)     
 
 
+def items_tiid_post(tiids):
+    logger.debug("In api /items with tiids " + str(tiids))
+
+    updated_tiids = []
+    for tiid in tiids:
+        updated_tiid = update_item(tiid)
+        updated_tiids.append(updated_tiid)
+
+    response_code = 200
+    resp = make_response(json.dumps(updated_tiids), response_code)
+    resp.mimetype = "application/json"
+    return resp
+
 @app.route('/items', methods=['POST'])
 def items_namespace_post():
-    '''Creates multiple items based on a POSTed list of aliases.
-    
-    Note that this requires the POST content-type be sent as application/json..
-    this could be seen as a bug or feature...'''
+    try:
+        aliases_list = [(namespace, nid) for [namespace, nid] in request.json]
+    except ValueError:
+        #is a list of tidds, so do update instead
+        return items_tiid_post(request.json)
 
-    # get aliases into tuples instead of lists so can hash into a set
-    aliases_list = [(namespace, nid) for [namespace, nid] in request.json]
+    # no error, so do lookups and create the ones that don't exist
     logger.debug("In api /items with aliases " + str(aliases_list))
 
     unique_aliases = list(set(aliases_list))
