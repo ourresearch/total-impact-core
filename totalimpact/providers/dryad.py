@@ -185,7 +185,7 @@ class Dryad(Provider):
         """ Find <arr> sections in the given xml document which have a
             match for the name attribute """
         try:
-            doc = minidom.parseString(xml)
+            doc = minidom.parseString(xml.encode('utf-8'))
         except ExpatError, e:
             raise ProviderContentMalformedError("Content parse provider supplied XML document")
         arrs = doc.getElementsByTagName('arr')
