@@ -17,7 +17,7 @@ ROOTDIR=`dirname $_my_path`
 
 # Change these to match your config
 STATEDIR=$ROOTDIR/run
-STARTUP_LOG=$ROOTDIR/logs/backend-startup.log
+STARTUP_LOG=/tmp/backend-startup.log
 export TOTALIMPACT_CONFIG=$ROOTDIR/config/staging.cfg
 export PYTHONPATH=.:$PYTHONPATH
 

@@ -5,7 +5,7 @@ import os
 from totalimpact import backend
 
 rootdir = "."
-logfile = os.path.join(rootdir, 'logs', 'total-impact.log')
+logfile = '/tmp/total-impact.log'
 
 
 yappi.clear_stats()

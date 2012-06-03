@@ -465,7 +465,7 @@ if __name__ == "__main__":
     if options.log:
         logfile = options.log
     else:
-        logfile = os.path.join(rootdir, 'logs', 'backend.log')
+        logfile = 'tmp/total-impact_backend.log'
 
     if options.daemon:
         context = daemon.DaemonContext()
@@ -473,7 +473,7 @@ if __name__ == "__main__":
         if options.startup_log:
             output = open(options.startup_log,'a+')
         else:
-            output = open(os.path.join(rootdir, 'logs', 'backend-startup.log'),'a+')
+            output = open('/tmp/total-impact_backend_startup.log','a+')
 
         context.stderr = output
         context.stdout = output
