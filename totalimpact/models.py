@@ -67,7 +67,6 @@ class Saveable(object):
         ''' Recursively convert this object's members into a dictionary structure for 
             serialisation to the database.
         '''
-        start_time = datetime.datetime.now().isoformat()
         dict_repr = todict(self, ignore=['dao'])
         return dict_repr
 
@@ -153,7 +152,7 @@ class ItemFactory():
 
         return item
 
-        
+
     @classmethod
     def get_simple_item(cls, dao, tiid):
         res = dao.view("by_tiid_with_snaps", 
