@@ -106,7 +106,11 @@ class Mendeley(Provider):
         return metrics_dict
 
 
-    # default method; providers can override    
+    def _extract_provenance_url(self, page, status_code=200, id=None):
+        data = provider._load_json(page)
+        provenance_url = data['mendeley_url']
+        return provenance_url        
+
     def provenance_url(self, metric_name, aliases):
 
         id = self.get_best_id(aliases)     
@@ -124,6 +128,5 @@ class Mendeley(Provider):
             return []
 
         page = response.text
-        data = provider._load_json(page)
-        provenance_url = data['mendeley_url']
+        provenance_url = self._extract_provenance_url(page, response.status_code, id)
         return provenance_url

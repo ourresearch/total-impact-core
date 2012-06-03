@@ -11,6 +11,7 @@ datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provi
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
 SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, "aliases")
 SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
+SAMPLE_EXTRACT_PROVENANCE_URL_PAGE = SAMPLE_EXTRACT_METRICS_PAGE
 
 TEST_DOI = "10.1371/journal.pcbi.1000361"
 
@@ -48,8 +49,8 @@ class TestMendeley(ProviderTestCase):
         assert_equals(metrics_dict["mendeley:readers"], 50)
         assert_equals(metrics_dict["mendeley:groups"], 4)
 
-    def test_provenance_url(self):
-        provenance_url = self.provider.provenance_url("readers", 
-            [self.testitem_aliases])
-        assert_equals(provenance_url, "http://api.mendeley.com/research/adventures-in-semantic-publishing-exemplar-semantic-enhancements-of-a-research-article/")
+    def test_extract_provenance_url(self):
+        f = open(SAMPLE_EXTRACT_PROVENANCE_URL_PAGE, "r")
+        provenance_url = self.provider._extract_provenance_url(f.read())
+        assert_equals(provenance_url, "http://api.mendeley.com/research/snps-prescriptions-predict-drug-response/")
 
