@@ -1,9 +1,11 @@
 *.pyc
 *.egg-info/*
 .*.swp
+*.log
 src*
 .DS_Store
 .Python
+.nose*
 doc/_build/*
 /nbproject
 build
