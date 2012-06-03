@@ -45,8 +45,4 @@ class TestPlosalm(ProviderTestCase):
 
         assert_equals(metrics_dict, expected)
 
-    def test_metrics(self):
-        metrics_dict = self.provider.metrics([self.testitem_aliases])
-        expected = {u'plosalm:pmc_abstract': (70, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), 'plosalm:html_views': (11462, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:scopus': (20, u'http://www.scopus.com/scopus/inward/citedby.url?doi=10.1371%2Fjournal.pcbi.1000361&rel=R3.0.0&partnerID=OIVxnoIl&md5=5917ea9916ee68b95c2a7968d65927ab'), u'plosalm:pmc_unique-ip': (580, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), 'plosalm:pdf_views': (1086, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:pmc_pdf': (149, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:pubmed_central': (12, u'http://www.ncbi.nlm.nih.gov/sites/entrez?db=pubmed&cmd=link&LinkName=pubmed_pmc_refs&from_uid=19381256'), u'plosalm:pmc_figure': (39, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:pmc_supp-data': (6, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:pmc_full-text': (624, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:crossref': (13, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361')}
-        assert_equals(metrics_dict, expected)
 
