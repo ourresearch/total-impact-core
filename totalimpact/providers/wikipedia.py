@@ -56,10 +56,10 @@ class Wikipedia(Provider):
         searchinfo = doc.getElementsByTagName('searchinfo')
         if not searchinfo:
             raise ProviderContentMalformedError("No searchinfo in response document")
-        totalhits = searchinfo[0].attributes['totalhits'].value
+        totalhits = int(searchinfo[0].attributes['totalhits'].value)
 
         if totalhits:
-            metrics_dict = {"wikipedia:mentions": int(totalhits)}
+            metrics_dict = {"wikipedia:mentions": totalhits}
         else:
             metrics_dict = {}
         #logger.info("_extract_metrics returns metrics_dict %s" % (str(metrics_dict)))
