@@ -21,14 +21,14 @@ class Mendeley(Provider):
 
     static_meta_dict = {
         "readers": {
-            "display_name": "watchers",
+            "display_name": "readers",
             "provider": "Mendeley",
             "provider_url": "http://www.mendeley.com/",
             "description": "The number of readers who have added the article to their libraries",
             "icon": "http://www.mendeley.com/favicon.ico",
         },    
         "groups": {
-            "display_name": "watchers",
+            "display_name": "groups",
             "provider": "Mendeley",
             "provider_url": "http://www.mendeley.com/",
             "description": "The number of groups who have added the article to their libraries",
