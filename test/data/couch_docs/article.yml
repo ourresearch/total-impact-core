@@ -3,7 +3,6 @@
     id: thisisauuid
     created: "123456700.0"
     last_modified: "123459999.9"
-    last_requested: "123459999.9"
     aliases:
       doi:
         - 10.1371/journal.pbio.0050082

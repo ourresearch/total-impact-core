@@ -63,9 +63,10 @@ class Dao(object):
                     "_id": "_design/queues",
                     "language": "javascript",
                     "views": {
-                        "requested": {},
                         "by_alias": {},
                         "by_tiid_with_snaps": {},
+                        "by_type_and_id": {},
+                        "needs_aliases": {},
                         } 
                     }
         for view_name in view["views"]:

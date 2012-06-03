@@ -105,7 +105,6 @@ ITEM_DATA = {
     "_rev": "456",
     "created": 1330260456.916,
     "last_modified": 12414214.234,
-    "last_requested": 124141245.234, 
     "aliases": ALIAS_DATA,
     "metrics": { 
         "wikipedia:mentions": METRICS_DATA,

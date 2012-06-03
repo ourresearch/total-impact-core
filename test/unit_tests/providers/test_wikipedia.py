@@ -50,7 +50,7 @@ class TestWikipedia(ProviderTestCase):
                 </api>
                 """
         res = self.provider._extract_metrics(empty_page)
-        assert_equals(res["wikipedia:mentions"], 0)
+        assert_equals(res, {})
         
     @raises(ProviderContentMalformedError)    
     def test_extract_metrics_invalid(self):

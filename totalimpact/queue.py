@@ -17,8 +17,8 @@ log = logging.getLogger("queue")
 
 
 class QueueMonitor(StoppableThread):
-    """ Worker to watch couch for newly requested items, and place them
-        onto the aliases queue. 
+    """ Worker to watch couch for items that need aliases (new or update)
+        and place them onto the aliases in-memory queue. 
     """
 
     def __init__(self, dao):
@@ -31,7 +31,7 @@ class QueueMonitor(StoppableThread):
         ctxfilter.local.backend['thread'] = 'QueueMonitor'
 
         while not self.stopped():
-            viewname = 'queues/requested'
+            viewname = 'queues/needs_aliases'
             rows = self.dao.view(viewname)
 
             for row in rows["rows"]:
@@ -44,26 +44,21 @@ class QueueMonitor(StoppableThread):
                 ctxfilter.local.backend['item'] = tiid
                 log.info("%20s detected on request queue: item %s" 
                     % ("QueueMonitor", tiid))
-                # In case clocks are out between processes, use min to ensure queued >= requested
-                item.last_queued = max(item.last_requested, datetime.datetime.now().isoformat()) 
-                item_doc["last_queued"] = item.last_queued
 
-                # now save back the updated last_queued information
+                # now save back the updated needs_aliases information
                 # do this before putting on queue, so that no one has changed it.
-                log.info("%20s UPDATING last_queued date in db: item %s" 
+                log.info("%20s UPDATING needs_aliases date in db: item %s" 
                     % ("QueueMonitor", tiid))
 
+                # remove the needs_aliases key from doc, to take off queue
+                del item_doc["needs_aliases"]
+                delattr(item, "needs_aliases")  #not sure this is needed
                 item_doc["id"] = item.id
                 self.dao.save(item_doc)
 
                 # Now add the item to the in-memory queue
                 Queue.init_queue("aliases")
                 Queue.enqueue("aliases", item)
-
-
-                #item.save()
-                log.info("%20s saving item %s to update last_queued information" 
-                    % ("QueueMonitor", tiid))
 
             if runonce:
                 break
