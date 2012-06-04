@@ -4,11 +4,11 @@ from test.utils import slow
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
 from totalimpact.providers.provider import Provider, ProviderFactory
-from totalimpact import dao, api
+from totalimpact import app, dao
 from totalimpact.tilogging import logging
 
 # To read global config
-from totalimpact.api import app
+from totalimpact import app
 
 TEST_DB_NAME = "test_dao"
 
