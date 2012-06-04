@@ -2,7 +2,7 @@
 
 import threading, time, sys, copy, datetime, pprint
 import traceback
-from totalimpact import dao, api
+from totalimpact import dao, app
 from totalimpact.queue import Queue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.models import Error
@@ -400,7 +400,7 @@ from totalimpact.providers.provider import ProviderFactory, ProviderConfiguratio
 from totalimpact.queue import QueueMonitor
 from totalimpact.tilogging import logging
 from totalimpact import default_settings
-from totalimpact.api import app
+from totalimpact import app
 
 
 def main(logfile=None):

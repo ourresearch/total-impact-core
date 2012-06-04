@@ -396,7 +396,7 @@ class Provider(object):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
-        from totalimpact.api import app
+        from totalimpact import app
 
         # first thing is to try to retrieve from cache
         # use the cache if the config parameter is set and the arg allows it
@@ -424,7 +424,7 @@ class Provider(object):
         
         # make the request        
         try:
-            from totalimpact.api import app
+            from totalimpact import app
             proxies = None
             if app.config["PROXY"]:
                 proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}

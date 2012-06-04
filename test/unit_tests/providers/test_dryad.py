@@ -1,7 +1,6 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider
-from totalimpact.api import app
 
 import os
 from nose.tools import assert_equals

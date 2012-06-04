@@ -5,7 +5,7 @@ from copy import deepcopy
 
 from totalimpact import models, default_settings
 from totalimpact.providers import provider
-from totalimpact import dao, api
+from totalimpact import dao, app
 
 COLLECTION_DATA = {
     "id": "uuid-goes-here",
