@@ -21,7 +21,7 @@ def slow(f):
     f.slow = True
     return f
 
-logger = logging.getLogger("ti.test_backend")
+logging.disable(logging.CRITICAL)
 CWD, _ = os.path.split(__file__)
 
 TIME_SCALE = 0.0005 #multiplier to run the tests as fast as possible
