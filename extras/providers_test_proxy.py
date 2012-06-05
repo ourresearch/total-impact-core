@@ -121,15 +121,9 @@ if __name__ == '__main__':
     parser.add_option("-p", "--port",
                       action="store", dest="port", default=8081,
                       help="Port to run the server on (default 8081)")
-    parser.add_option("-i", "--pid",
-                      action="store", dest="pid", default=None,
-                      help="pid file")
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
                       help="print debugging output")
-    parser.add_option("-d", "--daemon",
-                      action="store_true", dest="daemon", default=False,
-                      help="run as a daemon")
     parser.add_option("-l", "--log",
                       action="store", dest="log", default=None,
                       help="runtime log")
@@ -154,31 +148,9 @@ if __name__ == '__main__':
     class ReuseServer(SocketServer.TCPServer):
         allow_reuse_address = True
 
-    if not options.daemon:
-        handler = ProvidersTestProxy
-        httpd = ReuseServer(("", int(options.port)), handler)
-        print "listening on port", options.port
-        httpd.serve_forever()
-    else:
-        rootdir = os.path.dirname(os.path.dirname(__file__))
-        context = daemon.DaemonContext()
-        if options.log:
-            logfile = options.log
-        else:
-            logfile = 'tmp/total-impact_proxy.log'
-        output = open(logfile,'w+')
-        context.stderr = output
-        context.stdout = output
-        if options.pid:
-            context.pidfile = PidFile(options.pid)
-        else: 
-            context.pidfile = PidFile(os.path.join(rootdir, 'run', 'proxy.pid'))
-        context.working_directory = rootdir
-        with context:
-            handler = ProvidersTestProxy
-            httpd = ReuseServer(("", int(options.port)), handler)
-            print "listening on port", options.port
-            httpd.serve_forever()
-
+    handler = ProvidersTestProxy
+    httpd = ReuseServer(("", int(options.port)), handler)
+    print "listening on port", options.port
+    httpd.serve_forever()
     
 
