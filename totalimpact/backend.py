@@ -1,24 +1,11 @@
 #!/usr/bin/env python
 
-import threading, time, sys, copy, datetime, pprint, logging
-import traceback
-from totalimpact import dao, app
-from totalimpact.queue import Queue
-from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
-from totalimpact.models import Error
+import threading, time, sys, copy, datetime, logging, os, traceback
+from totalimpact import default_settings, dao
+from totalimpact.queue import Queue, QueueMonitor
+from totalimpact.models import Error, Item, Collection, ItemFactory, CollectionFactory
 from totalimpact.pidsupport import StoppableThread
-
-from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
-from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
-from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
-from totalimpact.providers.provider import ProviderError
-
-import daemon
-import lockfile
-from totalimpact.pidsupport import PidFile
-
-from optparse import OptionParser
-import os
+from totalimpact.providers.provider import ProviderError,  Provider, ProviderFactory
 
 logger = logging.getLogger('ti.backend')
 logger.setLevel(logging.DEBUG)
@@ -43,7 +30,7 @@ class TotalImpactBackend(object):
         for provider in self.providers:
             if not provider.provides_metrics:
                 continue
-            thread_count = app.config["PROVIDERS"][provider.provider_name]["workers"]
+            thread_count = default_settings.PROVIDERS[provider.provider_name]["workers"]
             logger.info("%20s: spawning, n=%i" % (provider.provider_name, thread_count)) 
             # create and start the metrics threads
             for idx in range(thread_count):
@@ -195,7 +182,7 @@ class ProviderThread(StoppableThread):
             return None
 
         try:
-            override_template_url = app.config["PROVIDERS"][provider.provider_name][method_name + "_url"]
+            override_template_url = default_settings.PROVIDERS[provider.provider_name][method_name + "_url"]
         except KeyError:
             # No problem, the provider will use the template_url it knows about
             override_template_url = None
@@ -372,57 +359,27 @@ class ProviderMetricsThread(ProviderThread):
                         self.dao.save(snap)
 
 
-
-
-
-from totalimpact import dao
-from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
-from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
-from totalimpact.queue import QueueMonitor
-from totalimpact import default_settings
-from totalimpact import app
-
-
 def main():
-
-    logger = logging.getLogger("totalimpact.backend")
-
     mydao = dao.Dao(
-        app.config["DB_NAME"],
-        app.config["DB_URL"],
-        app.config["DB_USERNAME"],
-        app.config["DB_PASSWORD"]
+        default_settings.DB_NAME,
+        default_settings.DB_URL,
+        default_settings.DB_USERNAME,
+        default_settings.DB_PASSWORD
     ) 
-    '''
-    # Adding this by handle. fileConfig doesn't allow filters to be added
-    # We need the fiter on the root logger, so that our log settings work,
-    # as we're trying to add in thread details to there in the formatter.
-    # Without the filter, those details don't exist and logging will fail.
-    
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter("%(asctime)s %(levelname)8s %(item)8s %(thread)s%(provider)s - %(message)s")#,"%H:%M:%S,%f")
-    handler.setFormatter(formatter)
-    handler.addFilter(ContextFilter())
-    logger.addHandler(handler)
-    '''
 
-    from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
-    from totalimpact.providers.provider import Provider, ProviderFactory
 
     # Start all of the backend processes
-    providers = ProviderFactory.get_providers(app.config["PROVIDERS"])
+    providers = ProviderFactory.get_providers(default_settings.PROVIDERS)
     backend = TotalImpactBackend(mydao, providers)
     backend._spawn_threads()
     backend._monitor()
     backend._cleanup()
         
-    from totalimpact.queue import Queue
     logger.debug("Items on Queues: %s" 
         % (str([queue_name + " : " + str(Queue.queued_items_ids(queue_name)) for queue_name in Queue.queued_items.keys()]),))
 
  
 if __name__ == "__main__":
-
     main()
     
 

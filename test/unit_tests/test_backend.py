@@ -4,16 +4,14 @@ from test.utils import slow
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
 from totalimpact.providers.provider import Provider, ProviderFactory
-from totalimpact import app, dao
+from totalimpact import dao
 
 # To read global config
 from totalimpact import app
 
 TEST_DB_NAME = "test_dao"
 
-from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
-from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
-from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
+from totalimpact.providers.provider import ProviderTimeout, ProviderRateLimitError
 
 from test.mocks import ProviderMock, QueueMock, ItemMock
 

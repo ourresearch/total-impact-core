@@ -11,3 +11,4 @@ doc/_build/*
 build
 dist
 secrets.py
+venv
