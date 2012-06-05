@@ -7,7 +7,7 @@ from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 
 import logging
-logger = logging.getLogger('providers.slideshare')
+logger = logging.getLogger('ti.providers.slideshare')
 
 class Slideshare(Provider):  
 

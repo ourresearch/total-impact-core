@@ -5,7 +5,7 @@ from xml.parsers.expat import ExpatError
 import re
 
 import logging
-logger = logging.getLogger('providers.dryad')
+logger = logging.getLogger('ti.providers.dryad')
 
 class Dryad(Provider):  
 

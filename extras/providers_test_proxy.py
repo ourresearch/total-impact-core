@@ -148,7 +148,7 @@ if __name__ == '__main__':
         logger = logging.getLogger('')
         logger.addHandler(ch)
     else:
-        logger = logging.getLogger('totalimpact.providers')
+        logger = logging.getLogger('ti.providers')
         logger.setLevel(logging.WARNING)
 
     class ReuseServer(SocketServer.TCPServer):

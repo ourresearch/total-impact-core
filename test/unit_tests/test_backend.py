@@ -1,11 +1,10 @@
-import os, unittest, time
+import os, unittest, time, logging
 from nose.tools import nottest, assert_equals
 from test.utils import slow
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact import app, dao
-from totalimpact.tilogging import logging
 
 # To read global config
 from totalimpact import app
@@ -22,7 +21,7 @@ def slow(f):
     f.slow = True
     return f
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ti.test_backend")
 CWD, _ = os.path.split(__file__)
 
 TIME_SCALE = 0.0005 #multiplier to run the tests as fast as possible

@@ -3,7 +3,7 @@ from totalimpact.providers.provider import Provider, ProviderContentMalformedErr
 import BeautifulSoup
 
 import logging
-logger = logging.getLogger('providers.crossref')
+logger = logging.getLogger('ti.providers.crossref')
 
 class Crossref(Provider):  
 

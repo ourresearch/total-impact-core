@@ -192,7 +192,7 @@ if __name__ == '__main__':
         # Nicer formatting to show different providers
         formatter = logging.Formatter('  %(name)s - %(message)s')
         ch.setFormatter(formatter)
-        logger = logging.getLogger('')
+        logger = logging.getLogger('ti.providers_check')
         logger.addHandler(ch)
 
     check = ProvidersCheck()    

@@ -61,7 +61,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if not options.verbose:
-        logger = logging.getLogger('totalimpact.providers')
+        logger = logging.getLogger('ti.providers')
         logger.setLevel(logging.WARNING)
 
     class ReuseServer(SocketServer.TCPServer):
