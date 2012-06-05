@@ -8,48 +8,6 @@ import time
 import os
 import logging
 
-class ContextFilter(logging.Filter):
-    """ Filter to add contextual information regarding items to logs
-
-        This filter will check the thread local storage to see if we have
-        recorded that we are processing an item. If so, we will add this 
-        into the formatter so that the logs print it.
-    """
-    def __init__(self):
-        # Check thread local storage
-        self.local = threading.local()
-
-    def threadInit(self):
-        """ All threads should call this to set up the context object """
-        self.local.backend = {
-            'item': '',
-            'method': '',
-            'provider': '',
-            'thread': ''
-        }
-
-    def filter(self, record):
-    
-        # Attempt to get values. Any problems, just assume empty
-        item = method = provider = thread = ""
-        try:
-            # Only get the first 8 chars of item, to keep logs brief
-            item = self.local.backend['item'][:8]
-            method = self.local.backend['method']
-            provider = self.local.backend['provider']
-            thread = self.local.backend['thread']
-        except (AttributeError, KeyError), e:
-            pass
-
-        # Store context information for logger to print
-        record.item = item
-        record.method = method
-        record.provider = provider
-        record.thread = thread
-        return True
-
-ctxfilter = ContextFilter()
-
 
 class StoppableThread(threading.Thread):
     def __init__(self):

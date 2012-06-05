@@ -1,15 +1,11 @@
-import time, datetime
-import threading
-import simplejson
-import copy
+import time, datetime, logging, threading, simplejson, copy
 from totalimpact import default_settings
 from totalimpact.models import Item, ItemFactory
-from totalimpact.pidsupport import StoppableThread, ctxfilter
+from totalimpact.pidsupport import StoppableThread
 from totalimpact.providers.provider import ProviderFactory
 import default_settings
 
-from totalimpact.tilogging import logging
-log = logging.getLogger("queue")
+log = logging.getLogger("ti.queue")
 
 
 # some data useful for testing
@@ -27,8 +23,6 @@ class QueueMonitor(StoppableThread):
 
     def run(self, runonce=False):
         """ runonce is for the test suite """
-        ctxfilter.threadInit()
-        ctxfilter.local.backend['thread'] = 'QueueMonitor'
 
         while not self.stopped():
             viewname = 'queues/needs_aliases'
@@ -41,7 +35,6 @@ class QueueMonitor(StoppableThread):
                         item_doc)
 
                 tiid = item.id
-                ctxfilter.local.backend['item'] = tiid
                 log.info("%20s detected on request queue: item %s" 
                     % ("QueueMonitor", tiid))
 

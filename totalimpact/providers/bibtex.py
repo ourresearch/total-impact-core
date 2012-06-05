@@ -8,7 +8,7 @@ from StringIO import StringIO
 import re
 
 import logging
-logger = logging.getLogger('providers.bibtex')
+logger = logging.getLogger('ti.providers.bibtex')
 
 class Bibtex(Provider):  
 

@@ -1,10 +1,8 @@
-import hashlib
-import memcache
+import hashlib, memcache, logging
 from cPickle import UnpickleableError
-from totalimpact.tilogging import logging
 
 # set up logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ti.cache")
 
 class CacheException(Exception):
     pass

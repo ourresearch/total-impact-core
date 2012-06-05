@@ -3,7 +3,7 @@ from totalimpact.providers.provider import Provider, ProviderContentMalformedErr
 import lxml.html
 
 import logging
-logger = logging.getLogger('providers.webpage')
+logger = logging.getLogger('ti.providers.webpage')
 
 class Webpage(Provider):  
 

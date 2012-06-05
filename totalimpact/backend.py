@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
-import threading, time, sys, copy, datetime, pprint
+import threading, time, sys, copy, datetime, pprint, logging
 import traceback
 from totalimpact import dao, app
 from totalimpact.queue import Queue
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.models import Error
-from totalimpact.pidsupport import StoppableThread, ctxfilter
-
-from totalimpact.tilogging import logging
+from totalimpact.pidsupport import StoppableThread
 
 from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
 from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
@@ -22,7 +20,8 @@ from totalimpact.pidsupport import PidFile
 from optparse import OptionParser
 import os
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('ti.backend')
+logger.setLevel(logging.DEBUG)
 
 class TotalImpactBackend(object):
     
@@ -115,6 +114,7 @@ class ProviderThread(StoppableThread):
         Metric and Alias providers.
     """
 
+
     def __init__(self, dao, queue):
         self.dao = dao
         StoppableThread.__init__(self)
@@ -136,12 +136,7 @@ class ProviderThread(StoppableThread):
         logger.debug(str(e.stack_trace))
         
 
-    def startup(self):
-        # Ensure logs for this thread are marked correctly
-        ctxfilter.threadInit()
-
     def run(self, run_only_once=False):
-        self.startup()
 
         while not self.stopped():
             # get the first item on the queue - this waits until
@@ -157,14 +152,12 @@ class ProviderThread(StoppableThread):
                 # now want to calculate its metrics. 
                 # Repeatedly process this item until we hit the error limit
                 # or we successfully process it         
-                ctxfilter.local.backend['item'] = item.id
                 logger.debug("%20s: processing item %s" % (self.thread_id, item.id))
 
                 # process item saves the item back to the db as necessary
                 # also puts alias items on metrics queue when done
                 self.process_item(item) 
 
-                ctxfilter.local.backend['item'] = ''
 
             # Flag for testing. We should finish the run loop as soon
             # as we've processed a single item.
@@ -202,7 +195,7 @@ class ProviderThread(StoppableThread):
             return None
 
         try:
-            override_template_url = api.app.config["PROVIDERS"][provider.provider_name][method_name + "_url"]
+            override_template_url = app.config["PROVIDERS"][provider.provider_name][method_name + "_url"]
         except KeyError:
             # No problem, the provider will use the template_url it knows about
             override_template_url = None
@@ -302,11 +295,6 @@ class ProvidersAliasThread(ProviderThread):
         self.thread_id = "alias_thread"
         self.dao = dao
 
-    def startup(self):
-        # Ensure logs for this thread are marked correctly
-        ctxfilter.threadInit()
-        ctxfilter.local.backend['method'] = 'alias'
-        ctxfilter.local.backend['thread'] = self.thread_id
         
     def process_item(self, item):
         logger.info("%20s: initial alias list for %s is %s" 
@@ -314,8 +302,6 @@ class ProvidersAliasThread(ProviderThread):
 
         if not self.stopped():
             for provider in self.providers: 
-
-                ctxfilter.local.backend['provider'] = ':' + provider.provider_name
 
                 (success, new_aliases) = self.process_item_for_provider(item, provider, 'aliases')
                 if success:
@@ -346,14 +332,13 @@ class ProvidersAliasThread(ProviderThread):
                 logger.info("%20s: interm biblio for item %s after %s: %s" 
                     % (self.thread_id, item.id, provider.provider_name, str(item.biblio)))
 
-            ctxfilter.local.backend['provider'] = ''
             logger.info("%20s: final alias list for %s is %s" 
                     % (self.thread_id, item.id, item.aliases.get_aliases_list()))
 
             # Time to add this to the metrics queue
             self.queue.add_to_metrics_queues(item)
-            logger.info("%20s: FULL ITEM on metrics queue %s %s"
-                % (self.thread_id, item.id, pprint.pprint(item.as_dict())))
+            logger.debug("%20s: FULL ITEM on metrics queue %s %s"
+                % (self.thread_id, item.id,item.as_dict()))
             logger.debug("%20s: added to metrics queues complete for item %s " % (self.thread_id, item.id))
             self.dao.save(item.as_dict())
 
@@ -372,13 +357,9 @@ class ProviderMetricsThread(ProviderThread):
         self.thread_id = self.provider.provider_name + "_thread"
         self.dao = dao
 
-    def startup(self):
-        # Ensure logs for this thread are marked correctly
-        ctxfilter.threadInit()
-        ctxfilter.local.backend['thread'] = self.thread_id
-        ctxfilter.local.backend['method'] = 'metric'
 
     def process_item(self, item):
+        # used by logging
 
         (success, metrics) = self.process_item_for_provider(item, 
             self.provider, 'metrics')
@@ -398,14 +379,13 @@ from totalimpact import dao
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact.queue import QueueMonitor
-from totalimpact.tilogging import logging
 from totalimpact import default_settings
 from totalimpact import app
 
 
-def main(logfile=None):
+def main():
 
-    logger = logging.getLogger()
+    logger = logging.getLogger("totalimpact.backend")
 
     mydao = dao.Dao(
         app.config["DB_NAME"],
@@ -413,19 +393,18 @@ def main(logfile=None):
         app.config["DB_USERNAME"],
         app.config["DB_PASSWORD"]
     ) 
-
+    '''
     # Adding this by handle. fileConfig doesn't allow filters to be added
     # We need the fiter on the root logger, so that our log settings work,
     # as we're trying to add in thread details to there in the formatter.
     # Without the filter, those details don't exist and logging will fail.
-    from totalimpact.backend import ctxfilter
-    handler = logging.handlers.RotatingFileHandler(logfile)
-    handler.level = logging.ERROR
+    
+    handler = logging.StreamHandler()
     formatter = logging.Formatter("%(asctime)s %(levelname)8s %(item)8s %(thread)s%(provider)s - %(message)s")#,"%H:%M:%S,%f")
-    handler.formatter = formatter
-    handler.addFilter(ctxfilter)
+    handler.setFormatter(formatter)
+    handler.addFilter(ContextFilter())
     logger.addHandler(handler)
-    ctxfilter.threadInit()
+    '''
 
     from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
     from totalimpact.providers.provider import Provider, ProviderFactory
@@ -444,48 +423,6 @@ def main(logfile=None):
  
 if __name__ == "__main__":
 
-    parser = OptionParser()
-    parser.add_option("-p", "--pid",
-                      action="store", dest="pid", default=None,
-                      help="pid file")
-    parser.add_option("-s", "--startup-log",
-                      action="store", dest="startup_log", default=None,
-                      help="startup log")
-    parser.add_option("-l", "--log",
-                      action="store", dest="log", default=None,
-                      help="runtime log")
-    parser.add_option("-d", "--daemon",
-                      action="store_true", dest="daemon", default=False,
-                      help="run as a daemon")
-
-    (options, args) = parser.parse_args()
-    # Root of the totalimpact directory
-    rootdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-
-    if options.log:
-        logfile = options.log
-    else:
-        logfile = 'tmp/total-impact_backend.log'
-
-    if options.daemon:
-        context = daemon.DaemonContext()
-
-        if options.startup_log:
-            output = open(options.startup_log,'a+')
-        else:
-            output = open('/tmp/total-impact_backend_startup.log','a+')
-
-        context.stderr = output
-        context.stdout = output
-        if options.pid:
-            context.pidfile = PidFile(options.pid)
-        else: 
-            context.pidfile = PidFile(os.path.join(rootdir, 'run', 'backend.pid'))
-        context.working_directory = rootdir
-        with context:
-            main(logfile)
-
-    else:
-        main(logfile)
+    main()
     
 

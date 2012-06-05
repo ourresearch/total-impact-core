@@ -4,7 +4,7 @@ from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 
 import logging
-logger = logging.getLogger('providers.wikipedia')
+logger = logging.getLogger('ti.providers.wikipedia')
 
 class Wikipedia(Provider):  
     """ Gets numbers of citations for a DOI document from wikipedia using
