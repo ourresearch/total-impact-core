@@ -17,6 +17,7 @@ setup(
         "python-memcached",
         "PyYAML",
         "negotiate",
+        "zs.bibtex",        
         "importlib"
     ],
     url = '',
