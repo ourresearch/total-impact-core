@@ -1,8 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
-from totalimpact.providers.secrets import Slideshare_key, Slideshare_secret
 
-import simplejson, urllib, time, hashlib, re
+import simplejson, urllib, time, hashlib, re, os
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
 
@@ -15,8 +14,8 @@ class Slideshare(Provider):
     url = "http://www.slideshare.net/"
     descr = "The best way to share presentations, documents and professional videos."
 
-    member_items_url_template = "http://www.slideshare.net/api/2/get_slideshows_by_user?api_key=" + Slideshare_key + "&detailed=1&ts=%s&hash=%s&username_for=%s"
-    everything_url_template = "http://www.slideshare.net/api/2/get_slideshow?api_key=" + Slideshare_key + "&detailed=1&ts=%s&hash=%s&slideshow_url=%s"
+    member_items_url_template = "http://www.slideshare.net/api/2/get_slideshows_by_user?api_key=" + os.environ["SLIDESHARE_KEY"] + "&detailed=1&ts=%s&hash=%s&username_for=%s"
+    everything_url_template = "http://www.slideshare.net/api/2/get_slideshow?api_key=" + os.environ["SLIDESHARE_KEY"] + "&detailed=1&ts=%s&hash=%s&slideshow_url=%s"
     biblio_url_template = everything_url_template
     aliases_url_template = everything_url_template
     metrics_url_template = everything_url_template
@@ -70,7 +69,7 @@ class Slideshare(Provider):
             return template %id
             
         ts = time.time()
-        hash_combo = hashlib.sha1(Slideshare_secret + str(ts)).hexdigest()
+        hash_combo = hashlib.sha1(os.environ["SLIDESHARE_SECRET"] + str(ts)).hexdigest()
         complete_url = template %(ts, hash_combo, id)
         return(complete_url)
 
