@@ -26,9 +26,9 @@ class QueueMonitor(StoppableThread):
 
         while not self.stopped():
             viewname = 'queues/needs_aliases'
-            rows = self.dao.view(viewname)
+            res = self.dao.view(viewname)
 
-            for row in rows["rows"]:
+            for row in res.rows:
                 item_doc = copy.deepcopy(row["value"])
 
                 item = ItemFactory.get_item_object_from_item_doc(self.dao, 

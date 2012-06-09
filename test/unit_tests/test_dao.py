@@ -8,10 +8,9 @@ TEST_DB_NAME = "test_dao"
 class TestDAO(unittest.TestCase):
 
     def setUp(self):
-        self.d = dao.Dao(TEST_DB_NAME, os.environ["CLOUDANT_URL"])
+        self.d = dao.Dao(os.environ["CLOUDANT_URL"], TEST_DB_NAME)
 
     def teardown(self):
-        print "I am the teardown, and i ran."
         self.d.delete_db(TEST_DB_NAME)
         
     def test_works_at_all(self):
@@ -22,13 +21,8 @@ class TestDAO(unittest.TestCase):
         assert_equals(set(design_doc["views"].keys()), 
             set([u'by_alias', u'by_tiid_with_snaps', "by_type_and_id", "needs_aliases"]))
 
-    def test_db_exists(self):
-        assert self.d.db_exists("unlikely_name") == False
-        assert self.d.db_exists(TEST_DB_NAME) == True
-
     def test_connect_db(self):
         assert self.d.db.__class__.__name__ == "Database"
-        assert_equals(TEST_DB_NAME, self.d.db_name)
 
     @raises(Exception) # throws ResourceConflict, which @raises doesn't catch.
     def test_create_item_fails_if_item_exists(self):
@@ -51,6 +45,13 @@ class TestDAO(unittest.TestCase):
 
     def test_needs_aliases_view(self):
         res = self.d.view('queues/needs_aliases')
+        nrows = len(res.rows)
+        assert_equals(nrows, 0)
+
+        self.assertTrue( isinstance(res.rows, list), res )
+
+    def test_view_with_keyword_args(self):
+        res = self.d.view('queues/needs_aliases', endkey=[1,10])
         nrows = len(res.rows)
         assert_equals(nrows, 0)
 

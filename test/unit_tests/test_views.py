@@ -33,10 +33,6 @@ sample_item_loc = os.path.join(
 f = open(sample_item_loc, "r")
 ARTICLE_ITEM = yaml.load(f.read())
 
-rendered_article_loc = os.path.join(
-    os.path.split(__file__)[0],
-    '../rendered_views/article.html')
-RENDERED_ARTICLE = open(rendered_article_loc, "r").read()
 
 def MOCK_member_items(self, query_string, url=None, cache_enabled=True):
     return(GOLD_MEMBER_ITEM_CONTENT) 
@@ -52,13 +48,10 @@ class ViewsTester(unittest.TestCase):
         # setup the database
         self.testing_db_name = "api_test"
         self.app.config["DB_NAME"] = self.testing_db_name
-        self.d = dao.Dao(
-            self.app.config["DB_NAME"],
-            self.app.config["DB_URL"],
-            self.app.config["DB_USERNAME"], 
-            self.app.config["DB_PASSWORD"])
+        self.d = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
-        self.d.create_new_db_and_connect(self.testing_db_name)
+    def teardown(self):
+        self.d.delete_db(self.testing_db_name)
 
 class TestMemberItems(ViewsTester):
 

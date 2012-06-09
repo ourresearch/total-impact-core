@@ -17,11 +17,7 @@ def connect_to_db():
     '''sets up the db. this has to happen before every request, so that
     we can pass in alternate config values for testing'''
     global mydao
-    mydao = dao.Dao(
-        app.config["DB_NAME"],
-        app.config["DB_URL"],
-        app.config["DB_USERNAME"],
-        app.config["DB_PASSWORD"])
+    mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
 # adding a simple route to confirm working API
 @app.route('/')
