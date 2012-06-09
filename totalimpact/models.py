@@ -82,7 +82,7 @@ class Saveable(object):
 
         while retry:
             try:
-                res = self.dao.save_and_commit(self.as_dict())
+                res = self.dao.save(self.as_dict())
                 retry = False
             except couchdb.ResourceConflict, e:
                 logger.info("Couch conflict, will retry")
@@ -153,7 +153,7 @@ class ItemFactory():
 
     @classmethod
     def get_simple_item(cls, dao, tiid):
-        res = dao.view("by_tiid_with_snaps", 
+        res = dao.view("queues/by_tiid_with_snaps", 
                 startkey=[tiid,0], 
                 endkey=[tiid,1])
         rows = res["rows"]

@@ -33,13 +33,14 @@ def hello():
     return resp
 
 def get_tiid_by_alias(ns, nid):
-    viewname = 'queues/by_alias'
-    res = mydao.view(viewname, key=[ns,nid])
-    rows = res["rows"]
-    if rows:
-        if (len(rows) > 1):
+    res = mydao.view('queues/by_alias')
+
+    matches = res[[ns,nid]] # same namespace and alias
+        
+    if matches.rows:
+        if (len(matches.rows) > 1):
             logger.warning("More than one tiid for alias (%s, %s)" %(ns, nid))
-        tiid = rows[0]["id"]
+        tiid = matches.rows[0]["id"]
     else:
         tiid = None
     return tiid
