@@ -72,7 +72,11 @@ def hello():
 def get_tiid_by_alias(ns, nid):
     viewname = 'queues/by_alias'
     res = mydao.view(viewname, key=[ns,nid])
-    rows = res["rows"]
+    try:
+        rows = res["rows"]
+    except KeyError:
+        rows = []
+
     if rows:
         if (len(rows) > 1):
             logger.warning("More than one tiid for alias (%s, %s)" %(ns, nid))
@@ -208,6 +212,43 @@ def item(tiid, format=None):
     resp.mimetype = "application/json"
     return resp
 
+def make_csv_rows(items):
+    header_metric_names = []
+    for item in items:
+        header_metric_names += item["metrics"].keys()
+
+    # get unique
+    header_alias_names = ["title", "doi"]
+    header_metric_names = sorted(list(set(header_metric_names)))
+
+    # make header row
+    csv_list = ["tiid," + ','.join(header_alias_names + header_metric_names)]
+
+    # body rows
+    for item in items:
+        column_list = [item["id"]]
+        for alias_name in header_alias_names:
+            try:
+                value = item['aliases'][alias_name][0]
+                if (" " in value) or ("," in value):
+                    value = '"' + value + '"'
+                column_list += [value]
+            except (IndexError, KeyError):
+                column_list += [""]        
+        for metric_name in header_metric_names:
+            try:
+                values = item['metrics'][metric_name]['values']
+                latest_key = sorted(values, reverse=True)[0]
+                column_list += [str(values[latest_key])]
+            except (IndexError, KeyError):
+                column_list += [""]
+        print column_list
+        csv_list.append(",".join(column_list))
+
+    # join together in a string
+    csv = "\n".join(csv_list)
+    return csv
+
 '''
 GET /items/:tiid,:tiid,...
 returns a json list of item objects (100 max)
@@ -219,7 +260,7 @@ def items(tiids, format=None):
     items = []
 
     for index,tiid in enumerate(tiids.split(',')):
-        if index > 99: break    # weak, change
+        if index > 500: break    # weak, change
 
         try:
             item_dict = ItemFactory.get_simple_item(mydao, tiid)
@@ -232,26 +273,8 @@ def items(tiids, format=None):
         items.append(item_dict)
 
     if format == "csv":
-        # make the header
-        csv = "tiid," + ','.join(sorted(items[0]['metrics'])) + "\n"
-        for item in items:
-            row = ''
-            row = row + item["id"]
-            for metric_name in sorted(item["metrics"]):
-                row = row + ","
-                try:
-                    latest_key = sorted(
-                        item['metrics'][metric_name]['values'],
-                        reverse=True)[0]
-                    val_to_add = item['metrics'][metric_name]['values'][latest_key]
-                except IndexError:
-                    val_to_add = ""
-
-                row = row + str(val_to_add)
-
-            csv =  csv + row + "\n"
-            
-        resp = make_response(csv[0:-2]) # remove trailing "\n"
+        csv = make_csv_rows(items)
+        resp = make_response(csv)
         resp.mimetype = "text/csv"
         resp.headers.add("Content-Disposition", "attachment; filename=ti.csv")
     else:
