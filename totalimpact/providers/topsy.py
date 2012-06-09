@@ -6,7 +6,7 @@ import simplejson
 import re
 
 import logging
-logger = logging.getLogger('providers.topsy')
+logger = logging.getLogger('ti.providers.topsy')
 
 class Topsy(Provider):  
 

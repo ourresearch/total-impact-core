@@ -5,7 +5,7 @@ from totalimpact.providers.secrets import Mendeley_key
 import simplejson, urllib
 
 import logging
-logger = logging.getLogger('providers.mendeley')
+logger = logging.getLogger('ti.providers.mendeley')
 
 class Mendeley(Provider):  
 

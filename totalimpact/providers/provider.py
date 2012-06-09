@@ -3,15 +3,13 @@ from totalimpact.dao import Dao
 from totalimpact import providers
 from totalimpact import default_settings
 
-import requests, os, time, threading, sys, traceback, importlib, urllib
+import requests, os, time, threading, sys, traceback, importlib, urllib, logging
 import simplejson
 import BeautifulSoup
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
 
-
-from totalimpact.tilogging import logging
-logger = logging.getLogger("provider")
+logger = logging.getLogger("ti.provider")
 
 
 class ProviderFactory(object):
@@ -196,7 +194,7 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
 
         if response.status_code != 200:
-            logger.warning("%20s WARNING, status_code=%i getting %s" 
+            logger.warning("%s status_code=%i getting %s" 
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
                 return {}
@@ -396,7 +394,7 @@ class Provider(object):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
-        from totalimpact.api import app
+        from totalimpact import app
 
         # first thing is to try to retrieve from cache
         # use the cache if the config parameter is set and the arg allows it
@@ -424,7 +422,7 @@ class Provider(object):
         
         # make the request        
         try:
-            from totalimpact.api import app
+            from totalimpact import app
             proxies = None
             if app.config["PROXY"]:
                 proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}

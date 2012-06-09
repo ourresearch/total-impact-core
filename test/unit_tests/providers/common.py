@@ -9,8 +9,6 @@ import simplejson
 from nose.tools import nottest, raises, assert_equals
 from nose.plugins.skip import SkipTest
 
-from totalimpact.api import app
-
 # prepare a monkey patch to override the http_get method of the Provider
 class DummyResponse(object):
     def __init__(self, status, content):

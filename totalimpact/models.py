@@ -11,7 +11,7 @@ from pprint import pprint
 # to the DB at one time to avoid document conflicts
 
 import logging
-logger = logging.getLogger('models')
+logger = logging.getLogger('ti.models')
 
 def todict(obj, classkey=None, ignore=None):
     """ Convert an object to a diff representation 
@@ -134,8 +134,6 @@ class ItemFactory():
         (value, drilldown_url) = metric_value_drilldown
         snap["value"] = value
         snap["drilldown_url"] = drilldown_url
-        #print "HERE IS MY SNAP"
-        print snap, "\n"
         return snap        
 
     @classmethod

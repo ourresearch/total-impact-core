@@ -4,7 +4,7 @@ from totalimpact.providers.provider import Provider, ProviderContentMalformedErr
 import simplejson
 
 import logging
-logger = logging.getLogger('providers.github')
+logger = logging.getLogger('ti.providers.github')
 
 class Github(Provider):  
 

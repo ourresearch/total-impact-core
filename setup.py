@@ -11,14 +11,12 @@ setup(
         "couchdb",
         "requests",
         "BeautifulSoup",
-        "beautifulsoup4",
         "lxml",
         "simplejson",
         "python-memcached",
-        "PyYAML",
-        "negotiate",
-        "zs.bibtex",        
-        "importlib"
+        "importlib",
+        "rq",
+        "zs.bibtex"
     ],
     url = '',
     author = 'total-impact',
