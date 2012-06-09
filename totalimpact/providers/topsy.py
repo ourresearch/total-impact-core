@@ -1,9 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
-from secrets import Topsy_key
 
-import simplejson
-import re
+import simplejson, re, os
 
 import logging
 logger = logging.getLogger('ti.providers.topsy')
@@ -14,7 +12,7 @@ class Topsy(Provider):
 
     url = "http://www.topsy.com/"
     descr = "Real-time search for the social web, <a href='http://topsy.com'><img src='http://cdn.topsy.com/img/powered.png'/></a>"
-    metrics_url_template = "http://otter.topsy.com/stats.json?url=%s&apikey=" + Topsy_key
+    metrics_url_template = "http://otter.topsy.com/stats.json?url=%s&apikey=" + os.environ["TOPSY_KEY"]
     provenance_url_template = "http://topsy.com/%s?utm_source=otter"
 
     static_meta_dict =  {

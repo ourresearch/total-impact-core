@@ -1,9 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
-from secrets import PLoS_key
 
-import simplejson
-import re
+import simplejson, os, re
 
 import logging
 logger = logging.getLogger('ti.providers.plosalm')
@@ -14,7 +12,7 @@ class Plosalm(Provider):
 
     url = "http://www.plos.org/"
     descr = "PLoS article level metrics."
-    metrics_url_template = "http://alm.plos.org/articles/info:doi%%2F%s.json?history=1&api_key=" + PLoS_key + "&citations=1"
+    metrics_url_template = "http://alm.plos.org/articles/info:doi%%2F%s.json?history=1&api_key=" + os.environ["PLOS_KEY"] + "&citations=1"
     provenance_url_template = metrics_url_template
 
     PLOS_ICON = "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg"

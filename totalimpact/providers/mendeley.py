@@ -1,8 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
-from totalimpact.providers.secrets import Mendeley_key
 
-import simplejson, urllib
+import simplejson, urllib, os
 
 import logging
 logger = logging.getLogger('ti.providers.mendeley')
@@ -13,7 +12,7 @@ class Mendeley(Provider):
 
     url = "http://www.mendeley.com"
     descr = " A research management tool for desktop and web."
-    everything_url_template = "http://api.mendeley.com/oapi/documents/details/%s?type=doi&consumer_key=" + Mendeley_key
+    everything_url_template = "http://api.mendeley.com/oapi/documents/details/%s?type=doi&consumer_key=" + os.environ["MENDELEY_KEY"]
     biblio_url_template = everything_url_template
     aliases_url_template = everything_url_template
     metrics_url_template = everything_url_template
