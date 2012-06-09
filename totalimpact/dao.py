@@ -7,25 +7,17 @@ logger = logging.getLogger("ti.dao")
 
 class Dao(object):
 
-    def __init__(self, db_name, db_url):
+    def __init__(self, db_url, db_name):
         '''sets up the data properties and makes a db connection'''
 
         self.couch = couchdb.Server(url=db_url)
 
         try:
             self.db = self.couch[ db_name ]
-        except ResourceNotFound:
-            self.create_db(self.db_name)
+        except (ValueError, ResourceNotFound):
+            self.create_db(db_name)
         except LookupError:
             raise LookupError("CANNOT CONNECT TO DATABASE, maybe doesn't exist?")
-
-    def __getstate__(self):
-        '''Returns None when you try to pickle this object.
-
-        Otherwise a threadlock from couch prevents pickling of other stuff that
-        may contain this object.'''
-
-        return None
        
     def delete_db(self, db_name):
         self.couch.delete(db_name);
@@ -87,8 +79,8 @@ class Dao(object):
         return response
 
        
-    def view(self, viewname):
-        return self.db.view(viewname)
+    def view(self, viewname, **kwargs):
+        return self.db.view(viewname, kwargs)
 
     def create_collection(self):
         return self.create_item()
