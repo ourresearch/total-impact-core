@@ -60,8 +60,6 @@ class TestBackend():
     
     def setUp(self):
         self.config = None #placeholder
-
-        TEST_DB_NAME = "test_backend"
         TEST_PROVIDER_CONFIG = {
             "wikipedia": {}
         }
@@ -77,7 +75,7 @@ class TestBackend():
     def teardown(self):
         # FIXME: check that this doesn't need to be wrapped in a classmethod() call
         ProviderFactory.get_providers = self.get_providers
-        self.d.delete_db(TEST_DB_NAME)
+        self.d.delete_db(os.environ["CLOUDANT_DB"])
 
     def test_01_init_backend(self):
         watcher = TotalImpactBackend(self.d, self.providers)
