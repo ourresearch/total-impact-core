@@ -250,7 +250,9 @@ class Provider(object):
         if response.status_code != 200:
             logger.warning("%20s WARNING, status_code=%i getting %s" 
                 % (self.provider_name, response.status_code, url))            
-            if response.status_code == 404:
+            if response.status_code == 404: #not found
+                return {}
+            elif response.status_code == 403: #forbidden
                 return {}
             else:
                 self._get_error(response.status_code, response)
@@ -307,6 +309,8 @@ class Provider(object):
             logger.warning("%20s WARNING, status_code=%i getting %s" 
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
+                return []
+            if response.status_code == 403:  #forbidden
                 return []
             else:
                 self._get_error(response.status_code, response)
@@ -520,6 +524,30 @@ def _extract_from_json(page, dict_of_keylists):
                 return_dict[metric] = value
     return return_dict
 
+def _get_doc_from_xml(page):
+    try:
+        doc = minidom.parseString(page.strip().encode('utf-8'))
+        lookup_function = _lookup_xml_from_dom
+    except ExpatError, e:
+        doc = BeautifulSoup.BeautifulStoneSoup(page) 
+        lookup_function = _lookup_xml_from_soup
+
+    if not doc:
+        raise ProviderContentMalformedError
+    return (doc, lookup_function)
+
+def _count_in_xml(page, mykey):  
+    (doc, lookup_function) = _get_doc_from_xml(page)  
+    count = 0
+    if not doc:
+        return None
+    try:
+        doc_list = doc.getElementsByTagName(mykey)
+        count = len(doc_list)
+    except (KeyError, IndexError, TypeError):
+        pass
+            
+    return(count)
 
 
 def _lookup_xml_from_dom(doc, keylist):    
@@ -538,6 +566,12 @@ def _lookup_xml_from_dom(doc, keylist):
         response = doc.firstChild.data
     else:
         response = None
+
+    try:
+        response = int(response)
+    except ValueError:
+        pass
+
     return(response)
 
 def _lookup_xml_from_soup(soup, keylist):    
@@ -551,23 +585,21 @@ def _lookup_xml_from_soup(soup, keylist):
         except KeyError:
             return None
             
-    if smaller_bowl_of_soup:      
+    if smaller_bowl_of_soup: 
+
         response = smaller_bowl_of_soup.text
     else:
         response = None
+
+    try:
+        response = int(response)
+    except ValueError:
+        pass
+
     return(response)
 
 def _extract_from_xml(page, dict_of_keylists):
-    try:
-        doc = minidom.parseString(page.strip().encode('utf-8'))
-        lookup_function = _lookup_xml_from_dom
-    except ExpatError, e:
-        doc = BeautifulSoup.BeautifulStoneSoup(page) 
-        lookup_function = _lookup_xml_from_soup
-
-    if not doc:
-        raise ProviderContentMalformedError
-
+    (doc, lookup_function) = _get_doc_from_xml(page)
     return_dict = {}
     if dict_of_keylists:
         for (metric, keylist) in dict_of_keylists.iteritems():
