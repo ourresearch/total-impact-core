@@ -4,7 +4,7 @@ import hashlib
 import simplejson
 
 import logging
-logger = logging.getLogger('providers.delicious')
+logger = logging.getLogger('ti.providers.delicious')
 
 class Delicious(Provider):  
 

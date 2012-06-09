@@ -6,7 +6,7 @@ import simplejson
 import re
 
 import logging
-logger = logging.getLogger('providers.plosalm')
+logger = logging.getLogger('ti.providers.plosalm')
 
 class Plosalm(Provider):  
 

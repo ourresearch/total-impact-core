@@ -1,20 +1,17 @@
-import os, unittest, time
+import os, unittest, time, logging
 from nose.tools import nottest, assert_equals
 from test.utils import slow
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
 from totalimpact.providers.provider import Provider, ProviderFactory
-from totalimpact import dao, api
-from totalimpact.tilogging import logging
+from totalimpact import dao
 
 # To read global config
-from totalimpact.api import app
+from totalimpact import app
 
 TEST_DB_NAME = "test_dao"
 
-from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
-from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
-from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
+from totalimpact.providers.provider import ProviderTimeout, ProviderRateLimitError
 
 from test.mocks import ProviderMock, QueueMock, ItemMock
 
@@ -22,7 +19,7 @@ def slow(f):
     f.slow = True
     return f
 
-logger = logging.getLogger(__name__)
+logging.disable(logging.CRITICAL)
 CWD, _ = os.path.split(__file__)
 
 TIME_SCALE = 0.0005 #multiplier to run the tests as fast as possible

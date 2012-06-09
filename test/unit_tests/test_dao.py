@@ -4,7 +4,7 @@ from nose.tools import nottest, raises, assert_equals, assert_true
 
 from totalimpact import dao
 # To read global config
-from totalimpact.api import app
+from totalimpact import app
 
 TEST_DB_NAME = "test_dao"
 
