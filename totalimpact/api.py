@@ -113,16 +113,17 @@ def create_item(namespace, nid):
         abort(500)     
 
 def update_item(tiid):
-    logger.debug("In update_item with tiid" + tiid)
+    logger.debug("In update_item with tiid " + tiid)
     item_doc = mydao.get(tiid)
 
     # set the needs_aliases timestamp so it will go on queue for update
-    item = ItemFactory.get_item_object_from_item_doc(mydao, item_doc)
-    item.needs_aliases = datetime.datetime.now().isoformat()
-    item.save()
+    #item = ItemFactory.get_item_object_from_item_doc(mydao, item_doc)
+    item_doc["needs_aliases"] = datetime.datetime.now().isoformat()
+    item_doc["id"] = item_doc["_id"]
+    mydao.save(item_doc)
 
     try:
-        return item.id
+        return tiid
     except AttributeError:
         abort(500)     
 
