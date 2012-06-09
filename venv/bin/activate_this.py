@@ -9,10 +9,12 @@ try:
     __file__
 except NameError:
     raise AssertionError(
-        "You must run this like execfile('path/to/active_this.py', dict(__file__='path/to/activate_this.py'))")
+        "You must run this like execfile('path/to/activate_this.py', dict(__file__='path/to/activate_this.py'))")
 import sys
 import os
 
+old_os_path = os.environ['PATH']
+os.environ['PATH'] = os.path.dirname(os.path.abspath(__file__)) + os.pathsep + old_os_path
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if sys.platform == 'win32':
     site_packages = os.path.join(base, 'Lib', 'site-packages')

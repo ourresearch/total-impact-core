@@ -14,7 +14,6 @@ setup(
         "lxml",
         "simplejson",
         "python-memcached",
-        "importlib",
         "rq",
         "zs.bibtex"
     ],
