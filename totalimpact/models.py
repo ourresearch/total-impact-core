@@ -82,7 +82,7 @@ class Saveable(object):
 
         while retry:
             try:
-                res = self.dao.save_and_commit(self.as_dict())
+                res = self.dao.save(self.as_dict())
                 retry = False
             except couchdb.ResourceConflict, e:
                 logger.info("Couch conflict, will retry")
@@ -153,19 +153,19 @@ class ItemFactory():
 
     @classmethod
     def get_simple_item(cls, dao, tiid):
-        res = dao.view("by_tiid_with_snaps", 
-                startkey=[tiid,0], 
-                endkey=[tiid,1])
-        rows = res["rows"]
+        res = dao.view("queues/by_tiid_with_snaps")
+        rows = res[[tiid,0]:[tiid,1]].rows
+
         if not rows:
             return None
-        item_doc = rows[0]["value"]
-        snaps = [row["value"] for row in rows[1:]]
-        try:
-            item = cls.build_item(item_doc, snaps)
-        except Exception, e:
-            item = None
-            logger.error("Exception %s: Unable to build item %s, %s, %s" % (e, tiid, str(item_doc), str(snaps)))
+        else:
+            item_doc = rows[0]["value"]
+            snaps = [row["value"] for row in rows[1:]]
+            try:
+                item = cls.build_item(item_doc, snaps)
+            except Exception, e:
+                item = None
+                logger.error("Exception %s: Unable to build item %s, %s, %s" % (e, tiid, str(item_doc), str(snaps)))
         return item
 
     @classmethod

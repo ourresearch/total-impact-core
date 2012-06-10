@@ -60,15 +60,11 @@ class TestBackend():
     
     def setUp(self):
         self.config = None #placeholder
-
-        TEST_DB_NAME = "test_backend"
         TEST_PROVIDER_CONFIG = {
             "wikipedia": {}
         }
 
-        self.d = dao.Dao(TEST_DB_NAME, app.config["DB_URL"],
-            app.config["DB_USERNAME"], app.config["DB_PASSWORD"])
-        self.d.create_new_db_and_connect(TEST_DB_NAME)
+        self.d = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
         self.get_providers = ProviderFactory.get_providers
         ProviderFactory.get_providers = classmethod(get_providers_mock)
@@ -76,9 +72,10 @@ class TestBackend():
         self.providers = self.get_providers(TEST_PROVIDER_CONFIG)
         
         
-    def tearDown(self):
+    def teardown(self):
         # FIXME: check that this doesn't need to be wrapped in a classmethod() call
         ProviderFactory.get_providers = self.get_providers
+        self.d.delete_db(os.environ["CLOUDANT_DB"])
 
     def test_01_init_backend(self):
         watcher = TotalImpactBackend(self.d, self.providers)
