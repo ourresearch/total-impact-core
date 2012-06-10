@@ -17,11 +17,7 @@ def connect_to_db():
     '''sets up the db. this has to happen before every request, so that
     we can pass in alternate config values for testing'''
     global mydao
-    mydao = dao.Dao(
-        app.config["DB_NAME"],
-        app.config["DB_URL"],
-        app.config["DB_USERNAME"],
-        app.config["DB_PASSWORD"])
+    mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
 # adding a simple route to confirm working API
 @app.route('/')
@@ -37,17 +33,14 @@ def hello():
     return resp
 
 def get_tiid_by_alias(ns, nid):
-    viewname = 'queues/by_alias'
-    res = mydao.view(viewname, key=[ns,nid])
-    try:
-        rows = res["rows"]
-    except KeyError:
-        rows = []
+    res = mydao.view('queues/by_alias')
 
-    if rows:
-        if (len(rows) > 1):
+    matches = res[[ns,nid]] # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
+        
+    if matches.rows:
+        if (len(matches.rows) > 1):
             logger.warning("More than one tiid for alias (%s, %s)" %(ns, nid))
-        tiid = rows[0]["id"]
+        tiid = matches.rows[0]["id"]
     else:
         tiid = None
     return tiid

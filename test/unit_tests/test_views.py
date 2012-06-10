@@ -33,10 +33,6 @@ sample_item_loc = os.path.join(
 f = open(sample_item_loc, "r")
 ARTICLE_ITEM = yaml.load(f.read())
 
-rendered_article_loc = os.path.join(
-    os.path.split(__file__)[0],
-    '../rendered_views/article.html')
-RENDERED_ARTICLE = open(rendered_article_loc, "r").read()
 
 api_items_loc = os.path.join(
     os.path.split(__file__)[0],
@@ -57,13 +53,10 @@ class ViewsTester(unittest.TestCase):
         # setup the database
         self.testing_db_name = "api_test"
         self.app.config["DB_NAME"] = self.testing_db_name
-        self.d = dao.Dao(
-            self.app.config["DB_NAME"],
-            self.app.config["DB_URL"],
-            self.app.config["DB_USERNAME"], 
-            self.app.config["DB_PASSWORD"])
+        self.d = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
-        self.d.create_new_db_and_connect(self.testing_db_name)
+    def tearDown(self):
+        self.d.delete_db( os.environ["CLOUDANT_DB"]) 
 
 class TestMemberItems(ViewsTester):
 
@@ -130,7 +123,7 @@ class TestProvider(ViewsTester):
             assert md["delicious"]['metrics']["bookmarks"]["description"]
 
 
-class TestItem(ViewsTester):
+class TestItem(ViewsTester): 
 
     def test_item_post_unknown_tiid(self):
         response = self.client.post('/item/doi/AnIdOfSomeKind/')
