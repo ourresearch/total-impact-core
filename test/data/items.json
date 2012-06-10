@@ -1,0 +1,678 @@
+[
+    {
+        "aliases": {
+            "created": "2012-06-08T19:29:33.072037", 
+            "doi": [
+                "10.1371/journal.pcbi.1000362"
+            ], 
+            "last_modified": "2012-06-08T19:29:34.706255", 
+            "title": [
+                "Tumor-Immune Interaction, Surgical Treatment, and Cancer Recurrence in a Mathematical Model of Melanoma"
+            ], 
+            "url": [
+                "http://www.pubmedcentral.nih.gov/articlerender.fcgi?artid=2667258&tool=pmcentrez&rendertype=abstract", 
+                "http://dx.plos.org/10.1371/journal.pcbi.1000362"
+            ]
+        }, 
+        "biblio": {
+            "authors": "Eikenberry, Thalhauser, Kuang", 
+            "genre": "article", 
+            "journal": "PLoS Computational Biology", 
+            "title": "Tumor-Immune Interaction, Surgical Treatment, and Cancer Recurrence in a Mathematical Model of Melanoma", 
+            "year": 2009
+        }, 
+        "created": "2012-06-08T19:29:33.072025", 
+        "id": "f2b45fcab1da11e19199c8bcc8937e3f", 
+        "last_modified": "2012-06-08T19:29:33.072025", 
+        "metrics": {
+            "mendeley:groups": {
+                "provenance_url": "http://api.mendeley.com/research/tumorimmune-interaction-surgical-treatment-and-cancer-recurrence-in-a-mathematical-model-of-melanoma/", 
+                "static_meta": {
+                    "description": "The number of groups who have added the article to their libraries", 
+                    "display_name": "groups", 
+                    "icon": "http://www.mendeley.com/favicon.ico", 
+                    "provider": "Mendeley", 
+                    "provider_url": "http://www.mendeley.com/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:35.025842": 1
+                }
+            }, 
+            "mendeley:readers": {
+                "provenance_url": "http://api.mendeley.com/research/tumorimmune-interaction-surgical-treatment-and-cancer-recurrence-in-a-mathematical-model-of-melanoma/", 
+                "static_meta": {
+                    "description": "The number of readers who have added the article to their libraries", 
+                    "display_name": "readers", 
+                    "icon": "http://www.mendeley.com/favicon.ico", 
+                    "provider": "Mendeley", 
+                    "provider_url": "http://www.mendeley.com/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:35.042503": 13
+                }
+            }, 
+            "plosalm:crossref": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000362", 
+                "static_meta": {
+                    "description": "the citation data reported for an article from CrossRef", 
+                    "display_name": "citations", 
+                    "icon": "http://www.crossref.org/favicon.ico", 
+                    "provider": "CrossRef", 
+                    "provider_url": "http://www.crossref.org"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.296749": 7
+                }
+            }, 
+            "plosalm:html_views": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000362", 
+                "static_meta": {
+                    "description": "the number of views of the PLoS HTML article", 
+                    "display_name": "html views", 
+                    "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg", 
+                    "provider": "PLoS", 
+                    "provider_url": "http://www.plos.org/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.014432": 2075
+                }
+            }, 
+            "plosalm:pdf_views": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000362", 
+                "static_meta": {
+                    "description": "the number of downloads of the PDF", 
+                    "display_name": "pdf views", 
+                    "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg", 
+                    "provider": "PLoS", 
+                    "provider_url": "http://www.plos.org/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.026315": 484
+                }
+            }, 
+            "plosalm:pmc_abstract": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000362", 
+                "static_meta": {
+                    "description": "the number of times the abstracts have been viewed on PubMed Central", 
+                    "display_name": "abstract views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.009547": 29
+                }
+            }, 
+            "plosalm:pmc_figure": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000362", 
+                "static_meta": {
+                    "description": "the number of times the figures have been viewed on PubMed Central", 
+                    "display_name": "figure views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.279388": 13
+                }
+            }, 
+            "plosalm:pmc_full-text": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000362", 
+                "static_meta": {
+                    "description": "the number of times the full-text has been viewed on PubMed Central", 
+                    "display_name": "full-text views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.290499": 232
+                }
+            }, 
+            "plosalm:pmc_pdf": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000362", 
+                "static_meta": {
+                    "description": "the number of times the pdf has been viewed on PubMed Central", 
+                    "display_name": "pdf views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.268811": 113
+                }
+            }, 
+            "plosalm:pmc_supp-data": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000362", 
+                "static_meta": {
+                    "description": "the number of times the supplementary data has been viewed on PubMed Central", 
+                    "display_name": "supp-data views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.285216": 0
+                }
+            }, 
+            "plosalm:pmc_unique-ip": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000362", 
+                "static_meta": {
+                    "description": "the number of unique IP addresess that have viewed the paper on PubMed Central", 
+                    "display_name": "unique-ip views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.022402": 251
+                }
+            }, 
+            "plosalm:pubmed_central": {
+                "provenance_url": "http://www.ncbi.nlm.nih.gov/sites/entrez?db=pubmed&cmd=link&LinkName=pubmed_pmc_refs&from_uid=19390606", 
+                "static_meta": {
+                    "description": "the citation data reported for an article from PubMed Central", 
+                    "display_name": "citations", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.274074": 2
+                }
+            }, 
+            "plosalm:scopus": {
+                "provenance_url": "http://www.scopus.com/scopus/inward/citedby.url?doi=10.1371%2Fjournal.pcbi.1000362&rel=R3.0.0&partnerID=OIVxnoIl&md5=57483861a24031b10c49b7a151d1a3d0", 
+                "static_meta": {
+                    "description": "the citation data reported for an article from Scopus", 
+                    "display_name": "citations", 
+                    "icon": "http://scopus.com/static/images/favicon.ico", 
+                    "provider": "Scopus", 
+                    "provider_url": "http://scopus.com"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.018659": 11
+                }
+            }
+        }, 
+        "type": "item"
+    }, 
+    {
+        "aliases": {
+            "created": "2012-06-08T19:28:11.225782", 
+            "doi": [
+                "10.5061/dryad.1295"
+            ], 
+            "last_modified": "2012-06-08T19:28:22.038595", 
+            "title": [
+                "data from: comparison of quantitative and molecular genetic variation of native vs. invasive populations of purple loosestrife (lythrum salicaria l., lythraceae)", 
+                "comparison of quantitative and molecular genetic variation of native vs. invasive populations of purple loosestrife (lythrum salicaria l., lythraceae)"
+            ], 
+            "url": [
+                "http://hdl.handle.net/10255/dryad.1299", 
+                "http://hdl.handle.net/10255/dryad.1295"
+            ]
+        }, 
+        "biblio": {
+            "authors": "Chun, Nason, Moloney, Chun, Nason, Moloney, Chun, Nason, Moloney, Chun, Nason, Moloney, Chun, Nason, Moloney", 
+            "genre": "dataset", 
+            "repository": "Dryad Digital Repository", 
+            "title": "Data from: Comparison of quantitative and molecular genetic variation of native vs. invasive populations of purple loosestrife (Lythrum salicaria L., Lythraceae)", 
+            "year": "2010"
+        }, 
+        "created": "2012-06-08T19:28:11.225769", 
+        "id": "c1eba010b1da11e19199c8bcc8937e3f", 
+        "last_modified": "2012-06-08T19:28:11.225769", 
+        "metrics": {
+            "dryad:most_downloaded_file": {
+                "provenance_url": "http://dx.doi.org/10.5061/dryad.1295", 
+                "static_meta": {
+                    "description": "Dryad most downloaded file: number of downloads of the most commonly downloaded data package component", 
+                    "display_name": "most downloaded file", 
+                    "icon": "http:\\/\\/datadryad.org\\/favicon.ico", 
+                    "provider": "Dryad", 
+                    "provider_url": "http:\\/\\/www.datadryad.org\\/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:23.698677": 70
+                }
+            }, 
+            "dryad:package_views": {
+                "provenance_url": "http://dx.doi.org/10.5061/dryad.1295", 
+                "static_meta": {
+                    "description": "Dryad package views: number of views of the main package page", 
+                    "display_name": "package views", 
+                    "icon": "http:\\/\\/datadryad.org\\/favicon.ico", 
+                    "provider": "Dryad", 
+                    "provider_url": "http:\\/\\/www.datadryad.org\\/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:23.689355": 537
+                }
+            }, 
+            "dryad:total_downloads": {
+                "provenance_url": "http://dx.doi.org/10.5061/dryad.1295", 
+                "static_meta": {
+                    "description": "Dryad total downloads: combined number of downloads of the data package and data files", 
+                    "display_name": "total downloads", 
+                    "icon": "http:\\/\\/datadryad.org\\/favicon.ico", 
+                    "provider": "Dryad", 
+                    "provider_url": "http:\\/\\/www.datadryad.org\\/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:23.694089": 114
+                }
+            }
+        }, 
+        "type": "item"
+    }, 
+    {
+        "aliases": {
+            "created": "2012-06-08T19:28:11.375411", 
+            "doi": [
+                "10.1371/journal.pcbi.1000361"
+            ], 
+            "last_modified": "2012-06-08T19:28:24.003769", 
+            "title": [
+                "Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article"
+            ], 
+            "url": [
+                "http://dx.doi.org/10.1371/journal.pcbi.1000361", 
+                "http://dx.plos.org/10.1371/journal.pcbi.1000361"
+            ]
+        }, 
+        "biblio": {
+            "authors": "Shotton, Portwin, Klyne, Miles", 
+            "genre": "article", 
+            "journal": "PLoS Computational Biology", 
+            "title": "Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article", 
+            "year": 2009
+        }, 
+        "created": "2012-06-08T19:28:11.375400", 
+        "id": "c202754cb1da11e19199c8bcc8937e3f", 
+        "last_modified": "2012-06-08T19:28:11.375400", 
+        "metrics": {
+            "mendeley:groups": {
+                "provenance_url": "http://api.mendeley.com/research/snps-prescriptions-predict-drug-response/", 
+                "static_meta": {
+                    "description": "The number of groups who have added the article to their libraries", 
+                    "display_name": "groups", 
+                    "icon": "http://www.mendeley.com/favicon.ico", 
+                    "provider": "Mendeley", 
+                    "provider_url": "http://www.mendeley.com/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:24.422247": 4
+                }
+            }, 
+            "mendeley:readers": {
+                "provenance_url": "http://api.mendeley.com/research/snps-prescriptions-predict-drug-response/", 
+                "static_meta": {
+                    "description": "The number of readers who have added the article to their libraries", 
+                    "display_name": "readers", 
+                    "icon": "http://www.mendeley.com/favicon.ico", 
+                    "provider": "Mendeley", 
+                    "provider_url": "http://www.mendeley.com/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:24.430956": 52
+                }
+            }, 
+            "plosalm:crossref": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361", 
+                "static_meta": {
+                    "description": "the citation data reported for an article from CrossRef", 
+                    "display_name": "citations", 
+                    "icon": "http://www.crossref.org/favicon.ico", 
+                    "provider": "CrossRef", 
+                    "provider_url": "http://www.crossref.org"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:26.772152": 13
+                }
+            }, 
+            "plosalm:html_views": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361", 
+                "static_meta": {
+                    "description": "the number of views of the PLoS HTML article", 
+                    "display_name": "html views", 
+                    "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg", 
+                    "provider": "PLoS", 
+                    "provider_url": "http://www.plos.org/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:26.721194": 11521
+                }
+            }, 
+            "plosalm:pdf_views": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361", 
+                "static_meta": {
+                    "description": "the number of downloads of the PDF", 
+                    "display_name": "pdf views", 
+                    "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg", 
+                    "provider": "PLoS", 
+                    "provider_url": "http://www.plos.org/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:26.734587": 1097
+                }
+            }, 
+            "plosalm:pmc_abstract": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361", 
+                "static_meta": {
+                    "description": "the number of times the abstracts have been viewed on PubMed Central", 
+                    "display_name": "abstract views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:26.716591": 70
+                }
+            }, 
+            "plosalm:pmc_figure": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361", 
+                "static_meta": {
+                    "description": "the number of times the figures have been viewed on PubMed Central", 
+                    "display_name": "figure views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:26.747989": 39
+                }
+            }, 
+            "plosalm:pmc_full-text": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361", 
+                "static_meta": {
+                    "description": "the number of times the full-text has been viewed on PubMed Central", 
+                    "display_name": "full-text views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:26.765984": 624
+                }
+            }, 
+            "plosalm:pmc_pdf": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361", 
+                "static_meta": {
+                    "description": "the number of times the pdf has been viewed on PubMed Central", 
+                    "display_name": "pdf views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:26.738799": 149
+                }
+            }, 
+            "plosalm:pmc_supp-data": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361", 
+                "static_meta": {
+                    "description": "the number of times the supplementary data has been viewed on PubMed Central", 
+                    "display_name": "supp-data views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:26.757223": 6
+                }
+            }, 
+            "plosalm:pmc_unique-ip": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361", 
+                "static_meta": {
+                    "description": "the number of unique IP addresess that have viewed the paper on PubMed Central", 
+                    "display_name": "unique-ip views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:26.730002": 580
+                }
+            }, 
+            "plosalm:pubmed_central": {
+                "provenance_url": "http://www.ncbi.nlm.nih.gov/sites/entrez?db=pubmed&cmd=link&LinkName=pubmed_pmc_refs&from_uid=19381256", 
+                "static_meta": {
+                    "description": "the citation data reported for an article from PubMed Central", 
+                    "display_name": "citations", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:26.742822": 12
+                }
+            }, 
+            "plosalm:scopus": {
+                "provenance_url": "http://www.scopus.com/scopus/inward/citedby.url?doi=10.1371%2Fjournal.pcbi.1000361&rel=R3.0.0&partnerID=OIVxnoIl&md5=5917ea9916ee68b95c2a7968d65927ab", 
+                "static_meta": {
+                    "description": "the citation data reported for an article from Scopus", 
+                    "display_name": "citations", 
+                    "icon": "http://scopus.com/static/images/favicon.ico", 
+                    "provider": "Scopus", 
+                    "provider_url": "http://scopus.com"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:26.725041": 19
+                }
+            }, 
+            "wikipedia:mentions": {
+                "provenance_url": "http://en.wikipedia.org/wiki/Special:Search?search='10.1371/journal.pcbi.1000361'&go=Go", 
+                "static_meta": {
+                    "description": "The number of Wikipedia articles that mentioned this object.", 
+                    "display_name": "mentions", 
+                    "icon": "http://wikipedia.org/favicon.ico", 
+                    "provider": "Wikipedia", 
+                    "provider_url": "http://www.wikipedia.org/"
+                }, 
+                "values": {
+                    "2012-06-08T19:28:24.629825": 1
+                }
+            }
+        }, 
+        "type": "item"
+    }, 
+    {
+        "aliases": {
+            "created": "2012-06-08T19:29:33.333348", 
+            "doi": [
+                "10.1371/journal.pcbi.1000363"
+            ], 
+            "last_modified": "2012-06-08T19:29:36.608589", 
+            "title": [
+                "Design Principles for Riboswitch Function"
+            ], 
+            "url": [
+                "http://www.ncbi.nlm.nih.gov/pubmed/19381267", 
+                "http://dx.plos.org/10.1371/journal.pcbi.1000363"
+            ]
+        }, 
+        "biblio": {
+            "authors": "Beisel, Smolke", 
+            "genre": "article", 
+            "journal": "PLoS Computational Biology", 
+            "title": "Design Principles for Riboswitch Function", 
+            "year": 2009
+        }, 
+        "created": "2012-06-08T19:29:33.333337", 
+        "id": "f2dc3f36b1da11e19199c8bcc8937e3f", 
+        "last_modified": "2012-06-08T19:29:33.333337", 
+        "metrics": {
+            "mendeley:groups": {
+                "provenance_url": "http://api.mendeley.com/research/design-principles-riboswitch-function/", 
+                "static_meta": {
+                    "description": "The number of groups who have added the article to their libraries", 
+                    "display_name": "groups", 
+                    "icon": "http://www.mendeley.com/favicon.ico", 
+                    "provider": "Mendeley", 
+                    "provider_url": "http://www.mendeley.com/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.985186": 4
+                }
+            }, 
+            "mendeley:readers": {
+                "provenance_url": "http://api.mendeley.com/research/design-principles-riboswitch-function/", 
+                "static_meta": {
+                    "description": "The number of readers who have added the article to their libraries", 
+                    "display_name": "readers", 
+                    "icon": "http://www.mendeley.com/favicon.ico", 
+                    "provider": "Mendeley", 
+                    "provider_url": "http://www.mendeley.com/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:36.999798": 57
+                }
+            }, 
+            "plosalm:crossref": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000363", 
+                "static_meta": {
+                    "description": "the citation data reported for an article from CrossRef", 
+                    "display_name": "citations", 
+                    "icon": "http://www.crossref.org/favicon.ico", 
+                    "provider": "CrossRef", 
+                    "provider_url": "http://www.crossref.org"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:38.462084": 16
+                }
+            }, 
+            "plosalm:html_views": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000363", 
+                "static_meta": {
+                    "description": "the number of views of the PLoS HTML article", 
+                    "display_name": "html views", 
+                    "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg", 
+                    "provider": "PLoS", 
+                    "provider_url": "http://www.plos.org/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:38.410669": 3361
+                }
+            }, 
+            "plosalm:pdf_views": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000363", 
+                "static_meta": {
+                    "description": "the number of downloads of the PDF", 
+                    "display_name": "pdf views", 
+                    "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg", 
+                    "provider": "PLoS", 
+                    "provider_url": "http://www.plos.org/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:38.427647": 1112
+                }
+            }, 
+            "plosalm:pmc_abstract": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000363", 
+                "static_meta": {
+                    "description": "the number of times the abstracts have been viewed on PubMed Central", 
+                    "display_name": "abstract views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:38.404975": 37
+                }
+            }, 
+            "plosalm:pmc_figure": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000363", 
+                "static_meta": {
+                    "description": "the number of times the figures have been viewed on PubMed Central", 
+                    "display_name": "figure views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:38.444495": 54
+                }
+            }, 
+            "plosalm:pmc_full-text": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000363", 
+                "static_meta": {
+                    "description": "the number of times the full-text has been viewed on PubMed Central", 
+                    "display_name": "full-text views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:38.456441": 434
+                }
+            }, 
+            "plosalm:pmc_pdf": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000363", 
+                "static_meta": {
+                    "description": "the number of times the pdf has been viewed on PubMed Central", 
+                    "display_name": "pdf views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:38.432903": 285
+                }
+            }, 
+            "plosalm:pmc_supp-data": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000363", 
+                "static_meta": {
+                    "description": "the number of times the supplementary data has been viewed on PubMed Central", 
+                    "display_name": "supp-data views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:38.451439": 41
+                }
+            }, 
+            "plosalm:pmc_unique-ip": {
+                "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000363", 
+                "static_meta": {
+                    "description": "the number of unique IP addresess that have viewed the paper on PubMed Central", 
+                    "display_name": "unique-ip views", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:38.422204": 495
+                }
+            }, 
+            "plosalm:pubmed_central": {
+                "provenance_url": "http://www.ncbi.nlm.nih.gov/sites/entrez?db=pubmed&cmd=link&LinkName=pubmed_pmc_refs&from_uid=19381267", 
+                "static_meta": {
+                    "description": "the citation data reported for an article from PubMed Central", 
+                    "display_name": "citations", 
+                    "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif", 
+                    "provider": "PMC", 
+                    "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:38.437879": 9
+                }
+            }, 
+            "plosalm:scopus": {
+                "provenance_url": "http://www.scopus.com/scopus/inward/citedby.url?doi=10.1371%2Fjournal.pcbi.1000363&rel=R3.0.0&partnerID=OIVxnoIl&md5=e7d1695df04b039f05362a7f6efcc530", 
+                "static_meta": {
+                    "description": "the citation data reported for an article from Scopus", 
+                    "display_name": "citations", 
+                    "icon": "http://scopus.com/static/images/favicon.ico", 
+                    "provider": "Scopus", 
+                    "provider_url": "http://scopus.com"
+                }, 
+                "values": {
+                    "2012-06-08T19:29:38.416611": 19
+                }
+            }
+        }, 
+        "type": "item"
+    }
+]

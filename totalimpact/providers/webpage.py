@@ -24,20 +24,24 @@ class Webpage(Provider):
 
 
     # use lxml because is html
+
     def _extract_biblio(self, page, id=None):
         #dict_of_keylists = {
         #    'title' : ['html', 'head', 'title'],
         #    'h1' : ['h1']
         #}
 
-        parsed_html = lxml.html.document_fromstring(page.encode("utf-8"))
-        title = parsed_html.find(".//title").text
-        h1 = parsed_html.find(".//h1").text
-
         biblio_dict = {}
-        if title:
-            biblio_dict["title"] = title
-        if h1:
-            biblio_dict["h1"] = h1
+        parsed_html = lxml.html.document_fromstring(page.encode("utf-8"))
+        
+        try:
+            biblio_dict["title"] = parsed_html.find(".//title").text
+        except AttributeError:
+            pass
+
+        try:
+            biblio_dict["h1"] = parsed_html.find(".//h1").text
+        except AttributeError:
+            pass
 
         return biblio_dict    

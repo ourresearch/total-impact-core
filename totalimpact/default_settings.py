@@ -51,7 +51,7 @@ PROVIDERS = {
     "slideshare":{
         "workers":3
     },
-    # if-need-be biblio providers go here
+    # if-need-be biblio providers go here, in order with best first
     "mendeley":{
         "workers":3
     },  
@@ -61,13 +61,19 @@ PROVIDERS = {
     "webpage":{
         "workers":3
     },
-    # don't-have-biblio providers go here
-    "plosalm":{
+    # don't-have-biblio providers go here, alphabetical order
+    "citeulike":{
         "workers":3
-    },  
+   },   
     "delicious":{
         "workers":3
    },   
+    "facebook":{
+        "workers":3
+   },   
+    "plosalm":{
+        "workers":3
+    },  
     "topsy":{
         "workers":3
     },  

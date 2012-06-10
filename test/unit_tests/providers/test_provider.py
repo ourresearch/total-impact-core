@@ -62,7 +62,7 @@ class Test_Provider():
             'year' : ['doi_record', 'year']}
 
         response = provider._extract_from_xml(page, dict_of_keylists)
-        assert_equals(response, {'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'year': u'2007'})        
+        assert_equals(response, {'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'year': 2007})
 
 class TestProviderFactory():
 
