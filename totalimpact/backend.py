@@ -360,7 +360,7 @@ class ProviderMetricsThread(ProviderThread):
 
 
 def main():
-    mydao = dao.Dao(os.environ("CLOUDANT_URL"), os.environ("CLOUDANT_DB"))
+    mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
 
     # Start all of the backend processes

@@ -104,5 +104,11 @@ class Dao(object):
 
         self.create_db(db_name)
 
+    def __getstate__(self):
+        '''Returns None when you try to pickle this object.
 
+        Otherwise a threadlock from couch prevents pickling of other stuff that
+        may contain this object.'''
+
+        return None
 
