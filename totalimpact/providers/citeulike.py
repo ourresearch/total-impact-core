@@ -1,6 +1,5 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
-from secrets import Topsy_key
 
 import simplejson
 import re
