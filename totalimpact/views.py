@@ -35,7 +35,7 @@ def hello():
 def get_tiid_by_alias(ns, nid):
     res = mydao.view('queues/by_alias')
 
-    matches = res[[ns,nid]] # same namespace and alias
+    matches = res[[ns,nid]] # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
         
     if matches.rows:
         if (len(matches.rows) > 1):

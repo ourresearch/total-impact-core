@@ -79,8 +79,8 @@ class Dao(object):
         return response
 
        
-    def view(self, viewname, **kwargs):
-        return self.db.view(viewname, kwargs)
+    def view(self, viewname):
+        return self.db.view(viewname)
 
     def create_collection(self):
         return self.create_item()

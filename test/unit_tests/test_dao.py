@@ -50,13 +50,6 @@ class TestDAO(unittest.TestCase):
 
         self.assertTrue( isinstance(res.rows, list), res )
 
-    def test_view_with_keyword_args(self):
-        res = self.d.view('queues/needs_aliases', endkey=[1,10])
-        nrows = len(res.rows)
-        assert_equals(nrows, 0)
-
-        self.assertTrue( isinstance(res.rows, list), res )
-
 
 
              
