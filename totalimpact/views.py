@@ -24,8 +24,9 @@ def connect_to_db():
 def hello():
     msg = {
         "hello": "world",
-        "message": "Congratulations! You have found the Total Impact API.",
+        "message": "Congratulations! You have found the total-Impact API.",
         "moreinfo": "http://total-impact.tumblr.com/",
+        "contact": "totalimpactdev@gmail.com",
         "version": app.config["VERSION"]
     }
     resp = make_response( json.dumps(msg, sort_keys=True, indent=4), 200)        
