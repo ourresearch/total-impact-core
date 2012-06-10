@@ -3,6 +3,7 @@ CouchDB==0.8
 Flask==0.7.2
 Flask-Login==0.1.2
 Flask-WTF==0.6
+gunicorn==0.14.3
 Jinja2==2.6
 Logbook==0.3
 WTForms==1.0.1
