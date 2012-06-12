@@ -5,6 +5,7 @@ import os, json, time, datetime
 from pprint import pprint
 
 from totalimpact import dao, app
+from totalimpact.crossdomain import crossdomain
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
 from totalimpact import default_settings
@@ -52,6 +53,7 @@ GET /tiid/:namespace/:id
 303 else list of tiids
 '''
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
+@crossdomain(origin='*')
 def tiid(ns, nid):
     tiid = get_tiid_by_alias(ns, nid)
 
@@ -103,6 +105,7 @@ def items_tiid_post(tiids):
     return resp
 
 @app.route('/items', methods=['POST'])
+@crossdomain(origin='*')
 def items_namespace_post():
     try:
         aliases_list = [(namespace, nid) for [namespace, nid] in request.json]
@@ -133,6 +136,7 @@ def items_namespace_post():
     return resp
 
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
+@crossdomain(origin='*')
 def item_namespace_post(namespace, nid):
     '''Creates a new item using the given namespace and id.
 
@@ -159,6 +163,7 @@ def item_namespace_post(namespace, nid):
 404 if tiid not found in db
 '''
 @app.route('/item/<tiid>', methods=['GET'])
+@crossdomain(origin='*')
 def item(tiid, format=None):
     # TODO check request headers for format as well.
 
@@ -218,6 +223,7 @@ returns a json list of item objects (100 max)
 '''
 @app.route('/items/<tiids>', methods=['GET'])
 @app.route('/items/<tiids>.<format>', methods=['GET'])
+@crossdomain(origin='*')
 def items(tiids, format=None):
     items = []
 
@@ -247,6 +253,7 @@ def items(tiids, format=None):
         
 
 @app.route('/provider', methods=['GET'])
+@crossdomain(origin='*')
 def provider():
     ret = ProviderFactory.get_all_metadata()
     resp = make_response( json.dumps(ret, sort_keys=True, indent=4), 200 )
@@ -276,6 +283,7 @@ returns dictionary with metrics object and biblio object
 # should return list of member ID {namespace:id} k/v pairs
 # if > 100 memberitems, return 100 and response code indicates truncated
 @app.route('/provider/<provider_name>/memberitems', methods=['GET'])
+@crossdomain(origin='*')
 def provider_memberitems(provider_name):
     query = request.values.get('query','')
 
@@ -293,6 +301,7 @@ def provider_memberitems(provider_name):
 # For internal use only.  Useful for testing before end-to-end working
 # Example: http://127.0.0.1:5001/provider/dryad/aliases/10.5061/dryad.7898
 @app.route('/provider/<provider_name>/aliases/<path:id>', methods=['GET'] )
+@crossdomain(origin='*')
 def provider_aliases(provider_name, id):
 
     provider = ProviderFactory.get_provider(provider_name)
@@ -316,6 +325,7 @@ def provider_aliases(provider_name, id):
 # For internal use only.  Useful for testing before end-to-end working
 # Example: http://127.0.0.1:5001/provider/dryad/metrics/10.5061/dryad.7898
 @app.route('/provider/<provider_name>/metrics/<path:id>', methods=['GET'] )
+@crossdomain(origin='*')
 def provider_metrics(provider_name, id):
 
     provider = ProviderFactory.get_provider(provider_name)
@@ -334,6 +344,7 @@ def provider_metrics(provider_name, id):
 # For internal use only.  Useful for testing before end-to-end working
 # Example: http://127.0.0.1:5001/provider/dryad/biblio/10.5061/dryad.7898
 @app.route('/provider/<provider_name>/biblio/<path:id>', methods=['GET'] )
+@crossdomain(origin='*')
 def provider_biblio(provider_name, id):
 
     provider = ProviderFactory.get_provider(provider_name)
@@ -376,6 +387,7 @@ returns 404 or 204
 '''
 @app.route('/collection', methods = ['POST'])
 @app.route('/collection/<cid>', methods = ['GET', 'PUT'])
+@crossdomain(origin='*')
 def collection(cid=''):
     response_code = None
 
