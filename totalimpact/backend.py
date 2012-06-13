@@ -295,11 +295,8 @@ class ProvidersAliasThread(ProviderThread):
                     if new_aliases:
                         item.aliases.add_unique(new_aliases)
                 else:
-                    item.aliases.clear_aliases()
-                    logger.info("%20s: NOT SUCCESS in process_item %s clear aliases provider %s" 
+                    logger.info("%20s: NOT SUCCESS in process_item %s, partial aliases only for provider %s" 
                         % (self.thread_id, item.id, provider.provider_name))
-
-                    break
 
                 (success, biblio) = self.process_item_for_provider(item, provider, 'biblio')
                 if success:
@@ -310,10 +307,9 @@ class ProvidersAliasThread(ProviderThread):
                             % (self.thread_id, item.id, provider.provider_name))
 
                 else:
-                    # This provider has failed and exceeded the 
-                    # total number of retries. Don't process any 
-                    # more providers, we abort this item entirely
-                    break
+                    logger.info("%20s: NOT SUCCESS in process_item %s, partial biblio only for provider %s" 
+                        % (self.thread_id, item.id, provider.provider_name))
+
                 logger.info("%20s: interm aliases for item %s after %s: %s" 
                     % (self.thread_id, item.id, provider.provider_name, str(item.aliases.get_aliases_list())))
                 logger.info("%20s: interm biblio for item %s after %s: %s" 
