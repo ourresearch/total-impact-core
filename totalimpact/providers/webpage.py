@@ -35,12 +35,16 @@ class Webpage(Provider):
         parsed_html = lxml.html.document_fromstring(page.encode("utf-8"))
         
         try:
-            biblio_dict["title"] = parsed_html.find(".//title").text
+            response = parsed_html.find(".//h1").text
+            if response:
+                biblio_dict["title"] = response
         except AttributeError:
             pass
 
         try:
-            biblio_dict["h1"] = parsed_html.find(".//h1").text
+            response = parsed_html.find(".//h1").text
+            if response:
+                biblio_dict["h1"] = response
         except AttributeError:
             pass
 
