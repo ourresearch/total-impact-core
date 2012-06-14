@@ -74,7 +74,7 @@ class Provider(object):
 
     def __init__(self, 
             max_cache_duration=86400, 
-            max_retries=3, 
+            max_retries=1, 
             tool_email="mytotalimpact@gmail.com"): 
         # FIXME change email to totalimpactdev@gmail.com after registering it with crossref
     
