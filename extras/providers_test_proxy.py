@@ -14,10 +14,7 @@ from optparse import OptionParser
 import logging
 import os
 
-import daemon
-import lockfile
 import re
-from totalimpact.pidsupport import PidFile
 
 responses = {'dryad':{},'wikipedia':{},'github':{},'mendeley':{},'crossref':{}}
 

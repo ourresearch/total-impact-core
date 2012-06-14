@@ -3,7 +3,6 @@
 # A basic functional test of the total impact API
 #
 
-import mechanize
 import urllib2
 import urllib
 import json
