@@ -25,7 +25,7 @@ class ProviderFactory(object):
     def get_providers(cls, config_providers):
         """ config is the application configuration """
         providers = []
-        for provider_name, v in config_providers.iteritems():
+        for provider_name, v in config_providers:
             try:
                 prov = ProviderFactory.get_provider(provider_name)
                 prov.provider_name = provider_name

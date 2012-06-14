@@ -25,12 +25,23 @@ class TotalImpactBackend(object):
             logger.info("Interrupted ... exiting ...")
             self._cleanup()
     
+    def _get_num_workers_from_config(self, provider_name, provider_config):
+        relevant_provider_config = {"workers":1}
+        for (key, provider_config_dict) in provider_config:
+            if (key==provider_name):
+                relevant_provider_config = provider_config_dict
+        return relevant_provider_config["workers"]
+
     def _spawn_threads(self):
         
         for provider in self.providers:
             if not provider.provides_metrics:
                 continue
-            thread_count = default_settings.PROVIDERS[provider.provider_name]["workers"]
+
+            thread_count = self._get_num_workers_from_config(
+                provider.provider_name, 
+                default_settings.PROVIDERS)
+
             logger.info("%20s: spawning, n=%i" % (provider.provider_name, thread_count)) 
             # create and start the metrics threads
             for idx in range(thread_count):
@@ -181,15 +192,9 @@ class ProviderThread(StoppableThread):
                 % (self.thread_id, provider, method_name, str(aliases), tiid))
             return None
 
-        try:
-            override_template_url = default_settings.PROVIDERS[provider.provider_name][method_name + "_url"]
-        except KeyError:
-            # No problem, the provider will use the template_url it knows about
-            override_template_url = None
-
         logger.debug("%20s: calling %s %s for %s" % (self.thread_id, provider, method_name, tiid))
         try:
-            response = method_to_call(aliases, override_template_url)
+            response = method_to_call(aliases)
             #logger.debug("%20s: response from %s %s %s for %s, %s" 
             #    % (self.thread_id, provider, method_name, str(aliases), tiid, str(response)))
         except NotImplementedError:
@@ -298,11 +303,15 @@ class ProvidersAliasThread(ProviderThread):
                     logger.info("%20s: NOT SUCCESS in process_item %s, partial aliases only for provider %s" 
                         % (self.thread_id, item.id, provider.provider_name))
 
-                (success, biblio) = self.process_item_for_provider(item, provider, 'biblio')
+                (success, new_biblio) = self.process_item_for_provider(item, provider, 'biblio')
                 if success:
-                    if biblio:
+                    if new_biblio:
                         # merge old biblio with new, favoring old in cases of conflicts
-                        item.biblio = dict(biblio.items() + item.biblio.items())
+                        #item.biblio = dict(new_biblio.items() + item.biblio.items())
+                        for (k, v) in new_biblio.iteritems():
+                            if not item.biblio.has_key(k):
+                                item.biblio[k] = v
+
                         logger.info("%20s: in process_item biblio %s provider %s" 
                             % (self.thread_id, item.id, provider.provider_name))
 
