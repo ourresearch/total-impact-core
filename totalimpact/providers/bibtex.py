@@ -95,7 +95,7 @@ class Bibtex(Provider):
         print url
 
         response = self.http_get(url, cache_enabled=cache_enabled)
-        print response.text
+        #print response.text
         response_lines = response.text.split("\n")
         dois = [line.split("|")[-1].strip() for line in response_lines]
 
