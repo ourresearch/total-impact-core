@@ -19,6 +19,14 @@ def connect_to_db():
     global mydao
     mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
+#@app.before_request
+def check_api_key():
+    ti_api_key = request.values.get('api_key','')
+    logger.debug("In check_api_key with " + ti_api_key)
+    if not ti_api_key:
+        response = make_response("please get an api key and include api_key=YOURKEY in your query", 403)
+        return response
+
 @app.after_request
 def add_crossdomain_header(resp):
     resp.headers['Access-Control-Allow-Origin'] = "*"
@@ -27,6 +35,7 @@ def add_crossdomain_header(resp):
 
 # adding a simple route to confirm working API
 @app.route('/')
+@app.route('/v1')
 def hello():
     msg = {
         "hello": "world",
