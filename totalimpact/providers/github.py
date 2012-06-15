@@ -13,9 +13,9 @@ class Github(Provider):
     url = "http://github.com"
     descr = "A social, online repository for open-source software."
     member_items_url_template = "https://api.github.com/users/%s/repos"
-    biblio_url_template = "https://github.com/api/v2/json/repos/show/%s"
-    aliases_url_template = "https://github.com/api/v2/json/repos/show/%s"
-    metrics_url_template = "https://github.com/api/v2/json/repos/show/%s"
+    biblio_url_template = "https://api.github.com/repos/%s"
+    aliases_url_template = "https://api.github.com/repos/%s"
+    metrics_url_template = "https://api.github.com/repos/%s"
 
     provenance_url_templates = {
         "github:watchers" : "https://github.com/%s/%s/watchers",
@@ -72,20 +72,20 @@ class Github(Provider):
 
     def _extract_biblio(self, page, id=None):
         dict_of_keylists = {
-            'title' : ['repository', 'name'],
-            'description' : ['repository', 'description'],
-            'owner' : ['repository', 'owner'],
-            'url' : ['repository', 'url'],
-            'last_push_date' : ['repository', 'pushed_at'],
-            'create_date' : ['repository', 'created_at']
+            'title' : ['name'],
+            'description' : ['description'],
+            'owner' : ['owner', 'login'],
+            'url' : ['svn_url'],
+            'last_push_date' : ['pushed_at'],
+            'create_date' : ['created_at']
         }
         biblio_dict = provider._extract_from_json(page, dict_of_keylists)
 
         return biblio_dict    
        
     def _extract_aliases(self, page, id=None):
-        dict_of_keylists = {"url": ["repository", "url"], 
-                            "title" : ["repository", "name"]}
+        dict_of_keylists = {"url": ["svn_url"], 
+                            "title" : ["name"]}
 
         aliases_dict = provider._extract_from_json(page, dict_of_keylists)
         if aliases_dict:
@@ -103,8 +103,8 @@ class Github(Provider):
                 raise(self._get_error(status_code))
 
         dict_of_keylists = {
-            'github:watchers' : ['repository', 'watchers'],
-            'github:forks' : ['repository', 'forks']
+            'github:watchers' : ['watchers'],
+            'github:forks' : ['forks']
         }
 
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)
