@@ -20,7 +20,7 @@ def searchdoi(title, author):
   #print response.status, response.reason
   data = response.read()
   conn.close()
-  result = re.findall(r"doi:(10.\d+.[0-9a-wA-W_/\.]+)" , data, re.DOTALL)
+  result = re.findall(r"doi:(10.\d+.[0-9a-wA-W_/\.\-]+)" , data, re.DOTALL)
   if (len(result) > 0):
     doi = result[0]
   else:
