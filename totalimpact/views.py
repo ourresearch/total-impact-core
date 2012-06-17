@@ -128,9 +128,9 @@ def items_namespace_post():
     # no error, so do lookups and create the ones that don't exist
     logger.debug("In api /items with aliases " + str(aliases_list))
 
-    unique_aliases = list(set(aliases_list))
+    # unique_aliases = list(set(aliases_list))
     tiids = []
-    for alias in unique_aliases:
+    for alias in aliases_list:
         (namespace, nid) = alias
         logger.debug("In api /items with alias " + str(alias))
         existing_tiid = get_tiid_by_alias(namespace, nid)
