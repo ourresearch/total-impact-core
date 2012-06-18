@@ -38,6 +38,9 @@ class QueueMonitor(StoppableThread):
                 log.info("%20s detected on request queue: item %s" 
                     % ("QueueMonitor", tiid))
 
+                # remove biblio so it will be overwritten
+                #item_doc["biblio"] = {}
+
                 # now save back the updated needs_aliases information
                 # do this before putting on queue, so that no one has changed it.
                 log.info("%20s UPDATING needs_aliases date in db: item %s" 
