@@ -31,7 +31,6 @@ class Bibtex(Provider):
         members = [("doi", "10.234234/2342342")]
         return(members)
 
-    # overwrite because doesn't get anything from a web page to start
     def member_items(self, 
             query_string, 
             provider_url_template=None, 

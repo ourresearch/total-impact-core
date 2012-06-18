@@ -6,7 +6,7 @@ from pprint import pprint
 
 from totalimpact import dao, app
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
-from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError
+from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError, ProviderHttpError
 from totalimpact import default_settings
 import csv, StringIO, logging
 
@@ -273,6 +273,22 @@ def provider():
 
     return resp
 
+ALLOWED_EXTENSIONS = set(['bib'])
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    if request.method == 'POST':
+        file = request.files['file']
+        logger.debug("filename = " + file.filename)
+        file_contents = file.read()
+        resp = make_response( json.dumps(file_contents, sort_keys=True, indent=4), 200)        
+        resp.mimetype = "application/json"
+        return resp
+
 
 '''
 GET /provider/:provider/memberitems?query=:querystring[&type=:type]
@@ -294,9 +310,22 @@ returns dictionary with metrics object and biblio object
 # external APIs should go to /item routes
 # should return list of member ID {namespace:id} k/v pairs
 # if > 100 memberitems, return 100 and response code indicates truncated
-@app.route('/provider/<provider_name>/memberitems', methods=['GET'])
+@app.route('/provider/<provider_name>/memberitems', methods=['GET', 'POST'])
 def provider_memberitems(provider_name):
-    query = request.values.get('query','')
+    logger.debug("In provider_memberitems")
+
+    if request.method == "POST":
+        logger.debug("In provider_memberitems with post")
+
+        logger.debug("request files include" + str(request.headers))
+
+        file = request.files['file']
+        logger.debug("In provider_memberitems got file")
+        logger.debug("filename = " + file.filename)
+        query = file.read().decode("utf-8")
+    else:
+        query = request.values.get('query','')
+
 
     logger.debug("In provider_memberitems with " + query)
 
@@ -423,23 +452,6 @@ def collection(cid=''):
                 # we got missing or improperly formated data.
                 # should log the error...
                 abort(404)  #what is the right error message for 'needs arguments'?
-
-    elif request.method == "PUT":
-        # it exists in the database already, but we're going to overwrite it.
-        #FIXME: currently does not delete anything...only adds. See #93
-        if coll:
-            coll = CollectionFactory.make(mydao, collection_dict=request.json )
-            coll.save()
-            response_code = 200 # OK
-        else:
-            abort(404)
-
-    elif request.method == "DELETE":
-        if coll:
-            coll.delete()
-            response_code = 204 # The server successfully processed the request, but is not returning any content
-        else:
-            abort(404)
 
     elif request.method == "GET":
         if coll:
