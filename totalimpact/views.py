@@ -273,22 +273,6 @@ def provider():
 
     return resp
 
-ALLOWED_EXTENSIONS = set(['bib'])
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-
-@app.route('/upload', methods=['POST'])
-def upload():
-    if request.method == 'POST':
-        file = request.files['file']
-        logger.debug("filename = " + file.filename)
-        file_contents = file.read()
-        resp = make_response( json.dumps(file_contents, sort_keys=True, indent=4), 200)        
-        resp.mimetype = "application/json"
-        return resp
-
 
 '''
 GET /provider/:provider/memberitems?query=:querystring[&type=:type]
@@ -428,7 +412,7 @@ returns 404 or 204
 (see http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete)
 '''
 @app.route('/collection', methods = ['POST'])
-@app.route('/collection/<cid>', methods = ['GET', 'PUT'])
+@app.route('/collection/<cid>', methods = ['GET'])
 def collection(cid=''):
     response_code = None
 
