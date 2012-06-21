@@ -34,8 +34,9 @@ class Webpage(Provider):
         biblio_dict = {}
         parsed_html = lxml.html.document_fromstring(page.encode("utf-8"))
         
+
         try:
-            response = parsed_html.find(".//h1").text
+            response = parsed_html.find(".//title").text
             if response:
                 biblio_dict["title"] = response
         except AttributeError:
@@ -47,5 +48,6 @@ class Webpage(Provider):
                 biblio_dict["h1"] = response
         except AttributeError:
             pass
+
 
         return biblio_dict    
