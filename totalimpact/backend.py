@@ -362,6 +362,11 @@ class ProviderMetricsThread(ProviderThread):
                     if metrics[metric_name]:
                         snap = ItemFactory.build_snap(item.id, metrics[metric_name], metric_name)
                         self.dao.save(snap)
+        # tell api you are done by reporting update count in item
+        item_doc = self.dao.get(item.id)
+        item_doc["num_provider_responses"] += 1
+        item_doc["id"] = item_doc["_id"]
+        self.dao.save(item_doc)
 
 
 def main():
