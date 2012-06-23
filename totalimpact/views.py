@@ -81,6 +81,7 @@ def create_item(namespace, nid):
     item = ItemFactory.make_simple(mydao)
     item.aliases.add_alias(namespace, nid)
     item.needs_aliases = datetime.datetime.now().isoformat()
+    item.num_provider_responses = 0
     item.save()
 
     try:
@@ -95,6 +96,7 @@ def update_item(tiid):
     # set the needs_aliases timestamp so it will go on queue for update
     #item = ItemFactory.get_item_object_from_item_doc(mydao, item_doc)
     item_doc["needs_aliases"] = datetime.datetime.now().isoformat()
+    item_doc["num_provider_responses"] = 0
     item_doc["id"] = item_doc["_id"]
     mydao.save(item_doc)
 
@@ -171,6 +173,15 @@ def item_namespace_post(namespace, nid):
 
     return resp
 
+def is_reporting_complete(item_dict):
+    try:
+        num_providers_responded = item_dict["num_provider_responses"]
+    except KeyError:
+        num_providers_responded = 0
+    num_providers = len(default_settings.PROVIDERS)
+    reporting_complete = (num_providers_responded == num_providers)
+    return reporting_complete
+
 
 '''GET /item/:tiid
 404 if tiid not found in db
@@ -186,8 +197,14 @@ def item(tiid, format=None):
 
     if not item_dict:
         abort(404)
-        
-    resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4))
+    
+    is_reporting_complete = get_provider_complete_response_code(item_dict)
+    if is_reporting_complete:
+        response_code = 200
+    else:
+        response_code = 210 # not complete yet
+
+    resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4), response_code)
     resp.mimetype = "application/json"
 
     return resp
@@ -239,6 +256,7 @@ returns a json list of item objects (100 max)
 def items(tiids, format=None):
     items = []
 
+    reporting_complete_so_far = True
     for index,tiid in enumerate(tiids.split(',')):
         if index > 500: break    # weak, change
 
@@ -252,13 +270,21 @@ def items(tiids, format=None):
 
         items.append(item_dict)
 
+        reporting_complete_so_far = reporting_complete_so_far and is_reporting_complete(item_dict)
+
+    # return success if all reporting is complete for all items    
+    if reporting_complete_so_far:
+        response_code = 200
+    else:
+        response_code = 210 # not complete yet
+
     if format == "csv":
         csv = make_csv_rows(items)
-        resp = make_response(csv)
+        resp = make_response(csv, response_code)
         resp.mimetype = "text/csv"
         resp.headers.add("Content-Disposition", "attachment; filename=ti.csv")
     else:
-        resp = make_response(json.dumps(items, sort_keys=True, indent=4))
+        resp = make_response(json.dumps(items, sort_keys=True, indent=4), response_code)
         resp.mimetype = "application/json"
 
     resp.headers['Access-Control-Allow-Origin'] = "*"
