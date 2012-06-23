@@ -25,7 +25,7 @@ class Dao(object):
     def create_db(self, db_name):
         '''makes a new database with the given name.
         uploads couch views stored in the config directory'''
-        view = {
+        designDoc = {
                     "_id": "_design/queues",
                     "language": "javascript",
                     "views": {
@@ -33,18 +33,29 @@ class Dao(object):
                         "by_tiid_with_snaps": {},
                         "by_type_and_id": {},
                         "needs_aliases": {},
-                        } 
+                        },
+                    "updates": {
+                        "bump-providers-run-counter" :  '''function(doc, req) {
+                            if (!doc.providersRunCounter) doc.providersRunCounter = 0;
+                            doc.providersRunCounter += 1;
+                            var message = '<h1>bumped it!</h1>';
+                            return [doc, message];
+                        }'''
                     }
-        for view_name in view["views"]:
+        }
+                        
+                    
+                    
+        for view_name in designDoc["views"]:
             file = open('./config/couch/views/{0}.js'.format(view_name))
-            view["views"][view_name]["map"] = file.read()
+            designDoc["views"][view_name]["map"] = file.read()
 
         try:
             self.db = self.couch.create(db_name)
         except ValueError:
             print("Error, maybe because database name cannot include uppercase, must match [a-z][a-z0-9_\$\(\)\+-/]*$")
             raise ValueError
-        self.db.save( view )
+        self.db.save( designDoc )
         return True
 
     @property
