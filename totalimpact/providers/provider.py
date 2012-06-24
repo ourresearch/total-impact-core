@@ -35,6 +35,15 @@ class ProviderFactory(object):
         return providers
 
     @classmethod
+    def num_providers_with_metrics(cls, config_providers):
+        providers = cls.get_providers(config_providers)
+        num_providers_with_metrics = 0
+        for provider in providers:
+            if provider.provides_metrics:
+                num_providers_with_metrics += 1
+        return num_providers_with_metrics
+
+    @classmethod
     def get_all_static_meta(cls, config_providers=default_settings.PROVIDERS):
         # this is now duplicating get_all_metadata below; not high refactoring priority, though.
         all_static_meta = {}
