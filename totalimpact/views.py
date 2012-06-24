@@ -173,18 +173,6 @@ def item_namespace_post(namespace, nid):
 
     return resp
 
-def is_reporting_complete(item_dict):
-    try:
-        num_providers_responded = item_dict["providersRunCounter"]
-    except KeyError:
-        num_providers_responded = 0
-    num_providers_with_metrics = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-    
-    reporting_complete = (num_providers_responded == num_providers_with_metrics)
-    logger.debug("In is_reporting_complete with num_responded=%i, total_providers=%i" %(num_providers_responded, num_providers_with_metrics))
-
-    return reporting_complete
-
 
 '''GET /item/:tiid
 404 if tiid not found in db
@@ -201,10 +189,10 @@ def item(tiid, format=None):
     if not item_dict:
         abort(404)
     
-    if is_reporting_complete(item_dict):
-        response_code = 200
-    else:
+    if item_dict["currently_updating"]:
         response_code = 210 # not complete yet
+    else:
+        response_code = 200 
 
     resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4), response_code)
     resp.mimetype = "application/json"
@@ -258,7 +246,7 @@ returns a json list of item objects (100 max)
 def items(tiids, format=None):
     items = []
 
-    reporting_complete_so_far = True
+    something_still_updating = False
     for index,tiid in enumerate(tiids.split(',')):
         if index > 500: break    # weak, change
 
@@ -272,13 +260,13 @@ def items(tiids, format=None):
 
         items.append(item_dict)
 
-        reporting_complete_so_far = reporting_complete_so_far and is_reporting_complete(item_dict)
+        something_still_updating = something_still_updating or item_dict["currently_updating"]
 
     # return success if all reporting is complete for all items    
-    if reporting_complete_so_far:
-        response_code = 200
-    else:
+    if something_still_updating:
         response_code = 210 # not complete yet
+    else:
+        response_code = 200
 
     if format == "csv":
         csv = make_csv_rows(items)
