@@ -1,9 +1,9 @@
 installation and use
 ==================
 
-You need Python 2.7, because Heroku is 2.7. This is a bit of a pain, but as long as you remember to run everything in the virtualenv, you’re ok.
+You need Python 2.7, because Heroku is 2.7. This is a bit of a pain, but as long as you remember to run everything in the virtualenv, you're ok.
 
-If you get KeyErrors and totalimpact won’t import, you haven’t exported the env variables correctly.
+If you get KeyErrors and totalimpact won't import, you haven't exported the env variables correctly.
 installation procedure. Here are the steps:
 
 installation
@@ -103,7 +103,7 @@ use
 
     heroku config:add API_ROOT=api.total-impact-core-staging.herokuapp.com --remote staging
     heroku ps:scale web=1 worker=1 --remote staging
-    # don’t forget to spin down the staging server when you’re done: 
+    # don't forget to spin down the staging server when you're done: 
     heroku ps:scale web=0 worker=0 --remote staging
 
 
@@ -122,12 +122,12 @@ deploying to heroku
 first-time installation
 -----------------------
 
-This shouldn’t ever need to be done again, but just in case...
+This shouldn't ever need to be done again, but just in case...
 
 ### Create Heroku configs if necessary
 
     # See the env vars above. here's one example:
-    heroku config:add LOG_LEVEL=debug # or --remote heroku
+    heroku config:add LOG_LEVEL=debug --remote heroku
 
 ### Add or remove workers
 
