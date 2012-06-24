@@ -1,53 +1,63 @@
+import os, requests, json, couchdb
+from time import sleep
 
 #kill the database
-base_url = 'http://localhost:5001/'
-id_list = list of 1000 identiers
-number_of_collections = 5
-
-## Get all the tiids
-tiid_list = []
-for (namespace, nid) in id_list:
-	get_tiid_url = base_url + 'item/%s/%s' % (namespace, nid)
-    get_tiid_req = urllib2.Request(get_tiid_url)
-    data = "" #blank data to force a post
-    get_tiid_response = urllib2.urlopen(get_tiid_req, data)
-
-    tiid = json.loads(urllib.unquote(get_tiid_response.read()))
-    tiid_list += [tiid]
-
-## make all the collections
-collection_ids_list = []
-for i in range(1, number_of_collections):
-	size_of_collection = len(tiid_list)/number_of_collections
-	first_item_index = i*size_of_collection
-	tiids_in_this_collection = tiid_list[first_item_index:(first_item_index+size_of_collection)]
-    response = self.client.post(
-        '/collection',
-        data=json.dumps({"items": tiids_in_this_collection, "title":"My Collection number " + str(i)}),
-        content_type="application/json")
-
-    assert_equals(response.status_code, 201)  #Created
-
-    response_loaded = json.loads(response.data)
-    new_collection_id = response_loaded["id"]
-    collection_ids_list += [new_collection_id]
-
-## get all the collections
-for collection_id in collection_ids_list:
-    get_collection_url = base_url + 'collection/%s' % (collection_id)
-    get_collection_request = urllib2.Request(get_collection_url)
-    get_collection_response = urllib2.urlopen(get_collection_request)
-    assert(get_collection_response.status_code == 200)
-
-## give it a few seconds
-sleep(5)
-
-## see if all the metrics are ready
-for tiid in tiid_list:
-    get_metrics_url = base_url + 'item/%s' % (tiid)
-    get_metrics_request = urllib2.Request(get_metrics_url)
-    get_metrics_response = urllib2.urlopen(get_metrics_request)
-
-    assert(get_metrics_response.status_code == 200)
+base_url = "http://total-impact-core-staging.herokuapp.com"
+id_list = [("doi", "10.1371/journal.pone.00" + str(x)) for x in range(2900, 3900)]
 
 
+
+def create_items(ids):
+    ## Get all the tiids
+    tiid_list = []
+    for (namespace, nid) in ids:
+        get_tiid_url = base_url + '/item/%s/%s' % (namespace, nid)
+        resp = requests.post(get_tiid_url)
+        
+        tiid = json.loads(resp.text)
+        tiid_list = tiid_list + [tiid]
+    
+    print "returning tiid list."
+    return tiid_list
+    
+    
+def create_collection(tiids, collection_num=1):
+    url = base_url+"/collection"
+    resp = requests.post(
+        url,
+        data=json.dumps(
+            {
+                "items": tiids, 
+                "title":"My Collection number " + str(collection_num)
+            }
+        ),
+        content_type="application/json"
+    )
+    print "returning collection id: " + resp.text
+    return resp.text[1:-1] #remove quotes
+    
+def poll_collection_tiids(collection_id):
+    resp = requests.get(base_url+"/collection/"+collection_ids)
+    tiids = json.loads(resp.text)
+    tiids_str = ",".join(tiids)
+    still_updating = True
+    while still_updating:
+        print "running update."
+        url = base_url+"/items/"+tiids_str
+        requests.get(url)
+        if resp.status_code == 200:
+            still_updating = False
+        
+        sleep(.5)
+    
+
+def test_one_user(collection_size):
+    ids = id_list[0:collection_size]
+    print ids
+    tiids = create_items(ids)
+#    collection_id = create_collection(tiids)
+#    poll_collection_tiids(collection_id)
+    
+
+print "starting test..."
+test_one_user(1)
