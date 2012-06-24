@@ -371,13 +371,12 @@ class ProviderMetricsThread(ProviderThread):
                         self.dao.save(snap)
 
         # update provider counter so api knows when all have finished
-        logger.debug("%20s: done with metrics for %s, bumping counter"
-            % (self.thread_id, item.id))
-
+        #logger.debug("%20s: done with metrics for %s, bumping counter"
+        #    % (self.thread_id, item.id))
         self.dao.bump_providers_run_counter(item.id)
 
-        logger.debug("%20s: done with metrics for %s, bump counter done"
-            % (self.thread_id, item.id))
+        #logger.debug("%20s: done with metrics for %s, bump counter done"
+        #    % (self.thread_id, item.id))
 
 
 def main():
