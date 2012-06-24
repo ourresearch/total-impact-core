@@ -129,6 +129,7 @@ class Dao(object):
             return False
         else:
             bump_url = os.environ["CLOUDANT_URL"] + "/" + os.environ["CLOUDANT_DB"] + "/_design/queues/_update/bump-providers-run-counter/" + item_id
+            logger.info("bump_url = %s" %(bump_url))
 
             try:
                 logger.info("bumping ProviderRunCounter")
