@@ -15,7 +15,7 @@ installation
 
 (see https://toolbelt.heroku.com/ for instructions)
 
-### make sure to add ssh key
+### add ssh key
 
     heroku keys:add ~/.ssh/id_rsa.pub # (or path to your public key, ex: heroku keys:add ~/.ssh/github_rsa.pub)
 
@@ -110,21 +110,27 @@ use
 deploying to heroku
 ===================
 
-    git push heroku master # or: git push staging master; or, “git push newfeaturebranch staging:master” to push from your “newfeaturebranch” branch to the “master” branch on the heroku staging server
+    git push heroku master 
+    # or: git push staging master
+    # or: git push newfeaturebranch staging:master
 
 ### view heroku logs
-    heroku logs --tail --remote staging|heroku
+
+    heroku logs --tail --remote staging # or --remote heroku
 
 
-    first-time installation
+first-time installation
+-----------------------
 
-    This shouldn’t ever need to be done again, but just in case...
+This shouldn’t ever need to be done again, but just in case...
 
 ### Create Heroku configs if necessary
+
     # See the env vars above. here's one example:
-    heroku config:add LOG_LEVEL=debug --remote staging
+    heroku config:add LOG_LEVEL=debug # or --remote heroku
 
 ### Add or remove workers
+
     cd total-impact-core
-    heroku ps:scale web=1 worker=1
+    heroku ps:scale web=1 worker=1 # or --remote heroku
 
