@@ -1,4 +1,4 @@
-import pdb, json, uuid, couchdb, time, copy, logging
+import pdb, json, uuid, couchdb, time, copy, logging, os, urllib2, random
 from couchdb import ResourceNotFound
 from totalimpact import default_settings
 
@@ -122,4 +122,19 @@ class Dao(object):
         may contain this object.'''
 
         return None
+
+    def bump_providers_run_counter(self, item_id):
+        done_updating = False
+        while not done_updating:
+            bump_url = os.environ["CLOUDANT_URL"] + "/" + os.environ["CLOUDANT_DB"] + "/_design/queues/_update/bump-providers-run-counter/" + item_id
+
+            bump_request = urllib2.Request(bump_url)
+            data = "" #blank data to force a post
+            try:
+                bump_response = urllib2.urlopen(bump_request, data)
+                done_updating = True
+            except urllib2.HTTPError, e:
+                logger.info("conflict updating ProviderRunCounter, trying again, status_code %s" %(str(e.code)))
+            except urllib2.URLError, e:
+                logger.info("conflict updating ProviderRunCounter, trying again, status_code %s" %(str(e.args)))
 
