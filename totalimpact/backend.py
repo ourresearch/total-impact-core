@@ -35,7 +35,7 @@ class TotalImpactBackend(object):
     def _spawn_threads(self):
         
         for provider in self.providers:
-            if not provider.provides_metrics:                
+            if not provider.provides_metrics:                            
                 continue
 
             thread_count = self._get_num_workers_from_config(
@@ -360,23 +360,26 @@ class ProviderMetricsThread(ProviderThread):
     def process_item(self, item):
         # used by logging
 
-        (success, metrics) = self.process_item_for_provider(item, 
-            self.provider, 'metrics')
-        
-        if success:
-            if metrics:
-                for metric_name in metrics.keys():
-                    if metrics[metric_name]:
-                        snap = ItemFactory.build_snap(item.id, metrics[metric_name], metric_name)
-                        self.dao.save(snap)
+        try:
+            (success, metrics) = self.process_item_for_provider(item, 
+                self.provider, 'metrics')
 
-        # update provider counter so api knows when all have finished
-        #logger.debug("%20s: done with metrics for %s, bumping counter"
-        #    % (self.thread_id, item.id))
-        self.dao.bump_providers_run_counter(item.id)
+            if success:
+                if metrics:
+                    for metric_name in metrics.keys():
+                        if metrics[metric_name]:
+                            snap = ItemFactory.build_snap(item.id, metrics[metric_name], metric_name)
+                            self.dao.save(snap)
+        except ProviderError:
+            pass
+        finally:
+            # update provider counter so api knows when all have finished
+            logger.debug("%20s: done with metrics for %s, bumping counter"
+                % (self.thread_id, item.id))
+            self.dao.bump_providers_run_counter(item.id)
 
-        #logger.debug("%20s: done with metrics for %s, bump counter done"
-        #    % (self.thread_id, item.id))
+            logger.debug("%20s: done with metrics for %s, bump counter DONE"
+                % (self.thread_id, item.id))
 
 
 def main():

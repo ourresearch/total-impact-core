@@ -1,4 +1,4 @@
-import pdb, json, uuid, couchdb, time, copy, logging, os, urllib2, random
+import pdb, json, uuid, couchdb, time, copy, logging, os, requests, random
 from couchdb import ResourceNotFound
 from totalimpact import default_settings
 
@@ -123,18 +123,24 @@ class Dao(object):
 
         return None
 
-    def bump_providers_run_counter(self, item_id):
-        done_updating = False
-        while not done_updating:
+    def bump_providers_run_counter(self, item_id, tries=0):
+        if (tries >= 10):
+            logger.error("Ran out of tries updating ProviderRunCounter, failing")
+            return False
+        else:
             bump_url = os.environ["CLOUDANT_URL"] + "/" + os.environ["CLOUDANT_DB"] + "/_design/queues/_update/bump-providers-run-counter/" + item_id
 
-            bump_request = urllib2.Request(bump_url)
-            data = "" #blank data to force a post
             try:
-                bump_response = urllib2.urlopen(bump_request, data)
-                done_updating = True
-            except urllib2.HTTPError, e:
-                logger.info("conflict updating ProviderRunCounter, trying again, status_code %s" %(str(e.code)))
-            except urllib2.URLError, e:
-                logger.info("conflict updating ProviderRunCounter, trying again, status_code %s" %(str(e.args)))
+                logger.info("bumping ProviderRunCounter")
+                bump_response = requests.post(bump_url, data="")
+                print bump_response.text
+                print bump_response.status_code
+                # success
+                logger.info("bumping ProviderRunCounter DONE")
+                if bump_response.status_code==201:
+                    return True
+            except Exception, e:
+                logger.info("conflict updating ProviderRunCounter, trying again, status_code %s" %(str(e)))
+            # not success because didn't return, so try again
+            self.bump_providers_run_counter(item_id, tries+1)
 
