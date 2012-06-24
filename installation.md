@@ -96,15 +96,15 @@ use
 
 ### running in foreman
 
-foreman start --port 5000
-foreman start --port 5001
+    foreman start --port 5000
+    foreman start --port 5001
 
 ### running using the staging server
 
-heroku config:add API_ROOT=api.total-impact-core-staging.herokuapp.com --remote staging
-heroku ps:scale web=1 worker=1 --remote staging
-# don’t forget to spin down the staging server when you’re done: 
-heroku ps:scale web=0 worker=0 --remote staging
+    heroku config:add API_ROOT=api.total-impact-core-staging.herokuapp.com --remote staging
+    heroku ps:scale web=1 worker=1 --remote staging
+    # don’t forget to spin down the staging server when you’re done: 
+    heroku ps:scale web=0 worker=0 --remote staging
 
 
 deploying to heroku
