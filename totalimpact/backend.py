@@ -2,7 +2,7 @@
 
 import threading, time, sys, copy, datetime, logging, os, traceback
 from totalimpact import default_settings, dao
-from totalimpact.queue import Queue, QueueMonitor
+from totalimpact.tiqueue import Queue, QueueMonitor
 from totalimpact.models import Error, Item, Collection, ItemFactory, CollectionFactory
 from totalimpact.pidsupport import StoppableThread
 from totalimpact.providers.provider import ProviderError,  Provider, ProviderFactory

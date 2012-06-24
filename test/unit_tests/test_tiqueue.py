@@ -1,4 +1,4 @@
-from totalimpact.queue import Queue
+from totalimpact.tiqueue import Queue
 from ..mocks import ItemMock
 from nose.tools import nottest, assert_equals
 

@@ -1,4 +1,4 @@
-import time, datetime, logging, threading, simplejson, copy
+import time, datetime, logging, threading, simplejson, copy, couchdb
 from totalimpact import default_settings
 from totalimpact.models import Item, ItemFactory
 from totalimpact.pidsupport import StoppableThread
@@ -28,7 +28,15 @@ class QueueMonitor(StoppableThread):
             viewname = 'queues/needs_aliases'
             res = self.dao.view(viewname)
 
-            for row in res.rows:
+            try:
+                rows = res.rows
+            except couchdb.ResourceNotFound:
+                log.warning("%20s can't find database. Sleeping then will try again" 
+                    % ("QueueMonitor"))
+                time.sleep(0.5)
+                continue
+
+            for row in rows:
                 item_doc = copy.deepcopy(row["value"])
 
                 item = ItemFactory.get_item_object_from_item_doc(self.dao, 
