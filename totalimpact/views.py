@@ -81,7 +81,7 @@ def create_item(namespace, nid):
     item = ItemFactory.make_simple(mydao)
     item.aliases.add_alias(namespace, nid)
     item.needs_aliases = datetime.datetime.now().isoformat()
-    item.num_provider_responses = 0
+    item.providersRunCounter = 0
     item.save()
 
     try:
@@ -96,7 +96,7 @@ def update_item(tiid):
     # set the needs_aliases timestamp so it will go on queue for update
     #item = ItemFactory.get_item_object_from_item_doc(mydao, item_doc)
     item_doc["needs_aliases"] = datetime.datetime.now().isoformat()
-    item_doc["num_provider_responses"] = 0
+    item_doc["providersRunCounter"] = 0
     item_doc["id"] = item_doc["_id"]
     mydao.save(item_doc)
 
@@ -175,11 +175,14 @@ def item_namespace_post(namespace, nid):
 
 def is_reporting_complete(item_dict):
     try:
-        num_providers_responded = item_dict["num_provider_responses"]
+        num_providers_responded = item_dict["providersRunCounter"]
     except KeyError:
         num_providers_responded = 0
-    num_providers = len(default_settings.PROVIDERS)
-    reporting_complete = (num_providers_responded == num_providers)
+    num_providers_with_metrics = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
+    
+    reporting_complete = (num_providers_responded == num_providers_with_metrics)
+    logger.debug("In is_reporting_complete with num_responded=%i, total_providers=%i" %(num_providers_responded, num_providers_with_metrics))
+
     return reporting_complete
 
 
@@ -198,8 +201,7 @@ def item(tiid, format=None):
     if not item_dict:
         abort(404)
     
-    is_reporting_complete = get_provider_complete_response_code(item_dict)
-    if is_reporting_complete:
+    if is_reporting_complete(item_dict):
         response_code = 200
     else:
         response_code = 210 # not complete yet
