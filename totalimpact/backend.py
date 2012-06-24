@@ -35,7 +35,7 @@ class TotalImpactBackend(object):
     def _spawn_threads(self):
         
         for provider in self.providers:
-            if not provider.provides_metrics:
+            if not provider.provides_metrics:                
                 continue
 
             thread_count = self._get_num_workers_from_config(
@@ -182,6 +182,11 @@ class ProviderThread(StoppableThread):
         provides_method_name = "provides_" + method_name
         provides_method_to_call = getattr(provider, provides_method_name)
         if not provides_method_to_call:
+
+            if method_name == "metrics":
+                # bump it because doesn't support it, not going to call it
+                self.dao.bump_providers_run_counter(item.id)
+
             logger.debug("%20s: skipping %s %s %s for %s, does not provide" 
                 % (self.thread_id, provider, method_name, str(aliases), tiid))
             return None
@@ -328,11 +333,11 @@ class ProvidersAliasThread(ProviderThread):
                     % (self.thread_id, item.id, item.aliases.get_aliases_list()))
 
             # Time to add this to the metrics queue
-            self.queue.add_to_metrics_queues(item)
             logger.debug("%20s: FULL ITEM on metrics queue %s %s"
                 % (self.thread_id, item.id,item.as_dict()))
             logger.debug("%20s: added to metrics queues complete for item %s " % (self.thread_id, item.id))
             self.dao.save(item.as_dict())
+            self.queue.add_to_metrics_queues(item)
 
 
     
@@ -350,6 +355,8 @@ class ProviderMetricsThread(ProviderThread):
         self.dao = dao
 
 
+
+
     def process_item(self, item):
         # used by logging
 
@@ -362,11 +369,15 @@ class ProviderMetricsThread(ProviderThread):
                     if metrics[metric_name]:
                         snap = ItemFactory.build_snap(item.id, metrics[metric_name], metric_name)
                         self.dao.save(snap)
-        # tell api you are done by reporting update count in item
-        item_doc = self.dao.get(item.id)
-        item_doc["num_provider_responses"] += 1
-        item_doc["id"] = item_doc["_id"]
-        self.dao.save(item_doc)
+
+        # update provider counter so api knows when all have finished
+        logger.debug("%20s: done with metrics for %s, bumping counter"
+            % (self.thread_id, item.id))
+
+        self.dao.bump_providers_run_counter(item.id)
+
+        logger.debug("%20s: done with metrics for %s, bump counter done"
+            % (self.thread_id, item.id))
 
 
 def main():
