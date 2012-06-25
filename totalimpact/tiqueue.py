@@ -58,10 +58,6 @@ class QueueMonitor(StoppableThread):
                 del item_doc["needs_aliases"]
                 delattr(item, "needs_aliases")  #not sure this is needed
 
-                # add the number of providers with metrics, so can compare it
-                #  to estimate progress of reporting metrics
-                item_doc["providersWithMetricsCount"] = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-                item.providersWithMetricsCount = item_doc["providersWithMetricsCount"]
 
                 item_doc["id"] = item.id
 
