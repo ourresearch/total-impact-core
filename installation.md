@@ -30,6 +30,11 @@ installation
     sudo apt-get install libxslt1-dev 
     sudo apt-get install python2.7-dev
 
+### Install memcache stuff (this is for osx...)
+    brew install memcache
+    brew install libmemcached
+    pip install pylibmc
+
 ### Clone the repos
 
     git clone git://github.com/total-impact/total-impact-core
