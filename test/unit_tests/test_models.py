@@ -117,39 +117,7 @@ TEST_PROVIDER_CONFIG = {
     "wikipedia": {}
 }
 
-TEST_DB_NAME = "test_models"
-
-
-class TestSaveable():
-    def setUp(self):
-        pass
-
-    def test_id_gets_set(self):
-        s = models.Saveable(dao="dao")
-        assert_equals(len(s.id), 32)
-
-        s2 = models.Saveable(dao="dao", id="123")
-        assert_equals(s2.id, "123")
-
-    def test_as_dict(self):
-        s = models.Saveable(dao="dao")
-        s.foo = "a var"
-        s.bar = "another var"
-        assert_equals(s.as_dict()['foo'], "a var")
-
-    def test_as_dict_recursive(self):
-        s = models.Saveable(dao="dao")
-        class TestObj:
-            pass
-        
-        foo =  TestObj()
-        foo.bar = "I'm in foo!"
-
-        s.constituent_dict = {}
-        s.constituent_dict["foo_obj"] = foo
-
-        assert_equals(s.as_dict()['constituent_dict']['foo_obj']['bar'], foo.bar)
-
+TEST_DB_NAME = "ti"
 
 
 class TestItemFactory():
@@ -159,7 +127,7 @@ class TestItemFactory():
 
     def test_make_new(self):
         '''create an item from scratch.'''
-        item = models.ItemFactory.make_simple(self.d)
+        item = models.ItemFactory.make_new_item(self.d)
         assert_equals(len(item.id), 32)
         assert item.created < datetime.datetime.now().isoformat()
         assert_equals(item.aliases.__class__.__name__, "Aliases")
@@ -208,37 +176,6 @@ class TestItemFactory():
         genre = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "unknown")
 
-
-
-
-class TestItem():
-
-    def setUp(self):
-        self.d = MockDao()
-        self.d.setResponses([deepcopy(ITEM_DATA)])
-
-
-    def test_mock_dao(self):
-        assert_equals(self.d.get("123"), ITEM_DATA)
-
-    def ITEM_DATA_init(self):
-        i = models.Item(self.d)
-        assert_equals(len(i.id), 32) # made a uuid, yay
-
-    def ITEM_DATA_save(self):
-        i = models.Item(self.d, id="123")
-
-        # load all the values from the item_DATA into the test item.
-        for key in ITEM_DATA:
-            setattr(i, key, ITEM_DATA[key])
-        i.save()
-
-        assert_equals(i.aliases, ALIAS_DATA)
-
-        seed = deepcopy(ITEM_DATA)
-        seed["_id"] = "123"
-        # the fake dao puts the doc-to-save in the self.input var.
-        assert_equals(self.input, seed)
 
 class TestCollectionFactory():
 
