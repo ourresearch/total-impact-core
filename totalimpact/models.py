@@ -106,16 +106,9 @@ class ItemFactory():
 
     @classmethod
     def is_currently_updating(cls, providersRunCounter, providersWithMetricsCount):
-        try:
-            num_providers_responded = providersRunCounter
-            num_providers_extant = providersWithMetricsCount
-        except KeyError:
-            logger.debug("In is_currently_updating; got undefined args, returning False.")
-            return False
-            
         
-        is_currently_updating = (num_providers_responded != num_providers_extant)
-        logger.debug("In is_currently_updating with num_responded=%i, total_providers=%i" %(num_providers_responded, num_providers_extant))
+        is_currently_updating = (providersRunCounter != providersWithMetricsCount)
+        logger.debug("In is_currently_updating with num_responded=%i, total_providers=%i" %(providersRunCounter, providersWithMetricsCount))
         return is_currently_updating
 
     @classmethod
@@ -133,10 +126,14 @@ class ItemFactory():
         except KeyError:
             item["providersRunCounter"] = 0
 
-        item["currently_updating"] = cls.is_currently_updating(
-            item["providersRunCounter"],
-            item["providersWithMetricsCount"]
-            )
+        try:
+            item["currently_updating"] = cls.is_currently_updating(
+                item["providersRunCounter"],
+                item["providersWithMetricsCount"]
+                )
+        except KeyError:
+            item["currently_updating"] = False
+            
         item["metrics"] = {} #not using what is in stored item for this
         for snap in snaps:
             metric_name = snap["metric_name"]
