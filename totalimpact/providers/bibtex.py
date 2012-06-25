@@ -17,7 +17,7 @@ class Bibtex(Provider):
     url = ""
     descr = ""
     member_items_url_template = "https://api.github.com/users/%s/repos"
-  
+    max_entries = 10
 
     def __init__(self):
         super(Bibtex, self).__init__()
@@ -44,7 +44,8 @@ class Bibtex(Provider):
         biblio = {}
         cleaned_string = query_string.replace("\&", "").replace("%", "")
         entries = ["@"+entry for entry in cleaned_string.split("@")]
-        for entry in entries:
+        num_entries_to_parse = min(self.max_entries, len(entries))
+        for entry in entries[0:num_entries_to_parse]:
             try:
                 entry_parsed = parse_string(entry)
                 biblio.update(entry_parsed)
