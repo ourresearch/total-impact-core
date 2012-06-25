@@ -121,10 +121,6 @@ class ItemFactory():
         item["biblio"]['genre'] = cls.decide_genre(item_doc['aliases'])
         item["created"] = item_doc["created"]
         item["last_modified"] = item_doc["last_modified"]
-        try:
-            item["providersRunCounter"] = item_doc["providersRunCounter"]
-        except KeyError:
-            item["providersRunCounter"] = 0
 
         try:
             item["currently_updating"] = cls.is_currently_updating(
@@ -132,7 +128,7 @@ class ItemFactory():
                 item["providersWithMetricsCount"]
                 )
         except KeyError:
-            item["currently_updating"] = False
+            item["currently_updating"] = True
             
         item["metrics"] = {} #not using what is in stored item for this
         for snap in snaps:
