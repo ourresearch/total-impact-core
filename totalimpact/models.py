@@ -4,131 +4,42 @@ from totalimpact import default_settings
 from totalimpact.providers.provider import ProviderFactory
 import time, uuid, json, hashlib, inspect, re, copy, string, random, datetime
 
-import threading
-from pprint import pprint
-
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
 
 import logging
 logger = logging.getLogger('ti.models')
 
-def todict(obj, classkey=None, ignore=None):
-    """ Convert an object to a diff representation 
-        Recipe from http://stackoverflow.com/questions/1036409/recursively-convert-python-object-graph-to-dictionary
-        Added in an extra parameter 'ignore' as 
-        copying the dao is horribly horribly slow
-    """
-    if isinstance(obj, dict):
-        for k in obj.keys():
-            obj[k] = todict(obj[k], classkey, ignore)
-        return obj
-    elif hasattr(obj, "__iter__"):
-        return [todict(v, classkey) for v in obj]
-    elif hasattr(obj, "__dict__"):
-        data = dict([(key, todict(value, classkey, ignore)) 
-            for key, value in obj.__dict__.iteritems() 
-            if not callable(value) and not key.startswith('_')
-            and not key in ignore])
-        if classkey is not None and hasattr(obj, "__class__"):
-            data[classkey] = obj.__class__.__name__
-        return data
-    else:
-        return obj
-
-class GlobalItemLock:
-
-    def __init__(self):
-        self.lock = threading.Lock()
-        self.itemLock = {}
-
-    def getItemLock(self, item_id):
-        self.lock.acquire()
-        if not self.itemLock.has_key(item_id):
-            self.itemLock[item_id] = threading.Lock()
-        self.lock.release()
-        return self.itemLock[item_id]
- 
-
-itemlock = GlobalItemLock()
-
-
-class Saveable(object):
-
-    def __init__(self, dao, id=None):
-        self.dao = dao
-
-        if id is None:
-            self.id = uuid.uuid1().hex
-        else:
-            self.id = id
-
-    def as_dict(self, obj=None, classkey=None):
-        ''' Recursively convert this object's members into a dictionary structure for 
-            serialisation to the database.
-        '''
-        dict_repr = todict(self, ignore=['dao'])
-        return dict_repr
-
-
-    def save(self):
-        return self.save_simple()
-
-    def save_simple(self):
-        retry = True
-        import couchdb
-
-        logger.info("IN SIMPLE SAVE with item %s" %self.id)
-
-        while retry:
-            try:
-                res = self.dao.save(self.as_dict())
-                retry = False
-            except couchdb.ResourceConflict, e:
-                logger.info("Couch conflict, will retry")
-
-        return res        
-
-    def delete(self):
-        self.dao.delete(self.id)
-        return True
-
-
-class Item(Saveable):
-    pass
-
 
 class ItemFactory():
-    #TODO this should subclass a SaveableFactory
 
-    item_class = Item
     all_static_meta = ProviderFactory.get_all_static_meta()
 
-    @classmethod
-    def is_currently_updating(cls, providersRunCounter, providersWithMetricsCount):
-        
-        is_currently_updating = (providersRunCounter != providersWithMetricsCount)
-        logger.debug("In is_currently_updating with num_responded=%i, total_providers=%i" %(providersRunCounter, providersWithMetricsCount))
-        return is_currently_updating
 
     @classmethod
-    def build_item(cls, item_doc, snaps):
+    def get_item(cls, dao, tiid):
+        res = dao.view("queues/by_tiid_with_snaps")
+        rows = res[[tiid,0]:[tiid,1]].rows
+
+        if not rows:
+            return None
+        else:
+            item_doc = rows[0]["value"]
+            snaps = [row["value"] for row in rows[1:]]
+            try:
+                item = cls.build_item_for_client(item_doc, snaps)
+            except Exception, e:
+                item = None
+                logger.error("Exception %s: Unable to build item %s, %s, %s" % (e, tiid, str(item_doc), str(snaps)))
+        return item
+
+    @classmethod
+    def build_item_for_client(cls, item_doc, snaps):
         item = {}
-        item["type"] = "item"
         item["id"] = item_doc["_id"]
-        item["aliases"] = item_doc["aliases"]
-        item["biblio"] = item_doc["biblio"]
         item["biblio"]['genre'] = cls.decide_genre(item_doc['aliases'])
-        item["created"] = item_doc["created"]
-        item["last_modified"] = item_doc["last_modified"]
+        item["currently_updating"] = (item["currently_updating"] != item["providersWithMetricsCount"])
 
-        try:
-            item["currently_updating"] = cls.is_currently_updating(
-                item["providersRunCounter"],
-                item["providersWithMetricsCount"]
-                )
-        except KeyError:
-            item["currently_updating"] = True
             
         item["metrics"] = {} #not using what is in stored item for this
         for snap in snaps:
@@ -139,6 +50,8 @@ class ItemFactory():
             item["metrics"][metric_name]["provenance_url"] = snap["drilldown_url"]
             item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
         return item
+    
+
 
     @classmethod
     def build_snap(cls, tiid, metric_value_drilldown, metric_name):
@@ -153,54 +66,20 @@ class ItemFactory():
         return snap        
 
     @classmethod
-    def make_simple(cls, dao):
-        item = cls.item_class(dao=dao)
+    def make_new_item(cls):
+        item = {}
         
         # make all the top-level stuff
         now = datetime.datetime.now().isoformat()
-        item.aliases = Aliases()
-        item.biblio = {}
-        item.last_modified = now
-        item.created = now
-        item.type = "item"
+        item["aliases"] = Aliases()
+        item["biblio"] = {}
+        item["last_modified"] = now
+        item["created"] = now
+        item["type"] = "item"
+        item["providersRunCounter"] = 0
+        item["providersWithMetricsCount"] = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
 
         return item
-
-
-    @classmethod
-    def get_simple_item(cls, dao, tiid):
-        res = dao.view("queues/by_tiid_with_snaps")
-        rows = res[[tiid,0]:[tiid,1]].rows
-
-        if not rows:
-            return None
-        else:
-            item_doc = rows[0]["value"]
-            snaps = [row["value"] for row in rows[1:]]
-            try:
-                item = cls.build_item(item_doc, snaps)
-            except Exception, e:
-                item = None
-                logger.error("Exception %s: Unable to build item %s, %s, %s" % (e, tiid, str(item_doc), str(snaps)))
-        return item
-
-    @classmethod
-    def get_item_object_from_item_doc(cls, dao, item_doc):
-        item = Item(dao, id=item_doc["_id"])
-
-        if item_doc is None:
-            logger.warning("Unable to load item %s" % id)
-            raise LookupError
-
-        # first, just copy everything from the item_doc the DB gave us
-        for k in item_doc:
-            if k not in ["_id", "_rev"]:
-                setattr(item, k, item_doc[k])
-
-        # the aliases property needs to be an Aliases obj, not a dict.
-        item.aliases = Aliases(seed=item_doc['aliases'])
-        return item
-
 
 
     @classmethod
@@ -311,39 +190,6 @@ class Collection(Saveable):
             self.item_tiids = []
         if item_id in self.item_tiids:
             self.item_tiids.remove(item_id)
-
-
-
-class Biblio(object):
-    """
-    {
-        "title": "An extension of de Finetti's theorem", 
-        "journal": "Advances in Applied Probability", 
-        "author": [
-            "Pitman, J"
-        ], 
-        "collection": "pitnoid", 
-        "volume": "10", 
-        "id": "p78", 
-        "year": "1978", 
-        "pages": "268 to 270"
-    }
-    """
-    #TODO remove the "data" property, bringing this into parallel with teh
-    # other stuff in this module.
-    
-    def __init__(self, seed=None):
-        self.data = seed if seed is not None else ""
-            
-    def __str__(self):
-        return str(self.data)
-
-    def __repr__(self):
-        return str(self.data)
-
-    def as_dict(self):
-        # renamed for consistancy with Items(); TODO cleanup old one
-        return self.data
 
 
 class Aliases(object):
