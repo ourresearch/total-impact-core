@@ -104,12 +104,6 @@ class ItemFactory():
     item_class = Item
     all_static_meta = ProviderFactory.get_all_static_meta()
 
-    @classmethod
-    def is_currently_updating(cls, providersRunCounter, providersWithMetricsCount):
-        
-        is_currently_updating = (providersRunCounter != providersWithMetricsCount)
-        logger.debug("In is_currently_updating with num_responded=%i, total_providers=%i" %(providersRunCounter, providersWithMetricsCount))
-        return is_currently_updating
 
     @classmethod
     def build_item(cls, item_doc, snaps):
@@ -121,14 +115,8 @@ class ItemFactory():
         item["biblio"]['genre'] = cls.decide_genre(item_doc['aliases'])
         item["created"] = item_doc["created"]
         item["last_modified"] = item_doc["last_modified"]
-
-        try:
-            item["currently_updating"] = cls.is_currently_updating(
-                item["providersRunCounter"],
-                item["providersWithMetricsCount"]
-                )
-        except KeyError:
-            item["currently_updating"] = True
+        
+        item["currently_updating"] = (item_doc["providersRunCounter"] != item_doc["providersWithMetricsCount"])
             
         item["metrics"] = {} #not using what is in stored item for this
         for snap in snaps:

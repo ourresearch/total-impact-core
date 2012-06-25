@@ -40,7 +40,7 @@ installation
     git clone git://github.com/total-impact/total-impact-core
     git clone git://github.com/total-impact/total-impact-webapp
 
-### paste env vars into .bashrc 
+### paste env vars into .bash_profile 
 
     sudo nano ~/.bashrc
 
