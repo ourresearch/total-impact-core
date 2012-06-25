@@ -1,4 +1,4 @@
-import pdb, json, uuid, couchdb, time, copy, logging, os, requests, random
+import pdb, json, uuid, couchdb, time, copy, logging, couchdb
 from couchdb import ResourceNotFound
 from totalimpact import default_settings
 
@@ -124,25 +124,19 @@ class Dao(object):
         return None
 
     def bump_providers_run_counter(self, item_id, tries=0):
-        if (tries >= 10):
-            logger.error("Ran out of tries updating ProviderRunCounter, failing")
-            return False
-        else:
-            bump_url = os.environ["CLOUDANT_URL"] + "/" + os.environ["CLOUDANT_DB"] + "/_design/queues/_update/bump-providers-run-counter/" + item_id
-            bump_url = bump_url.replace("https://", "")
-            logger.info("bump_url = %s" %(bump_url))
-
-            try:
-                logger.info("bumping ProviderRunCounter")
-                bump_response = requests.post(bump_url, data="")
-                print bump_response.text
-                print bump_response.status_code
-                # success
+        bump = self.db.resource("_design", "queues", "_update", "bump-providers-run-counter")
+        try:
+            (status_code, b, c) = bump.post(item_id)
+            if status_code == 201:
                 logger.info("bumping ProviderRunCounter DONE")
-                if bump_response.status_code==201:
-                    return True
-            except Exception, e:
-                logger.info("conflict updating ProviderRunCounter, trying again, status_code %s" %(str(e)))
-            # not success because didn't return, so try again
-            self.bump_providers_run_counter(item_id, tries+1)
+                return True
+        except couchdb.ResourceConflict:
+            #error handling below
+            pass
+
+        if tries > 10:
+            logger.error("FAILING bumping ProviderRunCounter, tried 10 times")
+            return False
+        logger.warning("bumping ProviderRunCounter, trying again")
+        self.bump_providers_run_counter(item_id, tries+1)
 
