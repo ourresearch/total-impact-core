@@ -79,11 +79,14 @@ def tiid(ns, nid):
 def create_item(namespace, nid):
     logger.debug("In create_item with alias" + str((namespace, nid)))
     item = ItemFactory.make_simple(mydao)
-    item.aliases.add_alias(namespace, nid)
-    item.needs_aliases = datetime.datetime.now().isoformat()
+    
+    # set this so we know when it's still updating later on
     item.providersRunCounter = 0
     item.providersWithMetricsCount = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-
+    
+    item.aliases.add_alias(namespace, nid)
+    item.needs_aliases = datetime.datetime.now().isoformat()
+    
     item.save()
 
     try:
@@ -98,10 +101,11 @@ def update_item(tiid):
     # set the needs_aliases timestamp so it will go on queue for update
     #item = ItemFactory.get_item_object_from_item_doc(mydao, item_doc)
     item_doc["needs_aliases"] = datetime.datetime.now().isoformat()
-    
+
+    # set this so we know when it's still updating later on
     item_doc["providersRunCounter"] = 0
     item_doc["providersWithMetricsCount"] = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-
+    
     item_doc["id"] = item_doc["_id"]
     mydao.save(item_doc)
 
