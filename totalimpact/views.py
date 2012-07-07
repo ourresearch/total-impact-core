@@ -92,7 +92,7 @@ def create_item(namespace, nid):
     try:
         return item.id
     except AttributeError:
-        abort(500)     
+        abort(500)    
 
 def update_item(tiid):
     logger.debug("In update_item with tiid " + tiid)
