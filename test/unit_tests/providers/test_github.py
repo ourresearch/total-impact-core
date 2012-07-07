@@ -24,7 +24,7 @@ class TestGithub(ProviderTestCase):
     testitem_biblio = ("github", "egonw,cdk")
 
     def setUp(self):
-        ProviderTestCase.setUp(self)
+        ProviderTestCase.setUp(self) 
 
     def test_is_relevant_alias(self):
         # ensure that it matches an appropriate ids
@@ -33,8 +33,9 @@ class TestGithub(ProviderTestCase):
         assert_equals(self.provider.is_relevant_alias(("doi", "NOT A GITHUB ID")), False)
   
     def test_extract_metrics_success(self):
-        f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
-        metrics_dict = self.provider._extract_metrics(f.read())
+        returned = open(SAMPLE_EXTRACT_METRICS_PAGE, "r").read()
+        print returned
+        metrics_dict = self.provider._extract_metrics(returned)
         assert_equals(metrics_dict["github:watchers"], 7)
 
     def test_extract_members_success(self):        
