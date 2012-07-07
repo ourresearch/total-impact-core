@@ -213,16 +213,6 @@ class ItemFactory():
         else:
             return "unknown"
 
-    @classmethod
-    def get_metric_names(self, providers_config):
-        full_metric_names = []
-        providers = ProviderFactory.get_providers(providers_config)
-        for provider in providers:
-            metric_names = provider.metric_names()
-            for metric_name in metric_names:
-                full_metric_names.append(provider.provider_name + ':' + metric_name)
-        return full_metric_names
-
 
 
 

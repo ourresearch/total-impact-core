@@ -60,9 +60,10 @@ class TestBackend():
     
     def setUp(self):
         self.config = None #placeholder
-        TEST_PROVIDER_CONFIG = {
-            "wikipedia": {}
-        }
+        TEST_PROVIDER_CONFIG = [
+            ("wikipedia", { "workers":3 }),
+        ]
+
 
         self.d = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
