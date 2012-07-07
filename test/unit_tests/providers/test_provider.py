@@ -10,10 +10,10 @@ sampledir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_pro
 
 class Test_Provider():
 
-    TEST_PROVIDER_CONFIG = {
-        "wikipedia": {},
-        "mendeley": {}
-    }
+    TEST_PROVIDER_CONFIG = [
+        ("mendeley", { "workers":3 }),
+        ("wikipedia", { "workers":3 }),
+    ]
     
     TEST_JSON = """{"repository":{"homepage":"","watchers":7,"has_downloads":true,"fork":false,"language":"Java","has_issues":true,"has_wiki":true,"forks":0,"size":4480,"private":false,"created_at":"2008/09/29 04:26:42 -0700","name":"gtd","owner":"egonw","description":"Git-based ToDo tool.","open_issues":2,"url":"https://github.com/egonw/gtd","pushed_at":"2012/02/28 10:21:26 -0800"}}"""
 
