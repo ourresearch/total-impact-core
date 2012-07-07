@@ -1,5 +1,5 @@
 import pdb, json, uuid, couchdb, time, copy, logging, couchdb
-from couchdb import ResourceNotFound
+from couchdb import ResourceNotFound, PreconditionFailed
 from totalimpact import default_settings
 
 # set up logging
@@ -14,7 +14,7 @@ class Dao(object):
 
         try:
             self.db = self.couch[ db_name ]
-        except (ValueError, ResourceNotFound):
+        except (ResourceNotFound):
             self.create_db(db_name)
         except LookupError:
             raise LookupError("CANNOT CONNECT TO DATABASE, maybe doesn't exist?")
