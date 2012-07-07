@@ -1,1 +1,35 @@
-{"repository":{"homepage":"","watchers":7,"has_downloads":true,"fork":false,"language":"Java","has_issues":true,"has_wiki":true,"forks":0,"size":4480,"private":false,"created_at":"2008/09/29 04:26:42 -0700","name":"gtd","owner":"egonw","description":"Git-based ToDo tool.","open_issues":2,"url":"https://github.com/egonw/gtd","pushed_at":"2012/02/28 10:21:26 -0800"}}
+{
+  "homepage": "",
+  "language": "Java",
+  "pushed_at": "2012-02-28T18:21:26Z",
+  "owner": {
+    "gravatar_id": "c3096199842c5b16aec27b728229e0e9",
+    "login": "egonw",
+    "url": "https://api.github.com/users/egonw",
+    "id": 26721,
+    "avatar_url": "https://secure.gravatar.com/avatar/c3096199842c5b16aec27b728229e0e9?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-140.png"
+  },
+  "open_issues": 2,
+  "forks": 0,
+  "svn_url": "https://github.com/egonw/gtd",
+  "description": "Git-based ToDo tool.",
+  "full_name": "egonw/gtd",
+  "url": "https://api.github.com/repos/egonw/gtd",
+  "master_branch": "master",
+  "has_issues": true,
+  "mirror_url": null,
+  "has_downloads": true,
+  "clone_url": "https://github.com/egonw/gtd.git",
+  "ssh_url": "git@github.com:egonw/gtd.git",
+  "created_at": "2008-09-29T11:26:42Z",
+  "size": 4480,
+  "fork": false,
+  "html_url": "https://github.com/egonw/gtd",
+  "name": "gtd",
+  "git_url": "git://github.com/egonw/gtd.git",
+  "private": false,
+  "updated_at": "2012-03-26T00:03:20Z",
+  "id": 57495,
+  "has_wiki": true,
+  "watchers": 7
+}

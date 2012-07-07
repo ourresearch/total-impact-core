@@ -507,6 +507,7 @@ def _load_json(page):
     try:
         data = simplejson.loads(page) 
     except simplejson.JSONDecodeError, e:
+        logger.error("json decode fail, '" + e.msg + "'. Here's the string: " + page)
         raise ProviderContentMalformedError
     return(data)
 
