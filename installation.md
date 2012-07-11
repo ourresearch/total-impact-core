@@ -90,7 +90,7 @@ add this line at the end of your `/etc/syslog.conf` (use tab, not spaces, to sep
     
 When you run locally, you can use "local3" to pipe your output to Papertrail, like this:
 
-    python run.py | logger -p local0.debug
+    python run.py | logger -p local3.debug
 
 
 
