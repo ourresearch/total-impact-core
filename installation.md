@@ -77,7 +77,21 @@ installation
     git remote add staging git@heroku.com:total-impact-core-staging.git
 
 ### install
+
     pip install -r requirements.txt -e .
+    
+### optional: setup logging from local to Papertrail:
+
+First, [setup a new system on Papertrail](https://papertrailapp.com/systems/new); you probably want the "other log methods"
+if you're on a laptop and won't have a constant hostname. Note the port number they give you. Next (assuming you're on OSX),
+add this line at the end of your `/etc/syslog.conf` (use tab, not spaces, to separate):
+
+    local3.*     @logs.papertrailapp.com:<your port number>
+    
+When you run locally, you can use "local3" to pipe your output to Papertrail, like this:
+
+    python run.py | logger -p local0.debug
+
 
 
 use
