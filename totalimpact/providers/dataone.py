@@ -22,12 +22,30 @@ class Dataone(Provider):
         (namespace, nid) = alias
         return("dataone" == namespace)
 
-    def _extract_biblio(self, page, id=None):
+    def _extract_biblio(self, redirect_page, id=None):
+        redirect_dict_of_keylists = {
+            'url' : ['url']
+        }
+
+        redirect_dict = provider._extract_from_xml(redirect_page, redirect_dict_of_keylists)
+
+        logger.info("%20s WARNING, url= %s" 
+                % (self.provider_name, redirect_dict["url"]))            
+
+        # try to get a response from the data provider        
+        response = self.http_get(redirect_dict["url"])
+
+        if response.status_code != 200:
+            logger.warning("%20s WARNING, status_code=%i getting %s" 
+                % (self.provider_name, response.status_code, url))            
+            self._get_error(response.status_code, response)
+            return {}
+
         dict_of_keylists = {
             'title' : ['dataset', 'title'], 
             'published_date' : ['dataset', 'pubDate']
         }
-        biblio_dict = provider._extract_from_xml(page, dict_of_keylists)
+        biblio_dict = provider._extract_from_xml(response.text, dict_of_keylists)
 
         return biblio_dict    
        
@@ -39,7 +57,9 @@ class Dataone(Provider):
         aliases_dict = provider._extract_from_xml(page, dict_of_keylists)
 
         try:
-            aliases_dict["doi"] = provider.doi_from_url_string(aliases_dict["url"])
+            doi = provider.doi_from_url_string(aliases_dict["url"])
+            if doi:
+                aliases_dict["doi"] = doi
         except KeyError:
             pass
 

@@ -208,6 +208,8 @@ class Provider(object):
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
                 return {}
+            elif response.status_code == 303: #redirect
+                pass                
             else:
                 self._get_error(response.status_code, response)
 
@@ -262,6 +264,8 @@ class Provider(object):
                 return {}
             elif response.status_code == 403: #forbidden
                 return {}
+            elif response.status_code == 303: #redirect
+                pass
             else:
                 self._get_error(response.status_code, response)
         
@@ -318,8 +322,10 @@ class Provider(object):
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
                 return []
-            if response.status_code == 403:  #forbidden
+            elif response.status_code == 403:  #forbidden
                 return []
+            elif response.status_code == 303: #redirect
+                pass                
             else:
                 self._get_error(response.status_code, response)
         
@@ -440,7 +446,7 @@ class Provider(object):
             proxies = None
             if app.config["PROXY"]:
                 proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}
-            r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=True)
+            r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=False)
         except requests.exceptions.Timeout as e:
             logger.debug("Attempt to connect to provider timed out during GET on " + url)
             raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
@@ -620,6 +626,8 @@ def _extract_from_xml(page, dict_of_keylists):
 
 # given a url that has a doi embedded in it, return the doi
 def doi_from_url_string(url):
+    logger.info("doi_from_url_string url " + url)
+
     result = re.findall(r"doi.(10.\d+.[0-9a-wA-W_/\.\-%]+)" , url, re.DOTALL)
     try:
         doi = urllib.unquote(result[0])
