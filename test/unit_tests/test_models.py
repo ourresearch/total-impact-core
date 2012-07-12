@@ -113,9 +113,9 @@ ITEM_DATA = {
     "biblio": BIBLIO_DATA
 }
 
-TEST_PROVIDER_CONFIG = {
-    "wikipedia": {}
-}
+TEST_PROVIDER_CONFIG = [
+    ("wikipedia", {})
+]
 
 TEST_DB_NAME = "test_models"
 
