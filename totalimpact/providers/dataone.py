@@ -22,6 +22,13 @@ class Dataone(Provider):
         (namespace, nid) = alias
         return("dataone" == namespace)
 
+    #override because need to add "doi:" prefix when necessary
+    def _get_templated_url(self, template, id, method=None):
+        if id.startswith("10."):
+            id = "doi:" + id
+        url = template % id
+        return(url)
+
     def _extract_biblio(self, redirect_page, id=None):
         redirect_dict_of_keylists = {
             'url' : ['url']
