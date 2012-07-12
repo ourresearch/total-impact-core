@@ -446,7 +446,7 @@ class Provider(object):
             proxies = None
             if app.config["PROXY"]:
                 proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}
-            r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=False)
+            r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=False, verify=False)
         except requests.exceptions.Timeout as e:
             logger.debug("Attempt to connect to provider timed out during GET on " + url)
             raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
