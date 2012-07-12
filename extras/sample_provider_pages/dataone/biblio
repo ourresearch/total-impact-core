@@ -1,0 +1,152 @@
+This XML file does not appear to have any style information associated with it. The document tree is shown below.
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.0.1" xmlns:stmml="http://www.xml-cml.org/schema/stmml" xmlns:ds="eml://ecoinformatics.org/dataset-2.0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" packageId="esa.44.1" system="knb" xsi:schemaLocation="eml://ecoinformatics.org/eml-2.0.1 eml.xsd" scope="system">
+<!--
+Person who filled in the catalog entry form: Jason Tanner
+-->
+<!-- Form filled out at Mon Aug 27 23:42:37 2007 GMT -->
+<dataset scope="document">
+<title>Heron Island coral transition rates</title>
+<creator scope="document">
+<organizationName>SARDI Aquatic Sciences</organizationName>
+</creator>
+<creator scope="document">
+<organizationName>Ecological Society of America</organizationName>
+</creator>
+<creator scope="document">
+<individualName>
+<givenName>Jason</givenName>
+<surName>Tanner</surName>
+</individualName>
+<organizationName>SARDI Aquatic Sciences</organizationName>
+<address scope="document">
+<deliveryPoint>PO Box 120</deliveryPoint>
+<city>Henley Beach</city>
+<administrativeArea>Select state or territory here.</administrativeArea>
+<postalCode>5022</postalCode>
+<country>Australia</country>
+</address>
+<phone phonetype="voice">61 8 8207 5489</phone>
+<phone phonetype="Fax">61 8 8207 5481</phone>
+<electronicMailAddress>tanner.jason@saugov.sa.gov.au</electronicMailAddress>
+</creator>
+<metadataProvider scope="document">
+<individualName>
+<givenName>Jason</givenName>
+<surName>Tanner</surName>
+</individualName>
+</metadataProvider>
+<associatedParty scope="document">
+<individualName>
+<givenName>Connell</givenName>
+<surName>Joe</surName>
+</individualName>
+<role>Co-owner</role>
+</associatedParty>
+<pubDate>2007-08-27</pubDate>
+<abstract>
+<para>
+Data gives rates of transition between different benthic species groups at Heron Island in a series of permanent quadrats at 3 sites (exposed crest, protected crest and exposed pools). The 9 species groups are based on taxonomic and morphological considerations, and include free space. In total, they cover 72 coral and 9 algal species. Temporal coverage is currently from 1962 to 1989.
+</para>
+</abstract>
+<keywordSet>
+<keyword keywordType="taxonomic">coral</keyword>
+<keywordThesaurus>None</keywordThesaurus>
+</keywordSet>
+<keywordSet>
+<keyword keywordType="theme">community models</keyword>
+<keywordThesaurus>None</keywordThesaurus>
+</keywordSet>
+<keywordSet>
+<keyword keywordType="place">heron island</keyword>
+<keywordThesaurus>None</keywordThesaurus>
+</keywordSet>
+<keywordSet>
+<keyword keywordType="place">great barrier reef</keyword>
+<keywordThesaurus>None</keywordThesaurus>
+</keywordSet>
+<keywordSet>
+<keyword keywordType="theme">transition rates</keyword>
+<keywordThesaurus>None</keywordThesaurus>
+</keywordSet>
+<intellectualRights>
+<para>Obtain permission from data set owner(s)</para>
+</intellectualRights>
+<distribution scope="document">
+<offline>
+<mediumName>digital</mediumName>
+</offline>
+</distribution>
+<coverage scope="document">
+<temporalCoverage scope="document">
+<rangeOfDates>
+<beginDate>
+<calendarDate>1962</calendarDate>
+</beginDate>
+<endDate>
+<calendarDate>1989</calendarDate>
+</endDate>
+</rangeOfDates>
+</temporalCoverage>
+<geographicCoverage scope="document">
+<geographicDescription>Heron Island, Great Barrier Reef, Australia</geographicDescription>
+<boundingCoordinates>
+<westBoundingCoordinate>151.9167</westBoundingCoordinate>
+<eastBoundingCoordinate>151.9167</eastBoundingCoordinate>
+<northBoundingCoordinate>-23.4333</northBoundingCoordinate>
+<southBoundingCoordinate>-23.4333</southBoundingCoordinate>
+</boundingCoordinates>
+</geographicCoverage>
+</coverage>
+<contact scope="document">
+<individualName>
+<givenName>Jason</givenName>
+<surName>Tanner</surName>
+</individualName>
+<organizationName>SARDI Aquatic Sciences</organizationName>
+<address scope="document">
+<deliveryPoint>PO Box 120</deliveryPoint>
+<city>Henley Beach</city>
+<administrativeArea>Select state or territory here.</administrativeArea>
+<postalCode>5022</postalCode>
+<country>Australia</country>
+</address>
+<phone phonetype="voice">61 8 8207 5489</phone>
+<phone phonetype="Fax">61 8 8207 5481</phone>
+<electronicMailAddress>tanner.jason@saugov.sa.gov.au</electronicMailAddress>
+</contact>
+<methods>
+<methodStep>
+<description>
+<section>
+<title>
+Coral species group transitions in permanet quadrats
+</title>
+<para>
+A seriews of permanent quadrats were established at 3 sites on Heron Island in 1962 by Joe Connell. These have been photographed approx every 1-2 years since. For the period 1962-1989, maps of all extant coral colonies (and algae) were drawn from these photographs. A series of grid points were then overlaid on each map, and the species group under each point scored. Each grid point was referenced to the stakes marking the corners of each quadrat, ensuring that points were in the same location each census. The species group under each point was then compared between successive censuses, allowing rates of transition between species groups to be calculated.
+</para>
+<para/>
+</section>
+</description>
+</methodStep>
+</methods>
+<access authSystem="knb" order="denyFirst" scope="document">
+<allow>
+<principal>uid=esaadmin,o=NCEAS,dc=ecoinformatics,dc=org</principal>
+<permission>all</permission>
+</allow>
+<allow>
+<principal>cn=knb-prod,o=NCEAS,dc=ecoinformatics,dc=org</principal>
+<permission>all</permission>
+</allow>
+<allow>
+<principal>cn=esa-moderators,dc=ecoinformatics,dc=org</principal>
+<permission>all</permission>
+</allow>
+<allow>
+<principal>uid=Tanner,o=unaffiliated,dc=ecoinformatics,dc=org</principal>
+<permission>read</permission>
+<permission>write</permission>
+</allow>
+</access>
+</dataset>
+</eml:eml>
