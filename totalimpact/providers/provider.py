@@ -629,7 +629,7 @@ def _extract_from_xml(page, dict_of_keylists):
 def doi_from_url_string(url):
     logger.info("doi_from_url_string url " + url)
 
-    result = re.findall(r"doi.(10.\d+.[0-9a-wA-W_/\.\-%]+)" , url, re.DOTALL)
+    result = re.findall("(10\.\d+.[0-9a-wA-W_/\.\-%]+)" , url, re.DOTALL)
     try:
         doi = urllib.unquote(result[0])
     except IndexError:
