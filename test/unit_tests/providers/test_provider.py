@@ -64,6 +64,12 @@ class Test_Provider():
         response = provider._extract_from_xml(page, dict_of_keylists)
         assert_equals(response, {'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'year': 2007})
 
+    def test_doi_from_url_string(self):
+        test_url = "https://knb.ecoinformatics.org/knb/d1/mn/v1/object/doi:10.5063%2FAA%2Fnrs.373.1"
+        expected = "10.5063/AA/nrs.373.1"
+        response = provider.doi_from_url_string(test_url)
+        assert_equals(response, expected)
+
 class TestProviderFactory():
 
     def test_get_all_static_meta(self):

@@ -8,6 +8,7 @@ import simplejson
 import BeautifulSoup
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
+import re
 
 logger = logging.getLogger("ti.provider")
 
@@ -586,21 +587,20 @@ def _lookup_xml_from_soup(soup, keylist):
     for mykey in keylist:
         if not smaller_bowl_of_soup:
             return None
-
         try:
-            smaller_bowl_of_soup = smaller_bowl_of_soup.find(mykey)
+            # BeautifulSoup forces all keys to lowercase
+            smaller_bowl_of_soup = smaller_bowl_of_soup.find(mykey.lower())
         except KeyError:
             return None
             
     if smaller_bowl_of_soup: 
-
         response = smaller_bowl_of_soup.text
     else:
         response = None
 
     try:
         response = int(response)
-    except ValueError:
+    except (ValueError, TypeError):
         pass
 
     return(response)
@@ -618,7 +618,15 @@ def _extract_from_xml(page, dict_of_keylists):
 
     return return_dict
 
+# given a url that has a doi embedded in it, return the doi
+def doi_from_url_string(url):
+    result = re.findall(r"doi.(10.\d+.[0-9a-wA-W_/\.\-%]+)" , url, re.DOTALL)
+    try:
+        doi = urllib.unquote(result[0])
+    except IndexError:
+        doi = None
 
+    return(doi)
 
 
 
