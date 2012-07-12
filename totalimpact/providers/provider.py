@@ -451,7 +451,7 @@ class Provider(object):
             logger.debug("Attempt to connect to provider timed out during GET on " + url)
             raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
         except requests.exceptions.RequestException as e:
-            logger.info("RequestException " + e.message)
+            logger.info("RequestException exception: %s" % e)
             logger.info("RequestException during GET on: " + url)
             raise ProviderHttpError("RequestException during GET on: " + url, e)
         
