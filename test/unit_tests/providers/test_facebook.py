@@ -1,7 +1,7 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
-from totalimpact.api import app
+from totalimpact.views import app
 
 import os
 import collections
