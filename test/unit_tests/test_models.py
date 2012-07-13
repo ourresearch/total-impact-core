@@ -110,11 +110,12 @@ ITEM_DATA = {
         "wikipedia:mentions": METRICS_DATA,
         "bar:views": METRICS_DATA2
     },
-    "biblio": BIBLIO_DATA,
-    "providersRunCounter": 0,
-    "providersWithMetricsCount":10
+    "biblio": BIBLIO_DATA
 }
 
+TEST_PROVIDER_CONFIG = [
+    ("wikipedia", {})
+]
 
 TEST_DB_NAME = "test_models"
 
@@ -167,6 +168,10 @@ class TestItemFactory():
         self.d.setResponses([deepcopy(ITEM_DATA)])
         item = models.ItemFactory.build_item(deepcopy(ITEM_DATA), [])
         assert_equals(item["biblio"]['genre'], "article")
+
+    def test_get_metric_names(self):
+        response = models.ItemFactory.get_metric_names(TEST_PROVIDER_CONFIG)
+        assert_equals(response, ['wikipedia:mentions'])
 
     def test_decide_genre_article_doi(self):
         aliases = {"doi":["10:123", "10:456"]}

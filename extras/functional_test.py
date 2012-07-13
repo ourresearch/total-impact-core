@@ -64,8 +64,8 @@ TEST_ITEMS = {
             'aliases': ['github', 'url', 'title'],
             'biblio': [u'last_push_date', u'create_date', u'description', u'title', u'url', u'owner', 'h1'],
             'metrics' : {
-                'github:forks' : 0,
-                'github:watchers' : 7
+                'github:forks' : 27,
+                'github:watchers' : 31
             }
         },                    
     ('url', 'http://nescent.org/'):
