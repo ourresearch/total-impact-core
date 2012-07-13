@@ -15,6 +15,7 @@ class TotalImpactBackend(object):
     def __init__(self, dao, providers):
         self.threads = [] 
         self.dao = dao
+        self.dao.update_design_doc()
         self.providers = providers
     
     def run(self):
@@ -185,7 +186,8 @@ class ProviderThread(StoppableThread):
 
             if method_name == "metrics":
                 # bump it because doesn't support it, not going to call it
-                self.dao.bump_providers_run_counter(item.id)
+                provider_name =  provider.__class__.__name__
+                self.dao.bump_providers_run(item.id, provider_name)
 
             logger.debug("%20s: skipping %s %s %s for %s, does not provide" 
                 % (self.thread_id, provider, method_name, str(aliases), tiid))
@@ -374,12 +376,8 @@ class ProviderMetricsThread(ProviderThread):
             pass
         finally:
             # update provider counter so api knows when all have finished
-            logger.debug("%20s: done with metrics for %s, bumping counter"
-                % (self.thread_id, item.id))
-            self.dao.bump_providers_run_counter(item.id)
-
-            logger.debug("%20s: done with metrics for %s, bump counter DONE"
-                % (self.thread_id, item.id))
+            provider_name =  self.provider.__class__.__name__
+            self.dao.bump_providers_run(item.id, provider_name)
 
 
 def main():
