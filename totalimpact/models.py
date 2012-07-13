@@ -115,8 +115,9 @@ class ItemFactory():
         item["biblio"]['genre'] = cls.decide_genre(item_doc['aliases'])
         item["created"] = item_doc["created"]
         item["last_modified"] = item_doc["last_modified"]
+        item["providers_run"] = item_doc["providers_run"]
         
-        item["currently_updating"] = (item_doc["providersRunCounter"] != item_doc["providersWithMetricsCount"])
+        item["currently_updating"] = (len(item_doc["providers_run"]) != item_doc["providersWithMetricsCount"])
             
         item["metrics"] = {} #not using what is in stored item for this
         for snap in snaps:

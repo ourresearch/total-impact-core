@@ -81,7 +81,7 @@ def create_item(namespace, nid):
     item = ItemFactory.make_simple(mydao)
     
     # set this so we know when it's still updating later on
-    item.providersRunCounter = 0
+    item.providers_run = []
     item.providersWithMetricsCount = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
     
     item.aliases.add_alias(namespace, nid)
@@ -99,11 +99,10 @@ def update_item(tiid):
     item_doc = mydao.get(tiid)
 
     # set the needs_aliases timestamp so it will go on queue for update
-    #item = ItemFactory.get_item_object_from_item_doc(mydao, item_doc)
     item_doc["needs_aliases"] = datetime.datetime.now().isoformat()
 
     # set this so we know when it's still updating later on
-    item_doc["providersRunCounter"] = 0
+    item_doc["providers_run"] = []
     item_doc["providersWithMetricsCount"] = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
     
     item_doc["id"] = item_doc["_id"]
@@ -128,9 +127,13 @@ def items_tiid_post(tiids):
     resp.mimetype = "application/json"
     return resp
 
+
+#TODO we really could use some documentation of this function (and some refactoring...
+# too much logic here in the views.
 @app.route('/items', methods=['POST'])
 def items_namespace_post():
     try:
+        #it's  a list of aliases; make new items for 'em
         aliases_list = [(namespace, nid) for [namespace, nid] in request.json]
     except ValueError:
         #is a list of tidds, so do update instead

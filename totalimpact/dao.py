@@ -1,9 +1,29 @@
-import pdb, json, uuid, couchdb, time, copy, logging, couchdb
+import pdb, json, uuid, couchdb, time, copy, logging, os, re, threading
 from couchdb import ResourceNotFound, PreconditionFailed
 from totalimpact import default_settings
+import requests
 
 # set up logging
 logger = logging.getLogger("ti.dao")
+lock = threading.Lock()
+
+class DbUrl(object):
+    
+    def __init__(self, url):
+        self.full = url
+        
+    def get_username(self):
+        m = re.search("https://([^:]+)", self.full)
+        return m.group(1)
+
+    def get_password(self):
+        m = re.search(":[^:]+:([^@]+)", self.full)
+        return m.group(1)
+    
+    def get_base(self):
+        m = re.search("@(.+)", self.full)
+        return "https://" + m.group(1)
+        
 
 class Dao(object):
 
@@ -11,6 +31,8 @@ class Dao(object):
         '''sets up the data properties and makes a db connection'''
 
         self.couch = couchdb.Server(url=db_url)
+        self.url = DbUrl(db_url)
+        self.db_name = db_name
 
         try:
             self.db = self.couch[ db_name ]
@@ -18,14 +40,18 @@ class Dao(object):
             self.create_db(db_name)
         except LookupError:
             raise LookupError("CANNOT CONNECT TO DATABASE, maybe doesn't exist?")
+        
+        self.bump = self.db.resource("_design", "queues", "_update", "bump-providers-run")
+
        
     def delete_db(self, db_name):
         self.couch.delete(db_name);
 
-    def create_db(self, db_name):
-        '''makes a new database with the given name.
-        uploads couch views stored in the config directory'''
-        designDoc = {
+
+        
+        
+    def update_design_doc(self):
+        design_doc = {
                     "_id": "_design/queues",
                     "language": "javascript",
                     "views": {
@@ -35,28 +61,48 @@ class Dao(object):
                         "needs_aliases": {},
                         },
                     "updates": {
-                        "bump-providers-run-counter" :  '''function(doc, req) {
-                            if (!doc.providersRunCounter) doc.providersRunCounter = 0;
-                            doc.providersRunCounter += 1;
-                            var message = '<h1>bumped it!</h1>';
+                        "bump-providers-run" :  '''function(doc, req) {
+                            if (!doc.providers_run) doc.providers_run = [];
+                            
+                            // don't duplicate providers in the providers_run array...
+                            if (doc.providers_run.indexOf(req.query.provider_name) < 0) {
+                                doc.providers_run.push(req.query.provider_name);
+                            }
+                            var message = toJSON(doc.providers_run);
                             return [doc, message];
                         }'''
                     }
         }
-                        
                     
-                    
-        for view_name in designDoc["views"]:
+        for view_name in design_doc["views"]:
             file = open('./config/couch/views/{0}.js'.format(view_name))
-            designDoc["views"][view_name]["map"] = file.read()
+            design_doc["views"][view_name]["map"] = file.read()        
+
+        logger.info("overwriting the design/queues doc with the latest version in dao.")
+        logger.debug("overwriting the design/queues doc with this, from dao: " + str(design_doc))
+        
+        try:
+            current_design_doc_rev = self.db["_design/queues"]["_rev"]
+            design_doc["_rev"] = current_design_doc_rev
+        except ResourceNotFound:
+            logger.info("brand new db; there's no design/queues doc. That's fine, we'll make it.")
+            
+        self.db.save(design_doc)
+        logger.info("saved the new design doc.")
+
+
+    def create_db(self, db_name):
+        '''makes a new database with the given name.
+        uploads couch views stored in the config directory'''
 
         try:
             self.db = self.couch.create(db_name)
+            self.db_name = db_name
         except ValueError:
             print("Error, maybe because database name cannot include uppercase, must match [a-z][a-z0-9_\$\(\)\+-/]*$")
             raise ValueError
-        self.db.save( designDoc )
-        return True
+        
+        self.update_design_doc()
 
     @property
     def json(self):
@@ -123,20 +169,34 @@ class Dao(object):
 
         return None
 
-    def bump_providers_run_counter(self, item_id, tries=0):
-        bump = self.db.resource("_design", "queues", "_update", "bump-providers-run-counter")
-        try:
-            (status_code, b, c) = bump.post(item_id)
-            if status_code == 201:
-                logger.info("bumping ProviderRunCounter DONE")
-                return True
-        except couchdb.ResourceConflict:
-            #error handling below
-            pass
+    def bump_providers_run(self, item_id, provider_name, tries=0):
+        
+        query_url = "{base}/{db}/{update}/{item_id}?provider_name={provider_name}".format(
+            base=self.url.get_base(),
+            db=self.db_name,
+            update="_design/queues/_update/bump-providers-run",
+            item_id=item_id,
+            provider_name=provider_name
+        )
 
-        if tries > 10:
-            logger.error("FAILING bumping ProviderRunCounter, tried 10 times")
-            return False
-        logger.warning("bumping ProviderRunCounter, trying again")
-        self.bump_providers_run_counter(item_id, tries+1)
+        '''
+        Doesn't seem like the lock should be necessary, but without it, occasionally
+        calls to the update handler are not recorded, suggesting race conditions.
+        '''
+        with lock:
+            (status_code, b, c) = self.bump.post(item_id, provider_name=provider_name)
+            if status_code == 201:
+                logger.info("bumped providers_run with {provider_name} for {id}. providers_run = {providers_run}".format(
+                    provider_name=provider_name,
+                    id=item_id,
+                    providers_run=c.read()
+                ))
+                return True
+
+            if r.status_code == 201:
+                logger.info("bumped providers_run with {provider_name} for {id}. providers_run = {providers_run}".format(
+                    provider_name=provider_name,
+                    id=item_id,
+                    providers_run=r.text
+                ))
 
