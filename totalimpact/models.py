@@ -119,11 +119,14 @@ class ItemFactory():
         
         try:
             # some legacy docs may not have the "providers_run" field yet...
-            num_providers_run = len(item_doc["providers_run"])
+            item["providers_run"] = item_doc["providers_run"]
+            num_providers_run = len(item["providers_run"])
+            item["currently_updating"] = (num_providers_run != item_doc["providersWithMetricsCount"])
         except KeyError:
-            num_providers_run = 0
+            # since the update process sets providers_run, if it doesn't have the
+            # key at all, it must not be updating.
+            item["currently_updating"] = False
             
-        item["currently_updating"] = (num_providers_run != item_doc["providersWithMetricsCount"])
             
         item["metrics"] = {} #not using what is in stored item for this
         for snap in snaps:
