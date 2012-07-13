@@ -115,7 +115,6 @@ class ItemFactory():
         item["biblio"]['genre'] = cls.decide_genre(item_doc['aliases'])
         item["created"] = item_doc["created"]
         item["last_modified"] = item_doc["last_modified"]
-        item["providers_run"] = item_doc["providers_run"]
         
         try:
             # some legacy docs may not have the "providers_run" field yet...
