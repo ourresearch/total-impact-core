@@ -117,7 +117,13 @@ class ItemFactory():
         item["last_modified"] = item_doc["last_modified"]
         item["providers_run"] = item_doc["providers_run"]
         
-        item["currently_updating"] = (len(item_doc["providers_run"]) != item_doc["providersWithMetricsCount"])
+        try:
+            # some legacy docs may not have the "providers_run" field yet...
+            num_providers_run = len(item_doc["providers_run"])
+        except KeyError:
+            num_providers_run = 0
+            
+        item["currently_updating"] = (num_providers_run != item_doc["providersWithMetricsCount"])
             
         item["metrics"] = {} #not using what is in stored item for this
         for snap in snaps:
