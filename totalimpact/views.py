@@ -254,7 +254,6 @@ returns a json list of item objects (100 max)
 404 unless all tiids return items from db
 '''
 @app.route('/items/<tiids>', methods=['GET'])
-@app.route('/items/<tiids>.<format>', methods=['GET'])
 def items(tiids, format=None):
     items = []
 
@@ -265,9 +264,15 @@ def items(tiids, format=None):
         try:
             item_dict = ItemFactory.get_simple_item(mydao, tiid)
         except (LookupError, AttributeError):
+            logger.warning("Got an error looking up tiid '{tiid}': aborting with 404".format(
+                tiid=tiid
+            ))
             abort(404)
 
         if not item_dict:
+            logger.warning("Looks like there's no item with tiid '{tiid}': aborting with 404".format(
+                tiid=tiid
+            ))
             abort(404)
 
         items.append(item_dict)
