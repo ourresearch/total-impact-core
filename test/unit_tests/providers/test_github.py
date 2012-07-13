@@ -12,8 +12,6 @@ SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, "aliases")
 SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(datadir, "members")
 SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
 
-TEST_DOI = "10.1371/journal.pcbi.1000361"
-
 class TestGithub(ProviderTestCase):
 
     provider_name = "github"
@@ -33,10 +31,10 @@ class TestGithub(ProviderTestCase):
         assert_equals(self.provider.is_relevant_alias(("doi", "NOT A GITHUB ID")), False)
   
     def test_extract_metrics_success(self):
-        returned = open(SAMPLE_EXTRACT_METRICS_PAGE, "r").read()
-        print returned
-        metrics_dict = self.provider._extract_metrics(returned)
-        assert_equals(metrics_dict["github:watchers"], 7)
+        f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
+        metrics_dict = self.provider._extract_metrics(f.read())
+        print metrics_dict
+        assert_equals(metrics_dict["github:watchers"], 31)
 
     def test_extract_members_success(self):        
         f = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r")

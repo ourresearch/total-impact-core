@@ -129,6 +129,7 @@ class ProviderMock(Provider):
     provides_aliases = True
     provides_metrics = True
     provides_biblio = True
+    url = "http://fakeproviderurl.com"
 
     def __init__(self, provider_name=None, metrics_exceptions=None, aliases_exceptions=None, biblio_exceptions=None):
         Provider.__init__(self, None)
