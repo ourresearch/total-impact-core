@@ -325,19 +325,17 @@ class GitHubUsernameSampler(IdSampler):
     db_url = "http://total-impact.cloudant.com/github_usernames"
     
     def get(self, num=1):
-        rand_hex_string = hex(random.getrandbits(128))[2:-1]
+        rand_hex_string = hex(random.getrandbits(128))[2:-1] # courtesy http://stackoverflow.com/a/976607/226013
         req_url = self.db_url + '/_all_docs?include_docs=true&limit={limit}&startkey="{startkey}"'.format(
             limit=num,
             startkey=rand_hex_string
         )
         r = requests.get(req_url)
         json_resp = json.loads(r.text)
-        print json_resp
+
         usernames = [row["doc"]["actor"] for row in json_resp["rows"]]
         return usernames
         
-    
-
 
 class Report(object):
     pass
