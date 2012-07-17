@@ -52,8 +52,8 @@ class DirectEntry:
             
             
             
-class Widget:
-    '''Emulates a single widget on the create_collection page; 
+class Importer:
+    '''Emulates a single importer on the create_collection page; 
     
     feed it a provider name like "github" at instantiation, then run run a query 
     like jasonpriem to get all the aliases associated with that account
@@ -71,7 +71,7 @@ class Widget:
             )
         start = time.time()
         logger.info(
-            "getting aliases from the {provider} widget, using url '{url}'"
+            "getting aliases from the {provider} importer, using url '{url}'"
             .format(provider=self.provider_name, url=query_url)
             )
         resp = requests.get(query_url)
@@ -79,7 +79,7 @@ class Widget:
         try:
             aliases = json.loads(resp.text)
         except ValueError:
-            logger.warning("{provider} widget returned no json for {query}".format(
+            logger.warning("{provider} importer returned no json for {query}".format(
                 provider=self.provider_name,
                 query="query"
             ))
@@ -89,7 +89,7 @@ class Widget:
         aliases = [(namespace, id) if isinstance(id, str) 
             else (namespace, ",".join(id)) for namespace, id in aliases]
             
-        logger.info("{provider} widget got {num_aliases} aliases from '{q}' in {elapsed} seconds.".format(
+        logger.info("{provider} importer got {num_aliases} aliases from '{q}' in {elapsed} seconds.".format(
             provider = self.provider_name,
             num_aliases = len(aliases),
             q = query,
@@ -216,11 +216,11 @@ class CreateCollectionPage:
         self.aliases = self.aliases + aliases_from_direct_entry
         return self.aliases
         
-    def get_aliases_with_widgets(self, widgets_dict):
-        for provider_name, query in widgets_dict.iteritems():
-            widget = Widget(provider_name)
-            aliases_from_this_widget = widget.get_aliases(query)
-            self.aliases = self.aliases + aliases_from_this_widget
+    def get_aliases_with_importers(self, importers_dict):
+        for provider_name, query in importers_dict.iteritems():
+            importer = Importer(provider_name)
+            aliases_from_this_importer = importer.get_aliases(query)
+            self.aliases = self.aliases + aliases_from_this_importer
         return self.aliases
     
     def press_go_button(self):
@@ -357,7 +357,6 @@ class User(object):
 *****************************************************************************'''
     
 #TODO give test collections a memorable name
-#TODO rename widget to importer
 
 def run_test():
     start = time.time()
@@ -366,7 +365,7 @@ def run_test():
     ccp.clean_db()
     
     ccp.enter_aliases_directly({"plos": 5})
-    ccp.get_aliases_with_widgets({"github": "jasonpriem"})
+    ccp.get_aliases_with_importers({"github": "jasonpriem"})
     ccp.press_go_button()
     
     logger.info("Finished test: collection took {elapsed} seconds".format(
