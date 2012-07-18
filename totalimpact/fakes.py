@@ -35,53 +35,57 @@ webapp_url = "http://localhost:5000"
 *****************************************************************************'''
 
 class Importer:
-    '''Emulates a single importer on the create_collection page; 
-    
-    feed it a provider name like "github" at instantiation, then run run a query 
+    '''Emulates a single importer on the create_collection page;
+
+    feed it a provider name like "github" at instantiation, then run run a query
     like jasonpriem to get all the aliases associated with that account
     '''
     query = None
-    
+
     def __init__(self, provider_name):
         self.provider_name = provider_name
-    
+
     def get_aliases(self, query):
         query_url = "{api_url}/provider/{provider_name}/memberitems?query={query}".format(
-            api_url=api_url, 
+            api_url=api_url,
             provider_name=self.provider_name,
             query=query
             )
         start = time.time()
         logger.info(
-            "getting aliases from the {provider} importer, using url '{url}'"
-            .format(provider=self.provider_name, url=query_url)
-            )
-        resp = requests.get(query_url)
-        
+            "getting aliases from the {provider} importer, using url '{url}'".format(
+                provider=self.provider_name, 
+                url=query_url
+            ))
+        r = requests.get('http://localhost:5001/provider/github/memberitems?query=Morgawr')
+
+        logger.debug("finished http call.")
+
         try:
-            aliases = json.loads(resp.text)
+            aliases = json.loads(r.text)
+            logger.debug("got some aliases from the http call: " + str(aliases))
         except ValueError:
             logger.warning("{provider} importer returned no json for {query}".format(
                 provider=self.provider_name,
                 query="query"
             ))
             aliases = []
-            
+
         # anoyingly, some providers return lists-as-IDs, which must be joined with a comma
-        aliases = [(namespace, id) if isinstance(id, str) 
+        aliases = [(namespace, id) if isinstance(id, str)
             else (namespace, ",".join(id)) for namespace, id in aliases]
-            
+
         logger.info("{provider} importer got {num_aliases} aliases from '{q}' in {elapsed} seconds.".format(
             provider = self.provider_name,
             num_aliases = len(aliases),
             q = query,
             elapsed = round(time.time() - start, 2),
         ))
-            
+
         return aliases
-    
-    
-    
+
+
+
 class ReportPage:
     def __init__(self, collection_id):
         self.collection_id = collection_id
@@ -106,41 +110,41 @@ class ReportPage:
                 collection_id = collection_id,
                 url=request_url
             ))
-    
-        
+
+
     def _get_tiids(self, text):
         '''gets the list of tiids to poll. in the real report page, this is done
         via a 'tiids' javascript var that's placed there when the view constructs
         the page. this method parses the page to get them...it's brittle, though,
         since if the report page changes this breaks.'''
-        
+
         m = re.search("var tiids = (\[[^\]]+\])", text)
         tiids = json.loads(m.group(1))
         return tiids
 
 
     def poll(self, max_time=50):
-        
+
         logger.info("polling the {num_tiids} tiids of collection '{collection_id}'".format(
             num_tiids = len(self.tiids),
             collection_id = self.collection_id
         ))
-        
+
         tiids_str = ",".join(self.tiids)
         still_updating = True
         tries = 0
         start = time.time()
         while still_updating:
-                
+
             url = api_url+"/items/"+tiids_str
             resp = requests.get(url, config={'verbose': None})
             items = json.loads(resp.text)
             tries += 1
-            
+
             currently_updating_flags = [True for item in items if item["currently_updating"]]
             num_currently_updating = len(currently_updating_flags)
             num_finished_updating = len(self.tiids) - num_currently_updating
-            
+
             logger.info("{num_done} of {num_total} items done updating after {tries} requests.".format(
                 num_done=num_finished_updating,
                 num_total=len(self.tiids),
@@ -167,15 +171,15 @@ class ReportPage:
                 return False
 
             sleep(0.5)
-        
-             
-            
-            
-            
+
+
+
+
+
 class CreateCollectionPage:
-    
+
     aliases = []
-    
+
     def __init__(self):
         start = time.time()
         logger.info("loading the create-collection page")
@@ -189,30 +193,30 @@ class CreateCollectionPage:
             logger.warning("create-collection page failed to load!".format(
                 collection_id = collection_id
             ))
-    
+
     def reload(self):
         self.aliases = []
         self.collection_name = "My collection"
-        
+
     def set_collection_name(self, collection_name):
         self.collection_name = collection_name
-    
+
     def enter_aliases_directly(self, aliases):
         self.aliases = self.aliases + aliases
         return self.aliases
-        
+
     def get_aliases_with_importers(self, provider_name, query):
         importer = Importer(provider_name)
         aliases_from_this_importer = importer.get_aliases(query)
         self.aliases = self.aliases + aliases_from_this_importer
         return self.aliases
-    
+
     def press_go_button(self):
         tiids = self._create_items()
         collection_id = self._create_collection(tiids, name)
         report_page = ReportPage(collection_id)
         report_page.poll()
-                    
+
     def _create_items(self):
         start = time.time()
         logger.info("trying to create {num_aliases} new items.".format(
@@ -221,11 +225,11 @@ class CreateCollectionPage:
         query = api_url + '/items'
         data = json.dumps(self.aliases)
         resp = requests.post(
-            query, 
+            query,
             data=data,
             headers={'Content-type': 'application/json'}
             )
-        
+
         try:
             tiids = json.loads(resp.text)
         except ValueError:
@@ -234,16 +238,16 @@ class CreateCollectionPage:
                 data=data
             ))
             raise ValueError
-        
+
         logger.info("created {num_items} items in {elapsed} seconds.".format(
             num_items = len(self.aliases),
             elapsed = round(time.time() - start, 2)
             ))
-            
+
         logger.debug("created these new items: " + str(tiids))
-            
+
         return tiids
-    
+
     def _create_collection(self, tiids, collection_name):
         start = time.time()
         url = api_url+"/collection"
@@ -253,31 +257,31 @@ class CreateCollectionPage:
             num_tiids = len(tiids)
         ))
         logger.debug("creating collection with these tiids: " + str(tiids))
-        
+
         resp = requests.post(
             url,
             data = json.dumps({
-                "items": tiids, 
+                "items": tiids,
                 "title": collection_name
             }),
             headers={'Content-type': 'application/json'}
         )
         collection_id = json.loads(resp.text)["id"]
-        
+
         logger.info("created collection '{id}' with {num_items} items in {elapsed} seconds.".format(
             id=collection_id,
             num_items = len(self.aliases),
             elapsed = round(time.time() - start, 2)
-            ))        
-            
+            ))
+
         return collection_id
-    
+
     def clean_db(self):
         pass
-        
+
 
 class IdSampler(object):
-    
+
     def get_dois(self, num=1):
         start = time.time()
         url = "http://random.labs.crossref.org/dois?count="+str(num)
@@ -293,9 +297,9 @@ class IdSampler(object):
             elapsed=round(time.time() - start, 2)
         ))
         logger.debug("IdSampler got these dois back: " + str(dois))
-        
+
         return dois
-        
+
     def get_github_username(self):
         start = time.time()
         db_url = "http://total-impact.cloudant.com/github_usernames"
@@ -321,32 +325,32 @@ class IdSampler(object):
 class User(object):
 
     def do(self, action_type):
-         start = time.time()
-         interaction_name = ''.join(random.choice(string.ascii_lowercase) for x in range(5))
-         logger.info("Fakes.user.{action_type} interaction '{interaction_name}' starting now".format(
+        start = time.time()
+        interaction_name = ''.join(random.choice(string.ascii_lowercase) for x in range(5))
+        logger.info("Fakes.user.{action_type} interaction '{interaction_name}' starting now".format(
             action_type=action_type,
             interaction_name=interaction_name
         ))
-         
-         try:
-             error_str = None
-             result = getattr(self, action_type)(interaction_name)
-         except Exception, e:
-             error_str = e.__repr__()
-             logger.error("""Fakes.user.{action_type} interaction 
-'{interaction_name}' threw an error: '{error}'""".format(
-                 action_type=action_type,
-                 interaction_name=interaction_name,
-                 error=e.__repr__()
+
+        try:
+            error_str = None
+            result = getattr(self, action_type)(interaction_name)
+        except Exception, e:
+            error_str = e.__repr__()
+            logger.exception("Fakes.user.{action_type} '{interaction_name}' threw an error:'".format(
+             action_type=action_type,
+             interaction_name=interaction_name,
+             error=e.__repr__()
             ))
-            
-         end = time.time()
-         elapsed = end - start
-         logger.info("Fakes.user finished {name} interaction in {elapsed} seconds.".format(
-            name=action_type,
-            elapsed=elapsed
-         ))
-         return {
+        result = None
+
+        end = time.time()
+        elapsed = end - start
+        logger.info("Fakes.user finished {name} interaction in {elapsed} seconds.".format(
+        name=action_type,
+        elapsed=elapsed
+        ))
+        return {
             "start": start,
             "end": end,
             "elapsed": elapsed,
@@ -354,18 +358,18 @@ class User(object):
             "name": interaction_name,
             "result":result,
             "error_str": error_str
-         }
+        }
 
     def make_collection(self, interaction_name):
         logger.info("starting make_collection interaction script.")
         ccp = CreateCollectionPage()
 
-        sampler = IdSampler() 
+        sampler = IdSampler()
         ccp.enter_aliases_directly(sampler.get_dois(5))
-        ccp.get_aliases_with_importers("github", sampler.get_github_usernames(1))
+        ccp.get_aliases_with_importers("github", sampler.get_github_username())
         ccp.set_collection_name(collection_name)
-        ccp.press_go_button()    
-        
+        ccp.press_go_button()
+
     def upate_collection(self, interaction_name):
          pass
 
