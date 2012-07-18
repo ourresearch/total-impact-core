@@ -4,7 +4,7 @@ from flask import render_template, flash
 import os, json, time, datetime
 from pprint import pprint
 
-from totalimpact import dao, app
+from totalimpact import dao, app, fakes
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError, ProviderHttpError
 from totalimpact import default_settings
@@ -482,3 +482,13 @@ def collection(cid=''):
     return resp
 
 
+@app.route('/tests/create_collection', methods = ['GET'])
+def test_create_collection():
+    fake_user = fakes.User()
+    report = fake_user.do("make_collection")
+    return render_template(
+        'interaction_test_report.html',
+        report=report
+        )
+    
+    

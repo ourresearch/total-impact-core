@@ -1,4 +1,4 @@
-import os, requests, json, couchdb, time, sys, re, random
+import os, requests, json, couchdb, time, sys, re, random, string
 from totalimpact import dao
 from time import sleep
 import logging
@@ -11,7 +11,7 @@ logging.basicConfig(
     datefmt='%H:%M:%S'
 )
 logging.getLogger("ti").setLevel(logging.INFO)
-logger = logging.getLogger("ti.create_collection_test")
+logger = logging.getLogger("ti.fakes")
 
 #quiet Requests' noisy logging:
 requests_log = logging.getLogger("requests")
@@ -34,24 +34,6 @@ webapp_url = "http://localhost:5000"
 ''' Test classes
 *****************************************************************************'''
 
-class DirectEntry:
-    
-    def get_plos_aliases(self):
-        return [("doi", "10.1371/journal.pone.000" + str(x)) for x in range(2901, 3901)]
-    
-    def get_aliases(self, ranges):
-        all_aliases = []
-        for alias_type, count in ranges.iteritems():
-            getter_name = "get_" + alias_type + "_aliases"
-            aliases_of_this_type = getattr(self, getter_name)()
-            all_aliases = all_aliases + aliases_of_this_type[0:count]
-            
-        logger.info("adding {0} aliases by direct entry.".format(len(all_aliases)))
-        logger.debug("adding these aliases by direct entry: " + str(all_aliases))
-        return all_aliases
-            
-            
-            
 class Importer:
     '''Emulates a single importer on the create_collection page; 
     
@@ -172,7 +154,7 @@ class ReportPage:
                     id=self.collection_id,
                     elapsed=elapsed
                 ))
-                still_updating = False
+                return True
             elif elapsed > max_time:
                 logger.error("max polling time ({max} secs) exceeded for collection '{id}'; giving up.".format(
                     max=max_time,
@@ -185,7 +167,8 @@ class ReportPage:
                 return False
 
             sleep(0.5)
-            
+        
+             
             
             
             
@@ -209,23 +192,24 @@ class CreateCollectionPage:
     
     def reload(self):
         self.aliases = []
+        self.collection_name = "My collection"
+        
+    def set_collection_name(self, collection_name):
+        self.collection_name = collection_name
     
-    def enter_aliases_directly(self, ranges):
-        direct_entry = DirectEntry()
-        aliases_from_direct_entry = direct_entry.get_aliases(ranges)
-        self.aliases = self.aliases + aliases_from_direct_entry
+    def enter_aliases_directly(self, aliases):
+        self.aliases = self.aliases + aliases
         return self.aliases
         
-    def get_aliases_with_importers(self, importers_dict):
-        for provider_name, query in importers_dict.iteritems():
-            importer = Importer(provider_name)
-            aliases_from_this_importer = importer.get_aliases(query)
-            self.aliases = self.aliases + aliases_from_this_importer
+    def get_aliases_with_importers(self, provider_name, query):
+        importer = Importer(provider_name)
+        aliases_from_this_importer = importer.get_aliases(query)
+        self.aliases = self.aliases + aliases_from_this_importer
         return self.aliases
     
     def press_go_button(self):
         tiids = self._create_items()
-        collection_id = self._create_collection(tiids)
+        collection_id = self._create_collection(tiids, name)
         report_page = ReportPage(collection_id)
         report_page.poll()
                     
@@ -260,10 +244,10 @@ class CreateCollectionPage:
             
         return tiids
     
-    def _create_collection(self, tiids):
+    def _create_collection(self, tiids, collection_name):
         start = time.time()
         url = api_url+"/collection"
-        collection_name = "test"
+        collection_name = "[ti test] " + collection_name
 
         logger.info("creating collection with {num_tiids} tiids".format(
             num_tiids = len(tiids)
@@ -289,85 +273,101 @@ class CreateCollectionPage:
         return collection_id
     
     def clean_db(self):
-        
-        start = time.time()
-        
-        # this is a painfully inefficient way to do this...
-        # TODO rewrite DAO to extend python-couchdb, not encapsulate it.
-        mydao = dao.Dao(base_db_url, base_db)
-        mydao.delete_db(base_db)
-        mydao.create_db(base_db)
-
-        logger.info("deleted and remade the old 'ti' db in {elapsed} seconds".format(
-            elapsed=round(time.time() - start, 2)
-        ))
+        pass
         
 
 class IdSampler(object):
     
-    def get(self, num):
-        raise NotImplementedError
-    
-
-class DoiSampler(IdSampler):
-    
-    def get(self, num=1):
+    def get_dois(self, num=1):
+        start = time.time()
         url = "http://random.labs.crossref.org/dois?count="+str(num)
+        logger.info("getting {num} random dois with IdSampler, using {url}".format(
+            num=num,
+            url=url
+        ))
         r = requests.get(url)
         print r.text
         dois = json.loads(r.text)
+        logger.info("IdSampler got {count} random dois back in {elapsed} seconds".format(
+            count=len(dois),
+            elapsed=round(time.time() - start, 2)
+        ))
+        logger.debug("IdSampler got these dois back: " + str(dois))
+        
         return dois
         
-        
-
-class GitHubUsernameSampler(IdSampler):
-    
-    db_url = "http://total-impact.cloudant.com/github_usernames"
-    
-    def get(self, num=1):
+    def get_github_username(self):
+        start = time.time()
+        db_url = "http://total-impact.cloudant.com/github_usernames"
         rand_hex_string = hex(random.getrandbits(128))[2:-1] # courtesy http://stackoverflow.com/a/976607/226013
-        req_url = self.db_url + '/_all_docs?include_docs=true&limit={limit}&startkey="{startkey}"'.format(
-            limit=num,
+        req_url = db_url + '/_all_docs?include_docs=true&limit=1&startkey="{startkey}"'.format(
             startkey=rand_hex_string
         )
+        logger.info("getting a random github username with IdSampler, using {url}".format(
+            url=req_url
+        ))
         r = requests.get(req_url)
         json_resp = json.loads(r.text)
 
-        usernames = [row["doc"]["actor"] for row in json_resp["rows"]]
-        return usernames
-        
+        username = json_resp["rows"][0]["doc"]["actor"]
+        logger.info("IdSampler got random github username '{username}' in {elapsed} seconds".format(
+            username=username,
+            elapsed=round(time.time() - start, 2)
+        ))
 
-class Report(object):
-    pass
+        return username
 
 
 class User(object):
-     
-     def make_collection(self):
-         pass
-     
-     def upate_collection(self):
-         pass
-     
-     def check_collection(self):
+
+    def do(self, action_type):
+         start = time.time()
+         interaction_name = ''.join(random.choice(string.ascii_lowercase) for x in range(5))
+         logger.info("Fakes.user.{action_type} interaction '{interaction_name}' starting now".format(
+            action_type=action_type,
+            interaction_name=interaction_name
+        ))
+         
+         try:
+             error_str = None
+             result = getattr(self, action_type)(interaction_name)
+         except Exception, e:
+             error_str = e.__repr__()
+             logger.error("""Fakes.user.{action_type} interaction 
+'{interaction_name}' threw an error: '{error}'""".format(
+                 action_type=action_type,
+                 interaction_name=interaction_name,
+                 error=e.__repr__()
+            ))
+            
+         end = time.time()
+         elapsed = end - start
+         logger.info("Fakes.user finished {name} interaction in {elapsed} seconds.".format(
+            name=action_type,
+            elapsed=elapsed
+         ))
+         return {
+            "start": start,
+            "end": end,
+            "elapsed": elapsed,
+            "action": action_type,
+            "name": interaction_name,
+            "result":result,
+            "error_str": error_str
+         }
+
+    def make_collection(self, interaction_name):
+        logger.info("starting make_collection interaction script.")
+        ccp = CreateCollectionPage()
+
+        sampler = IdSampler() 
+        ccp.enter_aliases_directly(sampler.get_dois(5))
+        ccp.get_aliases_with_importers("github", sampler.get_github_usernames(1))
+        ccp.set_collection_name(collection_name)
+        ccp.press_go_button()    
+        
+    def upate_collection(self, interaction_name):
          pass
 
-
-''' Test code
-*****************************************************************************'''
-    
-#TODO give test collections a memorable name
-
-def run_test():
-    start = time.time()
-    logger.info("starting test.")
-    ccp = CreateCollectionPage()
-    ccp.clean_db()
-    
-    ccp.enter_aliases_directly({"plos": 5})
-    ccp.get_aliases_with_importers({"github": "jasonpriem"})
-    ccp.press_go_button()
-    
-    logger.info("Finished test: collection took {elapsed} seconds".format(
-        elapsed = round(time.time() - start, 2)
-    ))
+    def check_collection(self, interaction_name):
+         pass
