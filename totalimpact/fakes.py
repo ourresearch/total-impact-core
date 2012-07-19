@@ -1,5 +1,4 @@
-import os, requests, json, couchdb, datetime, time, sys, re, random, string
-from totalimpact import dao
+import os, requests, json, datetime, time, sys, re, random, string
 from time import sleep
 import logging
 
@@ -191,7 +190,7 @@ class CreateCollectionPage:
                 elapsed=elapsed
             ))
         else:
-            logger.warning("create-collection page failed to load!".format(
+            logger.warning("create-collection page for '{collection_id}' failed to load!".format(
                 collection_id = collection_id
             ))
         self.aliases = []
@@ -289,13 +288,16 @@ class IdSampler(object):
             url=url
         ))
         r = requests.get(url)
-        print r.text
-        dois = json.loads(r.text)
-        logger.info("IdSampler got {count} random dois back in {elapsed} seconds".format(
-            count=len(dois),
-            elapsed=round(time.time() - start, 2)
-        ))
-        logger.debug("IdSampler got these dois back: " + str(dois))
+        if r.status_code == 200:
+            dois = json.loads(r.text)
+            logger.info("IdSampler got {count} random dois back in {elapsed} seconds".format(
+                count=len(dois),
+                elapsed=round(time.time() - start, 2)
+            ))
+            logger.debug("IdSampler got these dois back: " + str(dois))
+        else:
+            logger.warning("the random doi service isn't working right now; sending back an empty list.")
+            dois = []
 
         return dois
 
