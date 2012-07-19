@@ -11,6 +11,7 @@ from totalimpact import default_settings
 import csv, StringIO, logging
 
 logger = logging.getLogger("ti.views")
+logger.setLevel(logging.DEBUG)
 
 @app.before_request
 def connect_to_db():
@@ -132,6 +133,8 @@ def items_tiid_post(tiids):
 # too much logic here in the views.
 @app.route('/items', methods=['POST'])
 def items_namespace_post():
+
+    logger.debug("/items got this json as a POST: " + str(request.json))
     try:
         #it's  a list of aliases; make new items for 'em
         aliases_list = [(namespace, nid) for [namespace, nid] in request.json]

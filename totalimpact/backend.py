@@ -17,7 +17,7 @@ class TotalImpactBackend(object):
         self.dao = dao
         self.dao.update_design_doc()
         self.providers = providers
-    
+
     def run(self):
         self._spawn_threads()
         try:
@@ -25,7 +25,7 @@ class TotalImpactBackend(object):
         except (KeyboardInterrupt, SystemExit):
             logger.info("Interrupted ... exiting ...")
             self._cleanup()
-    
+
     def _get_num_workers_from_config(self, provider_name, provider_config):
         relevant_provider_config = {"workers":1}
         for (key, provider_config_dict) in provider_config:

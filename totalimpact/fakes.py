@@ -18,7 +18,7 @@ requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
 # Don't get db from env variable because don't want to kill production by mistake
-base_db_url = "https://app5492954.heroku:Tkvx8JlwIoNkCJcnTscpKcRl@app5492954.heroku.cloudant.com"
+base_db_url = os.getenv("CLOUDANT_URL")
 base_db = os.getenv("CLOUDANT_DB")
 #base_db_url = "http://localhost:5984"
 #base_db = "localdb"
@@ -75,7 +75,7 @@ class Importer:
         aliases = [(namespace, id) if isinstance(id, str)
             else (namespace, ",".join(id)) for namespace, id in aliases]
 
-        logger.info("{provider} importer got {num_aliases} aliases from '{q}' in {elapsed} seconds.".format(
+        logger.info("{provider} importer got {num_aliases} aliases with username '{q}' in {elapsed} seconds.".format(
             provider = self.provider_name,
             num_aliases = len(aliases),
             q = query,
@@ -113,10 +113,10 @@ class ReportPage:
 
 
     def _get_tiids(self, text):
-        '''gets the list of tiids to poll. in the real report page, this is done
+        """gets the list of tiids to poll. in the real report page, this is done
         via a 'tiids' javascript var that's placed there when the view constructs
         the page. this method parses the page to get them...it's brittle, though,
-        since if the report page changes this breaks.'''
+        since if the report page changes this breaks."""
 
         m = re.search("var tiids = (\[[^\]]+\])", text)
         tiids = json.loads(m.group(1))
@@ -178,9 +178,10 @@ class ReportPage:
 
 class CreateCollectionPage:
 
-    aliases = []
-
     def __init__(self):
+        self.reload()
+
+    def reload(self):
         start = time.time()
         logger.info("loading the create-collection page")
         resp = requests.get(webapp_url+"/create")
@@ -193,8 +194,6 @@ class CreateCollectionPage:
             logger.warning("create-collection page failed to load!".format(
                 collection_id = collection_id
             ))
-
-    def reload(self):
         self.aliases = []
         self.collection_name = "My collection"
 
@@ -213,7 +212,7 @@ class CreateCollectionPage:
 
     def press_go_button(self):
         tiids = self._create_items()
-        collection_id = self._create_collection(tiids, name)
+        collection_id = self._create_collection(tiids)
         report_page = ReportPage(collection_id)
         report_page.poll()
 
@@ -248,10 +247,10 @@ class CreateCollectionPage:
 
         return tiids
 
-    def _create_collection(self, tiids, collection_name):
+    def _create_collection(self, tiids):
         start = time.time()
         url = api_url+"/collection"
-        collection_name = "[ti test] " + collection_name
+        collection_name = "[ti test] " + self.collection_name
 
         logger.info("creating collection with {num_tiids} tiids".format(
             num_tiids = len(tiids)
@@ -365,9 +364,9 @@ class User(object):
         ccp = CreateCollectionPage()
 
         sampler = IdSampler()
-        ccp.enter_aliases_directly(sampler.get_dois(5))
+        ccp.enter_aliases_directly([["doi", x] for x in sampler.get_dois(5)])
         ccp.get_aliases_with_importers("github", sampler.get_github_username())
-        ccp.set_collection_name(collection_name)
+        ccp.set_collection_name(interaction_name)
         ccp.press_go_button()
 
     def upate_collection(self, interaction_name):
