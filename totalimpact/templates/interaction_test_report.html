@@ -1,7 +1,3 @@
-<!--
-To change this template, choose Tools | Templates
-and open the template in the editor.
--->
 <!DOCTYPE html>
 <html>
     <head>
@@ -9,7 +5,11 @@ and open the template in the editor.
         <meta http-equiv="Content-Type" content="text/html; charset=MacRoman">
     </head>
     <body>
-        <h1>Report for <span id="action">{{ report.action }}</span> interaction <span id="name">{{ report.name }}</span></h1>
-        <div>TODO write content</div>
+        <h1>Report for {{ report.action }} interaction '{{ report.name }}'</h1>
+        <ul>
+           {% for key, value in report.iteritems() %}
+           <li id="{{ key }}"><span class="key">{{ key }}:</span><span class="value">{{ value }}</span></li>
+           {% endfor %}
+        </ul>
     </body>
 </html>

@@ -1,4 +1,4 @@
-import os, requests, json, couchdb, time, sys, re, random, string
+import os, requests, json, couchdb, datetime, time, sys, re, random, string
 from totalimpact import dao
 from time import sleep
 import logging
@@ -54,7 +54,7 @@ class Importer:
         start = time.time()
         logger.info(
             "getting aliases from the {provider} importer, using url '{url}'".format(
-                provider=self.provider_name, 
+                provider=self.provider_name,
                 url=query_url
             ))
         r = requests.get('http://localhost:5001/provider/github/memberitems?query=Morgawr')
@@ -321,7 +321,7 @@ class IdSampler(object):
         return username
 
 
-class User(object):
+class Person(object):
 
     def do(self, action_type):
         start = time.time()
@@ -349,9 +349,11 @@ class User(object):
         name=action_type,
         elapsed=elapsed
         ))
+
+        # this is a really dumb way to do the times; should be using time objects, not stamps
         return {
-            "start": start,
-            "end": end,
+            "start": datetime.datetime.fromtimestamp(start).strftime('%m-%d %H:%M:%S'),
+            "end": datetime.datetime.fromtimestamp(end).strftime('%m-%d %H:%M:%S'),
             "elapsed": elapsed,
             "action": action_type,
             "name": interaction_name,

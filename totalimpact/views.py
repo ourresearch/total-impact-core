@@ -468,7 +468,7 @@ def collection(cid=''):
                 coll.title = request.json["title"]
                 coll.save()
                 response_code = 201 # Created
-            except (AttributeError, TypeError, JSONDecodeError):
+            except (AttributeError, TypeError):
                 # we got missing or improperly formated data.
                 # should log the error...
                 abort(404)  #what is the right error message for 'needs arguments'?
@@ -485,13 +485,30 @@ def collection(cid=''):
     return resp
 
 
-@app.route('/tests/create_collection', methods = ['GET'])
-def test_create_collection():
-    fake_user = fakes.User()
-    report = fake_user.do("make_collection")
-    return render_template(
-        'interaction_test_report.html',
-        report=report
-        )
+@app.route('/tests/interactions/<action_type>', methods = ['GET'])
+def test_create_collection(action_type='', web=True):
+    logger.info("running /tests/interactions/"+action_type)
+
+    person = fakes.Person()
+#    report = person.do(script_name)
+
+    report = {
+        "start": "7-19 12:00:00",
+        "start": "7-19 12:00:45",
+        "elapsed": 45,
+        "action": action_type,
+        "name": "abcde",
+        "result":True,
+        "error_str": None
+    }
+
+    if web:
+        return render_template(
+            'interaction_test_report.html',
+            report=report
+            )
+    else:
+        return report
+
     
     
