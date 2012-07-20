@@ -486,12 +486,13 @@ def collection(cid=''):
 
 
 @app.route('/tests/interactions/<action_type>', methods = ['GET'])
-def test_create_collection(action_type='', web=True):
+def tests_interactions(action_type='', web=True):
     logger.info("running /tests/interactions/"+action_type)
 
     person = fakes.Person()
-#    report = person.do(script_name)
+    report = person.do(action_type)
 
+    '''
     report = {
         "start": "7-19 12:00:00",
         "start": "7-19 12:00:45",
@@ -501,6 +502,7 @@ def test_create_collection(action_type='', web=True):
         "result":True,
         "error_str": None
     }
+    '''
 
     if web:
         return render_template(
