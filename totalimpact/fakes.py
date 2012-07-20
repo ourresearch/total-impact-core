@@ -2,19 +2,11 @@ import os, requests, json, datetime, time, sys, re, random, string
 from time import sleep
 import logging
 
-# see http://wiki.pylonshq.com/display/pylonscookbook/Alternative+logging+configuration
-logging.basicConfig(
-    stream=sys.stdout,
-    level=logging.DEBUG,
-    format='"%(asctime)s %(levelname)8s %(name)s - %(message)s"',
-    datefmt='%H:%M:%S'
-)
-logging.getLogger("ti").setLevel(logging.INFO)
+
 logger = logging.getLogger("ti.fakes")
 
 #quiet Requests' noisy logging:
-requests_log = logging.getLogger("requests")
-requests_log.setLevel(logging.WARNING)
+requests_log = logging.getLogger("requests").setLevel(logging.WARNING)
 
 # Don't get db from env variable because don't want to kill production by mistake
 base_db_url = os.getenv("CLOUDANT_URL")
@@ -56,9 +48,7 @@ class Importer:
                 provider=self.provider_name,
                 url=query_url
             ))
-        r = requests.get('http://localhost:5001/provider/github/memberitems?query=Morgawr')
-
-        logger.debug("finished http call.")
+        r = requests.get(query_url)
 
         try:
             aliases = json.loads(r.text)
@@ -210,10 +200,14 @@ class CreateCollectionPage:
         return self.aliases
 
     def press_go_button(self):
+        if len(self.aliases) == 0:
+            raise ValueError("Trying to create a collection with no aliases.")
+
         tiids = self._create_items()
         collection_id = self._create_collection(tiids)
         report_page = ReportPage(collection_id)
         report_page.poll()
+        return collection_id
 
     def _create_items(self):
         start = time.time()
@@ -339,11 +333,11 @@ class Person(object):
         except Exception, e:
             error_str = e.__repr__()
             logger.exception("Fakes.user.{action_type} '{interaction_name}' threw an error:'".format(
-             action_type=action_type,
-             interaction_name=interaction_name,
-             error=e.__repr__()
+            action_type=action_type,
+            interaction_name=interaction_name,
+            error=e.__repr__()
             ))
-        result = None
+            result = None
 
         end = time.time()
         elapsed = end - start
@@ -352,11 +346,11 @@ class Person(object):
         elapsed=elapsed
         ))
 
-        # this is a really dumb way to do the times; should be using time objects, not stamps
+        # this is a dumb way to do the times; should be using time objects, not stamps
         return {
             "start": datetime.datetime.fromtimestamp(start).strftime('%m-%d %H:%M:%S'),
             "end": datetime.datetime.fromtimestamp(end).strftime('%m-%d %H:%M:%S'),
-            "elapsed": elapsed,
+            "elapsed": round(elapsed, 2),
             "action": action_type,
             "name": interaction_name,
             "result":result,
@@ -371,7 +365,7 @@ class Person(object):
         ccp.enter_aliases_directly([["doi", x] for x in sampler.get_dois(5)])
         ccp.get_aliases_with_importers("github", sampler.get_github_username())
         ccp.set_collection_name(interaction_name)
-        ccp.press_go_button()
+        return ccp.press_go_button()
 
     def upate_collection(self, interaction_name):
          pass
