@@ -14,7 +14,9 @@ class StdOut(object):
 
 # syslog will push to local3, which is formatted to push stuff to papertrail
 syslog.openlog(facility=syslog.LOG_LOCAL3)
-#sys.stdout = StdOut()
+
+# stdout won't be sent to terminal, but rather to logger.
+sys.stdout = StdOut()
 
 # we have to do the import down here, so that totalimpact logging will use our new stdout
 from totalimpact import views
@@ -23,10 +25,7 @@ from totalimpact import views
 parser = argparse.ArgumentParser(description="Run interaction tests from the command line")
 parser.add_argument("action_type", type=str, help="The action to test; available actions listed in fakes.py")
 args = vars(parser.parse_args())
-print args["action_type"]
-syslog.syslog( "run_interaction_tests.py starting.")
+print "run_interaction_tests.py starting."
 
-
-
-#report = views.tests_interactions("make_collection", web=False)
-#print "run_interaction_tests.py finished. Report: " + str(report)
+report = views.tests_interactions("make_collection", web=False)
+print "run_interaction_tests.py finished. Report: " + str(report)
