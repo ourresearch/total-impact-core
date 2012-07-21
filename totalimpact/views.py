@@ -89,6 +89,10 @@ def create_item(namespace, nid):
     item.needs_aliases = datetime.datetime.now().isoformat()
     
     item.save()
+    logger.info("Created new item '{id}' with alias '{alias}'".format(
+        id=item.id,
+        alias=str((namespace, nid))
+    ))
 
     try:
         return item.id
@@ -468,6 +472,10 @@ def collection(cid=''):
                 coll.title = request.json["title"]
                 coll.save()
                 response_code = 201 # Created
+                logger.info("saved new collection '{id}' with {num_items} items.".format(
+                    id=coll.id,
+                    num_items=len(request.json["items"])
+                ))
             except (AttributeError, TypeError):
                 # we got missing or improperly formated data.
                 # should log the error...
