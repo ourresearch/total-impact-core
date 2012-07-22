@@ -11,12 +11,8 @@ requests_log = logging.getLogger("requests").setLevel(logging.WARNING)
 # Don't get db from env variable because don't want to kill production by mistake
 base_db_url = os.getenv("CLOUDANT_URL")
 base_db = os.getenv("CLOUDANT_DB")
-#base_db_url = "http://localhost:5984"
-#base_db = "localdb"
-#api_url = "http://total-impact-core-staging.herokuapp.com"
-#webapp_url = "http://total-impact.org"
-api_url = "http://localhost:5001"
-webapp_url = "http://localhost:5000"
+webapp_url = "http://" + os.getenv("WEBAPP_ROOT")
+api_url = "http://" + os.getenv("API_ROOT")
 
 
 
