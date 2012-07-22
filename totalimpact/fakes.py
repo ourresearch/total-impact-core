@@ -196,6 +196,7 @@ class CreateCollectionPage:
         return self.aliases
 
     def press_go_button(self):
+        logger.info("user has pressed the 'go' button on the create-collection page.")
         if len(self.aliases) == 0:
             raise ValueError("Trying to create a collection with no aliases.")
 
