@@ -1,4 +1,4 @@
-import pdb, json, uuid, couchdb, time, copy, logging, os, re, threading
+import pdb, json, uuid, couchdb, time, copy, logging, os, re, threading, redis
 from couchdb import ResourceNotFound, PreconditionFailed
 from totalimpact import default_settings
 import requests
@@ -34,6 +34,9 @@ class Dao(object):
         self.url = DbUrl(db_url)
         self.db_name = db_name
 
+        # setup redis. this should go elsewhere, eventually.
+        self.redis = redis.from_url(os.getenv('REDISTOGO_URL'))
+
         try:
             self.db = self.couch[ db_name ]
         except (ResourceNotFound):
@@ -52,28 +55,16 @@ class Dao(object):
         
     def update_design_doc(self):
         design_doc = {
-                    "_id": "_design/queues",
-                    "language": "javascript",
-                    "views": {
-                        "by_alias": {},
-                        "by_tiid_with_snaps": {},
-                        "by_type_and_id": {},
-                        "needs_aliases": {},
-                        },
-                    "updates": {
-                        "bump-providers-run" :  '''function(doc, req) {
-                            if (!doc.providers_run) doc.providers_run = [];
-                            
-                            // don't duplicate providers in the providers_run array...
-                            if (doc.providers_run.indexOf(req.query.provider_name) < 0) {
-                                doc.providers_run.push(req.query.provider_name);
-                            }
-                            var message = toJSON(doc.providers_run);
-                            return [doc, message];
-                        }'''
-                    }
+            "_id": "_design/queues",
+            "language": "javascript",
+            "views": {
+                "by_alias": {},
+                "by_tiid_with_snaps": {},
+                "by_type_and_id": {},
+                "needs_aliases": {},
+            }
         }
-                    
+
         for view_name in design_doc["views"]:
             file = open('./config/couch/views/{0}.js'.format(view_name))
             design_doc["views"][view_name]["map"] = file.read()        
@@ -170,33 +161,27 @@ class Dao(object):
         return None
 
     def bump_providers_run(self, item_id, provider_name, tries=0):
-        
-        query_url = "{base}/{db}/{update}/{item_id}?provider_name={provider_name}".format(
-            base=self.url.get_base(),
-            db=self.db_name,
-            update="_design/queues/_update/bump-providers-run",
-            item_id=item_id,
-            provider_name=provider_name
-        )
+        providers_run_count = self.redis.incr(item_id)
+        logger.info("bumped providers_run with {provider_name} for {id}. {providers_run_count} run so far.".format(
+            provider_name=provider_name,
+            id=item_id,
+            providers_run_count=providers_run_count
+        ))
+        return int(providers_run_count)
 
-        '''
-        Doesn't seem like the lock should be necessary, but without it, occasionally
-        calls to the update handler are not recorded, suggesting race conditions.
-        '''
-        with lock:
-            (status_code, b, c) = self.bump.post(item_id, provider_name=provider_name)
-            if status_code == 201:
-                logger.info("bumped providers_run with {provider_name} for {id}. providers_run = {providers_run}".format(
-                    provider_name=provider_name,
-                    id=item_id,
-                    providers_run=c.read()
-                ))
-                return True
+    def get_providers_run_count(self, item_id):
+        r = self.redis.get(item_id)
+        logger.debug("getting providers run count for {id}: it's {num}".format(
+            id=item_id,
+            num=r
+        ))
+        if r is None:
+            return 0
+        else:
+            return int(r)
 
-            if r.status_code == 201:
-                logger.info("bumped providers_run with {provider_name} for {id}. providers_run = {providers_run}".format(
-                    provider_name=provider_name,
-                    id=item_id,
-                    providers_run=r.text
-                ))
+    def reset_providers_run_count(self, item_id):
+        logger.debug("resetting providers_run count to zero for "+item_id)
+        self.redis.set(item_id, 0)
+
 

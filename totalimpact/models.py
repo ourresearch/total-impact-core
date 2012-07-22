@@ -99,14 +99,13 @@ class Item(Saveable):
 
 
 class ItemFactory():
-    #TODO this should subclass a SaveableFactory
 
     item_class = Item
     all_static_meta = ProviderFactory.get_all_static_meta()
 
 
     @classmethod
-    def build_item(cls, item_doc, snaps):
+    def build_item(cls, item_doc, snaps, num_providers_run):
         item = {}
         item["type"] = "item"
         item["id"] = item_doc["_id"]
@@ -117,9 +116,6 @@ class ItemFactory():
         item["last_modified"] = item_doc["last_modified"]
         
         try:
-            # some legacy docs may not have the "providers_run" field yet...
-            item["providers_run"] = item_doc["providers_run"]
-            num_providers_run = len(item["providers_run"])
             item["currently_updating"] = (num_providers_run != item_doc["providersWithMetricsCount"])
         except KeyError:
             # since the update process sets providers_run, if it doesn't have the
@@ -175,7 +171,8 @@ class ItemFactory():
             item_doc = rows[0]["value"]
             snaps = [row["value"] for row in rows[1:]]
             try:
-                item = cls.build_item(item_doc, snaps)
+                num_providers_run = dao.get_providers_run_count(tiid)
+                item = cls.build_item(item_doc, snaps, num_providers_run)
             except Exception, e:
                 item = None
                 logger.error("Exception %s: Unable to build item %s, %s, %s" % (e, tiid, str(item_doc), str(snaps)))
