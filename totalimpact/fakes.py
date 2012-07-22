@@ -343,7 +343,7 @@ class Person(object):
         ))
 
         # this is a dumb way to do the times; should be using time objects, not stamps
-        return {
+        report = {
             "start": datetime.datetime.fromtimestamp(start).strftime('%m-%d %H:%M:%S'),
             "end": datetime.datetime.fromtimestamp(end).strftime('%m-%d %H:%M:%S'),
             "elapsed": round(elapsed, 2),
@@ -352,6 +352,11 @@ class Person(object):
             "result":result,
             "error_str": error_str
         }
+        logger.info("finished doing '{action_type}' interaction test. Here's the report: {report}".format(
+            action_type=action_type,
+            report=str(report)
+        ))
+
 
     def make_collection(self, interaction_name):
         logger.info("starting make_collection interaction script.")
