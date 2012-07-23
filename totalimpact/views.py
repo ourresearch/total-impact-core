@@ -82,10 +82,12 @@ def create_item(namespace, nid):
     item = ItemFactory.make_simple(mydao)
     
     # set this so we know when it's still updating later on
-    mydao.reset_providers_run_count(item.id)
+    mydao.set_num_providers_left(
+        item.id,
+        ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
+    )
 
-    item.providersWithMetricsCount = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-    
+
     item.aliases.add_alias(namespace, nid)
     item.needs_aliases = datetime.datetime.now().isoformat()
     
@@ -108,9 +110,10 @@ def update_item(tiid):
     item_doc["needs_aliases"] = datetime.datetime.now().isoformat()
 
     # set this so we know when it's still updating later on
-    mydao.reset_providers_run_count(item_doc["_id"])
-    item_doc["providersWithMetricsCount"] = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-    
+    mydao.set_num_providers_left(
+        item_doc["_id"],
+        ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
+    )
     item_doc["id"] = item_doc["_id"]
     mydao.save(item_doc)
 

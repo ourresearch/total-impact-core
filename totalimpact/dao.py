@@ -161,27 +161,31 @@ class Dao(object):
         return None
 
     def bump_providers_run(self, item_id, provider_name, tries=0):
-        providers_run_count = self.redis.incr(item_id)
-        logger.info("bumped providers_run with {provider_name} for {id}. {providers_run_count} run so far.".format(
+        #TODO rename to decr_num_providers_left
+        num_providers_left = self.redis.decr(item_id)
+        logger.info("bumped providers_run with {provider_name} for {id}. {num_providers_left} left to run.".format(
             provider_name=provider_name,
             id=item_id,
-            providers_run_count=providers_run_count
+            num_providers_left=num_providers_left
         ))
-        return int(providers_run_count)
+        return int(num_providers_left)
 
-    def get_providers_run_count(self, item_id):
+    def get_num_providers_left(self, item_id):
         r = self.redis.get(item_id)
-        logger.debug("getting providers run count for {id}: it's {num}".format(
+        logger.debug("item '{id}' has {num} still left to run".format(
             id=item_id,
             num=r
         ))
         if r is None:
-            return 0
+            return None
         else:
             return int(r)
 
-    def reset_providers_run_count(self, item_id):
-        logger.debug("resetting providers_run count to zero for "+item_id)
-        self.redis.set(item_id, 0)
+    def set_num_providers_left(self, item_id, num_providers_left):
+        self.redis.set(item_id, num_providers_left)
+        logger.debug("set num_providers_left count to {num} for item '{tiid}'".format(
+            num=num_providers_left,
+            tiid=item_id
+        ))
 
 

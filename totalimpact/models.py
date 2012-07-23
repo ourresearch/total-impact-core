@@ -1,8 +1,6 @@
 from werkzeug import generate_password_hash, check_password_hash
-import totalimpact.dao as dao
-from totalimpact import default_settings
 from totalimpact.providers.provider import ProviderFactory
-import time, uuid, json, hashlib, inspect, re, copy, string, random, datetime
+import uuid, string, random, datetime, iso8601, pytz
 
 import threading
 from pprint import pprint
@@ -105,7 +103,7 @@ class ItemFactory():
 
 
     @classmethod
-    def build_item(cls, item_doc, snaps, num_providers_run):
+    def build_item(cls, item_doc, snaps, num_providers_left):
         item = {}
         item["type"] = "item"
         item["id"] = item_doc["_id"]
@@ -114,15 +112,10 @@ class ItemFactory():
         item["biblio"]['genre'] = cls.decide_genre(item_doc['aliases'])
         item["created"] = item_doc["created"]
         item["last_modified"] = item_doc["last_modified"]
-        
-        try:
-            item["currently_updating"] = (num_providers_run != item_doc["providersWithMetricsCount"])
-        except KeyError:
-            # since the update process sets providers_run, if it doesn't have the
-            # key at all, it must not be updating.
-            item["currently_updating"] = False
-            
-            
+
+        # decide if the item is still updating:
+        item["currently_updating"] = bool(num_providers_left)
+
         item["metrics"] = {} #not using what is in stored item for this
         for snap in snaps:
             metric_name = snap["metric_name"]
@@ -171,8 +164,8 @@ class ItemFactory():
             item_doc = rows[0]["value"]
             snaps = [row["value"] for row in rows[1:]]
             try:
-                num_providers_run = dao.get_providers_run_count(tiid)
-                item = cls.build_item(item_doc, snaps, num_providers_run)
+                num_providers_left = dao.get_num_providers_left(tiid)
+                item = cls.build_item(item_doc, snaps, num_providers_left)
             except Exception, e:
                 item = None
                 logger.error("Exception %s: Unable to build item %s, %s, %s" % (e, tiid, str(item_doc), str(snaps)))
