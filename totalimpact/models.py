@@ -114,7 +114,7 @@ class ItemFactory():
         item["last_modified"] = item_doc["last_modified"]
 
         # decide if the item is still updating:
-        item["currently_updating"] = bool(num_providers_left)
+        item["currently_updating"] = num_providers_left > 0
 
         item["metrics"] = {} #not using what is in stored item for this
         for snap in snaps:
