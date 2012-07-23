@@ -358,6 +358,7 @@ class Person(object):
             action_type=action_type,
             report=str(report)
         ))
+        return report
 
 
     def make_collection(self, interaction_name):

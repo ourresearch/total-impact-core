@@ -172,20 +172,17 @@ class Dao(object):
 
     def get_num_providers_left(self, item_id):
         r = self.redis.get(item_id)
-        logger.debug("item '{id}' has {num} still left to run".format(
-            id=item_id,
-            num=r
-        ))
+
         if r is None:
             return None
         else:
             return int(r)
 
     def set_num_providers_left(self, item_id, num_providers_left):
-        self.redis.set(item_id, num_providers_left)
-        logger.debug("set num_providers_left count to {num} for item '{tiid}'".format(
+        logger.debug("setting {num} providers left to update for item '{tiid}'.".format(
             num=num_providers_left,
             tiid=item_id
         ))
+        self.redis.set(item_id, num_providers_left)
 
 
