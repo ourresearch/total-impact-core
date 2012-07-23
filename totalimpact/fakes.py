@@ -222,9 +222,10 @@ class CreateCollectionPage:
         try:
             tiids = json.loads(resp.text)
         except ValueError:
-            logger.warning("POSTing {query} endpoint returned no json (body: {data}) ".format(
+            logger.warning("POSTing {query} endpoint with data '{data}' returned no json, only '{resp}') ".format(
                 query=query,
-                data=data
+                data=data,
+                resp=resp
             ))
             raise ValueError
 
