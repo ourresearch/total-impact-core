@@ -1,17 +1,29 @@
 import os, requests, json, datetime, time, sys, re, random, string
 from time import sleep
+from requests import Timeout
 import logging
 
+# setup logging
+class ContextFilter(logging.Filter):
+    def filter(self, record):
+        record.msg = "test '{name}': {msg}".format(
+            name=self.test_name,
+            msg=record.msg
+        )
+        return True
 
 logger = logging.getLogger("ti.fakes")
+logger.setLevel(logging.INFO)
 
-#quiet Requests' noisy logging:
-requests_log = logging.getLogger("requests").setLevel(logging.WARNING)
+requests_log = logging.getLogger("requests").setLevel(logging.WARNING) # Requests' logging is too noisy
 
+
+# setup external services
 base_db_url = os.getenv("CLOUDANT_URL")
 base_db = os.getenv("CLOUDANT_DB")
 webapp_url = "http://" + os.getenv("WEBAPP_ROOT")
 api_url = "http://" + os.getenv("API_ROOT")
+
 
 
 
@@ -107,7 +119,7 @@ class ReportPage:
         return tiids
 
 
-    def poll(self, max_time=50):
+    def poll(self, max_time=60):
 
         logger.info("polling the {num_tiids} tiids of collection '{collection_id}'".format(
             num_tiids = len(self.tiids),
@@ -144,11 +156,8 @@ class ReportPage:
                 ))
                 return True
             elif elapsed > max_time:
-                logger.error("max polling time ({max} secs) exceeded for collection '{id}'; giving up.".format(
+                raise Exception("max polling time ({max} secs) exceeded for collection {id}. These items didn't update: {item_ids}".format(
                     max=max_time,
-                    id=self.collection_id
-                ))
-                logger.error("these items in collection '{id}' didn't update: {item_ids}".format(
                     id=self.collection_id,
                     item_ids=", ".join([item["id"] for item in items if item["currently_updating"]])
                 ))
@@ -273,12 +282,18 @@ class IdSampler(object):
 
     def get_dois(self, num=1):
         start = time.time()
-        url = "http://random.labs.crossref.org/dois?count="+str(num)
+        dois = []
+        url = "http://random.labs.crossref.org/dois?from=2000&count="+str(num)
         logger.info("getting {num} random dois with IdSampler, using {url}".format(
             num=num,
             url=url
         ))
-        r = requests.get(url)
+        try:
+            r = requests.get(url, timeout=20)
+        except Timeout:
+            logger.warning("the random doi service isn't working right now (timed out); sending back an empty list.")
+            return dois
+
         if r.status_code == 200:
             dois = json.loads(r.text)
             logger.info("IdSampler got {count} random dois back in {elapsed} seconds".format(
@@ -287,8 +302,7 @@ class IdSampler(object):
             ))
             logger.debug("IdSampler got these dois back: " + str(dois))
         else:
-            logger.warning("the random doi service isn't working right now; sending back an empty list.")
-            dois = []
+            logger.warning("the random doi service isn't working right now (got error code); sending back an empty list.")
 
         return dois
 
@@ -316,9 +330,16 @@ class IdSampler(object):
 
 class Person(object):
 
+    # "do" is a stupid name
     def do(self, action_type):
         start = time.time()
         interaction_name = ''.join(random.choice(string.ascii_lowercase) for x in range(5))
+
+        # all log messages will have the name of the test.
+        f = ContextFilter()
+        f.test_name = interaction_name
+        logger.addFilter(f)
+
         logger.info("Fakes.user.{action_type} interaction '{interaction_name}' starting now".format(
             action_type=action_type,
             interaction_name=interaction_name
@@ -329,10 +350,10 @@ class Person(object):
             result = getattr(self, action_type)(interaction_name)
         except Exception, e:
             error_str = e.__repr__()
-            logger.exception("Fakes.user.{action_type} '{interaction_name}' threw an error:'".format(
-            action_type=action_type,
-            interaction_name=interaction_name,
-            error=e.__repr__()
+            logger.exception("Fakes.user.{action_type} '{interaction_name}' threw an error: '{error_str}'".format(
+                action_type=action_type,
+                interaction_name=interaction_name,
+                error_str=error_str
             ))
             result = None
 
