@@ -1,7 +1,7 @@
 
 from flask import Flask, jsonify, json, request, redirect, abort, make_response
 from flask import render_template, flash
-import os, json, time, datetime
+import os, datetime, redis
 from pprint import pprint
 
 from totalimpact import dao, app, fakes
@@ -12,13 +12,9 @@ import csv, StringIO, logging
 
 logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
+redis = redis.from_url(os.getenv("REDISTOGO_URL"))
+mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
-@app.before_request
-def connect_to_db():
-    '''sets up the db. this has to happen before every request, so that
-    we can pass in alternate config values for testing'''
-    global mydao
-    mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
 #@app.before_request
 def check_api_key():
@@ -498,31 +494,17 @@ def collection(cid=''):
 
 
 @app.route('/tests/interactions/<action_type>', methods = ['GET'])
-def tests_interactions(action_type='', web=True):
-    logger.info("running /tests/interactions/"+action_type)
+def tests_interactions(action_type=''):
+    logger.info("getting tests/interactions/"+action_type)
 
-    person = fakes.Person()
-    report = person.do(action_type)
+    report_key = action_type + "_report"
+    report = redis.hgetall(report_key)
 
-    '''
-    report = {
-        "start": "7-19 12:00:00",
-        "start": "7-19 12:00:45",
-        "elapsed": 45,
-        "action": action_type,
-        "name": "abcde",
-        "result":True,
-        "error_str": None
-    }
-    '''
+    return render_template(
+        'interaction_test_report.html',
+        report=report
+        )
 
-    if web:
-        return render_template(
-            'interaction_test_report.html',
-            report=report
-            )
-    else:
-        return report
 
     
     
