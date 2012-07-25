@@ -8,7 +8,6 @@ logger = logging.getLogger("ti.fakes")
 #quiet Requests' noisy logging:
 requests_log = logging.getLogger("requests").setLevel(logging.WARNING)
 
-# Don't get db from env variable because don't want to kill production by mistake
 base_db_url = os.getenv("CLOUDANT_URL")
 base_db = os.getenv("CLOUDANT_DB")
 webapp_url = "http://" + os.getenv("WEBAPP_ROOT")

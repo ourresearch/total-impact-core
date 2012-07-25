@@ -1,7 +1,5 @@
-import pdb, json, uuid, couchdb, time, copy, logging, os, re, threading, redis
+import json, uuid, couchdb, time, logging, os, re, threading, redis
 from couchdb import ResourceNotFound, PreconditionFailed
-from totalimpact import default_settings
-import requests
 
 # set up logging
 logger = logging.getLogger("ti.dao")
@@ -184,5 +182,6 @@ class Dao(object):
             tiid=item_id
         ))
         self.redis.set(item_id, num_providers_left)
+
 
 
