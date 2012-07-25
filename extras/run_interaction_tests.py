@@ -1,4 +1,4 @@
-import argparse
+import argparse, redis, os
 from totalimpact import fakes
 
 """ Runs interaction tests; takes type of interaction from the argument it's called with."""
@@ -12,6 +12,12 @@ print "run_interaction_tests.py starting."
 
 person = fakes.Person()
 report = person.do(args["action_type"])
+
+redis = redis.from_url(os.getenv("REDISTOGO_URL"))
+report_key = args["action_type"] + "_report"
+print "saving report in redis with key " + report_key
+redis.hmset(report_key, report)
+
 
 
 
