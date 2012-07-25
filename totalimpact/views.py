@@ -1,14 +1,13 @@
 
-from flask import Flask, jsonify, json, request, redirect, abort, make_response
-from flask import render_template, flash
+from flask import json, request, redirect, abort, make_response
+from flask import render_template
 import os, datetime, redis
-from pprint import pprint
 
 from totalimpact import dao, app, fakes
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError, ProviderHttpError
 from totalimpact import default_settings
-import csv, StringIO, logging
+import logging
 
 logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
@@ -497,8 +496,11 @@ def collection(cid=''):
 def tests_interactions(action_type=''):
     logger.info("getting tests/interactions/"+action_type)
 
-    report_key = action_type + "_report"
-    report = redis.hgetall(report_key)
+    report = redis.hgetall(action_type + "_report")
+    report["url"] = "http://{root}/collection/{collection_id}".format(
+        root=os.getenv("WEBAPP_ROOT"),
+        collection_id=report["result"]
+    )
 
     return render_template(
         'interaction_test_report.html',
