@@ -14,7 +14,6 @@ logger = logging.getLogger("ti.fakes")
 
 class CollectionTester(object):
 
-    # "do" is a stupid name
     def test(self, method):
         start = time.time()
         interaction_name = ''.join(random.choice(string.ascii_lowercase) for x in range(5))
@@ -72,7 +71,15 @@ class CollectionTester(object):
 
 
     def create(self, interaction_name):
-        logger.debug("starting the 'create' method now.")
+        ''' Imitates a user creating and viewing a collection.
+
+        Should be run before commits. Is also run regularly on the production
+        server. Would be better to walk through the actual pages with a headless
+        browser, but they are so heavy on js, that seems very hard. Soo we use
+        the fake pages to imitate the AJAX calls the js pages make.
+        '''
+
+        logger.debug("in the 'create' method now.")
         ccp = fakes.CreateCollectionPage()
 
         sampler = fakes.IdSampler()
@@ -81,11 +88,30 @@ class CollectionTester(object):
         ccp.set_collection_name(interaction_name)
         return ccp.press_go_button()
 
-    def read(self, interaction_name):
-        pass
+    def read(self, interaction_name, collection_name="kn5auf"):
+        '''Imitates a user viewing the sample collection.
 
-    def update(self, interaction_name):
+        This method is useful for testing, and should be run before commits.
+        However, in production we use StillAlive to actually load and check the
+        report page using a headless browswer, which is better than this
+        simulation.
+        '''
+        logger.debug("in the 'read' method now.")
+        report_page = fakes.ReportPage(collection_name)
+        result = report_page.poll()
+        return result
+
+    def update(self, interaction_name, collection_name="kn5auf"):
+        '''Imitates a user updating a collection
+
+        Not implemented yet because isn't as common or important.
+        '''
+
         pass
 
     def delete(self, interaction_name):
+        '''Imitates a user updating a collection
+
+        Listed for CRUD completeness, but don't think we need this.
+        '''
         pass
