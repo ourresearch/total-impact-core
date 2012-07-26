@@ -44,11 +44,11 @@ class CollectionTester(object):
 
         end = time.time()
         elapsed = end - start
-        logger.info("{classname}.{method}('{interaction_name}') interaction in {elapsed} seconds.".format(
+        logger.info("{classname}.{method}('{interaction_name}') finished in {elapsed} seconds.".format(
             classname=self.__class__.__name__,
             method=method,
             interaction_name=interaction_name,
-            elapsed=elapsed
+            elapsed=round(elapsed, 2)
         ))
 
         # this is a dumb way to do the times; should be using time objects, not stamps
