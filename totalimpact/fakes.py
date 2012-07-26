@@ -3,15 +3,6 @@ from time import sleep
 from requests import Timeout
 import logging
 
-# setup logging
-class ContextFilter(logging.Filter):
-    def filter(self, record):
-        record.msg = "test '{name}': {msg}".format(
-            name=self.test_name,
-            msg=record.msg
-        )
-        return True
-
 logger = logging.getLogger("ti.fakes")
 logger.setLevel(logging.INFO)
 
@@ -19,8 +10,6 @@ requests_log = logging.getLogger("requests").setLevel(logging.WARNING) # Request
 
 
 # setup external services
-base_db_url = os.getenv("CLOUDANT_URL")
-base_db = os.getenv("CLOUDANT_DB")
 webapp_url = "http://" + os.getenv("WEBAPP_ROOT")
 api_url = "http://" + os.getenv("API_ROOT")
 
@@ -289,7 +278,7 @@ class IdSampler(object):
             url=url
         ))
         try:
-            r = requests.get(url, timeout=20)
+            r = requests.get(url, timeout=10)
         except Timeout:
             logger.warning("the random doi service isn't working right now (timed out); sending back an empty list.")
             return dois
@@ -327,72 +316,3 @@ class IdSampler(object):
 
         return username
 
-
-class Person(object):
-
-    # "do" is a stupid name
-    def do(self, action_type):
-        start = time.time()
-        interaction_name = ''.join(random.choice(string.ascii_lowercase) for x in range(5))
-
-        # all log messages will have the name of the test.
-        f = ContextFilter()
-        f.test_name = interaction_name
-        logger.addFilter(f)
-
-        logger.info("Fakes.user.{action_type} interaction '{interaction_name}' starting now".format(
-            action_type=action_type,
-            interaction_name=interaction_name
-        ))
-
-        try:
-            error_str = None
-            result = getattr(self, action_type)(interaction_name)
-        except Exception, e:
-            error_str = e.__repr__()
-            logger.exception("Fakes.user.{action_type} '{interaction_name}' threw an error: '{error_str}'".format(
-                action_type=action_type,
-                interaction_name=interaction_name,
-                error_str=error_str
-            ))
-            result = None
-
-        end = time.time()
-        elapsed = end - start
-        logger.info("Fakes.user finished {name} interaction in {elapsed} seconds.".format(
-        name=action_type,
-        elapsed=elapsed
-        ))
-
-        # this is a dumb way to do the times; should be using time objects, not stamps
-        report = {
-            "start": datetime.datetime.fromtimestamp(start).strftime('%m-%d %H:%M:%S'),
-            "end": datetime.datetime.fromtimestamp(end).strftime('%m-%d %H:%M:%S'),
-            "elapsed": round(elapsed, 2),
-            "action": action_type,
-            "name": interaction_name,
-            "result":result,
-            "error_str": error_str
-        }
-        logger.info("finished doing '{action_type}' interaction test. Here's the report: {report}".format(
-            action_type=action_type,
-            report=str(report)
-        ))
-        return report
-
-
-    def make_collection(self, interaction_name):
-        logger.info("starting make_collection interaction script.")
-        ccp = CreateCollectionPage()
-
-        sampler = IdSampler()
-        ccp.enter_aliases_directly([["doi", x] for x in sampler.get_dois(5)])
-        ccp.get_aliases_with_importers("github", sampler.get_github_username())
-        ccp.set_collection_name(interaction_name)
-        return ccp.press_go_button()
-
-    def upate_collection(self, interaction_name):
-         pass
-
-    def check_collection(self, interaction_name):
-         pass
