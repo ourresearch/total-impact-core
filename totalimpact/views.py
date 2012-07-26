@@ -492,11 +492,11 @@ def collection(cid=''):
     return resp
 
 
-@app.route('/tests/interactions/<action_type>', methods = ['GET'])
+@app.route('/test/collection/<action_type>', methods = ['GET'])
 def tests_interactions(action_type=''):
-    logger.info("getting tests/interactions/"+action_type)
+    logger.info("getting test/collection/"+action_type)
 
-    report = redis.hgetall(action_type + "_report")
+    report = redis.hgetall("test.collection." + action_type)
     report["url"] = "http://{root}/collection/{collection_id}".format(
         root=os.getenv("WEBAPP_ROOT"),
         collection_id=report["result"]
