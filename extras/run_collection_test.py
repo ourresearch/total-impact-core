@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser(description="Run interaction tests from the com
 parser.add_argument("action_type", type=str, help="The action to test; available actions listed in fakes.py")
 args = vars(parser.parse_args())
 print args
-print "run_interaction_tests.py starting."
+print "run_collection_test.py starting."
 
 # this assumes you're testing collections; must be adapted when we add provider tests...
 collection_tester = testers.CollectionTester()
