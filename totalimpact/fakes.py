@@ -139,9 +139,10 @@ class ReportPage:
 
             elapsed = time.time() - start
             if resp.status_code == 200:
-                logger.info("collection '{id}' finished updating in {elapsed} seconds.".format(
+                logger.info("collection '{id}' with {num_items} items finished updating in {elapsed} seconds.".format(
                     id=self.collection_id,
-                    elapsed=elapsed
+                    num_items=len(self.tiids),
+                    elapsed=round(elapsed, 2)
                 ))
                 return True
             elif elapsed > max_time:
