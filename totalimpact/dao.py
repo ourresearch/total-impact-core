@@ -104,24 +104,21 @@ class Dao(object):
             return None
 
     def save(self, doc):
-        try:
-            doc["_id"] = doc["id"]
-            del doc["id"]
-        except KeyError:
-            doc["_id"] = uuid.uuid1().hex
-            logger.info("IN DAO MINTING A NEW ID ID %s" %(doc["_id"]))
-        logger.info("IN DAO SAVING ID %s" %(doc["_id"]))
+        if "_id" not in doc:
+            raise KeyError("tried to save doc with '_id' key unset.")
+
+        logger.info("I'm in ur dao, saving id '%s'" %(doc["_id"]))
         retry = True
         while retry:
             try:
                 response = self.db.save(doc)
                 retry = False
             except couchdb.ResourceConflict, e:
-                logger.info("Couch conflict %s, will retry" %(e))
+                logger.info("Couch conflict saving {id}; will retry".format(id=doc["_id"]))
                 newer_doc = self.get(doc["_id"])
                 doc["_rev"] = newer_doc["_rev"]
                 time.sleep(0.1)
-        logger.info("IN DAO SAVED ID %s" %(doc["_id"]))
+        logger.info("In dao, saved %s" %(doc["_id"]))
         return response
 
        

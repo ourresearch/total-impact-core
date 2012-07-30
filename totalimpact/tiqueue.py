@@ -53,10 +53,7 @@ class QueueMonitor(StoppableThread):
 
             error_count = 0
             for row in rows:
-                item_doc = copy.deepcopy(row["value"])
-
-                item = ItemFactory.get_item_object_from_item_doc(self.dao, 
-                        item_doc)
+                item = copy.deepcopy(row["value"])
 
                 log.info("%20s detected on request queue: item %s"
                     % ("QueueMonitor", item["_id"]))
@@ -67,9 +64,9 @@ class QueueMonitor(StoppableThread):
                     % ("QueueMonitor", item["_id"]))
 
                 # remove the needs_aliases key from doc, to take off queue
-                del item_doc["needs_aliases"]
+                del item["needs_aliases"]
 
-                self.dao.save(item_doc)
+                self.dao.save(item)
 
                 # Now add the item to the in-memory queue
                 Queue.init_queue("aliases")
