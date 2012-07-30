@@ -15,8 +15,9 @@ class TotalImpactBackend(object):
     def __init__(self, dao, providers):
         self.threads = [] 
         self.dao = dao
+        self.dao.update_design_doc()
         self.providers = providers
-    
+
     def run(self):
         self._spawn_threads()
         try:
@@ -24,7 +25,7 @@ class TotalImpactBackend(object):
         except (KeyboardInterrupt, SystemExit):
             logger.info("Interrupted ... exiting ...")
             self._cleanup()
-    
+
     def _get_num_workers_from_config(self, provider_name, provider_config):
         relevant_provider_config = {"workers":1}
         for (key, provider_config_dict) in provider_config:
@@ -185,7 +186,8 @@ class ProviderThread(StoppableThread):
 
             if method_name == "metrics":
                 # bump it because doesn't support it, not going to call it
-                self.dao.bump_providers_run_counter(item.id)
+                provider_name =  provider.__class__.__name__
+                self.dao.bump_providers_run(item.id, provider_name)
 
             logger.debug("%20s: skipping %s %s %s for %s, does not provide" 
                 % (self.thread_id, provider, method_name, str(aliases), tiid))
@@ -236,10 +238,17 @@ class ProviderThread(StoppableThread):
                     logger.debug("%20s: cache NOT enabled %s %s for %s"
                         % (self.thread_id, provider, method_name, tiid))
 
+                # convert the dict into a list of (namespace, id) tuples, like:
+                # [(doi, 10.123), (doi, 10.345), (pmid, 1234567)]
+                alias_tuples = [
+                    (namespace, id)
+                    for namespace, id_list in item.aliases.iteritems()
+                    for id in id_list
+                ]
                 response = self.call_provider_method(
                     provider, 
                     method_name, 
-                    item.aliases.get_aliases_list(), 
+                    alias_tuples,
                     item.id,
                     cache_enabled=cache_enabled)
                 success = True
@@ -289,13 +298,15 @@ class ProvidersAliasThread(ProviderThread):
         queue = Queue("aliases")
         ProviderThread.__init__(self, dao, queue)
         self.providers = providers
+
         self.thread_id = "alias_thread"
         self.dao = dao
+
 
         
     def process_item(self, item):
         logger.info("%20s: initial alias list for %s is %s" 
-                    % (self.thread_id, item.id, item.aliases.get_aliases_list()))
+                    % (self.thread_id, item.id, item.aliases))
 
         if not self.stopped():
             for provider in self.providers: 
@@ -303,7 +314,18 @@ class ProvidersAliasThread(ProviderThread):
                 (success, new_aliases) = self.process_item_for_provider(item, provider, 'aliases')
                 if success:
                     if new_aliases:
-                        item.aliases.add_unique(new_aliases)
+                        logger.debug("here are the new aliases from {provider}: {aliases}.".format(
+                            provider=provider,
+                            aliases=str(new_aliases)
+                        ))
+                        # add new aliases
+                        for ns, id in new_aliases:
+                            try:
+                                item.aliases[ns].append(id)
+                                item.aliases[ns] = list(set(item.aliases[ns]))
+                            except KeyError: # no ids for that namespace yet. make it.
+                                item.aliases[ns] = [id]
+
                 else:
                     logger.info("%20s: NOT SUCCESS in process_item %s, partial aliases only for provider %s" 
                         % (self.thread_id, item.id, provider.provider_name))
@@ -325,12 +347,12 @@ class ProvidersAliasThread(ProviderThread):
                         % (self.thread_id, item.id, provider.provider_name))
 
                 logger.info("%20s: interm aliases for item %s after %s: %s" 
-                    % (self.thread_id, item.id, provider.provider_name, str(item.aliases.get_aliases_list())))
+                    % (self.thread_id, item.id, provider.provider_name, str(item.aliases)))
                 logger.info("%20s: interm biblio for item %s after %s: %s" 
                     % (self.thread_id, item.id, provider.provider_name, str(item.biblio)))
 
             logger.info("%20s: final alias list for %s is %s" 
-                    % (self.thread_id, item.id, item.aliases.get_aliases_list()))
+                    % (self.thread_id, item.id, item.aliases))
 
             # Time to add this to the metrics queue
             logger.debug("%20s: FULL ITEM on metrics queue %s %s"
@@ -374,12 +396,8 @@ class ProviderMetricsThread(ProviderThread):
             pass
         finally:
             # update provider counter so api knows when all have finished
-            logger.debug("%20s: done with metrics for %s, bumping counter"
-                % (self.thread_id, item.id))
-            self.dao.bump_providers_run_counter(item.id)
-
-            logger.debug("%20s: done with metrics for %s, bump counter DONE"
-                % (self.thread_id, item.id))
+            provider_name =  self.provider.__class__.__name__
+            self.dao.bump_providers_run(item.id, provider_name)
 
 
 def main():

@@ -1,8 +1,6 @@
 from werkzeug import generate_password_hash, check_password_hash
-import totalimpact.dao as dao
-from totalimpact import default_settings
 from totalimpact.providers.provider import ProviderFactory
-import time, uuid, json, hashlib, inspect, re, copy, string, random, datetime
+import uuid, string, random, datetime, iso8601, pytz
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts

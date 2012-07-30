@@ -1,9 +1,27 @@
-import pdb, json, uuid, couchdb, time, copy, logging, couchdb
-from couchdb import ResourceNotFound
-from totalimpact import default_settings
+import json, uuid, couchdb, time, logging, os, re, threading, redis
+from couchdb import ResourceNotFound, PreconditionFailed
 
 # set up logging
 logger = logging.getLogger("ti.dao")
+lock = threading.Lock()
+
+class DbUrl(object):
+    
+    def __init__(self, url):
+        self.full = url
+        
+    def get_username(self):
+        m = re.search("https://([^:]+)", self.full)
+        return m.group(1)
+
+    def get_password(self):
+        m = re.search(":[^:]+:([^@]+)", self.full)
+        return m.group(1)
+    
+    def get_base(self):
+        m = re.search("@(.+)", self.full)
+        return "https://" + m.group(1)
+        
 
 class Dao(object):
 
@@ -11,52 +29,69 @@ class Dao(object):
         '''sets up the data properties and makes a db connection'''
 
         self.couch = couchdb.Server(url=db_url)
+        self.url = DbUrl(db_url)
+        self.db_name = db_name
+
+        # setup redis. this should go elsewhere, eventually.
+        self.redis = redis.from_url(os.getenv('REDISTOGO_URL'))
 
         try:
             self.db = self.couch[ db_name ]
-        except (ValueError, ResourceNotFound):
+        except (ResourceNotFound):
             self.create_db(db_name)
         except LookupError:
             raise LookupError("CANNOT CONNECT TO DATABASE, maybe doesn't exist?")
+        
+        self.bump = self.db.resource("_design", "queues", "_update", "bump-providers-run")
+
        
     def delete_db(self, db_name):
         self.couch.delete(db_name);
 
+
+        
+        
+    def update_design_doc(self):
+        design_doc = {
+            "_id": "_design/queues",
+            "language": "javascript",
+            "views": {
+                "by_alias": {},
+                "by_tiid_with_snaps": {},
+                "by_type_and_id": {},
+                "needs_aliases": {},
+            }
+        }
+
+        for view_name in design_doc["views"]:
+            file = open('./config/couch/views/{0}.js'.format(view_name))
+            design_doc["views"][view_name]["map"] = file.read()        
+
+        logger.info("overwriting the design/queues doc with the latest version in dao.")
+        logger.debug("overwriting the design/queues doc with this, from dao: " + str(design_doc))
+        
+        try:
+            current_design_doc_rev = self.db["_design/queues"]["_rev"]
+            design_doc["_rev"] = current_design_doc_rev
+        except ResourceNotFound:
+            logger.info("brand new db; there's no design/queues doc. That's fine, we'll make it.")
+            
+        self.db.save(design_doc)
+        logger.info("saved the new design doc.")
+
+
     def create_db(self, db_name):
         '''makes a new database with the given name.
         uploads couch views stored in the config directory'''
-        designDoc = {
-                    "_id": "_design/queues",
-                    "language": "javascript",
-                    "views": {
-                        "by_alias": {},
-                        "by_tiid_with_snaps": {},
-                        "by_type_and_id": {},
-                        "needs_aliases": {},
-                        },
-                    "updates": {
-                        "bump-providers-run-counter" :  '''function(doc, req) {
-                            if (!doc.providersRunCounter) doc.providersRunCounter = 0;
-                            doc.providersRunCounter += 1;
-                            var message = '<h1>bumped it!</h1>';
-                            return [doc, message];
-                        }'''
-                    }
-        }
-                        
-                    
-                    
-        for view_name in designDoc["views"]:
-            file = open('./config/couch/views/{0}.js'.format(view_name))
-            designDoc["views"][view_name]["map"] = file.read()
 
         try:
             self.db = self.couch.create(db_name)
+            self.db_name = db_name
         except ValueError:
             print("Error, maybe because database name cannot include uppercase, must match [a-z][a-z0-9_\$\(\)\+-/]*$")
             raise ValueError
-        self.db.save( designDoc )
-        return True
+        
+        self.update_design_doc()
 
     @property
     def json(self):
@@ -123,20 +158,30 @@ class Dao(object):
 
         return None
 
-    def bump_providers_run_counter(self, item_id, tries=0):
-        bump = self.db.resource("_design", "queues", "_update", "bump-providers-run-counter")
-        try:
-            (status_code, b, c) = bump.post(item_id)
-            if status_code == 201:
-                logger.info("bumping ProviderRunCounter DONE")
-                return True
-        except couchdb.ResourceConflict:
-            #error handling below
-            pass
+    def bump_providers_run(self, item_id, provider_name, tries=0):
+        #TODO rename to decr_num_providers_left
+        num_providers_left = self.redis.decr(item_id)
+        logger.info("bumped providers_run with {provider_name} for {id}. {num_providers_left} left to run.".format(
+            provider_name=provider_name,
+            id=item_id,
+            num_providers_left=num_providers_left
+        ))
+        return int(num_providers_left)
 
-        if tries > 10:
-            logger.error("FAILING bumping ProviderRunCounter, tried 10 times")
-            return False
-        logger.warning("bumping ProviderRunCounter, trying again")
-        self.bump_providers_run_counter(item_id, tries+1)
+    def get_num_providers_left(self, item_id):
+        r = self.redis.get(item_id)
+
+        if r is None:
+            return None
+        else:
+            return int(r)
+
+    def set_num_providers_left(self, item_id, num_providers_left):
+        logger.debug("setting {num} providers left to update for item '{tiid}'.".format(
+            num=num_providers_left,
+            tiid=item_id
+        ))
+        self.redis.set(item_id, num_providers_left)
+
+
 

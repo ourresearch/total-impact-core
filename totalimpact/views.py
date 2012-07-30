@@ -1,23 +1,19 @@
 
-from flask import Flask, jsonify, json, request, redirect, abort, make_response
-from flask import render_template, flash
-import os, json, time, datetime
-from pprint import pprint
+from flask import json, request, redirect, abort, make_response
+from flask import render_template
+import os, datetime, redis
 
-from totalimpact import dao, app
+from totalimpact import dao, app, fakes
 from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError, ProviderHttpError
 from totalimpact import default_settings
-import csv, StringIO, logging
+import logging
 
 logger = logging.getLogger("ti.views")
+logger.setLevel(logging.DEBUG)
+redis = redis.from_url(os.getenv("REDISTOGO_URL"))
+mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
-@app.before_request
-def connect_to_db():
-    '''sets up the db. this has to happen before every request, so that
-    we can pass in alternate config values for testing'''
-    global mydao
-    mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
 #@app.before_request
 def check_api_key():
@@ -79,24 +75,40 @@ def tiid(ns, nid):
 def create_item(namespace, nid):
     logger.debug("In create_item with alias" + str((namespace, nid)))
     item = ItemFactory.make_simple(mydao)
-    item.aliases.add_alias(namespace, nid)
+    
+    # set this so we know when it's still updating later on
+    mydao.set_num_providers_left(
+        item.id,
+        ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
+    )
+
+
+    item.aliases[namespace] = [nid]
     item.needs_aliases = datetime.datetime.now().isoformat()
-    item.providersRunCounter = 0
+    
     item.save()
+    logger.info("Created new item '{id}' with alias '{alias}'".format(
+        id=item.id,
+        alias=str((namespace, nid))
+    ))
 
     try:
         return item.id
     except AttributeError:
-        abort(500)     
+        abort(500)    
 
 def update_item(tiid):
     logger.debug("In update_item with tiid " + tiid)
     item_doc = mydao.get(tiid)
 
     # set the needs_aliases timestamp so it will go on queue for update
-    #item = ItemFactory.get_item_object_from_item_doc(mydao, item_doc)
     item_doc["needs_aliases"] = datetime.datetime.now().isoformat()
-    item_doc["providersRunCounter"] = 0
+
+    # set this so we know when it's still updating later on
+    mydao.set_num_providers_left(
+        item_doc["_id"],
+        ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
+    )
     item_doc["id"] = item_doc["_id"]
     mydao.save(item_doc)
 
@@ -119,9 +131,15 @@ def items_tiid_post(tiids):
     resp.mimetype = "application/json"
     return resp
 
+
+#TODO we really could use some documentation of this function (and some refactoring...
+# too much logic here in the views.
 @app.route('/items', methods=['POST'])
 def items_namespace_post():
+
+    logger.debug("/items got this json as a POST: " + str(request.json))
     try:
+        #it's  a list of aliases; make new items for 'em
         aliases_list = [(namespace, nid) for [namespace, nid] in request.json]
     except ValueError:
         #is a list of tidds, so do update instead
@@ -242,7 +260,6 @@ returns a json list of item objects (100 max)
 404 unless all tiids return items from db
 '''
 @app.route('/items/<tiids>', methods=['GET'])
-@app.route('/items/<tiids>.<format>', methods=['GET'])
 def items(tiids, format=None):
     items = []
 
@@ -253,9 +270,15 @@ def items(tiids, format=None):
         try:
             item_dict = ItemFactory.get_simple_item(mydao, tiid)
         except (LookupError, AttributeError):
+            logger.warning("Got an error looking up tiid '{tiid}': aborting with 404".format(
+                tiid=tiid
+            ))
             abort(404)
 
         if not item_dict:
+            logger.warning("Looks like there's no item with tiid '{tiid}': aborting with 404".format(
+                tiid=tiid
+            ))
             abort(404)
 
         items.append(item_dict)
@@ -448,7 +471,11 @@ def collection(cid=''):
                 coll.title = request.json["title"]
                 coll.save()
                 response_code = 201 # Created
-            except (AttributeError, TypeError, JSONDecodeError):
+                logger.info("saved new collection '{id}' with {num_items} items.".format(
+                    id=coll.id,
+                    num_items=len(request.json["items"])
+                ))
+            except (AttributeError, TypeError):
                 # we got missing or improperly formated data.
                 # should log the error...
                 abort(404)  #what is the right error message for 'needs arguments'?
@@ -465,3 +492,21 @@ def collection(cid=''):
     return resp
 
 
+@app.route('/test/collection/<action_type>', methods = ['GET'])
+def tests_interactions(action_type=''):
+    logger.info("getting test/collection/"+action_type)
+
+    report = redis.hgetall("test.collection." + action_type)
+    report["url"] = "http://{root}/collection/{collection_id}".format(
+        root=os.getenv("WEBAPP_ROOT"),
+        collection_id=report["result"]
+    )
+
+    return render_template(
+        'interaction_test_report.html',
+        report=report
+        )
+
+
+    
+    
