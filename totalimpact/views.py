@@ -83,7 +83,7 @@ def create_item(namespace, nid):
     )
 
 
-    item.aliases.add_alias(namespace, nid)
+    item.aliases[namespace] = [nid]
     item.needs_aliases = datetime.datetime.now().isoformat()
     
     item.save()
