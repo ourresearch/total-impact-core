@@ -1,6 +1,7 @@
 from werkzeug import generate_password_hash, check_password_hash
 from totalimpact.providers.provider import ProviderFactory
-import uuid, string, random, datetime, iso8601, pytz
+from totalimpact import default_settings
+import uuid, string, random, datetime
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
@@ -64,12 +65,13 @@ class ItemFactory():
         return snap        
 
     @classmethod
-    def make_new_item(cls):
+    def make(cls):
         item = {}
         
         # make all the top-level stuff
         now = datetime.datetime.now().isoformat()
-        item["aliases"] = Aliases()
+        item["_id"] = uuid.uuid4()
+        item["aliases"] = {}
         item["biblio"] = {}
         item["last_modified"] = now
         item["created"] = now
@@ -128,33 +130,20 @@ class CollectionFactory():
         return ''.join(random.choice(choices) for x in range(len))
 
     @classmethod
-    def make(cls, dao, id=None, collection_dict=None):
-
-        if id is not None and collection_dict is not None:
-            raise TypeError("you can load from the db or from a dict, but not both")
+    def make(cls):
 
         now = datetime.datetime.now().isoformat()
-        collection = Collection(dao=dao)
+        collection = {}
 
-        if id is None and collection_dict is None:
-            collection.id = cls.make_id()
-            collection.created = now
-            collection.last_modified = now
-            collection.type = "collection"
-        else: # load an extant item
-            if collection_dict is None:
-                collection_dict = dao.get(id)
-
-            if collection_dict is None:
-                raise LookupError
-            
-            for k in collection_dict:
-                setattr(collection, k, collection_dict[k])
+        collection["_id"] = cls.make_id()
+        collection["created"] = now
+        collection["last_modified"] = now
+        collection["type"] = "collection"
 
         return collection
 
 
-class Collection(Object):
+class Collection():
     """
     {
         "id": "uuid-goes-here",

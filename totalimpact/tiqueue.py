@@ -1,6 +1,6 @@
 import time, datetime, logging, threading, simplejson, copy, couchdb
 from totalimpact import default_settings
-from totalimpact.models import Item, ItemFactory
+from totalimpact.models import ItemFactory
 from totalimpact.pidsupport import StoppableThread
 from totalimpact.providers.provider import ProviderFactory
 
@@ -58,24 +58,16 @@ class QueueMonitor(StoppableThread):
                 item = ItemFactory.get_item_object_from_item_doc(self.dao, 
                         item_doc)
 
-                tiid = item.id
-                log.info("%20s detected on request queue: item %s" 
-                    % ("QueueMonitor", tiid))
-
-                # remove biblio so it will be overwritten
-                #item_doc["biblio"] = {}
+                log.info("%20s detected on request queue: item %s"
+                    % ("QueueMonitor", item["_id"]))
 
                 # now save back the updated needs_aliases information
                 # do this before putting on queue, so that no one has changed it.
                 log.info("%20s UPDATING needs_aliases date in db: item %s" 
-                    % ("QueueMonitor", tiid))
+                    % ("QueueMonitor", item["_id"]))
 
                 # remove the needs_aliases key from doc, to take off queue
                 del item_doc["needs_aliases"]
-                delattr(item, "needs_aliases")  #not sure this is needed
-
-
-                item_doc["id"] = item.id
 
                 self.dao.save(item_doc)
 
@@ -111,12 +103,12 @@ class Queue():
 
     @classmethod
     def queued_items_ids(cls, queue_name):
-        return ([item.id for item in cls.queued_items[queue_name]])
+        return ([item["_id"] for item in cls.queued_items[queue_name]])
 
     @classmethod
     def enqueue(cls, queue_name, item):
         log.info("%20s enqueuing item %s"
-            % ("Queue " + queue_name, item.id))
+            % ("Queue " + queue_name, item["_id"]))
 
         # Synchronised section
         cls.queue_lock.acquire()
@@ -132,7 +124,7 @@ class Queue():
             # Take from the head of the queue
             item = copy.deepcopy(self.queued_items[self.queue_name][0])
             log.info("%20s dequeuing item %s" 
-                % ("Queue " + self.queue_name, item.id))
+                % ("Queue " + self.queue_name, item["_id"]))
             del self.queued_items[self.queue_name][0]
         self.queue_lock.release()
         return item
@@ -141,7 +133,7 @@ class Queue():
     def add_to_metrics_queues(self, item):
         # Add the item to the metrics queue
         log.info("%20s adding item %s to all metrics queues" 
-            % ("Queue", item.id))
+            % ("Queue", item["_id"]))
 
         providers_config = default_settings.PROVIDERS
         providers = ProviderFactory.get_providers(providers_config)
