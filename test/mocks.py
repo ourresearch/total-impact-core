@@ -63,7 +63,7 @@ class QueueMock(object):
             # Generate a mock item with initial alias ('mock', id)
             item = MockItemFactory.make_simple("not a dao")
             item.id = self.current_item
-            item.aliases.add_alias('mock',str(item.id))
+            item.aliases['mock'] = str(item.id)
             self.items[self.current_item] = item
             return item
         else:
