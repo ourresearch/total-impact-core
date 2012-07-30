@@ -5,6 +5,34 @@ from totalimpact import dao
 
 TEST_DB_NAME = "test_dao"
 
+
+class TestDbUrl(unittest.TestCase):
+    
+    def setUp(self):
+        url = "https://mah_username:mah_password@mah_username.cloudant.com"
+        self.db_url = dao.DbUrl(url)
+        pass
+    
+    def test_get_username(self):
+        username = self.db_url.get_username()
+        assert_equals(
+            username,
+            "mah_username"
+        )
+    def test_get_password(self):
+        password = self.db_url.get_password()
+        assert_equals(
+            password,
+            "mah_password"
+        )
+    def test_get_base(self):
+        base = self.db_url.get_base()
+        assert_equals(
+            base,
+            "https://mah_username.cloudant.com"
+        )
+        
+
 class TestDAO(unittest.TestCase):
 
     def setUp(self):

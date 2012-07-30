@@ -20,6 +20,7 @@ PROVIDERS = [
     # if-need-be biblio providers go here, in order with best first
     ("mendeley", { "workers":3 }),
     ("bibtex", { "workers":3 }),
+    ("dataone", {  "workers":3 }),
     ("webpage", {  "workers":3 }),
 
     # don't-have-biblio providers go here, alphabetical order

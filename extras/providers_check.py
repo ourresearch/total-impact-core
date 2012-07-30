@@ -27,6 +27,8 @@ import traceback
 
 from optparse import OptionParser
 
+#TODO use the new, refactored items and alias dicts (no longer objects).
+# this will break until that's done.
 
 class ProvidersCheck:
 

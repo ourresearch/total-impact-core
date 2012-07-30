@@ -138,7 +138,7 @@ class TestItem(ViewsTester):
         tiid = json.loads(resp.data)
 
         response = self.client.get('/item/' + tiid)
-        assert_equals(response.status_code, 200)
+        assert_equals(response.status_code, 210) # 210 created, but not done updating...
         assert_equals(response.mimetype, "application/json")
         saved_item = json.loads(response.data)
 
@@ -228,43 +228,6 @@ class TestCollection(ViewsTester):
                 set(response_loaded.keys()),
                 set([u'created', u'item_tiids', u'last_modified', u'title', u'type', u'id']))
         assert_equals(len(response_loaded["id"]), 6)
-
-    def test_collection_put_updated_collection(self):
-
-        # Put in an item.  Could mock this out in the future.
-        response = self.client.post('/collection',
-                data=json.dumps({"items": TEST_COLLECTION_TIID_LIST, "title":"My Title"}),
-                content_type="application/json")
-        response_loaded = json.loads(response.data)
-        new_collection_id = response_loaded["id"]
-
-        # put the new collection stuff
-        response = self.client.put('/collection/' + new_collection_id,
-                data=json.dumps(COLLECTION_SEED_MODIFIED),
-                content_type="application/json")
-        print response
-        print response.data
-        assert_equals(response.status_code, 200)  #updated
-        assert_equals(response.mimetype, "application/json")
-        response_loaded = json.loads(response.data)
-        assert_equals(
-                set(response_loaded.keys()),
-                set([u'created', u'collection_name', u'item_tiids', u'last_modified',
-                    u'owner', u'id'])
-                )
-        assert_equals(response_loaded["item_tiids"],
-            COLLECTION_SEED_MODIFIED["item_tiids"])
-
-    def test_collection_put_empty_payload(self):
-        response = self.client.put('/collection/' + TEST_COLLECTION_ID)
-        assert_equals(response.status_code, 404)  #Not found
-
-    def test_collection_delete_with_no_id(self):
-        response = self.client.delete('/collection/')
-        assert_equals(response.status_code, 404)  #Not found
-
-
-
 
     def test_collection_get_with_no_id(self):
         response = self.client.get('/collection/')

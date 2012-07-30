@@ -3,7 +3,6 @@ from totalimpact import default_settings
 from totalimpact.models import Item, ItemFactory
 from totalimpact.pidsupport import StoppableThread
 from totalimpact.providers.provider import ProviderFactory
-import default_settings
 
 log = logging.getLogger("ti.queue")
 
@@ -24,6 +23,7 @@ class QueueMonitor(StoppableThread):
     def run(self, runonce=False):
         """ runonce is for the test suite """
 
+        error_count = 0
         while not self.stopped():
             viewname = 'queues/needs_aliases'
             res = self.dao.view(viewname)
@@ -36,6 +36,22 @@ class QueueMonitor(StoppableThread):
                 time.sleep(0.5)
                 continue
 
+            except couchdb.ServerError, e:
+                log.error("The QueueMonitor got a server error back from CouchDB:{str}".format(
+                    str=e.__repr__()
+                ))
+                error_count += 1
+                if error_count > 3:
+                    log.critical("QueueMonitor still getting CouchDB server errors after {tries} tries: {error_str}".format(
+                        tries=error_count,
+                        error_str=e.__repr__()
+                    ))
+
+                time.sleep(2**error_count)
+                continue
+
+
+            error_count = 0
             for row in rows:
                 item_doc = copy.deepcopy(row["value"])
 
@@ -58,10 +74,6 @@ class QueueMonitor(StoppableThread):
                 del item_doc["needs_aliases"]
                 delattr(item, "needs_aliases")  #not sure this is needed
 
-                # add the number of providers with metrics, so can compare it
-                #  to estimate progress of reporting metrics
-                item_doc["providersWithMetricsCount"] = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-                item.providersWithMetricsCount = item_doc["providersWithMetricsCount"]
 
                 item_doc["id"] = item.id
 
