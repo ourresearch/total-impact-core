@@ -128,12 +128,6 @@ class Dao(object):
     def view(self, viewname):
         return self.db.view(viewname)
 
-    def create_collection(self):
-        return self.create_item()
-
-    def update_collection(self):
-        return self.update_item()
-        
     def delete(self, id):
         doc = self.db.get(id)
         self.db.delete(doc)

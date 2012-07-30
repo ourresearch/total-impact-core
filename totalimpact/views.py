@@ -3,9 +3,9 @@ from flask import json, request, redirect, abort, make_response
 from flask import render_template
 import os, datetime, redis
 
-from totalimpact import dao, app, fakes
-from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
-from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError, ProviderHttpError
+from totalimpact import dao, app
+from totalimpact.models import ItemFactory, CollectionFactory
+from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
 import logging
 
@@ -74,26 +74,26 @@ def tiid(ns, nid):
 
 def create_item(namespace, nid):
     logger.debug("In create_item with alias" + str((namespace, nid)))
-    item = ItemFactory.make_simple(mydao)
+    item = ItemFactory.make()
     
     # set this so we know when it's still updating later on
     mydao.set_num_providers_left(
-        item.id,
+        item["id"],
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
     )
 
 
-    item.aliases[namespace] = [nid]
-    item.needs_aliases = datetime.datetime.now().isoformat()
+    item["aliases"][namespace] = [nid]
+    item["needs_aliases"] = datetime.datetime.now().isoformat()
     
-    item.save()
+    mydao.save(item)
     logger.info("Created new item '{id}' with alias '{alias}'".format(
-        id=item.id,
+        id=item["id"],
         alias=str((namespace, nid))
     ))
 
     try:
-        return item.id
+        return item["id"]
     except AttributeError:
         abort(500)    
 
@@ -455,10 +455,7 @@ returns 404 or 204
 def collection(cid=''):
     response_code = None
 
-    try:
-        coll = CollectionFactory.make(mydao, id=cid)
-    except LookupError:
-        coll = None
+    coll = mydao.get(cid)
 
     if request.method == "POST":
         if coll:
@@ -466,13 +463,13 @@ def collection(cid=''):
             abort(405)   # Method Not Allowed
         else:
             try:
-                coll = CollectionFactory.make(mydao)
-                coll.add_items(request.json["items"])
-                coll.title = request.json["title"]
-                coll.save()
+                coll = CollectionFactory.make()
+                coll["item_tiids"] = request.json["items"]
+                coll["title"] = request.json["title"]
+                mydao.save(coll)
                 response_code = 201 # Created
                 logger.info("saved new collection '{id}' with {num_items} items.".format(
-                    id=coll.id,
+                    id=coll["_id"],
                     num_items=len(request.json["items"])
                 ))
             except (AttributeError, TypeError):
@@ -486,7 +483,7 @@ def collection(cid=''):
         else:
             abort(404)
 
-    resp = make_response( json.dumps( coll.as_dict(), sort_keys=True, indent=4 ), response_code)
+    resp = make_response( json.dumps( coll, sort_keys=True, indent=4 ), response_code)
     resp.mimetype = "application/json"
 
     return resp
