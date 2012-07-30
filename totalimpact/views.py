@@ -78,7 +78,7 @@ def create_item(namespace, nid):
     
     # set this so we know when it's still updating later on
     mydao.set_num_providers_left(
-        item["id"],
+        item["_id"],
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
     )
 
@@ -88,12 +88,12 @@ def create_item(namespace, nid):
     
     mydao.save(item)
     logger.info("Created new item '{id}' with alias '{alias}'".format(
-        id=item["id"],
+        id=item["_id"],
         alias=str((namespace, nid))
     ))
 
     try:
-        return item["id"]
+        return item["_id"]
     except AttributeError:
         abort(500)    
 
@@ -200,19 +200,21 @@ def item(tiid, format=None):
     # TODO check request headers for format as well.
 
     try:
-        item_dict = ItemFactory.get_simple_item(mydao, tiid)
+        item = ItemFactory.get_item(mydao, tiid)
     except (LookupError, AttributeError):
         abort(404)
 
-    if not item_dict:
+    if not item:
         abort(404)
     
-    if item_dict["currently_updating"]:
+    if mydao.get_num_providers_left(tiid) > 0:
         response_code = 210 # not complete yet
+        item["currently_updating"] = True
     else:
-        response_code = 200 
+        response_code = 200
+        item["currently_updating"] = False
 
-    resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4), response_code)
+    resp = make_response(json.dumps(item, sort_keys=True, indent=4), response_code)
     resp.mimetype = "application/json"
 
     return resp
@@ -231,7 +233,7 @@ def make_csv_rows(items):
 
     # body rows
     for item in items:
-        column_list = [item["id"]]
+        column_list = [item["_id"]]
         for alias_name in header_alias_names:
             try:
                 value = item['aliases'][alias_name][0]
@@ -263,30 +265,33 @@ returns a json list of item objects (100 max)
 def items(tiids, format=None):
     items = []
 
-    something_still_updating = False
+    something_currently_updating = False
     for index,tiid in enumerate(tiids.split(',')):
         if index > 500: break    # weak, change
 
         try:
-            item_dict = ItemFactory.get_simple_item(mydao, tiid)
-        except (LookupError, AttributeError):
-            logger.warning("Got an error looking up tiid '{tiid}': aborting with 404".format(
-                tiid=tiid
+            item = ItemFactory.get_item(mydao, tiid)
+        except (LookupError, AttributeError), e:
+            logger.warning("Got an error looking up tiid '{tiid}'; aborting with 404. error: {error}".format(
+                tiid=tiid,
+                error = e.__repr__()
             ))
             abort(404)
 
-        if not item_dict:
+        if not item:
             logger.warning("Looks like there's no item with tiid '{tiid}': aborting with 404".format(
                 tiid=tiid
             ))
             abort(404)
 
-        items.append(item_dict)
+        currently_updating = mydao.get_num_providers_left(tiid) > 0
+        item["currently_updating"] = currently_updating
+        something_currently_updating = something_currently_updating or currently_updating
 
-        something_still_updating = something_still_updating or item_dict["currently_updating"]
+        items.append(item)
 
     # return success if all reporting is complete for all items    
-    if something_still_updating:
+    if something_currently_updating:
         response_code = 210 # not complete yet
     else:
         response_code = 200

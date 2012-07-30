@@ -1,7 +1,7 @@
 from werkzeug import generate_password_hash, check_password_hash
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
-import uuid, string, random, datetime
+import shortuuid, string, random, datetime
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
@@ -23,21 +23,18 @@ class ItemFactory():
         if not rows:
             return None
         else:
-            item_doc = rows[0]["value"]
+            item = rows[0]["value"]
             snaps = [row["value"] for row in rows[1:]]
             try:
-                item = cls.build_item_for_client(item_doc, snaps)
+                item = cls.build_item_for_client(item, snaps)
             except Exception, e:
                 item = None
-                logger.error("Exception %s: Unable to build item %s, %s, %s" % (e, tiid, str(item_doc), str(snaps)))
+                logger.error("Exception %s: Unable to build item %s, %s, %s" % (e.__repr__(), tiid, str(item), str(snaps)))
         return item
 
     @classmethod
-    def build_item_for_client(cls, item_doc, snaps):
-        item = {}
-        item["id"] = item_doc["_id"]
-        item["biblio"]['genre'] = cls.decide_genre(item_doc['aliases'])
-        item["currently_updating"] = (item["currently_updating"] != item["providersWithMetricsCount"])
+    def build_item_for_client(cls, item, snaps):
+        item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
 
             
         item["metrics"] = {} #not using what is in stored item for this
@@ -54,11 +51,16 @@ class ItemFactory():
 
     @classmethod
     def build_snap(cls, tiid, metric_value_drilldown, metric_name):
+
+        now = datetime.datetime.now().isoformat()
+        shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
+
         snap = {}
+        snap["_id"] = shortuuid.uuid()
         snap["type"] = "metric_snap"
         snap["metric_name"] = metric_name
         snap["tiid"] = tiid
-        snap["created"] = datetime.datetime.now().isoformat()
+        snap["created"] = now
         (value, drilldown_url) = metric_value_drilldown
         snap["value"] = value
         snap["drilldown_url"] = drilldown_url
@@ -66,17 +68,17 @@ class ItemFactory():
 
     @classmethod
     def make(cls):
-        item = {}
-        
-        # make all the top-level stuff
+
         now = datetime.datetime.now().isoformat()
-        item["_id"] = uuid.uuid4()
+        shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
+
+        item = {}
+        item["_id"] = shortuuid.uuid()
         item["aliases"] = {}
         item["biblio"] = {}
         item["last_modified"] = now
         item["created"] = now
         item["type"] = "item"
-        item["providersRunCounter"] = 0
         item["providersWithMetricsCount"] = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
 
         return item
@@ -178,4 +180,8 @@ class Collection():
         if item_id in self.item_tiids:
             self.item_tiids.remove(item_id)
 
+
+# could make these saveable into the DB if we wanted, in the future
+class Error():
+    pass
 
