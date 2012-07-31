@@ -264,8 +264,8 @@ class Provider(object):
                 return {}
             elif response.status_code == 403: #forbidden
                 return {}
-            elif response.status_code == 303: #redirect
-                pass
+            elif ((response.status_code >= 300) and (response.status_code < 400)): #redirect
+                return {}
             else:
                 self._get_error(response.status_code, response)
         
@@ -457,7 +457,11 @@ class Provider(object):
         
         # cache the response and return
         if use_cache:
-            c.set_cache_entry(url, {'text' : r.text, 'status_code' : r.status_code})
+            try:
+                response_text = r.text
+            except TypeError:
+                response_text = None
+            c.set_cache_entry(url, {'text' : response_text, 'status_code' : r.status_code})
         return r
 
 
