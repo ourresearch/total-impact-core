@@ -33,18 +33,20 @@ api_items_loc = os.path.join(
 API_ITEMS_JSON = json.loads(open(api_items_loc, "r").read())
 
 def MOCK_member_items(self, query_string, url=None, cache_enabled=True):
-    return(GOLD_MEMBER_ITEM_CONTENT) 
+    return(GOLD_MEMBER_ITEM_CONTENT)
+
+# ensures that all the functions in the views.py module will use a local db,
+# which we can in turn use for these unit tests.
+mydao = views.set_db("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
 
 class ViewsTester(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        os.putenv("CLOUDANT_DB", "api_test")
-
-    def setUp(self):
         pass
 
+    def setUp(self):
         #setup api test client
         self.app = app
         self.app.testing = True
@@ -55,7 +57,11 @@ class ViewsTester(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        os.putenv("CLOUDANT_DB", "ti")
+        pass
+
+class DaoTester(unittest.TestCase):
+    def test_dao(self):
+        assert_equals(mydao.db.name, "ti")
 
 
 class TestMemberItems(ViewsTester):
@@ -207,11 +213,14 @@ class TestApi(ViewsTester):
 
     def setUp(self):
         super(TestApi, self).setUp()
-        self.d = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
+
+        # hacky way to delete the "ti" db, then make it fresh again for each test.
+        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
+        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+
 
     def tearDown(self):
-#        self.d.delete_db(os.environ["CLOUDANT_DB"])
-#        self.d.create_db(os.environ["CLOUDANT_DB"])
         pass
 
 
@@ -248,9 +257,10 @@ class TestApi(ViewsTester):
         second_plos_create_tiid = json.loads(second_plos_create_tiid_resp.data)
 
         # check that the tiid lists are the same
-        assert_equals(first_plos_create_tiid, second_plos_create_tiid)
+        assert_equals(first_plos_create_tiid, second_plos_create_tiid) 
 
 """
+
 
 class TestTiid(ViewsTester):
 
