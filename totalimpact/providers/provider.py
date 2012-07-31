@@ -527,12 +527,14 @@ def _lookup_json(data, keylist):
     for mykey in keylist:
         try:
             data = data[mykey]
-        except KeyError:
+        except (KeyError, TypeError):
             return None
     return(data)
 
 def _extract_from_json(page, dict_of_keylists):
     data = _load_json(page)
+    if not data:
+        return {}
     
     return_dict = {}
     if dict_of_keylists:
