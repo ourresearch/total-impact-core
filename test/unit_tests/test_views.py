@@ -33,17 +33,24 @@ api_items_loc = os.path.join(
 API_ITEMS_JSON = json.loads(open(api_items_loc, "r").read())
 
 def MOCK_member_items(self, query_string, url=None, cache_enabled=True):
-    return(GOLD_MEMBER_ITEM_CONTENT) 
+    return(GOLD_MEMBER_ITEM_CONTENT)
+
+# ensures that all the functions in the views.py module will use a local db,
+# which we can in turn use for these unit tests.
+mydao = views.set_db("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
 
 class ViewsTester(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        os.putenv("CLOUDANT_DB", "api_test")
+        pass
 
     def setUp(self):
-        pass
+        # hacky way to delete the "ti" db, then make it fresh again for each test.
+        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
+        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
         #setup api test client
         self.app = app
@@ -55,7 +62,11 @@ class ViewsTester(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        os.putenv("CLOUDANT_DB", "ti")
+        pass
+
+class DaoTester(unittest.TestCase):
+    def test_dao(self):
+        assert_equals(mydao.db.name, "ti")
 
 
 class TestMemberItems(ViewsTester):
@@ -99,7 +110,7 @@ class TestItem(ViewsTester):
         print response
         print response.data
         assert_equals(response.status_code, 201)  #Created
-        assert_equals(len(json.loads(response.data)), 25)
+        assert_equals(len(json.loads(response.data)), 24)
         assert_equals(response.mimetype, "application/json")
 
     def test_item_post_success(self):
@@ -207,11 +218,11 @@ class TestApi(ViewsTester):
 
     def setUp(self):
         super(TestApi, self).setUp()
-        self.d = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
+
+
+
 
     def tearDown(self):
-#        self.d.delete_db(os.environ["CLOUDANT_DB"])
-#        self.d.create_db(os.environ["CLOUDANT_DB"])
         pass
 
 
@@ -250,7 +261,7 @@ class TestApi(ViewsTester):
         # check that the tiid lists are the same
         assert_equals(first_plos_create_tiid, second_plos_create_tiid)
 
-"""
+
 
 class TestTiid(ViewsTester):
 
@@ -272,16 +283,15 @@ class TestTiid(ViewsTester):
     def test_item_post_known_tiid(self):
         response = self.client.post('/item/doi/IdThatAlreadyExists/')
         print response
-        print response.data
+        print "here is the response data: " + response.data
 
         # FIXME should check and if already exists return 200
         # right now this makes a new item every time, creating many dups
         assert_equals(response.status_code, 201)
-        assert_equals(len(json.loads(response.data)), 32)
+        assert_equals(len(json.loads(response.data)), 24)
         assert_equals(response.mimetype, "application/json")
 
     def test_item_get_unknown_tiid(self):
         # pick a random ID, very unlikely to already be something with this ID
         response = self.client.get('/item/' + str(uuid.uuid1()))
         assert_equals(response.status_code, 404)  # Not Found
-"""

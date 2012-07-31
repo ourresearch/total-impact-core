@@ -12,7 +12,15 @@ import logging
 logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 redis = redis.from_url(os.getenv("REDISTOGO_URL"))
-mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
+
+mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
+
+def set_db(url, db):
+    """useful for unit testing, where you want to use a local database
+    """
+    global mydao
+    mydao = dao.Dao(url, db)
+    return mydao
 
 
 #@app.before_request
@@ -109,7 +117,6 @@ def update_item(tiid):
         item_doc["_id"],
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
     )
-    item_doc["id"] = item_doc["_id"]
     mydao.save(item_doc)
 
     try:
