@@ -49,10 +49,12 @@ class Wikipedia(Provider):
                 raise(self._get_error(status_code))
 
         (doc, lookup_function) = provider._get_doc_from_xml(page)
-        searchinfo = doc.getElementsByTagName('searchinfo')
-        if not searchinfo:
+
+        try:
+            searchinfo = doc.getElementsByTagName('searchinfo')
+            totalhits = int(searchinfo[0].attributes['totalhits'].value)
+        except (TypeError, IndexError):
             raise ProviderContentMalformedError("No searchinfo in response document")
-        totalhits = int(searchinfo[0].attributes['totalhits'].value)
 
         if totalhits:
             metrics_dict = {"wikipedia:mentions": totalhits}
