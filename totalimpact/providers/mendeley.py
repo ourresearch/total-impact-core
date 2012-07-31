@@ -66,7 +66,7 @@ class Mendeley(Provider):
             author_string = ", ".join([author["surname"] for author in author_list])
             if author_string:
                 biblio_dict["authors"] = author_string
-        except TypeError:
+        except (TypeError, KeyError):
             pass
 
         return biblio_dict    

@@ -56,12 +56,10 @@ class Crossref(Provider):
         }
         biblio_dict = provider._extract_from_xml(page, dict_of_keylists)
 
-        soup = BeautifulSoup.BeautifulStoneSoup(page) 
-        if not soup:
-            raise(ProviderContentMalformedError)
-
-        authors_list = soup.findAll(contributor_role="author")
-        authors = ", ".join([str(author.surname.text) for author in authors_list if author.surname])
+        (doc, lookup_function) = provider._get_doc_from_xml(page)
+        contributors = doc.getElementsByTagName("contributors")[0]
+        surname_list = [surname.firstChild.data for surname in contributors.getElementsByTagName("surname")]
+        authors = ", ".join(surname_list)
         if authors:
             biblio_dict["authors"] = authors
 
