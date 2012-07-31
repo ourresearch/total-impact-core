@@ -47,6 +47,11 @@ class ViewsTester(unittest.TestCase):
         pass
 
     def setUp(self):
+        # hacky way to delete the "ti" db, then make it fresh again for each test.
+        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
+        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+
         #setup api test client
         self.app = app
         self.app.testing = True
@@ -214,10 +219,7 @@ class TestApi(ViewsTester):
     def setUp(self):
         super(TestApi, self).setUp()
 
-        # hacky way to delete the "ti" db, then make it fresh again for each test.
-        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
-        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+
 
 
     def tearDown(self):
@@ -257,9 +259,8 @@ class TestApi(ViewsTester):
         second_plos_create_tiid = json.loads(second_plos_create_tiid_resp.data)
 
         # check that the tiid lists are the same
-        assert_equals(first_plos_create_tiid, second_plos_create_tiid) 
+        assert_equals(first_plos_create_tiid, second_plos_create_tiid)
 
-"""
 
 
 class TestTiid(ViewsTester):
@@ -282,16 +283,15 @@ class TestTiid(ViewsTester):
     def test_item_post_known_tiid(self):
         response = self.client.post('/item/doi/IdThatAlreadyExists/')
         print response
-        print response.data
+        print "here is the response data: " + response.data
 
         # FIXME should check and if already exists return 200
         # right now this makes a new item every time, creating many dups
         assert_equals(response.status_code, 201)
-        assert_equals(len(json.loads(response.data)), 32)
+        assert_equals(len(json.loads(response.data)), 25)
         assert_equals(response.mimetype, "application/json")
 
     def test_item_get_unknown_tiid(self):
         # pick a random ID, very unlikely to already be something with this ID
         response = self.client.get('/item/' + str(uuid.uuid1()))
         assert_equals(response.status_code, 404)  # Not Found
-"""
