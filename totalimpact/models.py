@@ -56,7 +56,7 @@ class ItemFactory():
         shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
 
         snap = {}
-        snap["_id"] = shortuuid.uuid()
+        snap["_id"] = shortuuid.uuid()[0:24]
         snap["type"] = "metric_snap"
         snap["metric_name"] = metric_name
         snap["tiid"] = tiid
@@ -73,7 +73,7 @@ class ItemFactory():
         shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
 
         item = {}
-        item["_id"] = shortuuid.uuid()
+        item["_id"] = shortuuid.uuid()[0:24]
         item["aliases"] = {}
         item["biblio"] = {}
         item["last_modified"] = now
