@@ -36,35 +36,33 @@ class TestDbUrl(unittest.TestCase):
 class TestDAO(unittest.TestCase):
 
     def setUp(self):
-        self.d = dao.Dao(os.environ["CLOUDANT_URL"], TEST_DB_NAME)
+        # hacky way to delete the "ti" db, then make it fresh again for each test.
+        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
+        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
     def teardown(self):
-        self.d.delete_db(TEST_DB_NAME)
-        
-    def test_works_at_all(self):
-        assert True
+        pass
+
+
+    @raises(KeyError)
+    def test_create_item_fails_if_item_exists(self):
+        doc = {"id": "123"} # no leading underscore...
+        ret = self.d.save(doc)
+
 
     def test_create_db_uploads_views(self):
         design_doc = self.d.db.get("_design/queues")
-        assert_equals(set(design_doc["views"].keys()), 
+        assert_equals(set(design_doc["views"].keys()),
             set([u'by_alias', u'by_tiid_with_snaps', "by_type_and_id", "needs_aliases"]))
 
     def test_connect_db(self):
         assert self.d.db.__class__.__name__ == "Database"
 
-    @raises(Exception) # throws ResourceConflict, which @raises doesn't catch.
-    def test_create_item_fails_if_item_exists(self):
-        id = "123"
-        data = {}
-        
-        ret = self.d.create_item(data, id)
-        ret = self.d.create_item(data, id)
-
-
     def test_delete(self):
         id = "123"
-        
-        ret = self.d.save({"id":"123"})
+
+        ret = self.d.save({"_id":"123"})
         assert_equals(id, ret[0])
 
         del_worked = self.d.delete(id)

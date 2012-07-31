@@ -145,40 +145,6 @@ class CollectionFactory():
         return collection
 
 
-class Collection():
-    """
-    {
-        "id": "uuid-goes-here",
-        "collection_name": "My Collection",
-        "owner": "abcdef",
-        "created": 1328569452.406,
-        "last_modified": 1328569492.406,
-        "item_tiids": ["abcd3", "abcd4"]
-    }
-    """
-        
-    def item_ids(self):
-        if not hasattr(self, "item_tiids"): 
-            self.item_tiids = []
-        return self.item_tiids
-        
-    def add_item(self, new_item_id):
-        if not hasattr(self, "item_tiids"): 
-            self.item_tiids = []
-        if new_item_id not in self.item_tiids:
-            self.item_tiids.append(new_item_id)
-    
-    def add_items(self, new_item_ids):
-        if not hasattr(self, "item_tiids"): 
-            self.item_tiids = []
-        for item_id in new_item_ids:
-            self.add_item(item_id)
-    
-    def remove_item(self, item_id):
-        if not hasattr(self, "item_tiids"): 
-            self.item_tiids = []
-        if item_id in self.item_tiids:
-            self.item_tiids.remove(item_id)
 
 
 # could make these saveable into the DB if we wanted, in the future
