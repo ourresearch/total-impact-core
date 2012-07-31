@@ -182,7 +182,7 @@ def item_namespace_post(namespace, nid):
         logger.debug("... found with tiid " + tiid)
     else:
         tiid = create_item(namespace, nid)
-        logger.debug("... created with tiid " + tiid)
+        logger.debug("new item created with tiid " + tiid)
 
     response_code = 201 # Created
    
@@ -233,6 +233,7 @@ def make_csv_rows(items):
 
     # body rows
     for item in items:
+        print "keys: " + str(item.keys())
         column_list = [item["_id"]]
         for alias_name in header_alias_names:
             try:
@@ -262,6 +263,7 @@ returns a json list of item objects (100 max)
 404 unless all tiids return items from db
 '''
 @app.route('/items/<tiids>', methods=['GET'])
+@app.route('/items/<tiids>.<format>', methods=['GET'])
 def items(tiids, format=None):
     items = []
 

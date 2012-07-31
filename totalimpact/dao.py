@@ -68,7 +68,7 @@ class Dao(object):
             design_doc["views"][view_name]["map"] = file.read()        
 
         logger.info("overwriting the design/queues doc with the latest version in dao.")
-        logger.debug("overwriting the design/queues doc with this, from dao: " + str(design_doc))
+#        logger.debug("overwriting the design/queues doc with this, from dao: " + str(design_doc))
         
         try:
             current_design_doc_rev = self.db["_design/queues"]["_rev"]

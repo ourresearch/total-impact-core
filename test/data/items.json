@@ -1,11 +1,9 @@
 [
     {
         "aliases": {
-            "created": "2012-06-08T19:29:33.072037", 
             "doi": [
                 "10.1371/journal.pcbi.1000362"
             ], 
-            "last_modified": "2012-06-08T19:29:34.706255", 
             "title": [
                 "Tumor-Immune Interaction, Surgical Treatment, and Cancer Recurrence in a Mathematical Model of Melanoma"
             ], 
@@ -22,7 +20,7 @@
             "year": 2009
         }, 
         "created": "2012-06-08T19:29:33.072025", 
-        "id": "f2b45fcab1da11e19199c8bcc8937e3f", 
+        "_id": "f2b45fcab1da11e19199c8bcc8937e3f",
         "last_modified": "2012-06-08T19:29:33.072025", 
         "metrics": {
             "mendeley:groups": {
@@ -221,7 +219,7 @@
             "year": "2010"
         }, 
         "created": "2012-06-08T19:28:11.225769", 
-        "id": "c1eba010b1da11e19199c8bcc8937e3f", 
+        "_id": "c1eba010b1da11e19199c8bcc8937e3f",
         "last_modified": "2012-06-08T19:28:11.225769", 
         "metrics": {
             "dryad:most_downloaded_file": {
@@ -289,7 +287,7 @@
             "year": 2009
         }, 
         "created": "2012-06-08T19:28:11.375400", 
-        "id": "c202754cb1da11e19199c8bcc8937e3f", 
+        "_id": "c202754cb1da11e19199c8bcc8937e3f",
         "last_modified": "2012-06-08T19:28:11.375400", 
         "metrics": {
             "mendeley:groups": {
@@ -500,7 +498,7 @@
             "year": 2009
         }, 
         "created": "2012-06-08T19:29:33.333337", 
-        "id": "f2dc3f36b1da11e19199c8bcc8937e3f", 
+        "_id": "f2dc3f36b1da11e19199c8bcc8937e3f",
         "last_modified": "2012-06-08T19:29:33.333337", 
         "metrics": {
             "mendeley:groups": {
