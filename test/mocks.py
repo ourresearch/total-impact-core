@@ -6,8 +6,12 @@ from totalimpact.providers.provider import ProviderClientError, ProviderServerEr
 from totalimpact import ItemFactory
 
 def dao_init_mock(self, config):
+    pass
 
 class MockDao(object):
+
+    responses = []
+    index = 0
 
     def get(self, id):
         ret = self.responses[self.index]
@@ -19,7 +23,7 @@ class MockDao(object):
         self.index = 0
 
     def save(self, doc):
-        self.save.append(doc)
+        self.responses.append(doc)
 
     def view(self, viewname, **kwargs):
         return None
