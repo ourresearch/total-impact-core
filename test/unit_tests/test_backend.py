@@ -6,14 +6,14 @@ from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, Provi
 from totalimpact.providers.provider import Provider, ProviderFactory
 from totalimpact import dao
 
-# To read global config
-from totalimpact import app
 
 TEST_DB_NAME = "test_dao"
 
-from totalimpact.providers.provider import ProviderTimeout, ProviderRateLimitError
+#@TODO this needs lots and lots of work, including using the same local db test
+# approach that test_views.py uses.
 
-from test.mocks import ProviderMock, QueueMock, ItemMock
+
+from test.mocks import ProviderMock, QueueMock
 
 def slow(f):
     f.slow = True
@@ -47,7 +47,8 @@ class ProviderNotImplemented(Provider):
         raise NotImplementedError()
 
 def first_mock(self):
-    return ItemMock()
+    return {"_id": "testitemid"}
+
 def save_and_unqueue_mock(self, item):
     pass
     
