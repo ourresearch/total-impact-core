@@ -180,7 +180,7 @@ class ReportPage:
                 ))
                 logger.error("these items in collection '{id}' didn't update: {item_ids}".format(
                     id=self.collection_id,
-                    item_ids=", ".join([item["id"] for item in items if item["currently_updating"]])
+                    item_ids=", ".join([item["_id"] for item in items if item["currently_updating"]])
                 ))
                 return False
 

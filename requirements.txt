@@ -27,6 +27,7 @@ rednose==0.3.3
 requests==0.13.0
 rq==0.1.2
 rsa==3.0.1
+shortuuid==0.2
 simplejson==2.5.2
 times==0.4
 wsgiref==0.1.2
