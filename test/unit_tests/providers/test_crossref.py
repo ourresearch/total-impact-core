@@ -32,7 +32,7 @@ class TestCrossRef(ProviderTestCase):
     def test_extract_biblio(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
         biblio = self.provider._extract_biblio(f.read())
-        expected = {'authors': 'Piwowar, Day, Fridsma, Eisen', 'journal': u'PLoS ONE', 'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'year': 2007}
+        expected = {'authors': 'Piwowar, Day, Fridsma', 'journal': u'PLoS ONE', 'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'year': 2007}
         assert_equals(biblio, expected)
 
     def test_extract_aliases(self):
