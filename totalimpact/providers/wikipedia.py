@@ -13,8 +13,8 @@ class Wikipedia(Provider):
 
     example_id = ("doi", "10.1371/journal.pcbi.1000361")
 
-    provenance_url_template = "http://en.wikipedia.org/wiki/Special:Search?search='%s'&go=Go"
-    metrics_url_template = "http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch='%s'"
+    provenance_url_template = 'http://en.wikipedia.org/wiki/Special:Search?search="%s"&go=Go'
+    metrics_url_template = 'http://en.wikipedia.org/w/api.php?action=query&list=search&srprop=timestamp&format=xml&srsearch="%s"'
 
     url = "http://www.wikipedia.org/"
     descr = "The free encyclopedia that anyone can edit."
@@ -48,11 +48,7 @@ class Wikipedia(Provider):
             else:
                 raise(self._get_error(status_code))
 
-        try:
-            doc = minidom.parseString(page)
-        except ExpatError, e:
-            raise ProviderContentMalformedError("Content parse provider supplied XML document")
-
+        (doc, lookup_function) = provider._get_doc_from_xml(page)
         searchinfo = doc.getElementsByTagName('searchinfo')
         if not searchinfo:
             raise ProviderContentMalformedError("No searchinfo in response document")
