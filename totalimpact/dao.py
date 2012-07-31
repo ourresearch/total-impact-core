@@ -49,8 +49,6 @@ class Dao(object):
         self.couch.delete(db_name);
 
 
-        
-        
     def update_design_doc(self):
         design_doc = {
             "_id": "_design/queues",
