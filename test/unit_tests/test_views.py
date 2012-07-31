@@ -110,7 +110,7 @@ class TestItem(ViewsTester):
         print response
         print response.data
         assert_equals(response.status_code, 201)  #Created
-        assert_equals(len(json.loads(response.data)), 25)
+        assert_equals(len(json.loads(response.data)), 24)
         assert_equals(response.mimetype, "application/json")
 
     def test_item_post_success(self):
@@ -288,7 +288,7 @@ class TestTiid(ViewsTester):
         # FIXME should check and if already exists return 200
         # right now this makes a new item every time, creating many dups
         assert_equals(response.status_code, 201)
-        assert_equals(len(json.loads(response.data)), 25)
+        assert_equals(len(json.loads(response.data)), 24)
         assert_equals(response.mimetype, "application/json")
 
     def test_item_get_unknown_tiid(self):
