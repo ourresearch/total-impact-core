@@ -1,23 +1,17 @@
-import os, unittest, time
-import sys
-import logging
-import traceback
+import time, logging
 
-from totalimpact import default_settings
 from totalimpact.backend import StoppableThread
-
 from totalimpact.providers.provider import Provider
-from totalimpact.providers.provider import ProviderConfigurationError, ProviderTimeout, ProviderHttpError
-from totalimpact.providers.provider import ProviderClientError, ProviderServerError, ProviderContentMalformedError
-from totalimpact.providers.provider import ProviderValidationFailedError, ProviderRateLimitError
-
-from totalimpact.models import Aliases
-
+from totalimpact.providers.provider import ProviderClientError, ProviderServerError
+from totalimpact import ItemFactory
 
 def dao_init_mock(self, config):
     pass
 
 class MockDao(object):
+
+    responses = []
+    index = 0
 
     def get(self, id):
         ret = self.responses[self.index]
@@ -29,7 +23,7 @@ class MockDao(object):
         self.index = 0
 
     def save(self, doc):
-        self.save.append(doc)
+        self.responses.append(doc)
 
     def view(self, viewname, **kwargs):
         return None
@@ -45,6 +39,12 @@ class InterruptTester(object):
         st.stop()
         st.join()
 
+
+################################################################################
+# TODO this class is TOTALLY BROKEN
+# and will be until it's refactored to use the new, refactored items and alias
+# dicts (no longer objects).
+################################################################################
 class QueueMock(object):
 
     def __init__(self, max_items = None):
@@ -61,7 +61,7 @@ class QueueMock(object):
                 if self.current_item > self.max_items:
                     return None
             # Generate a mock item with initial alias ('mock', id)
-            item = MockItemFactory.make_simple("not a dao")
+            item = ItemFactory.make()
             item.id = self.current_item
             item.aliases['mock'] = str(item.id)
             self.items[self.current_item] = item
@@ -81,26 +81,6 @@ class QueueMock(object):
 
     def add_to_metrics_queues(self, item):
         pass
-
-
-class ItemMock(object):
-    def __init__(self,id=None,dao=None):
-        self.id = id
-        # Aliases is safe to include in this way as it doesn't
-        # communicate with the dao
-        self.aliases = Aliases()
-        self.metrics = {}
-    def __repr__(self):
-        return "ItemMock(%s)" % self.id
-    def save(self):
-        pass
-    def as_dict(self):
-        return {}
-
-from totalimpact.models import ItemFactory
-
-class MockItemFactory(ItemFactory):
-    item_class = ItemMock
 
 
 

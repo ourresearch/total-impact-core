@@ -83,7 +83,7 @@ class CollectionTester(object):
         ccp = fakes.CreateCollectionPage()
 
         sampler = fakes.IdSampler()
-        ccp.enter_aliases_directly([["doi", x] for x in sampler.get_dois(5)])
+#        ccp.enter_aliases_directly([["doi", x] for x in sampler.get_dois(5)])
         ccp.get_aliases_with_importers("github", sampler.get_github_username())
         ccp.set_collection_name(interaction_name)
         return ccp.press_go_button()

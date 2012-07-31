@@ -120,7 +120,6 @@ class ReportPage:
         tries = 0
         start = time.time()
         while still_updating:
-
             url = api_url+"/items/"+tiids_str
             resp = requests.get(url, config={'verbose': None})
             items = json.loads(resp.text)
@@ -149,7 +148,7 @@ class ReportPage:
                 raise Exception("max polling time ({max} secs) exceeded for collection {id}. These items didn't update: {item_ids}".format(
                     max=max_time,
                     id=self.collection_id,
-                    item_ids=", ".join([item["id"] for item in items if item["currently_updating"]])
+                    item_ids=", ".join([item["_id"] for item in items if item["currently_updating"]])
                 ))
                 return False
 
@@ -254,7 +253,7 @@ class CreateCollectionPage:
             }),
             headers={'Content-type': 'application/json'}
         )
-        collection_id = json.loads(resp.text)["id"]
+        collection_id = json.loads(resp.text)["_id"]
 
         logger.info("created collection '{id}' with {num_items} items in {elapsed} seconds.".format(
             id=collection_id,

@@ -3,9 +3,9 @@ from flask import json, request, redirect, abort, make_response
 from flask import render_template
 import os, datetime, redis
 
-from totalimpact import dao, app, fakes
-from totalimpact.models import Item, Collection, ItemFactory, CollectionFactory
-from totalimpact.providers.provider import ProviderFactory, ProviderConfigurationError, ProviderHttpError
+from totalimpact import dao, app
+from totalimpact.models import ItemFactory, CollectionFactory
+from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
 import logging
 
@@ -74,26 +74,26 @@ def tiid(ns, nid):
 
 def create_item(namespace, nid):
     logger.debug("In create_item with alias" + str((namespace, nid)))
-    item = ItemFactory.make_simple(mydao)
+    item = ItemFactory.make()
     
     # set this so we know when it's still updating later on
     mydao.set_num_providers_left(
-        item.id,
+        item["_id"],
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
     )
 
 
-    item.aliases[namespace] = [nid]
-    item.needs_aliases = datetime.datetime.now().isoformat()
+    item["aliases"][namespace] = [nid]
+    item["needs_aliases"] = datetime.datetime.now().isoformat()
     
-    item.save()
+    mydao.save(item)
     logger.info("Created new item '{id}' with alias '{alias}'".format(
-        id=item.id,
+        id=item["_id"],
         alias=str((namespace, nid))
     ))
 
     try:
-        return item.id
+        return item["_id"]
     except AttributeError:
         abort(500)    
 
@@ -182,7 +182,7 @@ def item_namespace_post(namespace, nid):
         logger.debug("... found with tiid " + tiid)
     else:
         tiid = create_item(namespace, nid)
-        logger.debug("... created with tiid " + tiid)
+        logger.debug("new item created with tiid " + tiid)
 
     response_code = 201 # Created
    
@@ -200,19 +200,21 @@ def item(tiid, format=None):
     # TODO check request headers for format as well.
 
     try:
-        item_dict = ItemFactory.get_simple_item(mydao, tiid)
+        item = ItemFactory.get_item(mydao, tiid)
     except (LookupError, AttributeError):
         abort(404)
 
-    if not item_dict:
+    if not item:
         abort(404)
     
-    if item_dict["currently_updating"]:
+    if mydao.get_num_providers_left(tiid) > 0:
         response_code = 210 # not complete yet
+        item["currently_updating"] = True
     else:
-        response_code = 200 
+        response_code = 200
+        item["currently_updating"] = False
 
-    resp = make_response(json.dumps(item_dict, sort_keys=True, indent=4), response_code)
+    resp = make_response(json.dumps(item, sort_keys=True, indent=4), response_code)
     resp.mimetype = "application/json"
 
     return resp
@@ -231,7 +233,8 @@ def make_csv_rows(items):
 
     # body rows
     for item in items:
-        column_list = [item["id"]]
+        print "keys: " + str(item.keys())
+        column_list = [item["_id"]]
         for alias_name in header_alias_names:
             try:
                 value = item['aliases'][alias_name][0]
@@ -260,33 +263,37 @@ returns a json list of item objects (100 max)
 404 unless all tiids return items from db
 '''
 @app.route('/items/<tiids>', methods=['GET'])
+@app.route('/items/<tiids>.<format>', methods=['GET'])
 def items(tiids, format=None):
     items = []
 
-    something_still_updating = False
+    something_currently_updating = False
     for index,tiid in enumerate(tiids.split(',')):
         if index > 500: break    # weak, change
 
         try:
-            item_dict = ItemFactory.get_simple_item(mydao, tiid)
-        except (LookupError, AttributeError):
-            logger.warning("Got an error looking up tiid '{tiid}': aborting with 404".format(
-                tiid=tiid
+            item = ItemFactory.get_item(mydao, tiid)
+        except (LookupError, AttributeError), e:
+            logger.warning("Got an error looking up tiid '{tiid}'; aborting with 404. error: {error}".format(
+                tiid=tiid,
+                error = e.__repr__()
             ))
             abort(404)
 
-        if not item_dict:
+        if not item:
             logger.warning("Looks like there's no item with tiid '{tiid}': aborting with 404".format(
                 tiid=tiid
             ))
             abort(404)
 
-        items.append(item_dict)
+        currently_updating = mydao.get_num_providers_left(tiid) > 0
+        item["currently_updating"] = currently_updating
+        something_currently_updating = something_currently_updating or currently_updating
 
-        something_still_updating = something_still_updating or item_dict["currently_updating"]
+        items.append(item)
 
     # return success if all reporting is complete for all items    
-    if something_still_updating:
+    if something_currently_updating:
         response_code = 210 # not complete yet
     else:
         response_code = 200
@@ -455,10 +462,7 @@ returns 404 or 204
 def collection(cid=''):
     response_code = None
 
-    try:
-        coll = CollectionFactory.make(mydao, id=cid)
-    except LookupError:
-        coll = None
+    coll = mydao.get(cid)
 
     if request.method == "POST":
         if coll:
@@ -466,13 +470,13 @@ def collection(cid=''):
             abort(405)   # Method Not Allowed
         else:
             try:
-                coll = CollectionFactory.make(mydao)
-                coll.add_items(request.json["items"])
-                coll.title = request.json["title"]
-                coll.save()
+                coll = CollectionFactory.make()
+                coll["item_tiids"] = request.json["items"]
+                coll["title"] = request.json["title"]
+                mydao.save(coll)
                 response_code = 201 # Created
                 logger.info("saved new collection '{id}' with {num_items} items.".format(
-                    id=coll.id,
+                    id=coll["_id"],
                     num_items=len(request.json["items"])
                 ))
             except (AttributeError, TypeError):
@@ -486,7 +490,7 @@ def collection(cid=''):
         else:
             abort(404)
 
-    resp = make_response( json.dumps( coll.as_dict(), sort_keys=True, indent=4 ), response_code)
+    resp = make_response( json.dumps( coll, sort_keys=True, indent=4 ), response_code)
     resp.mimetype = "application/json"
 
     return resp
