@@ -1,10 +1,9 @@
 from totalimpact.tiqueue import Queue
-from ..mocks import ItemMock
-from nose.tools import nottest, assert_equals
+from nose.tools import assert_equals
 
 # needs updated tests
 
-FAKE_ITEM = ItemMock(id="IAmTheMockYouAreLookingFor")
+FAKE_ITEM = { "_id": "IAmTheMockYouAreLookingFor"}
 
 class TestQueue():
 	def setUp(self):
@@ -16,7 +15,7 @@ class TestQueue():
 		Queue.enqueue("aliases", FAKE_ITEM)
 		assert_equals(len(Queue.queued_items["aliases"]), 1)
 		item_on_queue = Queue.queued_items["aliases"][0]
-		assert_equals(item_on_queue.id, 'IAmTheMockYouAreLookingFor')
+		assert_equals(item_on_queue["_id"], 'IAmTheMockYouAreLookingFor')
 
 	def test_clear(self):
 	    Queue.enqueue("aliases", FAKE_ITEM)
@@ -30,6 +29,6 @@ class TestQueue():
 		print "1 ", Queue.queued_items
 		item = Queue("aliases").dequeue()
 		print "2 ", Queue.queued_items
-		assert_equals(item.id, "IAmTheMockYouAreLookingFor")
+		assert_equals(item["_id"], "IAmTheMockYouAreLookingFor")
 		assert_equals(len(Queue.queued_items["aliases"]), 0)
 

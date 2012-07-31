@@ -3,7 +3,7 @@ import time, logging
 from totalimpact.backend import StoppableThread
 from totalimpact.providers.provider import Provider
 from totalimpact.providers.provider import ProviderClientError, ProviderServerError
-from totalimpact import ItemFactory
+from totalimpact.models import ItemFactory
 
 def dao_init_mock(self, config):
     pass
@@ -17,6 +17,9 @@ class MockDao(object):
         ret = self.responses[self.index]
         self.index = self.index + 1
         return ret
+
+    def __getitem__(self, item):
+        return get(item)
     
     def setResponses(self, responses):
         self.responses = responses
@@ -38,6 +41,7 @@ class InterruptTester(object):
         time.sleep(stop_after)
         st.stop()
         st.join()
+
 
 
 ################################################################################

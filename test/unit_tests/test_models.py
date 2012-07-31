@@ -1,14 +1,10 @@
 from nose.tools import raises, assert_equals, nottest
-import os, unittest, json, time, datetime
-from test.mocks import MockDao
-from copy import deepcopy
+import os, unittest
 
-from totalimpact import models, default_settings
-from totalimpact.providers import provider
-from totalimpact import dao, app
+from totalimpact import models, dao
 
 COLLECTION_DATA = {
-    "id": "uuid-goes-here",
+    "_id": "uuid-goes-here",
     "collection_name": "My Collection",
     "owner": "abcdef",
     "created": 1328569452.406,
@@ -19,17 +15,13 @@ COLLECTION_DATA = {
 ALIAS_DATA = {
     "title":["Why Most Published Research Findings Are False"],
     "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
-    "doi": ["10.1371/journal.pmed.0020124"],
-    "created": 12345.111,
-    "last_modified": 12346.222,
+    "doi": ["10.1371/journal.pmed.0020124"]
     }
 
 ALIAS_CANONICAL_DATA = {
     "title":["Why Most Published Research Findings Are False"],
     "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
-    "doi": ["10.1371/journal.pmed.0020124"],
-    "created": 12387239847.234,
-    "last_modified": 1328569492.406
+    "doi": ["10.1371/journal.pmed.0020124"]
     }
 
 
@@ -101,8 +93,7 @@ BIBLIO_DATA = {
 
 
 ITEM_DATA = {
-    "_id": "123",
-    "_rev": "456",
+    "_id": "test",
     "created": 1330260456.916,
     "last_modified": 12414214.234,
     "aliases": ALIAS_DATA,
@@ -110,7 +101,8 @@ ITEM_DATA = {
         "wikipedia:mentions": METRICS_DATA,
         "bar:views": METRICS_DATA2
     },
-    "biblio": BIBLIO_DATA
+    "biblio": BIBLIO_DATA,
+    "type": "item"
 }
 
 TEST_PROVIDER_CONFIG = [
@@ -122,24 +114,31 @@ TEST_DB_NAME = "ti"
 
 class TestItemFactory():
 
-    def setUp(self): 
-        self.d = MockDao()
+    def setUp(self):
+        # hacky way to delete the "ti" db, then make it fresh again for each test.
+        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
+        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
-    def test_make_new(self):
-        '''create an item from scratch.'''
-        item = models.ItemFactory.make_new_item(self.d)
-        assert_equals(len(item.id), 32)
-        assert item.created < datetime.datetime.now().isoformat()
-        assert_equals(item.aliases.__class__.__name__, "Aliases")
+
+#    def test_make_new(self):
+#        '''create an item from scratch.'''
+#        item = models.ItemFactory.make()
+#        assert_equals(len(item["_id"]), 24)
+#        assert item["created"] < datetime.datetime.now().isoformat()
+#        assert_equals(item["aliases"], {})
+
 
     def test_adds_genre(self):
-        self.d.setResponses([deepcopy(ITEM_DATA)])
-        item = models.ItemFactory.build_item(deepcopy(ITEM_DATA), [])
+        # put the item in the db
+        self.d.save(ITEM_DATA)
+        item = models.ItemFactory.get_item(self.d, "test")
         assert_equals(item["biblio"]['genre'], "article")
 
     def test_get_metric_names(self):
         response = models.ItemFactory.get_metric_names(TEST_PROVIDER_CONFIG)
         assert_equals(response, ['wikipedia:mentions'])
+
 
     def test_decide_genre_article_doi(self):
         aliases = {"doi":["10:123", "10:456"]}
@@ -176,87 +175,11 @@ class TestItemFactory():
         genre = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "unknown")
 
-
 class TestCollectionFactory():
 
-    def setUp(self):        
-        self.d = MockDao()
-        
-    def COLLECTION_DATA_load(self):
-        self.d.get = lambda id: deepcopy(COLLECTION_DATA)
-        c = models.Collection(self.d, id="SomeCollectionId")
-        c.load()
-        assert_equals(c.collection_name, "My Collection")
-        assert_equals(c.item_ids(), [u'origtiid1', u'origtiid2'])
-
-    @raises(LookupError)
-    def test_load_with_nonexistant_collection_fails(self):
-        self.d.setResponses([None])
-        factory = models.CollectionFactory.make(self.d, "AnUnknownCollectionId")
-
-    def test_creates_identifier(self):
-        coll = models.CollectionFactory.make(self.d)
-        assert_equals(len(coll.id), 6)
-
-
-class TestCollection():
-
-    def setUp(self):        
-        self.d = MockDao()
-
-    def test_mock_dao(self):
-        self.d.setResponses([ deepcopy(COLLECTION_DATA)])
-        assert_equals(self.d.get("SomeCollectionId"), COLLECTION_DATA)
-
-    def COLLECTION_DATA_init(self):
-        c = models.Collection(self.d)
-        assert_equals(len(c.id), 32) # made a uuid, yay
-
-    def COLLECTION_DATA_add_items(self):
-        c = models.Collection(self.d, seed=deepcopy(COLLECTION_DATA))
-        c.add_items(["newtiid1", "newtiid2"])
-        assert_equals(c.item_ids(), [u'origtiid1', u'origtiid2', 'newtiid1', 'newtiid2'])
-
-    def COLLECTION_DATA_remove_item(self):
-        c = models.Collection(self.d, seed=deepcopy(COLLECTION_DATA))
-        c.remove_item("origtiid1")
-        assert_equals(c.item_ids(), ["origtiid2"])
-
-    def COLLECTION_DATA_save(self):
-        # this fake save method puts the doc-to-save in the self.input variable
-        def fake_save(data, id):
-            self.input = data
-        self.d.update_item = fake_save
-
-        c = models.Collection(self.d)
-
-        # load all the values from the item_DATA into the test item.
-        for key in COLLECTION_DATA:
-            setattr(c, key, COLLECTION_DATA[key])
-        c.save()
-
-        seed = deepcopy(COLLECTION_DATA)
-        # the dao changes the contents to give the id variable the leading underscore expected by couch
-        seed["_id"] = seed["id"]
-        del(seed["id"])
-
-        # check to see if the fake save method did in fact "save" the collection as expected
-        assert_equals(self.input, seed)
-
-    def test_collection_delete(self):
-        self.d.delete = lambda id: True
-        c = models.Collection(self.d, id="SomeCollectionId")
-        response = c.delete()
-        assert_equals(response, True)
+    def test_make_creates_identifier(self):
+        coll = models.CollectionFactory.make()
+        assert_equals(len(coll["_id"]), 6)
 
 class TestBiblio(unittest.TestCase):
     pass
-
-
-
-
-    
-
-        
-        
-        
