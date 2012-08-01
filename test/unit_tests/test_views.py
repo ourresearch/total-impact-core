@@ -139,7 +139,7 @@ class TestItem(ViewsTester):
 
 class TestItems(ViewsTester):
 
-    def test_post_with_multiple_items(self):
+    def test_post(self):
         items = [
             ["doi", "10.123"],
             ["doi", "10.124"],
@@ -159,6 +159,38 @@ class TestItems(ViewsTester):
 
         expected_dois = [i[1] for i in items]
         assert_equals(set(expected_dois), set(dois))
+
+    def test_post_with_aliases_already_in_db(self):
+        items = [
+            ["doi", "10.123"],
+            ["doi", "10.124"],
+            ["doi", "10.125"]
+        ]
+        resp = self.client.post(
+            '/items',
+            data=json.dumps(items),
+            content_type="application/json"
+        )
+        tiids = json.loads(resp.data)
+
+        new_items = [
+            ["doi", "10.123"], # duplicate
+            ["doi", "10.124"], # duplicate
+            ["doi", "10.999"]  # new
+        ]
+
+        resp2 = self.client.post(
+            '/items',
+            data=json.dumps(new_items),
+            content_type="application/json"
+        )
+        new_tiids = json.loads(resp2.data)
+
+        # 3 unique tiids in first set + 1 unique in second set
+        assert_equals(len(set(tiids + new_tiids)), 4)
+
+        # 3 new items + 1 new item + 1 design doc
+        assert_equals(self.d.db.info()["doc_count"], 5)
 
     def test_make_csv_rows(self):
         csv = views.make_csv_rows(API_ITEMS_JSON)

@@ -139,41 +139,97 @@ def items_tiid_post(tiids):
     return resp
 
 
-#TODO we really could use some documentation of this function (and some refactoring...
-# too much logic here in the views.
+
+
 @app.route('/items', methods=['POST'])
-def items_namespace_post():
+def items_post():
+    """
+    Depending on input, updates, retrieves, or creates a set of items
 
-    logger.debug("/items got this json as a POST: " + str(request.json))
-    try:
-        #it's  a list of aliases; make new items for 'em
-        aliases_list = [(namespace, nid) for [namespace, nid] in request.json]
-    except ValueError:
-        #is a list of tidds, so do update instead
-        return items_tiid_post(request.json)
+    If input is a list of tiids, it updates them.
+    If input is a list of aliases,
+        If we've already got a tiid for this alias, it get it.
+        If it's a new alias, it makes a new item for it.
 
-    # no error, so do lookups and create the ones that don't exist
-    logger.debug("In api /items with aliases " + str(aliases_list))
+    In all cases, returns a list of tiids.
+    Could use much refactoring, as much code is replicated between this and /item.
+    Even better, most of this should move into a Collection or Updater model.
+    """
+    logger.debug("POST/items got this json: " + str(request.json))
+    if isinstance(request.json[0], basestring):
+        # this seems to be a list of tiids; we'll do an update
+        logger.info("POST /items got a list of tiids; doing an update.")
+        logger.debug("POST /items got this list of tiids; doing an update with them: {tiids_str}".format(
+            tiids_str=str(request.json)
+        ))
+        updated_tiids = []
+        for tiid in tiids:
+            updated_tiid = update_item(tiid)
+            updated_tiids.append(updated_tiid)
 
-    # unique_aliases = list(set(aliases_list))
-    tiids = []
-    for alias in aliases_list:
-        (namespace, nid) = alias
-        logger.debug("In api /items with alias " + str(alias))
-        existing_tiid = get_tiid_by_alias(namespace, nid)
-        if existing_tiid:
-            tiid = existing_tiid
-            logger.debug("... found with tiid " + tiid)
-        else:
-            tiid = create_item(namespace, nid)
-            logger.debug("... created with tiid " + tiid)
-        tiids.append(tiid)
+        response_code = 200
+        tiids = updated_tiid
+    else:
+        # we got some alias tuples; time to create new items.
+        logger.info("POST /items got a list of aliases; creating new items for 'em.")
+        logger.debug("POST /items got this list of aliases; creating new items for 'em: {aliases}".format(
+            aliases=str(request.json)
+        ))
+        try:
+            aliases_list = [(namespace, nid) for [namespace, nid] in request.json]
+        except ValueError:
+            logger.error("bad input to POST /items (requires tiids or [namespace, id] pairs):{input}".format(
+                input=str(request.json)
+            ))
+            abort(404, "POST /items requires a list of either tiids or [namespace, id] pairs.")
 
-    response_code = 201 # Created
+        tiids = []
+        items = []
+        for alias in aliases_list:
+            (namespace, nid) = alias
+            existing_tiid = get_tiid_by_alias(namespace, nid)
+            if existing_tiid:
+                tiids.append(existing_tiid)
+                logger.debug("POST /items found an existing tiid ({tiid}) for alias {alias}".format(
+                    tiid=existing_tiid,
+                    alias=str(alias)
+                ))
+            else:
+                logger.debug("POST /items: alias {alias} isn't in the db; making a new item for it.".format(
+                    alias=alias
+                ))
+                item = ItemFactory.make()
+                item["aliases"][namespace] = [nid]
+                item["needs_aliases"] = datetime.datetime.now().isoformat()
+                items.append(item)
+                tiids.append(item["_id"])
+
+        logger.debug("POST /items saving a group of {num} new items.".format(
+            num=len(items)
+        ))
+        logger.debug("POST /items saving a group of {num} new items: {items}".format(
+            num=len(items),
+            items=str(items)
+        ))
+
+        # for each item, set the number of providers that need to run before the update is done
+        for item in items:
+            mydao.set_num_providers_left(
+                item["_id"],
+                ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
+            )
+
+        # batch upload the new docs to the db
+        for doc in mydao.db.update(items):
+            pass
+
+        response_code = 201 # Created
+
     resp = make_response(json.dumps(tiids), response_code)
     resp.mimetype = "application/json"
-
     return resp
+
+
 
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
