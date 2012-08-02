@@ -157,11 +157,14 @@ def items_post():
     """
     logger.debug("POST/items got this json: " + str(request.json))
     if isinstance(request.json[0], basestring):
+        tiids = request.json
+        
         # this seems to be a list of tiids; we'll do an update
         logger.info("POST /items got a list of tiids; doing an update.")
         logger.debug("POST /items got this list of tiids; doing an update with them: {tiids_str}".format(
-            tiids_str=str(request.json)
+            tiids_str=str(tiids)
         ))
+
         updated_tiids = []
         for tiid in tiids:
             updated_tiid = update_item(tiid)
