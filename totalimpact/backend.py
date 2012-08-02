@@ -240,11 +240,15 @@ class ProviderThread(StoppableThread):
 
                 # convert the dict into a list of (namespace, id) tuples, like:
                 # [(doi, 10.123), (doi, 10.345), (pmid, 1234567)]
-                alias_tuples = [
-                    (namespace, id)
-                    for namespace, id_list in item["aliases"].iteritems()
-                    for id in id_list
-                ]
+                alias_tuples = []
+                for ns, ids in item["aliases"].iteritems():
+                    if isinstance(ids, basestring): # it's a date, not a list of ids
+                        alias_tuples.append((ns, ids))
+                    else:
+                        for id in ids:
+                            alias_tuples.append((ns, id))
+
+
                 response = self.call_provider_method(
                     provider, 
                     method_name, 
@@ -319,12 +323,19 @@ class ProvidersAliasThread(ProviderThread):
                             aliases=str(new_aliases)
                         ))
                         # add new aliases
-                        for ns, id in new_aliases:
+                        for ns, nid in new_aliases:
                             try:
-                                item["aliases"][ns].append(id)
+                                item["aliases"][ns].append(nid)
                                 item["aliases"][ns] = list(set(item["aliases"][ns]))
                             except KeyError: # no ids for that namespace yet. make it.
-                                item["aliases"][ns] = [id]
+                                item["aliases"][ns] = [nid]
+                            except AttributeError:
+                                # nid is a string; overwrite.
+                                item["aliases"][ns] = nid
+                                logger.debug("aliases[{ns}] is a string ('{nid}'); overwriting".format(
+                                    ns=ns,
+                                    nid=nid
+                                ))
 
                 else:
                     logger.info("%20s: NOT SUCCESS in process_item %s, partial aliases only for provider %s" 
