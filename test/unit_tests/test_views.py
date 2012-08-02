@@ -66,7 +66,7 @@ class ViewsTester(unittest.TestCase):
 
 class DaoTester(unittest.TestCase):
     def test_dao(self):
-        assert_equals(mydao.db.name, "ti")
+        assert_equals(mydao.db.name, os.getenv("CLOUDANT_DB"))
 
 
 class TestMemberItems(ViewsTester):
