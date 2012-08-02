@@ -163,12 +163,12 @@ def items_post():
             tiids_str=str(request.json)
         ))
         updated_tiids = []
-        for tiid in tiids:
+        for tiid in request.json:
             updated_tiid = update_item(tiid)
             updated_tiids.append(updated_tiid)
 
         response_code = 200
-        tiids = updated_tiid
+        tiids = updated_tiids
     else:
         # we got some alias tuples; time to create new items.
         logger.info("POST /items got a list of aliases; creating new items for 'em.")

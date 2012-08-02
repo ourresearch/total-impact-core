@@ -160,6 +160,26 @@ class TestItems(ViewsTester):
         expected_dois = [i[1] for i in items]
         assert_equals(set(expected_dois), set(dois))
 
+    def test_post_tiids_updates(self):
+        items = [
+            ["doi", "10.123"],
+            ["doi", "10.124"],
+            ["doi", "10.125"]
+        ]
+        resp = self.client.post(
+            '/items',
+            data=json.dumps(items),
+            content_type="application/json"
+        )
+        tiids = json.loads(resp.data)
+
+        update_resp = self.client.post(
+            '/items',
+            data=json.dumps(tiids),
+            content_type="application/json"
+        )
+        assert_equals(tiids, json.loads(update_resp.data))
+
     def test_post_with_aliases_already_in_db(self):
         items = [
             ["doi", "10.123"],
