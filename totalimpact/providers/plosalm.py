@@ -12,7 +12,7 @@ class Plosalm(Provider):
 
     url = "http://www.plos.org/"
     descr = "PLoS article level metrics."
-    metrics_url_template = "http://alm.plos.org/articles/info:doi%%2F%s.json?history=1&api_key=" + os.environ["PLOS_KEY"] + "&citations=1"
+    metrics_url_template = "http://alm.plos.org/articles/%s.json?history=1&api_key=" + os.environ["PLOS_KEY"] + "&events=1"
     provenance_url_template = metrics_url_template
 
     PLOS_ICON = "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg"
@@ -139,7 +139,7 @@ class Plosalm(Provider):
 
     def _aggregate_monthly_stats(self, metric_name, section):
         total = 0
-        for monthly_views in section["citations"][0]["citation"]["views"]:
+        for monthly_views in section["events"]:
             total += int(monthly_views[metric_name])
         return (total)
 
@@ -162,7 +162,7 @@ class Plosalm(Provider):
                 metrics_dict["pdf_views"] = pdf_sum
             elif (source == "PubMed Central Usage Stats"):
                 #drilldown_url = provider._lookup_json(section["citations"][0], ["citation", "uri"])
-                first_month_stats = section["citations"][0]["citation"]["views"][0]
+                first_month_stats = section["events"][0]
                 for metric_name in first_month_stats:
                     normalized_metric_name = "pmc_" + self._normalize_source(metric_name)
                     if (normalized_metric_name in self.static_meta_dict.keys()):
