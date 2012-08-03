@@ -62,7 +62,7 @@ class Mendeley(Provider):
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
-        relevant = (namespace=="doi" or namespace=="pmid")
+        relevant = (namespace=="doi")
         return(relevant)
 
     #override because need to break up id
