@@ -188,6 +188,7 @@ def items_post():
 
         tiids = []
         items = []
+        aliases_list = [(namespace.strip(), nid.strip()) for (namespace, nid) in aliases_list]
         for alias in aliases_list:
             (namespace, nid) = alias
             existing_tiid = get_tiid_by_alias(namespace, nid)
