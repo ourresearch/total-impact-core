@@ -11,6 +11,9 @@ CACHE_ENABLED = True # Memcache server enabled
 # List of desired providers and their configuration files
 # Alias methods will be called in the order of this list
 PROVIDERS = [
+    # this is up here because it can produce dois
+    ("pubmed", { "workers":1 }),  # 1 because rate limited
+
     # best biblio providers go here, in order with best first
     ("crossref", { "workers":3 }),
     ("dryad", { "workers":3 }),            

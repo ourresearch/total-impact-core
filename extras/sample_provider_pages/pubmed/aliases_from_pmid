@@ -1,0 +1,153 @@
+<PubmedArticleSet>
+<PubmedArticle>
+<MedlineCitation Owner="NLM" Status="MEDLINE">
+<PMID Version="1">17593900</PMID>
+<DateCreated>
+<Year>2007</Year>
+<Month>08</Month>
+<Day>09</Day>
+</DateCreated>
+<DateCompleted>
+<Year>2007</Year>
+<Month>12</Month>
+<Day>10</Day>
+</DateCompleted>
+<DateRevised>
+<Year>2009</Year>
+<Month>11</Month>
+<Day>18</Day>
+</DateRevised>
+<Article PubModel="Print">
+<Journal>
+<ISSN IssnType="Electronic">1549-1676</ISSN>
+<JournalIssue CitedMedium="Internet">
+<Volume>4</Volume>
+<Issue>6</Issue>
+<PubDate>
+<Year>2007</Year>
+<Month>Jun</Month>
+</PubDate>
+</JournalIssue>
+<Title>PLoS medicine</Title>
+<ISOAbbreviation>PLoS Med.</ISOAbbreviation>
+</Journal>
+<ArticleTitle>
+Why most published research findings are false: author's reply to Goodman and Greenland.
+</ArticleTitle>
+<Pagination>
+<MedlinePgn>e215</MedlinePgn>
+</Pagination>
+<AuthorList CompleteYN="Y">
+<Author ValidYN="Y">
+<LastName>Ioannidis</LastName>
+<ForeName>John P A</ForeName>
+<Initials>JP</Initials>
+</Author>
+</AuthorList>
+<Language>eng</Language>
+<PublicationTypeList>
+<PublicationType>Comment</PublicationType>
+<PublicationType>Letter</PublicationType>
+</PublicationTypeList>
+</Article>
+<MedlineJournalInfo>
+<Country>United States</Country>
+<MedlineTA>PLoS Med</MedlineTA>
+<NlmUniqueID>101231360</NlmUniqueID>
+<ISSNLinking>1549-1277</ISSNLinking>
+</MedlineJournalInfo>
+<CitationSubset>IM</CitationSubset>
+<CommentsCorrectionsList>
+<CommentsCorrections RefType="Cites">
+<RefSource>BMJ. 2004 Oct 16;329(7471):883</RefSource>
+<PMID Version="1">15469946</PMID>
+</CommentsCorrections>
+<CommentsCorrections RefType="Cites">
+<RefSource>JAMA. 2005 Jul 13;294(2):218-28</RefSource>
+<PMID Version="1">16014596</PMID>
+</CommentsCorrections>
+<CommentsCorrections RefType="Cites">
+<RefSource>PLoS Med. 2005 Aug;2(8):e124</RefSource>
+<PMID Version="1">16060722</PMID>
+</CommentsCorrections>
+<CommentsCorrections RefType="Cites">
+<RefSource>Am J Epidemiol. 2006 Mar 15;163(6):493-501</RefSource>
+<PMID Version="1">16443796</PMID>
+</CommentsCorrections>
+<CommentsCorrections RefType="Cites">
+<RefSource>Int J Epidemiol. 2006 Jun;35(3):765-75</RefSource>
+<PMID Version="1">16446352</PMID>
+</CommentsCorrections>
+<CommentsCorrections RefType="Cites">
+<RefSource>PLoS Clin Trials. 2006;1(7):e36</RefSource>
+<PMID Version="1">17111044</PMID>
+</CommentsCorrections>
+<CommentsCorrections RefType="Cites">
+<RefSource>PLoS Med. 2007 Mar;4(3):e79</RefSource>
+<PMID Version="1">17341129</PMID>
+</CommentsCorrections>
+<CommentsCorrections RefType="Cites">
+<RefSource>PLoS Med. 2007 Apr;4(4):e168</RefSource>
+<PMID Version="1">17456002</PMID>
+</CommentsCorrections>
+<CommentsCorrections RefType="CommentOn">
+<RefSource>PLoS Med. 2007 Apr;4(4):e168</RefSource>
+<PMID Version="1">17456002</PMID>
+</CommentsCorrections>
+</CommentsCorrectionsList>
+<MeshHeadingList>
+<MeshHeading>
+<DescriptorName MajorTopicYN="N">Humans</DescriptorName>
+</MeshHeading>
+<MeshHeading>
+<DescriptorName MajorTopicYN="N">Periodicals as Topic</DescriptorName>
+<QualifierName MajorTopicYN="Y">standards</QualifierName>
+</MeshHeading>
+<MeshHeading>
+<DescriptorName MajorTopicYN="N">Publishing</DescriptorName>
+<QualifierName MajorTopicYN="Y">standards</QualifierName>
+</MeshHeading>
+<MeshHeading>
+<DescriptorName MajorTopicYN="N">Reproducibility of Results</DescriptorName>
+</MeshHeading>
+<MeshHeading>
+<DescriptorName MajorTopicYN="N">Research Design</DescriptorName>
+<QualifierName MajorTopicYN="N">standards</QualifierName>
+</MeshHeading>
+</MeshHeadingList>
+<OtherID Source="NLM">PMC1896210</OtherID>
+</MedlineCitation>
+<PubmedData>
+<History>
+<PubMedPubDate PubStatus="pubmed">
+<Year>2007</Year>
+<Month>6</Month>
+<Day>28</Day>
+<Hour>9</Hour>
+<Minute>0</Minute>
+</PubMedPubDate>
+<PubMedPubDate PubStatus="medline">
+<Year>2007</Year>
+<Month>12</Month>
+<Day>11</Day>
+<Hour>9</Hour>
+<Minute>0</Minute>
+</PubMedPubDate>
+<PubMedPubDate PubStatus="entrez">
+<Year>2007</Year>
+<Month>6</Month>
+<Day>28</Day>
+<Hour>9</Hour>
+<Minute>0</Minute>
+</PubMedPubDate>
+</History>
+<PublicationStatus>ppublish</PublicationStatus>
+<ArticleIdList>
+<ArticleId IdType="pii">07-PLME-C-0434</ArticleId>
+<ArticleId IdType="doi">10.1371/journal.pmed.0040215</ArticleId>
+<ArticleId IdType="pubmed">17593900</ArticleId>
+<ArticleId IdType="pmc">PMC1896210</ArticleId>
+</ArticleIdList>
+</PubmedData>
+</PubmedArticle>
+</PubmedArticleSet>
