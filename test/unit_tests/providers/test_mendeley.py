@@ -47,6 +47,9 @@ class TestMendeley(ProviderTestCase):
         metrics_dict = self.provider._extract_metrics(f.read())
         assert_equals(metrics_dict["mendeley:readers"], 50)
         assert_equals(metrics_dict["mendeley:groups"], 4)
+        assert_equals(metrics_dict["mendeley:discipline"], [{'id': 6, 'value': 40, 'name': 'Computer and Information Science'}, {'id': 3, 'value': 24, 'name': 'Biological Sciences'}, {'id': 23, 'value': 12, 'name': 'Social Sciences'}])
+        assert_equals(metrics_dict["mendeley:career_stage"][0], {'name': 'Librarian', 'value': 22})
+        assert_equals(metrics_dict["mendeley:country"][0], {'name': 'United States', 'value': 22})
 
     def test_extract_provenance_url(self):
         f = open(SAMPLE_EXTRACT_PROVENANCE_URL_PAGE, "r")

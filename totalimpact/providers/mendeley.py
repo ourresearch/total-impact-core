@@ -32,7 +32,28 @@ class Mendeley(Provider):
             "provider_url": "http://www.mendeley.com/",
             "description": "The number of groups who have added the article to their libraries",
             "icon": "http://www.mendeley.com/favicon.ico",
-        }
+        },
+        "discipline": {
+            "display_name": "discipline",
+            "provider": "Mendeley",
+            "provider_url": "http://www.mendeley.com/",
+            "description": "The top three disciplines of readers who have added the article to their libraries",
+            "icon": "http://www.mendeley.com/favicon.ico",
+        },   
+        "career_stage": {
+            "display_name": "career stage",
+            "provider": "Mendeley",
+            "provider_url": "http://www.mendeley.com/",
+            "description": "The top three careers of readers who have added the article to their libraries",
+            "icon": "http://www.mendeley.com/favicon.ico",
+        },   
+        "country": {
+            "display_name": "country",
+            "provider": "Mendeley",
+            "provider_url": "http://www.mendeley.com/",
+            "description": "The top three countries of readers who have added the article to their libraries",
+            "icon": "http://www.mendeley.com/favicon.ico",
+        }   
     }
 
 
@@ -91,6 +112,9 @@ class Mendeley(Provider):
                 raise(self._get_error(status_code))
 
         dict_of_keylists = {"mendeley:readers": ["stats", "readers"], 
+                            "mendeley:discipline": ["stats", "discipline"],
+                            "mendeley:career_stage": ["stats", "status"],
+                            "mendeley:country": ["stats", "country"],
                             "mendeley:groups" : ["groups"]}
 
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)
