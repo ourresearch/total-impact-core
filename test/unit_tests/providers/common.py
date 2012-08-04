@@ -14,39 +14,39 @@ class DummyResponse(object):
         self.status_code = status
         self.text = content  
 
-def get_member_items_html_success(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True):
+def get_member_items_html_success(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True, allow_redirects=False):
     f = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r")
     return DummyResponse(200, f.read())
 
-def get_member_items_html_zero_items(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True):
+def get_member_items_html_zero_items(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True, allow_redirects=False):
     f = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE_ZERO_ITEMS, "r")
     return DummyResponse(200, f.read())
 
-def get_aliases_html_success(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True):
+def get_aliases_html_success(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True, allow_redirects=False):
     f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
     return DummyResponse(200, f.read())
 
-def get_metrics_html_success(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True):
+def get_metrics_html_success(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True, allow_redirects=False):
     f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
     return DummyResponse(200, f.read())
 
-def get_biblio_html_success(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True):
+def get_biblio_html_success(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True, allow_redirects=False):
     f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
     return DummyResponse(200, f.read())
 
-def get_nonsense_xml(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True):
+def get_nonsense_xml(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True, allow_redirects=False):
     return DummyResponse(200, '<?xml version="1.0" encoding="UTF-8"?><nothingtoseehere>nonsense</nothingtoseehere>')
 
-def get_nonsense_txt(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True):
+def get_nonsense_txt(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True, allow_redirects=False):
     return DummyResponse(200, "nonsense")
 
-def get_empty(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True):
+def get_empty(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True, allow_redirects=False):
     return DummyResponse(200, "")
 
-def get_400(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True):
+def get_400(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True, allow_redirects=False):
     return DummyResponse(400, "")
 
-def get_500(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True):
+def get_500(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True, allow_redirects=False):
     return DummyResponse(500, "")
 
 

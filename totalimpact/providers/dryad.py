@@ -132,7 +132,9 @@ class Dryad(Provider):
 
     def _extract_metrics(self, page, status_code=200, id=None):
         if status_code != 200:
-            if status_code == 404:
+            if status_code == 303:
+                pass #this is ok
+            elif status_code == 404:
                 return {}
             else:
                 raise(self._get_error(status_code))
