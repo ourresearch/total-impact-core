@@ -14,10 +14,12 @@ class Pubmed(Provider):
     descr = "PubMed comprises more than 21 million citations for biomedical literature"
     provenance_url_pmc_citations_template = "http://www.ncbi.nlm.nih.gov/pubmed?linkname=pubmed_pubmed_citedin&from_uid=%s"
     provenance_url_pmc_citations_filtered_template = "http://www.ncbi.nlm.nih.gov/pubmed?term=%s&cmd=DetailsSearch"
+    provenance_url_f1000_template = "http://f1000.com/pubmed/%s"
 
-    pmc_citations_url_template = "http://www.pubmedcentral.nih.gov/utils/entrez2pmcciting.cgi?view=xml&id=%s"
-    pmc_filter_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=(%s)"
     metrics_url_template = None # have specific metrics urls instead
+    metrics_pmc_citations_url_template = "http://www.pubmedcentral.nih.gov/utils/entrez2pmcciting.cgi?view=xml&id=%s"
+    metrics_pmc_filter_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=(%s)"
+    metrics_f1000_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=%s&cmd=llinks"
 
     aliases_from_doi_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?term=%s&email=team@total-impact.org&tool=total-impact" 
     aliases_from_pmid_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml&email=team@total-impact.org&tool=total-impact" 
@@ -43,6 +45,13 @@ class Pubmed(Provider):
             "provider_url": "http://pubmed.gov",
             "description": "The number of citations by editorials papers in PubMed Central",
             "icon": "http://www.ncbi.nlm.nih.gov/favicon.ico"
+        },            
+        "f1000": {
+            "display_name": "reviewed",
+            "provider": "F1000",
+            "provider_url": "http://f1000.com",
+            "description": "The article has been reviewed by F1000",
+            "icon": "http://f1000.com/1344012469601/images/favicon.ico"
         }            
     }
 
@@ -128,15 +137,25 @@ class Pubmed(Provider):
         new_aliases_unique = list(set(new_aliases))
         return new_aliases_unique
 
-    def _filter(self, citing_pmcids, filter_ptype):
+    def _filter(self, id, citing_pmcids, filter_ptype):
         pmcids_string = " OR ".join(["PMC"+pmcid for pmcid in citing_pmcids])
         query_string = filter_ptype + "[ptyp] AND (" + pmcids_string + ")"
-        pmcid_filter_url = self.pmc_filter_url_template %query_string
-        page = self._get_eutils_page(None, pmcid_filter_url)
+        pmcid_filter_url = self.metrics_pmc_filter_url_template %query_string
+        page = self._get_eutils_page(id, pmcid_filter_url)
         (doc, lookup_function) = provider._get_doc_from_xml(page)        
         id_docs = doc.getElementsByTagName("Id")
         pmids = [id_doc.firstChild.data for id_doc in id_docs]
         return pmids
+
+    def _check_reviewed_by_f1000(self, id, cache_enabled):
+        metrics_f1000_url = self.metrics_f1000_url_template %id
+        page = self._get_eutils_page(id, metrics_f1000_url)
+        f1000_url = "http://f1000.com/pubmed/%s" %id
+        if (f1000_url in page):
+            reviewed_by_f1000 = "Yes"
+        else:
+            reviewed_by_f1000 = 0
+        return reviewed_by_f1000
 
     # override because multiple pages to get
     def get_metrics_for_id(self, 
@@ -146,15 +165,20 @@ class Pubmed(Provider):
 
         logger.debug("%20s getting metrics for %s" % (self.provider_name, id))
         metrics_dict = {}
+
+        reviewed_by_f1000 = self._check_reviewed_by_f1000(id, cache_enabled)
+        if reviewed_by_f1000:
+            metrics_dict["pubmed:f1000"] = reviewed_by_f1000
+
         citing_pmcids = self._get_citing_pmcids(id, cache_enabled)
         if (citing_pmcids):
             metrics_dict["pubmed:pmc_citations"] = len(citing_pmcids)
     
-            number_review_pmids = len(self._filter(citing_pmcids, "review"))
+            number_review_pmids = len(self._filter(id, citing_pmcids, "review"))
             if number_review_pmids:
                 metrics_dict["pubmed:pmc_citations_reviews"] = number_review_pmids
     
-            number_editorial_pmids = len(self._filter(citing_pmcids, "editorial"))
+            number_editorial_pmids = len(self._filter(id, citing_pmcids, "editorial"))
             if number_editorial_pmids:
                 metrics_dict["pubmed:pmc_citations_editorials"] = number_editorial_pmids
         # check for f1000
@@ -173,7 +197,7 @@ class Pubmed(Provider):
     # documentation for pubmedtopmcciting: http://www.pubmedcentral.nih.gov/utils/entrez2pmcciting.cgi
     # could take multiple PMC IDs
     def _get_citing_pmcids(self, id, cache_enabled=True):
-        pmc_citations_url = self.pmc_citations_url_template %id
+        pmc_citations_url = self.metrics_pmc_citations_url_template %id
         page = self._get_eutils_page(id, pmc_citations_url, cache_enabled)
         pmcids = self._extract_citing_pmcids(page)
         return pmcids
@@ -188,16 +212,23 @@ class Pubmed(Provider):
         url = None
         if (metric_name == "pubmed:pmc_citations"):
             url = self._get_templated_url(self.provenance_url_pmc_citations_template, id, "provenance")
-        if (metric_name == "pubmed:pmc_citations_reviews"):
+
+        elif (metric_name == "pubmed:f1000"):
+            url = self._get_templated_url(self.provenance_url_f1000_template, id, "provenance")
+
+        elif (metric_name == "pubmed:pmc_citations_reviews"):
             citing_pmcids = self._get_citing_pmcids(id)
-            filtered_pmids = self._filter(citing_pmcids, "review")
+            filtered_pmids = self._filter(id, citing_pmcids, "review")
             pmids_string = " OR ".join([pmid for pmid in filtered_pmids])
-            url = self._get_templated_url(self.provenance_url_pmc_citations_filtered_template, pmids_string, "provenance")
-        if (metric_name == "pubmed:pmc_citations_editorials"):
+            url = self._get_templated_url(self.provenance_url_pmc_citations_filtered_template, 
+                    urllib.quote(pmids_string), "provenance")
+
+        elif (metric_name == "pubmed:pmc_citations_editorials"):
             citing_pmcids = self._get_citing_pmcids(id)
-            filtered_pmcids = self._filter(citing_pmcids, "editorial")
+            filtered_pmids = self._filter(id,citing_pmcids, "editorial")
             pmids_string = " OR ".join([pmid for pmid in filtered_pmids])
-            url = self._get_templated_url(self.provenance_url_pmc_citations_filtered_template, pmids_string, "provenance")
+            url = self._get_templated_url(self.provenance_url_pmc_citations_filtered_template, 
+                    urllib.quote(pmids_string), "provenance")
 
         return url
 
