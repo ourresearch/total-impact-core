@@ -1,5 +1,6 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
+from test.utils import http
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
 import os
@@ -14,7 +15,7 @@ SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
 SAMPLE_EXTRACT_PROVENANCE_URL_PAGE = SAMPLE_EXTRACT_METRICS_PAGE
 
 TEST_DOI = "10.1371/journal.pcbi.1000361"
-TEST_PMID = "22855908"
+TEST_PMID = "16901231"
 
 class TestPubmed(ProviderTestCase):
 
@@ -36,7 +37,7 @@ class TestPubmed(ProviderTestCase):
         # ensure that the dryad reader can interpret an xml doc appropriately
         f = open(SAMPLE_EXTRACT_ALIASES_FROM_DOI_PAGE, "r")
         aliases = self.provider._extract_aliases_from_doi(f.read())
-        assert_equals(aliases, [('pmid', 19381256)])
+        assert_equals(aliases, [('pmid', '19381256')])
 
     def test_extract_aliases_from_pmid(self):
         # ensure that the dryad reader can interpret an xml doc appropriately
@@ -44,8 +45,26 @@ class TestPubmed(ProviderTestCase):
         aliases = self.provider._extract_aliases_from_pmid(f.read())
         assert_equals(aliases, [('doi', u'10.1371/journal.pmed.0040215')])
 
-    def test_extract_metrics_success(self):
+    def test_extract_citing_pmcids(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
-        metrics_dict = self.provider._extract_metrics(f.read())
-        assert_equals(metrics_dict["pubmed:pmc_citations"], 149)
+        pmcids = self.provider._extract_citing_pmcids(f.read())
+        assert_equals(len(pmcids), 149)
+
+    @http
+    def test_aliases_from_pmid(self):
+        print self.testitem_aliases
+        metrics_dict = self.provider.aliases([self.testitem_aliases])
+        assert_equals(set(metrics_dict), set([('doi', u'10.1089/omi.2006.10.231'), ('pmid', '16901231')]))
+
+    @http
+    def test_aliases_from_doi(self):
+        metrics_dict = self.provider.aliases([("doi", TEST_DOI)])
+        assert_equals(set(metrics_dict), set([('pmid', '19381256'), ('doi', '10.1371/journal.pcbi.1000361')]))
+
+    @http
+    def test_metrics(self):
+        metrics_dict = self.provider.metrics([self.testitem_metrics])
+        expected = {'pubmed:pmc_citations': (12, 'http://www.ncbi.nlm.nih.gov/pubmed?linkname=pubmed_pubmed_citedin&from_uid=16901231'), 'pubmed:pmc_citations_reviews': (2, u'http://www.ncbi.nlm.nih.gov/pubmed?term=20455752 OR 18192184&cmd=DetailsSearch')}
+        assert_equals(metrics_dict, expected)
+
 
