@@ -1,5 +1,6 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
+from test.utils import http
 from totalimpact.providers.provider import Provider
 
 import os
@@ -75,4 +76,14 @@ class TestDryad(ProviderTestCase):
         #    then won't find any metrics. Should get a None returned.
         metrics = self.provider.metrics([("doi", "10.9999/NOTADRYADDOI")])
         assert_equals(metrics, {})
+
+    @http
+    def test_metrics(self):
+        metrics_dict = self.provider.metrics([self.testitem_metrics])
+        expected = {'dryad:package_views': (361, 'http://dx.doi.org/10.5061/dryad.7898'), 
+            'dryad:total_downloads': (176, 'http://dx.doi.org/10.5061/dryad.7898'), 
+            'dryad:most_downloaded_file': (65, 'http://dx.doi.org/10.5061/dryad.7898')}
+        print metrics_dict            
+        for key in expected:
+            assert(metrics_dict[key] >= expected[key])
 
