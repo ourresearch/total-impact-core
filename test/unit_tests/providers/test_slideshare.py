@@ -1,6 +1,7 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from test.utils import http
 
 import os
 import collections
@@ -56,4 +57,11 @@ class TestSlideshare(ProviderTestCase):
         assert_equals(metrics_dict["slideshare:views"], 337)
         assert_equals(metrics_dict["slideshare:downloads"], 4)
 
+    @http
+    def test_metrics(self):
+        metrics_dict = self.provider.metrics([self.testitem_metrics])
+        expected = {'slideshare:downloads': (6, 'http://www.slideshare.net/cavlec/manufacturing-serendipity-12176916'), 'slideshare:views': (543, 'http://www.slideshare.net/cavlec/manufacturing-serendipity-12176916'), 'slideshare:favorites': (2, 'http://www.slideshare.net/cavlec/manufacturing-serendipity-12176916')}
+        print metrics_dict
+        for key in expected:
+            assert(metrics_dict[key] >= expected[key])
 
