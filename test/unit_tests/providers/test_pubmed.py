@@ -15,7 +15,7 @@ SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
 SAMPLE_EXTRACT_PROVENANCE_URL_PAGE = SAMPLE_EXTRACT_METRICS_PAGE
 
 TEST_DOI = "10.1371/journal.pcbi.1000361"
-TEST_PMID = "16901231"
+TEST_PMID = "16060722"
 
 class TestPubmed(ProviderTestCase):
 
@@ -54,7 +54,7 @@ class TestPubmed(ProviderTestCase):
     def test_aliases_from_pmid(self):
         print self.testitem_aliases
         metrics_dict = self.provider.aliases([self.testitem_aliases])
-        assert_equals(set(metrics_dict), set([('doi', u'10.1089/omi.2006.10.231'), ('pmid', '16901231')]))
+        assert_equals(set(metrics_dict), set([('pmid', '16060722'), ('doi', u'10.1371/journal.pmed.0020124')]))
 
     @http
     def test_aliases_from_doi(self):
@@ -64,7 +64,8 @@ class TestPubmed(ProviderTestCase):
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'pubmed:pmc_citations': (12, 'http://www.ncbi.nlm.nih.gov/pubmed?linkname=pubmed_pubmed_citedin&from_uid=16901231'), 'pubmed:pmc_citations_reviews': (2, u'http://www.ncbi.nlm.nih.gov/pubmed?term=20455752 OR 18192184&cmd=DetailsSearch')}
+        print metrics_dict
+        expected = {'pubmed:pmc_citations': (149, 'http://www.ncbi.nlm.nih.gov/pubmed?linkname=pubmed_pubmed_citedin&from_uid=16060722'), 'pubmed:f1000': (True, 'http://f1000.com/pubmed/16060722'), 'pubmed:pmc_citations_reviews': (20, 'http://www.ncbi.nlm.nih.gov/pubmed?term=22182676%20OR%2022065657%20OR%2021998558%20OR%2021890791%20OR%2021788505%20OR%2021407270%20OR%2020967426%20OR%2020637084%20OR%2020571517%20OR%2020420659%20OR%2020382258%20OR%2020307281%20OR%2019956635%20OR%2019860651%20OR%2019207020%20OR%2018834308%20OR%2018612135%20OR%2018603647%20OR%2017705840%20OR%2017587446&cmd=DetailsSearch'), 'pubmed:pmc_citations_editorials': (11, 'http://www.ncbi.nlm.nih.gov/pubmed?term=22515987%20OR%2022285994%20OR%2021693091%20OR%2021153562%20OR%2020876290%20OR%2020596038%20OR%2020420659%20OR%2020040241%20OR%2019967369%20OR%2019949717%20OR%2017880356&cmd=DetailsSearch')}
         assert_equals(metrics_dict, expected)
 
 
