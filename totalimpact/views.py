@@ -304,17 +304,20 @@ def make_csv_rows(items):
         column_list = [item["_id"]]
         for alias_name in header_alias_names:
             try:
-                value = item['aliases'][alias_name][0]
-                if (" " in value) or ("," in value):
-                    value = '"' + value + '"'
-                column_list += [value]
+                value_to_store = item['aliases'][alias_name][0]
+                if (" " in value_to_store) or ("," in value_to_store):
+                    value_to_store = '"' + value_to_store + '"'
+                column_list += [value_to_store]
             except (IndexError, KeyError):
                 column_list += [""]        
         for metric_name in header_metric_names:
             try:
                 values = item['metrics'][metric_name]['values']
                 latest_key = sorted(values, reverse=True)[0]
-                column_list += [str(values[latest_key])]
+                value_to_store = str(values[latest_key])
+                if (" " in value_to_store) or ("," in value_to_store):
+                    value_to_store = '"' + value_to_store + '"'
+                column_list += [value_to_store]
             except (IndexError, KeyError):
                 column_list += [""]
         print column_list
