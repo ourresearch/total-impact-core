@@ -6,6 +6,7 @@ from totalimpact.views import app
 import os
 import collections
 from nose.tools import assert_equals, raises, nottest
+from test.utils import http
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/citeulike")
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
@@ -39,4 +40,11 @@ class TestCiteulike(ProviderTestCase):
         expected = 'http://www.citeulike.org/doi/10.1371/journal.pcbi.1000361'
         assert_equals(provenance_url, expected)
 
+    @http
+    def test_metrics(self):
+        metrics_dict = self.provider.metrics([self.testitem_metrics])
+        expected = {'citeulike:bookmarks': (59, 'http://www.citeulike.org/doi/10.1371/journal.pcbi.1000361')}
+        print metrics_dict
+        for key in expected:
+            assert(metrics_dict[key] >= expected[key])
 

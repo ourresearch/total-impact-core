@@ -1,6 +1,7 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from test.utils import http
 
 import os
 import collections
@@ -37,5 +38,13 @@ class TestTopsy(ProviderTestCase):
             [self.testitem_aliases])
         expected = "http://topsy.com/total-impact.org?utm_source=otter"
         assert_equals(provenance_url, expected)
+
+    @http
+    def test_metrics(self):
+        metrics_dict = self.provider.metrics([self.testitem_metrics])
+        expected = {'topsy:influential_tweets': (32, 'http://topsy.com/total-impact.org?utm_source=otter'), 'topsy:tweets': (332, 'http://topsy.com/total-impact.org?utm_source=otter')}
+        print metrics_dict
+        for key in expected:
+            assert(metrics_dict[key] >= expected[key])
 
 

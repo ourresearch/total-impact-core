@@ -380,7 +380,7 @@ class Provider(object):
         url = self._get_templated_url(provider_url_template, id, "metrics")
 
         # try to get a response from the data provider                
-        response = self.http_get(url, cache_enabled=cache_enabled)
+        response = self.http_get(url, cache_enabled=cache_enabled, allow_redirects=True)
 
         #logger.debug("get_metrics_for_id response.status_code %i" % response.status_code)
         
@@ -410,7 +410,7 @@ class Provider(object):
         return self.max_retries
 
     
-    def http_get(self, url, headers=None, timeout=None, cache_enabled=True):
+    def http_get(self, url, headers=None, timeout=None, cache_enabled=True, allow_redirects=False):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
@@ -446,7 +446,7 @@ class Provider(object):
             proxies = None
             if app.config["PROXY"]:
                 proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}
-            r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=False, verify=False)
+            r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=allow_redirects, verify=False)
         except requests.exceptions.Timeout as e:
             logger.debug("Attempt to connect to provider timed out during GET on " + url)
             raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
