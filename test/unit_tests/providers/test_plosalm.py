@@ -1,6 +1,7 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from test.utils import http
 
 import os
 import collections
@@ -42,5 +43,14 @@ class TestPlosalm(ProviderTestCase):
         metrics_dict = self.provider._extract_metrics(good_page)
         expected = {'plosalm:pmc_supp-data': 15, 'plosalm:html_views': 11856, 'plosalm:pmc_abstract': 96, 'plosalm:pmc_unique-ip': 856, 'plosalm:scopus': 26, 'plosalm:pdf_views': 1134, 'plosalm:pmc_pdf': 257, 'plosalm:pmc_full-text': 896, 'plosalm:pmc_figure': 70, 'plosalm:pubmed_central': 13, 'plosalm:crossref': 14}
         assert_equals(metrics_dict, expected)
+
+    @http
+    def test_metrics(self):
+        metrics_dict = self.provider.metrics([self.testitem_metrics])
+        expected = {u'plosalm:pmc_supp-data': (15, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), 'plosalm:html_views': (11871, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:scopus': (26, u'http://www.scopus.com/scopus/inward/citedby.url?doi=10.1371%2Fjournal.pcbi.1000361&rel=R3.0.0&partnerID=OIVxnoIl&md5=5917ea9916ee68b95c2a7968d65927ab'), u'plosalm:pmc_unique-ip': (856, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), 'plosalm:pdf_views': (1137, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:pmc_pdf': (257, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:pubmed_central': (13, u'http://www.ncbi.nlm.nih.gov/sites/entrez?db=pubmed&cmd=link&LinkName=pubmed_pmc_refs&from_uid=19381256'), u'plosalm:pmc_figure': (70, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:pmc_abstract': (96, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:pmc_full-text': (896, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361'), u'plosalm:crossref': (14, 'http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000361')}
+        print metrics_dict
+        for key in expected:
+            assert(metrics_dict[key] >= expected[key])
+
 
 

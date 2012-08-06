@@ -2,6 +2,7 @@ from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from totalimpact.views import app
+from test.utils import http
 
 import os
 import collections
@@ -38,5 +39,13 @@ class TestFacebook(ProviderTestCase):
             [self.testitem_aliases])
         expected = ""
         assert_equals(provenance_url, expected)
+
+    @http
+    def test_metrics(self):
+        metrics_dict = self.provider.metrics([self.testitem_metrics])
+        expected = {'facebook:likes': (24, ''), 'facebook:shares': (6, '')}
+        print metrics_dict
+        for key in expected:
+            assert(metrics_dict[key] >= expected[key])
 
 

@@ -1,6 +1,7 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from test.utils import http
 
 import os
 import collections
@@ -55,5 +56,13 @@ class TestWikipedia(ProviderTestCase):
     def test_extract_metrics_invalid(self):
         incorrect_doc = """this isn't the wikipedia search result page you are looking for"""
         self.provider._extract_metrics(incorrect_doc)
+
+    @http
+    def test_metrics(self):
+        metrics_dict = self.provider.metrics([self.testitem_metrics])
+        expected = {'wikipedia:mentions': (1, 'http://en.wikipedia.org/wiki/Special:Search?search="10.1371/journal.pcbi.1000361"&go=Go')}
+        print metrics_dict
+        for key in expected:
+            assert(metrics_dict[key] >= expected[key])
 
 

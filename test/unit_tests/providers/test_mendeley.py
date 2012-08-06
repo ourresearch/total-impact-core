@@ -1,6 +1,7 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from test.utils import http
 
 import os
 import collections
@@ -12,7 +13,7 @@ SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, "aliases")
 SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
 SAMPLE_EXTRACT_PROVENANCE_URL_PAGE = SAMPLE_EXTRACT_METRICS_PAGE
 
-TEST_DOI = "10.1371/journal.pcbi.1000361"
+TEST_DOI = "10.1371/journal.pbio.1000056"
 
 class TestMendeley(ProviderTestCase):
 
@@ -55,4 +56,13 @@ class TestMendeley(ProviderTestCase):
         f = open(SAMPLE_EXTRACT_PROVENANCE_URL_PAGE, "r")
         provenance_url = self.provider._extract_provenance_url(f.read())
         assert_equals(provenance_url, "http://api.mendeley.com/research/snps-prescriptions-predict-drug-response/")
+
+    @http
+    def test_metrics(self):
+        metrics_dict = self.provider.metrics([self.testitem_metrics])
+        expected = {'mendeley:discipline': ([{u'id': 3, u'value': 89, u'name': u'Biological Sciences'}, {u'id': 12, u'value': 7, u'name': u'Environmental Sciences'}, {u'id': 7, u'value': 4, u'name': u'Earth Sciences'}], u'http://api.mendeley.com/research/amazonian-amphibian-diversity-is-primarily-derived-from-late-miocene-andean-lineages/'), 'mendeley:country': ([{u'name': u'Brazil', u'value': 24}, {u'name': u'United States', u'value': 23}, {u'name': u'United Kingdom', u'value': 7}], u'http://api.mendeley.com/research/amazonian-amphibian-diversity-is-primarily-derived-from-late-miocene-andean-lineages/'), 'mendeley:career_stage': ([{u'name': u'Ph.D. Student', u'value': 31}, {u'name': u'Post Doc', u'value': 14}, {u'name': u'Student (Master)', u'value': 12}], u'http://api.mendeley.com/research/amazonian-amphibian-diversity-is-primarily-derived-from-late-miocene-andean-lineages/'), 'mendeley:groups': (7, u'http://api.mendeley.com/research/amazonian-amphibian-diversity-is-primarily-derived-from-late-miocene-andean-lineages/'), 'mendeley:readers': (173, u'http://api.mendeley.com/research/amazonian-amphibian-diversity-is-primarily-derived-from-late-miocene-andean-lineages/')}
+        print metrics_dict
+        for key in expected:
+            assert(metrics_dict[key] >= expected[key])
+
 
