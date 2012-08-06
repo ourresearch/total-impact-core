@@ -285,101 +285,7 @@ def item(tiid, format=None):
     resp.mimetype = "application/json"
 
     return resp
-
-def make_csv_rows(items):
-    header_metric_names = []
-    for item in items:
-        header_metric_names += item["metrics"].keys()
-
-    # get unique
-    header_alias_names = ["title", "doi"]
-    header_metric_names = sorted(list(set(header_metric_names)))
-
-    # make header row
-    csv_list = ["tiid," + ','.join(header_alias_names + header_metric_names)]
-
-    # body rows
-    for item in items:
-        print "keys: " + str(item.keys())
-        column_list = [item["_id"]]
-        for alias_name in header_alias_names:
-            try:
-                value_to_store = item['aliases'][alias_name][0]
-                if (" " in value_to_store) or ("," in value_to_store):
-                    value_to_store = '"' + value_to_store + '"'
-                column_list += [value_to_store]
-            except (IndexError, KeyError):
-                column_list += [""]        
-        for metric_name in header_metric_names:
-            try:
-                values = item['metrics'][metric_name]['values']
-                latest_key = sorted(values, reverse=True)[0]
-                value_to_store = str(values[latest_key])
-                if (" " in value_to_store) or ("," in value_to_store):
-                    value_to_store = '"' + value_to_store + '"'
-                column_list += [value_to_store]
-            except (IndexError, KeyError):
-                column_list += [""]
-        print column_list
-        csv_list.append(",".join(column_list))
-
-    # join together in a string
-    csv = "\n".join(csv_list)
-    return csv
-
-'''
-GET /items/:tiid,:tiid,...
-returns a json list of item objects (100 max)
-404 unless all tiids return items from db
-'''
-@app.route('/items/<tiids>', methods=['GET'])
-@app.route('/items/<tiids>.<format>', methods=['GET'])
-def items(tiids, format=None):
-    items = []
-
-    something_currently_updating = False
-    for index,tiid in enumerate(tiids.split(',')):
-        if index > 500: break    # weak, change
-
-        try:
-            item = ItemFactory.get_item(mydao, tiid)
-        except (LookupError, AttributeError), e:
-            logger.warning("Got an error looking up tiid '{tiid}'; aborting with 404. error: {error}".format(
-                tiid=tiid,
-                error = e.__repr__()
-            ))
-            abort(404)
-
-        if not item:
-            logger.warning("Looks like there's no item with tiid '{tiid}': aborting with 404".format(
-                tiid=tiid
-            ))
-            abort(404)
-
-        currently_updating = mydao.get_num_providers_left(tiid) > 0
-        item["currently_updating"] = currently_updating
-        something_currently_updating = something_currently_updating or currently_updating
-
-        items.append(item)
-
-    # return success if all reporting is complete for all items    
-    if something_currently_updating:
-        response_code = 210 # not complete yet
-    else:
-        response_code = 200
-
-    if format == "csv":
-        csv = make_csv_rows(items)
-        resp = make_response(csv, response_code)
-        resp.mimetype = "text/csv"
-        resp.headers.add("Content-Disposition", "attachment; filename=ti.csv")
-    else:
-        resp = make_response(json.dumps(items, sort_keys=True, indent=4), response_code)
-        resp.mimetype = "application/json"
-
-    resp.headers['Access-Control-Allow-Origin'] = "*"
-    return resp
-        
+      
 
 @app.route('/provider', methods=['GET'])
 def provider():
@@ -502,10 +408,114 @@ def provider_biblio(provider_name, id):
     return resp
 
 
+
+
+
+def make_csv_rows(items):
+    header_metric_names = []
+    for item in items:
+        header_metric_names += item["metrics"].keys()
+
+    # get unique
+    header_alias_names = ["title", "doi"]
+    header_metric_names = sorted(list(set(header_metric_names)))
+
+    # make header row
+    csv_list = ["tiid," + ','.join(header_alias_names + header_metric_names)]
+
+    # body rows
+    for item in items:
+        print "keys: " + str(item.keys())
+        column_list = [item["_id"]]
+        for alias_name in header_alias_names:
+            try:
+                value_to_store = item['aliases'][alias_name][0]
+                if (" " in value_to_store) or ("," in value_to_store):
+                    value_to_store = '"' + value_to_store + '"'
+                column_list += [value_to_store]
+            except (IndexError, KeyError):
+                column_list += [""]        
+        for metric_name in header_metric_names:
+            try:
+                values = item['metrics'][metric_name]['values']
+                latest_key = sorted(values, reverse=True)[0]
+                value_to_store = str(values[latest_key])
+                if (" " in value_to_store) or ("," in value_to_store):
+                    value_to_store = '"' + value_to_store + '"'
+                column_list += [value_to_store]
+            except (IndexError, KeyError):
+                column_list += [""]
+        print column_list
+        csv_list.append(",".join(column_list))
+
+    # join together in a string
+    csv = "\n".join(csv_list)
+    return csv
+
+def retrieve_items(tiids):
+    something_currently_updating = False
+    items = []
+    for tiid in tiids:
+        try:
+            item = ItemFactory.get_item(mydao, tiid)
+        except (LookupError, AttributeError), e:
+            logger.warning("Got an error looking up tiid '{tiid}'; aborting with 404. error: {error}".format(
+                tiid=tiid,
+                error = e.__repr__()
+            ))
+            abort(404)
+
+        if not item:
+            logger.warning("Looks like there's no item with tiid '{tiid}': aborting with 404".format(
+                tiid=tiid
+            ))
+            abort(404)
+
+        currently_updating = mydao.get_num_providers_left(tiid) > 0
+        item["currently_updating"] = currently_updating
+        something_currently_updating = something_currently_updating or currently_updating
+
+        items.append(item)
+    return (items, something_currently_updating)
+  
+
 '''
 GET /collection/:collection_ID
-returns a collection object 
+returns a collection object and the items
+'''
+@app.route('/collection/<cid>', methods = ['GET'])
+@app.route('/collection/<cid>.<format>', methods = ['GET'])
+def collection_get(cid='', format="json"):
+    response_code = None
 
+    coll = mydao.get(cid)
+    if not coll:
+        abort(404)
+
+    tiids = coll["item_tiids"]
+    (items, something_currently_updating) = retrieve_items(tiids.split(","))
+
+    # return success if all reporting is complete for all items    
+    if something_currently_updating:
+        response_code = 210 # update is not complete yet
+    else:
+        response_code = 200
+
+    if format == "csv":
+        csv = make_csv_rows(items)
+        resp = make_response(csv, response_code)
+        resp.mimetype = "text/csv"
+        resp.headers.add("Content-Disposition", "attachment; filename=ti.csv")
+    else:
+        coll["items"] = items
+        del coll["item_tiids"]
+        # print json.dumps(coll, sort_keys=True, indent=4)
+        resp = make_response(json.dumps(coll, sort_keys=True, indent=4), response_code)
+        resp.mimetype = "application/json"
+
+    return resp
+
+'''
 POST /collection
 creates new collection
 post payload a dict like:
@@ -515,56 +525,32 @@ post payload a dict like:
     }
 returns collection_id
 returns 405 or 201
-
-PUT /collection/:collection
-payload is a collection object
-overwrites whatever was there before.
-returns 404 or 200
-(see http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete)
-
-# We don't want to support delete yet, too risky.  Taken out for now.
-DELETE /collection/:collection
-returns 404 or 204
-(see http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete)
 '''
 @app.route('/collection', methods = ['POST'])
-@app.route('/collection/<cid>', methods = ['GET'])
-def collection(cid=''):
+def collection_post(cid=''):
     response_code = None
-
     coll = mydao.get(cid)
-
-    if request.method == "POST":
-        if coll:
-            # Collection already exists: should call PUT instead
-            abort(405)   # Method Not Allowed
-        else:
-            try:
-                coll = CollectionFactory.make()
-                coll["item_tiids"] = request.json["items"]
-                coll["title"] = request.json["title"]
-                mydao.save(coll)
-                response_code = 201 # Created
-                logger.info("saved new collection '{id}' with {num_items} items.".format(
-                    id=coll["_id"],
-                    num_items=len(request.json["items"])
-                ))
-            except (AttributeError, TypeError):
-                # we got missing or improperly formated data.
-                # should log the error...
-                abort(404)  #what is the right error message for 'needs arguments'?
-
-    elif request.method == "GET":
-        if coll:
-            response_code = 200 #OK
-        else:
-            abort(404)
-
+    if coll:
+        # Collection already exists: should call PUT instead
+        abort(405)   # Method Not Allowed
+    else:
+        try:
+            coll = CollectionFactory.make()
+            coll["item_tiids"] = request.json["items"]
+            coll["title"] = request.json["title"]
+            mydao.save(coll)
+            response_code = 201 # Created
+            logger.info("saved new collection '{id}' with {num_items} items.".format(
+                id=coll["_id"],
+                num_items=len(request.json["items"])
+            ))
+        except (AttributeError, TypeError):
+            # we got missing or improperly formated data.
+            # should log the error...
+            abort(404)  #what is the right error message for 'needs arguments'?
     resp = make_response( json.dumps( coll, sort_keys=True, indent=4 ), response_code)
     resp.mimetype = "application/json"
-
     return resp
-
 
 @app.route('/test/collection/<action_type>', methods = ['GET'])
 def tests_interactions(action_type=''):
