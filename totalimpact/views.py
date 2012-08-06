@@ -58,7 +58,7 @@ def get_tiid_by_alias(ns, nid):
     matches = res[[ns,nid]] # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
         
     if matches.rows:
-        if (len(matches.rows) > 1):
+        if len(matches.rows) > 1:
             logger.warning("More than one tiid for alias (%s, %s)" %(ns, nid))
         tiid = matches.rows[0]["id"]
     else:
@@ -237,13 +237,13 @@ def items_post():
 
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
-    '''Creates a new item using the given namespace and id.
+    """Creates a new item using the given namespace and id.
 
     POST /item/:namespace/:nid
     201 location: {tiid}
     500?  if fails to create
     example /item/PMID/234234232
-    '''
+    """
     tiid = get_tiid_by_alias(namespace, nid)
     if tiid:
         logger.debug("... found with tiid " + tiid)
