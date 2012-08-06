@@ -139,27 +139,6 @@ class TestItem(ViewsTester):
 
 class TestItems(ViewsTester):
 
-    def test_post(self):
-        items = [
-            ["doi", "10.123"],
-            ["doi", "10.124"],
-            ["doi", "10.125"]
-        ]
-        resp = self.client.post(
-            '/items',
-            data=json.dumps(items),
-            content_type="application/json"
-        )
-        tiids_str = ','.join(json.loads(resp.data))
-        dois = []
-
-        get_items_resp = self.client.get('/items/'+tiids_str)
-        for item_from_db in json.loads(get_items_resp.data):
-            dois.append(item_from_db['aliases']['doi'][0])
-
-        expected_dois = [i[1] for i in items]
-        assert_equals(set(expected_dois), set(dois))
-
     def test_post_tiids_updates(self):
         items = [
             ["doi", "10.123"],
@@ -212,31 +191,6 @@ class TestItems(ViewsTester):
         # 3 new items + 1 new item + 1 design doc
         assert_equals(self.d.db.info()["doc_count"], 5)
 
-    def test_make_csv_rows(self):
-        csv = views.make_csv_rows(API_ITEMS_JSON)
-        expected = u'tiid,title,doi,dryad:most_downloaded_file,dryad:package_views,dryad:total_downloads,mendeley:groups,mendeley:readers,plosalm:crossref,plosalm:html_views,plosalm:pdf_views,plosalm:pmc_abstract,plosalm:pmc_figure,plosalm:pmc_full-text,plosalm:pmc_pdf,plosalm:pmc_supp-data,plosalm:pmc_unique-ip,plosalm:pubmed_central,plosalm:scopus,wikipedia:mentions\nf2b45fcab1da11e19199c8bcc8937e3f,"Tumor-Immune Interaction, Surgical Treatment, and Cancer Recurrence in a Mathematical Model of Melanoma",10.1371/journal.pcbi.1000362,,,,1,13,7,2075,484,29,13,232,113,0,251,2,11,\nc1eba010b1da11e19199c8bcc8937e3f,"data from: comparison of quantitative and molecular genetic variation of native vs. invasive populations of purple loosestrife (lythrum salicaria l., lythraceae)",10.5061/dryad.1295,70,537,114,,,,,,,,,,,,,,\nc202754cb1da11e19199c8bcc8937e3f,"Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article",10.1371/journal.pcbi.1000361,,,,4,52,13,11521,1097,70,39,624,149,6,580,12,19,1\nf2dc3f36b1da11e19199c8bcc8937e3f,"Design Principles for Riboswitch Function",10.1371/journal.pcbi.1000363,,,,4,57,16,3361,1112,37,54,434,285,41,495,9,19,'
-        assert_equals(csv, expected)
-
-    def test_get_csv(self):
-        # put some items in the db
-        items = [
-            ["url", "http://google.com"],
-            ["url", "http://nescent.org"],
-            ["url", "http://total-impact.org"]
-        ]
-        resp = self.client.post(
-            '/items',
-            data=json.dumps(items),
-            content_type="application/json"
-        )
-        tiids = json.loads(resp.data)
-        tiids_str = ','.join(tiids)
-        print "tiids_str = " + tiids_str
-
-        resp = self.client.get('/items/'+tiids_str+'.csv')
-        rows = resp.data.split("\n")
-        print rows
-        assert_equals(len(rows), 4) # header plus 3 items
 
 
 class TestCollection(ViewsTester):
@@ -265,6 +219,68 @@ class TestCollection(ViewsTester):
         response = self.client.get('/collection/')
         assert_equals(response.status_code, 404)  #Not found
 
+    def test_make_csv_rows(self):
+        csv = views.make_csv_rows(API_ITEMS_JSON)
+        expected = u'tiid,title,doi,dryad:most_downloaded_file,dryad:package_views,dryad:total_downloads,mendeley:groups,mendeley:readers,plosalm:crossref,plosalm:html_views,plosalm:pdf_views,plosalm:pmc_abstract,plosalm:pmc_figure,plosalm:pmc_full-text,plosalm:pmc_pdf,plosalm:pmc_supp-data,plosalm:pmc_unique-ip,plosalm:pubmed_central,plosalm:scopus,wikipedia:mentions\nf2b45fcab1da11e19199c8bcc8937e3f,"Tumor-Immune Interaction, Surgical Treatment, and Cancer Recurrence in a Mathematical Model of Melanoma",10.1371/journal.pcbi.1000362,,,,1,13,7,2075,484,29,13,232,113,0,251,2,11,\nc1eba010b1da11e19199c8bcc8937e3f,"data from: comparison of quantitative and molecular genetic variation of native vs. invasive populations of purple loosestrife (lythrum salicaria l., lythraceae)",10.5061/dryad.1295,70,537,114,,,,,,,,,,,,,,\nc202754cb1da11e19199c8bcc8937e3f,"Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article",10.1371/journal.pcbi.1000361,,,,4,52,13,11521,1097,70,39,624,149,6,580,12,19,1\nf2dc3f36b1da11e19199c8bcc8937e3f,"Design Principles for Riboswitch Function",10.1371/journal.pcbi.1000363,,,,4,57,16,3361,1112,37,54,434,285,41,495,9,19,'
+        assert_equals(csv, expected)
+
+    def test_get_csv(self):
+        # put some items in the db
+        items = [
+            ["url", "http://google.com"],
+            ["url", "http://nescent.org"],
+            ["url", "http://total-impact.org"]
+        ]
+        resp = self.client.post(
+            '/items',
+            data=json.dumps(items),
+            content_type="application/json"
+        )
+        tiids_str = ','.join(json.loads(resp.data))
+
+        response = self.client.post(
+            '/collection',
+            data=json.dumps({"items": tiids_str, "title":"My Title"}),
+            content_type="application/json")
+        collection = json.loads(response.data)
+        collection_id = collection["_id"]
+
+        resp = self.client.get('/collection/'+collection_id+'.csv')
+        print resp
+        rows = resp.data.split("\n")
+        print rows
+        assert_equals(len(rows), 4) # header plus 3 items
+
+    def test_collection_get(self):
+        # put some items in the db
+        items = [
+            ["url", "http://google.com"],
+            ["url", "http://nescent.org"],
+            ["url", "http://total-impact.org"]
+        ]
+        resp = self.client.post(
+            '/items',
+            data=json.dumps(items),
+            content_type="application/json"
+        )
+        tiids_str = ','.join(json.loads(resp.data))
+
+        response = self.client.post(
+            '/collection',
+            data=json.dumps({"items": tiids_str, "title":"My Title"}),
+            content_type="application/json")
+        collection = json.loads(response.data)
+        collection_id = collection["_id"]
+
+        resp = self.client.get('/collection/'+collection_id)
+        print resp
+        assert_equals(resp.status_code, 210)
+        collection_data = json.loads(resp.data)
+        assert_equals(collection_data.keys(), [u'title', u'items', u'_rev', u'created', u'last_modified', u'_id', u'type'])
+
+        items_urls = [item_from_db['aliases']['url'][0] for item_from_db in collection_data["items"]]
+        expected_ids = [i[1] for i in items]
+        assert_equals(set(items_urls), set(expected_ids))
 
 class TestApi(ViewsTester):
 
