@@ -82,7 +82,7 @@ class ReportPage:
         )
         resp = requests.get(request_url)
         if resp.status_code == 200:
-            self.tiids = self._get_tiids(resp.text)
+            self.collectionId = self._get_collectionId(resp.text)
             elapsed = time.time() - start
             logger.info(
                 "loaded the report page for '{collection_id}' in {elapsed} seconds.".format(
@@ -97,33 +97,31 @@ class ReportPage:
                 ))
 
 
-    def _get_tiids(self, text):
-        """gets the list of tiids to poll. in the real report page, this is done
-        via a 'tiids' javascript var that's placed there when the view constructs
+    def _get_collectionId(self, text):
+        """gets id of the collection to poll. in the real report page, this is done
+        via a 'collectionId' javascript var that's placed there when the view constructs
         the page. this method parses the page to get them...it's brittle, though,
         since if the report page changes this breaks."""
 
-        m = re.search("var tiids = (\[[^\]]+\])", text)
-        tiids = json.loads(m.group(1))
-        return tiids
+        m = re.search('var collectionId = "([^"]+)"', text)
+        collectionId = m.group(1)
+        return collectionId
 
 
     def poll(self, max_time=60):
         logger.info(
-            "polling the {num_tiids} tiids of collection '{collection_id}'".format(
-                num_tiids=len(self.tiids),
+            "polling collection '{collection_id}'".format(
                 collection_id=self.collection_id
             ))
 
-        tiids_str = ",".join(self.tiids)
         still_updating = True
         tries = 0
         start = time.time()
         while still_updating:
-            url = api_url + "/items/" + tiids_str
+            url = api_url + "/collection/" + self.collectionId
             resp = requests.get(url, config={'verbose': None})
             try:
-                items = json.loads(resp.text)
+                items = json.loads(resp.text)["items"]
             except ValueError:
                 logger.warning(
                     "POSTing '{url}' returned no json, only '{resp}') ".format(
@@ -136,12 +134,12 @@ class ReportPage:
             currently_updating_flags = [True for item in items if
                                         item["currently_updating"]]
             num_currently_updating = len(currently_updating_flags)
-            num_finished_updating = len(self.tiids) - num_currently_updating
+            num_finished_updating = len(items) - num_currently_updating
 
             logger.info(
                 "{num_done} of {num_total} items done updating after {tries} requests.".format(
                     num_done=num_finished_updating,
-                    num_total=len(self.tiids),
+                    num_total=len(items),
                     tries=tries
                 ))
             logger.debug("got these items back: " + str(items))
@@ -151,7 +149,7 @@ class ReportPage:
                 logger.info(
                     "collection '{id}' with {num_items} items finished updating in {elapsed} seconds.".format(
                         id=self.collection_id,
-                        num_items=len(self.tiids),
+                        num_items=len(items),
                         elapsed=round(elapsed, 2)
                     ))
                 return True
