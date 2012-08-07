@@ -1,4 +1,3 @@
-
 from flask import json, request, redirect, abort, make_response
 from flask import render_template
 import os, datetime, redis
@@ -25,11 +24,14 @@ def set_db(url, db):
 
 #@app.before_request
 def check_api_key():
-    ti_api_key = request.values.get('api_key','')
+    ti_api_key = request.values.get('api_key', '')
     logger.debug("In check_api_key with " + ti_api_key)
     if not ti_api_key:
-        response = make_response("please get an api key and include api_key=YOURKEY in your query", 403)
+        response = make_response(
+            "please get an api key and include api_key=YOURKEY in your query",
+            403)
         return response
+
 
 @app.after_request
 def add_crossdomain_header(resp):
@@ -48,18 +50,20 @@ def hello():
         "contact": "totalimpactdev@gmail.com",
         "version": app.config["VERSION"]
     }
-    resp = make_response( json.dumps(msg, sort_keys=True, indent=4), 200)        
+    resp = make_response(json.dumps(msg, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
+
 
 def get_tiid_by_alias(ns, nid):
     res = mydao.view('queues/by_alias')
 
-    matches = res[[ns,nid]] # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
-        
+    matches = res[[ns,
+                   nid]] # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
+
     if matches.rows:
         if len(matches.rows) > 1:
-            logger.warning("More than one tiid for alias (%s, %s)" %(ns, nid))
+            logger.warning("More than one tiid for alias (%s, %s)" % (ns, nid))
         tiid = matches.rows[0]["id"]
     else:
         tiid = None
@@ -70,30 +74,31 @@ GET /tiid/:namespace/:id
 404 if not found because not created yet
 303 else list of tiids
 '''
+
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
 def tiid(ns, nid):
     tiid = get_tiid_by_alias(ns, nid)
 
     if not tiid:
         abort(404)
-    resp = make_response(json.dumps(tiid, sort_keys=True, indent=4 ), 303) 
+    resp = make_response(json.dumps(tiid, sort_keys=True, indent=4), 303)
     resp.mimetype = "application/json"
     return resp
+
 
 def create_item(namespace, nid):
     logger.debug("In create_item with alias" + str((namespace, nid)))
     item = ItemFactory.make()
-    
+
     # set this so we know when it's still updating later on
     mydao.set_num_providers_left(
         item["_id"],
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
     )
 
-
     item["aliases"][namespace] = [nid]
     item["needs_aliases"] = datetime.datetime.now().isoformat()
-    
+
     mydao.save(item)
     logger.info("Created new item '{id}' with alias '{alias}'".format(
         id=item["_id"],
@@ -103,41 +108,7 @@ def create_item(namespace, nid):
     try:
         return item["_id"]
     except AttributeError:
-        abort(500)    
-
-def update_item(tiid):
-    logger.debug("In update_item with tiid " + tiid)
-    item_doc = mydao.get(tiid)
-
-    # set the needs_aliases timestamp so it will go on queue for update
-    item_doc["needs_aliases"] = datetime.datetime.now().isoformat()
-
-    # set this so we know when it's still updating later on
-    mydao.set_num_providers_left(
-        item_doc["_id"],
-        ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-    )
-    mydao.save(item_doc)
-
-    try:
-        return tiid
-    except AttributeError:
-        abort(500)     
-
-
-def items_tiid_post(tiids):
-    logger.debug("In api /items with tiids " + str(tiids))
-
-    updated_tiids = []
-    for tiid in tiids:
-        updated_tiid = update_item(tiid)
-        updated_tiids.append(updated_tiid)
-
-    response_code = 200
-    resp = make_response(json.dumps(updated_tiids), response_code)
-    resp.mimetype = "application/json"
-    return resp
-
+        abort(500)
 
 
 
@@ -156,83 +127,66 @@ def items_post():
     Even better, most of this should move into a Collection or Updater model.
     """
     logger.debug("POST/items got this json: " + str(request.json))
-    if isinstance(request.json[0], basestring):
-        tiids = request.json
-        
-        # this seems to be a list of tiids; we'll do an update
-        logger.info("POST /items got a list of tiids; doing an update.")
-        logger.debug("POST /items got this list of tiids; doing an update with them: {tiids_str}".format(
-            tiids_str=str(tiids)
-        ))
-
-        updated_tiids = []
-        for tiid in request.json:
-            updated_tiid = update_item(tiid)
-            updated_tiids.append(updated_tiid)
-
-        response_code = 200
-        tiids = updated_tiids
-    else:
-        # we got some alias tuples; time to create new items.
-        logger.info("POST /items got a list of aliases; creating new items for 'em.")
-        logger.debug("POST /items got this list of aliases; creating new items for 'em: {aliases}".format(
+    logger.info("POST /items got a list of aliases; creating new items for 'em.")
+    logger.debug("POST /items got this list of aliases; creating new items for 'em: {aliases}".format(
             aliases=str(request.json)
         ))
-        try:
-            aliases_list = [(namespace, nid) for [namespace, nid] in request.json]
-        except ValueError:
-            logger.error("bad input to POST /items (requires tiids or [namespace, id] pairs):{input}".format(
+    try:
+        aliases_list = [(namespace, nid) for [namespace, nid] in request.json]
+    except ValueError:
+        logger.error("bad input to POST /items (requires [namespace, id] pairs):{input}".format(
                 input=str(request.json)
             ))
-            abort(404, "POST /items requires a list of either tiids or [namespace, id] pairs.")
+        abort(404, "POST /items requires a list of [namespace, id] pairs.")
 
-        tiids = []
-        items = []
-        aliases_list = [(namespace.strip(), nid.strip()) for (namespace, nid) in aliases_list]
-        for alias in aliases_list:
-            (namespace, nid) = alias
-            existing_tiid = get_tiid_by_alias(namespace, nid)
-            if existing_tiid:
-                tiids.append(existing_tiid)
-                logger.debug("POST /items found an existing tiid ({tiid}) for alias {alias}".format(
+    tiids = []
+    items = []
+    aliases_list = [(namespace.strip(), nid.strip()) for (namespace, nid) in
+                                                     aliases_list]
+    for alias in aliases_list:
+        (namespace, nid) = alias
+        existing_tiid = get_tiid_by_alias(namespace, nid)
+        if existing_tiid:
+            tiids.append(existing_tiid)
+            logger.debug("POST /items found an existing tiid ({tiid}) for alias {alias}".format(
                     tiid=existing_tiid,
                     alias=str(alias)
                 ))
-            else:
-                logger.debug("POST /items: alias {alias} isn't in the db; making a new item for it.".format(
+        else:
+            logger.debug("POST /items: alias {alias} isn't in the db; making a new item for it.".format(
                     alias=alias
                 ))
-                item = ItemFactory.make()
-                item["aliases"][namespace] = [nid]
-                item["needs_aliases"] = datetime.datetime.now().isoformat()
-                items.append(item)
-                tiids.append(item["_id"])
+            item = ItemFactory.make()
+            item["aliases"][namespace] = [nid]
+            item["needs_aliases"] = datetime.datetime.now().isoformat()
+            items.append(item)
+            tiids.append(item["_id"])
 
-        logger.debug("POST /items saving a group of {num} new items.".format(
-            num=len(items)
-        ))
-        logger.debug("POST /items saving a group of {num} new items: {items}".format(
+    logger.debug("POST /items saving a group of {num} new items.".format(
+        num=len(items)
+    ))
+    logger.debug("POST /items saving a group of {num} new items: {items}".format(
             num=len(items),
             items=str(items)
         ))
 
-        # for each item, set the number of providers that need to run before the update is done
-        for item in items:
-            mydao.set_num_providers_left(
-                item["_id"],
-                ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-            )
+    # for each item, set the number of providers that need to run before the update is done
+    for item in items:
+        mydao.set_num_providers_left(
+            item["_id"],
+            ProviderFactory.num_providers_with_metrics(
+                default_settings.PROVIDERS)
+        )
 
-        # batch upload the new docs to the db
-        for doc in mydao.db.update(items):
-            pass
+    # batch upload the new docs to the db
+    for doc in mydao.db.update(items):
+        pass
 
-        response_code = 201 # Created
+    response_code = 201 # Created
 
     resp = make_response(json.dumps(tiids), response_code)
     resp.mimetype = "application/json"
     return resp
-
 
 
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
@@ -252,7 +206,7 @@ def item_namespace_post(namespace, nid):
         logger.debug("new item created with tiid " + tiid)
 
     response_code = 201 # Created
-   
+
     resp = make_response(json.dumps(tiid), response_code)
     resp.mimetype = "application/json"
 
@@ -262,6 +216,7 @@ def item_namespace_post(namespace, nid):
 '''GET /item/:tiid
 404 if tiid not found in db
 '''
+
 @app.route('/item/<tiid>', methods=['GET'])
 def item(tiid, format=None):
     # TODO check request headers for format as well.
@@ -273,7 +228,7 @@ def item(tiid, format=None):
 
     if not item:
         abort(404)
-    
+
     if mydao.get_num_providers_left(tiid) > 0:
         response_code = 210 # not complete yet
         item["currently_updating"] = True
@@ -281,16 +236,17 @@ def item(tiid, format=None):
         response_code = 200
         item["currently_updating"] = False
 
-    resp = make_response(json.dumps(item, sort_keys=True, indent=4), response_code)
+    resp = make_response(json.dumps(item, sort_keys=True, indent=4),
+                         response_code)
     resp.mimetype = "application/json"
 
     return resp
-      
+
 
 @app.route('/provider', methods=['GET'])
 def provider():
     ret = ProviderFactory.get_all_metadata()
-    resp = make_response( json.dumps(ret, sort_keys=True, indent=4), 200 )
+    resp = make_response(json.dumps(ret, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
 
     return resp
@@ -330,8 +286,7 @@ def provider_memberitems(provider_name):
         logger.debug("filename = " + file.filename)
         query = file.read().decode("utf-8")
     else:
-        query = request.values.get('query','')
-
+        query = request.values.get('query', '')
 
     logger.debug("In provider_memberitems with " + query)
 
@@ -339,8 +294,8 @@ def provider_memberitems(provider_name):
     logger.debug("provider: " + provider.provider_name)
 
     memberitems = provider.member_items(query, cache_enabled=False)
-    
-    resp = make_response( json.dumps(memberitems, sort_keys=True, indent=4), 200 )
+
+    resp = make_response(json.dumps(memberitems, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
     resp.headers['Access-Control-Allow-Origin'] = "*"
 
@@ -348,11 +303,10 @@ def provider_memberitems(provider_name):
 
 # For internal use only.  Useful for testing before end-to-end working
 # Example: http://127.0.0.1:5001/provider/dryad/aliases/10.5061/dryad.7898
-@app.route('/provider/<provider_name>/aliases/<path:id>', methods=['GET'] )
+@app.route('/provider/<provider_name>/aliases/<path:id>', methods=['GET'])
 def provider_aliases(provider_name, id):
-
     provider = ProviderFactory.get_provider(provider_name)
-    if id=="example":
+    if id == "example":
         id = provider.example_id[1]
         url = "http://localhost:8080/" + provider_name + "/aliases?%s"
     else:
@@ -362,21 +316,20 @@ def provider_aliases(provider_name, id):
         new_aliases = provider._get_aliases_for_id(id, url, cache_enabled=False)
     except NotImplementedError:
         new_aliases = []
-        
+
     all_aliases = [(provider.example_id[0], id)] + new_aliases
 
-    resp = make_response( json.dumps(all_aliases, sort_keys=True, indent=4) )
+    resp = make_response(json.dumps(all_aliases, sort_keys=True, indent=4))
     resp.mimetype = "application/json"
 
     return resp
 
 # For internal use only.  Useful for testing before end-to-end working
 # Example: http://127.0.0.1:5001/provider/dryad/metrics/10.5061/dryad.7898
-@app.route('/provider/<provider_name>/metrics/<path:id>', methods=['GET'] )
+@app.route('/provider/<provider_name>/metrics/<path:id>', methods=['GET'])
 def provider_metrics(provider_name, id):
-
     provider = ProviderFactory.get_provider(provider_name)
-    if id=="example":
+    if id == "example":
         id = provider.example_id[1]
         url = "http://localhost:8080/" + provider_name + "/metrics?%s"
     else:
@@ -384,31 +337,27 @@ def provider_metrics(provider_name, id):
 
     metrics = provider.get_metrics_for_id(id, url, cache_enabled=False)
 
-    resp = make_response( json.dumps(metrics, sort_keys=True, indent=4) )
+    resp = make_response(json.dumps(metrics, sort_keys=True, indent=4))
     resp.mimetype = "application/json"
 
     return resp
 
 # For internal use only.  Useful for testing before end-to-end working
 # Example: http://127.0.0.1:5001/provider/dryad/biblio/10.5061/dryad.7898
-@app.route('/provider/<provider_name>/biblio/<path:id>', methods=['GET'] )
+@app.route('/provider/<provider_name>/biblio/<path:id>', methods=['GET'])
 def provider_biblio(provider_name, id):
-
     provider = ProviderFactory.get_provider(provider_name)
-    if id=="example":
+    if id == "example":
         id = provider.example_id[1]
         url = "http://localhost:8080/" + provider_name + "/biblio?%s"
     else:
         url = None
 
     biblio = provider.get_biblio_for_id(id, url, cache_enabled=False)
-    resp = make_response( json.dumps(biblio, sort_keys=True, indent=4) )
+    resp = make_response(json.dumps(biblio, sort_keys=True, indent=4))
     resp.mimetype = "application/json"
 
     return resp
-
-
-
 
 
 def make_csv_rows(items):
@@ -434,7 +383,7 @@ def make_csv_rows(items):
                     value_to_store = '"' + value_to_store + '"'
                 column_list += [value_to_store]
             except (IndexError, KeyError):
-                column_list += [""]        
+                column_list += [""]
         for metric_name in header_metric_names:
             try:
                 values = item['metrics'][metric_name]['values']
@@ -452,6 +401,7 @@ def make_csv_rows(items):
     csv = "\n".join(csv_list)
     return csv
 
+
 def retrieve_items(tiids):
     something_currently_updating = False
     items = []
@@ -459,16 +409,18 @@ def retrieve_items(tiids):
         try:
             item = ItemFactory.get_item(mydao, tiid)
         except (LookupError, AttributeError), e:
-            logger.warning("Got an error looking up tiid '{tiid}'; aborting with 404. error: {error}".format(
-                tiid=tiid,
-                error = e.__repr__()
-            ))
+            logger.warning(
+                "Got an error looking up tiid '{tiid}'; aborting with 404. error: {error}".format(
+                    tiid=tiid,
+                    error=e.__repr__()
+                ))
             abort(404)
 
         if not item:
-            logger.warning("Looks like there's no item with tiid '{tiid}': aborting with 404".format(
-                tiid=tiid
-            ))
+            logger.warning(
+                "Looks like there's no item with tiid '{tiid}': aborting with 404".format(
+                    tiid=tiid
+                ))
             abort(404)
 
         currently_updating = mydao.get_num_providers_left(tiid) > 0
@@ -477,14 +429,15 @@ def retrieve_items(tiids):
 
         items.append(item)
     return (items, something_currently_updating)
-  
+
 
 '''
 GET /collection/:collection_ID
 returns a collection object and the items
 '''
-@app.route('/collection/<cid>', methods = ['GET'])
-@app.route('/collection/<cid>.<format>', methods = ['GET'])
+
+@app.route('/collection/<cid>', methods=['GET'])
+@app.route('/collection/<cid>.<format>', methods=['GET'])
 def collection_get(cid='', format="json"):
     coll = mydao.get(cid)
     if not coll:
@@ -497,8 +450,9 @@ def collection_get(cid='', format="json"):
             abort(405)  # method not supported
         else:
             response_code = 200
-            resp = make_response(json.dumps(coll, sort_keys=True, indent=4), response_code)
-            resp.mimetype = "application/json"            
+            resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
+                                 response_code)
+            resp.mimetype = "application/json"
     else:
         tiids = coll["item_tiids"]
         (items, something_currently_updating) = retrieve_items(tiids)
@@ -513,21 +467,58 @@ def collection_get(cid='', format="json"):
             csv = make_csv_rows(items)
             resp = make_response(csv, response_code)
             resp.mimetype = "text/csv"
-            resp.headers.add("Content-Disposition", "attachment; filename=ti.csv")
+            resp.headers.add("Content-Disposition",
+                             "attachment; filename=ti.csv")
         else:
             coll["items"] = items
             del coll["item_tiids"]
             # print json.dumps(coll, sort_keys=True, indent=4)
-            resp = make_response(json.dumps(coll, sort_keys=True, indent=4), response_code)
+            resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
+                                 response_code)
             resp.mimetype = "application/json"
     return resp
 
-'''
-POST /collection
-creates new collection
-'''
-@app.route('/collection', methods = ['POST'])
-def collection_post(cid=''):
+
+@app.route("/collection/<cid>", methods=["POST"])
+def collection_update(cid=""):
+    """ Updates all the items in a given collection.
+    """
+
+    # first, get the tiids in this collection:
+    try:
+        tiids = mydao.get(cid)["item_tiids"]
+    except Exception:
+        logger.exception("couldn't get tiids for collection '{cid}'".format(
+            cid=cid
+        ))
+        abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")
+
+    # put each of them on the update queue
+    for tiid in tiids:
+        logger.debug("In update_item with tiid " + tiid)
+        item_doc = mydao.get(tiid)
+
+        # set the needs_aliases timestamp so it will go on queue for update
+        item_doc["needs_aliases"] = datetime.datetime.now().isoformat()
+
+        # set this so we know when it's still updating later on
+        mydao.set_num_providers_left(
+            item_doc["_id"],
+            ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
+        )
+        mydao.save(item_doc)
+
+    resp = make_response("true", 200)
+    resp.mimetype = "application/json"
+    return resp
+
+
+@app.route('/collection', methods=['POST'])
+def collection_create(cid=''):
+    """
+    POST /collection
+    creates new collection
+    """
     response_code = None
     coll = mydao.get(cid)
     if coll:
@@ -540,21 +531,24 @@ def collection_post(cid=''):
             coll["title"] = request.json["title"]
             mydao.save(coll)
             response_code = 201 # Created
-            logger.info("saved new collection '{id}' with {num_items} items.".format(
-                id=coll["_id"],
-                num_items=len(request.json["items"])
-            ))
+            logger.info(
+                "saved new collection '{id}' with {num_items} items.".format(
+                    id=coll["_id"],
+                    num_items=len(request.json["items"])
+                ))
         except (AttributeError, TypeError):
             # we got missing or improperly formated data.
             # should log the error...
             abort(404)  #what is the right error message for 'needs arguments'?
-    resp = make_response( json.dumps( coll, sort_keys=True, indent=4 ), response_code)
+    resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
+                         response_code)
     resp.mimetype = "application/json"
     return resp
 
-@app.route('/test/collection/<action_type>', methods = ['GET'])
+
+@app.route('/test/collection/<action_type>', methods=['GET'])
 def tests_interactions(action_type=''):
-    logger.info("getting test/collection/"+action_type)
+    logger.info("getting test/collection/" + action_type)
 
     report = redis.hgetall("test.collection." + action_type)
     report["url"] = "http://{root}/collection/{collection_id}".format(
@@ -565,7 +559,7 @@ def tests_interactions(action_type=''):
     return render_template(
         'interaction_test_report.html',
         report=report
-        )
+    )
 
 
     
