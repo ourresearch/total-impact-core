@@ -288,7 +288,8 @@ def provider_memberitems(provider_name):
     else:
         query = request.values.get('query', '')
 
-    logger.debug("In provider_memberitems with " + query)
+    # this debug message is too long for bibtex, as written
+    #logger.debug("In provider_memberitems with " + query)
 
     provider = ProviderFactory.get_provider(provider_name)
     logger.debug("provider: " + provider.provider_name)
