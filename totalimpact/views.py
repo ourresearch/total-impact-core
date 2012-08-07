@@ -486,45 +486,45 @@ returns a collection object and the items
 @app.route('/collection/<cid>', methods = ['GET'])
 @app.route('/collection/<cid>.<format>', methods = ['GET'])
 def collection_get(cid='', format="json"):
-    response_code = None
-
     coll = mydao.get(cid)
     if not coll:
         abort(404)
 
-    tiids = coll["item_tiids"]
-    (items, something_currently_updating) = retrieve_items(tiids.split(","))
-
-    # return success if all reporting is complete for all items    
-    if something_currently_updating:
-        response_code = 210 # update is not complete yet
+    # if not include items, then just return the collection straight from couch
+    if (request.args.get("include_items") in ["0", "false", "False"]):
+        # except if format is csv.  can't do that.
+        if format == "csv":
+            abort(405)  # method not supported
+        else:
+            response_code = 200
+            resp = make_response(json.dumps(coll, sort_keys=True, indent=4), response_code)
+            resp.mimetype = "application/json"            
     else:
-        response_code = 200
+        tiids = coll["item_tiids"]
+        (items, something_currently_updating) = retrieve_items(tiids)
 
-    if format == "csv":
-        csv = make_csv_rows(items)
-        resp = make_response(csv, response_code)
-        resp.mimetype = "text/csv"
-        resp.headers.add("Content-Disposition", "attachment; filename=ti.csv")
-    else:
-        coll["items"] = items
-        del coll["item_tiids"]
-        # print json.dumps(coll, sort_keys=True, indent=4)
-        resp = make_response(json.dumps(coll, sort_keys=True, indent=4), response_code)
-        resp.mimetype = "application/json"
+        # return success if all reporting is complete for all items    
+        if something_currently_updating:
+            response_code = 210 # update is not complete yet
+        else:
+            response_code = 200
 
+        if format == "csv":
+            csv = make_csv_rows(items)
+            resp = make_response(csv, response_code)
+            resp.mimetype = "text/csv"
+            resp.headers.add("Content-Disposition", "attachment; filename=ti.csv")
+        else:
+            coll["items"] = items
+            del coll["item_tiids"]
+            # print json.dumps(coll, sort_keys=True, indent=4)
+            resp = make_response(json.dumps(coll, sort_keys=True, indent=4), response_code)
+            resp.mimetype = "application/json"
     return resp
 
 '''
 POST /collection
 creates new collection
-post payload a dict like:
-    {
-        items:[ [namespace, id],  [namespace, id], ...],
-        title: "this is my title"
-    }
-returns collection_id
-returns 405 or 201
 '''
 @app.route('/collection', methods = ['POST'])
 def collection_post(cid=''):
