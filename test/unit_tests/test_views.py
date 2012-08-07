@@ -195,10 +195,6 @@ class TestItems(ViewsTester):
 
 class TestCollection(ViewsTester):
 
-    def test_collection_post_already_exists(self):
-        response = self.client.post('/collection/' + TEST_COLLECTION_ID)
-        assert_equals(response.status_code, 405)  # Method Not Allowed
-
     def test_collection_post_new_collection(self):
         response = self.client.post(
             '/collection',
@@ -310,6 +306,31 @@ class TestCollection(ViewsTester):
         collection_data = json.loads(resp.data)
         assert_equals(set(collection_data.keys()), set([u'title', u'item_tiids', u'_rev', u'created', u'last_modified', u'_id', u'type']))
         assert_equals(collection_data["item_tiids"], tiids)
+
+    def test_collection_update_puts_items_on_update_queue(self):
+        # put some stuff in the collection:
+        # put some items in the db
+        for doc in mydao.db.update([
+                {"_id":"larry"},
+                {"_id":"curly"},
+                {"_id":"moe"}
+        ]):
+            pass # no need to do anything, just put 'em in couch.
+
+        collection = {
+            "_id":"123",
+            "item_tiids":["larry", "curly", "moe"]
+            }
+        mydao.save(collection)
+        resp = self.client.post(
+            "/collection/123"
+        )
+        assert_equals(resp.data, "true")
+
+        larry = mydao.get("larry")
+        # super hacky way to test for iso date string
+        assert_equals(larry["needs_aliases"][0:4], "2012")
+
 
 class TestApi(ViewsTester):
 
