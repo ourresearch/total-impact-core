@@ -2,6 +2,7 @@ from nose.tools import raises, assert_equals, nottest
 import os, unittest
 
 from totalimpact import models, dao
+from totalimpact.providers import bibtex
 
 COLLECTION_DATA = {
     "_id": "uuid-goes-here",
@@ -109,7 +110,6 @@ TEST_PROVIDER_CONFIG = [
     ("wikipedia", {})
 ]
 
-TEST_DB_NAME = "ti"
 
 
 class TestItemFactory():
@@ -174,6 +174,18 @@ class TestItemFactory():
         aliases = {"unknown_namespace":["myname"]}
         genre = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "unknown")
+
+class TestMemberItems():
+
+    def test_init(self):
+        bib = bibtex.Bibtex()
+
+        mi = models.MemberItems(bib, myredis)
+        assert_equals(mi.__class__.__name__, "MemberItems")
+        assert_equals(mi.provider.__class__.__name__, "Bibtex")
+
+
+
 
 class TestCollectionFactory():
 
