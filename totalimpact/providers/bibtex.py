@@ -21,15 +21,6 @@ class Bibtex(Provider):
     def __init__(self):
         super(Bibtex, self).__init__()
 
-    def is_relevant_alias(self, alias):
-        (namespace, nid) = alias
-        return("bibtex" == namespace)
-
-    def _extract_members(self, page, query_string): 
-
-        members = [("doi", "10.234234/2342342")]
-        return(members)
-
     def _parse_bibtex_entries(self, entries):
         biblio = {}        
         for entry in entries:
@@ -42,6 +33,8 @@ class Bibtex(Provider):
 
     def _lookup_dois_from_biblio(self, biblio, cache_enabled):
         text_list = []
+        print biblio
+
         for mykey in biblio:
             #print "** parsing", biblio[mykey]
 
@@ -80,7 +73,7 @@ class Bibtex(Provider):
 
         # doi-lookup call to crossref can take a while, give it a long timeout
         response = self.http_get(url, timeout=30, cache_enabled=cache_enabled)
-        
+
         #print response.text
         response_lines = response.text.split("\n")
         dois = [line.split("|")[-1].strip() for line in response_lines]
@@ -89,13 +82,29 @@ class Bibtex(Provider):
 
         return dois
 
+    def paginate(self, bibtex_contents):
+        logger.debug("%20s paginate in member_items" % (self.provider_name))
+
+        cleaned_string = bibtex_contents.replace("\&", "").replace("%", "")
+        entries = ["@"+entry for entry in cleaned_string.split("@")]
+        print entries
+        
+        items_per_page = 20
+        layout = divmod(len(entries), items_per_page)
+        last_page = min(1+layout[0], 25)  # 20 items/page * 25 pages = 500 items max  
+
+        biblio_pages = []
+        for i in xrange(0, last_page):
+            last_item = min(i*items_per_page+items_per_page, len(entries))
+            logger.debug("%20s getting bibtex entries %i-%i of %i" % (self.provider_name, 1+i*items_per_page, last_item, len(entries)))
+            biblio_pages += [self._parse_bibtex_entries(entries[1+i*items_per_page : last_item])]
+        return(biblio_pages)
+
+
     def member_items(self, 
             query_string, 
             provider_url_template=None, 
             cache_enabled=True):
-
-        if not self.provides_members:
-            raise NotImplementedError()
 
         logger.debug("%20s getting member_items for bibtex" % (self.provider_name))
 
@@ -119,6 +128,7 @@ class Bibtex(Provider):
             dois += self._lookup_dois_from_biblio(biblio, cache_enabled)
 
         logger.debug("%20s found %i dois total" % (self.provider_name, len(dois)))
+        logger.debug("%20s dois: %s" % (self.provider_name, "\n".join(dois)))
         aliases = []
         for doi in dois:
             if doi and ("10." in doi):
