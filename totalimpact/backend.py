@@ -3,7 +3,7 @@
 import time, sys, logging, os, traceback
 from totalimpact import default_settings, dao
 from totalimpact.tiqueue import Queue, QueueMonitor
-from totalimpact.models import Error, ItemFactory
+from totalimpact.models import ItemFactory
 from totalimpact.pidsupport import StoppableThread
 from totalimpact.providers.provider import ProviderError, ProviderFactory
 

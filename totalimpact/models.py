@@ -147,7 +147,7 @@ class CollectionFactory():
 
 
 
-# could make these saveable into the DB if we wanted, in the future
-class Error():
-    pass
+class MemberItems():
 
+    def __init__(self, provider):
+        self.provider = provider
