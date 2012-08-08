@@ -4,7 +4,7 @@ from test.utils import slow
 
 from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
 from totalimpact.providers.provider import Provider, ProviderFactory
-from totalimpact import dao
+from totalimpact import dao, tiredis
 
 
 TEST_DB_NAME = "test_dao"
@@ -69,6 +69,10 @@ class TestBackend():
         temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
+        # do the same thing for the redis db
+        self.r = tiredis.from_url("redis://localhost:6379")
+        self.r.flushdb()
+
         self.get_providers = ProviderFactory.get_providers
         ProviderFactory.get_providers = classmethod(get_providers_mock)
 
@@ -81,7 +85,7 @@ class TestBackend():
         self.d.delete_db(os.environ["CLOUDANT_DB"])
 
     def test_01_init_backend(self):
-        watcher = TotalImpactBackend(self.d, self.providers)
+        watcher = TotalImpactBackend(self.d, self.r, self.providers)
         
         assert len(watcher.threads) == 0
         assert len(watcher.providers) == len(self.providers), len(watcher.providers)
@@ -98,7 +102,7 @@ class TestBackend():
         # relies on Queue.first mock as per setUp
         
         providers = [ProviderMock()]
-        pat = ProvidersAliasThread(providers, self.config)
+        pat = ProvidersAliasThread(self.d, self.r, providers)
         pat.queue = QueueMock()
         
         pat.start()
@@ -111,7 +115,7 @@ class TestBackend():
        
     def test_12_metrics_stopped(self):
         # relies on Queue.first mock as per setUp
-        pmt = ProviderMetricsThread(ProviderMock(), self.d)
+        pmt = ProviderMetricsThread(self.d, self.r, ProviderMock())
         pmt.queue = QueueMock()
         
         pmt.start()

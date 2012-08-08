@@ -1,7 +1,7 @@
 from nose.tools import raises, assert_equals, nottest
 import os, unittest
 
-from totalimpact import models, dao
+from totalimpact import models, dao, tiredis
 from totalimpact.providers import bibtex
 
 COLLECTION_DATA = {
@@ -121,6 +121,7 @@ class TestItemFactory():
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
 
+
 #    def test_make_new(self):
 #        '''create an item from scratch.'''
 #        item = models.ItemFactory.make()
@@ -177,10 +178,15 @@ class TestItemFactory():
 
 class TestMemberItems():
 
+    def setUp(self):
+        # setup a clean new redis instance
+        self.r = tiredis.from_url("redis://localhost:6379")
+        self.r.flushdb()
+
     def test_init(self):
         bib = bibtex.Bibtex()
 
-        mi = models.MemberItems(bib, myredis)
+        mi = models.MemberItems(bib, self.r)
         assert_equals(mi.__class__.__name__, "MemberItems")
         assert_equals(mi.provider.__class__.__name__, "Bibtex")
 

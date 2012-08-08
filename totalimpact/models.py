@@ -149,5 +149,6 @@ class CollectionFactory():
 
 class MemberItems():
 
-    def __init__(self, provider):
+    def __init__(self, provider, redis):
         self.provider = provider
+        self.redis = redis
