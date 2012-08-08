@@ -64,7 +64,10 @@ class TestBackend():
         TEST_PROVIDER_CONFIG = [
             ("wikipedia", {})
         ]
-        self.d = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
+        # hacky way to delete the "ti" db, then make it fresh again for each test.
+        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
+        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
         self.get_providers = ProviderFactory.get_providers
         ProviderFactory.get_providers = classmethod(get_providers_mock)
