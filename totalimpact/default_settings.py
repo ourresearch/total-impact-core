@@ -31,7 +31,7 @@ PROVIDERS = [
     ("delicious", { "workers":3 }),   
     ("facebook", { "workers":3 }),   
     ("plosalm", { "workers":3 }),
-    ("researchblogging", { "workers":3 }),
+    # ("researchblogging", { "workers":3 }), # takes too long for interactive test
     ("topsy", { "workers":3 }),
     ("wikipedia", { "workers":3 }),
 ]
