@@ -85,5 +85,6 @@ class TestDryad(ProviderTestCase):
             'dryad:most_downloaded_file': (65, 'http://dx.doi.org/10.5061/dryad.7898')}
         print metrics_dict            
         for key in expected:
-            assert(metrics_dict[key] >= expected[key])
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 

@@ -46,5 +46,6 @@ class TestResearchblogging(ProviderTestCase):
         expected = {'researchblogging:blogs': (1, 'http://researchblogging.org/post-search/list?search_text=10.1371/journal.pcbi.1000361')}
         print metrics_dict
         for key in expected:
-            assert(metrics_dict[key] >= expected[key])
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 

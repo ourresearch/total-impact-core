@@ -63,6 +63,7 @@ class TestWikipedia(ProviderTestCase):
         expected = {'wikipedia:mentions': (1, 'http://en.wikipedia.org/wiki/Special:Search?search="10.1371/journal.pcbi.1000361"&go=Go')}
         print metrics_dict
         for key in expected:
-            assert(metrics_dict[key] >= expected[key])
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
 

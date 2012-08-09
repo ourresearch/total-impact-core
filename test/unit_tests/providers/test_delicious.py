@@ -45,5 +45,6 @@ class TestDelicious(ProviderTestCase):
         expected = {'delicious:bookmarks': (75, 'http://www.delicious.com/url/2d6bf502d610eaa99db37fada1957a95')}
         print metrics_dict
         for key in expected:
-            assert(metrics_dict[key] >= expected[key])
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
