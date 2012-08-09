@@ -131,7 +131,10 @@ class Mendeley(Provider):
 
     def _extract_provenance_url(self, page, status_code=200, id=None):
         data = provider._load_json(page)
-        provenance_url = data['mendeley_url']
+        try:
+            provenance_url = data['mendeley_url']
+        except KeyError:
+            provenance_url = ""
         return provenance_url        
 
     def provenance_url(self, metric_name, aliases):
