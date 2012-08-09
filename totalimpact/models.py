@@ -1,7 +1,7 @@
 from werkzeug import generate_password_hash, check_password_hash
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
-import shortuuid, string, random, datetime
+import shortuuid, string, random, datetime, hashlib, threading, json
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
@@ -149,5 +149,26 @@ class CollectionFactory():
 
 class MemberItems():
 
-    def __init__(self, provider):
+    def __init__(self, provider, redis):
         self.provider = provider
+        self.redis = redis
+
+    def start_update(self, str):
+        pages = self.provider.paginate(str)
+        hash = hashlib.md5(str).hexdigest()
+        t = threading.Thread(target=self._update, args=(pages, hash))
+        t.start()
+        return hash
+
+    def _update(self, pages, key):
+        status = {
+            "memberitems": [],
+            "pages": len(pages),
+            "complete": 0
+        }
+        for page in pages:
+            status["memberitems"].append(self.provider.member_items(page))
+            status["complete"] += 1
+            self.redis.set(key, json.dumps(status))
+
+        return True

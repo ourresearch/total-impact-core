@@ -34,26 +34,26 @@ class Mendeley(Provider):
             "icon": "http://www.mendeley.com/favicon.ico",
         },
         "discipline": {
-            "display_name": "discipline",
+            "display_name": "discipline, top 3 percentages",
             "provider": "Mendeley",
             "provider_url": "http://www.mendeley.com/",
-            "description": "The top three disciplines of readers who have added the article to their libraries",
+            "description": "Percent of readers by discipline, for top three disciplines (csv, api only)",
             "icon": "http://www.mendeley.com/favicon.ico",
         },   
         "career_stage": {
-            "display_name": "career stage",
+            "display_name": "career stage, top 3 percentages",
             "provider": "Mendeley",
             "provider_url": "http://www.mendeley.com/",
-            "description": "The top three careers of readers who have added the article to their libraries",
+            "description": "Percent of readers by career stage, for top three career stages (csv, api only)",
             "icon": "http://www.mendeley.com/favicon.ico",
         },   
         "country": {
-            "display_name": "country",
+            "display_name": "country, top 3 percentages",
             "provider": "Mendeley",
             "provider_url": "http://www.mendeley.com/",
-            "description": "The top three countries of readers who have added the article to their libraries",
+            "description": "Percent of readers by country, for top three countries (csv, api only)",
             "icon": "http://www.mendeley.com/favicon.ico",
-        }   
+        }
     }
 
 

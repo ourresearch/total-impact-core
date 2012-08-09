@@ -147,30 +147,4 @@ class Dao(object):
 
         return None
 
-    def bump_providers_run(self, item_id, provider_name, tries=0):
-        #TODO rename to decr_num_providers_left
-        num_providers_left = self.redis.decr(item_id)
-        logger.info("bumped providers_run with {provider_name} for {id}. {num_providers_left} left to run.".format(
-            provider_name=provider_name,
-            id=item_id,
-            num_providers_left=num_providers_left
-        ))
-        return int(num_providers_left)
-
-    def get_num_providers_left(self, item_id):
-        r = self.redis.get(item_id)
-
-        if r is None:
-            return None
-        else:
-            return int(r)
-
-    def set_num_providers_left(self, item_id, num_providers_left):
-        logger.debug("setting {num} providers left to update for item '{tiid}'.".format(
-            num=num_providers_left,
-            tiid=item_id
-        ))
-        self.redis.set(item_id, num_providers_left)
-
-
 

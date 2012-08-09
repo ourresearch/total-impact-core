@@ -60,8 +60,8 @@ class TestSlideshare(ProviderTestCase):
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'slideshare:downloads': (6, 'http://www.slideshare.net/cavlec/manufacturing-serendipity-12176916'), 'slideshare:views': (543, 'http://www.slideshare.net/cavlec/manufacturing-serendipity-12176916'), 'slideshare:favorites': (2, 'http://www.slideshare.net/cavlec/manufacturing-serendipity-12176916')}
+        expected = {'slideshare:downloads': (4, 'http://www.slideshare.net/cavlec/manufacturing-serendipity-12176916'), 'slideshare:views': (543, 'http://www.slideshare.net/cavlec/manufacturing-serendipity-12176916'), 'slideshare:favorites': (2, 'http://www.slideshare.net/cavlec/manufacturing-serendipity-12176916')}
         print metrics_dict
         for key in expected:
-            assert(metrics_dict[key] >= expected[key])
-
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]

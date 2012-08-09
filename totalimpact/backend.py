@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import time, sys, logging, os, traceback
-from totalimpact import default_settings, dao
+from totalimpact import default_settings, dao, tiredis
 from totalimpact.tiqueue import Queue, QueueMonitor
 from totalimpact.models import ItemFactory
 from totalimpact.pidsupport import StoppableThread
@@ -12,9 +12,10 @@ logger.setLevel(logging.DEBUG)
 
 class TotalImpactBackend(object):
     
-    def __init__(self, dao, providers):
+    def __init__(self, dao, redis, providers):
         self.threads = [] 
         self.dao = dao
+        self.redis = redis
         self.dao.update_design_doc()
         self.providers = providers
 
@@ -46,13 +47,13 @@ class TotalImpactBackend(object):
             logger.info("%20s: spawning, n=%i" % (provider.provider_name, thread_count)) 
             # create and start the metrics threads
             for idx in range(thread_count):
-                t = ProviderMetricsThread(provider, self.dao)
+                t = ProviderMetricsThread(self.dao, self.redis, provider)
                 t.thread_id = t.thread_id + '[%i]' % idx
                 t.start()
                 self.threads.append(t)
         
         logger.info("%20s: spawning" % ("aliases"))
-        t = ProvidersAliasThread(self.providers, self.dao)
+        t = ProvidersAliasThread(self.dao, self.redis, self.providers)
         t.start()
         self.threads.append(t)
 
@@ -114,8 +115,9 @@ class ProviderThread(StoppableThread):
     """
 
 
-    def __init__(self, dao, queue):
+    def __init__(self, dao, redis, queue):
         self.dao = dao
+        self.redis = redis
         StoppableThread.__init__(self)
         self.thread_id = "BaseProviderThread"
         self.run_once = False
@@ -185,9 +187,9 @@ class ProviderThread(StoppableThread):
         if not provides_method_to_call:
 
             if method_name == "metrics":
-                # bump it because doesn't support it, not going to call it
+                # we're not going to call this method, so decr the counter
                 provider_name =  provider.__class__.__name__
-                self.dao.bump_providers_run(item["_id"], provider_name)
+                self.redis.decr_num_providers_left(tiid, provider_name)
 
             logger.debug("%20s: skipping %s %s %s for %s, does not provide" 
                 % (self.thread_id, provider, method_name, str(aliases), tiid))
@@ -297,10 +299,10 @@ class ProviderThread(StoppableThread):
 
 class ProvidersAliasThread(ProviderThread):
     
-    def __init__(self, providers, dao):
+    def __init__(self, dao, redis, providers):
         self.providers = providers
         queue = Queue("aliases")
-        ProviderThread.__init__(self, dao, queue)
+        ProviderThread.__init__(self, dao, redis, queue)
         self.providers = providers
 
         self.thread_id = "alias_thread"
@@ -378,12 +380,13 @@ class ProviderMetricsThread(ProviderThread):
         requests for a single provider. It will deal with retries and 
         timeouts as required.
     """
-    def __init__(self, provider, dao):
+    def __init__(self, dao, redis, provider):
         self.provider = provider
         queue = Queue(provider.provider_name)
-        ProviderThread.__init__(self, dao, queue)
+        ProviderThread.__init__(self, dao, redis, queue)
         self.thread_id = self.provider.provider_name + "_thread"
         self.dao = dao
+        self.redis = redis
 
 
 
@@ -406,16 +409,17 @@ class ProviderMetricsThread(ProviderThread):
         finally:
             # update provider counter so api knows when all have finished
             provider_name =  self.provider.__class__.__name__
-            self.dao.bump_providers_run(item["_id"], provider_name)
+            self.redis.decr_num_providers_left(item["_id"], provider_name)
 
 
 def main():
     mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
+    myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
 
 
     # Start all of the backend processes
     providers = ProviderFactory.get_providers(default_settings.PROVIDERS)
-    backend = TotalImpactBackend(mydao, providers)
+    backend = TotalImpactBackend(mydao, myredis, providers)
     backend._spawn_threads()
     backend._monitor()
     backend._cleanup()
