@@ -21,6 +21,7 @@ class Bibtex(Provider):
     def __init__(self):
         super(Bibtex, self).__init__()
 
+
     def _parse_bibtex_entries(self, entries):
         biblio = {}        
         for entry in entries:
@@ -33,7 +34,7 @@ class Bibtex(Provider):
 
     def _lookup_dois_from_biblio(self, biblio, cache_enabled):
         text_list = []
-        print biblio
+        #print biblio
 
         for mykey in biblio:
             #print "** parsing", biblio[mykey]
@@ -42,7 +43,7 @@ class Bibtex(Provider):
                 journal = biblio[mykey]["journal"]
             except KeyError:
                 # need to have journal or can't look up with current api call
-                logger.info("%20s NOT ABLE TO LOOK UP because no journal in %s" % (self.provider_name, biblio[mykey]))
+                logger.info("%20s NOT ABLE TO LOOK UP DOI because no journal in %s" % (self.provider_name, biblio[mykey]))
                 continue
 
             try:
@@ -69,12 +70,12 @@ class Bibtex(Provider):
 
         text_str = "%0A".join(text_list)
         url = "http://doi.crossref.org/servlet/query?pid=totalimpactdev@gmail.com&qdata=%s" % text_str
-        #print url
+        print url
 
         # doi-lookup call to crossref can take a while, give it a long timeout
         response = self.http_get(url, timeout=30, cache_enabled=cache_enabled)
 
-        #print response.text
+        print response.text
         response_lines = response.text.split("\n")
         dois = [line.split("|")[-1].strip() for line in response_lines]
         dois = [doi for doi in dois if doi]
@@ -87,8 +88,8 @@ class Bibtex(Provider):
 
         cleaned_string = bibtex_contents.replace("\&", "").replace("%", "")
         entries = ["@"+entry for entry in cleaned_string.split("@")]
-        print entries
-        
+        #print entries
+
         items_per_page = 20
         layout = divmod(len(entries), items_per_page)
         last_page = min(1+layout[0], 25)  # 20 items/page * 25 pages = 500 items max  
@@ -96,36 +97,20 @@ class Bibtex(Provider):
         biblio_pages = []
         for i in xrange(0, last_page):
             last_item = min(i*items_per_page+items_per_page, len(entries))
-            logger.debug("%20s getting bibtex entries %i-%i of %i" % (self.provider_name, 1+i*items_per_page, last_item, len(entries)))
+            logger.debug("%20s parsing bibtex entries %i-%i of %i" % (self.provider_name, 1+i*items_per_page, last_item, len(entries)))
             biblio_pages += [self._parse_bibtex_entries(entries[1+i*items_per_page : last_item])]
         return(biblio_pages)
 
 
-    def member_items(self, 
-            query_string, 
-            provider_url_template=None, 
-            cache_enabled=True):
-
+    def member_items(self, parsed_bibtex, cache_enabled=True):
         logger.debug("%20s getting member_items for bibtex" % (self.provider_name))
+        #print parsed_bibtex
+        try:
+            parsed_bibtex.keys()
+        except AttributeError:  
+            raise provider.ProviderServerError("did not receive a dictionary in bibtex member_items")
 
-        biblio = {}
-        cleaned_string = query_string.replace("\&", "").replace("%", "")
-        entries = ["@"+entry for entry in cleaned_string.split("@")]
-
-        dois = []
-
-        items_per_page = 20
-        layout = divmod(len(entries), items_per_page)
-        last_page = min(1+layout[0], 25)  # 20 items/page * 25 pages = 500 items max  
-
-        for i in xrange(0, last_page):
-            last_item = min(i*items_per_page+items_per_page, len(entries))
-            logger.debug("%20s getting bibtex entries %i-%i of %i" % (self.provider_name, 1+i*items_per_page, last_item, len(entries)))
-            biblio = self._parse_bibtex_entries(entries[1+i*items_per_page : last_item])
-            #print biblio
-            if not biblio:
-                return []
-            dois += self._lookup_dois_from_biblio(biblio, cache_enabled)
+        dois = self._lookup_dois_from_biblio(parsed_bibtex, cache_enabled)
 
         logger.debug("%20s found %i dois total" % (self.provider_name, len(dois)))
         logger.debug("%20s dois: %s" % (self.provider_name, "\n".join(dois)))
