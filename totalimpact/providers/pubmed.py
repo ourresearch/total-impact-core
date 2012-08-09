@@ -89,7 +89,7 @@ class Pubmed(Provider):
         dict_of_keylists = {"doi": ["PubmedData", "ArticleIdList"]}
 
         (doc, lookup_function) = provider._get_doc_from_xml(page)
-            doi = None
+        doi = None
         try:
             articleidlist = doc.getElementsByTagName("ArticleIdList")[0]
             for articleid in articleidlist.getElementsByTagName("ArticleId"):
