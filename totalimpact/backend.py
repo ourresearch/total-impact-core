@@ -10,6 +10,9 @@ from totalimpact.providers.provider import ProviderError, ProviderFactory
 logger = logging.getLogger('ti.backend')
 logger.setLevel(logging.DEBUG)
 
+class backendException(Exception):
+    pass
+
 class TotalImpactBackend(object):
     
     def __init__(self, dao, redis, providers):
@@ -128,8 +131,7 @@ class ProviderThread(StoppableThread):
         # trying process an item.
         logger.error("exception for item(%s): %s" % (item["_id"], error_msg))
         
-        e = Error()
-        e.message = error_msg
+        e = backendException(error_msg)
         e.id = item["_id"]
         e.provider = self.thread_id
         e.stack_trace = "".join(traceback.format_tb(tb))
