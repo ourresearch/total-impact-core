@@ -231,6 +231,7 @@ class TestMemberItems():
             ]
         )
 
+
     def test_get_async(self):
         ret = self.mi.start_update("1234")
         sleep(.1)
