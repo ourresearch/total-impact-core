@@ -40,11 +40,12 @@ class ItemFactory():
         item["metrics"] = {} #not using what is in stored item for this
         for snap in snaps:
             metric_name = snap["metric_name"]
-            item["metrics"][metric_name] = {}
-            item["metrics"][metric_name]["values"] = {}
-            item["metrics"][metric_name]["values"][snap["created"]] = snap["value"]
-            item["metrics"][metric_name]["provenance_url"] = snap["drilldown_url"]
-            item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
+            if metric_name in cls.all_static_meta.keys():
+                item["metrics"][metric_name] = {}
+                item["metrics"][metric_name]["values"] = {}
+                item["metrics"][metric_name]["values"][snap["created"]] = snap["value"]
+                item["metrics"][metric_name]["provenance_url"] = snap["drilldown_url"]
+                item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
         return item
     
 
