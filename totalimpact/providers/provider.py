@@ -548,7 +548,10 @@ def _extract_from_json(page, dict_of_keylists):
 
 def _get_doc_from_xml(page):
     try:
-        doc = minidom.parseString(page.strip().encode('utf-8'))
+        try:
+            doc = minidom.parseString(page.strip().encode('utf-8'))
+        except UnicodeDecodeError:
+            doc = minidom.parseString(page.strip())            
         lookup_function = _lookup_xml_from_dom
     except ExpatError, e:
         doc = BeautifulSoup.BeautifulStoneSoup(page) 
