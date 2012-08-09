@@ -1,7 +1,7 @@
 from werkzeug import generate_password_hash, check_password_hash
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
-import shortuuid, string, random, datetime, hashlib, threading, json
+import shortuuid, string, random, datetime, hashlib, threading, json, time
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
@@ -159,6 +159,34 @@ class MemberItems():
         t = threading.Thread(target=self._update, args=(pages, hash))
         t.start()
         return hash
+
+    def get_synch(self, query):
+        ret = {}
+        start = time.time()
+        ret = {
+            "memberitems":self.provider.member_items(query),
+            "pages": 1,
+            "complete": 1
+        }
+        logger.debug("got {num_memberitems} synchronous memberitems for query '{query}' in {elapsed} seconds.".format(
+            num_memberitems=len(ret["memberitems"]),
+            query=query,
+            elapsed=round(time.time() - start, 2)
+        ))
+        return ret
+
+    def get_asynch(self, query_hash):
+        query_status_str = self.redis.get(query_hash)
+        start = time.time()
+
+        ret = json.loads(query_status_str)
+        logger.debug("have finished {num_memberitems} asynchronous memberitems for query hash '{query_hash}' in {elapsed} seconds.".format(
+                num_memberitems=len(ret["memberitems"]),
+                query_hash=query_hash,
+                elapsed=round(time.time() - start, 2)
+            ))
+
+        return ret
 
     def _update(self, pages, key):
         status = {
