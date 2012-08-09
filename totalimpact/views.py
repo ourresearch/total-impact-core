@@ -260,42 +260,29 @@ of type :type (when this needs disambiguating)
 if > 100 memberitems, return the first 100 with a response code that indicates the list has been truncated
 examples : /provider/github/memberitems?query=jasonpriem&type=github_user
 
-POST /provider/:provider/aliases
-alias object as cargo, may or may not have a tiid in it
-returns alias object 
-
-POST /provider/:provider
-alias object as cargo, may or may not have tiid in it
-returns dictionary with metrics object and biblio object
 '''
 
-# routes for providers (TI apps to get metrics from remote sources)
-# external APIs should go to /item routes
-# should return list of member ID {namespace:id} k/v pairs
-# if > 100 memberitems, return 100 and response code indicates truncated
-@app.route('/provider/<provider_name>/memberitems', methods=['GET', 'POST'])
+@app.route('/provider/<provider_name>/memberitems', methods=['POST'])
 def provider_memberitems(provider_name):
-    logger.debug("In provider_memberitems, using provider " + provider_name)
+    """
+    Starts a memberitems update for a specified provider, using a supplied file.
 
-    if request.method == "POST":
-        logger.debug("In provider_memberitems with post")
+    Returns a hash of the file's contents, which is needed to get memberitems'
+    output. To get output, poll GET /provider/<provider_name>/memberitems/<hash>?method=async
+    """
+    logger.debug("Query POSTed to {provider_name}/memberitems with request headers '{headers}'".format(
+        provider_name=provider_name,
+        headers=request.headers
+    ))
 
-        logger.debug("request files include" + str(request.headers))
-
-        file = request.files['file']
-        logger.debug("In provider_memberitems got file")
-        logger.debug("filename = " + file.filename)
-        query = file.read().decode("utf-8")
-    else:
-        query = request.values.get('query', '')
-
-    # this debug message is too long for bibtex, as written
-    #logger.debug("In provider_memberitems with " + query)
+    file = request.files['file']
+    logger.debug("In provider_memberitems got file")
+    logger.debug("filename = " + file.filename)
+    query = file.read().decode("utf-8")
 
     provider = ProviderFactory.get_provider(provider_name)
-
     memberitems = MemberItems(provider, myredis)
-    query_hash = memberitems.start_update(query, cache_enabled=False)
+    query_hash = memberitems.start_update(query)
 
     resp = make_response('"'+query_hash+'"', 201) # created
     resp.mimetype = "application/json"
@@ -303,20 +290,26 @@ def provider_memberitems(provider_name):
     return resp
 
 
-@app.route("/provider/<provider_name>/memberitems", methods=['GET'])
-def provider_memberitems_get(provider_name):
-    query = request.values.get('query', '')
-    query_hash = hashlib.md5(query).hexdigest()
-    query_status_str = myredis.get(query_hash)
+@app.route("/provider/<provider_name>/memberitems/<query>", methods=['GET'])
+def provider_memberitems_get(provider_name, query):
+    """
+    Gets aliases associated with a query from a given provider.
 
-    ret = {}
-    if query_status_str is None:
-        provider = ProviderFactory.get_provider(provider_name)
-        ret["memberitems"] = provider.member_items(query, cache_enabled=False)
-        ret["pages"] = 1
-        ret["complete"] = 1
-    else:
-        ret = json.loads(query_status_str)
+    method=sync will call a provider's memberitems method with the supplied query,
+                and wait for the result.
+    method=async will look up the query in total-impact's db and return the current
+                 status of that query.
+
+    """
+    provider = ProviderFactory.get_provider(provider_name)
+    memberitems = MemberItems(provider, myredis)
+
+    ret = getattr(memberitems, "get_"+request.args.get('method', "sync"))(query)
+
+    resp = make_response(json.dumps(ret, sort_keys=True, indent=4), 200)
+    resp.mimetype = "application/json"
+    resp.headers['Access-Control-Allow-Origin'] = "*"
+    return resp
 
 
 # For internal use only.  Useful for testing before end-to-end working

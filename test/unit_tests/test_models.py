@@ -212,7 +212,7 @@ class TestMemberItems():
         assert_equals(status["memberitems"], self.memberitems_resp )
         assert_equals(status["complete"], 4 )
 
-    def test_get_synch(self):
+    def test_get_sync(self):
 
         github.Github.member_items = lambda self, x: \
                 [("github", name) for name in ["project1", "project2", "project3"]]
@@ -220,7 +220,7 @@ class TestMemberItems():
 
         # we haven't put q in redis with MemberItems.start_update(q),
         # so this should update while we wait.
-        ret = synch_mi.get_synch("jasonpriem")
+        ret = synch_mi.get_sync("jasonpriem")
         assert_equals(ret["pages"], 1)
         assert_equals(ret["complete"], 1)
         assert_equals(ret["memberitems"],
@@ -235,7 +235,7 @@ class TestMemberItems():
     def test_get_async(self):
         ret = self.mi.start_update("1234")
         sleep(.1)
-        res = self.mi.get_asynch(ret)
+        res = self.mi.get_async(ret)
         print res
         assert_equals(res["complete"], 4)
         assert_equals(res["memberitems"], self.memberitems_resp)
