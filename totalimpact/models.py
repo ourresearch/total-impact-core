@@ -189,6 +189,11 @@ class MemberItems():
         return ret
 
     def _update(self, pages, key):
+
+        # no need to run an update if one is underway or just finished.
+        if self.redis.get(key) is not None:
+            return True
+
         status = {
             "memberitems": [],
             "pages": len(pages),
