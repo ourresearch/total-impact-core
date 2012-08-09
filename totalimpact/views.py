@@ -1,9 +1,9 @@
 from flask import json, request, redirect, abort, make_response
 from flask import render_template
-import os, datetime, redis
+import os, datetime, redis, hashlib
 
 from totalimpact import dao, app, tiredis
-from totalimpact.models import ItemFactory, CollectionFactory
+from totalimpact.models import ItemFactory, CollectionFactory, MemberItems
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
 import logging
@@ -275,7 +275,7 @@ returns dictionary with metrics object and biblio object
 # if > 100 memberitems, return 100 and response code indicates truncated
 @app.route('/provider/<provider_name>/memberitems', methods=['GET', 'POST'])
 def provider_memberitems(provider_name):
-    logger.debug("In provider_memberitems")
+    logger.debug("In provider_memberitems, using provider " + provider_name)
 
     if request.method == "POST":
         logger.debug("In provider_memberitems with post")
@@ -293,15 +293,31 @@ def provider_memberitems(provider_name):
     #logger.debug("In provider_memberitems with " + query)
 
     provider = ProviderFactory.get_provider(provider_name)
-    logger.debug("provider: " + provider.provider_name)
 
-    memberitems = provider.member_items(query, cache_enabled=False)
+    memberitems = MemberItems(provider, myredis)
+    query_hash = memberitems.start_update(query, cache_enabled=False)
 
-    resp = make_response(json.dumps(memberitems, sort_keys=True, indent=4), 200)
+    resp = make_response('"'+query_hash+'"', 201) # created
     resp.mimetype = "application/json"
     resp.headers['Access-Control-Allow-Origin'] = "*"
-
     return resp
+
+
+@app.route("/provider/<provider_name>/memberitems", methods=['GET'])
+def provider_memberitems_get(provider_name):
+    query = request.values.get('query', '')
+    query_hash = hashlib.md5(query).hexdigest()
+    query_status_str = myredis.get(query_hash)
+
+    ret = {}
+    if query_status_str is None:
+        provider = ProviderFactory.get_provider(provider_name)
+        ret["memberitems"] = provider.member_items(query, cache_enabled=False)
+        ret["pages"] = 1
+        ret["complete"] = 1
+    else:
+        ret = json.loads(query_status_str)
+
 
 # For internal use only.  Useful for testing before end-to-end working
 # Example: http://127.0.0.1:5001/provider/dryad/aliases/10.5061/dryad.7898
