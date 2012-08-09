@@ -37,15 +37,14 @@ class Researchblogging(Provider):
 
 
     def _extract_metrics(self, page, status_code=200, id=None):
-
         if status_code != 200:
             if status_code == 404:
                 return {}
             else:
                 raise(self._get_error(status_code))
 
-        if not "views</li>" in page:
-            raise ProviderContentMalformedError
+        if not '<h1 class="pageTitle">Post List</h1>' in page:
+            return ProviderContentMalformedError
 
         count = len(self.blog_html_template.findall(page))
 
