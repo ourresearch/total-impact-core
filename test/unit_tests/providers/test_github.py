@@ -1,6 +1,7 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from test.utils import http
 
 import os
 import collections
@@ -50,4 +51,15 @@ class TestGithub(ProviderTestCase):
         provenance_url = self.provider.provenance_url("github:watchers", 
             [self.testitem_aliases])
         assert_equals(provenance_url, "https://github.com/egonw/cdk/watchers")
+
+    @http
+    def test_metrics(self):
+        metrics_dict = self.provider.metrics([self.testitem_metrics])
+        print metrics_dict
+        expected = {'github:forks': (29, 'https://github.com/egonw/cdk/network/members'), 'github:watchers': (31, 'https://github.com/egonw/cdk/watchers')}
+        for key in expected:
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+
+
 

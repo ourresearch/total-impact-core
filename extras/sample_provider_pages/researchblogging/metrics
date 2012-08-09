@@ -1,0 +1,285 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Main - Research Blogging</title>
+<link href="/public/css/reset.css" rel="stylesheet" type="text/css" />
+<link href="/public/css/style.css" rel="stylesheet" type="text/css" />
+<!--[if lte IE 6]>
+<link href="/public/css/styleExplorer.css" rel="stylesheet" type="text/css" media="screen" />
+<![endif]-->
+<!--[if IE 7]>
+<link href="/public/css/styleExplorer7.css" rel="stylesheet" type="text/css" media="screen" />
+<![endif]-->
+<script type="text/javascript">
+	var appBaseUrl = "http://researchblogging.org";
+</script>
+<script type="text/javascript" src="/public/js/js_utils.js"></script>
+<script type="text/javascript" src="/public/js/prototype16.js"></script>
+<script type="text/javascript" src="/public/js/global.js"></script>
+<script type="text/javascript" src="/public/js/calendar.js"></script>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-5655384-1");
+pageTracker._trackPageview();
+</script>
+</head>
+
+<body>
+    <div id="container">
+		<div id="header">
+	<h1><a href="/post-search/reset">Research Blogging</a></h1>
+	<ul id="menu">
+    	<li><a href="/post-list/reset">Home</a></li>
+    	<li><a href="/static/index/page/rss">RSS</a></li>
+    	<li><a href="/blog-list/list">Blogs</a></li>
+                <li><a href="/account/createChooseBlog">Register</a></li>
+                <li><a href="/news">News</a></li>
+        <li><a href="http://support.seedmediagroup.com/researchblogging">Forums</a></li>
+        <li><a href="/static/index/page/help">Help</a></li>
+        <li><a href="/static/index/page/awards">Awards</a></li>
+    </ul>
+    <div id="loginBox">
+    	    	<h2 class="login">login</h2>
+       	<form name="login" action="/account/login" method="post">
+          <div id="user">
+           	  <input name="user_username" type="text" id="user" size="5" value="username" onfocus="this.style.color='#333';if(this.value=='username')this.value='';" />
+          </div>
+            <div id="password">
+              	<input name="user_password" type="text" id="user" value="password" onfocus="javascript:this.style.color='#333';this.style.display='none';document.getElementById('user_password_hidden').style.display='block';document.getElementById('user_password_hidden').focus();"/>
+              	<input name="user_password" id="user_password_hidden" type="password" style="display:none" />            	
+<!--            	<input name="user_password" type="text" id="user" size="5" value="password" onfocus="this.style.color='#333';if(this.type=='text')this.type='password';if(this.value=='password')this.value='';" />
+-->
+            </div>
+            <input name="go" type="submit" value="Go" class="goButton" />
+        </form><br />
+           
+       	<div id="forgot"><a href="/account/forgotpassword">(forgot password?)</a></div>
+          
+    </div>
+</div>		<div id="flash" style="display:none;"></div>
+
+    	<div id="wrapper">
+			<div id="leftCol">
+           		<div id="mainLightBlueTop">
+	<h1 class="pageTitle">Post List</h1>
+</div>
+<div class="mainArticle" style="height: auto; min-height: 0;">
+	<h2 class="articleContent" style="padding-left: 33px; color: #000;">All posts containing "10.1371/journal.pcbi.1000361"</h2>
+	<p class="articleContent" style="margin-bottom: 12px; padding-left: 33px;">(<a href="/post/advancedsearch">Modify Search &raquo;</a>)</h3>	
+		
+</div>
+
+<div id="mainArticleBottom">
+	<div class="articleData">
+										<a href="/blog/home/id/566"><img src="/public/user_images/small3466792812_c1b81855a5_s1244125561t8eq9x0qilq06fs.jpg" alt="" width="80" height="80" border="0" /></a> 
+		<ul class="data">
+        	<li>December 10, 2009</li>
+            <li>06:18 PM</li>
+            <li>1,255 views</li>
+                                </ul>
+    </div>
+	<div class="articleContent">
+		<h1><a href="/post/gotourl/id/163611" title="http://duncan.hull.name/2009/12/11/utopia/">The Semantic Biochemical Journal experiment</a></h1>
+        <p class="source">by <a href="/blogger/home/id/575" class="green">Duncan Hull</a> in <a href="/blog/home/id/566" class="green">O'Really?</a></p>
+        
+        <div id="flag1" class="flagBox" style="display: none;">
+        <form method="post" action="/post/flag" name="form1">
+        	<input type="hidden" name="post_id" value="163611" />
+			<h4>Why is this post inappropriate?</h4>
+			
+			<p>
+									<input type="checkbox" name="flag_reason_id[]" value="1" />&nbsp;Not relevant to academic research
+						<br />			<input type="checkbox" name="flag_reason_id[]" value="2" />&nbsp;Uses offensive language
+						<br />			<input type="checkbox" name="flag_reason_id[]" value="3" />&nbsp;Solicits goods or services
+						<br />			<input type="checkbox" name="flag_reason_id[]" value="4" />&nbsp;Not accurate / substantive
+						</p>
+			
+			<p>Comments:<br />
+			<textarea name="comment"></textarea></p>
+			
+			<p><input type="submit" class="searchButton" value="Save" name="search"/></p>
+        	
+        </form>
+       	<a class="close" href="" onclick="toggleBox('flag1'); return false;">[x]</a>
+        </div>
+                	                <p>There is an interesting review [1] (and special issue) in the Biochemical Journal today, published by Portland Press Ltd. It provides (quote) &#8220;a whirlwind tour of recent projects to transform scholarly publishing paradigms, culminating in Utopia and the Semantic Biochemical Journal experiment&#8221;. Here is a quick outline of the publishing projects the review describes and [...]... <a href="/post/gotourl/id/163611" class="green">Read more &raquo;</a></p>
+        <div class="articleBox">
+
+	<div class="articleBoxTop">    <p>
+    Attwood, T., Kell, D., McDermott, P., Marsh, J., Pettifer, S., & Thorne, D. (2009) <a href="http://dx.doi.org/10.1042/BJ20091474" class="blue">Calling International Rescue: knowledge lost in literature and data landslide!</a>. Biochemical Journal, 424(3), 317-333. DOI:&nbsp;<a href="http://dx.doi.org/10.1042/BJ20091474" class="blue">10.1042/BJ20091474</a>&nbsp;&nbsp;<script src="http://pubget.com/widgetizer/link_js?doi=10.1042/BJ20091474"></script><noscript><a href="http://pubget.com/doi/10.1042/BJ20091474">Calling International Rescue: knowledge lost in literature and data landslide!</a></noscript>    </p>
+</div>
+	<div class="articleBoxTop">    <p>
+    Fink, J., Kushch, S., Williams, P., & Bourne, P. (2008) <a href="http://dx.doi.org/10.1093/nar/gkn317" class="blue">BioLit: integrating biological literature with databases</a>. Nucleic Acids Research, 36(Web Server). DOI:&nbsp;<a href="http://dx.doi.org/10.1093/nar/gkn317" class="blue">10.1093/nar/gkn317</a>&nbsp;&nbsp;<script src="http://pubget.com/widgetizer/link_js?doi=10.1093/nar/gkn317"></script><noscript><a href="http://pubget.com/doi/10.1093/nar/gkn317">BioLit: integrating biological literature with databases</a></noscript>    </p>
+</div>
+	<div class="articleBoxTop">    <p>
+    Shotton, D., Portwin, K., Klyne, G., & Miles, A. (2009) <a href="http://dx.doi.org/10.1371/journal.pcbi.1000361" class="blue">Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article</a>. PLoS Computational Biology, 5(4). DOI:&nbsp;<a href="http://dx.doi.org/10.1371/journal.pcbi.1000361" class="blue">10.1371/journal.pcbi.1000361</a>&nbsp;&nbsp;<script src="http://pubget.com/widgetizer/link_js?doi=10.1371/journal.pcbi.1000361"></script><noscript><a href="http://pubget.com/doi/10.1371/journal.pcbi.1000361">Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article</a></noscript>    </p>
+</div>
+	<div class="articleBoxTop">    <p>
+    Pafilis, E., O'Donoghue, S., Jensen, L., Horn, H., Kuhn, M., Brown, N., & Schneider, R. (2009) <a href="http://dx.doi.org/10.1038/nbt0609-508" class="blue">Reflect: augmented browsing for the life scientist</a>. Nature Biotechnology, 27(6), 508-510. DOI:&nbsp;<a href="http://dx.doi.org/10.1038/nbt0609-508" class="blue">10.1038/nbt0609-508</a>&nbsp;&nbsp;<script src="http://pubget.com/widgetizer/link_js?doi=10.1038/nbt0609-508"></script><noscript><a href="http://pubget.com/doi/10.1038/nbt0609-508">Reflect: augmented browsing for the life scientist</a></noscript>    </p>
+</div>
+	<div class="articleBoxTop">    <p>
+    Pettifer, S., Thorne, D., McDermott, P., Marsh, J., Villéger, A., Kell, D., & Attwood, T. (2009) <a href="http://dx.doi.org/10.1186/1471-2105-10-S6-S19" class="blue">Visualising biological data: a semantic approach to tool and database integration</a>. BMC Bioinformatics, 10(Suppl 6). DOI:&nbsp;<a href="http://dx.doi.org/10.1186/1471-2105-10-S6-S19" class="blue">10.1186/1471-2105-10-S6-S19</a>&nbsp;&nbsp;<script src="http://pubget.com/widgetizer/link_js?doi=10.1186/1471-2105-10-S6-S19"></script><noscript><a href="http://pubget.com/doi/10.1186/1471-2105-10-S6-S19">Visualising biological data: a semantic approach to tool and database integration</a></noscript>    </p>
+</div></div>
+    </div>
+	<div class="articleTopics">
+		<ul class="topics">
+        	        		        			<li><a href="/post-search/list?tag_id=3" class="darkGrey">Biology</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tag_id=4" class="darkGrey">Chemistry</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tag_id=6" class="darkGrey">Computer Science / Engineering</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tag_id=16" class="darkGrey">Research / Scholarship</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tags=utopia&search_clear=1" class="grey">utopia</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tags=Creative Commons&search_clear=1" class="grey">Creative Commons</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tags=Software Engineering&search_clear=1" class="grey">Software Engineering</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tags=Databases&search_clear=1" class="grey">Databases</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tags=Cheminformatics&search_clear=1" class="grey">Cheminformatics</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tags=Bioinformatics&search_clear=1" class="grey">Bioinformatics</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tags=semantic web&search_clear=1" class="grey">semantic web</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tags=ontology&search_clear=1" class="grey">ontology</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tags=Publishing&search_clear=1" class="grey">Publishing</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tags=Library Science&search_clear=1" class="grey">Library Science</a></li>
+        		         		
+                    		        			<li><a href="/post-search/list?tags=Elsevier Grand Challenge&search_clear=1" class="grey">Elsevier Grand Challenge</a></li>
+        		         		
+                    </ul>
+    </div>
+</div>
+				</div>
+            <div id="rightCol">
+				<div id="searchBox">
+   	  <form name="search" action="/post-search/list">
+        <label for="keyword"><h2 class="search">search</h2></label>
+    	<input name="search_text" id="keyword" type="text" value="10.1371/journal.pcbi.1000361" />
+      	<input type="submit" value="Search" class="searchButton" />
+  	  </form>
+    <p style="color: #B2B2B2;"><a href="/post/advancedsearch" class="advSearch">Advanced Search</a> | <a class="advSearch" href="/post-list/reset">Show All Posts</a></p>
+</div>
+<div class="rightBoxes">
+	<div class="rightBoxesTopFirst">
+    	<div id="topicsList">
+            <h2>topics</h2>
+        	<ul class="rightColumnList">
+            	<li><a href="/post-search/list/tag_id/all" class="active">All</a></li>
+            	            	<li><a href="/post-search/list/tag_id/1" class="rightColumnList">Anthropology</a></li>
+				            	<li><a href="/post-search/list/tag_id/2" class="rightColumnList">Astronomy</a></li>
+				            	<li><a href="/post-search/list/tag_id/3" class="rightColumnList">Biology</a></li>
+				            	<li><a href="/post-search/list/tag_id/4" class="rightColumnList">Chemistry</a></li>
+				            	<li><a href="/post-search/list/tag_id/6" class="rightColumnList">Computer Science / Engineering</a></li>
+				            	<li><a href="/post-search/list/tag_id/266825" class="rightColumnList">Ecology / Conservation</a></li>
+				            	<li><a href="/post-search/list/tag_id/7" class="rightColumnList">Geosciences</a></li>
+				            	<li><a href="/post-search/list/tag_id/225" class="rightColumnList">Health</a></li>
+				            	<li><a href="/post-search/list/tag_id/10" class="rightColumnList">Mathematics</a></li>
+				            	<li><a href="/post-search/list/tag_id/5" class="rightColumnList">Medicine</a></li>
+				            	<li><a href="/post-search/list/tag_id/226" class="rightColumnList">Neuroscience</a></li>
+				            	<li><a href="/post-search/list/tag_id/11" class="rightColumnList">Philosophy</a></li>
+				            	<li><a href="/post-search/list/tag_id/12" class="rightColumnList">Physics</a></li>
+				            	<li><a href="/post-search/list/tag_id/14" class="rightColumnList">Psychology</a></li>
+				            	<li><a href="/post-search/list/tag_id/15" class="rightColumnList">Social Science</a></li>
+				            	<li><a href="/post-search/list/tag_id/16" class="rightColumnList">Research / Scholarship</a></li>
+				            	<li><a href="/post-search/list/tag_id/17" class="rightColumnList">Other</a></li>
+				            </ul>
+        </div>
+        <div id="datesList">
+            <h2>dates</h2>
+        	<ul class="rightColumnList">
+            	<li><a href="/post-search/list/date/all" class="active">All</li>
+            	<li><a href="/post-search/list/date/today" class="rightColumnList">Today</a></li>
+            	<li><a href="/post-search/list/date/yesterday" class="rightColumnList">Yesterday</a></li>
+            	<li><a href="/post-search/list/date/lastseven" class="rightColumnList">Last Seven Days</a></li>
+            	<li><a href="/post-search/list/date/thismonth" class="rightColumnList">This Month</a></li>
+            	<li><a href="/post-search/list/date/lastmonth" class="rightColumnList">Last Month</a></li>
+            </ul>
+            <h2 class="view">View</h2>
+        	<ul class="rightColumnList">
+            	<li><a href="http://researchblogging.org/post-search/list?search_text=10.1371/journal.pcbi.1000361&post_length=condensed" class="active">Condensed</li>
+            	<li><a href="http://researchblogging.org/post-search/list?search_text=10.1371/journal.pcbi.1000361&post_length=full" class="rightColumnList">Full</a></li>
+            </ul>
+            <h2 class="view">Language</h2>
+        	<ul class="rightColumnList">
+            	            		            		            	<li class="active">English</li>
+	            	            	            	<li><a href="#" onclick="toggleBox('languageBox'); return false;" class="rightColumnList">Change</a></li>
+            </ul>
+        </div>
+        
+		<div id="languageBox" style="display: none;">
+			<a class="close" href="" onclick="toggleBox('languageBox'); return false;">[x]</a>
+			<h2>Languages to Display</h2>
+			<form action="/account/editLanguagePref" method="post">
+			<p>
+			<select multiple="true"name="user_language_ids[]">
+	        		        		<option value="1" selected>English</option>
+	        		        		<option value="3" >German</option>
+	        		        		<option value="6" >Spanish</option>
+	        		        		<option value="7" >Portuguese</option>
+	        		        		<option value="8" >Chinese</option>
+	        		        		<option value="9" >Polish</option>
+	        		        		<option value="10" >Italian</option>
+	        				</select>
+			</p>
+			<p><input type="submit" class="searchButton" value="Save" name="search" style="cursor:hand"/></p>
+			</form>
+		</div>
+		
+	</div>
+</div>
+<div class="rightBoxes">
+	<div class="rightBoxesTop">
+    	<h2 class="join">join us!</h2>
+        <p>Do you write about peer-reviewed research in your blog? Use ResearchBlogging.org to make it easy for your readers &#8212; and others from around the world &#8212; to find your serious posts about academic research.</p>
+        <p>If you don't have a blog, you can still use our site to learn about fascinating developments in cutting-edge research from around the world.</p>
+        <p><a href="/account/createChooseBlog" class="rightBoxesBorder">Register Now</a></p>
+	</div>
+</div>
+<div class="rightBoxes">
+	<div class="rightBoxesTop">
+    	<h2 class="join">News</h2>
+        <p>
+                	<a href="http://researchblogging.org/news/?p=3406" class="rightBoxesBorder">Editor's Selections: Sooty astrophysics, Kids vs. Crows, and Cell Phone Anxiety</a><br /><br />
+                	<a href="http://researchblogging.org/news/?p=3402" class="rightBoxesBorder">Editor's Selections: Dark Galaxies Illuminated, Exploring the Uncanny Valley, and the Hippies of Physics</a><br /><br />
+                	<a href="http://researchblogging.org/news/?p=3397" class="rightBoxesBorder">Editor's Selections: Radiation from TSA scanners, Studying climate change with elephant seals, And the changing landscape of Africa?</a><br /><br />
+                </p>
+	</div>
+</div>
+<div class="rightBoxes">
+	<div class="rightBoxesTopLast" style="padding-top: 25px; padding-bottom: 15px;">
+		<p><img src="/public/img/seedMediaGroup.gif" alt="" style="margin-bottom: 7px;" /></p>
+        <p>Research Blogging is powered by SMG Technology.</p>
+		<p>To learn more, visit <a style="color: #fff;" href="http://seedmediagroup.com">seedmediagroup.com</a>.</p>
+	</div>
+</div>            </div>
+        </div>
+		<div id="pageBrowser">
+</div>
+<div id="footer">
+	<ul class="footerList">
+    	<li>&copy; 2008 Research Blogging</li>
+        <li>&nbsp;&middot;&nbsp;</li>
+        <li><a href="/static/index/page/privacy">Privacy Policy</a></li>
+    	<li>&nbsp;&middot;&nbsp;</li>
+        <li><a href="/static/index/page/terms">Terms &amp; Conditions</a></li>
+        <li>&nbsp;&middot;&nbsp;</li>
+        <li><a href="/static/index/page/about">About</a></li>
+        <li>&nbsp;&middot;&nbsp;</li>
+        <li><a href="/static/index/page/contact">Contact Us</a></li>
+        <li style="text-align: right; padding-left: 360px;">Powered by <a href="http://seedmediagroup.com">SMG Technology</a></li>
+    </ul>
+</div>    </div>
+</body>
+</html>

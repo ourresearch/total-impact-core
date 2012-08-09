@@ -9,7 +9,7 @@ logger = logging.getLogger('providers.citeulike')
 
 class Citeulike(Provider):  
 
-    example_id = ("doi", "http://total-impact.org")
+    example_id = ("doi", "10.1371/journal.pcbi.1000361")
 
     url = "http://www.citeulike.org/"
     descr = "CiteULike is a free service to help you to store, organise and share the scholarly papers you are reading."

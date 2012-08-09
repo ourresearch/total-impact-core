@@ -63,6 +63,10 @@ class TestMendeley(ProviderTestCase):
         expected = {'mendeley:discipline': ([{u'id': 3, u'value': 89, u'name': u'Biological Sciences'}, {u'id': 12, u'value': 7, u'name': u'Environmental Sciences'}, {u'id': 7, u'value': 4, u'name': u'Earth Sciences'}], u'http://api.mendeley.com/research/amazonian-amphibian-diversity-is-primarily-derived-from-late-miocene-andean-lineages/'), 'mendeley:country': ([{u'name': u'Brazil', u'value': 24}, {u'name': u'United States', u'value': 23}, {u'name': u'United Kingdom', u'value': 7}], u'http://api.mendeley.com/research/amazonian-amphibian-diversity-is-primarily-derived-from-late-miocene-andean-lineages/'), 'mendeley:career_stage': ([{u'name': u'Ph.D. Student', u'value': 31}, {u'name': u'Post Doc', u'value': 14}, {u'name': u'Student (Master)', u'value': 12}], u'http://api.mendeley.com/research/amazonian-amphibian-diversity-is-primarily-derived-from-late-miocene-andean-lineages/'), 'mendeley:groups': (7, u'http://api.mendeley.com/research/amazonian-amphibian-diversity-is-primarily-derived-from-late-miocene-andean-lineages/'), 'mendeley:readers': (173, u'http://api.mendeley.com/research/amazonian-amphibian-diversity-is-primarily-derived-from-late-miocene-andean-lineages/')}
         print metrics_dict
         for key in expected:
-            assert(metrics_dict[key] >= expected[key])
-
+            if key in ['mendeley:discipline', 'mendeley:country', 'mendeley:career_stage']:
+                for i in range(1,3):
+                    assert metrics_dict[key][0][i]["value"] >= expected[key][0][i]["value"], [key, metrics_dict[key], expected[key]]                
+            else:
+                assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 

@@ -2,7 +2,7 @@ from flask import json, request, redirect, abort, make_response
 from flask import render_template
 import os, datetime, redis
 
-from totalimpact import dao, app
+from totalimpact import dao, app, tiredis
 from totalimpact.models import ItemFactory, CollectionFactory
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
@@ -13,6 +13,7 @@ logger.setLevel(logging.DEBUG)
 redis = redis.from_url(os.getenv("REDISTOGO_URL"))
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
+myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
 
 def set_db(url, db):
     """useful for unit testing, where you want to use a local database
@@ -91,7 +92,7 @@ def create_item(namespace, nid):
     item = ItemFactory.make()
 
     # set this so we know when it's still updating later on
-    mydao.set_num_providers_left(
+    myredis.set_num_providers_left(
         item["_id"],
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
     )
@@ -172,7 +173,7 @@ def items_post():
 
     # for each item, set the number of providers that need to run before the update is done
     for item in items:
-        mydao.set_num_providers_left(
+        myredis.set_num_providers_left(
             item["_id"],
             ProviderFactory.num_providers_with_metrics(
                 default_settings.PROVIDERS)
@@ -229,7 +230,7 @@ def item(tiid, format=None):
     if not item:
         abort(404)
 
-    if mydao.get_num_providers_left(tiid) > 0:
+    if myredis.get_num_providers_left(tiid) > 0:
         response_code = 210 # not complete yet
         item["currently_updating"] = True
     else:
@@ -424,7 +425,7 @@ def retrieve_items(tiids):
                 ))
             abort(404)
 
-        currently_updating = mydao.get_num_providers_left(tiid) > 0
+        currently_updating = myredis.get_num_providers_left(tiid) > 0
         item["currently_updating"] = currently_updating
         something_currently_updating = something_currently_updating or currently_updating
 
@@ -503,7 +504,7 @@ def collection_update(cid=""):
         item_doc["needs_aliases"] = datetime.datetime.now().isoformat()
 
         # set this so we know when it's still updating later on
-        mydao.set_num_providers_left(
+        myredis.set_num_providers_left(
             item_doc["_id"],
             ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
         )
