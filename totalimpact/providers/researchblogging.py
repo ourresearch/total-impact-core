@@ -23,7 +23,7 @@ class Researchblogging(Provider):
             "provider": "Research Blogging",
             "provider_url": "http://researchblogging.org/",
             "description": "Number of users who have blogged this item through Research Blogging.",
-            "icon": "http://researchblogging.org/favicon.ico" ,
+            "icon": "http://researchblogging.org/favicon.ico",
         }    
     }
     
@@ -43,8 +43,8 @@ class Researchblogging(Provider):
             else:
                 raise(self._get_error(status_code))
 
-        if not '<h1 class="pageTitle">Post List</h1>' in page:
-            return ProviderContentMalformedError
+        if not ('<h1 class="pageTitle">Post List</h1>' in page):
+            raise ProviderContentMalformedError()
 
         count = len(self.blog_html_template.findall(page))
 
