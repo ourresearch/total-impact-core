@@ -3,7 +3,7 @@ import os, unittest, hashlib, json
 from time import sleep
 
 from totalimpact import models, dao, tiredis
-from totalimpact.providers import bibtex
+from totalimpact.providers import bibtex, github
 
 COLLECTION_DATA = {
     "_id": "uuid-goes-here",
@@ -179,40 +179,67 @@ class TestItemFactory():
 
 class TestMemberItems():
 
+
+
     def setUp(self):
         # setup a clean new redis instance
         self.r = tiredis.from_url("redis://localhost:6379")
         self.r.flushdb()
 
-    def test_init(self):
-        bib = bibtex.Bibtex()
-        mi = models.MemberItems(bib, self.r)
-        assert_equals(mi.__class__.__name__, "MemberItems")
-        assert_equals(mi.provider.__class__.__name__, "Bibtex")
-
-    def test_start_update(self):
-
         bibtex.Bibtex.paginate = lambda self, x: [1,2,3,4]
         bibtex.Bibtex.member_items = lambda self, x: ("doi", str(x))
-        mi = models.MemberItems(bibtex.Bibtex(), self.r)
+        self.memberitems_resp = [
+            ["doi", "1"],
+            ["doi", "2"],
+            ["doi", "3"],
+            ["doi", "4"],
+        ]
 
-        ret = mi.start_update("1234")
+        self.mi = models.MemberItems(bibtex.Bibtex(), self.r)
+
+    def test_init(self):
+        assert_equals(self.mi.__class__.__name__, "MemberItems")
+        assert_equals(self.mi.provider.__class__.__name__, "Bibtex")
+
+    def test_start_update(self):
+        ret = self.mi.start_update("1234")
         input_hash = hashlib.md5("1234").hexdigest()
         assert_equals(input_hash, ret)
 
         sleep(.1) # give the thread a chance to finish.
         status = json.loads(self.r.get(input_hash))
 
-        assert_equals(
-            status["memberitems"],
+        assert_equals(status["memberitems"], self.memberitems_resp )
+        assert_equals(status["complete"], 4 )
+
+    def test_get_sync(self):
+
+        github.Github.member_items = lambda self, x: \
+                [("github", name) for name in ["project1", "project2", "project3"]]
+        synch_mi = models.MemberItems(github.Github(), self.r)
+
+        # we haven't put q in redis with MemberItems.start_update(q),
+        # so this should update while we wait.
+        ret = synch_mi.get_sync("jasonpriem")
+        assert_equals(ret["pages"], 1)
+        assert_equals(ret["complete"], 1)
+        assert_equals(ret["memberitems"],
             [
-                ["doi", "1"],
-                ["doi", "2"],
-                ["doi", "3"],
-                ["doi", "4"],
+                ("github", "project1"),
+                ("github", "project2"),
+                ("github", "project3")
             ]
         )
-        assert_equals(status["complete"], 4 )
+
+
+    def test_get_async(self):
+        ret = self.mi.start_update("1234")
+        sleep(.1)
+        res = self.mi.get_async(ret)
+        print res
+        assert_equals(res["complete"], 4)
+        assert_equals(res["memberitems"], self.memberitems_resp)
+
 
 
 
