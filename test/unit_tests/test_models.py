@@ -1,5 +1,6 @@
 from nose.tools import raises, assert_equals, nottest
-import os, unittest
+import os, unittest, hashlib, json
+from time import sleep
 
 from totalimpact import models, dao, tiredis
 from totalimpact.providers import bibtex
@@ -185,10 +186,34 @@ class TestMemberItems():
 
     def test_init(self):
         bib = bibtex.Bibtex()
-
         mi = models.MemberItems(bib, self.r)
         assert_equals(mi.__class__.__name__, "MemberItems")
         assert_equals(mi.provider.__class__.__name__, "Bibtex")
+
+    def test_start_update(self):
+
+        bibtex.Bibtex.paginate = lambda self, x: [1,2,3,4]
+        bibtex.Bibtex.member_items = lambda self, x: ("doi", str(x))
+        mi = models.MemberItems(bibtex.Bibtex(), self.r)
+
+        ret = mi.start_update("1234")
+        input_hash = hashlib.md5("1234").hexdigest()
+        assert_equals(input_hash, ret)
+
+        sleep(.1) # give the thread a chance to finish.
+        status = json.loads(self.r.get(input_hash))
+
+        assert_equals(
+            status["memberitems"],
+            [
+                ["doi", "1"],
+                ["doi", "2"],
+                ["doi", "3"],
+                ["doi", "4"],
+            ]
+        )
+        assert_equals(status["complete"], 4 )
+
 
 
 
