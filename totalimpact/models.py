@@ -155,12 +155,12 @@ class MemberItems():
 
     def start_update(self, str):
         pages = self.provider.paginate(str)
-        hash = hashlib.md5(str).hexdigest()
+        hash = hashlib.md5(str.encode('utf-8')).hexdigest()
         t = threading.Thread(target=self._update, args=(pages, hash))
         t.start()
         return hash
 
-    def get_synch(self, query):
+    def get_sync(self, query):
         ret = {}
         start = time.time()
         ret = {
@@ -175,11 +175,17 @@ class MemberItems():
         ))
         return ret
 
-    def get_asynch(self, query_hash):
+    def get_async(self, query_hash):
         query_status_str = self.redis.get(query_hash)
         start = time.time()
 
-        ret = json.loads(query_status_str)
+        try:
+            ret = json.loads(query_status_str)
+        except TypeError:
+            # if redis returns None, the update hasn't started yet (likely still
+            # parsing the input string; give the client some information, though:
+            ret = {"memberitems": [], "pages": 1, "complete": 0 }
+
         logger.debug("have finished {num_memberitems} asynchronous memberitems for query hash '{query_hash}' in {elapsed} seconds.".format(
                 num_memberitems=len(ret["memberitems"]),
                 query_hash=query_hash,
