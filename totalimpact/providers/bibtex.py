@@ -64,7 +64,7 @@ class Bibtex(Provider):
             try:
                 year = biblio[mykey]["year"]
             except KeyError:
-                volume = ""
+                year = ""
 
             text_list.append("|%s|%s|%s|%s||%s|||" % (journal, first_author, volume, number, year))
 
