@@ -70,12 +70,10 @@ class Bibtex(Provider):
 
         text_str = "%0A".join(text_list)
         url = "http://doi.crossref.org/servlet/query?pid=totalimpactdev@gmail.com&qdata=%s" % text_str
-        print url
 
         # doi-lookup call to crossref can take a while, give it a long timeout
         response = self.http_get(url, timeout=30, cache_enabled=cache_enabled)
 
-        print response.text
         response_lines = response.text.split("\n")
         dois = [line.split("|")[-1].strip() for line in response_lines]
         dois = [doi for doi in dois if doi]
