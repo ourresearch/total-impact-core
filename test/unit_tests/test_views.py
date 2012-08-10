@@ -81,11 +81,11 @@ class TestMemberItems(ViewsTester):
         Dryad.member_items = self.orig_Dryad_member_items
 
     def test_memberitems_get(self):
-        response = self.client.get('/provider/dryad/memberitems?query=Otto%2C%20Sarah%20P.&type=author')
+        response = self.client.get('/provider/dryad/memberitems/Otto%2C%20Sarah%20P.?method=sync')
         print response
         print response.data
         assert_equals(response.status_code, 200)
-        assert_equals(json.loads(response.data), GOLD_MEMBER_ITEM_CONTENT)
+        assert_equals(json.loads(response.data)["memberitems"], GOLD_MEMBER_ITEM_CONTENT)
         assert_equals(response.mimetype, "application/json")
 
 
