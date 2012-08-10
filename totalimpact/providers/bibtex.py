@@ -88,7 +88,7 @@ class Bibtex(Provider):
         entries = ["@"+entry for entry in cleaned_string.split("@")]
         #print entries
 
-        items_per_page = 20
+        items_per_page = 5
         layout = divmod(len(entries), items_per_page)
         last_page = min(1+layout[0], 25)  # 20 items/page * 25 pages = 500 items max  
 
