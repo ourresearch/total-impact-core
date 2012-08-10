@@ -18,7 +18,7 @@ class Cache(object):
 
     def get_cache_entry(self, url):
         """ Get an entry from the cache, returns None if not found """
-        key = hashlib.md5(url).hexdigest()
+        key = hashlib.md5(url.encode("utf-8")).hexdigest()
         mc = pylibmc.Client(
 		    servers=[os.environ.get('MEMCACHE_SERVERS')],
 		    username=os.environ.get('MEMCACHE_USERNAME'),
@@ -28,7 +28,7 @@ class Cache(object):
 
     def set_cache_entry(self, url, data):
         """ Store a cache entry """
-        key = hashlib.md5(url).hexdigest()
+        key = hashlib.md5(url.encode("utf-8")).hexdigest()
         mc = pylibmc.Client(
 		    servers=[os.environ.get('MEMCACHE_SERVERS')],
 		    username=os.environ.get('MEMCACHE_USERNAME'),
