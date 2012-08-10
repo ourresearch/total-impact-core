@@ -1,5 +1,8 @@
 import couchdb, os, logging, sys
 
+# run in heroku with:
+# heroku run python extras/couch_purge.py
+
 logging.basicConfig(
     stream=sys.stdout,
     level=logging.DEBUG,
@@ -10,31 +13,23 @@ logger = logging.getLogger("couch_purge")
 
 couch = couchdb.Server(url=os.getenv("CLOUDANT_URL"))
 db = couch[os.getenv("CLOUDANT_DB")]
-logger.info("connected to couch/ti")
+logger.info("connected to couch/" + os.getenv("CLOUDANT_DB"))
 
-view_name = "admin/bad_dois"
+view_name = "admin/old-wikipedia-snaps"
 
 for row in db.view(view_name, include_docs=True):
 
     doc = row.doc
-    logger.info("got doc '{id}' back from {view_name}".format(
+    logger.info("got doc '{id}' back from {view_name}, with drilldown_url {url}".format(
         id=row.id,
-        view_name=view_name
-    ))
+        view_name=view_name,
+        url=doc["drilldown_url"]
 
-    logger.info("doc '{id}' has these doi aliases: {aliases}".format(
-        id=row.id,
-        aliases=doc["aliases"]["doi"]
     ))
-
-    good_dois = [x for x in doc["aliases"]["doi"] if " []" not in x]
-    doc["aliases"]["doi"] = good_dois
-
-    logger.info("saving doc '{id}', which now has these aliases: '{aliases}'".format(
-        id=row.id,
-        aliases=doc["aliases"]
+    logger.info("deleting doc '{id}'.".format(
+        id=row.id
     ))
-    db.save(doc)
+    db.delete(doc)
 
 logger.info("finished the update.")
 

@@ -36,7 +36,7 @@ class Dao(object):
         self.redis = redis.from_url(os.getenv('REDISTOGO_URL'))
 
         try:
-            self.db = self.couch[ db_name ] 
+            self.db = self.couch[ db_name ]
         except (ResourceNotFound):
             self.create_db(db_name)
         except LookupError:
