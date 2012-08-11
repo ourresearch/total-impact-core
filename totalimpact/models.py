@@ -1,6 +1,8 @@
 from werkzeug import generate_password_hash, check_password_hash
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
+from totalimpact.pidsupport import Retry
+from totalimpact.providers.provider import ProviderTimeout
 import shortuuid, string, random, datetime, hashlib, threading, json, time
 
 # Master lock to ensure that only a single thread can write
@@ -195,6 +197,7 @@ class MemberItems():
 
         return ret
 
+    @Retry(3, ProviderTimeout, 0.1)
     def _update(self, pages, key):
 
         status = {

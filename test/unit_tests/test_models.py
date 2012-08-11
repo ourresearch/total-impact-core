@@ -4,6 +4,7 @@ from time import sleep
 
 from totalimpact import models, dao, tiredis
 from totalimpact.providers import bibtex, github
+from totalimpact.providers.provider import ProviderTimeout
 
 COLLECTION_DATA = {
     "_id": "uuid-goes-here",
@@ -239,8 +240,6 @@ class TestMemberItems():
         print res
         assert_equals(res["complete"], 4)
         assert_equals(res["memberitems"], self.memberitems_resp)
-
-
 
 
 
