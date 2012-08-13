@@ -572,6 +572,27 @@ def tests_interactions(action_type=''):
         report=report
     )
 
+@app.route("/collections/recent")
+@app.route("/collections/recent.<format>")
+def latest_collections(format=""):
+    res = mydao.db.view("queues/latest-collections", descending=True)
+    if request.args.get('include_tests') in [1, "yes", "true", "True"]:
+        include_tests = 1
+    else:
+        include_tests = 0
+
+    yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+    rows = res[[include_tests, "zzz"]:[include_tests ,yesterday.isoformat()]].rows
+
+    if format == "json":
+        resp = make_response(json.dumps(rows, indent=4), 200)
+        resp.mimetype = "application/json"
+    else:
+        # use a template to return some html
+        pass
+
+
+    return resp
 
     
     

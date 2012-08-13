@@ -4,6 +4,6 @@ function(doc) {
         if (doc.title.indexOf("[ti test]") == 0) {
             test = 1;
         }
-        emit([test, doc.created], doc.item_tiids.length)
+        emit([test, doc.created], [doc.title, doc.item_tiids.length])
     }
 }
