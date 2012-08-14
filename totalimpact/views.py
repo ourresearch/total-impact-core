@@ -583,14 +583,17 @@ def latest_collections(format=""):
 
     yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
     rows = res[[include_tests, "zzz"]:[include_tests ,yesterday.isoformat()]].rows
+    for row in rows:
+        row["url"] = "http://{root}/collection/{collection_id}".format(
+            root=os.getenv("WEBAPP_ROOT"),
+            collection_id=row["id"]
+        )
 
-    if format == "json":
+    if format == "html":
+        resp = render_template("latest_collections.html", rows=rows)
+    else:
         resp = make_response(json.dumps(rows, indent=4), 200)
         resp.mimetype = "application/json"
-    else:
-        # use a template to return some html
-        pass
-
 
     return resp
 

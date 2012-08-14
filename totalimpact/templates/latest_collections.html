@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
+<head>
+   <title>latest collections</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=MacRoman">
+   <style type="text/css">
+      span.time{width: 106px; color: #555; display:inline-block; text-align: right; margin-right: 5px; font-weight: bold}
+      span.seconds{font-weight:normal; font-size:.5em;}
+      span.collection-name{color:#555; font-size:.7em;}
+      span.num-items {font-size:.5em; min-width: 80px; display: inline-block; color: #555; text-align: right; margin-right: 5px;}
+      span.num-items a {font-size: 2em; font-weight: bold; text-decoration: none;}
+      body{margin:0; padding:0; line-height: 1.4; font-family:arial, sans-serif}
+      h1 { background: #333; color: #eee; margin:0; padding: 50px; font-size:40px; text-align: center;}
+      p, ul {width:400px; margin: 20px auto; font-size: 30px;}
+      ul {margin-top: 100px;}
+      li {list-style-type: none; width: 800px;}
+      a {font-weight: bold;}
+   </style>
+</head>
+<body>
+<h1>Collections created in the last 24 hours</h1>
+<ul>
+   {% for row in rows %}
+   <li id="{{ row.id }}">
+      <span class="num-items"><a href="{{ row.url }}">{{ row.value[1] }}</a></span>
+      <span class="time">{{ row.key[1][11:16] }}<span class="seconds">:{{ row.key[1][17:19] }}</span></span>
+      <span class="collection-name">{{ row.value[0] }}</span>
+   </li>
+   {% endfor %}
+</ul>
+</body>
+</html>
