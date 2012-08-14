@@ -32,4 +32,4 @@ shortuuid==0.2
 simplejson==2.5.2
 times==0.4
 wsgiref==0.1.2
-zs.bibtex==0.1.0
+pybtex==0.16
