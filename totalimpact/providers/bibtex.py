@@ -1,5 +1,5 @@
 from totalimpact.providers import provider
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout
 
 import simplejson
 from zs.bibtex.parser import parse_string
@@ -33,9 +33,10 @@ class Bibtex(Provider):
         return biblio
 
     def _lookup_dois_from_biblio(self, biblio, cache_enabled):
-        text_list = []
-        #print biblio
+        if not biblio:
+            return []
 
+        arg_dict = {}
         for mykey in biblio:
             #print "** parsing", biblio[mykey]
 
@@ -43,7 +44,7 @@ class Bibtex(Provider):
                 journal = biblio[mykey]["journal"]
             except KeyError:
                 # need to have journal or can't look up with current api call
-                logger.info("%20s NOT ABLE TO LOOK UP DOI because no journal in %s" % (self.provider_name, biblio[mykey]))
+                logger.info("%20s NO DOI because no journal in %s" % (self.provider_name, biblio[mykey]))
                 continue
 
             try:
@@ -62,24 +63,52 @@ class Bibtex(Provider):
                 volume = ""
 
             try:
+                pages = biblio[mykey]["pages"]
+                first_page = pages.split("--")[0]
+            except KeyError:
+                first_page = ""
+
+            try:
                 year = biblio[mykey]["year"]
             except KeyError:
                 year = ""
 
-            text_list.append("|%s|%s|%s|%s||%s|||" % (journal, first_author, volume, number, year))
+            arg_dict[mykey] = ("|%s|%s|%s|%s|%s|%s||%s|" % (journal, first_author, volume, number, first_page, year, mykey))
 
-        text_str = "%0A".join(text_list)
+        if not arg_dict:
+            return []
+
+        text_str = "%0A".join(arg_dict.values())
+        # for more info on crossref spec, see
+        # http://ftp.crossref.org/02publishers/25query_spec.html
         url = "http://doi.crossref.org/servlet/query?pid=totalimpactdev@gmail.com&qdata=%s" % text_str
 
+        logger.debug("%20s calling crossref at %s" % (self.provider_name, url))
         # doi-lookup call to crossref can take a while, give it a long timeout
-        response = self.http_get(url, timeout=30, cache_enabled=cache_enabled)
+
+        try:
+            response = self.http_get(url, timeout=30, cache_enabled=cache_enabled)
+        except ProviderTimeout:
+            return []
 
         response_lines = response.text.split("\n")
-        dois = [line.split("|")[-1].strip() for line in response_lines]
-        dois = [doi for doi in dois if doi]
-        logger.debug("%20s found %i dois" % (self.provider_name, len(dois)))
+        #import pprint
+        #pprint.pprint(biblio)
 
-        return dois
+        split_lines = [line.split("|") for line in response_lines if line]
+        line_keys = [line[-2].strip() for line in split_lines]
+        dois = [line[-1].strip() for line in split_lines]
+
+        for key, doi in zip(line_keys, dois):
+            if not doi:
+                logger.debug("%20s NO DOI from %s, %s" %(self.provider_name, arg_dict[key], key))
+                logger.debug("%20s full bibtex for NO DOI is %s" %(self.provider_name, biblio[key]))
+
+        non_empty_dois = [doi for doi in dois if doi]
+        logger.debug("%20s found %i dois" % (self.provider_name, len(non_empty_dois)))
+
+        return non_empty_dois
+
 
     def paginate(self, bibtex_contents):
         logger.debug("%20s paginate in member_items" % (self.provider_name))
@@ -102,6 +131,9 @@ class Bibtex(Provider):
 
     def member_items(self, parsed_bibtex, cache_enabled=True):
         logger.debug("%20s getting member_items for bibtex" % (self.provider_name))
+        if not parsed_bibtex:
+            return []
+
         #print parsed_bibtex
         try:
             parsed_bibtex.keys()
@@ -110,7 +142,6 @@ class Bibtex(Provider):
 
         dois = self._lookup_dois_from_biblio(parsed_bibtex, cache_enabled)
 
-        logger.debug("%20s found %i dois total" % (self.provider_name, len(dois)))
         logger.debug("%20s dois: %s" % (self.provider_name, "\n".join(dois)))
         aliases = []
         for doi in dois:
