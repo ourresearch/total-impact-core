@@ -2,7 +2,8 @@ from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout
 
 import simplejson
-from zs.bibtex.parser import parse_string
+import pybtex
+from pybtex.database.input import bibtex
 from pyparsing import ParseException
 from StringIO import StringIO
 import re
@@ -23,13 +24,9 @@ class Bibtex(Provider):
 
 
     def _parse_bibtex_entries(self, entries):
-        biblio = {}        
-        for entry in entries:
-            try:
-                entry_parsed = parse_string(entry)
-                biblio.update(entry_parsed)
-            except ParseException, e:  
-                logger.error("%20s NOT ABLE TO PARSE %s" % (self.provider_name, e))
+        stream = StringIO("\n".join(entries))
+        parser = bibtex.Parser()
+        biblio = parser.parse_stream(stream)
         return biblio
 
     def _lookup_dois_from_biblio(self, biblio, cache_enabled):
@@ -37,39 +34,39 @@ class Bibtex(Provider):
             return []
 
         arg_dict = {}
-        for mykey in biblio:
-            #print "** parsing", biblio[mykey]
+        for mykey in biblio.entries:
+            #print "** parsing", biblio.entries[mykey]
 
             try:
-                journal = biblio[mykey]["journal"]
+                journal = biblio.entries[mykey].fields["journal"]
             except KeyError:
                 # need to have journal or can't look up with current api call
-                logger.info("%20s NO DOI because no journal in %s" % (self.provider_name, biblio[mykey]))
+                logger.info("%20s NO DOI because no journal in %s" % (self.provider_name, biblio.entries[mykey]))
                 continue
 
             try:
-                first_author = biblio[mykey]["author"].split(",")[0]
+                first_author = biblio.entries[mykey].fields["author"].split(",")[0]
             except (KeyError, AttributeError):
-                first_author = biblio[mykey]["author"][0].split(",")[0]
+                first_author = biblio.entries[mykey].fields["author"][0].split(",")[0]
 
             try:
-                number = biblio[mykey]["number"]
+                number = biblio.entries[mykey].fields["number"]
             except KeyError:
                 number = ""
 
             try:
-                volume = biblio[mykey]["volume"]
+                volume = biblio.entries[mykey].fields["volume"]
             except KeyError:
                 volume = ""
 
             try:
-                pages = biblio[mykey]["pages"]
+                pages = biblio.entries[mykey].fields["pages"]
                 first_page = pages.split("--")[0]
             except KeyError:
                 first_page = ""
 
             try:
-                year = biblio[mykey]["year"]
+                year = biblio.entries[mykey].fields["year"]
             except KeyError:
                 year = ""
 
@@ -102,7 +99,7 @@ class Bibtex(Provider):
         for key, doi in zip(line_keys, dois):
             if not doi:
                 logger.debug("%20s NO DOI from %s, %s" %(self.provider_name, arg_dict[key], key))
-                logger.debug("%20s full bibtex for NO DOI is %s" %(self.provider_name, biblio[key]))
+                logger.debug("%20s full bibtex for NO DOI is %s" %(self.provider_name, biblio.entries[key]))
 
         non_empty_dois = [doi for doi in dois if doi]
         logger.debug("%20s found %i dois" % (self.provider_name, len(non_empty_dois)))
@@ -131,18 +128,13 @@ class Bibtex(Provider):
 
     def member_items(self, parsed_bibtex, cache_enabled=True):
         logger.debug("%20s getting member_items for bibtex" % (self.provider_name))
+
         if not parsed_bibtex:
             return []
 
-        #print parsed_bibtex
-        try:
-            parsed_bibtex.keys()
-        except AttributeError:  
-            raise provider.ProviderServerError("did not receive a dictionary in bibtex member_items")
-
         dois = self._lookup_dois_from_biblio(parsed_bibtex, cache_enabled)
 
-        logger.debug("%20s dois: %s" % (self.provider_name, "\n".join(dois)))
+        logger.debug("%20s dois: %s" % (self.provider_name, ", ".join(dois)))
         aliases = []
         for doi in dois:
             if doi and ("10." in doi):
