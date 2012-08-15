@@ -25,6 +25,7 @@
       <span class="num-items"><a href="{{ row.url }}">{{ row.value[1] }}</a></span>
       <span class="time">{{ row.key[1][11:16] }}<span class="seconds">:{{ row.key[1][17:19] }}</span></span>
       <span class="collection-name">{{ row.value[0] }}</span>
+      <span class="ip">{{ row.value[2] }}</span>
    </li>
    {% endfor %}
 </ul>
