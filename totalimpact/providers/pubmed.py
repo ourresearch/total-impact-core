@@ -74,18 +74,19 @@ class Pubmed(Provider):
     def provides_metrics(self):
         return True
 
-    def _extract_aliases_from_doi(self, page):
-        dict_of_keylists = {"pmid": ["eSearchResult", "IdList", "Id"]}
+    def _extract_aliases_from_doi(self, page, doi):
+        dict_of_keylists = {"pmid": ["eSearchResult", "IdList", "Id"], 
+                            "QueryTranslation": ["eSearchResult", "QueryTranslation"]}
 
         aliases_dict = provider._extract_from_xml(page, dict_of_keylists)
+        aliases_list = []
         if aliases_dict:
-            aliases_list = [(namespace, str(nid)) for (namespace, nid) in aliases_dict.iteritems()]
-        else:
-            aliases_list = []
+            if aliases_dict["QueryTranslation"] == (doi + "[All Fields]"):
+                aliases_list = [("pmid", str(aliases_dict["pmid"]))]
         return aliases_list
 
 
-    def _extract_aliases_from_pmid(self, page):
+    def _extract_aliases_from_pmid(self, page, pmid):
         dict_of_keylists = {"doi": ["PubmedData", "ArticleIdList"]}
 
         (doc, lookup_function) = provider._get_doc_from_xml(page)
@@ -129,11 +130,11 @@ class Pubmed(Provider):
             if (namespace == "doi"):
                 aliases_from_doi_url = self.aliases_from_doi_url_template %nid
                 page = self._get_eutils_page(nid, aliases_from_doi_url, cache_enabled)
-                new_aliases += self._extract_aliases_from_doi(page)
+                new_aliases += self._extract_aliases_from_doi(page, nid)
             if (namespace == "pmid"):
                 aliases_from_pmid_url = self.aliases_from_pmid_url_template %nid
                 page = self._get_eutils_page(nid, aliases_from_pmid_url, cache_enabled)
-                new_aliases += self._extract_aliases_from_pmid(page)
+                new_aliases += self._extract_aliases_from_pmid(page, nid)
 
         new_aliases_unique = list(set(new_aliases))
         return new_aliases_unique

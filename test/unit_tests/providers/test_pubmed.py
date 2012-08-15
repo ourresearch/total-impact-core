@@ -16,6 +16,7 @@ SAMPLE_EXTRACT_PROVENANCE_URL_PAGE = SAMPLE_EXTRACT_METRICS_PAGE
 
 TEST_DOI = "10.1371/journal.pcbi.1000361"
 TEST_PMID = "16060722"
+TEST_DOI_HAS_NO_PMID = "10.1016/j.artint.2005.10.007"
 
 class TestPubmed(ProviderTestCase):
 
@@ -36,13 +37,13 @@ class TestPubmed(ProviderTestCase):
     def test_extract_aliases_from_doi(self):
         # ensure that the dryad reader can interpret an xml doc appropriately
         f = open(SAMPLE_EXTRACT_ALIASES_FROM_DOI_PAGE, "r")
-        aliases = self.provider._extract_aliases_from_doi(f.read())
+        aliases = self.provider._extract_aliases_from_doi(f.read(), "10.1371/journal.pcbi.1000361")
         assert_equals(aliases, [('pmid', '19381256')])
 
     def test_extract_aliases_from_pmid(self):
         # ensure that the dryad reader can interpret an xml doc appropriately
         f = open(SAMPLE_EXTRACT_ALIASES_FROM_PMID_PAGE, "r")
-        aliases = self.provider._extract_aliases_from_pmid(f.read())
+        aliases = self.provider._extract_aliases_from_pmid(f.read(), "17593900")
         assert_equals(aliases, [('doi', u'10.1371/journal.pmed.0040215')])
 
     def test_extract_citing_pmcids(self):
@@ -52,7 +53,6 @@ class TestPubmed(ProviderTestCase):
 
     @http
     def test_aliases_from_pmid(self):
-        print self.testitem_aliases
         metrics_dict = self.provider.aliases([self.testitem_aliases])
         assert_equals(set(metrics_dict), set([('pmid', '16060722'), ('doi', u'10.1371/journal.pmed.0020124')]))
 
@@ -60,6 +60,9 @@ class TestPubmed(ProviderTestCase):
     def test_aliases_from_doi(self):
         metrics_dict = self.provider.aliases([("doi", TEST_DOI)])
         assert_equals(set(metrics_dict), set([('pmid', '19381256'), ('doi', '10.1371/journal.pcbi.1000361')]))
+
+        metrics_dict = self.provider.aliases([("doi", "TEST_DOI_HAS_NO_PMID")])
+        assert_equals(metrics_dict, [("doi", "TEST_DOI_HAS_NO_PMID")])
 
     @http
     def test_metrics(self):
