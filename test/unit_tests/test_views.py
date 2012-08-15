@@ -138,8 +138,6 @@ class TestItem(ViewsTester):
 
 
 class TestItems(ViewsTester):
-
-
     def test_post_with_aliases_already_in_db(self):
         items = [
             ["doi", "10.123"],
@@ -171,7 +169,6 @@ class TestItems(ViewsTester):
 
         # 3 new items + 1 new item + 1 design doc
         assert_equals(self.d.db.info()["doc_count"], 5)
-
 
 
 class TestCollection(ViewsTester):
@@ -318,12 +315,13 @@ class TestApi(ViewsTester):
     def setUp(self):
         super(TestApi, self).setUp()
 
-
-
-
     def tearDown(self):
         pass
 
+    def test_clean_id(self):
+        nid = u"10.1000/\u200bna\tture "
+        response = views.clean_id(nid)
+        assert_equals(response, u'10.1000/nature')
 
     def test_tiid_get_with_unknown_alias(self):
         # try to retrieve tiid id for something that doesn't exist yet

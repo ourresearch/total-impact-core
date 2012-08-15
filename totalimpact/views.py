@@ -1,6 +1,7 @@
 from flask import json, request, redirect, abort, make_response
 from flask import render_template
 import os, datetime, redis, hashlib
+import unicodedata, re
 
 from totalimpact import dao, app, tiredis
 from totalimpact.models import ItemFactory, CollectionFactory, MemberItems
@@ -14,6 +15,16 @@ redis = redis.from_url(os.getenv("REDISTOGO_URL"))
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
+
+# setup to remove control characters from received IDs
+# from http://stackoverflow.com/questions/92438/stripping-non-printable-characters-from-a-string-in-python
+control_chars = ''.join(map(unichr, range(0,32) + range(127,160)))
+control_char_re = re.compile('[%s]' % re.escape(control_chars))
+def clean_id(nid):
+    nid = control_char_re.sub('', nid)
+    nid = nid.replace(u'\u200b', "")
+    nid = nid.strip()
+    return(nid)
 
 def set_db(url, db):
     """useful for unit testing, where you want to use a local database
@@ -127,23 +138,24 @@ def items_post():
     Could use much refactoring, as much code is replicated between this and /item.
     Even better, most of this should move into a Collection or Updater model.
     """
-    logger.debug("POST/items got this json: " + str(request.json))
-    logger.info("POST /items got a list of aliases; creating new items for 'em.")
-    logger.debug("POST /items got this list of aliases; creating new items for 'em: {aliases}".format(
-            aliases=str(request.json)
-        ))
+    received_json = request.json
+    logger.debug("POST /items got this json: " + str(received_json))
+    logger.info("POST /items got a list of aliases; creating new items for them.")
     try:
-        aliases_list = [(namespace, nid) for [namespace, nid] in request.json]
+        # remove unprintable characters and change list to tuples
+        aliases_list = [(clean_id(namespace), clean_id(nid)) for [namespace, nid] in received_json]
     except ValueError:
         logger.error("bad input to POST /items (requires [namespace, id] pairs):{input}".format(
-                input=str(request.json)
+                input=str(aliases_list)
             ))
         abort(404, "POST /items requires a list of [namespace, id] pairs.")
 
+    logger.debug("POST /items got list of aliases; creating new items for {aliases}".format(
+            aliases=str(aliases_list)
+        ))
+
     tiids = []
     items = []
-    aliases_list = [(namespace.strip(), nid.strip()) for (namespace, nid) in
-                                                     aliases_list]
     for alias in aliases_list:
         (namespace, nid) = alias
         existing_tiid = get_tiid_by_alias(namespace, nid)
@@ -199,6 +211,9 @@ def item_namespace_post(namespace, nid):
     500?  if fails to create
     example /item/PMID/234234232
     """
+    # remove unprintable characters
+    nid = clean_id(nid)
+
     tiid = get_tiid_by_alias(namespace, nid)
     if tiid:
         logger.debug("... found with tiid " + tiid)
