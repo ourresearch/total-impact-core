@@ -540,32 +540,28 @@ def collection_update(cid=""):
 
 
 @app.route('/collection', methods=['POST'])
-def collection_create(cid=''):
+def collection_create():
     """
     POST /collection
     creates new collection
     """
     response_code = None
-    coll = mydao.get(cid)
-    if coll:
-        # Collection already exists: should call PUT instead
-        abort(405)   # Method Not Allowed
-    else:
-        try:
-            coll = CollectionFactory.make()
-            coll["item_tiids"] = request.json["items"]
-            coll["title"] = request.json["title"]
-            mydao.save(coll)
-            response_code = 201 # Created
-            logger.info(
-                "saved new collection '{id}' with {num_items} items.".format(
-                    id=coll["_id"],
-                    num_items=len(request.json["items"])
-                ))
-        except (AttributeError, TypeError):
-            # we got missing or improperly formated data.
-            # should log the error...
-            abort(404)  #what is the right error message for 'needs arguments'?
+    try:
+        coll = CollectionFactory.make()
+        coll["item_tiids"] = request.json["items"]
+        coll["title"] = request.json["title"]
+        coll["ip_address"] = request.remote_addr
+        mydao.save(coll)
+        response_code = 201 # Created
+        logger.info(
+            "saved new collection '{id}' with {num_items} items.".format(
+                id=coll["_id"],
+                num_items=len(request.json["items"])
+            ))
+    except (AttributeError, TypeError):
+        # we got missing or improperly formated data.
+        # should log the error...
+        abort(404)  #what is the right error message for 'needs arguments'?
     resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
                          response_code)
     resp.mimetype = "application/json"
