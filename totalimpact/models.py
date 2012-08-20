@@ -211,3 +211,21 @@ class MemberItems():
             self.redis.set(key, json.dumps(status))
 
         return True
+
+class UserFactory():
+
+    @classmethod
+    def get(cls, username, password, dao):
+
+        res = dao.db.view("queues/users-by-username", include_docs=True)
+        try:
+            doc = res[username].rows[0]["doc"]
+        except IndexError:
+            return None
+
+        if check_password_hash(doc["pw_hash"], password):
+            return doc
+        else:
+            return None
+
+
