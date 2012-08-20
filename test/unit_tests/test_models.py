@@ -250,32 +250,34 @@ class TestUserFactory():
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
         self.pw = "password"
-        self.un = "ovid"
+        self.email = "ovid@rome.it"
 
         self.user_doc = {
-            "_id": "123",
+            "_id": self.email,
             "type": "user",
-            "username": "ovid",
-            "email": "ovid@rome.it",
             "pw_hash": generate_password_hash(self.pw)
         }
         self.d.save(self.user_doc)
 
     def test_get(self):
-        user_dict = models.UserFactory.get(self.un, self.pw, self.d)
+        user_dict = models.UserFactory.get(self.email, self.pw, self.d)
         print user_dict
         assert_equals(user_dict, self.user_doc)
 
     def test_get_when_pw_is_wrong(self):
-        user_dict = models.UserFactory.get(self.un, "wrong password", self.d)
+        user_dict = models.UserFactory.get(self.email, "wrong password", self.d)
         print user_dict
         assert_equals(user_dict, None)
 
     def test_get_when_username_is_wrong(self):
-        user_dict = models.UserFactory.get("wrong username", self.pw, self.d)
+        user_dict = models.UserFactory.get("wrong email", self.pw, self.d)
         print user_dict
         assert_equals(user_dict, None)
 
+    def test_create(self):
+        doc = models.UserFactory.create(self.email, self.pw, self.d)
+        assert_equals(self.user_doc["_id"], doc["_id"])
+        assert_equals(self.user_doc["type"], doc["type"])
 
 
 
