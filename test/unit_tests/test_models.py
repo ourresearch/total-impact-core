@@ -1,6 +1,7 @@
 from nose.tools import raises, assert_equals, nottest
 import os, unittest, hashlib, json
 from time import sleep
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from totalimpact import models, dao, tiredis
 from totalimpact.providers import bibtex, github
@@ -240,6 +241,41 @@ class TestMemberItems():
         print res
         assert_equals(res["complete"], 4)
         assert_equals(res["memberitems"], self.memberitems_resp)
+
+class TestUserFactory():
+    def setUp(self):
+        # hacky way to delete the "ti" db, then make it fresh again for each test.
+        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
+        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+
+        self.pw = "password"
+        self.un = "ovid"
+
+        self.user_doc = {
+            "_id": "123",
+            "type": "user",
+            "username": "ovid",
+            "email": "ovid@rome.it",
+            "pw_hash": generate_password_hash(self.pw)
+        }
+        self.d.save(self.user_doc)
+
+    def test_get(self):
+        user_dict = models.UserFactory.get(self.un, self.pw, self.d)
+        print user_dict
+        assert_equals(user_dict, self.user_doc)
+
+    def test_get_when_pw_is_wrong(self):
+        user_dict = models.UserFactory.get(self.un, "wrong password", self.d)
+        print user_dict
+        assert_equals(user_dict, None)
+
+    def test_get_when_username_is_wrong(self):
+        user_dict = models.UserFactory.get("wrong username", self.pw, self.d)
+        print user_dict
+        assert_equals(user_dict, None)
+
 
 
 
