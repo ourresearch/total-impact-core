@@ -58,8 +58,7 @@ class Dao(object):
                 "by_tiid_with_snaps": {},
                 "by_type_and_id": {},
                 "needs_aliases": {},
-                "latest-collections": {},
-                "users-by-username": {}
+                "latest-collections": {}
             }
         }
 
