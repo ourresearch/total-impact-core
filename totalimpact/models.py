@@ -2,6 +2,7 @@ from werkzeug import generate_password_hash, check_password_hash
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
 from totalimpact.pidsupport import Retry
+from couchdb import ResourceNotFound
 from totalimpact.providers.provider import ProviderTimeout
 import shortuuid, string, random, datetime, hashlib, threading, json, time
 
@@ -215,17 +216,25 @@ class MemberItems():
 class UserFactory():
 
     @classmethod
-    def get(cls, username, password, dao):
-
-        res = dao.db.view("queues/users-by-username", include_docs=True)
+    def get(cls, id, password, dao):
         try:
-            doc = res[username].rows[0]["doc"]
-        except IndexError:
+            doc = dao.db[id]
+        except ResourceNotFound:
             return None
 
         if check_password_hash(doc["pw_hash"], password):
             return doc
         else:
             return None
+
+    @classmethod
+    def create(cls, id, pw, dao):
+        doc = {
+            "_id": id,
+            "type": "user",
+            "pw_hash": generate_password_hash(pw)
+        }
+        dao.save(doc)
+        return dao.db[id]
 
 
