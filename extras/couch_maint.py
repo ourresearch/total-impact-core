@@ -203,6 +203,40 @@ def build_alias_items_in_collections():
             logger.info("saving")
 
 
-### call the function here
-build_alias_items_in_collections()
+"""
+function(doc) {
+    emit([doc.type, doc._id], doc);
+}
+"""
+def delete_item_tiids_from_collection():
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, 
+            include_docs=True, 
+            start_key=["collection", "0000000000"], 
+            endkey=["collection", "zzzzzzzzzz"])
+    total_rows = len(view_rows)
+    logger.info("total rows = %i" % total_rows)
+    row_count = 0
+
+    for row in view_rows:
+        row_count += 1
+        logger.info("now on rows = %i of %i, id %s" % (row_count, total_rows, row.id))
+        collection = row.doc
+        #pprint(collection)
+        if collection.has_key("item_tiids"):
+            del collection["item_tiids"]
+            db.save(collection)
+            logger.info("saving")
+
+if (cloudant_db == "ti"):
+    print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
+else:
+    print "\n\nThis doesn't appear to be the production database"
+confirm = None
+confirm = raw_input("\nType YES if you are sure you want to run this test:")
+if confirm=="YES":
+    ### call the function here
+    delete_item_tiids_from_collection()
+else:
+    print "nevermind, then."
 
