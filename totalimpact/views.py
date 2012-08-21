@@ -617,12 +617,12 @@ def latest_collections(format=""):
 def create_user(userid=""):
     pw = request.values.get("key")
     if pw is None:
-        abort(400, "You have to include a key in the POST body.")
+        abort(400, '"You have to include a key in the POST body."')
 
     try:
-        user = UserFactory.create(userid, pw, mydao )
+        user = UserFactory.create(userid, mydao, pw )
     except ValueError:
-        abort(409, "That username already exists.")
+        abort(409, '"That username already exists."')
 
     resp = make_response(json.dumps(user, indent=4), 200)
     resp.mimetype = "application/json"
@@ -630,4 +630,11 @@ def create_user(userid=""):
 
 @app.route("/user/<userid>", methods=["GET"])
 def get_user(userid=''):
-    user = UserFactory.get
+    key = request.args.get("key", None)
+    user = UserFactory.get(userid, mydao, key)
+    if user is None:
+        abort(404, "User doesn't exist")
+    else:
+        resp = make_response(json.dumps(user, indent=4), 200)
+        resp.mimetype = "application/json"
+        return resp
