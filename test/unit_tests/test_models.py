@@ -251,38 +251,50 @@ class TestUserFactory():
 
         self.pw = "password"
         self.email = "ovid@rome.it"
+        self.id = "ovid"
 
         self.user_doc = {
-            "_id": self.email,
+            "_id": self.id,
             "type": "user",
+            "email": self.email,
             "pw_hash": generate_password_hash(self.pw)
         }
         self.d.save(self.user_doc)
 
     def test_get(self):
-        user_dict = models.UserFactory.get(self.email, self.pw, self.d)
+        user_dict = models.UserFactory.get(self.id, self.d, self.pw)
         print user_dict
         assert_equals(user_dict, self.user_doc)
 
     def test_get_when_pw_is_wrong(self):
-        user_dict = models.UserFactory.get(self.email, "wrong password", self.d)
+        user_dict = models.UserFactory.get(self.id, self.d, "wrong password")
         print user_dict
         assert_equals(user_dict, None)
 
     def test_get_when_username_is_wrong(self):
-        user_dict = models.UserFactory.get("wrong email", self.pw, self.d)
+        user_dict = models.UserFactory.get("wrong email", self.d, self.pw)
         print user_dict
         assert_equals(user_dict, None)
 
+    def test_get_without_pw(self):
+        user_dict = models.UserFactory.get(self.id, self.d)
+        assert_equals(user_dict["type"], "user")
+        assert_equals(user_dict["_id"], self.id)
+        assert "pw_hash" not in user_dict.keys()
+
     def test_create(self):
-        doc = models.UserFactory.create("new@new.io", self.pw, self.d)
-        assert_equals("new@new.io", doc["_id"])
+        doc = models.UserFactory.create("pliny", self.d, self.pw)
+        assert_equals(
+            "pliny",
+            doc["_id"]
+        )
         assert_equals("user", doc["type"])
 
     @raises(ValueError)
     def test_create_uses_id_already_in_db(self):
-        user = models.UserFactory.create(self.email, self.pw, self.d)
-        user2 = models.UserFactory.create(self.email, "new pw", self.d)
+        user = models.UserFactory.create(self.id, self.d, self.pw)
+        user2 = models.UserFactory.create(self.id, self.d, "new pw")
+
 
 
 

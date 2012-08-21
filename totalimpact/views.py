@@ -504,6 +504,11 @@ def collection_get(cid='', format="json"):
             resp.mimetype = "application/json"
     return resp
 
+@app.route("/collection/<cid>", methods=["PUT"])
+def collection_put_owner(cid=""):
+    pass
+
+
 
 @app.route("/collection/<cid>", methods=["POST"])
 def collection_update(cid=""):
@@ -609,7 +614,6 @@ def latest_collections(format=""):
     return resp
 
 @app.route("/user/<userid>", methods=["POST"])
-
 def create_user(userid=""):
     pw = request.values.get("key")
     if pw is None:
@@ -624,5 +628,6 @@ def create_user(userid=""):
     resp.mimetype = "application/json"
     return resp
 
-
-    
+@app.route("/user/<userid>", methods=["GET"])
+def get_user(userid=''):
+    user = UserFactory.get
