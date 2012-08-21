@@ -215,20 +215,28 @@ class MemberItems():
 
 class UserFactory():
 
+
     @classmethod
-    def get(cls, id, password, dao):
+    def get(cls, id, dao, password=None):
         try:
-            doc = dao.db[id]
+            hashed_id = id
+            doc = dao.db[hashed_id]
         except ResourceNotFound:
             return None
 
-        if check_password_hash(doc["pw_hash"], password):
+        if password is None:
+            del doc["pw_hash"]
+            del doc["email"]
             return doc
         else:
-            return None
+            if check_password_hash(doc["pw_hash"], password):
+                return doc
+            else:
+                return None
+
 
     @classmethod
-    def create(cls, id, pw, dao):
+    def create(cls, id, dao, pw):
         doc = {
             "_id": id,
             "type": "user",
