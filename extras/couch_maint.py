@@ -1,4 +1,5 @@
 import couchdb, os, logging, sys
+from pprint import pprint
 
 # run in heroku with:
 # heroku run python extras/couch_maint.py
@@ -10,84 +11,70 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("couch_maint")
-
-### CAREFUL!  
-
-production = False
-
-if (production):
-    print "USING PRODUCTION DB!!!! STOP NOW IF THIS ISNT WHAT YOU WANT!!!!"
-    ### THIS IS THE PRODUCTION DB!
-    # comment out when false for extra protection!!!!
-    #cloudant_db = "ti"
-    #cloudant_url = "https://app5109761.heroku:TuLL8oXFh4k0iAcAPnDMlSjC@app5109761.heroku.cloudant.com"
-    pass    
-else:    
-    cloudant_db = os.getenv("CLOUDANT_DB")
-    cloudant_url = os.getenv("CLOUDANT_URL")
+  
+cloudant_db = os.getenv("CLOUDANT_DB")
+cloudant_url = os.getenv("CLOUDANT_URL")
 
 couch = couchdb.Server(url=cloudant_url)
 db = couch[cloudant_db]
 logger.info("connected to couch at " + cloudant_url + " / " + cloudant_db)
 
 """
-admin/bad_pmid
+admin/items_with_pmids
 
 function(doc) {
   if (doc.type == "item") {
     if (typeof doc.aliases.pmid != "undefined") {
-      if (doc.aliases.pmid[0] == "22771269") {
      emit(doc._id, 1);
-      }
     }
   }
 }"""
-def del_bad_pmids():
-    view_name = "admin/bad_pmid"
+def del_pmids():
+    view_name = "admin/items_with_pmids"
     tiids = []
     for row in db.view(view_name, include_docs=True):
         tiid = row.id
         tiids += [tiid]
-        logger.info("got tiid {tiid}".format(
-            tiid=tiid))
-
         del(row.doc["aliases"]["pmid"])
-
-        logger.info("saving doc '{id}', which now has these aliases: '{aliases}'".format(
-            id=row.id,
-            aliases=row.doc["aliases"]
-        ))
+        logger.info("saving doc '{id}'".format(id=row.id))
         db.save(row.doc)
 
     logger.info("finished looking, found {num_tiids} tiids with pmids".format(
         num_tiids=len(tiids)))
 
+"""
+admin/snaps_by_metric_name
 
-def find_all_pmccitation_snaps():
+function(doc) {
+    // lists tiids by metric name
+    if (doc.type == "metric_snap") {
+       emit(doc.metric_name, 1)
+   }
+}
+"""
+def delete_all_pmccitation_snaps():
     view_name = "admin/snaps_by_metric_name"
-    snap_ids = []
+    snap_id_count = 0
     for row in db.view(view_name, include_docs=True, key="pubmed:pmc_citations"):
         snap_id = row.value
-        snap_ids += [snap_id]
+        snap_id_count += 1
+        print ".",
         #logger.info("pmc snap id {snap_id}".format(snap_id=snap_id))
-        #db.delete(row.doc)
-    logger.info("finished looking, found {num} tiids".format(num=len(snap_ids)))
+        db.delete(row.doc)
+    logger.info("finished deleting, found {num} tiids".format(num=snap_id_count))
 
-
-def find_all_tiids_w_pmccitation_snaps():
-    view_name = "admin/tiids_w_pmc_snaps"
-    tiids = []
-    for row in db.view(view_name, group=True, include_docs=False):
-        tiid = row.key
-        tiids += [tiid]
-        number_snaps = row.value
-        logger.info("tiid {tiid} had {number_snaps} pmc snaps".format(
-            tiid=tiid, 
-            number_snaps=number_snaps
-        ))
-    logger.info("finished looking, found {num_tiids} tiids".format(num_tiids=len(tiids)))
-
-
+"""
+admin/old-wikipedia-snaps
+function(doc) {
+    if (doc.type == "metric_snap") {
+       if (doc.metric_name == "wikipedia:mentions") {
+        if (doc.drilldown_url.indexOf('search=\"') == -1) {
+           emit([doc.created, doc._id], doc);
+            }
+        }
+    }
+}
+"""
 def wikipedia_snap_cleanup():
     view_name = "admin/old-wikipedia-snaps"
 
@@ -117,59 +104,139 @@ function(doc) {
         tiid = doc["_id"];
     if (typeof doc.aliases.doi != "undefined") {
        if (doc.aliases.doi.length > 1) {
-           emit(doc.aliases.doi.length, doc)
+           emit(doc._id, 1)
        }
     }
     }
 }
+
+admin/collections_by_tiid
+function(doc) {
+    // lists tiids by individual alias namespaces and ids
+    if (doc.type == "collection") {
+    doc.item_tiids.forEach(function(tiid) {
+           emit(tiid, doc._id)
+        })
+   }
+}
+
+admin/snaps_by_tiid
+function(doc) {
+    // lists tiids by individual alias namespaces and ids
+    if (doc.type == "metric_snap") {
+       emit(doc.tiid, doc._id)
+   }
+}
 """
 def bad_doi_cleanup():
     view_name = "admin/multiple_dois"
-    bad_doi = '10.1016/j.eururo.2012.06.052'
-    bad_title = "Reply from Authors re: Ricarda M. Bauer. Female Slings: Where Do We Stand? Eur Urol. In press. http://dx.doi.org/10.1016/ j.eururo.2012.05.036"
-    bad_url = "http://linkinghub.elsevier.com/retrieve/pii/S030228381200766X"
 
     changed_rows = 0
     for row in db.view(view_name, include_docs=True):
 
-        doc = row.doc
         logger.info("got doc '{id}' back from {view_name}".format(
             id=row.id,
             view_name=view_name
         ))
 
-        if (bad_doi in doc["aliases"]["doi"]):
-            print "\ngot a bad one!"
+        doc = row.doc
+        tiid = row.id
 
-            logger.info("doc '{id}' has these doi aliases: {aliases}".format(
-                id=row.id,
-                aliases=doc["aliases"]
-            ))
+        logger.info("\n\nPROCESSING ITEM {id}".format(id=tiid))            
+        pprint(doc["aliases"])
 
-            good_dois = [x for x in doc["aliases"]["doi"] if bad_doi not in x]
-            doc["aliases"]["doi"] = good_dois
+        # delete tiid from collections
+        collections_with_tiid = db.view("admin/collections_by_tiid", include_docs=True, key=tiid)
+        for collection_row in collections_with_tiid:
+            collection = collection_row.doc
+            logger.info("deleting from collection {id}".format(id=collection_row.id))
+            #pprint(collection)            
+            good_tiids = [x for x in collection["item_tiids"] if tiid not in x]
+            collection["item_tiids"] = good_tiids
+            db.save(collection)
 
-            good_titles = [x for x in doc["aliases"]["title"] if bad_title not in x]
-            doc["aliases"]["title"] = good_titles
+        # delete snaps
+        snaps_with_tiid = db.view("admin/snaps_by_tiid", include_docs=True, key=tiid)
+        for snap_row in snaps_with_tiid:
+            snap = snap_row.doc
+            pprint(snap)            
+            logger.info("deleting SNAP {id}".format(id=snap_row.id))            
+            db.delete(snap)
 
-            good_urls = [x for x in doc["aliases"]["url"] if bad_url not in x]
-            doc["aliases"]["url"] = good_urls
+        # delete the item
+        logger.info("deleting item {id}".format(id=tiid))            
+        db.delete(doc)
 
-            logger.info("saving doc '{id}', which now has these aliases: '{aliases}'".format(
-                id=row.id,
-                aliases=doc["aliases"]
-            ))
-            db.save(doc)
-            changed_rows += 1
+        changed_rows += 1
 
     logger.info("finished the update.")
     logger.info("changed %i rows" %changed_rows)
 
 
-bad_doi_cleanup()
+"""
+function(doc) {
+    emit([doc.type, doc._id], doc);
+}
+"""
+def build_alias_items_in_collections():
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, 
+            include_docs=True, 
+            start_key=["collection", "0000000000"], 
+            endkey=["collection", "zzzzzzzzzz"])
+    total_rows = len(view_rows)
+    logger.info("total rows = %i" % total_rows)
+    row_count = 0
 
-# remove all pmids
-# remove all doi '10.1016/j.eururo.2012.06.052'
-# remove all pmc snaps of the three datatypes
+    for row in view_rows:
+        row_count += 1
+        logger.info("now on rows = %i of %i, id %s" % (row_count, total_rows, row.id))
+        collection = row.doc
+        #pprint(collection)
+        if collection.has_key("alias_tiids"):
+            logger.info("skipping")
+        else:
+            item_tiids = collection["item_tiids"]
+            alias_tiids = dict(zip(["unknown-"+tiid for tiid in item_tiids], item_tiids))
+            collection["alias_tiids"] = alias_tiids
+            db.save(collection)
+            logger.info("saving")
 
-# remove all \b
+
+"""
+function(doc) {
+    emit([doc.type, doc._id], doc);
+}
+"""
+def delete_item_tiids_from_collection():
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, 
+            include_docs=True, 
+            start_key=["collection", "0000000000"], 
+            endkey=["collection", "zzzzzzzzzz"])
+    total_rows = len(view_rows)
+    logger.info("total rows = %i" % total_rows)
+    row_count = 0
+
+    for row in view_rows:
+        row_count += 1
+        logger.info("now on rows = %i of %i, id %s" % (row_count, total_rows, row.id))
+        collection = row.doc
+        #pprint(collection)
+        if collection.has_key("item_tiids"):
+            del collection["item_tiids"]
+            db.save(collection)
+            logger.info("saving")
+
+if (cloudant_db == "ti"):
+    print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
+else:
+    print "\n\nThis doesn't appear to be the production database"
+confirm = None
+confirm = raw_input("\nType YES if you are sure you want to run this test:")
+if confirm=="YES":
+    ### call the function here
+    delete_item_tiids_from_collection()
+else:
+    print "nevermind, then."
+
