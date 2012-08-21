@@ -2,7 +2,7 @@ from nose.tools import raises, assert_equals, nottest
 import os, unittest, hashlib, json
 from time import sleep
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from couchdb import ResourceConflict
 from totalimpact import models, dao, tiredis
 from totalimpact.providers import bibtex, github
 from totalimpact.providers.provider import ProviderTimeout
@@ -275,10 +275,14 @@ class TestUserFactory():
         assert_equals(user_dict, None)
 
     def test_create(self):
-        doc = models.UserFactory.create(self.email, self.pw, self.d)
-        assert_equals(self.user_doc["_id"], doc["_id"])
-        assert_equals(self.user_doc["type"], doc["type"])
+        doc = models.UserFactory.create("new@new.io", self.pw, self.d)
+        assert_equals("new@new.io", doc["_id"])
+        assert_equals("user", doc["type"])
 
+    @raises(ValueError)
+    def test_create_uses_id_already_in_db(self):
+        user = models.UserFactory.create(self.email, self.pw, self.d)
+        user2 = models.UserFactory.create(self.email, "new pw", self.d)
 
 
 
