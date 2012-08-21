@@ -68,5 +68,5 @@ class TestMendeley(ProviderTestCase):
                     assert metrics_dict[key][0][i]["value"] >= expected[key][0][i]["value"], [key, metrics_dict[key], expected[key]]                
             else:
                 assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
-            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] >= expected[key][1], [key, metrics_dict[key], expected[key]]
 
