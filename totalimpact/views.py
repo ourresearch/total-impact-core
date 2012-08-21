@@ -123,61 +123,47 @@ def create_item(namespace, nid):
         abort(500)
 
 
-
-@app.route('/items', methods=['POST'])
-def items_post():
-    """
-    Depending on input, updates, retrieves, or creates a set of items
-
-    If input is a list of tiids, it updates them.
-    If input is a list of aliases,
-        If we've already got a tiid for this alias, it get it.
-        If it's a new alias, it makes a new item for it.
-
-    In all cases, returns a list of tiids.
-    Could use much refactoring, as much code is replicated between this and /item.
-    Even better, most of this should move into a Collection or Updater model.
-    """
-    received_json = request.json
-    logger.debug("POST /items got this json: " + str(received_json))
-    logger.info("POST /items got a list of aliases; creating new items for them.")
-    try:
-        # remove unprintable characters and change list to tuples
-        aliases_list = [(clean_id(namespace), clean_id(nid)) for [namespace, nid] in received_json]
-    except ValueError:
-        logger.error("bad input to POST /items (requires [namespace, id] pairs):{input}".format(
-                input=str(aliases_list)
-            ))
-        abort(404, "POST /items requires a list of [namespace, id] pairs.")
-
-    logger.debug("POST /items got list of aliases; creating new items for {aliases}".format(
-            aliases=str(aliases_list)
-        ))
-
+def create_or_find_items_from_aliases(clean_aliases):
     tiids = []
     items = []
-    for alias in aliases_list:
+    for alias in clean_aliases:
         (namespace, nid) = alias
         existing_tiid = get_tiid_by_alias(namespace, nid)
         if existing_tiid:
             tiids.append(existing_tiid)
-            logger.debug("POST /items found an existing tiid ({tiid}) for alias {alias}".format(
+            logger.debug("found an existing tiid ({tiid}) for alias {alias}".format(
                     tiid=existing_tiid,
                     alias=str(alias)
                 ))
         else:
-            logger.debug("POST /items: alias {alias} isn't in the db; making a new item for it.".format(
+            logger.debug("alias {alias} isn't in the db; making a new item for it.".format(
                     alias=alias
                 ))
             item = ItemFactory.make()
             item["aliases"][namespace] = [nid]
             item["needs_aliases"] = datetime.datetime.now().isoformat()
             items.append(item)
-            tiids.append(item["_id"])
+            tiids.append(item["_id"])    
+    return(tiids, items)
 
-    logger.debug("POST /items saving a group of {num} new items.".format(
-        num=len(items)
-    ))
+
+def prep_collection_items(aliases):
+    logger.info("POST /items got a list of aliases; creating new items for them.")
+    try:
+        # remove unprintable characters and change list to tuples
+        clean_aliases = [(clean_id(namespace), clean_id(nid)) for [namespace, nid] in aliases]
+    except ValueError:
+        logger.error("bad input to POST /items (requires [namespace, id] pairs):{input}".format(
+                input=str(clean_aliases)
+            ))
+        abort(404, "POST /items requires a list of [namespace, id] pairs.")
+
+    logger.debug("POST /items got list of aliases; creating new items for {aliases}".format(
+            aliases=str(clean_aliases)
+        ))
+
+    (tiids, items) = create_or_find_items_from_aliases(clean_aliases)
+
     logger.debug("POST /items saving a group of {num} new items: {items}".format(
             num=len(items),
             items=str(items)
@@ -195,8 +181,29 @@ def items_post():
     for doc in mydao.db.update(items):
         pass
 
-    response_code = 201 # Created
+    return tiids
+    
 
+@app.route('/items', methods=['POST'])
+def items_post():
+    """
+    Depending on input, updates, retrieves, or creates a set of items
+
+    If input is a list of tiids, it updates them.
+    If input is a list of aliases,
+        If we've already got a tiid for this alias, it get it.
+        If it's a new alias, it makes a new item for it.
+
+    In all cases, returns a list of tiids.
+    Could use much refactoring, as much code is replicated between this and /item.
+    Even better, most of this should move into a Collection or Updater model.
+    """
+    aliases = request.json
+    logger.debug("POST /items got this json: " + str(aliases))
+
+    tiids = prep_collection_items(aliases)
+
+    response_code = 201 # Created
     resp = make_response(json.dumps(tiids), response_code)
     resp.mimetype = "application/json"
     return resp
@@ -232,7 +239,6 @@ def item_namespace_post(namespace, nid):
 '''GET /item/:tiid
 404 if tiid not found in db
 '''
-
 @app.route('/item/<tiid>', methods=['GET'])
 def item(tiid, format=None):
     # TODO check request headers for format as well.
@@ -461,7 +467,6 @@ def retrieve_items(tiids):
 GET /collection/:collection_ID
 returns a collection object and the items
 '''
-
 @app.route('/collection/<cid>', methods=['GET'])
 @app.route('/collection/<cid>.<format>', methods=['GET'])
 def collection_get(cid='', format="json"):
@@ -480,7 +485,7 @@ def collection_get(cid='', format="json"):
                                  response_code)
             resp.mimetype = "application/json"
     else:
-        tiids = coll["item_tiids"]
+        tiids = coll["alias_tiids"].values()
         (items, something_currently_updating) = retrieve_items(tiids)
 
         # return success if all reporting is complete for all items    
@@ -497,7 +502,7 @@ def collection_get(cid='', format="json"):
                              "attachment; filename=ti.csv")
         else:
             coll["items"] = items
-            del coll["item_tiids"]
+            del coll["alias_tiids"]
             # print json.dumps(coll, sort_keys=True, indent=4)
             resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
                                  response_code)
@@ -512,7 +517,8 @@ def collection_update(cid=""):
 
     # first, get the tiids in this collection:
     try:
-        tiids = mydao.get(cid)["item_tiids"]
+        collection = mydao.get(cid)
+        tiids = collection["alias_tiids"].values()
     except Exception:
         logger.exception("couldn't get tiids for collection '{cid}'".format(
             cid=cid
@@ -546,22 +552,44 @@ def collection_create():
     creates new collection
     """
     response_code = None
+    coll = CollectionFactory.make()
+    coll["ip_address"] = request.remote_addr
     try:
-        coll = CollectionFactory.make()
-        coll["item_tiids"] = request.json["items"]
         coll["title"] = request.json["title"]
-        coll["ip_address"] = request.remote_addr
-        mydao.save(coll)
-        response_code = 201 # Created
-        logger.info(
-            "saved new collection '{id}' with {num_items} items.".format(
-                id=coll["_id"],
-                num_items=len(request.json["items"])
-            ))
+
+        if "items" in request.json.keys():
+            logger.info("collection has tiids")
+            tiids = request.json["items"]
+            # since we don't know the aliases, just use unknown for now
+            aliases_strings = ["unknown:"+tiid for tiid in tiids]
+            logger.info("tiids: " + str(tiids))
+            logger.info("aliases_strings: " + str(aliases_strings))
+        elif "aliases" in request.json.keys():
+            logger.info("collection has aliases: finding and creating tiids")
+            aliases = request.json["aliases"]
+            tiids = prep_collection_items(aliases)
+            aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
     except (AttributeError, TypeError):
         # we got missing or improperly formated data.
-        # should log the error...
+        logger.error(
+            "we got missing or improperly formated data: '{id}' with {json}.".format(
+                id=coll["_id"],
+                json=str(request.json)))
         abort(404)  #what is the right error message for 'needs arguments'?
+
+    # save dict of alias:tiid
+    coll["alias_tiids"] = dict(zip(aliases_strings, tiids))
+
+    logger.info(json.dumps(coll, sort_keys=True, indent=4))
+
+    mydao.save(coll)
+    response_code = 201 # Created
+    logger.info(
+        "saved new collection '{id}' with {num_items} items.".format(
+            id=coll["_id"],
+            num_items=len(coll["alias_tiids"])
+        ))
+
     resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
                          response_code)
     resp.mimetype = "application/json"
