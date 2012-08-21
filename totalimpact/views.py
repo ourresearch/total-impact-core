@@ -609,10 +609,10 @@ def latest_collections(format=""):
     return resp
 
 @app.route("/user/<userid>", methods=["POST"])
+
 def create_user(userid=""):
-    try:
-        pw = request.values.get("key")
-    except AttributeError:
+    pw = request.values.get("key")
+    if pw is None:
         abort(400, "You have to include a key in the POST body.")
 
     try:
