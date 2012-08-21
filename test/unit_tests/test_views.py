@@ -21,10 +21,10 @@ COLLECTION_SEED = json.loads("""{
     "owner": "abcdef",
     "created": 1328569452.406,
     "last_modified": 1328569492.406,
-    "item_tiids": ["origtiid1", "origtiid2"] 
+    "alias_tiids": {"doi:123": "origtiid1", "github:frank":"origtiid2"}
 }""")
 COLLECTION_SEED_MODIFIED = deepcopy(COLLECTION_SEED)
-COLLECTION_SEED_MODIFIED["item_tiids"] = TEST_COLLECTION_TIID_LIST_MODIFIED
+COLLECTION_SEED_MODIFIED["alias_tiids"] = dict(zip(["doi:1", "doi:2"], TEST_COLLECTION_TIID_LIST_MODIFIED))
 
 
 api_items_loc = os.path.join(
@@ -186,9 +186,9 @@ class TestCollection(ViewsTester):
         response_loaded = json.loads(response.data)
         assert_equals(
                 set(response_loaded.keys()),
-                set([u'created', u'item_tiids', u'last_modified', u'alias_tiids', u'ip_address', u'title', u'type', u'_id', u'_rev']))
+                set([u'created', u'last_modified', u'alias_tiids', u'ip_address', u'title', u'type', u'_id', u'_rev']))
         assert_equals(len(response_loaded["_id"]), 6)
-        assert_equals(response_loaded["item_tiids"], [u'tiid1', u'tiid2'])
+        assert_equals(set(response_loaded["alias_tiids"].values()), set([u'tiid1', u'tiid2']))
 
     def test_collection_post_new_collection_from_aliases(self):
         aliases = [
@@ -209,9 +209,9 @@ class TestCollection(ViewsTester):
         response_loaded = json.loads(response.data)
         assert_equals(
                 set(response_loaded.keys()),
-                set([u'created', u'item_tiids', u'last_modified', u'ip_address', u'alias_tiids', u'title', u'type', u'_id', u'_rev']))
+                set([u'created', u'last_modified', u'ip_address', u'alias_tiids', u'title', u'type', u'_id', u'_rev']))
         assert_equals(len(response_loaded["_id"]), 6)
-        assert_equals(len(response_loaded["item_tiids"]), 3)
+        assert_equals(len(response_loaded["alias_tiids"]), 3)
         aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
         assert_equals(set(response_loaded["alias_tiids"].keys()), set(aliases_strings))
 
@@ -276,7 +276,7 @@ class TestCollection(ViewsTester):
         print resp
         assert_equals(resp.status_code, 210)
         collection_data = json.loads(resp.data)
-        assert_equals(set(collection_data.keys()), set([u'title', u'items', u'_rev', u'created', u'last_modified', u'ip_address', u'alias_tiids', u'_id', u'type']))
+        assert_equals(set(collection_data.keys()), set([u'title', u'items', u'_rev', u'created', u'last_modified', u'ip_address', u'_id', u'type']))
 
         items_urls = [item_from_db['aliases']['url'][0] for item_from_db in collection_data["items"]]
         expected_ids = [i[1] for i in items]
@@ -307,8 +307,8 @@ class TestCollection(ViewsTester):
         print resp
         assert_equals(resp.status_code, 200)
         collection_data = json.loads(resp.data)
-        assert_equals(set(collection_data.keys()), set([u'title', u'item_tiids', u'_rev', u'created', u'last_modified', u'ip_address', u'alias_tiids', u'_id', u'type']))
-        assert_equals(collection_data["item_tiids"], tiids)
+        assert_equals(set(collection_data.keys()), set([u'title', u'_rev', u'created', u'last_modified', u'ip_address', u'alias_tiids', u'_id', u'type']))
+        assert_equals(set(collection_data["alias_tiids"].values()), set(tiids))
 
     def test_collection_update_puts_items_on_update_queue(self):
         # put some stuff in the collection:
@@ -322,7 +322,7 @@ class TestCollection(ViewsTester):
 
         collection = {
             "_id":"123",
-            "item_tiids":["larry", "curly", "moe"]
+            "alias_tiids": {"doi:abc":"larry", "doi:def":"moe", "ghi":"curly"}
             }
         mydao.save(collection)
         resp = self.client.post(
@@ -331,6 +331,7 @@ class TestCollection(ViewsTester):
         assert_equals(resp.data, "true")
 
         larry = mydao.get("larry")
+        print larry
         # super hacky way to test for iso date string
         assert_equals(larry["needs_aliases"][0:4], "2012")
 
