@@ -186,9 +186,34 @@ class TestCollection(ViewsTester):
         response_loaded = json.loads(response.data)
         assert_equals(
                 set(response_loaded.keys()),
-                set([u'created', u'item_tiids', u'last_modified', u'ip_address', u'title', u'type', u'_id', u'_rev']))
+                set([u'created', u'item_tiids', u'last_modified', u'alias_tiids', u'ip_address', u'title', u'type', u'_id', u'_rev']))
         assert_equals(len(response_loaded["_id"]), 6)
         assert_equals(response_loaded["item_tiids"], [u'tiid1', u'tiid2'])
+
+    def test_collection_post_new_collection_from_aliases(self):
+        aliases = [
+                    ["doi", "10.123"],
+                    ["doi", "10.124"],
+                    ["doi", "10.125"]
+                ]
+
+        response = self.client.post(
+            '/collection',
+            data=json.dumps({"aliases": aliases, "title":"My Title"}),
+            content_type="application/json")
+
+        print response
+        print response.data
+        assert_equals(response.status_code, 201)  #Created
+        assert_equals(response.mimetype, "application/json")
+        response_loaded = json.loads(response.data)
+        assert_equals(
+                set(response_loaded.keys()),
+                set([u'created', u'item_tiids', u'last_modified', u'ip_address', u'alias_tiids', u'title', u'type', u'_id', u'_rev']))
+        assert_equals(len(response_loaded["_id"]), 6)
+        assert_equals(len(response_loaded["item_tiids"]), 3)
+        aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
+        assert_equals(set(response_loaded["alias_tiids"].keys()), set(aliases_strings))
 
     def test_collection_get_with_no_id(self):
         response = self.client.get('/collection/')
@@ -251,7 +276,7 @@ class TestCollection(ViewsTester):
         print resp
         assert_equals(resp.status_code, 210)
         collection_data = json.loads(resp.data)
-        assert_equals(set(collection_data.keys()), set([u'title', u'items', u'_rev', u'created', u'last_modified', u'ip_address', u'_id', u'type']))
+        assert_equals(set(collection_data.keys()), set([u'title', u'items', u'_rev', u'created', u'last_modified', u'ip_address', u'alias_tiids', u'_id', u'type']))
 
         items_urls = [item_from_db['aliases']['url'][0] for item_from_db in collection_data["items"]]
         expected_ids = [i[1] for i in items]
@@ -282,7 +307,7 @@ class TestCollection(ViewsTester):
         print resp
         assert_equals(resp.status_code, 200)
         collection_data = json.loads(resp.data)
-        assert_equals(set(collection_data.keys()), set([u'title', u'item_tiids', u'_rev', u'created', u'last_modified', u'ip_address', u'_id', u'type']))
+        assert_equals(set(collection_data.keys()), set([u'title', u'item_tiids', u'_rev', u'created', u'last_modified', u'ip_address', u'alias_tiids', u'_id', u'type']))
         assert_equals(collection_data["item_tiids"], tiids)
 
     def test_collection_update_puts_items_on_update_queue(self):
