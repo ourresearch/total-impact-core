@@ -14,6 +14,7 @@ print "run_collection_test.py starting."
 collection_tester = testers.CollectionTester()
 report = collection_tester.test(args["action_type"])
 
+# storing them in redis so we can look at them in the /test/collection/<create|read> report
 redis = redis.from_url(os.getenv("REDISTOGO_URL"))
 report_key = "test.collection." + args["action_type"]
 print "saving report in redis with key " + report_key
