@@ -392,3 +392,8 @@ class TestTiid(ViewsTester):
         # pick a random ID, very unlikely to already be something with this ID
         response = self.client.get('/item/' + str(uuid.uuid1()))
         assert_equals(response.status_code, 404)  # Not Found
+
+class TestUser(ViewsTester):
+    def test_create(self):
+        resp = self.client.post("/user/test@test.com", data={"key": "password"})
+        assert_equals("test@test.com", json.loads(resp.data)["_id"])
