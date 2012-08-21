@@ -125,8 +125,36 @@ class ItemFactory():
 
 class CollectionFactory():
 
+
     @classmethod
-    def make_id(cls, len=6):
+    def make(cls, owner=None):
+
+        key, key_hash = cls._make_update_keypair()
+
+        now = datetime.datetime.now().isoformat()
+        collection = {}
+
+        collection["_id"] = cls._make_id()
+        collection["created"] = now
+        collection["last_modified"] = now
+        collection["type"] = "collection"
+        collection["key_hash"] = key_hash
+        collection["owner"] = owner
+
+        return collection, key
+
+    @classmethod
+    def claim_collection(cls, coll, new_owner, key):
+        if "key_hash" not in coll.keys():
+            raise ValueError("This is an old collection that doesnt' support ownership.")
+        elif check_password_hash(coll["key_hash"], key):
+            coll["owner"] = new_owner
+            return coll
+        else:
+            raise ValueError("The given key doesn't match this collection's key")
+
+    @classmethod
+    def _make_id(cls, len=6):
         '''Make an id string.
 
         Currently uses only lowercase and digits for better say-ability. Six
@@ -136,17 +164,10 @@ class CollectionFactory():
         return ''.join(random.choice(choices) for x in range(len))
 
     @classmethod
-    def make(cls):
-
-        now = datetime.datetime.now().isoformat()
-        collection = {}
-
-        collection["_id"] = cls.make_id()
-        collection["created"] = now
-        collection["last_modified"] = now
-        collection["type"] = "collection"
-
-        return collection
+    def _make_update_keypair(cls):
+        key = shortuuid.uuid()
+        key_hash = generate_password_hash(key)
+        return key, key_hash
 
 
 
