@@ -2,7 +2,7 @@ from werkzeug import generate_password_hash, check_password_hash
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
 from totalimpact.pidsupport import Retry
-from couchdb import ResourceNotFound
+from couchdb import ResourceNotFound, ResourceConflict
 from totalimpact.providers.provider import ProviderTimeout
 import shortuuid, string, random, datetime, hashlib, threading, json, time
 
@@ -234,7 +234,11 @@ class UserFactory():
             "type": "user",
             "pw_hash": generate_password_hash(pw)
         }
-        dao.save(doc)
-        return dao.db[id]
+        try:
+            dao.db.save(doc)
+        except ResourceConflict:
+            raise ValueError
+
+        return dao.db[id] # getting again so it has _rev set
 
 
