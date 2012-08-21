@@ -173,5 +173,36 @@ def bad_doi_cleanup():
     logger.info("changed %i rows" %changed_rows)
 
 
+"""
+function(doc) {
+    emit([doc.type, doc._id], doc);
+}
+"""
+def build_alias_items_in_collections():
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, 
+            include_docs=True, 
+            start_key=["collection", "0000000000"], 
+            endkey=["collection", "zzzzzzzzzz"])
+    total_rows = len(view_rows)
+    logger.info("total rows = %i" % total_rows)
+    row_count = 0
+
+    for row in view_rows:
+        row_count += 1
+        logger.info("now on rows = %i of %i, id %s" % (row_count, total_rows, row.id))
+        collection = row.doc
+        #pprint(collection)
+        if collection.has_key("alias_tiids"):
+            logger.info("skipping")
+        else:
+            item_tiids = collection["item_tiids"]
+            alias_tiids = dict(zip(["unknown-"+tiid for tiid in item_tiids], item_tiids))
+            collection["alias_tiids"] = alias_tiids
+            db.save(collection)
+            logger.info("saving")
+
+
 ### call the function here
+build_alias_items_in_collections()
 
