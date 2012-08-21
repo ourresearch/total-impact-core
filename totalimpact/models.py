@@ -225,8 +225,10 @@ class UserFactory():
             return None
 
         if password is None:
-            del doc["pw_hash"]
-            del doc["email"]
+            try:
+                del doc["pw_hash"]
+            except KeyError:
+                pass # doesn't matter, we just want to delete them if they're there.
             return doc
         else:
             if check_password_hash(doc["pw_hash"], password):
@@ -242,6 +244,7 @@ class UserFactory():
             "type": "user",
             "pw_hash": generate_password_hash(pw)
         }
+
         try:
             dao.db.save(doc)
         except ResourceConflict:
