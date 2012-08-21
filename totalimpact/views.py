@@ -610,13 +610,19 @@ def latest_collections(format=""):
 
 @app.route("/user/<userid>", methods=["POST"])
 def create_user(userid=""):
-    pw = request.args.get('key')
-    user = UserFactory.create(userid, pw, mydao )
+    try:
+        pw = request.values.get("key")
+    except AttributeError:
+        abort(400, "You have to include a key in the POST body.")
+
+    try:
+        user = UserFactory.create(userid, pw, mydao )
+    except ValueError:
+        abort(409, "That username already exists.")
 
     resp = make_response(json.dumps(user, indent=4), 200)
+    resp.mimetype = "application/json"
+    return resp
 
-    if user is None:
-            response_code = "409"
-            resp_body = ""
 
     
