@@ -4,7 +4,7 @@ import os, datetime, redis, hashlib
 import unicodedata, re
 
 from totalimpact import dao, app, tiredis
-from totalimpact.models import ItemFactory, CollectionFactory, MemberItems
+from totalimpact.models import ItemFactory, CollectionFactory, MemberItems, UserFactory
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
 import logging
@@ -608,5 +608,15 @@ def latest_collections(format=""):
 
     return resp
 
-    
+@app.route("/user/<userid>", methods=["POST"])
+def create_user(userid=""):
+    pw = request.args.get('key')
+    user = UserFactory.create(userid, pw, mydao )
+
+    resp = make_response(json.dumps(user, indent=4), 200)
+
+    if user is None:
+            response_code = "409"
+            resp_body = ""
+
     
