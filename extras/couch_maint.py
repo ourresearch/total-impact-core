@@ -55,10 +55,7 @@ function(doc) {
 def delete_all_pmccitation_snaps():
     view_name = "admin/snaps_by_metric_name"
     snap_id_count = 0
-#    for row in db.view(view_name, include_docs=True, key="pubmed:pmc_citations"):
-#    for row in db.view(view_name, include_docs=True, key="pubmed:pmc_citations_reviews"):
-#    for row in db.view(view_name, include_docs=True, key="pubmed:pmc_citations_editorials"):
-    for row in db.view(view_name, include_docs=True, key="pubmed:f1000"):
+    for row in db.view(view_name, include_docs=True, key="pubmed:pmc_citations"):
         snap_id = row.value
         snap_id_count += 1
         print ".",
@@ -66,7 +63,18 @@ def delete_all_pmccitation_snaps():
         db.delete(row.doc)
     logger.info("finished deleting, found {num} tiids".format(num=snap_id_count))
 
-
+"""
+admin/old-wikipedia-snaps
+function(doc) {
+    if (doc.type == "metric_snap") {
+       if (doc.metric_name == "wikipedia:mentions") {
+        if (doc.drilldown_url.indexOf('search=\"') == -1) {
+           emit([doc.created, doc._id], doc);
+            }
+        }
+    }
+}
+"""
 def wikipedia_snap_cleanup():
     view_name = "admin/old-wikipedia-snaps"
 
@@ -165,5 +173,5 @@ def bad_doi_cleanup():
     logger.info("changed %i rows" %changed_rows)
 
 
-del_pmids()
+### call the function here
 
