@@ -397,3 +397,15 @@ class TestUser(ViewsTester):
     def test_create(self):
         resp = self.client.post("/user/test@test.com", data={"key": "password"})
         assert_equals("test@test.com", json.loads(resp.data)["_id"])
+
+    def test_create_if_already_exists(self):
+        resp = self.client.post("/user/test@test.com", data={"key": "password"})
+        resp2 = self.client.post("/user/test@test.com", data={"key": "another password"})
+        assert_equals(409, resp2.status_code)
+
+    def test_create_without_key_in_post_body(self):
+        resp = self.client.post("/user/test@test.com")
+        assert_equals(400, resp.status_code)
+
+
+
