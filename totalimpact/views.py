@@ -485,7 +485,7 @@ def collection_get(cid='', format="json"):
                                  response_code)
             resp.mimetype = "application/json"
     else:
-        tiids = coll["item_tiids"]
+        tiids = coll["alias_tiids"].values()
         (items, something_currently_updating) = retrieve_items(tiids)
 
         # return success if all reporting is complete for all items    
@@ -502,7 +502,7 @@ def collection_get(cid='', format="json"):
                              "attachment; filename=ti.csv")
         else:
             coll["items"] = items
-            del coll["item_tiids"]
+            del coll["alias_tiids"]
             # print json.dumps(coll, sort_keys=True, indent=4)
             resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
                                  response_code)
@@ -517,7 +517,8 @@ def collection_update(cid=""):
 
     # first, get the tiids in this collection:
     try:
-        tiids = mydao.get(cid)["item_tiids"]
+        collection = mydao.get(cid)
+        tiids = collection["alias_tiids"].values()
     except Exception:
         logger.exception("couldn't get tiids for collection '{cid}'".format(
             cid=cid
@@ -578,9 +579,6 @@ def collection_create():
 
     # save dict of alias:tiid
     coll["alias_tiids"] = dict(zip(aliases_strings, tiids))
-
-    # still store it the old way for backward compatibility for now
-    coll["item_tiids"] = tiids
 
     logger.info(json.dumps(coll, sort_keys=True, indent=4))
 
