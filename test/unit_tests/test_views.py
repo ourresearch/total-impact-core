@@ -397,17 +397,39 @@ class TestTiid(ViewsTester):
 
 class TestUser(ViewsTester):
     def test_create(self):
-        resp = self.client.post("/user/test@test.com", data={"key": "password"})
-        assert_equals("test@test.com", json.loads(resp.data)["_id"])
+        resp = self.client.post("/user/horace@rome.it", data={"key": "password"})
+        assert_equals("horace@rome.it", json.loads(resp.data)["_id"])
 
     def test_create_if_already_exists(self):
-        resp = self.client.post("/user/test@test.com", data={"key": "password"})
-        resp2 = self.client.post("/user/test@test.com", data={"key": "another password"})
+        resp = self.client.post("/user/ovid@rome.it", data={"key": "password"})
+        resp2 = self.client.post("/user/ovid@rome.it", data={"key": "another password"})
         assert_equals(409, resp2.status_code)
 
     def test_create_without_key_in_post_body(self):
-        resp = self.client.post("/user/test@test.com")
+        resp = self.client.post("/user/pliny@rome.it")
         assert_equals(400, resp.status_code)
+
+    def test_get_user_doesnt_exist(self):
+        resp = self.client.get("/user/test@foo.com")
+        assert_equals(resp.status_code, 404)
+
+    def test_get_user(self):
+        self.client.post("/user/catullus@rome.it", data={"key": "password", "email": "e"})
+
+        # get it with no password; doesn't reveal password hash
+        resp = self.client.get("/user/catullus@rome.it")
+        assert_equals(json.loads(resp.data)["_id"], "catullus@rome.it")
+        assert "pw_hash" not in json.loads(resp.data).keys()
+
+        # get it with a password; does include password hash
+        resp = self.client.get("/user/catullus@rome.it?key=password")
+        resp_dict = json.loads(resp.data)
+        print resp_dict
+
+        assert_equals(resp_dict["_id"], "catullus@rome.it")
+        assert "pw_hash" in resp_dict.keys()
+
+
 
 
 

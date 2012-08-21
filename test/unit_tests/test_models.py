@@ -250,13 +250,11 @@ class TestUserFactory():
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
         self.pw = "password"
-        self.email = "ovid@rome.it"
-        self.id = "ovid"
+        self.id = "ovid@rome.it"
 
         self.user_doc = {
             "_id": self.id,
             "type": "user",
-            "email": self.email,
             "pw_hash": generate_password_hash(self.pw)
         }
         self.d.save(self.user_doc)
@@ -283,12 +281,8 @@ class TestUserFactory():
         assert "pw_hash" not in user_dict.keys()
 
     def test_create(self):
-        doc = models.UserFactory.create("pliny", self.d, self.pw)
-        assert_equals(
-            "pliny",
-            doc["_id"]
-        )
-        assert_equals("user", doc["type"])
+        doc = models.UserFactory.create("pliny@rome.it", self.d, self.pw)
+        assert_equals("pliny@rome.it",doc["_id"] )
 
     @raises(ValueError)
     def test_create_uses_id_already_in_db(self):
