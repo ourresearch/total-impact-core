@@ -29,7 +29,7 @@ class Importer:
         self.provider_name = provider_name
 
     def get_aliases(self, query):
-        query_url = "{api_url}/provider/{provider_name}/memberitems?query={query}".format(
+        query_url = "{api_url}/provider/{provider_name}/memberitems/{query}?method=sync".format(
             api_url=api_url,
             provider_name=self.provider_name,
             query=query
@@ -43,7 +43,8 @@ class Importer:
         r = requests.get(query_url)
 
         try:
-            aliases = json.loads(r.text)
+            response = json.loads(r.text)
+            aliases = response["memberitems"]
             logger.debug("got some aliases from the http call: " + str(aliases))
         except ValueError:
             logger.warning(
@@ -53,7 +54,7 @@ class Importer:
                 ))
             aliases = []
 
-        # anoyingly, some providers return lists-as-IDs, which must be joined with a comma
+        # annoyingly, some providers return lists-as-IDs, which must be joined with a comma
         aliases = [(namespace, id) if isinstance(id, str)
                    else (namespace, ",".join(id)) for namespace, id in aliases]
 
