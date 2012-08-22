@@ -263,19 +263,19 @@ class ProviderThread(StoppableThread):
 
             except ProviderError, e:
                 error_msg = repr(e)
+                logger.info('ProviderError on %s %s' % (provider, method_name))
 
             except Exception, e:
                 # All other fatal errors. These are probably some form of
                 # logic error. We consider these to be fatal.
                 error_msg = repr(e)
                 error_limit_reached = True
+                tb = sys.exc_info()[2]
+                self.log_error(item, '%s on %s %s' % (error_msg, provider, method_name), tb)
 
             if error_msg:
                 # If we had any errors, update the error counts and sleep if 
                 # we need to do so, before retrying. 
-                tb = sys.exc_info()[2]
-                self.log_error(item, '%s on %s %s' % (error_msg, provider, method_name), tb)
-
                 error_counts += 1
 
                 if ((error_counts > max_retries) and (max_retries != -1)):
