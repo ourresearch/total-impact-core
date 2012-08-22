@@ -32,7 +32,8 @@ class ProviderFactory(object):
                 prov.provider_name = provider_name
                 providers.append(prov)
             except ProviderConfigurationError:
-                logger.error("Unable to configure provider ... skipping " + str(v))
+                logger.error("%20s Unable to configure provider ... skipping %s" 
+                    %(self.provider_name, str(v)))
         return providers
 
     @classmethod
@@ -120,7 +121,7 @@ class Provider(object):
     def relevant_aliases(self, aliases):
         filtered = [alias for alias in aliases 
                         if self.is_relevant_alias(alias)]
-        #logger.info("relevant_aliases for %s are %s given %s" % (self.provider_name, str(filtered), str(aliases)))
+        #logger.debug("%20s relevant_aliases are %s given %s" % (self.provider_name, str(filtered), str(aliases)))
 
         return filtered
 
@@ -198,7 +199,6 @@ class Provider(object):
 
         enc = urllib.quote(query_string)
         url = self._get_templated_url(provider_url_template, enc, "members")
-        #logger.debug("attempting to retrieve member items from " + url)
         
         # try to get a response from the data provider  
         response = self.http_get(url, cache_enabled=cache_enabled)
@@ -231,7 +231,7 @@ class Provider(object):
 
         # Only lookup biblio for items with appropriate ids
         if not id:
-            logger.info("%20s not checking biblio, no relevant alias" % (self.provider_name))
+            #logger.debug("%20s not checking biblio, no relevant alias" % (self.provider_name))
             return None
 
         if not provider_url_template:
@@ -287,7 +287,7 @@ class Provider(object):
         relevant_aliases = self.relevant_aliases(aliases)
 
         if not relevant_aliases:
-            logger.info("%20s not checking aliases, no relevant alias" % (self.provider_name))
+            #logger.debug("%20s not checking aliases, no relevant alias" % (self.provider_name))
             return []
 
         new_aliases = []
@@ -349,7 +349,7 @@ class Provider(object):
 
         # Only lookup metrics for items with appropriate ids
         if not id:
-            logger.info("%20s not checking metrics, no relevant alias" % (self.provider_name))
+            #logger.debug("%20s not checking metrics, no relevant alias" % (self.provider_name))
             return {}
 
         if not provider_url_template:
@@ -382,7 +382,7 @@ class Provider(object):
         # try to get a response from the data provider                
         response = self.http_get(url, cache_enabled=cache_enabled, allow_redirects=True)
 
-        #logger.debug("get_metrics_for_id response.status_code %i" % response.status_code)
+        #logger.debug("%20s get_metrics_for_id response.status_code %i" % (self.provider_name, response.status_code))
         
         # extract the metrics
         metrics_dict = self._extract_metrics(response.text, response.status_code, id=id)
@@ -419,7 +419,6 @@ class Provider(object):
         # first thing is to try to retrieve from cache
         # use the cache if the config parameter is set and the arg allows it
         use_cache = app.config["CACHE_ENABLED"] and cache_enabled
-        #logger.debug("http_get on %s with use_cache %i" %(url, use_cache))
 
         cache_data = None
         if use_cache:
@@ -434,6 +433,7 @@ class Provider(object):
             r = CachedResponse()
             r.status_code = cache_data['status_code']
             r.text = cache_data['text']
+            logger.debug("%20s cached GET %s" %(self.provider_name, url))
             return r
             
         # ensure that a user-agent string is set
@@ -446,9 +446,10 @@ class Provider(object):
             proxies = None
             if app.config["PROXY"]:
                 proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}
+            logger.debug("%20s live GET %s" %(self.provider_name, url))
             r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=allow_redirects, verify=False)
         except requests.exceptions.Timeout as e:
-            logger.debug("Attempt to connect to provider timed out during GET on " + url)
+            logger.info("%20s Attempt to connect to provider timed out during GET on %s" %(self.provider_name, url))
             raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
         except requests.exceptions.RequestException as e:
             raise ProviderHttpError("RequestException during GET on: " + url, e)
@@ -520,7 +521,7 @@ def _load_json(page):
     try:
         data = simplejson.loads(page) 
     except simplejson.JSONDecodeError, e:
-        logger.error("json decode fail, '" + e.msg + "'. Here's the string: " + page)
+        logger.error("%20s json decode fail '%s'. Here's the string: %s" %("_load_json", e.msg, page))
         raise ProviderContentMalformedError
     return(data)
 
@@ -638,7 +639,7 @@ def _extract_from_xml(page, dict_of_keylists):
 
 # given a url that has a doi embedded in it, return the doi
 def doi_from_url_string(url):
-    logger.info("doi_from_url_string url " + url)
+    logger.info("%20s parsing url %s" %("doi_from_url_string", url))
 
     result = re.findall("(10\.\d+.[0-9a-wA-W_/\.\-%]+)" , url, re.DOTALL)
     try:

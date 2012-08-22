@@ -120,7 +120,7 @@ class Queue():
         if len(self.queued_items[self.queue_name]) > 0:
             # Take from the head of the queue
             item = copy.deepcopy(self.queued_items[self.queue_name][0])
-            log.info("%20s dequeuing item %s" 
+            log.info("%20s  dequeuing item %s" 
                 % ("Queue " + self.queue_name, item["_id"]))
             del self.queued_items[self.queue_name][0]
         self.queue_lock.release()
@@ -129,7 +129,7 @@ class Queue():
     @classmethod
     def add_to_metrics_queues(self, item):
         # Add the item to the metrics queue
-        log.info("%20s adding item %s to all metrics queues" 
+        log.info("%20s  adding item %s to all metrics queues" 
             % ("Queue", item["_id"]))
 
         providers_config = default_settings.PROVIDERS
