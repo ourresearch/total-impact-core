@@ -207,7 +207,7 @@ class Provider(object):
             logger.warning("%s status_code=%i getting %s" 
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
-                return {}
+                raise ProviderItemNotFoundError
             elif response.status_code == 303: #redirect
                 pass                
             else:
@@ -451,8 +451,6 @@ class Provider(object):
             logger.debug("Attempt to connect to provider timed out during GET on " + url)
             raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
         except requests.exceptions.RequestException as e:
-            logger.info("RequestException exception: %s" % e)
-            logger.info("RequestException during GET on: " + url)
             raise ProviderHttpError("RequestException during GET on: " + url, e)
         
         # cache the response and return
@@ -507,6 +505,9 @@ class ProviderServerError(ProviderError):
         self.response = response
 
 class ProviderContentMalformedError(ProviderError):
+    pass
+
+class ProviderItemNotFoundError(ProviderError):
     pass
     
 class ProviderValidationFailedError(ProviderError):
