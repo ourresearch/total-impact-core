@@ -207,7 +207,7 @@ class Provider(object):
             logger.warning("%s status_code=%i getting %s" 
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
-                return {}
+                raise ProviderItemNotFoundError
             elif response.status_code == 303: #redirect
                 pass                
             else:
@@ -505,6 +505,9 @@ class ProviderServerError(ProviderError):
         self.response = response
 
 class ProviderContentMalformedError(ProviderError):
+    pass
+
+class ProviderItemNotFoundError(ProviderError):
     pass
     
 class ProviderValidationFailedError(ProviderError):
