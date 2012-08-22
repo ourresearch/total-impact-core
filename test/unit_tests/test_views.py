@@ -173,10 +173,19 @@ class TestItems(ViewsTester):
 
 class TestCollection(ViewsTester):
 
+    def setUp(self):
+        self.aliases = [
+            ["doi", "10.123"],
+            ["doi", "10.124"],
+            ["doi", "10.125"]
+        ]
+        super(TestCollection, self).setUp()
+
     def test_collection_post_new_collection(self):
+
         response = self.client.post(
             '/collection',
-            data=json.dumps({"items": TEST_COLLECTION_TIID_LIST, "title":"My Title"}),
+            data=json.dumps({"aliases": self.aliases, "title":"My Title"}),
             content_type="application/json")
 
         print response
@@ -186,34 +195,26 @@ class TestCollection(ViewsTester):
         response_loaded = json.loads(response.data)
         assert_equals(
                 set(response_loaded.keys()),
-                set([u'created', u'last_modified', u'alias_tiids', u'ip_address', u'title', u'type', u'_id', u'_rev']))
-        assert_equals(len(response_loaded["_id"]), 6)
-        assert_equals(set(response_loaded["alias_tiids"].values()), set([u'tiid1', u'tiid2']))
+                set(["collection", "key"])
+        )
+        coll = response_loaded["collection"]
+        assert_equals(len(coll["_id"]), 6)
+        assert_equals(
+            set(coll["alias_tiids"].keys()),
+            set([":".join(alias) for alias in self.aliases])
+        )
 
-    def test_collection_post_new_collection_from_aliases(self):
-        aliases = [
-                    ["doi", "10.123"],
-                    ["doi", "10.124"],
-                    ["doi", "10.125"]
-                ]
+    def test_new_collection_includes_key(self):
 
         response = self.client.post(
             '/collection',
-            data=json.dumps({"aliases": aliases, "title":"My Title"}),
-            content_type="application/json")
-
-        print response
+            data=json.dumps({"aliases": self.aliases, "title":"My Title"}),
+            content_type="application/json"
+        )
         print response.data
-        assert_equals(response.status_code, 201)  #Created
-        assert_equals(response.mimetype, "application/json")
-        response_loaded = json.loads(response.data)
-        assert_equals(
-                set(response_loaded.keys()),
-                set([u'created', u'last_modified', u'ip_address', u'alias_tiids', u'title', u'type', u'_id', u'_rev']))
-        assert_equals(len(response_loaded["_id"]), 6)
-        assert_equals(len(response_loaded["alias_tiids"]), 3)
-        aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
-        assert_equals(set(response_loaded["alias_tiids"].keys()), set(aliases_strings))
+        resp_loaded = json.loads(response.data)
+        assert_equals(resp_loaded.keys(), ["key", "collection"])
+
 
     def test_collection_get_with_no_id(self):
         response = self.client.get('/collection/')
@@ -225,24 +226,13 @@ class TestCollection(ViewsTester):
         assert_equals(csv, expected)
 
     def test_get_csv(self):
-        # put some items in the db
-        items = [
-            ["url", "http://google.com"],
-            ["url", "http://nescent.org"],
-            ["url", "http://total-impact.org"]
-        ]
-        resp = self.client.post(
-            '/items',
-            data=json.dumps(items),
-            content_type="application/json"
-        )
-        tiids = json.loads(resp.data)
 
         response = self.client.post(
             '/collection',
-            data=json.dumps({"items": tiids, "title":"My Title"}),
-            content_type="application/json")
-        collection = json.loads(response.data)
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
+            content_type="application/json"
+        )
+        collection = json.loads(response.data)["collection"]
         collection_id = collection["_id"]
 
         resp = self.client.get('/collection/'+collection_id+'.csv')
@@ -252,63 +242,33 @@ class TestCollection(ViewsTester):
         assert_equals(len(rows), 4) # header plus 3 items
 
     def test_collection_get(self):
-        # put some items in the db
-        items = [
-            ["url", "http://google.com"],
-            ["url", "http://nescent.org"],
-            ["url", "http://total-impact.org"]
-        ]
-        resp = self.client.post(
-            '/items',
-            data=json.dumps(items),
-            content_type="application/json"
-        )
-        tiids = json.loads(resp.data)
 
         response = self.client.post(
             '/collection',
-            data=json.dumps({"items": tiids, "title":"My Title"}),
-            content_type="application/json")
-        collection = json.loads(response.data)
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
+            content_type="application/json"
+        )
+        collection = json.loads(response.data)["collection"]
         collection_id = collection["_id"]
 
         resp = self.client.get('/collection/'+collection_id)
-        print resp
         assert_equals(resp.status_code, 210)
         collection_data = json.loads(resp.data)
-        assert_equals(set(collection_data.keys()), set([u'title', u'items', u'_rev', u'created', u'last_modified', u'ip_address', u'_id', u'type']))
-
-        items_urls = [item_from_db['aliases']['url'][0] for item_from_db in collection_data["items"]]
-        expected_ids = [i[1] for i in items]
-        assert_equals(set(items_urls), set(expected_ids))
-
-    def test_collection_get_include_items_false(self):
-        # put some items in the db
-        items = [
-            ["url", "http://google.com"],
-            ["url", "http://nescent.org"],
-            ["url", "http://total-impact.org"]
-        ]
-        resp = self.client.post(
-            '/items',
-            data=json.dumps(items),
-            content_type="application/json"
+        assert_equals(
+            set(collection_data.keys()),
+            {u'title',
+             u'items',
+             u'_rev',
+             u'created',
+             u'last_modified',
+             u'ip_address',
+             u'_id',
+             u'key_hash',
+             u'owner',
+             u'type'}
         )
-        tiids = json.loads(resp.data)
+        assert_equals(len(collection_data["items"]), len(self.aliases))
 
-        response = self.client.post(
-            '/collection',
-            data=json.dumps({"items": tiids, "title":"My Title"}),
-            content_type="application/json")
-        collection = json.loads(response.data)
-        collection_id = collection["_id"]
-
-        resp = self.client.get('/collection/'+collection_id+'?include_items=false')
-        print resp
-        assert_equals(resp.status_code, 200)
-        collection_data = json.loads(resp.data)
-        assert_equals(set(collection_data.keys()), set([u'title', u'_rev', u'created', u'last_modified', u'ip_address', u'alias_tiids', u'_id', u'type']))
-        assert_equals(set(collection_data["alias_tiids"].values()), set(tiids))
 
     def test_collection_update_puts_items_on_update_queue(self):
         # put some stuff in the collection:
@@ -335,7 +295,72 @@ class TestCollection(ViewsTester):
         # super hacky way to test for iso date string
         assert_equals(larry["needs_aliases"][0:4], "2012")
 
+    def test_collection_owner_set_at_creation(self):
 
+        response = self.client.post(
+            '/collection',
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection", "owner":"plato"}),
+            content_type="application/json"
+        )
+        collection = json.loads(response.data)["collection"]
+        assert_equals(collection["owner"], "plato")
+
+    def test_change_collection(self):
+
+        # make a new collection
+        response = self.client.post(
+            '/collection',
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection", "owner":"plato"}),
+            content_type="application/json"
+        )
+        resp = json.loads(response.data)
+        coll =  resp["collection"]
+        key =  resp["key"]
+
+        # change some stuff
+        coll["owner"] = "aristotle"
+        coll["title"] = "plato sux lol"
+
+        r = self.client.put(
+            "/collection/{id}?key={key}".format(id=coll["_id"], key=key),
+            data=json.dumps(coll),
+            content_type="application/json"
+        )
+
+        # get the collection out the db and see if it's the same one
+        changed_coll = self.d.get(coll["_id"])
+        assert_equals(changed_coll["title"], "plato sux lol")
+        assert_equals(changed_coll["owner"], "aristotle")
+
+
+    def test_change_collection_requires_key(self):
+
+        # make a new collection
+        response = self.client.post(
+            '/collection',
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection", "owner":"plato"}),
+            content_type="application/json"
+        )
+        resp = json.loads(response.data)
+        coll =  resp["collection"]
+        key =  resp["key"]
+
+        # change some stuff
+        coll["owner"] = "aristotle"
+        coll["title"] = "plato sux lol"
+
+        r = self.client.put(
+            "/collection/{id}".format(id=coll["_id"]),
+            data=json.dumps(coll),
+            content_type="application/json"
+        )
+
+        assert(r.status_code, 403)
+
+        # get the collection out the db and make sure nothing's changed
+        changed_coll = self.d.get(coll["_id"])
+        assert_equals(changed_coll["title"], "mah collection")
+        assert_equals(changed_coll["owner"], "plato")
 
 
 class TestApi(ViewsTester):
