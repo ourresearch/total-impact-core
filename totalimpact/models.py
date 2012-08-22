@@ -2,6 +2,7 @@ from werkzeug import generate_password_hash, check_password_hash
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact import default_settings
 from totalimpact.pidsupport import Retry
+from couchdb import ResourceNotFound, ResourceConflict
 from totalimpact.providers.provider import ProviderTimeout
 import shortuuid, string, random, datetime, hashlib, threading, json, time
 
@@ -124,8 +125,36 @@ class ItemFactory():
 
 class CollectionFactory():
 
+
     @classmethod
-    def make_id(cls, len=6):
+    def make(cls, owner=None):
+
+        key, key_hash = cls._make_update_keypair()
+
+        now = datetime.datetime.now().isoformat()
+        collection = {}
+
+        collection["_id"] = cls._make_id()
+        collection["created"] = now
+        collection["last_modified"] = now
+        collection["type"] = "collection"
+        collection["key_hash"] = key_hash
+        collection["owner"] = owner
+
+        return collection, key
+
+    @classmethod
+    def claim_collection(cls, coll, new_owner, key):
+        if "key_hash" not in coll.keys():
+            raise ValueError("This is an old collection that doesnt' support ownership.")
+        elif check_password_hash(coll["key_hash"], key):
+            coll["owner"] = new_owner
+            return coll
+        else:
+            raise ValueError("The given key doesn't match this collection's key")
+
+    @classmethod
+    def _make_id(cls, len=6):
         '''Make an id string.
 
         Currently uses only lowercase and digits for better say-ability. Six
@@ -135,17 +164,10 @@ class CollectionFactory():
         return ''.join(random.choice(choices) for x in range(len))
 
     @classmethod
-    def make(cls):
-
-        now = datetime.datetime.now().isoformat()
-        collection = {}
-
-        collection["_id"] = cls.make_id()
-        collection["created"] = now
-        collection["last_modified"] = now
-        collection["type"] = "collection"
-
-        return collection
+    def _make_update_keypair(cls):
+        key = shortuuid.uuid()
+        key_hash = generate_password_hash(key)
+        return key, key_hash
 
 
 
@@ -211,3 +233,44 @@ class MemberItems():
             self.redis.set(key, json.dumps(status))
 
         return True
+
+class UserFactory():
+
+
+    @classmethod
+    def get(cls, id, dao, password=None):
+        try:
+            hashed_id = id
+            doc = dao.db[hashed_id]
+        except ResourceNotFound:
+            return None
+
+        if password is None:
+            try:
+                del doc["pw_hash"]
+            except KeyError:
+                pass # doesn't matter, we just want to delete them if they're there.
+            return doc
+        else:
+            if check_password_hash(doc["pw_hash"], password):
+                return doc
+            else:
+                return None
+
+
+    @classmethod
+    def create(cls, id, dao, pw):
+        doc = {
+            "_id": id,
+            "type": "user",
+            "pw_hash": generate_password_hash(pw)
+        }
+
+        try:
+            dao.db.save(doc)
+        except ResourceConflict:
+            raise ValueError
+
+        return dao.db[id] # getting again so it has _rev set
+
+
