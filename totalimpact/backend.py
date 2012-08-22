@@ -180,8 +180,8 @@ class ProviderThread(StoppableThread):
             cache_enabled=True):
 
         if not aliases:
-            logger.debug("%20s: skipping %s %s %s for %s, no aliases" 
-                % (self.thread_id, provider, method_name, str(aliases), tiid))
+            logger.debug("%20s: %20s skipping %s for %s, no aliases" 
+                % (self.thread_id, provider, method_name, tiid))
             return None
 
         provides_method_name = "provides_" + method_name
@@ -193,17 +193,17 @@ class ProviderThread(StoppableThread):
                 provider_name =  provider.__class__.__name__
                 self.redis.decr_num_providers_left(tiid, provider_name)
 
-            logger.debug("%20s: skipping %s %s %s for %s, does not provide" 
-                % (self.thread_id, provider, method_name, str(aliases), tiid))
+            logger.debug("%20s: %20s skipping %s for %s, does not provide" 
+                % (self.thread_id, provider, method_name, tiid))
             return None
 
         method_to_call = getattr(provider, method_name)
         if not method_to_call:
-            logger.debug("%20s: skipping %s %s %s for %s, no method" 
-                % (self.thread_id, provider, method_name, str(aliases), tiid))
+            logger.debug("%20s: %20s skipping %s for %s, no method" 
+                % (self.thread_id, provider, method_name, tiid))
             return None
 
-        logger.debug("%20s: calling %s %s for %s" % (self.thread_id, provider, method_name, tiid))
+        logger.debug("%20s: %20s calling %s for %s" % (self.thread_id, provider, method_name, tiid))
         try:
             response = method_to_call(aliases)
             #logger.debug("%20s: response from %s %s %s for %s, %s" 
@@ -290,10 +290,10 @@ class ProviderThread(StoppableThread):
         if success:
             # response may be None for some methods and inputs
             if response:
-                logger.debug("%20s: success %s %s for %s, got %i results" 
+                logger.debug("%20s: %20s success %s for %s, got %i results" 
                     % (self.thread_id, provider, method_name, tiid, len(response)))
             else:
-                logger.debug("%20s: success %s %s for %s, got 0 results" 
+                logger.debug("%20s: %20s success %s for %s, got 0 results" 
                     % (self.thread_id, provider, method_name, tiid))
 
         return (success, response)
@@ -322,10 +322,8 @@ class ProvidersAliasThread(ProviderThread):
                 (success, new_aliases) = self.process_item_for_provider(item, provider, 'aliases')
                 if success:
                     if new_aliases:
-                        logger.debug("here are the new aliases from {provider}: {aliases}.".format(
-                            provider=provider,
-                            aliases=str(new_aliases)
-                        ))
+                        logger.debug("%20s: %20s new aliases for %s: %s" 
+                                    % (self.thread_id, provider, item["_id"], str(new_aliases)))
                         # add new aliases
                         for ns, nid in new_aliases:
                             try:
@@ -359,10 +357,10 @@ class ProvidersAliasThread(ProviderThread):
                     logger.info("%20s: NOT SUCCESS in process_item %s, partial biblio only for provider %s" 
                         % (self.thread_id, item["_id"], provider.provider_name))
 
-                logger.info("%20s: interm aliases for item %s after %s: %s" 
-                    % (self.thread_id, item["_id"], provider.provider_name, str(item["aliases"])))
-                logger.info("%20s: interm biblio for item %s after %s: %s" 
-                    % (self.thread_id, item["_id"], provider.provider_name, str(item["biblio"])))
+                #logger.debug("%20s: interm aliases for item %s after %s: %s" 
+                #    % (self.thread_id, item["_id"], provider.provider_name, str(item["aliases"])))
+                #logger.debug("%20s: interm biblio for item %s after %s: %s" 
+                #    % (self.thread_id, item["_id"], provider.provider_name, str(item["biblio"])))
 
             logger.info("%20s: final alias list for %s is %s" 
                     % (self.thread_id, item["_id"], item["aliases"]))
