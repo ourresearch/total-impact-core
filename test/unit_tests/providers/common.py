@@ -173,7 +173,7 @@ class ProviderTestCase:
             raise SkipTest
         Provider.http_get = get_empty
         aliases = self.provider.aliases([self.testitem_aliases])
-        assert_equals(aliases, [self.testitem_aliases])
+        assert_equals(aliases, [])
 
     @nottest
     @raises(ProviderContentMalformedError)

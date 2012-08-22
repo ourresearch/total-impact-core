@@ -118,13 +118,13 @@ class Pubmed(Provider):
                 self._get_error(response.status_code, response)
         return response.text
 
-    # default method; providers can override
+    # overriding so can look up in both directions
     def aliases(self, 
             aliases, 
             provider_url_template=None,
             cache_enabled=True):            
 
-        new_aliases = aliases[:]
+        new_aliases = []
         for alias in aliases:
             (namespace, nid) = alias
             if (namespace == "doi"):

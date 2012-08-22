@@ -54,15 +54,15 @@ class TestPubmed(ProviderTestCase):
     @http
     def test_aliases_from_pmid(self):
         metrics_dict = self.provider.aliases([self.testitem_aliases])
-        assert_equals(set(metrics_dict), set([('pmid', '16060722'), ('doi', u'10.1371/journal.pmed.0020124')]))
+        assert_equals(set(metrics_dict), set([('doi', u'10.1371/journal.pmed.0020124')]))
 
     @http
     def test_aliases_from_doi(self):
-        metrics_dict = self.provider.aliases([("doi", TEST_DOI)])
-        assert_equals(set(metrics_dict), set([('pmid', '19381256'), ('doi', '10.1371/journal.pcbi.1000361')]))
+        aliases_dict = self.provider.aliases([("doi", TEST_DOI)])
+        assert_equals(set(aliases_dict), set([('pmid', '19381256')]))
 
-        metrics_dict = self.provider.aliases([("doi", "TEST_DOI_HAS_NO_PMID")])
-        assert_equals(metrics_dict, [("doi", "TEST_DOI_HAS_NO_PMID")])
+        aliases_dict = self.provider.aliases([("doi", "TEST_DOI_HAS_NO_PMID")])
+        assert_equals(aliases_dict, [])
 
     @http
     def test_metrics(self):

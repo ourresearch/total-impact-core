@@ -204,7 +204,7 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
 
         if response.status_code != 200:
-            logger.warning("%s status_code=%i getting %s" 
+            logger.info("%20s status_code=%i getting %s" 
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
                 raise ProviderItemNotFoundError
@@ -258,7 +258,7 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
         
         if response.status_code != 200:
-            logger.warning("%20s WARNING, status_code=%i getting %s" 
+            logger.info("%20s status_code=%i getting %s" 
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404: #not found
                 return {}
@@ -290,7 +290,7 @@ class Provider(object):
             logger.info("%20s not checking aliases, no relevant alias" % (self.provider_name))
             return []
 
-        new_aliases = aliases[:]
+        new_aliases = []
         for alias in relevant_aliases:
             (namespace, nid) = alias
             new_aliases += self._get_aliases_for_id(nid, provider_url_template, cache_enabled)
@@ -318,7 +318,7 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
         
         if response.status_code != 200:
-            logger.warning("%20s WARNING, status_code=%i getting %s" 
+            logger.info("%20s status_code=%i getting %s" 
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
                 return []
