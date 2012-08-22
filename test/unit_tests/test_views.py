@@ -346,13 +346,21 @@ class TestCollection(ViewsTester):
         coll["owner"] = "aristotle"
         coll["title"] = "plato sux lol"
 
+        # 403 Forbidden if wrong key
+        r = self.client.put(
+            "/collection/{id}?key={key}".format(id=coll["_id"], key="bad key"),
+            data=json.dumps(coll),
+            content_type="application/json"
+        )
+        assert_equals(r.status_code, 403)
+
+        # 404 Bad Request if no key
         r = self.client.put(
             "/collection/{id}".format(id=coll["_id"]),
             data=json.dumps(coll),
             content_type="application/json"
         )
-
-        assert_equals(r.status_code, 403)
+        assert_equals(r.status_code, 404)
 
         # get the collection out the db and make sure nothing's changed
         changed_coll = self.d.get(coll["_id"])
