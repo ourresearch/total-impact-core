@@ -1,5 +1,5 @@
 from totalimpact.providers import provider
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderItemNotFoundError
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
 import re
@@ -75,9 +75,10 @@ class Dryad(Provider):
             raise ProviderContentMalformedError("Content does not contain expected text")
 
         identifiers = self._get_named_arr_str_from_xml(page, "dc.identifier", is_expected=False)
+        if not identifiers:
+            raise ProviderItemNotFoundError
 
         members = [("doi", hit.replace("doi:", "")) for hit in list(set(identifiers))]
-
         return(members)
 
 
