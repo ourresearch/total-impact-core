@@ -61,6 +61,9 @@ class Webpage(Provider):
     # use lxml because is html
     def _extract_biblio(self, page, id=None):
         biblio_dict = {}
+        if not page:
+            return biblio_dict
+            
         parsed_html = lxml.html.document_fromstring(page.encode("utf-8"))
         
         try:
