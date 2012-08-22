@@ -208,64 +208,31 @@ class CreateCollectionPage:
         if len(self.aliases) == 0:
             raise ValueError("Trying to create a collection with no aliases.")
 
-        tiids = self._create_items()
-        collection_id = self._create_collection(tiids)
+        collection_id = self._create_collection()
         report_page = ReportPage(collection_id)
         report_page.poll()
         return collection_id
 
-    def _create_items(self):
-        start = time.time()
-        logger.info("trying to create {num_aliases} new items.".format(
-            num_aliases=len(self.aliases)
-        ))
-        query = api_url + '/items'
-        data = json.dumps(self.aliases)
-        resp = requests.post(
-            query,
-            data=data,
-            headers={'Content-type': 'application/json'}
-        )
 
-        try:
-            tiids = json.loads(resp.text)
-        except ValueError:
-            logger.warning(
-                "POSTing {query} endpoint with data '{data}' returned no json, only '{resp}') ".format(
-                    query=query,
-                    data=data,
-                    resp=resp.text
-                ))
-            raise ValueError
-
-        logger.info("created {num_items} items in {elapsed} seconds.".format(
-            num_items=len(self.aliases),
-            elapsed=round(time.time() - start, 2)
-        ))
-
-        logger.debug("created these new items: " + str(tiids))
-
-        return tiids
-
-    def _create_collection(self, tiids):
+    def _create_collection(self):
         start = time.time()
         url = api_url + "/collection"
         collection_name = "[ti test] " + self.collection_name
 
-        logger.info("creating collection with {num_tiids} tiids".format(
-            num_tiids=len(tiids)
+        logger.info("creating collection with {num_aliases} tiids".format(
+            num_aliases=len(self.aliases)
         ))
-        logger.debug("creating collection with these tiids: " + str(tiids))
+        logger.debug("creating collection with these aliases: " + str(self.aliases))
 
         resp = requests.post(
             url,
             data=json.dumps({
-                "items": tiids,
+                "aliases": self.aliases,
                 "title": collection_name
             }),
             headers={'Content-type': 'application/json'}
         )
-        collection_id = json.loads(resp.text)["_id"]
+        collection_id = json.loads(resp.text)["collection"]["_id"]
 
         logger.info(
             "created collection '{id}' with {num_items} items in {elapsed} seconds.".format(
