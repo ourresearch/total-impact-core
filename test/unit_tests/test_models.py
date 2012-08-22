@@ -1,7 +1,8 @@
 from nose.tools import raises, assert_equals, nottest
 import os, unittest, hashlib, json
 from time import sleep
-
+from werkzeug.security import generate_password_hash, check_password_hash
+from couchdb import ResourceConflict
 from totalimpact import models, dao, tiredis
 from totalimpact.providers import bibtex, github
 from totalimpact.providers.provider import ProviderTimeout
@@ -241,14 +242,96 @@ class TestMemberItems():
         assert_equals(res["complete"], 4)
         assert_equals(res["memberitems"], self.memberitems_resp)
 
+class TestUserFactory():
+    def setUp(self):
+        # hacky way to delete the "ti" db, then make it fresh again for each test.
+        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
+        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+
+        self.pw = "password"
+        self.id = "ovid@rome.it"
+
+        self.user_doc = {
+            "_id": self.id,
+            "type": "user",
+            "pw_hash": generate_password_hash(self.pw)
+        }
+        self.d.save(self.user_doc)
+
+    def test_get(self):
+        user_dict = models.UserFactory.get(self.id, self.d, self.pw)
+        print user_dict
+        assert_equals(user_dict, self.user_doc)
+
+    def test_get_when_pw_is_wrong(self):
+        user_dict = models.UserFactory.get(self.id, self.d, "wrong password")
+        print user_dict
+        assert_equals(user_dict, None)
+
+    def test_get_when_username_is_wrong(self):
+        user_dict = models.UserFactory.get("wrong email", self.d, self.pw)
+        print user_dict
+        assert_equals(user_dict, None)
+
+    def test_get_without_pw(self):
+        user_dict = models.UserFactory.get(self.id, self.d)
+        assert_equals(user_dict["type"], "user")
+        assert_equals(user_dict["_id"], self.id)
+        assert "pw_hash" not in user_dict.keys()
+
+    def test_create(self):
+        doc = models.UserFactory.create("pliny@rome.it", self.d, self.pw)
+        assert_equals("pliny@rome.it",doc["_id"] )
+
+    @raises(ValueError)
+    def test_create_uses_id_already_in_db(self):
+        user = models.UserFactory.create(self.id, self.d, self.pw)
+        user2 = models.UserFactory.create(self.id, self.d, "new pw")
+
 
 
 
 class TestCollectionFactory():
 
     def test_make_creates_identifier(self):
-        coll = models.CollectionFactory.make()
+        coll, key = models.CollectionFactory.make()
         assert_equals(len(coll["_id"]), 6)
+
+    def test_make_sets_owner(self):
+        coll, key = models.CollectionFactory.make()
+        assert_equals(coll["owner"], None)
+
+        coll, key = models.CollectionFactory.make("socrates")
+        assert_equals(coll["owner"], "socrates")
+
+    def test_create_returns_collection_and_update_key(self):
+        coll, key = models.CollectionFactory.make()
+        assert check_password_hash(coll["key_hash"], key)
+
+    def test_claim_collection(self):
+        coll, key = models.CollectionFactory.make("socrates")
+        assert_equals(coll["owner"], "socrates")
+
+        coll = models.CollectionFactory.claim_collection(coll, "plato", key)
+        assert_equals(coll["owner"], "plato")
+
+    @raises(ValueError)
+    def test_claim_collection_fails_with_wrong_key(self):
+        coll, key = models.CollectionFactory.make("socrates")
+        assert_equals(coll["owner"], "socrates")
+
+        coll = models.CollectionFactory.claim_collection(coll, "plato", "wrong key")
+        assert_equals(coll["owner"], "plato")
+
+    @raises(ValueError)
+    def test_claim_collection_fails_if_key_hash_not_set(self):
+        coll, key = models.CollectionFactory.make("socrates")
+        assert_equals(coll["owner"], "socrates")
+        del coll["key_hash"]
+
+        coll = models.CollectionFactory.claim_collection(coll, "plato", key)
+        assert_equals(coll["owner"], "plato")
 
 class TestBiblio(unittest.TestCase):
     pass
