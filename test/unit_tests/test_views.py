@@ -352,7 +352,7 @@ class TestCollection(ViewsTester):
             content_type="application/json"
         )
 
-        assert(r.status_code, 403)
+        assert_equals(r.status_code, 403)
 
         # get the collection out the db and make sure nothing's changed
         changed_coll = self.d.get(coll["_id"])
