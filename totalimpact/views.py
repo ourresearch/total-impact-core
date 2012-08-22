@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from totalimpact import dao, app, tiredis
 from totalimpact.models import ItemFactory, CollectionFactory, MemberItems, UserFactory
-from totalimpact.providers.provider import ProviderFactory
+from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError
 from totalimpact import default_settings
 import logging
 
