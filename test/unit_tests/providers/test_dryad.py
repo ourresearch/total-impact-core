@@ -1,10 +1,10 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from test.utils import http
-from totalimpact.providers.provider import Provider
+from totalimpact.providers.provider import Provider, ProviderItemNotFoundError
 
 import os
-from nose.tools import assert_equals
+from nose.tools import assert_equals, raises
 import collections
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/dryad")
@@ -43,13 +43,13 @@ class TestDryad(ProviderTestCase):
         assert len(members) == 4, str(members)
         assert_equals(members, [('doi', u'10.5061/dryad.j1fd7'), ('doi', u'10.5061/dryad.mf1sd'), ('doi', u'10.5061/dryad.3td2f'), ('doi', u'10.5061/dryad.j2c4g')])
 
+    @raises(ProviderItemNotFoundError)
     def test_extract_members_zero_items(self):
         page = """<?xml version="1.0" encoding="UTF-8"?>
                 <response>
                 <lst name="responseHeader"><int name="status">0</int><int name="QTime">0</int><lst name="params"><str name="fl">dc.identifier</str><str name="q">dc.contributor.author:"Piwowar, Heather A."</str></lst></lst><result name="response" numFound="0" start="0"></result>
                 </response>"""
         members = self.provider._extract_members(page, TEST_DRYAD_AUTHOR)
-        assert len(members) == 0, str(members)
 
     def test_extract_aliases(self):
         # ensure that the dryad reader can interpret an xml doc appropriately

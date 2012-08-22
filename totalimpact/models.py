@@ -167,7 +167,7 @@ class MemberItems():
         ret = {}
         start = time.time()
         ret = {
-            "memberitems":self.provider.member_items(query),
+            "memberitems": self.provider.member_items(query),
             "pages": 1,
             "complete": 1
         }
