@@ -576,7 +576,8 @@ def _count_in_xml(page, mykey):
     return(count)
 
 
-def _lookup_xml_from_dom(doc, keylist):    
+def _lookup_xml_from_dom(doc, keylist): 
+    response = None   
     for mykey in keylist:
         if not doc:
             return None
@@ -588,16 +589,15 @@ def _lookup_xml_from_dom(doc, keylist):
         except (KeyError, IndexError):
             return None
             
-    if doc:      
-        response = doc.firstChild.data
-    else:
-        response = None
-
+    if doc:    
+        try:
+            response = doc.firstChild.data
+        except AttributeError:
+            return None
     try:
         response = int(response)
     except ValueError:
         pass
-
     return(response)
 
 def _lookup_xml_from_soup(soup, keylist):    
