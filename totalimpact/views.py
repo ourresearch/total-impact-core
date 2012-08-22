@@ -5,7 +5,7 @@ import unicodedata, re
 
 from totalimpact import dao, app, tiredis
 from totalimpact.models import ItemFactory, CollectionFactory, MemberItems
-from totalimpact.providers.provider import ProviderFactory
+from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError
 from totalimpact import default_settings
 import logging
 
@@ -325,7 +325,12 @@ def provider_memberitems_get(provider_name, query):
     provider = ProviderFactory.get_provider(provider_name)
     memberitems = MemberItems(provider, myredis)
 
-    ret = getattr(memberitems, "get_"+request.args.get('method', "sync"))(query)
+    try:
+        ret = getattr(memberitems, "get_"+request.args.get('method', "sync"))(query)
+    except ProviderItemNotFoundError:
+        abort(404)
+    except ProviderError:
+        abort(500)
 
     resp = make_response(json.dumps(ret, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
