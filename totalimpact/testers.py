@@ -85,7 +85,12 @@ class CollectionTester(object):
         sampler = fakes.IdSampler()
         ccp.enter_aliases_directly([["doi", x] for x in sampler.get_dois(5)])
         ccp.get_aliases_with_importers("github", sampler.get_github_username())
+        # include a paper known to be in the DB: it is in the official sample collection        
+        ccp.enter_aliases_directly([["doi", "10.1186/1471-2148-9-37"]])
+        logger.info("all aliases in collection {aliases}".format(aliases=str(ccp.aliases)))
+
         ccp.set_collection_name(interaction_name)
+
         return ccp.press_go_button()
 
     def read(self, interaction_name, collection_name="kn5auf"):
