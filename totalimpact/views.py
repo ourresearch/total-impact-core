@@ -391,7 +391,11 @@ def make_csv_rows(items):
         column_list = [item["_id"]]
         for alias_name in header_alias_names:
             try:
-                value_to_store = str(item['aliases'][alias_name][0]).strip()
+                value_to_store = item['aliases'][alias_name][0]
+                try:
+                    value_to_store = value_to_store.encode("utf-8").strip()
+                except AttributeError:
+                    value_to_store = str(value_to_store)
                 if (" " in value_to_store) or ("," in value_to_store):
                     value_to_store = '"' + value_to_store + '"'
                 column_list += [value_to_store]
@@ -401,7 +405,11 @@ def make_csv_rows(items):
             try:
                 values = item['metrics'][metric_name]['values']
                 latest_key = sorted(values, reverse=True)[0]
-                value_to_store = str(values[latest_key]).strip()
+                value_to_store = values[latest_key]
+                try:
+                    value_to_store = value_to_store.encode("utf-8").strip()
+                except AttributeError:
+                    value_to_store = str(value_to_store)
                 if (" " in value_to_store) or ("," in value_to_store):
                     value_to_store = '"' + value_to_store + '"'
                 column_list += [value_to_store]
