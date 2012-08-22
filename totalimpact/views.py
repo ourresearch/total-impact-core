@@ -154,18 +154,18 @@ def prep_collection_items(aliases):
         # remove unprintable characters and change list to tuples
         clean_aliases = [(clean_id(namespace), clean_id(nid)) for [namespace, nid] in aliases]
     except ValueError:
-        logger.error("bad input to POST /items (requires [namespace, id] pairs):{input}".format(
+        logger.error("bad input to POST /collection (requires [namespace, id] pairs):{input}".format(
                 input=str(clean_aliases)
             ))
-        abort(404, "POST /items requires a list of [namespace, id] pairs.")
+        abort(404, "POST /collection requires a list of [namespace, id] pairs.")
 
-    logger.debug("POST /items got list of aliases; creating new items for {aliases}".format(
+    logger.debug("POST /collection got list of aliases; creating new items for {aliases}".format(
             aliases=str(clean_aliases)
         ))
 
     (tiids, items) = create_or_find_items_from_aliases(clean_aliases)
 
-    logger.debug("POST /items saving a group of {num} new items: {items}".format(
+    logger.debug("POST /collection saving a group of {num} new items: {items}".format(
             num=len(items),
             items=str(items)
         ))
