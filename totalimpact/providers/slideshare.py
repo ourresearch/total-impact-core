@@ -1,5 +1,5 @@
 from totalimpact.providers import provider
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderItemNotFoundError
 
 import simplejson, urllib, time, hashlib, re, os
 from xml.dom import minidom 
@@ -21,7 +21,7 @@ class Slideshare(Provider):
     metrics_url_template = everything_url_template
     provenance_url_template = "%s"
 
-    sanity_check_re = re.compile("<Slideshow")
+    sanity_check_re = re.compile("<User")
 
     static_meta_dict = {
         "downloads": {
@@ -75,7 +75,10 @@ class Slideshare(Provider):
 
     def _sanity_check_page(self, page):
         if not self.sanity_check_re.search(page):
-            raise ProviderContentMalformedError
+            if ("User Not Found" in page):
+                raise ProviderItemNotFoundError
+            else:
+                raise ProviderContentMalformedError
         return True
 
     def _extract_members(self, page, query_string): 
