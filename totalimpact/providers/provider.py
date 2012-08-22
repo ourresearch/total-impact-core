@@ -633,6 +633,10 @@ def _extract_from_xml(page, dict_of_keylists):
 
             # only set metrics for non-zero and non-null metrics
             if value:
+                try:
+                    value = value.strip()  #strip spaces if any
+                except AttributeError:
+                    pass
                 return_dict[metric] = value
 
     return return_dict
