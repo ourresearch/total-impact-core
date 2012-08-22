@@ -2,6 +2,7 @@ from flask import json, request, redirect, abort, make_response
 from flask import render_template
 import os, datetime, redis, hashlib
 import unicodedata, re
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from totalimpact import dao, app, tiredis
 from totalimpact.models import ItemFactory, CollectionFactory, MemberItems, UserFactory
@@ -148,7 +149,7 @@ def create_or_find_items_from_aliases(clean_aliases):
 
 
 def prep_collection_items(aliases):
-    logger.info("POST /items got a list of aliases; creating new items for them.")
+    logger.info("got a list of aliases; creating new items for them.")
     try:
         # remove unprintable characters and change list to tuples
         clean_aliases = [(clean_id(namespace), clean_id(nid)) for [namespace, nid] in aliases]
@@ -182,31 +183,6 @@ def prep_collection_items(aliases):
         pass
 
     return tiids
-    
-
-@app.route('/items', methods=['POST'])
-def items_post():
-    """
-    Depending on input, updates, retrieves, or creates a set of items
-
-    If input is a list of tiids, it updates them.
-    If input is a list of aliases,
-        If we've already got a tiid for this alias, it get it.
-        If it's a new alias, it makes a new item for it.
-
-    In all cases, returns a list of tiids.
-    Could use much refactoring, as much code is replicated between this and /item.
-    Even better, most of this should move into a Collection or Updater model.
-    """
-    aliases = request.json
-    logger.debug("POST /items got this json: " + str(aliases))
-
-    tiids = prep_collection_items(aliases)
-
-    response_code = 201 # Created
-    resp = make_response(json.dumps(tiids), response_code)
-    resp.mimetype = "application/json"
-    return resp
 
 
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
@@ -510,8 +486,29 @@ def collection_get(cid='', format="json"):
     return resp
 
 @app.route("/collection/<cid>", methods=["PUT"])
-def collection_put_owner(cid=""):
-    pass
+def put_collection(cid=""):
+    key = request.args.get("key", None)
+    if key is None:
+        abort(404, "This method requires an update key.")
+
+    coll = dict(mydao.db[cid])
+    if "key_hash" not in coll.keys():
+        abort(501, "This collection has no update key; it cant' be changed.")
+    if not check_password_hash(coll["key_hash"], key):
+        abort(403, "Wrong update key")
+
+    for k in ["title", "owner", "alias_tiids"]:
+        try:
+            coll[k] = request.json[k]
+        except KeyError:
+            pass
+
+    coll["last_modified"] = datetime.datetime.now().isoformat()
+    print coll
+    mydao.db.save(coll)
+    resp = make_response(json.dumps(coll, sort_keys=True, indent=4), 200)
+    resp.mimetype = "application/json"
+    return resp
 
 
 
@@ -557,30 +554,21 @@ def collection_create():
     creates new collection
     """
     response_code = None
-    coll = CollectionFactory.make()
+    coll, key = CollectionFactory.make(owner=request.json.get("owner", None))
     coll["ip_address"] = request.remote_addr
     try:
         coll["title"] = request.json["title"]
+        aliases = request.json["aliases"]
+        tiids = prep_collection_items(aliases)
+        aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
 
-        if "items" in request.json.keys():
-            logger.info("collection has tiids")
-            tiids = request.json["items"]
-            # since we don't know the aliases, just use unknown for now
-            aliases_strings = ["unknown:"+tiid for tiid in tiids]
-            logger.info("tiids: " + str(tiids))
-            logger.info("aliases_strings: " + str(aliases_strings))
-        elif "aliases" in request.json.keys():
-            logger.info("collection has aliases: finding and creating tiids")
-            aliases = request.json["aliases"]
-            tiids = prep_collection_items(aliases)
-            aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
     except (AttributeError, TypeError):
         # we got missing or improperly formated data.
         logger.error(
             "we got missing or improperly formated data: '{id}' with {json}.".format(
                 id=coll["_id"],
                 json=str(request.json)))
-        abort(404)  #what is the right error message for 'needs arguments'?
+        abort(404, "Missing arguments.")
 
     # save dict of alias:tiid
     coll["alias_tiids"] = dict(zip(aliases_strings, tiids))
@@ -595,8 +583,8 @@ def collection_create():
             num_items=len(coll["alias_tiids"])
         ))
 
-    resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
-                         response_code)
+    resp = make_response(json.dumps({"collection":coll, "key":key},
+            sort_keys=True, indent=4), response_code)
     resp.mimetype = "application/json"
     return resp
 
