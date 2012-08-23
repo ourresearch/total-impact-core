@@ -113,7 +113,7 @@ class Dao(object):
                 response = self.db.save(doc)
                 retry = False
             except couchdb.ResourceConflict, e:
-                logger.info("%20s Couch conflict saving {id}; will retry" % ("dao", doc["_id"]))
+                logger.info("%20s Couch conflict saving %s; will retry" % ("dao", doc["_id"]))
                 newer_doc = self.get(doc["_id"])
                 doc["_rev"] = newer_doc["_rev"]
                 time.sleep(0.1)
