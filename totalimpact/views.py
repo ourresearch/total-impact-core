@@ -1,7 +1,8 @@
 from flask import json, request, redirect, abort, make_response
 from flask import render_template
 import os, datetime, redis, hashlib
-import unicodedata, re
+import unicodedata, re, csv, StringIO
+from collections import OrderedDict
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from totalimpact import dao, app, tiredis
@@ -372,55 +373,54 @@ def provider_biblio(provider_name, id):
 
     return resp
 
+def clean_value_for_csv(value):
+    try:
+        value_to_store = value
+        try:
+            value_to_store = value_to_store.encode("utf-8").strip()
+        except AttributeError:
+            value_to_store = str(value_to_store)
+    except (IndexError, KeyError):
+        value_to_store = ""
+    return value_to_store
+
 
 def make_csv_rows(items):
     header_metric_names = []
     for item in items:
         header_metric_names += item["metrics"].keys()
-
-    # get unique
-    header_alias_names = ["title", "doi"]
     header_metric_names = sorted(list(set(header_metric_names)))
 
+    header_alias_names = ["title", "doi"]
+
     # make header row
-    csv_list = ["tiid," + ','.join(header_alias_names + header_metric_names)]
+    header_list = ["tiid"] + header_alias_names + header_metric_names
+    ordered_fieldnames = OrderedDict([(col,None) for col in header_list])
+    mystream = StringIO.StringIO()
+    dw = csv.DictWriter(mystream, delimiter=',', dialect=csv.excel, fieldnames=ordered_fieldnames)
+    dw.writeheader()
 
     # body rows
     for item in items:
         print "keys: " + str(item.keys())
-        column_list = [item["_id"]]
+        ordered_fieldnames["tiid"] = item["_id"]
         for alias_name in header_alias_names:
             try:
-                value_to_store = item['aliases'][alias_name][0]
-                try:
-                    value_to_store = value_to_store.encode("utf-8").strip()
-                except AttributeError:
-                    value_to_store = str(value_to_store)
-                if (" " in value_to_store) or ("," in value_to_store):
-                    value_to_store = '"' + value_to_store + '"'
-                column_list += [value_to_store]
-            except (IndexError, KeyError):
-                column_list += [""]
+                ordered_fieldnames[alias_name] = clean_value_for_csv(item['aliases'][alias_name][0])
+            except (AttributeError, KeyError):
+                ordered_fieldnames[alias_name] = ""
         for metric_name in header_metric_names:
             try:
                 values = item['metrics'][metric_name]['values']
                 latest_key = sorted(values, reverse=True)[0]
-                value_to_store = values[latest_key]
-                try:
-                    value_to_store = value_to_store.encode("utf-8").strip()
-                except AttributeError:
-                    value_to_store = str(value_to_store)
-                if (" " in value_to_store) or ("," in value_to_store):
-                    value_to_store = '"' + value_to_store + '"'
-                column_list += [value_to_store]
-            except (IndexError, KeyError):
-                column_list += [""]
-        print column_list
-        csv_list.append(",".join(column_list))
-
-    # join together in a string
-    csv = "\n".join(csv_list)
-    return csv
+                ordered_fieldnames[metric_name] = clean_value_for_csv(values[latest_key])
+            except (AttributeError, KeyError):
+                ordered_fieldnames[metric_name] = ""
+        print ordered_fieldnames
+        dw.writerow(ordered_fieldnames)
+    contents = mystream.getvalue()
+    mystream.close()
+    return contents
 
 
 def retrieve_items(tiids):
