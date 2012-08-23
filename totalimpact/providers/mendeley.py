@@ -146,7 +146,6 @@ class Mendeley(Provider):
 
         url = self._get_templated_url(self.provenance_url_template, id, "provenance")
 
-        logger.debug("attempting to retrieve provenance url from " + url)
         # try to get a response from the data provider        
         response = self.http_get(url)
         if response.status_code != 200:
