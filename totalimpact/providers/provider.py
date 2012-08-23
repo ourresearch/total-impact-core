@@ -12,6 +12,8 @@ import re
 
 logger = logging.getLogger("ti.provider")
 
+# Requests' logging is too noisy
+requests_log = logging.getLogger("requests").setLevel(logging.WARNING) 
 
 class ProviderFactory(object):
 
@@ -93,6 +95,7 @@ class Provider(object):
         self.max_retries = max_retries
         self.tool_email = tool_email
         self.provider_name = self.__class__.__name__.lower()
+        self.logger = logging.getLogger("ti.providers." + self.provider_name)
 
     def __repr__(self):
         return "Provider(%s)" % self.provider_name
@@ -104,11 +107,11 @@ class Provider(object):
     def _get_error(self, status_code, response=None):
         if status_code >= 500:
             error = ProviderServerError(response)
-            logger.info("%20s ProviderServerError status code=%i, %s" 
+            self.logger.info("%20s ProviderServerError status code=%i, %s" 
                 % (self.provider_name, status_code, str(response)))
         else:
             error = ProviderClientError(response)
-            logger.info("%20s ProviderClientError status code=%i, %s" 
+            self.logger.info("%20s ProviderClientError status code=%i, %s" 
                 % (self.provider_name, status_code, str(response)))
 
         raise(error)
@@ -121,7 +124,7 @@ class Provider(object):
     def relevant_aliases(self, aliases):
         filtered = [alias for alias in aliases 
                         if self.is_relevant_alias(alias)]
-        #logger.debug("%20s relevant_aliases are %s given %s" % (self.provider_name, str(filtered), str(aliases)))
+        #self.logger.debug("%20s relevant_aliases are %s given %s" % (self.provider_name, str(filtered), str(aliases)))
 
         return filtered
 
@@ -192,7 +195,7 @@ class Provider(object):
         if not self.provides_members:
             raise NotImplementedError()
 
-        logger.debug("%20s getting member_items for %s" % (self.provider_name, query_string))
+        self.logger.debug("%20s getting member_items for %s" % (self.provider_name, query_string))
 
         if not provider_url_template:
             provider_url_template = self.member_items_url_template
@@ -204,8 +207,8 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
 
         if response.status_code != 200:
-            logger.info("%20s status_code=%i getting %s" 
-                % (self.provider_name, response.status_code, url))            
+            self.logger.info("%20s status_code=%i" 
+                % (self.provider_name, response.status_code))            
             if response.status_code == 404:
                 raise ProviderItemNotFoundError
             elif response.status_code == 303: #redirect
@@ -231,7 +234,7 @@ class Provider(object):
 
         # Only lookup biblio for items with appropriate ids
         if not id:
-            #logger.debug("%20s not checking biblio, no relevant alias" % (self.provider_name))
+            #self.logger.debug("%20s not checking biblio, no relevant alias" % (self.provider_name))
             return None
 
         if not provider_url_template:
@@ -248,7 +251,7 @@ class Provider(object):
         if not self.provides_biblio:
             return {}
 
-        logger.debug("%20s getting biblio for %s" % (self.provider_name, id))
+        self.logger.debug("%20s getting biblio for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.biblio_url_template
@@ -258,8 +261,8 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
         
         if response.status_code != 200:
-            logger.info("%20s status_code=%i getting %s" 
-                % (self.provider_name, response.status_code, url))            
+            self.logger.info("%20s status_code=%i" 
+                % (self.provider_name, response.status_code))            
             if response.status_code == 404: #not found
                 return {}
             elif response.status_code == 403: #forbidden
@@ -287,7 +290,7 @@ class Provider(object):
         relevant_aliases = self.relevant_aliases(aliases)
 
         if not relevant_aliases:
-            #logger.debug("%20s not checking aliases, no relevant alias" % (self.provider_name))
+            #self.logger.debug("%20s not checking aliases, no relevant alias" % (self.provider_name))
             return []
 
         new_aliases = []
@@ -308,7 +311,7 @@ class Provider(object):
         if not self.provides_aliases:
             return []
 
-        logger.debug("%20s getting aliases for %s" % (self.provider_name, id))
+        self.logger.debug("%20s getting aliases for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.aliases_url_template
@@ -318,8 +321,8 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
         
         if response.status_code != 200:
-            logger.info("%20s status_code=%i getting %s" 
-                % (self.provider_name, response.status_code, url))            
+            self.logger.info("%20s status_code=%i" 
+                % (self.provider_name, response.status_code))            
             if response.status_code == 404:
                 return []
             elif response.status_code == 403:  #forbidden
@@ -349,7 +352,7 @@ class Provider(object):
 
         # Only lookup metrics for items with appropriate ids
         if not id:
-            #logger.debug("%20s not checking metrics, no relevant alias" % (self.provider_name))
+            #self.logger.debug("%20s not checking metrics, no relevant alias" % (self.provider_name))
             return {}
 
         if not provider_url_template:
@@ -373,7 +376,7 @@ class Provider(object):
         if not self.provides_metrics:
             return {}
 
-        logger.debug("%20s getting metrics for %s" % (self.provider_name, id))
+        self.logger.debug("%20s getting metrics for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.metrics_url_template
@@ -382,7 +385,7 @@ class Provider(object):
         # try to get a response from the data provider                
         response = self.http_get(url, cache_enabled=cache_enabled, allow_redirects=True)
 
-        #logger.debug("%20s get_metrics_for_id response.status_code %i" % (self.provider_name, response.status_code))
+        #self.logger.debug("%20s get_metrics_for_id response.status_code %i" % (self.provider_name, response.status_code))
         
         # extract the metrics
         metrics_dict = self._extract_metrics(response.text, response.status_code, id=id)
@@ -433,7 +436,7 @@ class Provider(object):
             r = CachedResponse()
             r.status_code = cache_data['status_code']
             r.text = cache_data['text']
-            logger.debug("%20s cached GET %s" %(self.provider_name, url))
+            self.logger.debug("cache %s" %(url))
             return r
             
         # ensure that a user-agent string is set
@@ -446,10 +449,10 @@ class Provider(object):
             proxies = None
             if app.config["PROXY"]:
                 proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}
-            logger.debug("%20s live GET %s" %(self.provider_name, url))
+            self.logger.debug("LIVE %s" %(url))
             r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=allow_redirects, verify=False)
         except requests.exceptions.Timeout as e:
-            logger.info("%20s Attempt to connect to provider timed out during GET on %s" %(self.provider_name, url))
+            self.logger.info("%20s Attempt to connect to provider timed out during GET on %s" %(self.provider_name, url))
             raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
         except requests.exceptions.RequestException as e:
             raise ProviderHttpError("RequestException during GET on: " + url, e)
