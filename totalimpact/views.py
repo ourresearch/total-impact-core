@@ -373,15 +373,11 @@ def provider_biblio(provider_name, id):
 
     return resp
 
-def clean_value_for_csv(value):
+def clean_value_for_csv(value_to_store):
     try:
-        value_to_store = value
-        try:
-            value_to_store = value_to_store.encode("utf-8").strip()
-        except AttributeError:
-            value_to_store = str(value_to_store)
-    except (IndexError, KeyError):
-        value_to_store = ""
+        value_to_store = value_to_store.encode("utf-8").strip()
+    except AttributeError:
+        pass
     return value_to_store
 
 
@@ -397,6 +393,7 @@ def make_csv_rows(items):
     header_list = ["tiid"] + header_alias_names + header_metric_names
     ordered_fieldnames = OrderedDict([(col,None) for col in header_list])
     mystream = StringIO.StringIO()
+
     dw = csv.DictWriter(mystream, delimiter=',', dialect=csv.excel, fieldnames=ordered_fieldnames)
     dw.writeheader()
 
@@ -486,9 +483,11 @@ def collection_get(cid='', format="json"):
         if format == "csv":
             csv = make_csv_rows(items)
             resp = make_response(csv, response_code)
-            resp.mimetype = "text/csv"
+            resp.mimetype = "text/csv;charset=UTF-8"
             resp.headers.add("Content-Disposition",
                              "attachment; filename=ti.csv")
+            resp.headers.add("Content-Encoding",
+                             "UTF-8")
         else:
             coll["items"] = items
             del coll["alias_tiids"]
