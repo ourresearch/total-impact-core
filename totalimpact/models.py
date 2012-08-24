@@ -12,6 +12,8 @@ import shortuuid, string, random, datetime, hashlib, threading, json, time
 import logging
 logger = logging.getLogger('ti.models')
 
+class NotAuthenticatedError(Exception):
+    pass
 
 class ItemFactory():
 
@@ -322,7 +324,7 @@ class UserFactory():
             hashed_id = id
             doc = dao.db[hashed_id]
         except ResourceNotFound:
-            return None
+            raise KeyError("User doesn't exist.")
 
         if password is None:
             try:
@@ -334,11 +336,11 @@ class UserFactory():
             if check_password_hash(doc["pw_hash"], password):
                 return doc
             else:
-                return None
+                raise NotAuthenticatedError
 
 
     @classmethod
-    def create(cls, id, dao, pw):
+    def create(cls, id, pw, dao):
         doc = {
             "_id": id,
             "type": "user",
@@ -351,6 +353,19 @@ class UserFactory():
         except ResourceConflict:
             raise ValueError
 
-        return dao.db[id] # getting again so it has _rev set
+        return dict(dao.db[id]) # getting again so it has _rev set
+
+    @classmethod
+    def update(cls, userdict,  password, dao):
+        doc = cls.get(userdict["_id"], dao, password)
+        if doc is None:
+            raise KeyError("User not found.")
+
+        for k, v in userdict.iteritems():
+            if k in ["colls"]: # could add more later...
+                doc[k] = v
+
+        dao.db.save(doc)
+        return True
 
 

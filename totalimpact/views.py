@@ -6,7 +6,7 @@ from collections import OrderedDict
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from totalimpact import dao, app, tiredis
-from totalimpact.models import ItemFactory, CollectionFactory, MemberItems, UserFactory
+from totalimpact.models import ItemFactory, CollectionFactory, MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError
 from totalimpact import default_settings
 import logging
@@ -559,6 +559,8 @@ def collection_update(cid=""):
     return resp
 
 
+
+
 @app.route('/collection', methods=['POST'])
 def collection_create():
     """
@@ -601,6 +603,8 @@ def collection_create():
     return resp
 
 
+
+
 @app.route('/test/collection/<action_type>', methods=['GET'])
 def tests_interactions(action_type=''):
     logger.info("getting test/collection/" + action_type)
@@ -615,6 +619,8 @@ def tests_interactions(action_type=''):
         'interaction_test_report.html',
         report=report
     )
+
+
 
 @app.route("/collections/recent")
 @app.route("/collections/recent.<format>")
@@ -641,6 +647,8 @@ def latest_collections(format=""):
 
     return resp
 
+
+
 @app.route("/user/<userid>", methods=["POST"])
 def create_user(userid=""):
     pw = request.values.get("key")
@@ -648,7 +656,7 @@ def create_user(userid=""):
         abort(400, '"You have to include a key in the POST body."')
 
     try:
-        user = UserFactory.create(userid, mydao, pw )
+        user = UserFactory.create(userid, pw, mydao )
     except ValueError:
         abort(409, '"That username already exists."')
 
@@ -656,13 +664,49 @@ def create_user(userid=""):
     resp.mimetype = "application/json"
     return resp
 
+
+
 @app.route("/user/<userid>", methods=["GET"])
 def get_user(userid=''):
+    """
+    GET /user
+    Gets a user.
+
+    The user's private properties are not returned unless you pass a correct key.
+    """
+
     key = request.args.get("key", None)
-    user = UserFactory.get(userid, mydao, key)
-    if user is None:
-        abort(404, "User doesn't exist")
-    else:
-        resp = make_response(json.dumps(user, indent=4), 200)
-        resp.mimetype = "application/json"
-        return resp
+    try:
+        user = UserFactory.get(userid, mydao, password=key)
+    except KeyError:
+        abort(404, "User doesn't exist.")
+    except NotAuthenticatedError:
+        abort(403, "You've got the wrong password.")
+
+    resp = make_response(json.dumps(user, indent=4), 200)
+    resp.mimetype = "application/json"
+    return resp
+
+
+@app.route('/user/<userid>', methods=['PUT'])
+def update_user(userid=''):
+    """
+    PUT /collection
+    creates new collection
+    """
+
+    key = request.args.get("key", None)
+    new_stuff = request.json
+
+    try:
+        UserFactory.update(new_stuff, key, mydao)
+    except KeyError:
+        abort(404, "User doesn't exist.")
+    except NotAuthenticatedError:
+        abort(403, "You've got the wrong password.")
+
+    resp = make_response("true", 200)
+    resp.mimetype = "application/json"
+    return resp
+
+
