@@ -105,14 +105,22 @@ class Provider(object):
 
     # default method; providers can override
     def _get_error(self, status_code, response=None):
+        try:
+            headers = response.headers
+        except AttributeError:
+            headers = {}
+        try:
+            text = response.text
+        except AttributeError:
+            text = ""           
         if status_code >= 500:
             error = ProviderServerError(response)
-            self.logger.info("%20s ProviderServerError status code=%i, %s" 
-                % (self.provider_name, status_code, str(response)))
+            self.logger.info("%20s ProviderServerError status code=%i, %s, %s" 
+                % (self.provider_name, status_code, text, str(headers)))
         else:
             error = ProviderClientError(response)
-            self.logger.info("%20s ProviderClientError status code=%i, %s" 
-                % (self.provider_name, status_code, str(response)))
+            self.logger.info("%20s ProviderClientError status code=%i, %s, %s" 
+                % (self.provider_name, status_code, text, str(headers)))
 
         raise(error)
         return error
