@@ -294,6 +294,13 @@ class TestUserFactory():
 
 class TestCollectionFactory():
 
+    def setUp(self):
+        # hacky way to delete the "ti" db, then make it fresh again for each test.
+        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
+        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+
+
     def test_make_creates_identifier(self):
         coll, key = models.CollectionFactory.make()
         assert_equals(len(coll["_id"]), 6)
@@ -332,6 +339,21 @@ class TestCollectionFactory():
 
         coll = models.CollectionFactory.claim_collection(coll, "plato", key)
         assert_equals(coll["owner"], "plato")
+
+    def test_get_names(self):
+        colls = [
+            {"_id": "1", "title": "title 1"},
+            {"_id": "2", "title": "title 2"},
+            {"_id": "3", "title": "title 3"}
+        ]
+
+        # put all these in the db
+        for doc in self.d.db.update(colls):
+            pass
+
+        titlesDict = models.CollectionFactory.get_titles(["1", "2", "3"], self.d)
+        assert_equals(titlesDict["1"], "title 1")
+        assert_equals(titlesDict["3"], "title 3")
 
 class TestBiblio(unittest.TestCase):
     pass
