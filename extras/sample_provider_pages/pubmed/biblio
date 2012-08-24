@@ -1,0 +1,296 @@
+<?xml version="1.0"?>
+   <!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2012//EN" "http://www.ncbi.nlm.nih.gov/corehtml/query/DTD/pubmed_120101.dtd">
+   <PubmedArticleSet>
+   <PubmedArticle>
+       <MedlineCitation Owner="NLM" Status="MEDLINE">
+           <PMID Version="1">16060722</PMID>
+           <DateCreated>
+               <Year>2005</Year>
+               <Month>08</Month>
+               <Day>25</Day>
+           </DateCreated>
+           <DateCompleted>
+               <Year>2006</Year>
+               <Month>08</Month>
+               <Day>18</Day>
+           </DateCompleted>
+           <DateRevised>
+               <Year>2009</Year>
+               <Month>11</Month>
+               <Day>18</Day>
+           </DateRevised>
+           <Article PubModel="Print-Electronic">
+               <Journal>
+                   <ISSN IssnType="Electronic">1549-1676</ISSN>
+                   <JournalIssue CitedMedium="Internet">
+                       <Volume>2</Volume>
+                       <Issue>8</Issue>
+                       <PubDate>
+                           <Year>2005</Year>
+                           <Month>Aug</Month>
+                       </PubDate>
+                   </JournalIssue>
+                   <Title>PLoS medicine</Title>
+                   <ISOAbbreviation>PLoS Med.</ISOAbbreviation>
+               </Journal>
+               <ArticleTitle>Why most published research findings are false.</ArticleTitle>
+               <Pagination>
+                   <MedlinePgn>e124</MedlinePgn>
+               </Pagination>
+               <Abstract>
+                   <AbstractText>There is increasing concern that most current published research findings are false. The probability that a research claim is true may depend on study power and bias, the number of other studies on the same question, and, importantly, the ratio of true to no relationships among the relationships probed in each scientific field. In this framework, a research finding is less likely to be true when the studies conducted in a field are smaller; when effect sizes are smaller; when there is a greater number and lesser preselection of tested relationships; where there is greater flexibility in designs, definitions, outcomes, and analytical modes; when there is greater financial and other interest and prejudice; and when more teams are involved in a scientific field in chase of statistical significance. Simulations show that for most study designs and settings, it is more likely for a research claim to be false than true. Moreover, for many current scientific fields, claimed research findings may often be simply accurate measures of the prevailing bias. In this essay, I discuss the implications of these problems for the conduct and interpretation of research.</AbstractText>
+               </Abstract>
+               <Affiliation>Department of Hygiene and Epidemiology, University of Ioannina School of Medicine, Ioannina, Greece. jioannid@cc.uoi.gr</Affiliation>
+               <AuthorList CompleteYN="Y">
+                   <Author ValidYN="Y">
+                       <LastName>Ioannidis</LastName>
+                       <ForeName>John P A</ForeName>
+                       <Initials>JP</Initials>
+                   </Author>
+               </AuthorList>
+               <Language>eng</Language>
+               <PublicationTypeList>
+                   <PublicationType>Journal Article</PublicationType>
+               </PublicationTypeList>
+               <ArticleDate DateType="Electronic">
+                   <Year>2005</Year>
+                   <Month>08</Month>
+                   <Day>30</Day>
+               </ArticleDate>
+           </Article>
+           <MedlineJournalInfo>
+               <Country>United States</Country>
+               <MedlineTA>PLoS Med</MedlineTA>
+               <NlmUniqueID>101231360</NlmUniqueID>
+               <ISSNLinking>1549-1277</ISSNLinking>
+           </MedlineJournalInfo>
+           <CitationSubset>IM</CitationSubset>
+           <CommentsCorrectionsList>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>J Clin Epidemiol. 2005 Jun;58(6):543-9</RefSource>
+                   <PMID Version="1">15878467</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Lancet. 2003 Nov 1;362(9394):1439-44</RefSource>
+                   <PMID Version="1">14602436</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>J Biopharm Stat. 2003 Nov;13(4):675-89</RefSource>
+                   <PMID Version="1">14584715</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Trends Mol Med. 2003 Apr;9(4):135-8</RefSource>
+                   <PMID Version="1">12727138</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Lancet. 2003 Mar 8;361(9360):865-72</RefSource>
+                   <PMID Version="1">12642066</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Science. 1999 Oct 15;286(5439):531-7</RefSource>
+                   <PMID Version="1">10521349</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Stat Med. 1999 Aug 15;18(15):1905-42</RefSource>
+                   <PMID Version="1">10532877</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Lancet. 1999 Nov 27;354(9193):1896-900</RefSource>
+                   <PMID Version="1">10584742</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Stat Med. 2000 Feb 29;19(4):453-73</RefSource>
+                   <PMID Version="1">10694730</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Br J Psychiatry. 2000 Mar;176:249-52</RefSource>
+                   <PMID Version="1">10755072</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Nat Rev Cancer. 2004 Apr;4(4):309-14</RefSource>
+                   <PMID Version="1">15057290</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Lancet. 2004 May 22;363(9422):1724-7</RefSource>
+                   <PMID Version="1">15158637</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Lancet. 2004 May 22;363(9422):1728-31</RefSource>
+                   <PMID Version="1">15158638</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>JAMA. 2004 May 26;291(20):2457-65</RefSource>
+                   <PMID Version="1">15161896</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>JAMA. 1992 Jul 8;268(2):240-8</RefSource>
+                   <PMID Version="1">1535110</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>N Engl J Med. 2004 Sep 16;351(12):1250-1</RefSource>
+                   <PMID Version="1">15356289</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>N Engl J Med. 2004 Oct 21;351(17):1707-9</RefSource>
+                   <PMID Version="1">15470193</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Ann Intern Med. 2004 Nov 16;141(10):781-8</RefSource>
+                   <PMID Version="1">15545678</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Lancet. 2005 Feb 5-11;365(9458):454-5</RefSource>
+                   <PMID Version="1">15705441</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Lancet. 2005 Feb 5-11;365(9458):488-92</RefSource>
+                   <PMID Version="1">15705458</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>J Natl Cancer Inst. 2004 Mar 17;96(6):434-42</RefSource>
+                   <PMID Version="1">15026468</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>JAMA. 2005 Jul 13;294(2):218-28</RefSource>
+                   <PMID Version="1">16014596</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Stat Med. 1984 Oct-Dec;3(4):409-22</RefSource>
+                   <PMID Version="1">6528136</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Science. 1995 Jul 14;269(5221):164-9</RefSource>
+                   <PMID Version="1">7618077</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>JAMA. 1994 Jul 13;272(2):129-32</RefSource>
+                   <PMID Version="1">8015123</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Psychother Psychosom. 1998 Jul-Oct;67(4-5):194-201</RefSource>
+                   <PMID Version="1">9693346</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>JAMA. 2000 Apr 19;283(15):2008-12</RefSource>
+                   <PMID Version="1">10789670</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Nature. 2000 Jun 15;405(6788):847-56</RefSource>
+                   <PMID Version="1">10866211</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>BMJ. 2001 Jan 27;322(7280):226-31</RefSource>
+                   <PMID Version="1">11159626</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>BMJ. 2001 Apr 14;322(7291):879-80</RefSource>
+                   <PMID Version="1">11302887</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Lancet. 2001 Apr 14;357(9263):1191-4</RefSource>
+                   <PMID Version="1">11323066</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>BMC Med Res Methodol. 2001;1:3</RefSource>
+                   <PMID Version="1">11405896</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>J Epidemiol Biostat. 2001;6(2):193-204; discussion 205-10</RefSource>
+                   <PMID Version="1">11434499</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="Cites">
+                   <RefSource>Nat Genet. 2001 Nov;29(3):306-9</RefSource>
+                   <PMID Version="1">11600885</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="CommentIn">
+                   <RefSource>PLoS Med. 2007 Apr;4(4):e168</RefSource>
+                   <PMID Version="1">17456002</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="CommentIn">
+                   <RefSource>PLoS Med. 2005 Nov;2(11):e395</RefSource>
+                   <PMID Version="1">16288562</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="CommentIn">
+                   <RefSource>PLoS Med. 2005 Nov;2(11):e386; author reply e398</RefSource>
+                   <PMID Version="1">16288559</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="CommentIn">
+                   <RefSource>PLoS Med. 2005 Nov;2(11):e361</RefSource>
+                   <PMID Version="1">16288554</PMID>
+               </CommentsCorrections>
+               <CommentsCorrections RefType="CommentIn">
+                   <RefSource>PLoS Med. 2005 Aug;2(8):e272</RefSource>
+                   <PMID Version="1">16120013</PMID>
+               </CommentsCorrections>
+           </CommentsCorrectionsList>
+           <MeshHeadingList>
+               <MeshHeading>
+                   <DescriptorName MajorTopicYN="Y">Bias (Epidemiology)</DescriptorName>
+               </MeshHeading>
+               <MeshHeading>
+                   <DescriptorName MajorTopicYN="Y">Data Interpretation, Statistical</DescriptorName>
+               </MeshHeading>
+               <MeshHeading>
+                   <DescriptorName MajorTopicYN="N">Likelihood Functions</DescriptorName>
+               </MeshHeading>
+               <MeshHeading>
+                   <DescriptorName MajorTopicYN="N">Meta-Analysis as Topic</DescriptorName>
+               </MeshHeading>
+               <MeshHeading>
+                   <DescriptorName MajorTopicYN="N">Odds Ratio</DescriptorName>
+               </MeshHeading>
+               <MeshHeading>
+                   <DescriptorName MajorTopicYN="Y">Publishing</DescriptorName>
+               </MeshHeading>
+               <MeshHeading>
+                   <DescriptorName MajorTopicYN="N">Reproducibility of Results</DescriptorName>
+               </MeshHeading>
+               <MeshHeading>
+                   <DescriptorName MajorTopicYN="Y">Research Design</DescriptorName>
+               </MeshHeading>
+               <MeshHeading>
+                   <DescriptorName MajorTopicYN="N">Sample Size</DescriptorName>
+               </MeshHeading>
+           </MeshHeadingList>
+           <OtherID Source="NLM">PMC1182327</OtherID>
+       </MedlineCitation>
+       <PubmedData>
+           <History>
+               <PubMedPubDate PubStatus="aheadofprint">
+                   <Year>2005</Year>
+                   <Month>8</Month>
+                   <Day>30</Day>
+               </PubMedPubDate>
+               <PubMedPubDate PubStatus="pubmed">
+                   <Year>2005</Year>
+                   <Month>8</Month>
+                   <Day>3</Day>
+                   <Hour>9</Hour>
+                   <Minute>0</Minute>
+               </PubMedPubDate>
+               <PubMedPubDate PubStatus="medline">
+                   <Year>2006</Year>
+                   <Month>8</Month>
+                   <Day>19</Day>
+                   <Hour>9</Hour>
+                   <Minute>0</Minute>
+               </PubMedPubDate>
+               <PubMedPubDate PubStatus="entrez">
+                   <Year>2005</Year>
+                   <Month>8</Month>
+                   <Day>3</Day>
+                   <Hour>9</Hour>
+                   <Minute>0</Minute>
+               </PubMedPubDate>
+           </History>
+           <PublicationStatus>ppublish</PublicationStatus>
+           <ArticleIdList>
+               <ArticleId IdType="pii">04-PLME-E-0321R2</ArticleId>
+               <ArticleId IdType="doi">10.1371/journal.pmed.0020124</ArticleId>
+               <ArticleId IdType="pubmed">16060722</ArticleId>
+               <ArticleId IdType="pmc">PMC1182327</ArticleId>
+           </ArticleIdList>
+       </PubmedData>
+   </PubmedArticle>
+   
+   </PubmedArticleSet>
