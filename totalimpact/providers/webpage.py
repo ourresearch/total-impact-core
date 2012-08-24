@@ -47,14 +47,16 @@ class Webpage(Provider):
                 % (self.provider_name, id))
             return {}
 
-
         if response.status_code != 200:
             logger.info("%20s status_code=%i getting %s so giving up on webpage biblio" 
                 % (self.provider_name, response.status_code, url))            
             return {}
         
         # extract the aliases
-        biblio_dict = self._extract_biblio(response.text, id)
+        try:
+            biblio_dict = self._extract_biblio(response.text, id)
+        except TypeError:  #sometimes has a response but no text in it
+            return {}
 
         return biblio_dict
 
