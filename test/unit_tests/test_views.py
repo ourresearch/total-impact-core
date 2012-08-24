@@ -485,6 +485,28 @@ class TestUser(ViewsTester):
         assert_equals(resp_dict["_id"], "catullus@rome.it")
         assert "pw_hash" in resp_dict.keys()
 
+    def test_update_user(self):
+
+        # create the user
+        self.client.post("/user/catullus@rome.it", data={"key": "password", "email": "e"})
+
+        # get the new user and add a coll
+        resp = self.client.get("/user/catullus@rome.it?key=password")
+        user = json.loads(resp.data)
+        user["colls"] = ["cid:123"]
+
+        # put the new, modified user in the db
+        self.client.put(
+            "/user/catullus@rome.it?key=password",
+            data=json.dumps(user),
+            content_type="application/json"
+        )
+
+        # get the user out again, and check to see if it was modified
+        resp = self.client.get("/user/catullus@rome.it")
+        user = json.loads(resp.data)
+        assert_equals(user["colls"], ["cid:123"])
+
 
 
 

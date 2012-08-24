@@ -281,13 +281,22 @@ class TestUserFactory():
         assert "pw_hash" not in user_dict.keys()
 
     def test_create(self):
-        doc = models.UserFactory.create("pliny@rome.it", self.d, self.pw)
+        doc = models.UserFactory.create("pliny@rome.it", self.pw, self.d)
         assert_equals("pliny@rome.it",doc["_id"] )
 
     @raises(ValueError)
     def test_create_uses_id_already_in_db(self):
-        user = models.UserFactory.create(self.id, self.d, self.pw)
-        user2 = models.UserFactory.create(self.id, self.d, "new pw")
+        user = models.UserFactory.create(self.id, self.pw, self.d)
+        user2 = models.UserFactory.create(self.id, "new pw", self.d)
+
+    def test_update_user(self):
+        userdict = models.UserFactory.create("pliny@rome.it", self.pw, self.d)
+        userdict["colls"] = ["new coll!"]
+        models.UserFactory.update(userdict, self.pw, self.d)
+
+        updated_user = models.UserFactory.get("pliny@rome.it", self.d, self.pw)
+        assert_equals(updated_user["colls"], ["new coll!"])
+
 
 
 
