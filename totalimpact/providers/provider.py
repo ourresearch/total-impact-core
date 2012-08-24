@@ -566,18 +566,22 @@ def _get_doc_from_xml(page):
         raise ProviderContentMalformedError
     return (doc, lookup_function)
 
-def _count_in_xml(page, mykey):  
+def _count_in_xml(page, mykey): 
+    doc_list = _find_all_in_xml(page, mykey)
+    count = len(doc_list)
+    return(count)
+
+def _find_all_in_xml(page, mykey):  
     (doc, lookup_function) = _get_doc_from_xml(page)  
     count = 0
     if not doc:
         return None
     try:
         doc_list = doc.getElementsByTagName(mykey)
-        count = len(doc_list)
     except (KeyError, IndexError, TypeError):
-        pass
+        return None
             
-    return(count)
+    return(doc_list)
 
 
 def _lookup_xml_from_dom(doc, keylist): 

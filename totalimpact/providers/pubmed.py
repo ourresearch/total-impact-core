@@ -24,6 +24,10 @@ class Pubmed(Provider):
     aliases_from_doi_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?term=%s&email=team@total-impact.org&tool=total-impact" 
     aliases_from_pmid_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml&email=team@total-impact.org&tool=total-impact" 
 
+    aliases_pubmed_url_template = "http://www.ncbi.nlm.nih.gov/pubmed/%s"
+
+    biblio_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml&email=team@total-impact.org&tool=total-impact" 
+
     static_meta_dict = {
         "pmc_citations": {
             "display_name": "citations",
@@ -73,6 +77,19 @@ class Pubmed(Provider):
     @property
     def provides_metrics(self):
         return True
+
+    def _extract_biblio(self, page, id=None):
+        dict_of_keylists = {"year": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "PubDate", "Year"], 
+                            "title": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleTitle"],
+                            "journal": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "Title"],
+                            }
+        biblio_dict = provider._extract_from_xml(page, dict_of_keylists)
+        dom_authors = provider._find_all_in_xml(page, "LastName")
+        try:
+            biblio_dict["authors"] = ", ".join([author.firstChild.data for author in dom_authors])
+        except AttributeError:
+            pass
+        return biblio_dict  
 
     def _extract_aliases_from_doi(self, page, doi):
         dict_of_keylists = {"pmid": ["eSearchResult", "IdList", "Id"], 
@@ -132,9 +149,13 @@ class Pubmed(Provider):
                 page = self._get_eutils_page(nid, aliases_from_doi_url, cache_enabled)
                 new_aliases += self._extract_aliases_from_doi(page, nid)
             if (namespace == "pmid"):
+                # look up doi and other things on pubmed page
                 aliases_from_pmid_url = self.aliases_from_pmid_url_template %nid
                 page = self._get_eutils_page(nid, aliases_from_pmid_url, cache_enabled)
                 new_aliases += self._extract_aliases_from_pmid(page, nid)
+
+                # also, add link to paper on pubmed
+                new_aliases += [("url", self.aliases_pubmed_url_template %nid)] 
 
         new_aliases_unique = list(set(new_aliases))
         return new_aliases_unique
