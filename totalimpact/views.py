@@ -4,7 +4,7 @@ import os, datetime, redis, hashlib
 import unicodedata, re, csv, StringIO
 from collections import OrderedDict
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from simplejson import JSONDecodeError
 from totalimpact import dao, app, tiredis
 from totalimpact.models import ItemFactory, CollectionFactory, MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError
@@ -50,7 +50,9 @@ def check_api_key():
 @app.after_request
 def add_crossdomain_header(resp):
     resp.headers['Access-Control-Allow-Origin'] = "*"
+    resp.headers['Access-Control-Allow-Methods'] = "POST, GET, OPTIONS, PUT, DELETE"
     resp.headers['Access-Control-Allow-Headers'] = "Content-Type"
+
     return resp
 
 # adding a simple route to confirm working API
@@ -647,16 +649,28 @@ def latest_collections(format=""):
 
     return resp
 
-
+@app.route("/collections/<cids>")
+def get_collection_titles(cids=''):
+    cids_arr = cids.split(",")
+    coll_info = CollectionFactory.get_titles(cids_arr)
+    resp = make_response(json.dumps(rows, indent=4), 200)
+    resp.mimetype = "application/json"
+    return resp
 
 @app.route("/user/<userid>", methods=["POST"])
 def create_user(userid=""):
-    pw = request.values.get("key")
+    try:
+        pw = request.json.get("key")
+    except (AttributeError, JSONDecodeError):
+        logger.error("got no json. here's the request obj:" + str(request.data))
+        pw = None
+
     if pw is None:
         abort(400, '"You have to include a key in the POST body."')
 
+    colls = request.json.get("colls", None)
     try:
-        user = UserFactory.create(userid, pw, mydao )
+        user = UserFactory.create(userid, pw, mydao, colls)
     except ValueError:
         abort(409, '"That username already exists."')
 
@@ -675,9 +689,9 @@ def get_user(userid=''):
     The user's private properties are not returned unless you pass a correct key.
     """
 
-    key = request.args.get("key", None)
+    key = request.args.get("key")
     try:
-        user = UserFactory.get(userid, mydao, password=key)
+        user = UserFactory.get(userid, mydao, key)
     except KeyError:
         abort(404, "User doesn't exist.")
     except NotAuthenticatedError:
@@ -695,8 +709,8 @@ def update_user(userid=''):
     creates new collection
     """
 
-    key = request.args.get("key", None)
     new_stuff = request.json
+    key = new_stuff["key"]
 
     try:
         UserFactory.update(new_stuff, key, mydao)
@@ -708,5 +722,4 @@ def update_user(userid=''):
     resp = make_response("true", 200)
     resp.mimetype = "application/json"
     return resp
-
 

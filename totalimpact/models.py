@@ -319,34 +319,29 @@ class UserFactory():
 
 
     @classmethod
-    def get(cls, id, dao, password=None):
+    def get(cls, id, dao, key):
         try:
-            hashed_id = id
-            doc = dao.db[hashed_id]
+            doc = dao.db[id]
         except ResourceNotFound:
             raise KeyError("User doesn't exist.")
 
-        if password is None:
-            try:
-                del doc["pw_hash"]
-            except KeyError:
-                pass # doesn't matter, we just want to delete them if they're there.
-            return doc
         else:
-            if check_password_hash(doc["pw_hash"], password):
+            if doc["key"] == key:
                 return doc
             else:
                 raise NotAuthenticatedError
 
 
     @classmethod
-    def create(cls, id, pw, dao):
+    def create(cls, id, key, dao, colls=None):
         doc = {
             "_id": id,
             "type": "user",
-            "pw_hash": generate_password_hash(pw),
-            "colls": []
+            "key": key,
+            "colls": {}
         }
+        if colls is not None:
+            doc["colls"] = colls
 
         try:
             dao.db.save(doc)
