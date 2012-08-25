@@ -72,38 +72,52 @@ class TestCollection():
         expected = {u'dryad:package_views': [537, 0, 0, 0], u'wikipedia:mentions': [1, 0, 0, 0], u'dryad:most_downloaded_file': [70, 0, 0, 0], u'mendeley:readers': [57, 52, 13, 0], u'dryad:total_downloads': [114, 0, 0, 0], u'mendeley:groups': [4, 4, 1, 0]}
         assert_equals(response, expected)
 
+    def test_get_normalization_confidence_interval_ranges(self):
+        input = {"facebook:shares": [1, 0, 0, 0],
+            "mendeley:readers": [10, 9, 8, 7]}
+        response = collection.get_normalization_confidence_interval_ranges(input)
+        print response
+        expected = {'facebook:shares': {0: (2, 79), 1: (76, 98)}, 'mendeley:readers': {8: (20, 24), 9: (76, 79), 10: (76, 98), 7: (2, 24)}}
+        assert_equals(response, expected)
+
+        input = {"mendeley:readers": [10, 9, 9, 5, 5, 5, 4, 4, 4, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "mendeley:groups": [3, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+        response = collection.get_normalization_confidence_interval_ranges(input)
+        print response
+        expected = {'mendeley:groups': {0: (1, 94), 1: (79, 98), 2: (87, 99), 3: (91, 99)}, 'mendeley:readers': {0: (1, 60), 1: (36, 66), 2: (42, 82), 3: (61, 88), 4: (71, 93), 5: (77, 97), 9: (85, 99), 10: (91, 99)}}
+        assert_equals(response, expected)
+
     def test_calc_table_internals(self):
         # from http://www.milefoot.com/math/stat/ci-medians.htm
         response = collection.calc_confidence_interval_table(9, 0.80, [50])
-        assert_equals(response[0], 0.8203125)
-        assert_equals(response[1][50], (3,7))
+        assert_equals(response["range_sum"][50], 0.8203125)
+        assert_equals(response["limits"][50], (3,7))
 
         # from https://onlinecourses.science.psu.edu/stat414/book/export/html/231
         response = collection.calc_confidence_interval_table(9, 0.90, [50])
-        assert_equals(response[0], 0.9609375)
-        assert_equals(response[1][50], (2,8))
+        assert_equals(response["range_sum"][50], 0.9609375)
+        assert_equals(response["limits"][50], (2,8))
 
         # from https://onlinecourses.science.psu.edu/stat414/book/export/html/231
         response = collection.calc_confidence_interval_table(14, 0.90, [50])
-        assert_equals(response[0], 0.942626953125)
-        assert_equals(response[1][50], (4,11))
+        assert_equals(response["range_sum"][50], 0.942626953125)
+        assert_equals(response["limits"][50], (4,11))
 
     def test_calc_table_extremes(self):
         response = collection.calc_confidence_interval_table(9, 0.95, [90])
-        assert_equals(response[0], 0.9916689060000001)
-        assert_equals(response[1][90], (6,10))
+        assert_equals(response["range_sum"][90], 0.9916689060000001)
+        assert_equals(response["limits"][90], (6,10))
 
         response = collection.calc_confidence_interval_table(9, 0.95, [10])
-        assert_equals(response[0], 0.9916689060000002)
-        assert_equals(response[1][10], (0,4))
+        assert_equals(response["range_sum"][10], 0.9916689060000002)
+        assert_equals(response["limits"][10], (0,4))
 
     def test_calc_table(self):
         response = collection.calc_confidence_interval_table(9, 0.95, [i*10 for i in range(10)])
-        print response
-        expected = [(10, 30), (10, 40), (10, 60), (10, 60), (20, 70), (30, 80), (40, 90), (50, 90), (60, 90), (70, 90)]
-        assert_equals(response[2], expected)
+        print response["lookup_table"]
+        expected = [(10, 30), (10, 40), (10, 60), (20, 60), (30, 70), (40, 80), (50, 90), (60, 90), (70, 90)]
+        assert_equals(response["lookup_table"], expected)
 
         response = collection.calc_confidence_interval_table(50, 0.95, range(100))
-        print response
-        expected = [(1, 9), (1, 13), (1, 15), (2, 17), (3, 21), (5, 23), (6, 25), (7, 27), (8, 29), (10, 33), (12, 35), (13, 37), (14, 39), (16, 41), (18, 43), (20, 45), (21, 47), (22, 49), (24, 50), (26, 52), (28, 54), (30, 56), (32, 58), (33, 60), (34, 62), (36, 64), (38, 66), (40, 67), (42, 68), (44, 70), (46, 72), (48, 74), (50, 76), (51, 78), (53, 79), (55, 80), (57, 82), (59, 84), (61, 86), (63, 87), (65, 88), (67, 90), (71, 92), (73, 93), (75, 94), (77, 95), (79, 97), (83, 98), (85, 99), (87, 99), (91, 99)]
-        assert_equals(response[2], expected)
+        print response["lookup_table"]
+        expected = [(1, 9), (1, 13), (2, 15), (3, 17), (5, 21), (6, 23), (7, 25), (8, 27), (10, 29), (12, 33), (13, 35), (14, 37), (16, 39), (18, 41), (20, 43), (21, 45), (22, 47), (24, 49), (26, 50), (28, 52), (30, 54), (32, 56), (33, 58), (34, 60), (36, 62), (38, 64), (40, 66), (42, 67), (44, 68), (46, 70), (48, 72), (50, 74), (51, 76), (53, 78), (55, 79), (57, 80), (59, 82), (61, 84), (63, 86), (65, 87), (67, 88), (71, 90), (73, 92), (75, 93), (77, 94), (79, 95), (83, 97), (85, 98), (87, 99), (91, 99)]
+        assert_equals(response["lookup_table"], expected)

@@ -1,7 +1,7 @@
 from werkzeug import generate_password_hash, check_password_hash
 import shortuuid, string, random, datetime
 import csv, StringIO
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
@@ -98,58 +98,6 @@ def make_csv_stream(items):
     mystream.close()
     return contents
 
-
-# from http://userpages.umbc.edu/~rcampbel/Computers/Python/probstat.html
-def choose(n, k):
-    return 1 if (k == 0) else n*choose(n-1, k-1)/k
-
-def probPercentile(p, n, i):
-    prob = choose(n, i) * p**i * (1-p)**(n-i)
-    return(prob)
-
-def calc_confidence_interval_table(
-        n,                      # sample size
-        ci_thresh=0.95,         # confidence interval threshold
-        percentiles=range(8, 97, 2) # percentiles to calculate.  Median==50.
-        ):
-    ps_min = [None for i in range(n+1)]
-    ps_max = [None for i in range(n+1)]
-    limits = {}
-    for p in percentiles:
-        print(p)
-        out = {}
-        for i in range(0, n+1):
-            out[i] = probPercentile(p*0.01, n, i)
-        print(out)
-        mymax = [(i, out[i]) for i in out if out[i]==max(out.values())]
-        mymaxA = min([i for (i, val) in mymax])
-        mymaxB = max([i for (i, val) in mymax])
-        for i in range(0, n/2):
-            myrange = range(max(0, (mymaxA-i)), min(len(out), (1+mymaxB+i)))
-            mysum = sum([out[j] for j in myrange])
-            if mysum >= ci_thresh:
-                print mysum
-                limits[p] = (min(myrange), 1+max(myrange))
-                print "from index", limits[p][0], "to (but not including)", limits[p][1]
-                for i in myrange:
-                    ps_max[i] = p
-                    if not ps_min[i]:
-                        ps_min[i] = p
-                break
-    #for i in range(n-1, 0, -1):
-    #    print (i+0.0)/n, ps_min[i], ps_max[i]
-    return(mysum, limits, zip(ps_min, ps_max))
-
-def get_normalization_numbers(items):
-    metric_value_lists = get_metric_value_lists(items)
-    metrics_to_normalize = metric_value_lists.keys()
-    for key in metrics_to_normalize:
-        if ("plosalm" in key):
-            del metric_value_lists[key]
-        elif not isinstance(metric_value_lists[key][0], int):
-            del metric_value_lists[key]
-    return metric_value_lists  
-
 def get_metric_value_lists(items):
     (ordered_fieldnames, rows) = make_csv_rows(items)
     metric_values = {}
@@ -161,5 +109,94 @@ def get_metric_value_lists(items):
             values = [value if value else 0 for value in values]
             metric_values[metric_name] = sorted(values, reverse=True)
     return metric_values
+
+def get_normalization_numbers(items):
+    metric_value_lists = get_metric_value_lists(items)
+    metrics_to_normalize = metric_value_lists.keys()
+    for key in metrics_to_normalize:
+        if ("plosalm" in key):
+            del metric_value_lists[key]
+        elif not isinstance(metric_value_lists[key][0], int):
+            del metric_value_lists[key]
+    return metric_value_lists  
+
+def get_normalization_confidence_interval_ranges(metric_value_lists):
+    confidence_interval_level = 0.95
+    percentiles = range(100)
+    matches = {}
+    response = {}
+    for metric_name in metric_value_lists:
+        metric_values = sorted(metric_value_lists[metric_name], reverse=False)
+        #print metric_values
+        table_return = calc_confidence_interval_table(len(metric_values), 
+                confidence_interval_level=confidence_interval_level, 
+                percentiles=percentiles)
+        table = table_return["lookup_table"]
+        #print table
+        matches[metric_name] = defaultdict(list)
+        for i in range(len(metric_values)):
+            matches[metric_name][metric_values[i]] += [table[i]]
+        #print "matches", matches
+
+        response[metric_name] = {}
+        for metric_value in matches[metric_name]:
+            lowers = [lower for (lower, upper) in matches[metric_name][metric_value]]
+            lowest = min(lowers)
+            uppers = [upper for (lower, upper) in matches[metric_name][metric_value]]
+            highest = max(uppers)
+            response[metric_name][metric_value] = (lowest, highest)
+    return response  
+
+# from http://userpages.umbc.edu/~rcampbel/Computers/Python/probstat.html
+def choose(n, k):
+    return 1 if (k == 0) else n*choose(n-1, k-1)/k
+
+# from formula at http://www.milefoot.com/math/stat/ci-medians.htm
+def probPercentile(p, n, i):
+    prob = choose(n, i) * p**i * (1-p)**(n-i)
+    return(prob)
+
+def calc_confidence_interval_table(
+        n,                              # sample size
+        confidence_interval_level=0.95, # confidence interval threshold
+        percentiles=range(8, 97, 2) # percentiles to calculate.  Median==50.
+        ):
+    percentile_lower_bound = [None for i in range(n)]
+    percentile_upper_bound = [None for i in range(n)]
+    limits = {}
+    range_sum = {}
+    for percentile in percentiles:
+        #print(percentile)
+        order_statistic_probs = {}
+        for i in range(0, n+1):
+            order_statistic_probs[i] = probPercentile(percentile*0.01, n, i)
+        #print(order_statistic_probs)
+        max_order_statistic_prob = [(i, order_statistic_probs[i]) 
+            for i in order_statistic_probs 
+                if order_statistic_probs[i]==max(order_statistic_probs.values())]
+        lower_max_order_statistic_prob = min([i for (i, val) in max_order_statistic_prob])
+        upper_max_order_statistic_prob = max([i for (i, val) in max_order_statistic_prob])
+        for i in range(0, n/2):
+            myrange = range(max(0, (lower_max_order_statistic_prob-i)), 
+                            min(len(order_statistic_probs), (1+upper_max_order_statistic_prob+i)))
+            range_sum[percentile] = sum([order_statistic_probs[j] for j in myrange])
+            if range_sum[percentile] >= confidence_interval_level:
+                #print range_sum[percentile]
+                limits[percentile] = (min(myrange), 1+max(myrange))
+                #print "from index %i to (but not including) %i" %(limits[percentile][0], limits[percentile][1])
+                for i in myrange[0:-1]:
+                    percentile_upper_bound[i] = percentile
+                    if not percentile_lower_bound[i]:
+                        percentile_lower_bound[i] = percentile
+                break
+    #for i in range(n-1, 0, -1):
+    #    print (i+0.0)/n, ps_min[i], ps_max[i]
+    return({"range_sum":range_sum, 
+            "limits":limits, 
+            "lookup_table":zip(percentile_lower_bound, percentile_upper_bound)})
+
+
+
+
 
 
