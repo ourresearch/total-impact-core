@@ -292,12 +292,20 @@ class TestUserFactory():
         user2 = models.UserFactory.create(self.id, "new pw", self.d)
 
     def test_update_user(self):
-        userdict = models.UserFactory.create("pliny@rome.it", self.pw, self.d)
-        userdict["colls"] = ["new coll!"]
+        userdict = models.UserFactory.create(
+            "pliny@rome.it",
+            self.pw,
+            self.d,
+            colls={"cid1": "key1", "cid2":"key2"}
+        )
+        userdict["colls"]["cid3"] = "key3"
         models.UserFactory.update(userdict, self.pw, self.d)
 
         updated_user = models.UserFactory.get("pliny@rome.it", self.d, self.pw)
-        assert_equals(updated_user["colls"], ["new coll!"])
+        assert_equals(
+            updated_user["colls"],
+            {"cid1": "key1", "cid2":"key2", "cid3":"key3"}
+        )
 
 
 
