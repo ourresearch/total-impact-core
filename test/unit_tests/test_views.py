@@ -522,11 +522,14 @@ class TestUser(ViewsTester):
         user["colls"] = ["cid:123"]
 
         # put the new, modified user in the db
-        self.client.put(
+        res = self.client.put(
             "/user/catullus@rome.it",
             data=json.dumps(user),
             content_type="application/json"
         )
+
+        returned_user = json.loads(res.data)
+        assert_equals(returned_user["_id"], "catullus@rome.it")
 
         # get the user out again, and check to see if it was modified
         resp = self.client.get("/user/catullus@rome.it?key=passwordhash")

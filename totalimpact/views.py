@@ -713,13 +713,13 @@ def update_user(userid=''):
     key = new_stuff["key"]
 
     try:
-        UserFactory.update(new_stuff, key, mydao)
+        res = UserFactory.update(new_stuff, key, mydao)
     except KeyError:
         abort(404, "User doesn't exist.")
     except NotAuthenticatedError:
         abort(403, "You've got the wrong password.")
 
-    resp = make_response("true", 200)
+    resp = make_response(json.dumps(res, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 

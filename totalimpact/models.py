@@ -356,11 +356,9 @@ class UserFactory():
         if doc is None:
             raise KeyError("User not found.")
 
-        for k, v in userdict.iteritems():
-            if k in ["colls"]: # could add more later...
-                doc[k] = v
+        doc["colls"] = dict(doc["colls"].items() + userdict["colls"].items())
 
         dao.db.save(doc)
-        return True
+        return doc
 
 
