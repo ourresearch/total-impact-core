@@ -251,38 +251,40 @@ class TestUserFactory():
 
         self.pw = "password"
         self.id = "ovid@rome.it"
+        self.key = "ahashgeneratedbytheclient"
 
         self.user_doc = {
             "_id": self.id,
             "type": "user",
-            "pw_hash": generate_password_hash(self.pw)
+            "key": self.key
         }
         self.d.save(self.user_doc)
 
     def test_get(self):
-        user_dict = models.UserFactory.get(self.id, self.d, self.pw)
+        user_dict = models.UserFactory.get(self.id, self.d, self.key)
         print user_dict
         assert_equals(user_dict, self.user_doc)
 
+    @raises(models.NotAuthenticatedError)
     def test_get_when_pw_is_wrong(self):
         user_dict = models.UserFactory.get(self.id, self.d, "wrong password")
-        print user_dict
-        assert_equals(user_dict, None)
 
+    @raises(KeyError)
     def test_get_when_username_is_wrong(self):
         user_dict = models.UserFactory.get("wrong email", self.d, self.pw)
-        print user_dict
-        assert_equals(user_dict, None)
-
-    def test_get_without_pw(self):
-        user_dict = models.UserFactory.get(self.id, self.d)
-        assert_equals(user_dict["type"], "user")
-        assert_equals(user_dict["_id"], self.id)
-        assert "pw_hash" not in user_dict.keys()
 
     def test_create(self):
         doc = models.UserFactory.create("pliny@rome.it", self.pw, self.d)
         assert_equals("pliny@rome.it",doc["_id"] )
+
+    def test_create_with_colls(self):
+        colls = {
+            "cid1": "key1",
+            "cid2": "key2"
+        }
+        doc = models.UserFactory.create("pliny@rome.it", self.pw, self.d, colls=colls)
+        assert_equals(doc["colls"], colls)
+
 
     @raises(ValueError)
     def test_create_uses_id_already_in_db(self):

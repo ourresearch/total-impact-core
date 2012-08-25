@@ -168,6 +168,7 @@ class TestItems(ViewsTester):
         assert_equals(self.d.db.info()["doc_count"], 7)
 
 
+
 class TestCollection(ViewsTester):
 
     def setUp(self):
@@ -453,57 +454,82 @@ class TestTiid(ViewsTester):
 
 class TestUser(ViewsTester):
     def test_create(self):
-        resp = self.client.post("/user/horace@rome.it", data={"key": "password"})
+        resp = self.client.post(
+            "/user/horace@rome.it",
+            data=json.dumps({"key": "password"}),
+            content_type="application/json"
+        )
         assert_equals("horace@rome.it", json.loads(resp.data)["_id"])
 
     def test_create_if_already_exists(self):
-        resp = self.client.post("/user/ovid@rome.it", data={"key": "password"})
-        resp2 = self.client.post("/user/ovid@rome.it", data={"key": "another password"})
+        resp = self.client.post(
+            "/user/ovid@rome.it",
+            data=json.dumps({"key": "password"}),
+            content_type="application/json"
+        )
+        resp2 = self.client.post(
+            "/user/ovid@rome.it",
+            data=json.dumps({"key": "another password"}),
+            content_type="application/json"
+        )
         assert_equals(409, resp2.status_code)
 
     def test_create_without_key_in_post_body(self):
-        resp = self.client.post("/user/pliny@rome.it")
+        resp = self.client.post(
+            "/user/pliny@rome.it",
+            data='""',
+            content_type="application/json"
+        )
         assert_equals(400, resp.status_code)
+
+#    def test_create_with_colls(self):
+#        resp = self.client.post(
+#            "/user/pliny@rome.it",
+#            data=json.loads(["cid1", "cid2"]),
+#            content_type="application/json"
+#        )
+#        assert_equals(["cid1", "cid2"], json.loads(resp.data)["colls"])
 
     def test_get_user_doesnt_exist(self):
         resp = self.client.get("/user/test@foo.com")
         assert_equals(resp.status_code, 404)
 
     def test_get_user(self):
-        self.client.post("/user/catullus@rome.it", data={"key": "password", "email": "e"})
+        self.client.post(
+            "/user/catullus@rome.it",
+            data=json.dumps({"key": "passwordhash", "email": "e"}),
+            content_type="application/json"
+            )
 
-        # get it with no password; doesn't reveal password hash
-        resp = self.client.get("/user/catullus@rome.it")
-        assert_equals(json.loads(resp.data)["_id"], "catullus@rome.it")
-        assert "pw_hash" not in json.loads(resp.data).keys()
-
-        # get it with a password; does include password hash
-        resp = self.client.get("/user/catullus@rome.it?key=password")
+        resp = self.client.get("/user/catullus@rome.it?key=passwordhash")
         resp_dict = json.loads(resp.data)
         print resp_dict
 
         assert_equals(resp_dict["_id"], "catullus@rome.it")
-        assert "pw_hash" in resp_dict.keys()
 
     def test_update_user(self):
 
         # create the user
-        self.client.post("/user/catullus@rome.it", data={"key": "password", "email": "e"})
+        self.client.post(
+            "/user/catullus@rome.it",
+            data=json.dumps({"key": "passwordhash", "email": "e"}),
+            content_type="application/json"
+            )
 
         # get the new user and add a coll
-        resp = self.client.get("/user/catullus@rome.it?key=password")
+        resp = self.client.get("/user/catullus@rome.it?key=passwordhash")
         user = json.loads(resp.data)
         user["colls"] = ["cid:123"]
 
         # put the new, modified user in the db
         self.client.put(
-            "/user/catullus@rome.it?key=password",
+            "/user/catullus@rome.it",
             data=json.dumps(user),
             content_type="application/json"
         )
 
         # get the user out again, and check to see if it was modified
-        resp = self.client.get("/user/catullus@rome.it")
+        resp = self.client.get("/user/catullus@rome.it?key=passwordhash")
         user = json.loads(resp.data)
         assert_equals(user["colls"], ["cid:123"])
 
