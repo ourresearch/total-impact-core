@@ -1,10 +1,11 @@
 from werkzeug import generate_password_hash, check_password_hash
+from couchdb import ResourceNotFound, ResourceConflict
+import shortuuid, datetime, hashlib, threading, json, time
+
 from totalimpact.providers.provider import ProviderFactory
+from totalimpact.providers.provider import ProviderTimeout
 from totalimpact import default_settings
 from totalimpact.pidsupport import Retry
-from couchdb import ResourceNotFound, ResourceConflict
-from totalimpact.providers.provider import ProviderTimeout
-import shortuuid, string, random, datetime, hashlib, threading, json, time
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
@@ -120,54 +121,6 @@ class ItemFactory():
                 full_metric_names.append(provider.provider_name + ':' + metric_name)
         return full_metric_names
 
-
-
-
-class CollectionFactory():
-
-
-    @classmethod
-    def make(cls, owner=None):
-
-        key, key_hash = cls._make_update_keypair()
-
-        now = datetime.datetime.now().isoformat()
-        collection = {}
-
-        collection["_id"] = cls._make_id()
-        collection["created"] = now
-        collection["last_modified"] = now
-        collection["type"] = "collection"
-        collection["key_hash"] = key_hash
-        collection["owner"] = owner
-
-        return collection, key
-
-    @classmethod
-    def claim_collection(cls, coll, new_owner, key):
-        if "key_hash" not in coll.keys():
-            raise ValueError("This is an old collection that doesnt' support ownership.")
-        elif check_password_hash(coll["key_hash"], key):
-            coll["owner"] = new_owner
-            return coll
-        else:
-            raise ValueError("The given key doesn't match this collection's key")
-
-    @classmethod
-    def _make_id(cls, len=6):
-        '''Make an id string.
-
-        Currently uses only lowercase and digits for better say-ability. Six
-        places gives us around 2B possible values.
-        '''
-        choices = string.ascii_lowercase + string.digits
-        return ''.join(random.choice(choices) for x in range(len))
-
-    @classmethod
-    def _make_update_keypair(cls):
-        key = shortuuid.uuid()
-        key_hash = generate_password_hash(key)
-        return key, key_hash
 
 
 

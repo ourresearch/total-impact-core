@@ -1,19 +1,16 @@
-from flask import json, request, redirect, abort, make_response
+from flask import json, request, abort, make_response
 from flask import render_template
-import os, datetime, redis, hashlib
-import unicodedata, re, csv, StringIO
-from collections import OrderedDict
-from werkzeug.security import generate_password_hash, check_password_hash
+import os, datetime, re
+from werkzeug.security import check_password_hash
 
-from totalimpact import dao, app, tiredis
-from totalimpact.models import ItemFactory, CollectionFactory, MemberItems, UserFactory
+from totalimpact import dao, app, tiredis, collection
+from totalimpact.models import ItemFactory, MemberItems, UserFactory
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError
 from totalimpact import default_settings
 import logging
 
 logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
-redis = redis.from_url(os.getenv("REDISTOGO_URL"))
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
@@ -31,7 +28,7 @@ def clean_id(nid):
 def set_db(url, db):
     """useful for unit testing, where you want to use a local database
     """
-    global mydao
+    global mydao 
     mydao = dao.Dao(url, db)
     return mydao
 
@@ -373,53 +370,6 @@ def provider_biblio(provider_name, id):
 
     return resp
 
-def clean_value_for_csv(value_to_store):
-    try:
-        value_to_store = value_to_store.encode("utf-8").strip()
-    except AttributeError:
-        pass
-    return value_to_store
-
-
-def make_csv_rows(items):
-    header_metric_names = []
-    for item in items:
-        header_metric_names += item["metrics"].keys()
-    header_metric_names = sorted(list(set(header_metric_names)))
-
-    header_alias_names = ["title", "doi"]
-
-    # make header row
-    header_list = ["tiid"] + header_alias_names + header_metric_names
-    ordered_fieldnames = OrderedDict([(col,None) for col in header_list])
-    mystream = StringIO.StringIO()
-
-    dw = csv.DictWriter(mystream, delimiter=',', dialect=csv.excel, fieldnames=ordered_fieldnames)
-    dw.writeheader()
-
-    # body rows
-    for item in items:
-        print "keys: " + str(item.keys())
-        ordered_fieldnames["tiid"] = item["_id"]
-        for alias_name in header_alias_names:
-            try:
-                ordered_fieldnames[alias_name] = clean_value_for_csv(item['aliases'][alias_name][0])
-            except (AttributeError, KeyError):
-                ordered_fieldnames[alias_name] = ""
-        for metric_name in header_metric_names:
-            try:
-                values = item['metrics'][metric_name]['values']
-                latest_key = sorted(values, reverse=True)[0]
-                ordered_fieldnames[metric_name] = clean_value_for_csv(values[latest_key])
-            except (AttributeError, KeyError):
-                ordered_fieldnames[metric_name] = ""
-        print ordered_fieldnames
-        dw.writerow(ordered_fieldnames)
-    contents = mystream.getvalue()
-    mystream.close()
-    return contents
-
-
 def retrieve_items(tiids):
     something_currently_updating = False
     items = []
@@ -481,7 +431,7 @@ def collection_get(cid='', format="json"):
             response_code = 200
 
         if format == "csv":
-            csv = make_csv_rows(items)
+            csv = collection.make_csv_stream(items)
             resp = make_response(csv, response_code)
             resp.mimetype = "text/csv;charset=UTF-8"
             resp.headers.add("Content-Disposition",
@@ -566,7 +516,7 @@ def collection_create():
     creates new collection
     """
     response_code = None
-    coll, key = CollectionFactory.make(owner=request.json.get("owner", None))
+    coll, key = collection.make(owner=request.json.get("owner", None))
     coll["ip_address"] = request.remote_addr
     try:
         coll["title"] = request.json["title"]
@@ -605,7 +555,7 @@ def collection_create():
 def tests_interactions(action_type=''):
     logger.info("getting test/collection/" + action_type)
 
-    report = redis.hgetall("test.collection." + action_type)
+    report = myredis.hgetall("test.collection." + action_type)
     report["url"] = "http://{root}/collection/{collection_id}".format(
         root=os.getenv("WEBAPP_ROOT"),
         collection_id=report["result"]
@@ -639,7 +589,24 @@ def latest_collections(format=""):
         resp = make_response(json.dumps(rows, indent=4), 200)
         resp.mimetype = "application/json"
 
+    return resp            
+
+@app.route("/collections/reference-sets")
+def reference_sets(format=""):
+    res = mydao.db.view("queues/reference-sets", descending=True, include_docs=True)
+    all_norms = {}
+    for row in res.rows:
+        coll = row.doc
+        tiids = coll["alias_tiids"].values()
+        (items, something_currently_updating) = retrieve_items(tiids)
+        #ignore currently_updating for now
+        all_norms[coll["title"]] = collection.get_normalization_numbers(items)
+
+    resp = make_response(json.dumps(all_norms), 200)
+    resp.mimetype = "application/json"
     return resp
+
+
 
 @app.route("/user/<userid>", methods=["POST"])
 def create_user(userid=""):

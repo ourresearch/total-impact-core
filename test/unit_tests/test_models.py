@@ -1,11 +1,9 @@
 from nose.tools import raises, assert_equals, nottest
 import os, unittest, hashlib, json
 from time import sleep
-from werkzeug.security import generate_password_hash, check_password_hash
-from couchdb import ResourceConflict
+from werkzeug.security import generate_password_hash
 from totalimpact import models, dao, tiredis
 from totalimpact.providers import bibtex, github
-from totalimpact.providers.provider import ProviderTimeout
 
 COLLECTION_DATA = {
     "_id": "uuid-goes-here",
@@ -292,46 +290,4 @@ class TestUserFactory():
 
 
 
-class TestCollectionFactory():
 
-    def test_make_creates_identifier(self):
-        coll, key = models.CollectionFactory.make()
-        assert_equals(len(coll["_id"]), 6)
-
-    def test_make_sets_owner(self):
-        coll, key = models.CollectionFactory.make()
-        assert_equals(coll["owner"], None)
-
-        coll, key = models.CollectionFactory.make("socrates")
-        assert_equals(coll["owner"], "socrates")
-
-    def test_create_returns_collection_and_update_key(self):
-        coll, key = models.CollectionFactory.make()
-        assert check_password_hash(coll["key_hash"], key)
-
-    def test_claim_collection(self):
-        coll, key = models.CollectionFactory.make("socrates")
-        assert_equals(coll["owner"], "socrates")
-
-        coll = models.CollectionFactory.claim_collection(coll, "plato", key)
-        assert_equals(coll["owner"], "plato")
-
-    @raises(ValueError)
-    def test_claim_collection_fails_with_wrong_key(self):
-        coll, key = models.CollectionFactory.make("socrates")
-        assert_equals(coll["owner"], "socrates")
-
-        coll = models.CollectionFactory.claim_collection(coll, "plato", "wrong key")
-        assert_equals(coll["owner"], "plato")
-
-    @raises(ValueError)
-    def test_claim_collection_fails_if_key_hash_not_set(self):
-        coll, key = models.CollectionFactory.make("socrates")
-        assert_equals(coll["owner"], "socrates")
-        del coll["key_hash"]
-
-        coll = models.CollectionFactory.claim_collection(coll, "plato", key)
-        assert_equals(coll["owner"], "plato")
-
-class TestBiblio(unittest.TestCase):
-    pass
