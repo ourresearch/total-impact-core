@@ -121,7 +121,29 @@ class ItemFactory():
                 full_metric_names.append(provider.provider_name + ':' + metric_name)
         return full_metric_names
 
+    @classmethod
+    def retrieve_items(cls, tiids, myredis, mydao):
+        something_currently_updating = False
+        items = []
+        for tiid in tiids:
+            try:
+                item = cls.get_item(mydao, tiid)
+            except (LookupError, AttributeError), e:
+                logger.warning("Got an error looking up tiid '{tiid}'; error: {error}".format(
+                        tiid=tiid, error=e.__repr__()))
+                raise
 
+            if not item:
+                logger.warning("Looks like there's no item with tiid '{tiid}': ".format(
+                        tiid=tiid))
+                raise LookupError
+
+            currently_updating = myredis.get_num_providers_left(tiid) > 0
+            item["currently_updating"] = currently_updating
+            something_currently_updating = something_currently_updating or currently_updating
+
+            items.append(item)
+        return (items, something_currently_updating)
 
 
 

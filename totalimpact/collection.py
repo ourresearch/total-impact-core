@@ -3,6 +3,8 @@ import shortuuid, string, random, datetime
 import csv, StringIO
 from collections import OrderedDict, defaultdict
 
+from totalimpact.models import ItemFactory
+
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
 
@@ -146,6 +148,16 @@ def get_normalization_confidence_interval_ranges(metric_value_lists):
             highest = max(uppers)
             response[metric_name][metric_value] = (lowest, highest)
     return response  
+
+def get_reference_lookup(collection_doc, myredis, mydao):
+    tiids = collection_doc["alias_tiids"].values()
+    (items, something_currently_updating) = ItemFactory.retrieve_items(tiids, myredis, mydao)
+
+    #ignore currently_updating for now
+
+    normalization_numbers = get_normalization_numbers(items)
+    lookup = get_normalization_confidence_interval_ranges(normalization_numbers)
+    return lookup
 
 # from http://userpages.umbc.edu/~rcampbel/Computers/Python/probstat.html
 def choose(n, k):
