@@ -1,6 +1,6 @@
 from flask import json, request, abort, make_response
 from flask import render_template
-import os, datetime, re
+import os, datetime, re, couchdb
 from werkzeug.security import check_password_hash
 from collections import defaultdict
 
@@ -15,6 +15,15 @@ logger.setLevel(logging.DEBUG)
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
+
+logger.debug("Building reference sets")
+try:
+    myrefsets = collection.build_all_reference_lookups(myredis, mydao)
+    logger.debug("Reference sets dict has %i keys" %len(myrefsets.keys()))
+except couchdb.ResourceNotFound:
+    myrefsets = None
+    logger.error("Could not load reference sets!")
+
 
 # setup to remove control characters from received IDs
 # from http://stackoverflow.com/questions/92438/stripping-non-printable-characters-from-a-string-in-python
@@ -568,24 +577,10 @@ def latest_collections(format=""):
     return resp            
 
 @app.route("/collections/reference-sets")
-def reference_sets(format=""):
-    res = mydao.db.view("queues/reference-sets", descending=True, include_docs=True)
-    all_norms = defaultdict(dict)
-    for row in res.rows:
-        collection_doc = row.doc
-        try:
-            reference_lookup = collection.get_reference_lookup(collection_doc, myredis, mydao)
-        except (LookupError, AttributeError):       
-            abort(404)  # not found
-
-        (reference_set_name, year) = collection_doc["title"].replace("[reference-set]", "").split(":")
-        all_norms[reference_set_name][year] = reference_lookup
-
-    resp = make_response(json.dumps(all_norms, indent=4), 200)
+def reference_sets():
+    resp = make_response(json.dumps(myrefsets, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
-
-
 
 @app.route("/user/<userid>", methods=["POST"])
 def create_user(userid=""):
