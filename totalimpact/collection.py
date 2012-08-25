@@ -1,6 +1,6 @@
 from werkzeug import generate_password_hash, check_password_hash
 import shortuuid, string, random, datetime
-import csv, StringIO
+import csv, StringIO, json
 from collections import OrderedDict, defaultdict
 
 from totalimpact.models import ItemFactory
@@ -112,7 +112,7 @@ def get_metric_value_lists(items):
             metric_values[metric_name] = sorted(values, reverse=True)
     return metric_values
 
-def get_normalization_numbers(items):
+def get_metric_values_of_reference_sets(items):
     metric_value_lists = get_metric_value_lists(items)
     metrics_to_normalize = metric_value_lists.keys()
     for key in metrics_to_normalize:
@@ -122,23 +122,16 @@ def get_normalization_numbers(items):
             del metric_value_lists[key]
     return metric_value_lists  
 
-def get_normalization_confidence_interval_ranges(metric_value_lists):
-    confidence_interval_level = 0.95
-    percentiles = range(100)
+def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_interval_table):
     matches = {}
     response = {}
     for metric_name in metric_value_lists:
         metric_values = sorted(metric_value_lists[metric_name], reverse=False)
-        #print metric_values
-        table_return = calc_confidence_interval_table(len(metric_values), 
-                confidence_interval_level=confidence_interval_level, 
-                percentiles=percentiles)
-        table = table_return["lookup_table"]
-        #print table
+        if (len(confidence_interval_table) != len(metric_values)):
+            logging.error("BAD BAD")
         matches[metric_name] = defaultdict(list)
         for i in range(len(metric_values)):
-            matches[metric_name][metric_values[i]] += [table[i]]
-        #print "matches", matches
+            matches[metric_name][metric_values[i]] += [confidence_interval_table[i]]
 
         response[metric_name] = {}
         for metric_value in matches[metric_name]:
@@ -149,19 +142,48 @@ def get_normalization_confidence_interval_ranges(metric_value_lists):
             response[metric_name][metric_value] = (lowest, highest)
     return response  
 
-def get_reference_lookup(collection_doc, myredis, mydao):
+def build_reference_lookup(collection_doc, confidence_interval_table, myredis, mydao):
     tiids = collection_doc["alias_tiids"].values()
     (items, something_currently_updating) = ItemFactory.retrieve_items(tiids, myredis, mydao)
-
-    #ignore currently_updating for now
-
-    normalization_numbers = get_normalization_numbers(items)
-    lookup = get_normalization_confidence_interval_ranges(normalization_numbers)
+    normalization_numbers = get_metric_values_of_reference_sets(items)
+    lookup = get_normalization_confidence_interval_ranges(normalization_numbers, confidence_interval_table)
     return lookup
+
+def build_all_reference_lookups(myredis, mydao):
+    # for expediency, assuming all reference collections are this size
+    # risky assumption, but run with it for now!
+    size_of_reference_collections = 50
+    confidence_interval_level = 0.95
+    percentiles = range(100)
+
+    table_return = calc_confidence_interval_table(size_of_reference_collections, 
+            confidence_interval_level=confidence_interval_level, 
+            percentiles=percentiles)
+    confidence_interval_table = table_return["lookup_table"]
+    #print(json.dumps(confidence_interval_table, indent=4))
+
+    res = mydao.db.view("queues/reference-sets", descending=True, include_docs=True)
+    reference_lookup_dict = defaultdict(dict)
+    for row in res.rows:
+        collection_doc = row.doc
+        logging.info("Loading normalizations for %s" %collection_doc["title"])
+
+        (reference_set_name, year) = collection_doc["title"].replace("[reference-set]", "").split(":")
+        try:
+            reference_lookup = build_reference_lookup(collection_doc, confidence_interval_table, myredis, mydao)
+        except (LookupError, AttributeError):       
+            abort(404)  # not found
+
+        reference_lookup_dict[reference_set_name][year] = reference_lookup
+
+        ### FOR NOW JUST DO ONE YEAR.  Later, when faster, do all years
+        logging.warning("Only loading one year of normalizations till they get faster")
+        break
+    return(reference_lookup_dict)
 
 # from http://userpages.umbc.edu/~rcampbel/Computers/Python/probstat.html
 def choose(n, k):
-    return 1 if (k == 0) else n*choose(n-1, k-1)/k
+    return 1 if (k == 0) else n*choose(n-1, k-1)/k  
 
 # from formula at http://www.milefoot.com/math/stat/ci-medians.htm
 def probPercentile(p, n, i):
@@ -201,6 +223,7 @@ def calc_confidence_interval_table(
                     if not percentile_lower_bound[i]:
                         percentile_lower_bound[i] = percentile
                 break
+
     #for i in range(n-1, 0, -1):
     #    print (i+0.0)/n, ps_min[i], ps_max[i]
     return({"range_sum":range_sum, 

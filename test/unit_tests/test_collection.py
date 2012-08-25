@@ -67,15 +67,16 @@ class TestCollection():
         expected = 'tiid,title,doi,dryad:most_downloaded_file,dryad:package_views,dryad:total_downloads,mendeley:groups,mendeley:readers,plosalm:crossref,plosalm:html_views,plosalm:pdf_views,plosalm:pmc_abstract,plosalm:pmc_figure,plosalm:pmc_full-text,plosalm:pmc_pdf,plosalm:pmc_supp-data,plosalm:pmc_unique-ip,plosalm:pubmed_central,plosalm:scopus,wikipedia:mentions\r\nf2b45fcab1da11e19199c8bcc8937e3f,"Tumor-Immune Interaction, Surgical Treatment, and Cancer Recurrence in a Mathematical Model of Melanoma",10.1371/journal.pcbi.1000362,,,,1,13,7,2075,484,29,13,232,113,0,251,2,11,\r\nc1eba010b1da11e19199c8bcc8937e3f,"data from: comparison of quantitative and molecular genetic variation of native vs. invasive populations of purple loosestrife (lythrum salicaria l., lythraceae)",10.5061/dryad.1295,70,537,114,,,,,,,,,,,,,,\r\nc202754cb1da11e19199c8bcc8937e3f,Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article,10.1371/journal.pcbi.1000361,,,,4,52,13,11521,1097,70,39,624,149,6,580,12,19,1\r\nf2dc3f36b1da11e19199c8bcc8937e3f,Design Principles for Riboswitch Function,10.1371/journal.pcbi.1000363,,,,4,57,16,3361,1112,37,54,434,285,41,495,9,19,\r\n'
         assert_equals(csv, expected)
 
-    def test_get_normalization_numbers(self):
-        response = collection.get_normalization_numbers(API_ITEMS_JSON)
+    def test_get_metric_values_of_reference_sets(self):
+        response = collection.get_metric_values_of_reference_sets(API_ITEMS_JSON)
         expected = {u'dryad:package_views': [537, 0, 0, 0], u'wikipedia:mentions': [1, 0, 0, 0], u'dryad:most_downloaded_file': [70, 0, 0, 0], u'mendeley:readers': [57, 52, 13, 0], u'dryad:total_downloads': [114, 0, 0, 0], u'mendeley:groups': [4, 4, 1, 0]}
         assert_equals(response, expected)
 
     def test_get_normalization_confidence_interval_ranges(self):
         input = {"facebook:shares": [1, 0, 0, 0],
             "mendeley:readers": [10, 9, 8, 7]}
-        response = collection.get_normalization_confidence_interval_ranges(input)
+        table = collection.calc_confidence_interval_table(4, 0.80, [50])
+        response = collection.get_normalization_confidence_interval_ranges(input, table)
         print response
         expected = {'facebook:shares': {0: (2, 79), 1: (76, 98)}, 'mendeley:readers': {8: (20, 24), 9: (76, 79), 10: (76, 98), 7: (2, 24)}}
         assert_equals(response, expected)
