@@ -2,6 +2,7 @@ from flask import json, request, abort, make_response
 from flask import render_template
 import os, datetime, re
 from werkzeug.security import check_password_hash
+from collections import defaultdict
 
 from totalimpact import dao, app, tiredis, collection
 from totalimpact.models import ItemFactory, MemberItems, UserFactory
@@ -370,34 +371,6 @@ def provider_biblio(provider_name, id):
 
     return resp
 
-def retrieve_items(tiids):
-    something_currently_updating = False
-    items = []
-    for tiid in tiids:
-        try:
-            item = ItemFactory.get_item(mydao, tiid)
-        except (LookupError, AttributeError), e:
-            logger.warning(
-                "Got an error looking up tiid '{tiid}'; aborting with 404. error: {error}".format(
-                    tiid=tiid,
-                    error=e.__repr__()
-                ))
-            abort(404)
-
-        if not item:
-            logger.warning(
-                "Looks like there's no item with tiid '{tiid}': aborting with 404".format(
-                    tiid=tiid
-                ))
-            abort(404)
-
-        currently_updating = myredis.get_num_providers_left(tiid) > 0
-        item["currently_updating"] = currently_updating
-        something_currently_updating = something_currently_updating or currently_updating
-
-        items.append(item)
-    return (items, something_currently_updating)
-
 
 '''
 GET /collection/:collection_ID
@@ -422,7 +395,10 @@ def collection_get(cid='', format="json"):
             resp.mimetype = "application/json"
     else:
         tiids = coll["alias_tiids"].values()
-        (items, something_currently_updating) = retrieve_items(tiids)
+        try:
+            (items, something_currently_updating) = ItemFactory.retrieve_items(tiids, myredis, mydao)
+        except (LookupError, AttributeError):       
+            abort(404)  # not found
 
         # return success if all reporting is complete for all items    
         if something_currently_updating:
@@ -594,15 +570,18 @@ def latest_collections(format=""):
 @app.route("/collections/reference-sets")
 def reference_sets(format=""):
     res = mydao.db.view("queues/reference-sets", descending=True, include_docs=True)
-    all_norms = {}
+    all_norms = defaultdict(dict)
     for row in res.rows:
-        coll = row.doc
-        tiids = coll["alias_tiids"].values()
-        (items, something_currently_updating) = retrieve_items(tiids)
-        #ignore currently_updating for now
-        all_norms[coll["title"]] = collection.get_normalization_numbers(items)
+        collection_doc = row.doc
+        try:
+            reference_lookup = collection.get_reference_lookup(collection_doc, myredis, mydao)
+        except (LookupError, AttributeError):       
+            abort(404)  # not found
 
-    resp = make_response(json.dumps(all_norms), 200)
+        (reference_set_name, year) = collection_doc["title"].replace("[reference-set]", "").split(":")
+        all_norms[reference_set_name][year] = reference_lookup
+
+    resp = make_response(json.dumps(all_norms, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
