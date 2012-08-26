@@ -249,14 +249,16 @@ class TestUserFactory():
         temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
-        self.pw = "password"
         self.id = "ovid@rome.it"
         self.key = "ahashgeneratedbytheclient"
 
         self.user_doc = {
             "_id": self.id,
-            "type": "user",
-            "key": self.key
+            "key": self.key,
+            "colls": {
+                "cid1": "key1",
+                "cid2": "key2"
+            }
         }
         self.d.save(self.user_doc)
 
@@ -271,37 +273,21 @@ class TestUserFactory():
 
     @raises(KeyError)
     def test_get_when_username_is_wrong(self):
-        user_dict = models.UserFactory.get("wrong email", self.d, self.pw)
+        user_dict = models.UserFactory.get("wrong email", self.d, self.key)
 
     def test_create(self):
-        doc = models.UserFactory.create("pliny@rome.it", self.pw, self.d)
-        assert_equals("pliny@rome.it",doc["_id"] )
-
-    def test_create_with_colls(self):
-        colls = {
-            "cid1": "key1",
-            "cid2": "key2"
-        }
-        doc = models.UserFactory.create("pliny@rome.it", self.pw, self.d, colls=colls)
-        assert_equals(doc["colls"], colls)
-
-
-    @raises(ValueError)
-    def test_create_uses_id_already_in_db(self):
-        user = models.UserFactory.create(self.id, self.pw, self.d)
-        user2 = models.UserFactory.create(self.id, "new pw", self.d)
+        self.user_doc["_id"] = "new person"
+        doc = models.UserFactory.put(self.user_doc, self.key, self.d)
+        assert_equals("new person",doc["_id"] )
+        assert_equals(self.key, doc["key"] )
 
     def test_update_user(self):
-        userdict = models.UserFactory.create(
-            "pliny@rome.it",
-            self.pw,
-            self.d,
-            colls={"cid1": "key1", "cid2":"key2"}
-        )
-        userdict["colls"]["cid3"] = "key3"
-        models.UserFactory.update(userdict, self.pw, self.d)
 
-        updated_user = models.UserFactory.get("pliny@rome.it", self.d, self.pw)
+        # modify the user, then put it again
+        self.user_doc["colls"]["cid3"] = "key3"
+        models.UserFactory.put(self.user_doc, self.key, self.d)
+
+        updated_user = models.UserFactory.get("pliny@rome.it", self.d, self.key)
         assert_equals(
             updated_user["colls"],
             {"cid1": "key1", "cid2":"key2", "cid3":"key3"}

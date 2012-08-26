@@ -651,30 +651,11 @@ def latest_collections(format=""):
 
 @app.route("/collections/<cids>")
 def get_collection_titles(cids=''):
+    from time import sleep
+    sleep(1)
     cids_arr = cids.split(",")
-    coll_info = CollectionFactory.get_titles(cids_arr)
-    resp = make_response(json.dumps(rows, indent=4), 200)
-    resp.mimetype = "application/json"
-    return resp
-
-@app.route("/user/<userid>", methods=["POST"])
-def create_user(userid=""):
-    try:
-        pw = request.json.get("key")
-    except (AttributeError, JSONDecodeError):
-        logger.error("got no json. here's the request obj:" + str(request.data))
-        pw = None
-
-    if pw is None:
-        abort(400, '"You have to include a key in the POST body."')
-
-    colls = request.json.get("colls", None)
-    try:
-        user = UserFactory.create(userid, pw, mydao, colls)
-    except ValueError:
-        abort(409, '"That username already exists."')
-
-    resp = make_response(json.dumps(user, indent=4), 200)
+    coll_info = CollectionFactory.get_titles(cids_arr, mydao)
+    resp = make_response(json.dumps(coll_info, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
