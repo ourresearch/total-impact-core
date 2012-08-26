@@ -683,7 +683,7 @@ def get_user(userid=''):
     return resp
 
 
-@app.route('/user/<userid>', methods=['PUT'])
+@app.route('/user', methods=['PUT'])
 def update_user(userid=''):
     """
     PUT /collection
@@ -691,14 +691,16 @@ def update_user(userid=''):
     """
 
     new_stuff = request.json
-    key = new_stuff["key"]
-
     try:
-        res = UserFactory.update(new_stuff, key, mydao)
+        key = new_stuff["key"]
     except KeyError:
-        abort(404, "User doesn't exist.")
+        abort(400, "the submitted user object is missing required properties.")
+    try:
+        res = UserFactory.put(new_stuff, key, mydao)
     except NotAuthenticatedError:
         abort(403, "You've got the wrong password.")
+    except AttributeError:
+        abort(400, "the submitted user object is missing required properties.")
 
     resp = make_response(json.dumps(res, indent=4), 200)
     resp.mimetype = "application/json"

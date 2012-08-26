@@ -15,6 +15,7 @@ logger = logging.getLogger('ti.models')
 class NotAuthenticatedError(Exception):
     pass
 
+
 class ItemFactory():
 
     all_static_meta = ProviderFactory.get_all_static_meta()
@@ -338,17 +339,13 @@ class UserFactory():
     def put(cls, userdict,  password, dao):
 
         if "_id" not in userdict.keys() or "colls" not in userdict.keys():
-            return False
+            raise AttributeError
 
         try:
             doc = cls.get(userdict["_id"], dao, password)
-        except KeyError:
-            doc = None # no worries, we'll just make the user.
-
-        # we mostly overwrite, but want to merge in the server's colls
-        if doc is not None:
-            userdict["colls"] = dict(doc["colls"].items() + userdict["colls"].items())
             userdict["_rev"] = doc["_rev"]
+        except KeyError:
+            pass # no worries, we'll just make a new user.
 
         userdict["type"] = "user"
         dao.db.save(userdict)

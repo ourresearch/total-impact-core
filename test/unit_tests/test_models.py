@@ -287,7 +287,7 @@ class TestUserFactory():
         self.user_doc["colls"]["cid3"] = "key3"
         models.UserFactory.put(self.user_doc, self.key, self.d)
 
-        updated_user = models.UserFactory.get("pliny@rome.it", self.d, self.key)
+        updated_user = models.UserFactory.get("ovid@rome.it", self.d, self.key)
         assert_equals(
             updated_user["colls"],
             {"cid1": "key1", "cid2":"key2", "cid3":"key3"}
