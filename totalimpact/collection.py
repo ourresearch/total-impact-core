@@ -49,6 +49,27 @@ def _make_update_keypair():
     key_hash = generate_password_hash(key)
     return key, key_hash
 
+def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao):
+    coll = myredis.get_collection(cid)
+    if coll:
+        return (coll, False)
+
+    coll = mydao.get(cid)
+    tiids = coll["alias_tiids"].values()
+    try:
+        (items, something_currently_updating) = ItemFactory.retrieve_items(tiids, myrefsets, myredis, mydao)
+    except (LookupError, AttributeError):       
+        raise
+
+    coll["items"] = items
+    del coll["alias_tiids"]
+
+    if not something_currently_updating:
+        myredis.cache_collection(coll)
+
+    # print json.dumps(coll, sort_keys=True, indent=4)
+    return (coll, something_currently_updating)
+
 def clean_value_for_csv(value_to_store):
     try:
         value_to_store = value_to_store.encode("utf-8").strip()
@@ -142,12 +163,8 @@ def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_
             response[metric_name][metric_value] = (lowest, highest)
     return response  
 
-def build_reference_lookup(collection_doc, myrefsets, myredis, mydao):
-    tiids = collection_doc["alias_tiids"].values()
-
-    # don't pass in a reference set for getting the reference set!
-    (items, something_currently_updating) = ItemFactory.retrieve_items(tiids, None, myredis, mydao)
-    normalization_numbers = get_metric_values_of_reference_sets(items)
+def build_reference_lookup(coll_with_items, myrefsets):
+    normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])
     lookup = get_normalization_confidence_interval_ranges(normalization_numbers, myrefsets)
     return lookup
 
@@ -164,17 +181,20 @@ def build_all_reference_lookups(myredis, mydao):
     confidence_interval_table = table_return["lookup_table"]
     #print(json.dumps(confidence_interval_table, indent=4))
 
-    res = mydao.db.view("queues/reference-sets", descending=True, include_docs=True)
+    res = mydao.db.view("queues/reference-sets", descending=True, include_docs=False)
     reference_lookup_dict = defaultdict(dict)
     for row in res.rows:
-        collection_doc = row.doc
-        logging.info("Loading normalizations for %s" %collection_doc["title"])
-
-        (reference_set_name, year) = collection_doc["title"].replace("[reference-set]", "").split(":")
+        cid = row.id
         try:
-            reference_lookup = build_reference_lookup(collection_doc, confidence_interval_table, myredis, mydao)
+            # send it without reference sets because we are trying to load the reference sets here!
+            (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)
         except (LookupError, AttributeError):       
             raise #not found
+
+        logging.info("Loading normalizations for %s" %coll_with_items["title"])
+
+        (reference_set_name, year) = coll_with_items["title"].replace("[reference-set]", "").split(":")
+        reference_lookup = build_reference_lookup(coll_with_items, confidence_interval_table)
 
         reference_lookup_dict[reference_set_name][year] = reference_lookup
 

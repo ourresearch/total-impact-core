@@ -2,10 +2,10 @@ import random_pmids
 
 query_template = "(Research Support, U.S. Gov't, P.H.S. [pt] OR nih [gr]) AND Journal Article[pt] AND {year}[dp]"
 sample_size = 50
-seed = 42
+seed = 41
 email = "team@total-impact.org"
 
-for year in range(2007, 2012):
+for year in range(2011, 2012):
 	print "\n\n"
 	print year
 	query = query_template.format(year=year)

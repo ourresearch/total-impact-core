@@ -21,8 +21,8 @@ myrefsets = None
 try:
     myrefsets = collection.build_all_reference_lookups(myredis, mydao)
     logger.debug("Reference sets dict has %i keys" %len(myrefsets.keys()))
-except (couchdb.ResourceNotFound, LookupError, AttributeError):
-    logger.error("Could not load reference sets!")
+except (couchdb.ResourceNotFound, LookupError, AttributeError), e:
+    logger.error("Exception %s: Unable to load reference sets" % (e.__repr__()))
 
 
 # setup to remove control characters from received IDs
@@ -403,9 +403,8 @@ def collection_get(cid='', format="json"):
                                  response_code)
             resp.mimetype = "application/json"
     else:
-        tiids = coll["alias_tiids"].values()
         try:
-            (items, something_currently_updating) = ItemFactory.retrieve_items(tiids, myrefsets, myredis, mydao)
+            (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao)
         except (LookupError, AttributeError):       
             abort(404)  # not found
 
@@ -416,6 +415,7 @@ def collection_get(cid='', format="json"):
             response_code = 200
 
         if format == "csv":
+            items = coll_with_items["items"]
             csv = collection.make_csv_stream(items)
             resp = make_response(csv, response_code)
             resp.mimetype = "text/csv;charset=UTF-8"
@@ -424,10 +424,7 @@ def collection_get(cid='', format="json"):
             resp.headers.add("Content-Encoding",
                              "UTF-8")
         else:
-            coll["items"] = items
-            del coll["alias_tiids"]
-            # print json.dumps(coll, sort_keys=True, indent=4)
-            resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
+            resp = make_response(json.dumps(coll_with_items, sort_keys=True, indent=4),
                                  response_code)
             resp.mimetype = "application/json"
     return resp
@@ -473,6 +470,9 @@ def collection_update(cid=""):
             cid=cid
         ))
         abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")
+
+    # expire it from redis
+    myredis.expire_collection(cid)
 
     # put each of them on the update queue
     for tiid in tiids:
