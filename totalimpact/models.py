@@ -41,9 +41,13 @@ class ItemFactory():
         return item
 
     @classmethod
-    def get_normalized_values(cls, year, metric_name, value, myrefsets):
+    def get_normalized_values(cls, genre, year, metric_name, value, myrefsets):
         # Will be passed None as myrefsets type when loading items in reference collections :)
         if not myrefsets:
+            return {}
+
+        # for now, only normalize articles
+        if genre != "article":
             return {}
 
         response = {}
@@ -83,7 +87,7 @@ class ItemFactory():
 
 
                 item["metrics"][metric_name]["values"]["raw"] = snap["value"]
-                normalized_values = cls.get_normalized_values(year, metric_name, snap["value"], myrefsets)
+                normalized_values = cls.get_normalized_values(item["biblio"]['genre'], year, metric_name, snap["value"], myrefsets)
                 item["metrics"][metric_name]["values"].update(normalized_values)
 
         return item
