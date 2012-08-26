@@ -142,11 +142,13 @@ def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_
             response[metric_name][metric_value] = (lowest, highest)
     return response  
 
-def build_reference_lookup(collection_doc, confidence_interval_table, myredis, mydao):
+def build_reference_lookup(collection_doc, myrefsets, myredis, mydao):
     tiids = collection_doc["alias_tiids"].values()
-    (items, something_currently_updating) = ItemFactory.retrieve_items(tiids, myredis, mydao)
+
+    # don't pass in a reference set for getting the reference set!
+    (items, something_currently_updating) = ItemFactory.retrieve_items(tiids, None, myredis, mydao)
     normalization_numbers = get_metric_values_of_reference_sets(items)
-    lookup = get_normalization_confidence_interval_ranges(normalization_numbers, confidence_interval_table)
+    lookup = get_normalization_confidence_interval_ranges(normalization_numbers, myrefsets)
     return lookup
 
 def build_all_reference_lookups(myredis, mydao):
@@ -172,7 +174,7 @@ def build_all_reference_lookups(myredis, mydao):
         try:
             reference_lookup = build_reference_lookup(collection_doc, confidence_interval_table, myredis, mydao)
         except (LookupError, AttributeError):       
-            abort(404)  # not found
+            raise #not found
 
         reference_lookup_dict[reference_set_name][year] = reference_lookup
 
@@ -182,6 +184,7 @@ def build_all_reference_lookups(myredis, mydao):
     return(reference_lookup_dict)
 
 # from http://userpages.umbc.edu/~rcampbel/Computers/Python/probstat.html
+# also called binomial coefficient
 def choose(n, k):
     return 1 if (k == 0) else n*choose(n-1, k-1)/k  
 

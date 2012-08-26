@@ -17,11 +17,11 @@ mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
 
 logger.debug("Building reference sets")
+myrefsets = None
 try:
     myrefsets = collection.build_all_reference_lookups(myredis, mydao)
     logger.debug("Reference sets dict has %i keys" %len(myrefsets.keys()))
-except couchdb.ResourceNotFound:
-    myrefsets = None
+except (couchdb.ResourceNotFound, LookupError, AttributeError):
     logger.error("Could not load reference sets!")
 
 
@@ -228,7 +228,7 @@ def item(tiid, format=None):
     # TODO check request headers for format as well.
 
     try:
-        item = ItemFactory.get_item(mydao, tiid)
+        item = ItemFactory.get_item(tiid, myrefsets, mydao)
     except (LookupError, AttributeError):
         abort(404)
 
@@ -405,7 +405,7 @@ def collection_get(cid='', format="json"):
     else:
         tiids = coll["alias_tiids"].values()
         try:
-            (items, something_currently_updating) = ItemFactory.retrieve_items(tiids, myredis, mydao)
+            (items, something_currently_updating) = ItemFactory.retrieve_items(tiids, myrefsets, myredis, mydao)
         except (LookupError, AttributeError):       
             abort(404)  # not found
 
