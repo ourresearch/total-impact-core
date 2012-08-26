@@ -453,88 +453,102 @@ class TestTiid(ViewsTester):
         assert_equals(response.status_code, 404)  # Not Found
 
 class TestUser(ViewsTester):
+
     def test_create(self):
-        resp = self.client.post(
-            "/user/horace@rome.it",
-            data=json.dumps({"key": "password"}),
+
+        user = {
+            "_id": "horace@rome.it",
+            "key": "hash",
+            "colls": {}
+        }
+        resp = self.client.put(
+            "/user",
+            data=json.dumps(user),
             content_type="application/json"
         )
         assert_equals("horace@rome.it", json.loads(resp.data)["_id"])
 
-    def test_create_if_already_exists(self):
-        resp = self.client.post(
-            "/user/ovid@rome.it",
-            data=json.dumps({"key": "password"}),
-            content_type="application/json"
-        )
-        resp2 = self.client.post(
-            "/user/ovid@rome.it",
-            data=json.dumps({"key": "another password"}),
-            content_type="application/json"
-        )
-        assert_equals(409, resp2.status_code)
 
-    def test_create_without_key_in_post_body(self):
-        resp = self.client.post(
-            "/user/pliny@rome.it",
-            data='""',
+    def test_create_without_key_in_body(self):
+        user = {
+            "_id": "horace@rome.it",
+            "colls": {}
+        }
+        resp = self.client.put(
+            "/user",
+            data=json.dumps(user),
             content_type="application/json"
         )
         assert_equals(400, resp.status_code)
 
-#    def test_create_with_colls(self):
-#        resp = self.client.post(
-#            "/user/pliny@rome.it",
-#            data=json.loads(["cid1", "cid2"]),
-#            content_type="application/json"
-#        )
-#        assert_equals(["cid1", "cid2"], json.loads(resp.data)["colls"])
+    def test_create_without_colls_in_body(self):
+        user = {
+            "_id": "horace@rome.it",
+            "key":"hash"
+        }
+        resp = self.client.put(
+            "/user",
+            data=json.dumps(user),
+            content_type="application/json"
+        )
+        assert_equals(400, resp.status_code)
+
 
     def test_get_user_doesnt_exist(self):
         resp = self.client.get("/user/test@foo.com")
         assert_equals(resp.status_code, 404)
 
     def test_get_user(self):
-        self.client.post(
-            "/user/catullus@rome.it",
-            data=json.dumps({"key": "passwordhash", "email": "e"}),
+        user = {
+            "_id": "horace@rome.it",
+            "key": "hash",
+            "colls": {}
+        }
+        r = self.client.put(
+            "/user",
+            data=json.dumps(user),
             content_type="application/json"
-            )
-
-        resp = self.client.get("/user/catullus@rome.it?key=passwordhash")
+        )
+        resp = self.client.get("/user/horace@rome.it?key=hash")
         resp_dict = json.loads(resp.data)
         print resp_dict
 
-        assert_equals(resp_dict["_id"], "catullus@rome.it")
+        assert_equals(resp_dict["_id"], "horace@rome.it")
 
     def test_update_user(self):
 
-        # create the user
-        self.client.post(
-            "/user/catullus@rome.it",
-            data=json.dumps({"key": "passwordhash", "email": "e"}),
+        user = {
+            "_id": "horace@rome.it",
+            "key": "hash",
+            "colls": {}
+        }
+        r = self.client.put(
+            "/user",
+            data=json.dumps(user),
             content_type="application/json"
-            )
+        )
 
         # get the new user and add a coll
-        resp = self.client.get("/user/catullus@rome.it?key=passwordhash")
+        resp = self.client.get("/user/horace@rome.it?key=hash")
+        assert_equals(resp.status_code, 200)
+
         user = json.loads(resp.data)
         user["colls"] = ["cid:123"]
 
         # put the new, modified user in the db
         res = self.client.put(
-            "/user/catullus@rome.it",
+            "/user",
             data=json.dumps(user),
             content_type="application/json"
         )
 
-        returned_user = json.loads(res.data)
-        assert_equals(returned_user["_id"], "catullus@rome.it")
-
-        # get the user out again, and check to see if it was modified
-        resp = self.client.get("/user/catullus@rome.it?key=passwordhash")
-        user = json.loads(resp.data)
-        assert_equals(user["colls"], ["cid:123"])
+#        returned_user = json.loads(res.data)
+#        assert_equals(returned_user["_id"], "catullus@rome.it")
+#
+#        # get the user out again, and check to see if it was modified
+#        resp = self.client.get("/user/catullus@rome.it?key=passwordhash")
+#        user = json.loads(resp.data)
+#        assert_equals(user["colls"], ["cid:123"])
 
 
 
