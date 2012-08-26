@@ -14,13 +14,16 @@ import logging
 logger = logging.getLogger('ti.models')
 
 
+def closest(target, collection) :
+    return min((abs(target - i), i) for i in collection)[1]
+
 class ItemFactory():
 
     all_static_meta = ProviderFactory.get_all_static_meta()
 
 
     @classmethod
-    def get_item(cls, dao, tiid):
+    def get_item(cls, tiid, myrefsets, dao):
         res = dao.view("queues/by_tiid_with_snaps")
         rows = res[[tiid,0]:[tiid,1]].rows
 
@@ -30,18 +33,45 @@ class ItemFactory():
             item = rows[0]["value"]
             snaps = [row["value"] for row in rows[1:]]
             try:
-                item = cls.build_item_for_client(item, snaps)
+                item = cls.build_item_for_client(item, snaps, myrefsets)
             except Exception, e:
                 item = None
                 logger.error("Exception %s: Unable to build item %s, %s, %s" % (e.__repr__(), tiid, str(item), str(snaps)))
+                raise
         return item
 
     @classmethod
-    def build_item_for_client(cls, item, snaps):
-        item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
+    def get_normalized_values(cls, year, metric_name, value, myrefsets):
+        # Will be passed None as myrefsets type when loading items in reference collections :)
+        if not myrefsets:
+            return {}
 
-            
+        response = {}
+        for refsetname in myrefsets:
+            # for now, just use 2011.  Hack till can load them all.
+            year = "2011"
+
+            try:
+                fencepost_values = myrefsets[refsetname][year][metric_name].keys()
+                myclosest = closest(value, fencepost_values)
+                response[refsetname] = myrefsets[refsetname][year][metric_name][myclosest]
+            except KeyError:
+                logger.info("No good lookup in %s %s for %s" %(refsetname, year, metric_name))
+
+        return response
+
+    @classmethod
+    def build_item_for_client(cls, item, snaps, myrefsets):
+        item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
+           
         item["metrics"] = {} #not using what is in stored item for this
+
+        # need year to calculate normalization below
+        try:
+            year = item["biblio"]["year"]
+        except KeyError:
+            year = "2011" # hack.  what else to do?
+
         for snap in snaps:
             metric_name = snap["metric_name"]
             if metric_name in cls.all_static_meta.keys():
@@ -50,9 +80,13 @@ class ItemFactory():
                 item["metrics"][metric_name]["values"][snap["created"]] = snap["value"]
                 item["metrics"][metric_name]["provenance_url"] = snap["drilldown_url"]
                 item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
-        return item
-    
 
+
+                item["metrics"][metric_name]["values"]["raw"] = snap["value"]
+                normalized_values = cls.get_normalized_values(year, metric_name, snap["value"], myrefsets)
+                item["metrics"][metric_name]["values"].update(normalized_values)
+
+        return item
 
     @classmethod
     def build_snap(cls, tiid, metric_value_drilldown, metric_name):
@@ -122,12 +156,12 @@ class ItemFactory():
         return full_metric_names
 
     @classmethod
-    def retrieve_items(cls, tiids, myredis, mydao):
+    def retrieve_items(cls, tiids, myrefsets, myredis, mydao):
         something_currently_updating = False
         items = []
         for tiid in tiids:
             try:
-                item = cls.get_item(mydao, tiid)
+                item = cls.get_item(tiid, myrefsets, mydao)
             except (LookupError, AttributeError), e:
                 logger.warning("Got an error looking up tiid '{tiid}'; error: {error}".format(
                         tiid=tiid, error=e.__repr__()))

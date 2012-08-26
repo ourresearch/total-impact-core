@@ -75,16 +75,10 @@ class TestCollection():
     def test_get_normalization_confidence_interval_ranges(self):
         input = {"facebook:shares": [1, 0, 0, 0],
             "mendeley:readers": [10, 9, 8, 7]}
-        table = collection.calc_confidence_interval_table(4, 0.80, [50])
+        table = [(10, 30), (10, 60), (40, 80), (50, 90), (60, 90)]
         response = collection.get_normalization_confidence_interval_ranges(input, table)
         print response
-        expected = {'facebook:shares': {0: (2, 79), 1: (76, 98)}, 'mendeley:readers': {8: (20, 24), 9: (76, 79), 10: (76, 98), 7: (2, 24)}}
-        assert_equals(response, expected)
-
-        input = {"mendeley:readers": [10, 9, 9, 5, 5, 5, 4, 4, 4, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "mendeley:groups": [3, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
-        response = collection.get_normalization_confidence_interval_ranges(input)
-        print response
-        expected = {'mendeley:groups': {0: (1, 94), 1: (79, 98), 2: (87, 99), 3: (91, 99)}, 'mendeley:readers': {0: (1, 60), 1: (36, 66), 2: (42, 82), 3: (61, 88), 4: (71, 93), 5: (77, 97), 9: (85, 99), 10: (91, 99)}}
+        expected = {'facebook:shares': {0: (10, 80), 1: (50, 90)}, 'mendeley:readers': {8: (10, 60), 9: (40, 80), 10: (50, 90), 7: (10, 30)}}
         assert_equals(response, expected)
 
     def test_calc_table_internals(self):
