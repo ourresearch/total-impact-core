@@ -321,7 +321,9 @@ class UserFactory():
     @classmethod
     def get(cls, id, dao, key):
         try:
+            print id
             doc = dao.db[id]
+            print dict(doc)
         except ResourceNotFound:
             raise KeyError("User doesn't exist.")
 
@@ -333,32 +335,23 @@ class UserFactory():
 
 
     @classmethod
-    def create(cls, id, key, dao, colls=None):
-        doc = {
-            "_id": id,
-            "type": "user",
-            "key": key,
-            "colls": {}
-        }
-        if colls is not None:
-            doc["colls"] = colls
+    def put(cls, userdict,  password, dao):
+
+        if "_id" not in userdict.keys() or "colls" not in userdict.keys():
+            return False
 
         try:
-            dao.db.save(doc)
-        except ResourceConflict:
-            raise ValueError
+            doc = cls.get(userdict["_id"], dao, password)
+        except KeyError:
+            doc = None # no worries, we'll just make the user.
 
-        return dict(dao.db[id]) # getting again so it has _rev set
+        # we mostly overwrite, but want to merge in the server's colls
+        if doc is not None:
+            userdict["colls"] = dict(doc["colls"].items() + userdict["colls"].items())
+            userdict["_rev"] = doc["_rev"]
 
-    @classmethod
-    def update(cls, userdict,  password, dao):
-        doc = cls.get(userdict["_id"], dao, password)
-        if doc is None:
-            raise KeyError("User not found.")
-
-        doc["colls"] = dict(doc["colls"].items() + userdict["colls"].items())
-
-        dao.db.save(doc)
-        return doc
+        userdict["type"] = "user"
+        dao.db.save(userdict)
+        return userdict
 
 
