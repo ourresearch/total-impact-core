@@ -87,7 +87,7 @@ class Provider(object):
 
     def __init__(self, 
             max_cache_duration=86400, 
-            max_retries=1, 
+            max_retries=0, 
             tool_email="mytotalimpact@gmail.com"): 
         # FIXME change email to totalimpactdev@gmail.com after registering it with crossref
     
@@ -105,14 +105,22 @@ class Provider(object):
 
     # default method; providers can override
     def _get_error(self, status_code, response=None):
+        try:
+            headers = response.headers
+        except AttributeError:
+            headers = {}
+        try:
+            text = response.text
+        except AttributeError:
+            text = ""           
         if status_code >= 500:
             error = ProviderServerError(response)
-            self.logger.info("%20s ProviderServerError status code=%i, %s" 
-                % (self.provider_name, status_code, str(response)))
+            self.logger.info("%20s ProviderServerError status code=%i, %s, %s" 
+                % (self.provider_name, status_code, text, str(headers)))
         else:
             error = ProviderClientError(response)
-            self.logger.info("%20s ProviderClientError status code=%i, %s" 
-                % (self.provider_name, status_code, str(response)))
+            self.logger.info("%20s ProviderClientError status code=%i, %s, %s" 
+                % (self.provider_name, status_code, text, str(headers)))
 
         raise(error)
         return error
@@ -413,7 +421,7 @@ class Provider(object):
         return self.max_retries
 
     
-    def http_get(self, url, headers=None, timeout=None, cache_enabled=True, allow_redirects=False):
+    def http_get(self, url, headers=None, timeout=10, cache_enabled=True, allow_redirects=False):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
@@ -435,13 +443,17 @@ class Provider(object):
                 pass
             r = CachedResponse()
             r.status_code = cache_data['status_code']
-            r.text = cache_data['text']
-            self.logger.debug("cache %s" %(url))
-            return r
+
+            # use it if it was a 200, otherwise go get it again
+            if (r.status_code == 200):
+                r.text = cache_data['text']
+                self.logger.debug("cache %s" %(url))
+                return r
             
         # ensure that a user-agent string is set
         if headers is None:
             headers = {}
+        headers["User-Agent"] = "total-impact"    
         
         # make the request        
         try:
@@ -566,18 +578,23 @@ def _get_doc_from_xml(page):
         raise ProviderContentMalformedError
     return (doc, lookup_function)
 
-def _count_in_xml(page, mykey):  
+def _count_in_xml(page, mykey): 
+    doc_list = _find_all_in_xml(page, mykey)
+    if not doc_list:
+        return 0
+    count = len(doc_list)
+    return(count)
+
+def _find_all_in_xml(page, mykey):  
     (doc, lookup_function) = _get_doc_from_xml(page)  
-    count = 0
     if not doc:
         return None
     try:
         doc_list = doc.getElementsByTagName(mykey)
-        count = len(doc_list)
     except (KeyError, IndexError, TypeError):
-        pass
+        return None
             
-    return(count)
+    return(doc_list)
 
 
 def _lookup_xml_from_dom(doc, keylist): 

@@ -193,17 +193,17 @@ class ProviderThread(StoppableThread):
                 provider_name =  provider.__class__.__name__
                 self.redis.decr_num_providers_left(tiid, provider_name)
 
-            logger.debug("%20s: %20s skipping %s for %s, does not provide" 
-                % (self.thread_id, provider, method_name, tiid))
+            #logger.debug("%20s: %20s skipping %s for %s, does not provide" 
+            #    % (self.thread_id, provider, method_name, tiid))
             return None
 
         method_to_call = getattr(provider, method_name)
         if not method_to_call:
-            logger.debug("%20s: %20s skipping %s for %s, no method" 
-                % (self.thread_id, provider, method_name, tiid))
+            #logger.debug("%20s: %20s skipping %s for %s, no method" 
+            #    % (self.thread_id, provider, method_name, tiid))
             return None
 
-        logger.debug("%20s: %20s calling %s for %s" % (self.thread_id, provider, method_name, tiid))
+        #logger.debug("%20s: %20s calling %s for %s" % (self.thread_id, provider, method_name, tiid))
         try:
             response = method_to_call(aliases)
             #logger.debug("%20s: response from %s %s %s for %s, %s" 
