@@ -23,6 +23,7 @@ class TestPubmed(ProviderTestCase):
     provider_name = "pubmed"
 
     testitem_aliases = ("pmid", TEST_PMID)
+    testitem_biblio = ("pmid", TEST_PMID)
     testitem_metrics = ("pmid", TEST_PMID)
 
     def setUp(self):
@@ -46,15 +47,33 @@ class TestPubmed(ProviderTestCase):
         aliases = self.provider._extract_aliases_from_pmid(f.read(), "17593900")
         assert_equals(aliases, [('doi', u'10.1371/journal.pmed.0040215')])
 
+    # override default because returns url even if pmid api page is empty
+    def test_provider_aliases_empty(self):
+        Provider.http_get = common.get_empty
+        aliases = self.provider.aliases([self.testitem_aliases])
+        assert_equals(aliases, [("url", 'http://www.ncbi.nlm.nih.gov/pubmed/16060722')])
+
     def test_extract_citing_pmcids(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         pmcids = self.provider._extract_citing_pmcids(f.read())
         assert_equals(len(pmcids), 149)
 
+    def test_extract_biblio(self):
+        f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
+        ret = self.provider._extract_biblio(f.read())
+        expected = {'authors': u'Ioannidis', 'journal': u'PLoS medicine', 'year': 2005, 'title': u'Why most published research findings are false.'}
+        assert_equals(ret, expected)
+
+    @http
+    def test_biblio(self):
+        biblio_dict = self.provider.biblio([self.testitem_biblio])
+        expected = {'authors': u'Ioannidis', 'journal': u'PLoS medicine', 'year': 2005, 'title': u'Why most published research findings are false.'}
+        assert_equals(biblio_dict, expected)
+
     @http
     def test_aliases_from_pmid(self):
-        metrics_dict = self.provider.aliases([self.testitem_aliases])
-        assert_equals(set(metrics_dict), set([('doi', u'10.1371/journal.pmed.0020124')]))
+        aliases_dict = self.provider.aliases([self.testitem_aliases])
+        assert_equals(set(aliases_dict), set([("url", 'http://www.ncbi.nlm.nih.gov/pubmed/16060722'), ('doi', u'10.1371/journal.pmed.0020124')]))
 
     @http
     def test_aliases_from_doi(self):
