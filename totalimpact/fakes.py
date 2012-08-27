@@ -35,11 +35,8 @@ class Importer:
             query=query
         )
         start = time.time()
-        logger.info(
-            "getting aliases from the {provider} importer, using url '{url}'".format(
-                provider=self.provider_name,
-                url=query_url
-            ))
+        logger.info("getting aliases from the {provider} importer, using url '{url}'".format(
+                provider=self.provider_name, url=query_url))
         r = requests.get(query_url)
 
         try:
@@ -47,24 +44,16 @@ class Importer:
             aliases = response["memberitems"]
             logger.debug("got some aliases from the http call: " + str(aliases))
         except ValueError:
-            logger.warning(
-                "{provider} importer returned no json for {query}".format(
-                    provider=self.provider_name,
-                    query="query"
-                ))
+            logger.warning("{provider} importer returned no json for {query}".format(
+                    provider=self.provider_name, query="query"))
             aliases = []
 
         # annoyingly, some providers return lists-as-IDs, which must be joined with a comma
         aliases = [(namespace, id) if isinstance(id, str)
                    else (namespace, ",".join(id)) for namespace, id in aliases]
 
-        logger.info(
-            "{provider} importer got {num_aliases} aliases with username '{q}' in {elapsed} seconds.".format(
-                provider=self.provider_name,
-                num_aliases=len(aliases),
-                q=query,
-                elapsed=round(time.time() - start, 2),
-                ))
+        logger.info("{provider} importer got {num_aliases} aliases with username '{q}' in {elapsed} seconds.".format(
+                provider=self.provider_name, num_aliases=len(aliases), q=query, elapsed=round(time.time() - start, 2)))
 
         return aliases
 
@@ -73,10 +62,8 @@ class ReportPage:
     def __init__(self, collection_id):
         self.collection_id = collection_id
         start = time.time()
-        logger.info(
-            "loading the report page for collection '{collection_id}'.".format(
-                collection_id=collection_id
-            ))
+        logger.info("loading the report page for collection '{collection_id}'.".format(
+                collection_id=collection_id))
         request_url = "{webapp_url}/collection/{collection_id}".format(
             webapp_url=webapp_url,
             collection_id=collection_id
@@ -85,17 +72,11 @@ class ReportPage:
         if resp.status_code == 200:
             self.collectionId = self._get_collectionId(resp.text)
             elapsed = time.time() - start
-            logger.info(
-                "loaded the report page for '{collection_id}' in {elapsed} seconds.".format(
-                    collection_id=collection_id,
-                    elapsed=elapsed
-                ))
+            logger.info("loaded the report page for '{collection_id}' in {elapsed} seconds.".format(
+                    collection_id=collection_id, elapsed=elapsed))
         else:
-            logger.warning(
-                "report page for '{collection_id}' failed to load! ({url})".format(
-                    collection_id=collection_id,
-                    url=request_url
-                ))
+            logger.warning("report page for '{collection_id}' failed to load! ({url})".format(
+                    collection_id=collection_id, url=request_url))
 
 
     def _get_collectionId(self, text):
@@ -110,10 +91,8 @@ class ReportPage:
 
 
     def poll(self, max_time=60):
-        logger.info(
-            "polling collection '{collection_id}'".format(
-                collection_id=self.collection_id
-            ))
+        logger.info("polling collection '{collection_id}'".format(
+                collection_id=self.collection_id))
 
         still_updating = True
         tries = 0
@@ -125,11 +104,8 @@ class ReportPage:
                 items = json.loads(resp.text)["items"]
             except ValueError:
                 items = []
-                logger.warning(
-                    "POSTing '{url}' returned no json, only '{resp}') ".format(
-                        url=url,
-                        resp=resp.text
-                    ))
+                logger.warning("POSTing '{url}' returned no json, only '{resp}') ".format(
+                        url=url, resp=resp.text))
 
             tries += 1
 
@@ -138,22 +114,14 @@ class ReportPage:
             num_currently_updating = len(currently_updating_flags)
             num_finished_updating = len(items) - num_currently_updating
 
-            logger.info(
-                "{num_done} of {num_total} items done updating after {tries} requests.".format(
-                    num_done=num_finished_updating,
-                    num_total=len(items),
-                    tries=tries
-                ))
+            logger.info("{num_done} of {num_total} items done updating after {tries} requests.".format(
+                    num_done=num_finished_updating, num_total=len(items), tries=tries))
             logger.debug("got these items back: " + str(items))
 
             elapsed = time.time() - start
             if resp.status_code == 200:
-                logger.info(
-                    "collection '{id}' with {num_items} items finished updating in {elapsed} seconds.".format(
-                        id=self.collection_id,
-                        num_items=len(items),
-                        elapsed=round(elapsed, 2)
-                    ))
+                logger.info("collection '{id}' with {num_items} items finished updating in {elapsed} seconds.".format(
+                        id=self.collection_id, num_items=len(items), elapsed=round(elapsed, 2)))
                 return True
             elif elapsed > max_time:
                 raise Exception(
@@ -161,8 +129,7 @@ class ReportPage:
                         max=max_time,
                         id=self.collection_id,
                         item_ids=", ".join([item["_id"] for item in items if
-                                            item["currently_updating"]])
-                    ))
+                                            item["currently_updating"]])))
                 return False
 
             sleep(0.5)
@@ -178,15 +145,11 @@ class CreateCollectionPage:
         resp = requests.get(webapp_url + "/create")
         if resp.status_code == 200:
             elapsed = time.time() - start
-            logger.info(
-                "loaded the create-collection page in {elapsed} seconds.".format(
-                    elapsed=elapsed
-                ))
+            logger.info("loaded the create-collection page in {elapsed} seconds.".format(
+                elapsed=elapsed))
         else:
-            logger.warning(
-                "create-collection page for '{collection_id}' failed to load!".format(
-                    collection_id=collection_id
-                ))
+            logger.warning("create-collection page for '{collection_id}' failed to load!".format(
+                    collection_id=collection_id))
         self.aliases = []
         self.collection_name = "My collection"
 
@@ -204,8 +167,7 @@ class CreateCollectionPage:
         return self.aliases
 
     def press_go_button(self):
-        logger.info(
-            "user has pressed the 'go' button on the create-collection page.")
+        logger.info("user has pressed the 'go' button on the create-collection page.")
         if len(self.aliases) == 0:
             raise ValueError("Trying to create a collection with no aliases.")
 
@@ -226,21 +188,17 @@ class CreateCollectionPage:
         logger.debug("creating collection with these aliases: " + str(self.aliases))
 
         resp = requests.post(
-            url,
-            data=json.dumps({
-                "aliases": self.aliases,
-                "title": collection_name
-            }),
-            headers={'Content-type': 'application/json'}
-        )
+                url,
+                data=json.dumps({
+                    "aliases": self.aliases,
+                    "title": collection_name
+                }),
+                headers={'Content-type': 'application/json'}
+            )
         collection_id = json.loads(resp.text)["collection"]["_id"]
 
-        logger.info(
-            "created collection '{id}' with {num_items} items in {elapsed} seconds.".format(
-                id=collection_id,
-                num_items=len(self.aliases),
-                elapsed=round(time.time() - start, 2)
-            ))
+        logger.info("created collection '{id}' with {num_items} items in {elapsed} seconds.".format(
+                id=collection_id, num_items=len(self.aliases), elapsed=round(time.time() - start, 2)))
 
         return collection_id
 
@@ -253,29 +211,21 @@ class IdSampler(object):
         start = time.time()
         dois = []
         url = "http://random.labs.crossref.org/dois?from=2000&count=" + str(num)
-        logger.info(
-            "getting {num} random dois with IdSampler, using {url}".format(
-                num=num,
-                url=url
-            ))
+        logger.info("getting {num} random dois with IdSampler, using {url}".format(
+                num=num, url=url))
         try:
             r = requests.get(url, timeout=10)
         except Timeout:
-            logger.warning(
-                "the random doi service isn't working right now (timed out); sending back an empty list.")
+            logger.warning("the random doi service isn't working right now (timed out); sending back an empty list.")
             return dois
 
         if r.status_code == 200:
             dois = json.loads(r.text)
-            logger.info(
-                "IdSampler got {count} random dois back in {elapsed} seconds".format(
-                    count=len(dois),
-                    elapsed=round(time.time() - start, 2)
-                ))
+            logger.info("IdSampler got {count} random dois back in {elapsed} seconds".format(
+                    count=len(dois), elapsed=round(time.time() - start, 2)))
             logger.debug("IdSampler got these dois back: " + str(dois))
         else:
-            logger.warning(
-                "the random doi service isn't working right now (got error code); sending back an empty list.")
+            logger.warning("the random doi service isn't working right now (got error code); sending back an empty list.")
 
         return dois
 
@@ -287,19 +237,14 @@ class IdSampler(object):
         req_url = db_url + '/_all_docs?include_docs=true&limit=1&startkey="{startkey}"'.format(
             startkey=rand_hex_string
         )
-        logger.info(
-            "getting a random github username with IdSampler, using {url}".format(
-                url=req_url
-            ))
+        logger.info("getting a random github username with IdSampler, using {url}".format(
+                url=req_url))
         r = requests.get(req_url)
         json_resp = json.loads(r.text)
 
         username = json_resp["rows"][0]["doc"]["actor"]
-        logger.info(
-            "IdSampler got random github username '{username}' in {elapsed} seconds".format(
-                username=username,
-                elapsed=round(time.time() - start, 2)
-            ))
+        logger.info("IdSampler got random github username '{username}' in {elapsed} seconds".format(
+                username=username, elapsed=round(time.time() - start, 2)))
 
         return username
 
