@@ -198,9 +198,6 @@ def build_all_reference_lookups(myredis, mydao):
 
         reference_lookup_dict[reference_set_name][year] = reference_lookup
 
-        ### FOR NOW JUST DO ONE YEAR.  Later, when faster, do all years
-        logging.warning("Only loading one year of normalizations till they get faster")
-        break
     return(reference_lookup_dict)
 
 # from http://userpages.umbc.edu/~rcampbel/Computers/Python/probstat.html
