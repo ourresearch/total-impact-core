@@ -138,6 +138,8 @@ def get_metric_value_lists(items):
         else:
             values = [row[metric_name] for row in rows]
             values = [value if value else 0 for value in values]
+            # treat "Yes" as 1 for normalizaations
+            values = [1 if value=="Yes" else value for value in values]
             metric_values[metric_name] = sorted(values, reverse=True)
     return metric_values
 
