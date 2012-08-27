@@ -145,6 +145,10 @@ class ItemFactory():
         if genre != "article":
             return {}
 
+        # treat the f1000 "Yes" as a 1 for normalization
+        if value=="Yes":
+            value = 1
+
         response = {}
         for refsetname in myrefsets:
             try:
