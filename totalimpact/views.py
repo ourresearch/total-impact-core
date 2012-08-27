@@ -453,6 +453,10 @@ def put_collection(cid=""):
     coll["last_modified"] = datetime.datetime.now().isoformat()
     print coll
     mydao.db.save(coll)
+
+    # expire it from redis
+    myredis.expire_collection(cid)
+
     resp = make_response(json.dumps(coll, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
