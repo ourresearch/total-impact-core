@@ -28,13 +28,21 @@ class ItemFactory():
     @classmethod
     def get_item(cls, tiid, myrefsets, dao):
         res = dao.view("queues/by_tiid_with_snaps")
-        rows = res[[tiid,0]:[tiid,1]].rows
+        rows = res[[tiid,0]:[tiid,"zzzzzzzzzzzzzz"]].rows
 
         if not rows:
             return None
         else:
             item = rows[0]["value"]
-            snaps = [row["value"] for row in rows[1:]]
+            most_recent_snaps = {}
+            for row in rows[1:]:
+                snap = row["value"]
+                # they are in reverse order of creation, so overwrite
+                # and most recent one will be on top.
+                most_recent_snaps[snap["metric_name"]] = snap
+
+            snaps = most_recent_snaps.values()
+
             try:
                 item = cls.build_item_for_client(item, snaps, myrefsets)
             except Exception, e:
