@@ -1,10 +1,11 @@
 from werkzeug import generate_password_hash, check_password_hash
+from couchdb import ResourceNotFound, ResourceConflict
+import shortuuid, datetime, hashlib, threading, json, time
+
 from totalimpact.providers.provider import ProviderFactory
+from totalimpact.providers.provider import ProviderTimeout
 from totalimpact import default_settings
 from totalimpact.pidsupport import Retry
-from couchdb import ResourceNotFound, ResourceConflict
-from totalimpact.providers.provider import ProviderTimeout
-import shortuuid, string, random, datetime, hashlib, threading, json, time
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
@@ -16,13 +17,16 @@ class NotAuthenticatedError(Exception):
     pass
 
 
+def closest(target, collection) :
+    return min((abs(target - i), i) for i in collection)[1]
+
 class ItemFactory():
 
     all_static_meta = ProviderFactory.get_all_static_meta()
 
 
     @classmethod
-    def get_item(cls, dao, tiid):
+    def get_item(cls, tiid, myrefsets, dao):
         res = dao.view("queues/by_tiid_with_snaps")
         rows = res[[tiid,0]:[tiid,1]].rows
 
@@ -32,18 +36,25 @@ class ItemFactory():
             item = rows[0]["value"]
             snaps = [row["value"] for row in rows[1:]]
             try:
-                item = cls.build_item_for_client(item, snaps)
+                item = cls.build_item_for_client(item, snaps, myrefsets)
             except Exception, e:
                 item = None
                 logger.error("Exception %s: Unable to build item %s, %s, %s" % (e.__repr__(), tiid, str(item), str(snaps)))
+                raise
         return item
 
     @classmethod
-    def build_item_for_client(cls, item, snaps):
+    def build_item_for_client(cls, item, snaps, myrefsets):
         item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
-
-            
+           
         item["metrics"] = {} #not using what is in stored item for this
+
+        # need year to calculate normalization below
+        try:
+            year = item["biblio"]["year"]
+        except KeyError:
+            year = 2011 # hack.  what else to do?
+
         for snap in snaps:
             metric_name = snap["metric_name"]
             if metric_name in cls.all_static_meta.keys():
@@ -52,9 +63,13 @@ class ItemFactory():
                 item["metrics"][metric_name]["values"][snap["created"]] = snap["value"]
                 item["metrics"][metric_name]["provenance_url"] = snap["drilldown_url"]
                 item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
-        return item
-    
 
+
+                item["metrics"][metric_name]["values"]["raw"] = snap["value"]
+                normalized_values = cls.get_normalized_values(item["biblio"]['genre'], year, metric_name, snap["value"], myrefsets)
+                item["metrics"][metric_name]["values"].update(normalized_values)
+
+        return item
 
     @classmethod
     def build_snap(cls, tiid, metric_value_drilldown, metric_name):
@@ -123,136 +138,51 @@ class ItemFactory():
                 full_metric_names.append(provider.provider_name + ':' + metric_name)
         return full_metric_names
 
+    @classmethod
+    def get_normalized_values(cls, genre, year, metric_name, value, myrefsets):
+        # Will be passed None as myrefsets type when loading items in reference collections :)
+        if not myrefsets:
+            return {}
 
+        # for now, only normalize articles
+        if genre != "article":
+            return {}
 
+        response = {}
+        for refsetname in myrefsets:
+            try:
+                fencepost_values = myrefsets[refsetname][str(year)][metric_name].keys()
+                myclosest = closest(value, fencepost_values)
+                response[refsetname] = myrefsets[refsetname][str(year)][metric_name][myclosest]
+            except KeyError:
+                logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
 
-class CollectionFactory():
+        return response
 
     @classmethod
-    def get_titles(cls, cids, dao):
-        ret = {}
-        for cid in cids:
-            coll = dao.db[cid]
-            ret[cid] = coll["title"]
+    def retrieve_items(cls, tiids, myrefsets, myredis, mydao):
+        something_currently_updating = False
+        items = []
+        for tiid in tiids:
+            try:
+                item = cls.get_item(tiid, myrefsets, mydao)
+            except (LookupError, AttributeError), e:
+                logger.warning("Got an error looking up tiid '{tiid}'; error: {error}".format(
+                        tiid=tiid, error=e.__repr__()))
+                raise
 
-        return ret
+            if not item:
+                logger.warning("Looks like there's no item with tiid '{tiid}': ".format(
+                        tiid=tiid))
+                raise LookupError
 
+            currently_updating = myredis.get_num_providers_left(tiid) > 0
+            item["currently_updating"] = currently_updating
+            something_currently_updating = something_currently_updating or currently_updating
 
-
-    @classmethod
-    def make(cls, owner=None):
-
-        key, key_hash = cls._make_update_keypair()
-
-        now = datetime.datetime.now().isoformat()
-        collection = {}
-
-        collection["_id"] = cls._make_id()
-        collection["created"] = now
-        collection["last_modified"] = now
-        collection["type"] = "collection"
-        collection["key_hash"] = key_hash
-        collection["owner"] = owner
-
-        return collection, key
-
-    @classmethod
-    def claim_collection(cls, coll, new_owner, key):
-        if "key_hash" not in coll.keys():
-            raise ValueError("This is an old collection that doesnt' support ownership.")
-        elif check_password_hash(coll["key_hash"], key):
-            coll["owner"] = new_owner
-            return coll
-        else:
-            raise ValueError("The given key doesn't match this collection's key")
-
-    @classmethod
-    def _make_id(cls, len=6):
-        '''Make an id string.
-
-        Currently uses only lowercase and digits for better say-ability. Six
-        places gives us around 2B possible values.
-        '''
-        choices = string.ascii_lowercase + string.digits
-        return ''.join(random.choice(choices) for x in range(len))
-
-    @classmethod
-    def _make_update_keypair(cls):
-        key = shortuuid.uuid()
-        key_hash = generate_password_hash(key)
-        return key, key_hash
-
-    @classmethod
-    def get(cls, dao, myredis, cid):
-        """
-        Gets a collection dict from the db; formatting done by other methods
-        """
-        logger.info("getting collection for cid" + cid)
-        res = dao.db.view("queues/collections-with-items", include_docs=True)
-        try:
-            coll = dict([row.doc for row in res[[cid, 0]]][0])
-        except IndexError:
-            # key error makes more sense for client code
-            logger.error("Collection '{cid}' not found.".format(cid=cid))
-            raise KeyError("Collection '{cid}' not found.".format(cid=cid))
-        coll["items"]= []
-        items_currently_updating = 0
-        for row in res[[cid, 1]]:
-            currently_updating = myredis.get_num_providers_left(row["id"]) > 0 # boolean
-            row["doc"]["currently_updating"] = currently_updating
-            items_currently_updating += int(currently_updating)
-            coll["items"].append(row["doc"])
-
-        coll["num_items_updating"] = items_currently_updating
-        return coll
-
-    @classmethod
-    def get_json(cls, dao, myredis, cid):
-        coll = cls.get(dao, myredis, cid)
-        return json.dumps(coll, sort_keys=True, indent=4), coll["num_items_updating"]
-
-    @classmethod
-    def get_csv(cls, dao, myredis, cid):
-        coll = cls.get(dao, myredis, cid)
-
-        # create the header row
-        header_metric_names = []
-        for item in coll["items"]:
-            header_metric_names += item["metrics"].keys()
-
-            # get unique
-            header_alias_names = ["title", "doi"]
-            header_metric_names = sorted(list(set(header_metric_names)))
-
-            csv_list = ["tiid," + ','.join(header_alias_names + header_metric_names)]
-
-        # body rows
-        for item in coll["items"]:
-            column_list = [item["_id"]]
-            for alias_name in header_alias_names:
-                try:
-                    value_to_store = item['aliases'][alias_name][0]
-                    if (" " in value_to_store) or ("," in value_to_store):
-                        value_to_store = '"' + value_to_store + '"'
-                    column_list += [value_to_store]
-                except (IndexError, KeyError):
-                    column_list += [""]
-            for metric_name in header_metric_names:
-                try:
-                    values = item['metrics'][metric_name]['values']
-                    latest_key = sorted(values, reverse=True)[0]
-                    value_to_store = str(values[latest_key])
-                    if (" " in value_to_store) or ("," in value_to_store):
-                        value_to_store = '"' + value_to_store + '"'
-                    column_list += [value_to_store]
-                except (IndexError, KeyError):
-                    column_list += [""]
-            csv_list.append(",".join(column_list))
-
-        # join together in a string
-        csv = "\n".join(csv_list)
-        return csv, coll["num_items_updating"]
-
+            items.append(item)
+        return (items, something_currently_updating)
+        
 
 class MemberItems():
 

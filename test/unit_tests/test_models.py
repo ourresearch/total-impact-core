@@ -1,11 +1,9 @@
 from nose.tools import raises, assert_equals, nottest
-import os, unittest, hashlib, json
+import os, unittest, hashlib, json, pprint
 from time import sleep
-from werkzeug.security import generate_password_hash, check_password_hash
-from couchdb import ResourceConflict
+from werkzeug.security import generate_password_hash
 from totalimpact import models, dao, tiredis
 from totalimpact.providers import bibtex, github
-from totalimpact.providers.provider import ProviderTimeout
 
 COLLECTION_DATA = {
     "_id": "uuid-goes-here",
@@ -122,8 +120,9 @@ class TestItemFactory():
         temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
         temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-
-
+        self.myrefsets = {"nih": {"2011": {
+                        "facebook:comments": {0: [1, 99], 1: [91, 99]}, "mendeley:groups": {0: [1, 99], 3: [91, 99]}
+                    }}}
 
 #    def test_make_new(self):
 #        '''create an item from scratch.'''
@@ -136,7 +135,7 @@ class TestItemFactory():
     def test_adds_genre(self):
         # put the item in the db
         self.d.save(ITEM_DATA)
-        item = models.ItemFactory.get_item(self.d, "test")
+        item = models.ItemFactory.get_item("test", self.myrefsets, self.d)
         assert_equals(item["biblio"]['genre'], "article")
 
     def test_get_metric_names(self):
@@ -179,8 +178,18 @@ class TestItemFactory():
         genre = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "unknown")
 
-class TestMemberItems():
+    def test_build_item_for_client(self):
+        item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'providersWithMetricsCount': 11, 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
+        snaps = [{'tiid': '4mlln04q1rxy6l9oeb3t7ftv', 'metric_name': 'mendeley:groups', 'created': '2012-08-23T21:41:05.526046', '_rev': '1-5fde8dbb5c3af04114adb18295a42259', 'value': 2, 'drilldown_url': 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/', '_id': '25gvr5xxvbu8mabgzvvkdf65', 'type': 'metric_snap'}]
+        response = models.ItemFactory.build_item_for_client(item, snaps, self.myrefsets)
 
+        expected = {'raw': 2, '2012-08-23T21:41:05.526046': 2, 'nih': [91, 99]}
+        assert_equals(response["metrics"]['mendeley:groups']["values"], expected)
+
+
+
+
+class TestMemberItems():
 
 
     def setUp(self):
@@ -293,72 +302,3 @@ class TestUserFactory():
             {"cid1": "key1", "cid2":"key2", "cid3":"key3"}
         )
 
-
-
-
-
-class TestCollectionFactory():
-
-    def setUp(self):
-        # hacky way to delete the "ti" db, then make it fresh again for each test.
-        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
-        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-
-
-    def test_make_creates_identifier(self):
-        coll, key = models.CollectionFactory.make()
-        assert_equals(len(coll["_id"]), 6)
-
-    def test_make_sets_owner(self):
-        coll, key = models.CollectionFactory.make()
-        assert_equals(coll["owner"], None)
-
-        coll, key = models.CollectionFactory.make("socrates")
-        assert_equals(coll["owner"], "socrates")
-
-    def test_create_returns_collection_and_update_key(self):
-        coll, key = models.CollectionFactory.make()
-        assert check_password_hash(coll["key_hash"], key)
-
-    def test_claim_collection(self):
-        coll, key = models.CollectionFactory.make("socrates")
-        assert_equals(coll["owner"], "socrates")
-
-        coll = models.CollectionFactory.claim_collection(coll, "plato", key)
-        assert_equals(coll["owner"], "plato")
-
-    @raises(ValueError)
-    def test_claim_collection_fails_with_wrong_key(self):
-        coll, key = models.CollectionFactory.make("socrates")
-        assert_equals(coll["owner"], "socrates")
-
-        coll = models.CollectionFactory.claim_collection(coll, "plato", "wrong key")
-        assert_equals(coll["owner"], "plato")
-
-    @raises(ValueError)
-    def test_claim_collection_fails_if_key_hash_not_set(self):
-        coll, key = models.CollectionFactory.make("socrates")
-        assert_equals(coll["owner"], "socrates")
-        del coll["key_hash"]
-
-        coll = models.CollectionFactory.claim_collection(coll, "plato", key)
-        assert_equals(coll["owner"], "plato")
-
-    def test_get_names(self):
-        colls = [
-            {"_id": "1", "title": "title 1"},
-            {"_id": "2", "title": "title 2"},
-            {"_id": "3", "title": "title 3"}
-        ]
-
-        # put all these in the db
-        for doc in self.d.db.update(colls):
-            pass
-
-        titlesDict = models.CollectionFactory.get_titles(["1", "2", "3"], self.d)
-        assert_equals(titlesDict["1"], "title 1")
-        assert_equals(titlesDict["3"], "title 3")
-
-class TestBiblio(unittest.TestCase):
-    pass

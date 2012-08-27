@@ -1,22 +1,29 @@
-from flask import json, request, redirect, abort, make_response
+from flask import json, request, abort, make_response
 from flask import render_template
-import os, datetime, redis, hashlib
-import unicodedata, re, csv, StringIO
-from collections import OrderedDict
-from werkzeug.security import generate_password_hash, check_password_hash
-from simplejson import JSONDecodeError
-from totalimpact import dao, app, tiredis
-from totalimpact.models import ItemFactory, CollectionFactory, MemberItems, UserFactory, NotAuthenticatedError
+import os, datetime, re, couchdb
+from werkzeug.security import check_password_hash
+from collections import defaultdict
+
+from totalimpact import dao, app, tiredis, collection
+from totalimpact.models import ItemFactory, MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError
 from totalimpact import default_settings
 import logging
 
 logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
-redis = redis.from_url(os.getenv("REDISTOGO_URL"))
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
+
+logger.debug("Building reference sets")
+myrefsets = None
+try:
+    myrefsets = collection.build_all_reference_lookups(myredis, mydao)
+    logger.debug("Reference sets dict has %i keys" %len(myrefsets.keys()))
+except (couchdb.ResourceNotFound, LookupError, AttributeError), e:
+    logger.error("Exception %s: Unable to load reference sets" % (e.__repr__()))
+
 
 # setup to remove control characters from received IDs
 # from http://stackoverflow.com/questions/92438/stripping-non-printable-characters-from-a-string-in-python
@@ -31,7 +38,7 @@ def clean_id(nid):
 def set_db(url, db):
     """useful for unit testing, where you want to use a local database
     """
-    global mydao
+    global mydao 
     mydao = dao.Dao(url, db)
     return mydao
 
@@ -223,7 +230,7 @@ def item(tiid, format=None):
     # TODO check request headers for format as well.
 
     try:
-        item = ItemFactory.get_item(mydao, tiid)
+        item = ItemFactory.get_item(tiid, myrefsets, mydao)
     except (LookupError, AttributeError):
         abort(404)
 
@@ -375,81 +382,6 @@ def provider_biblio(provider_name, id):
 
     return resp
 
-def clean_value_for_csv(value_to_store):
-    try:
-        value_to_store = value_to_store.encode("utf-8").strip()
-    except AttributeError:
-        pass
-    return value_to_store
-
-
-def make_csv_rows(items):
-    header_metric_names = []
-    for item in items:
-        header_metric_names += item["metrics"].keys()
-    header_metric_names = sorted(list(set(header_metric_names)))
-
-    header_alias_names = ["title", "doi"]
-
-    # make header row
-    header_list = ["tiid"] + header_alias_names + header_metric_names
-    ordered_fieldnames = OrderedDict([(col,None) for col in header_list])
-    mystream = StringIO.StringIO()
-
-    dw = csv.DictWriter(mystream, delimiter=',', dialect=csv.excel, fieldnames=ordered_fieldnames)
-    dw.writeheader()
-
-    # body rows
-    for item in items:
-        print "keys: " + str(item.keys())
-        ordered_fieldnames["tiid"] = item["_id"]
-        for alias_name in header_alias_names:
-            try:
-                ordered_fieldnames[alias_name] = clean_value_for_csv(item['aliases'][alias_name][0])
-            except (AttributeError, KeyError):
-                ordered_fieldnames[alias_name] = ""
-        for metric_name in header_metric_names:
-            try:
-                values = item['metrics'][metric_name]['values']
-                latest_key = sorted(values, reverse=True)[0]
-                ordered_fieldnames[metric_name] = clean_value_for_csv(values[latest_key])
-            except (AttributeError, KeyError):
-                ordered_fieldnames[metric_name] = ""
-        print ordered_fieldnames
-        dw.writerow(ordered_fieldnames)
-    contents = mystream.getvalue()
-    mystream.close()
-    return contents
-
-
-def retrieve_items(tiids):
-    something_currently_updating = False
-    items = []
-    for tiid in tiids:
-        try:
-            item = ItemFactory.get_item(mydao, tiid)
-        except (LookupError, AttributeError), e:
-            logger.warning(
-                "Got an error looking up tiid '{tiid}'; aborting with 404. error: {error}".format(
-                    tiid=tiid,
-                    error=e.__repr__()
-                ))
-            abort(404)
-
-        if not item:
-            logger.warning(
-                "Looks like there's no item with tiid '{tiid}': aborting with 404".format(
-                    tiid=tiid
-                ))
-            abort(404)
-
-        currently_updating = myredis.get_num_providers_left(tiid) > 0
-        item["currently_updating"] = currently_updating
-        something_currently_updating = something_currently_updating or currently_updating
-
-        items.append(item)
-    return (items, something_currently_updating)
-
 
 '''
 GET /collection/:collection_ID
@@ -473,8 +405,11 @@ def collection_get(cid='', format="json"):
                                  response_code)
             resp.mimetype = "application/json"
     else:
-        tiids = coll["alias_tiids"].values()
-        (items, something_currently_updating) = retrieve_items(tiids)
+        try:
+            (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao)
+        except (LookupError, AttributeError):  
+            logger.error("couldn't get tiids for collection '{cid}'".format(cid=cid))
+            abort(404)  # not found
 
         # return success if all reporting is complete for all items    
         if something_currently_updating:
@@ -483,7 +418,8 @@ def collection_get(cid='', format="json"):
             response_code = 200
 
         if format == "csv":
-            csv = make_csv_rows(items)
+            items = coll_with_items["items"]
+            csv = collection.make_csv_stream(items)
             resp = make_response(csv, response_code)
             resp.mimetype = "text/csv;charset=UTF-8"
             resp.headers.add("Content-Disposition",
@@ -491,10 +427,7 @@ def collection_get(cid='', format="json"):
             resp.headers.add("Content-Encoding",
                              "UTF-8")
         else:
-            coll["items"] = items
-            del coll["alias_tiids"]
-            # print json.dumps(coll, sort_keys=True, indent=4)
-            resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
+            resp = make_response(json.dumps(coll_with_items, sort_keys=True, indent=4),
                                  response_code)
             resp.mimetype = "application/json"
     return resp
@@ -541,6 +474,9 @@ def collection_update(cid=""):
         ))
         abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")
 
+    # expire it from redis
+    myredis.expire_collection(cid)
+
     # put each of them on the update queue
     for tiid in tiids:
         logger.debug("In update_item with tiid " + tiid)
@@ -562,7 +498,7 @@ def collection_update(cid=""):
 
 
 
-
+# creates a collectino with aliases
 @app.route('/collection', methods=['POST'])
 def collection_create():
     """
@@ -570,14 +506,13 @@ def collection_create():
     creates new collection
     """
     response_code = None
-    coll, key = CollectionFactory.make(owner=request.json.get("owner", None))
+    coll, key = collection.make(owner=request.json.get("owner", None))
     coll["ip_address"] = request.remote_addr
     try:
         coll["title"] = request.json["title"]
         aliases = request.json["aliases"]
         tiids = prep_collection_items(aliases)
         aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
-
     except (AttributeError, TypeError):
         # we got missing or improperly formated data.
         logger.error(
@@ -606,12 +541,11 @@ def collection_create():
 
 
 
-
 @app.route('/test/collection/<action_type>', methods=['GET'])
 def tests_interactions(action_type=''):
     logger.info("getting test/collection/" + action_type)
 
-    report = redis.hgetall("test.collection." + action_type)
+    report = myredis.hgetall("test.collection." + action_type)
     report["url"] = "http://{root}/collection/{collection_id}".format(
         root=os.getenv("WEBAPP_ROOT"),
         collection_id=report["result"]
@@ -621,7 +555,6 @@ def tests_interactions(action_type=''):
         'interaction_test_report.html',
         report=report
     )
-
 
 
 @app.route("/collections/recent")
@@ -647,18 +580,25 @@ def latest_collections(format=""):
         resp = make_response(json.dumps(rows, indent=4), 200)
         resp.mimetype = "application/json"
 
-    return resp
+    return resp            
+
 
 @app.route("/collections/<cids>")
 def get_collection_titles(cids=''):
     from time import sleep
     sleep(1)
     cids_arr = cids.split(",")
-    coll_info = CollectionFactory.get_titles(cids_arr, mydao)
+    coll_info = collection.get_titles(cids_arr, mydao)
     resp = make_response(json.dumps(coll_info, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
+
+@app.route("/collections/reference-sets")
+def reference_sets():
+    resp = make_response(json.dumps(myrefsets, indent=4), 200)
+    resp.mimetype = "application/json"
+    return resp
 
 
 @app.route("/user/<userid>", methods=["GET"])
