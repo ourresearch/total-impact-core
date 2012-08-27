@@ -49,10 +49,10 @@ def _make_update_keypair():
     key_hash = generate_password_hash(key)
     return key, key_hash
 
-def get_titles(cids, dao):
+def get_titles(cids, mydao):
     ret = {}
     for cid in cids:
-        coll = dao.db[cid]
+        coll = mydao.db[cid]
         ret[cid] = coll["title"]
     return ret
 
