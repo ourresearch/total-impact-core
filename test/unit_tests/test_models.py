@@ -183,7 +183,7 @@ class TestItemFactory():
         snaps = [{'tiid': '4mlln04q1rxy6l9oeb3t7ftv', 'metric_name': 'mendeley:groups', 'created': '2012-08-23T21:41:05.526046', '_rev': '1-5fde8dbb5c3af04114adb18295a42259', 'value': 2, 'drilldown_url': 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/', '_id': '25gvr5xxvbu8mabgzvvkdf65', 'type': 'metric_snap'}]
         response = models.ItemFactory.build_item_for_client(item, snaps, self.myrefsets)
 
-        expected = {'raw': 2, '2012-08-23T21:41:05.526046': 2, 'nih': [91, 99]}
+        expected = {'raw': 2, 'nih': [91, 99]}
         assert_equals(response["metrics"]['mendeley:groups']["values"], expected)
 
 
