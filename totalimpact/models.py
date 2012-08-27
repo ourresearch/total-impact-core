@@ -155,8 +155,9 @@ class ItemFactory():
                 myclosest = closest(value, fencepost_values)
                 response[refsetname] = myrefsets[refsetname][str(year)][metric_name][myclosest]
             except KeyError:
-                logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
-
+                #logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
+                pass
+                
         return response
 
     @classmethod
@@ -182,7 +183,7 @@ class ItemFactory():
 
             items.append(item)
         return (items, something_currently_updating)
-        
+
 
 class MemberItems():
 
