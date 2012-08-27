@@ -52,15 +52,12 @@ class ItemFactory():
 
         response = {}
         for refsetname in myrefsets:
-            # for now, just use 2011.  Hack till can load them all.
-            year = "2011"
-
             try:
-                fencepost_values = myrefsets[refsetname][year][metric_name].keys()
+                fencepost_values = myrefsets[refsetname][str(year)][metric_name].keys()
                 myclosest = closest(value, fencepost_values)
-                response[refsetname] = myrefsets[refsetname][year][metric_name][myclosest]
+                response[refsetname] = myrefsets[refsetname][str(year)][metric_name][myclosest]
             except KeyError:
-                logger.info("No good lookup in %s %s for %s" %(refsetname, year, metric_name))
+                logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
 
         return response
 
@@ -74,7 +71,7 @@ class ItemFactory():
         try:
             year = item["biblio"]["year"]
         except KeyError:
-            year = "2011" # hack.  what else to do?
+            year = 2011 # hack.  what else to do?
 
         for snap in snaps:
             metric_name = snap["metric_name"]
