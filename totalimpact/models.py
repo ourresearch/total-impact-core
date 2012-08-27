@@ -60,11 +60,8 @@ class ItemFactory():
             if metric_name in cls.all_static_meta.keys():
                 item["metrics"][metric_name] = {}
                 item["metrics"][metric_name]["values"] = {}
-                item["metrics"][metric_name]["values"][snap["created"]] = snap["value"]
                 item["metrics"][metric_name]["provenance_url"] = snap["drilldown_url"]
                 item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
-
-
                 item["metrics"][metric_name]["values"]["raw"] = snap["value"]
                 normalized_values = cls.get_normalized_values(item["biblio"]['genre'], year, metric_name, snap["value"], myrefsets)
                 item["metrics"][metric_name]["values"].update(normalized_values)
