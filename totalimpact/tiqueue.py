@@ -69,6 +69,8 @@ class QueueMonitor(StoppableThread):
                 del item["needs_aliases"]
 
                 self.dao.save(item)
+                newrelic.agent.record_custom_metric('Custom/Queue/QueueMonitorSave', 1)
+
 
                 # Now add the item to the in-memory queue
                 Queue.init_queue("aliases")
