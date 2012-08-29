@@ -1,4 +1,6 @@
 import time, datetime, logging, threading, simplejson, copy, couchdb
+import newrelic.agent
+
 from totalimpact import default_settings
 from totalimpact.models import ItemFactory
 from totalimpact.pidsupport import StoppableThread
@@ -106,12 +108,14 @@ class Queue():
     def enqueue(cls, queue_name, item):
         log.info("%20s enqueuing item %s"
             % ("Queue " + queue_name, item["_id"]))
+        newrelic.agent.record_custom_metric('Custom/queue:'+queue_name, 1)
 
         # Synchronised section
         cls.queue_lock.acquire()
         # Add to the end of the queue
         cls.queued_items[queue_name].append(copy.deepcopy(item))
         cls.queue_lock.release()
+
 
     def dequeue(self):
         # Synchronised section
@@ -123,6 +127,7 @@ class Queue():
             log.info("%20s  dequeuing item %s" 
                 % ("Queue " + self.queue_name, item["_id"]))
             del self.queued_items[self.queue_name][0]
+            newrelic.agent.record_custom_metric('Custom/queue:'+self.queue_name, -1)
         self.queue_lock.release()
         return item
 
