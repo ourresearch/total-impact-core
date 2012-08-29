@@ -108,7 +108,7 @@ class Queue():
     def enqueue(cls, queue_name, item):
         log.info("%20s enqueuing item %s"
             % ("Queue " + queue_name, item["_id"]))
-        newrelic.agent.record_custom_metric('Custom/queue:'+queue_name, 1)
+        newrelic.agent.record_custom_metric('Custom/Queue/'+queue_name, 1)
 
         # Synchronised section
         cls.queue_lock.acquire()
@@ -127,7 +127,7 @@ class Queue():
             log.info("%20s  dequeuing item %s" 
                 % ("Queue " + self.queue_name, item["_id"]))
             del self.queued_items[self.queue_name][0]
-            newrelic.agent.record_custom_metric('Custom/queue:'+self.queue_name, -1)
+            newrelic.agent.record_custom_metric('Custom/Queue/'+self.queue_name, -1)
         self.queue_lock.release()
         return item
 
