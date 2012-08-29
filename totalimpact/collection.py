@@ -203,10 +203,15 @@ def build_all_reference_lookups(myredis, mydao):
 
         logging.info("Loading normalizations for %s" %coll_with_items["title"])
 
-        (reference_set_name, year) = coll_with_items["title"].replace("[reference-set]", "").split(":")
-        reference_lookup = build_reference_lookup(coll_with_items, confidence_interval_table)
+        try:
+            (reference_set_name, year) = coll_with_items["title"].replace("[reference-set]", "").split(":")
+        except ValueError:
+            logging.error("Normalization title '%s' not formatted as expected, not loading its normalizations" %coll_with_items["title"])
+            reference_set_name = None
 
-        reference_lookup_dict[reference_set_name][year] = reference_lookup
+        if reference_set_name:
+            reference_lookup = build_reference_lookup(coll_with_items, confidence_interval_table)
+            reference_lookup_dict[reference_set_name][year] = reference_lookup
 
     return(reference_lookup_dict)
 
