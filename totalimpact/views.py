@@ -5,7 +5,7 @@ from werkzeug.security import check_password_hash
 from collections import defaultdict
 import rq
 
-from totalimpact import dao, app, tiredis, collection
+from totalimpact import dao, app, tiredis, collection, tiqueue
 from totalimpact.models import ItemFactory, MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError
 from totalimpact import default_settings
@@ -16,7 +16,7 @@ logger.setLevel(logging.DEBUG)
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
-#myrq = rq.Queue("alias", connection=myredis)
+myrq = rq.Queue("alias", connection=myredis)
 
 logger.debug("Building reference sets")
 myrefsets = None
@@ -490,18 +490,15 @@ def collection_update(cid=""):
     # put each of them on the update queue
     for tiid in tiids:
         logger.debug("In update_item with tiid " + tiid)
-        item_doc = mydao.get(tiid)
-
-        # set the needs_aliases timestamp so it will go on queue for update
-        item_doc["needs_aliases"] = datetime.datetime.now().isoformat()
 
         # set this so we know when it's still updating later on
         myredis.set_num_providers_left(
-            item_doc["_id"],
+            tiid,
             ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
         )
-        mydao.save(item_doc)
-        #myrq.enqueue("update_item", tiid)
+
+        item_doc = mydao.get(tiid)
+        myrq.enqueue(tiqueue.update_item, item_doc)
 
     resp = make_response("true", 200)
     resp.mimetype = "application/json"
