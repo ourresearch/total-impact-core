@@ -122,9 +122,9 @@ def create_item(namespace, nid):
     )
 
     item["aliases"][namespace] = [nid]
-    item["needs_aliases"] = datetime.datetime.now().isoformat()
-
     mydao.save(item)
+    myrq.enqueue(tiqueue.update_item, item_doc)
+
     logger.info("Created new item '{id}' with alias '{alias}'".format(
         id=item["_id"],
         alias=str((namespace, nid))
@@ -154,7 +154,7 @@ def create_or_find_items_from_aliases(clean_aliases):
                 ))
             item = ItemFactory.make()
             item["aliases"][namespace] = [nid]
-            item["needs_aliases"] = datetime.datetime.now().isoformat()
+            myrq.enqueue(tiqueue.update_item, item)
             items.append(item)
             tiids.append(item["_id"])    
     return(tiids, items)
