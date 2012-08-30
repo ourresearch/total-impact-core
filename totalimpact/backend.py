@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-import time, sys, logging, os, traceback
+import time, sys, logging, os, traceback, Queue
 import rq
 
 from totalimpact import default_settings, dao, tiredis
-from totalimpact.tiqueue import Queue, RQWorker
+from totalimpact.tiqueue import tiQueue, RQWorker, CouchWorker
 from totalimpact.models import ItemFactory
 from totalimpact.pidsupport import StoppableThread
 from totalimpact.providers.provider import ProviderError, ProviderFactory
@@ -24,6 +24,7 @@ class TotalImpactBackend(object):
         self.rq = rq.Queue("alias", connection=myredis)
         self.dao.update_design_doc()
         self.providers = providers
+        self.couch_queue = Queue.Queue()
 
     def run(self):
         self._spawn_threads()
@@ -53,13 +54,13 @@ class TotalImpactBackend(object):
             logger.info("%20s: spawning, n=%i" % (provider.provider_name, thread_count)) 
             # create and start the metrics threads
             for idx in range(thread_count):
-                t = ProviderMetricsThread(self.dao, self.myredis, provider)
+                t = ProviderMetricsThread(self.couch_queue, self.dao, self.myredis, provider)
                 t.thread_id = t.thread_id + '[%i]' % idx
                 t.start()
                 self.threads.append(t)
         
         logger.info("%20s: spawning" % ("aliases"))
-        t = ProvidersAliasThread(self.dao, self.myredis, self.providers)
+        t = ProvidersAliasThread(self.couch_queue, self.dao, self.myredis, self.providers)
         t.start()
         self.threads.append(t)
 
@@ -70,8 +71,14 @@ class TotalImpactBackend(object):
         # worker processes to handle
         t = RQWorker(self.rq)
         t.start()
-        t.thread_id = 'RQ_monitor_thread'
+        t.thread_id = 'RQWorker_thread'
         self.threads.append(t)        
+
+        t = CouchWorker(self.couch_queue, self.dao)
+        t.start()
+        t.thread_id = 'CouchWorker_thread'
+        self.threads.append(t)        
+
         
     def _monitor(self):        
         # Install a signal handler so we'll break out of the main loop
@@ -304,14 +311,15 @@ class ProviderThread(StoppableThread):
 
 class ProvidersAliasThread(ProviderThread):
     
-    def __init__(self, dao, myredis, providers):
+    def __init__(self, couch_queue, dao, myredis, providers):
         self.providers = providers
-        queue = Queue("aliases")
+        queue = tiQueue("aliases")
         ProviderThread.__init__(self, dao, myredis, queue)
         self.providers = providers
 
         self.thread_id = "alias_thread"
         self.dao = dao
+        self.couch_queue = couch_queue
 
 
         
@@ -372,7 +380,7 @@ class ProvidersAliasThread(ProviderThread):
             logger.debug("%20s: FULL ITEM on metrics queue %s %s"
                 % (self.thread_id, item["_id"],item))
             logger.debug("%20s: added to metrics queues complete for item %s " % (self.thread_id, item["_id"]))
-            self.dao.save(item)
+            self.couch_queue.put(item)
             self.queue.add_to_metrics_queues(item)
 
 
@@ -383,15 +391,14 @@ class ProviderMetricsThread(ProviderThread):
         requests for a single provider. It will deal with retries and 
         timeouts as required.
     """
-    def __init__(self, dao, myredis, provider):
+    def __init__(self, couch_queue, dao, myredis, provider):
         self.provider = provider
-        queue = Queue(provider.provider_name)
+        queue = tiQueue(provider.provider_name)
         ProviderThread.__init__(self, dao, myredis, queue)
         self.thread_id = self.provider.provider_name + "_thread"
         self.dao = dao
         self.myredis = myredis
-
-
+        self.couch_queue = couch_queue
 
 
     def process_item(self, item):
@@ -406,7 +413,7 @@ class ProviderMetricsThread(ProviderThread):
                     for metric_name in metrics.keys():
                         if metrics[metric_name]:
                             snap = ItemFactory.build_snap(item["_id"], metrics[metric_name], metric_name)
-                            self.dao.save(snap)
+                            self.couch_queue.put(snap)
         except ProviderError:
             pass
         finally:
@@ -426,8 +433,8 @@ def main():
     backend._monitor()
     backend._cleanup()
         
-    logger.debug("Items on Queues: %s" 
-        % (str([queue_name + " : " + str(Queue.queued_items_ids(queue_name)) for queue_name in Queue.queued_items.keys()]),))
+    logger.debug("Items on tiQueues: %s" 
+        % (str([queue_name + " : " + str(tiQueue.queued_items_ids(queue_name)) for queue_name in tiQueue.queued_items.keys()]),))
 
  
 if __name__ == "__main__":
