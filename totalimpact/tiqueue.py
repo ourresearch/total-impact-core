@@ -13,19 +13,19 @@ log = logging.getLogger("ti.queue")
 # some data useful for testing
 # d = {"doi" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "url" : ["http://cottagelabs.com"]}
 
+# this is the function currently queued by the api upon create or update item
 def update_item(item_doc):
     log.info("IN UPDATE ITEM ******")
-    Queue.init_queue("aliases")
-    Queue.enqueue("aliases", item_doc)    
+    tiQueue.init_queue("aliases")
+    tiQueue.enqueue("aliases", item_doc)    
 
 class RQWorker(StoppableThread):
     def __init__(self, myrq):
-        log.info("%20s in init" % ("RQWorker"))
+        log.info("%20s init" % ("RQWorker"))
         self.myrq = myrq
         StoppableThread.__init__(self)
 
-    def run(self, runonce=False):
-        """ runonce is for the test suite """
+    def run(self):
         log.info("%20s in run" % ("RQWorker"))
 
         while not self.stopped():
@@ -39,7 +39,29 @@ class RQWorker(StoppableThread):
 
         log.info("%20s shutting down" % ("RQWorker"))   
 
-class Queue():
+class CouchWorker(StoppableThread):
+    def __init__(self, couch_queue, mydao):
+        log.info("%20s init" % ("CouchWorker"))
+        self.couch_queue = couch_queue
+        self.mydao = mydao
+        StoppableThread.__init__(self)
+
+    def run(self):
+        log.info("%20s in run" % ("CouchWorker"))
+
+        while not self.stopped():
+            doc = self.couch_queue.get()
+            if doc is None:
+                self._interruptable_sleep(0.5)
+            else:
+                log.info('Saving doc in CouchWorker!')
+                self.mydao.save(doc)
+                self.couch_queue.task_done()
+
+        log.info("%20s shutting down" % ("CouchWorker")) 
+
+
+class tiQueue():
     # This is a FIFO queue, add new item ids to the end of this list
     # to queue, remove from the head
     queued_items = {}
@@ -102,7 +124,7 @@ class Queue():
         providers = ProviderFactory.get_providers(providers_config)
         for provider in providers:
             if provider.provides_metrics:
-                Queue.enqueue(provider.provider_name, item)
+                tiQueue.enqueue(provider.provider_name, item)
 
     @property
     def provider(self):
