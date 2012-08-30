@@ -9,7 +9,7 @@ from totalimpact.providers.provider import ProviderFactory
 
 log = logging.getLogger("ti.queue")
 
-newrelic_app = newrelic.agent.application('total-impact-core')
+from totalimpact.views import mynewrelic_application
 
 
 # some data useful for testing
@@ -92,7 +92,7 @@ class tiQueue():
     def enqueue(cls, queue_name, item):
         log.info("%20s enqueuing item %s"
             % ("Queue " + queue_name, item["_id"]))
-        newrelic_app.record_metric('Custom/Queue/'+queue_name, 1)
+        mynewrelic_application.record_metric('Custom/Queue/'+queue_name, 1)
 
         # Synchronised section
         cls.queue_lock.acquire()
@@ -111,7 +111,7 @@ class tiQueue():
             log.info("%20s  dequeuing item %s" 
                 % ("Queue " + self.queue_name, item["_id"]))
             del self.queued_items[self.queue_name][0]
-            newrelic_app.record_metric('Custom/Queue/'+self.queue_name, -1)
+            mynewrelic_application.record_metric('Custom/Queue/'+self.queue_name, -1)
         self.queue_lock.release()
         return item
 
