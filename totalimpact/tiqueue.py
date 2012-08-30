@@ -66,7 +66,7 @@ class tiQueue():
     # to queue, remove from the head
     queued_items = {}
     queue_lock = threading.Lock()
-    newrelic_app = newrelic.agent.application('total-impact-core')
+    #newrelic_app = newrelic.agent.application('total-impact-core')
 
     def __init__(self, queue_name):
         self.queue_name = queue_name
@@ -91,7 +91,7 @@ class tiQueue():
     def enqueue(cls, queue_name, item):
         log.info("%20s enqueuing item %s"
             % ("Queue " + queue_name, item["_id"]))
-        cls.newrelic_app.record_metric('Custom/Queue/'+queue_name, 1)
+        #cls.newrelic_app.record_metric('Custom/Queue/'+queue_name, 1)
 
         # Synchronised section
         cls.queue_lock.acquire()
@@ -110,7 +110,7 @@ class tiQueue():
             log.info("%20s  dequeuing item %s" 
                 % ("Queue " + self.queue_name, item["_id"]))
             del self.queued_items[self.queue_name][0]
-            self.newrelic_app.record_metric('Custom/Queue/'+self.queue_name, -1)
+            #self.newrelic_app.record_metric('Custom/Queue/'+self.queue_name, -1)
         self.queue_lock.release()
         return item
 

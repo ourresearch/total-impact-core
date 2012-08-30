@@ -11,6 +11,11 @@ from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFound
 from totalimpact import default_settings
 import logging
 
+# temporary, do it here for experimenting
+import newrelic.agent
+mynewrelic_application = newrelic.agent.application('total-impact-core')
+
+
 logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 
@@ -483,9 +488,7 @@ def collection_update(cid=""):
     # expire it from redis
     myredis.expire_collection(cid)
 
-    import newrelic.agent
-    application = newrelic.agent.application('app name')
-    application.record_metric("Custom/Collection/Update", 1)
+    mynewrelic_application.record_metric("Custom/Collection/Update", 1)
 
     # put each of them on the update queue
     for tiid in tiids:
