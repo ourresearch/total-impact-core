@@ -3,6 +3,7 @@ from flask import render_template
 import os, datetime, re, couchdb
 from werkzeug.security import check_password_hash
 from collections import defaultdict
+import rq
 
 from totalimpact import dao, app, tiredis, collection
 from totalimpact.models import ItemFactory, MemberItems, UserFactory, NotAuthenticatedError
@@ -15,6 +16,7 @@ logger.setLevel(logging.DEBUG)
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
+#myrq = rq.Queue("alias", connection=myredis)
 
 logger.debug("Building reference sets")
 myrefsets = None
@@ -481,6 +483,10 @@ def collection_update(cid=""):
     # expire it from redis
     myredis.expire_collection(cid)
 
+    import newrelic.agent
+    application = newrelic.agent.application('app name')
+    application.record_metric("Custom/Collection/Update", 1)
+
     # put each of them on the update queue
     for tiid in tiids:
         logger.debug("In update_item with tiid " + tiid)
@@ -495,6 +501,7 @@ def collection_update(cid=""):
             ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
         )
         mydao.save(item_doc)
+        #myrq.enqueue("update_item", tiid)
 
     resp = make_response("true", 200)
     resp.mimetype = "application/json"
