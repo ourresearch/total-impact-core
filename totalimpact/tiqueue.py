@@ -1,5 +1,6 @@
 import time, datetime, logging, threading, simplejson, copy, couchdb
 import newrelic.agent
+import rq
 
 from totalimpact import default_settings
 from totalimpact.models import ItemFactory
@@ -12,6 +13,23 @@ log = logging.getLogger("ti.queue")
 # some data useful for testing
 # d = {"doi" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "url" : ["http://cottagelabs.com"]}
 
+class RQWorker(StoppableThread):
+    def __init__(self, myrq):
+        log.info("%20s in init" % ("RQWorker"))
+        self.myrq = myrq
+        StoppableThread.__init__(self)
+
+    def run(self, runonce=False):
+        """ runonce is for the test suite """
+        log.info("%20s in run" % ("RQWorker"))
+        #print self.myrq.all()
+
+        #result = self.myrq.dequeue()
+        #if result is None:
+        #    job, queue = result
+        #    log.info("%20s HI HEATHER 2" % ("RQWorker"))
+
+        log.info("%20s shutting down" % ("RQWorker"))
 
 class QueueMonitor(StoppableThread):
     """ Worker to watch couch for items that need aliases (new or update)
@@ -21,6 +39,7 @@ class QueueMonitor(StoppableThread):
     def __init__(self, dao):
         self.dao = dao
         StoppableThread.__init__(self)
+        self.newrelic_app = newrelic.agent.application('total-impact-core')
 
     def run(self, runonce=False):
         """ runonce is for the test suite """
@@ -69,8 +88,7 @@ class QueueMonitor(StoppableThread):
                 del item["needs_aliases"]
 
                 self.dao.save(item)
-                newrelic.agent.record_custom_metric('Custom/Queue/QueueMonitorSave', 1)
-
+                self.newrelic_app.record_metric('Custom/Queue/QueueMonitorSave', 1)
 
                 # Now add the item to the in-memory queue
                 Queue.init_queue("aliases")
@@ -85,7 +103,7 @@ class Queue():
     # to queue, remove from the head
     queued_items = {}
     queue_lock = threading.Lock()
-    
+    newrelic_app = newrelic.agent.application('total-impact-core')
 
     def __init__(self, queue_name):
         self.queue_name = queue_name
@@ -110,7 +128,7 @@ class Queue():
     def enqueue(cls, queue_name, item):
         log.info("%20s enqueuing item %s"
             % ("Queue " + queue_name, item["_id"]))
-        newrelic.agent.record_custom_metric('Custom/Queue/'+queue_name, 1)
+        cls.newrelic_app.record_metric('Custom/Queue/'+queue_name, 1)
 
         # Synchronised section
         cls.queue_lock.acquire()
@@ -129,7 +147,7 @@ class Queue():
             log.info("%20s  dequeuing item %s" 
                 % ("Queue " + self.queue_name, item["_id"]))
             del self.queued_items[self.queue_name][0]
-            newrelic.agent.record_custom_metric('Custom/Queue/'+self.queue_name, -1)
+            self.newrelic_app.record_metric('Custom/Queue/'+self.queue_name, -1)
         self.queue_lock.release()
         return item
 
