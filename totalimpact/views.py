@@ -5,6 +5,9 @@ from werkzeug.security import check_password_hash
 from collections import defaultdict
 import rq
 
+import newrelic.agent
+mynewrelic_application = newrelic.agent.application('total-impact-core')
+
 from totalimpact import dao, app, tiredis, collection, tiqueue
 from totalimpact.models import ItemFactory, MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError
@@ -12,8 +15,6 @@ from totalimpact import default_settings
 import logging
 
 # temporary, do it here for experimenting
-import newrelic.agent
-mynewrelic_application = newrelic.agent.application('total-impact-core')
 
 
 logger = logging.getLogger("ti.views")
