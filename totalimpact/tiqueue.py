@@ -1,4 +1,4 @@
-import time, datetime, logging, threading, simplejson, copy, couchdb
+import time, datetime, logging, threading, json, copy, couchdb
 import newrelic.agent
 import rq
 
@@ -13,6 +13,11 @@ log = logging.getLogger("ti.queue")
 # some data useful for testing
 # d = {"doi" : ["10.1371/journal.pcbi.1000361", "10.1016/j.meegid.2011.02.004"], "url" : ["http://cottagelabs.com"]}
 
+def update_item(item_doc):
+    log.info("IN UPDATE ITEM ******")
+    Queue.init_queue("aliases")
+    Queue.enqueue("aliases", item_doc)    
+
 class RQWorker(StoppableThread):
     def __init__(self, myrq):
         log.info("%20s in init" % ("RQWorker"))
@@ -22,82 +27,18 @@ class RQWorker(StoppableThread):
     def run(self, runonce=False):
         """ runonce is for the test suite """
         log.info("%20s in run" % ("RQWorker"))
-        #print self.myrq.all()
 
-        #result = self.myrq.dequeue()
-        #if result is None:
-        #    job, queue = result
-        #    log.info("%20s HI HEATHER 2" % ("RQWorker"))
-
-        log.info("%20s shutting down" % ("RQWorker"))
-
-class QueueMonitor(StoppableThread):
-    """ Worker to watch couch for items that need aliases (new or update)
-        and place them onto the aliases in-memory queue. 
-    """
-
-    def __init__(self, dao):
-        self.dao = dao
-        StoppableThread.__init__(self)
-        self.newrelic_app = newrelic.agent.application('total-impact-core')
-
-    def run(self, runonce=False):
-        """ runonce is for the test suite """
-
-        error_count = 0
         while not self.stopped():
-            viewname = 'queues/needs_aliases'
-            res = self.dao.view(viewname)
+            job = self.myrq.dequeue()
+            if job is None:
+                self._interruptable_sleep(0.5)
+            else:
+                log.info('Processing %s from queue %s' % (job.func_name, job.origin))
+                job.perform()
+                job.delete()
 
-            try:
-                rows = res.rows
-            except couchdb.ResourceNotFound:
-                log.warning("%20s can't find database. Sleeping then will try again" 
-                    % ("QueueMonitor"))
-                time.sleep(0.5)
-                continue
+        log.info("%20s shutting down" % ("RQWorker"))   
 
-            except couchdb.ServerError, e:
-                log.error("The QueueMonitor got a server error back from CouchDB:{str}".format(
-                    str=e.__repr__()
-                ))
-                error_count += 1
-                if error_count > 3:
-                    log.critical("QueueMonitor still getting CouchDB server errors after {tries} tries: {error_str}".format(
-                        tries=error_count,
-                        error_str=e.__repr__()
-                    ))
-
-                time.sleep(2**error_count)
-                continue
-
-
-            error_count = 0
-            for row in rows:
-                item = copy.deepcopy(row["value"])
-
-                log.info("%20s detected on request queue: item %s"
-                    % ("QueueMonitor", item["_id"]))
-
-                # now save back the updated needs_aliases information
-                # do this before putting on queue, so that no one has changed it.
-                log.info("%20s UPDATING needs_aliases date in db: item %s" 
-                    % ("QueueMonitor", item["_id"]))
-
-                # remove the needs_aliases key from doc, to take off queue
-                del item["needs_aliases"]
-
-                self.dao.save(item)
-                self.newrelic_app.record_metric('Custom/Queue/QueueMonitorSave', 1)
-
-                # Now add the item to the in-memory queue
-                Queue.init_queue("aliases")
-                Queue.enqueue("aliases", item)
-
-            if runonce:
-                break
-            self._interruptable_sleep(0.5)
-    
 class Queue():
     # This is a FIFO queue, add new item ids to the end of this list
     # to queue, remove from the head

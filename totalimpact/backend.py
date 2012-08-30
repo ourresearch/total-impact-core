@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-
 import time, sys, logging, os, traceback
+import rq
+
 from totalimpact import default_settings, dao, tiredis
-from totalimpact.tiqueue import Queue, QueueMonitor
+from totalimpact.tiqueue import Queue, RQWorker
 from totalimpact.models import ItemFactory
 from totalimpact.pidsupport import StoppableThread
 from totalimpact.providers.provider import ProviderError, ProviderFactory
@@ -15,10 +16,12 @@ class backendException(Exception):
 
 class TotalImpactBackend(object):
     
-    def __init__(self, dao, redis, providers):
+    def __init__(self, dao, myredis, providers):
         self.threads = [] 
         self.dao = dao
-        self.redis = redis
+        self.myredis = myredis
+
+        self.rq = rq.Queue("alias", connection=myredis)
         self.dao.update_design_doc()
         self.providers = providers
 
@@ -50,25 +53,25 @@ class TotalImpactBackend(object):
             logger.info("%20s: spawning, n=%i" % (provider.provider_name, thread_count)) 
             # create and start the metrics threads
             for idx in range(thread_count):
-                t = ProviderMetricsThread(self.dao, self.redis, provider)
+                t = ProviderMetricsThread(self.dao, self.myredis, provider)
                 t.thread_id = t.thread_id + '[%i]' % idx
                 t.start()
                 self.threads.append(t)
         
         logger.info("%20s: spawning" % ("aliases"))
-        t = ProvidersAliasThread(self.dao, self.redis, self.providers)
+        t = ProvidersAliasThread(self.dao, self.myredis, self.providers)
         t.start()
         self.threads.append(t)
 
-        logger.info("%20s: spawning" % ("monitor_thread"))
-        # Start the queue monitor
+        logger.info("%20s: spawning" % ("RQ_monitor_thread"))
+        # Start the RQ queue monitor
         # This will watch for newly created items appearing in the couchdb
         # which were requested through the API. It then queues them for the
         # worker processes to handle
-        t = QueueMonitor(self.dao)
+        t = RQWorker(self.rq)
         t.start()
-        t.thread_id = 'monitor_thread'
-        self.threads.append(t)
+        t.thread_id = 'RQ_monitor_thread'
+        self.threads.append(t)        
         
     def _monitor(self):        
         # Install a signal handler so we'll break out of the main loop
@@ -118,9 +121,9 @@ class ProviderThread(StoppableThread):
     """
 
 
-    def __init__(self, dao, redis, queue):
+    def __init__(self, dao, myredis, queue):
         self.dao = dao
-        self.redis = redis
+        self.myredis = myredis
         StoppableThread.__init__(self)
         self.thread_id = "BaseProviderThread"
         self.run_once = False
@@ -191,7 +194,7 @@ class ProviderThread(StoppableThread):
             if method_name == "metrics":
                 # we're not going to call this method, so decr the counter
                 provider_name =  provider.__class__.__name__
-                self.redis.decr_num_providers_left(tiid, provider_name)
+                self.myredis.decr_num_providers_left(tiid, provider_name)
 
             #logger.debug("%20s: %20s skipping %s for %s, does not provide" 
             #    % (self.thread_id, provider, method_name, tiid))
@@ -301,10 +304,10 @@ class ProviderThread(StoppableThread):
 
 class ProvidersAliasThread(ProviderThread):
     
-    def __init__(self, dao, redis, providers):
+    def __init__(self, dao, myredis, providers):
         self.providers = providers
         queue = Queue("aliases")
-        ProviderThread.__init__(self, dao, redis, queue)
+        ProviderThread.__init__(self, dao, myredis, queue)
         self.providers = providers
 
         self.thread_id = "alias_thread"
@@ -380,13 +383,13 @@ class ProviderMetricsThread(ProviderThread):
         requests for a single provider. It will deal with retries and 
         timeouts as required.
     """
-    def __init__(self, dao, redis, provider):
+    def __init__(self, dao, myredis, provider):
         self.provider = provider
         queue = Queue(provider.provider_name)
-        ProviderThread.__init__(self, dao, redis, queue)
+        ProviderThread.__init__(self, dao, myredis, queue)
         self.thread_id = self.provider.provider_name + "_thread"
         self.dao = dao
-        self.redis = redis
+        self.myredis = myredis
 
 
 
@@ -409,13 +412,12 @@ class ProviderMetricsThread(ProviderThread):
         finally:
             # update provider counter so api knows when all have finished
             provider_name =  self.provider.__class__.__name__
-            self.redis.decr_num_providers_left(item["_id"], provider_name)
+            self.myredis.decr_num_providers_left(item["_id"], provider_name)
 
 
 def main():
     mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
     myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
-
 
     # Start all of the backend processes
     providers = ProviderFactory.get_providers(default_settings.PROVIDERS)
