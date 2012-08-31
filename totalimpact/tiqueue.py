@@ -34,11 +34,11 @@ class RQWorker(StoppableThread):
         while not self.stopped():
             job = self.myrq.dequeue()
             if not job:
-                log.debug('no job')
                 self._interruptable_sleep(0.5)
                 counter += 1
-                if counter > 6:
+                if counter > 3:
                     mynewrelic_application.record_metric('Custom/Queue/Depth', self.myrq.count)
+                    mynewrelic_application.record_metric('Custom/Queue/Heartbeat', 1)
                     log.debug('RQ depth is %i' %self.myrq.count)
                     counter = 0
             else:
