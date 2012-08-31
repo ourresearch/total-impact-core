@@ -129,7 +129,7 @@ def create_item(namespace, nid):
 
     item["aliases"][namespace] = [nid]
     mydao.save(item)
-    myrq.enqueue(tiqueue.update_item, item_doc)
+    myrq.enqueue(tiqueue.update_item, item)
 
     logger.info("Created new item '{id}' with alias '{alias}'".format(
         id=item["_id"],
