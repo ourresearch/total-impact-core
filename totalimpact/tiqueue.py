@@ -1,11 +1,12 @@
-import time, datetime, logging, threading, json, copy, couchdb
+import time, datetime, logging, threading, json, copy, couchdb, os
 import newrelic.agent
-import rq
+import redis
 
 from totalimpact import default_settings
 from totalimpact.models import ItemFactory
 from totalimpact.pidsupport import StoppableThread
 from totalimpact.providers.provider import ProviderFactory
+from totalimpact import tiredis
 
 log = logging.getLogger("ti.queue")
 
@@ -19,12 +20,13 @@ from totalimpact.views import mynewrelic_application
 def update_item(item_doc):
     log.info("IN UPDATE ITEM ******")
     tiQueue.init_queue("aliases")
-    tiQueue.enqueue("aliases", item_doc)    
+    tiQueue.enqueue("aliases", item_doc)
 
 class RQWorker(StoppableThread):
     def __init__(self, myrq):
         log.info("%20s init" % ("RQWorker"))
-        self.myrq = myrq
+        self.myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
+
         StoppableThread.__init__(self)
 
     def run(self):
@@ -32,19 +34,17 @@ class RQWorker(StoppableThread):
         counter = 0
 
         while not self.stopped():
-            job = self.myrq.dequeue()
-            if not job:
+            item_doc_json = self.myredis.rpop("alias")
+            if item_doc_json:
+                log.info('Processing %s' %item_doc_json)
+                item = json.loads(item_doc_json)
+                update_item(item)
+            else:
                 self._interruptable_sleep(0.5)
                 counter += 1
                 if counter > 3:
-                    mynewrelic_application.record_metric('Custom/Queue/Depth', self.myrq.count)
                     mynewrelic_application.record_metric('Custom/Queue/Heartbeat', 1)
-                    log.debug('RQ depth is %i' %self.myrq.count)
                     counter = 0
-            else:
-                log.info('Processing %s from queue %s' % (job.func_name, job.origin))
-                job.perform()
-                job.delete()
 
         log.info("%20s shutting down" % ("RQWorker"))   
 
@@ -59,7 +59,7 @@ class CouchWorker(StoppableThread):
         log.info("%20s in run" % ("CouchWorker"))
 
         while not self.stopped():
-            doc = self.couch_queue.get()
+            (doc_type, doc) = self.couch_queue.get()
             if doc is None:
                 self._interruptable_sleep(0.5)
             else:
@@ -67,7 +67,7 @@ class CouchWorker(StoppableThread):
                 self.mydao.save(doc)
                 self.couch_queue.task_done()
 
-        log.info("%20s shutting down" % ("CouchWorker")) 
+        log.info("%20s shutting down" % ("CouchWorker"))         
 
 
 class tiQueue():

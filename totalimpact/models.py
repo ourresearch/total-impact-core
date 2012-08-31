@@ -194,6 +194,7 @@ class ItemFactory():
         return (items, something_currently_updating)
 
 
+
 class MemberItems():
 
     def __init__(self, provider, redis):

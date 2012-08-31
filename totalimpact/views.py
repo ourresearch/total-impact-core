@@ -1,9 +1,9 @@
 from flask import json, request, abort, make_response
 from flask import render_template
-import os, datetime, re, couchdb
+import os, datetime, re, couchdb, copy
 from werkzeug.security import check_password_hash
 from collections import defaultdict
-import rq
+import redis
 
 import newrelic.agent
 mynewrelic_application = newrelic.agent.application('total-impact-core')
@@ -22,7 +22,6 @@ logger.setLevel(logging.DEBUG)
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
-myrq = rq.Queue("alias", connection=myredis)
 
 logger.debug("Building reference sets")
 myrefsets = None
@@ -129,7 +128,9 @@ def create_item(namespace, nid):
 
     item["aliases"][namespace] = [nid]
     mydao.save(item)
-    myrq.enqueue(tiqueue.update_item, item)
+
+    logger.debug("adding item to queue ******** " + str((namespace, nid)))
+    myredis.lpush("alias", json.dumps(item))
 
     logger.info("Created new item '{id}' with alias '{alias}'".format(
         id=item["_id"],
@@ -160,7 +161,9 @@ def create_or_find_items_from_aliases(clean_aliases):
                 ))
             item = ItemFactory.make()
             item["aliases"][namespace] = [nid]
-            myrq.enqueue(tiqueue.update_item, item)
+            logger.debug("adding item to queue ******* " + str((namespace, nid)))
+            myredis.lpush("alias", json.dumps(item))
+
             items.append(item)
             tiids.append(item["_id"])    
     return(tiids, items)
@@ -502,7 +505,9 @@ def collection_update(cid=""):
         )
 
         item_doc = mydao.get(tiid)
-        myrq.enqueue(tiqueue.update_item, item_doc)
+        logger.debug("adding item to queue ******** " + str(tiid))
+        myredis.lpush("alias", json.dumps(item_doc))
+
 
     resp = make_response("true", 200)
     resp.mimetype = "application/json"

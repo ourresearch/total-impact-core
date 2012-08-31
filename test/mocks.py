@@ -5,6 +5,8 @@ from totalimpact.providers.provider import Provider
 from totalimpact.providers.provider import ProviderClientError, ProviderServerError
 from totalimpact.models import ItemFactory
 
+
+
 def dao_init_mock(self, config):
     pass
 
@@ -90,115 +92,53 @@ class QueueMock(object):
 
 class ProviderMock(Provider):
     """ Mock object to simulate a provider for testing 
-    
-        Allows generation of exceptions for when processing specific items, eg:
-          metrics_exceptions = {
-            1 : [ProviderTimeout],
-            5 : [ProviderTimeout, ProviderRateLimitError]
-          }
-        This will then generate the relevant exceptions in sequence. Note an 
-        exception will only be generated once, so once the method is retried
-        it will generate the next exception, or succeed if no exceptions remain.
 
-        You can obtain a list of items processed by this Provider by checking
-        the metrics_processed or aliases_processed dictionaries
-
-        Currently this needs to use "wikipedia:mentions", too hard to add in 
-        a new metric type just for this class.
     """
-
-    provider_name = "mock_provider"
-
+    threads_allowed = 3
     provides_members = True
     provides_aliases = True
     provides_metrics = True
     provides_biblio = True
+
+    metrics_returns = {
+        "mock:pdf": (1, "http://drilldownurl.org"),
+        "mock:html": (2, "http://drilldownurl.org")
+    }
+    aliases_returns = [('doi','10.1')]
+    biblio_returns = {"title": "fake item"}
+
+    exception_to_raise = None
     url = "http://fakeproviderurl.com"
 
-    def __init__(self, provider_name=None, metrics_exceptions=None, aliases_exceptions=None, biblio_exceptions=None):
+    def __init__(self, provider_name=None):
         Provider.__init__(self, None)
         if provider_name:
             self.provider_name = provider_name
         else:
             self.provider_name = 'mock_provider'
-        self.metrics_exceptions = metrics_exceptions
-        self.aliases_exceptions = aliases_exceptions
-        self.biblio_exceptions = biblio_exceptions
-        self.metrics_processed = {}
-        self.aliases_processed = {}
-        self.biblio_processed = {}
 
     def metric_names(self):
         return(["wikipedia:mentions"])
 
+    def get_max_retries(self):
+        return 3
+
+    def get_sleep_time(self, attempts):
+        return attempts * .1
+
     def aliases(self, aliases, url=None, cache_enabled=True):
-        # If we are supplied a mock item, should have (mock, id) as it's
-        # primary alias. Record that we have seen the item.
-        # We cannot generate exceptions if it's not a mock as we won't
-        # know what id to generate for.
-        mock_aliases = [(k,v) for (k,v) in aliases if k == 'mock']
-        if mock_aliases:
-            (ns,val) = mock_aliases[0]
-            item_id = int(val)
-            if self.aliases_exceptions:
-                if self.aliases_exceptions.has_key(item_id):
-                    if len(self.aliases_exceptions[item_id]) > 0:
-                        exc = self.aliases_exceptions[item_id].pop(0)
-                        if exc in [ProviderClientError, ProviderServerError]:
-                            raise exc('error')
-                        else:
-                            raise exc
-            self.aliases_processed[item_id] = True
-        return[('doi','test_alias')]
+        self._raise_preset_exception()
+        return self.aliases_returns
 
     def metrics(self, aliases, url=None, cache_enabled=True):
-        """ Process metrics for the given aliases
-
-            We should probably have been given a mockitem here. If so, then
-            record the alias id under the 'mock' namespace'
-        """
-        # If we are supplied a mock item, should have (mock, id) as it's
-        # primary alias. Record that we have seen the item.
-        # We cannot generate exceptions if it's not a mock as we won't
-        # know what id to generate for.
-        mock_aliases = [(k,v) for (k,v) in aliases if k == 'mock']
-        if mock_aliases:
-            (ns,val) = mock_aliases[0]
-            item_id = int(val)
-            if self.metrics_exceptions:
-                if self.metrics_exceptions.has_key(item_id):
-                    if len(self.metrics_exceptions[item_id]) > 0:
-                        exc = self.metrics_exceptions[item_id].pop(0)
-                        if exc in [ProviderClientError, ProviderServerError]:
-                            raise exc('error')
-                        else:
-                            raise exc
-                self.metrics_processed[item_id] = True
-        return {"wikipedia:mentions": (1, "http://drilldownurl.org")}
+        self._raise_preset_exception()
+        return self.metrics_returns
 
     def biblio(self, aliases, url=None, cache_enabled=True):
-        """ Process biblio for the given aliases
+        self._raise_preset_exception()
+        return self.biblio_returns
 
-            We should probably have been given a mockitem here. If so, then
-            record the alias id under the 'mock' namespace'
-        """
-        # If we are supplied a mock item, should have (mock, id) as it's
-        # primary alias. Record that we have seen the item.
-        # We cannot generate exceptions if it's not a mock as we won't
-        # know what id to generate for.
-        mock_aliases = [(k,v) for (k,v) in aliases if k == 'mock']
-        if mock_aliases:
-            (ns,val) = mock_aliases[0]
-            item_id = int(val)
-            if self.biblio_exceptions:
-                if self.biblio_exceptions.has_key(item_id):
-                    if len(self.biblio_exceptions[item_id]) > 0:
-                        exc = self.biblio_exceptions[item_id].pop(0)
-                        if exc in [ProviderClientError, ProviderServerError]:
-                            raise exc('error')
-                        else:
-                            raise exc
-                self.biblio_processed[item_id] = True
-        return {"title": "mock article name"}
-
+    def _raise_preset_exception(self):
+        if self.exception_to_raise:
+            raise self.exception_to_raise
         

@@ -1,4 +1,4 @@
-from totalimpact.tiqueue import Queue
+from totalimpact.tiqueue import tiQueue
 from nose.tools import assert_equals
 
 # needs updated tests
@@ -7,28 +7,28 @@ FAKE_ITEM = { "_id": "IAmTheMockYouAreLookingFor"}
 
 class TestQueue():
 	def setUp(self):
-		Queue.init_queue("aliases")
-		Queue.clear()
+		tiQueue.init_queue("aliases")
+		tiQueue.clear()
 
 	def test_enqueue(self):
-		Queue.clear()
-		Queue.enqueue("aliases", FAKE_ITEM)
-		assert_equals(len(Queue.queued_items["aliases"]), 1)
-		item_on_queue = Queue.queued_items["aliases"][0]
+		tiQueue.clear()
+		tiQueue.enqueue("aliases", FAKE_ITEM)
+		assert_equals(len(tiQueue.queued_items["aliases"]), 1)
+		item_on_queue = tiQueue.queued_items["aliases"][0]
 		assert_equals(item_on_queue["_id"], 'IAmTheMockYouAreLookingFor')
 
 	def test_clear(self):
-	    Queue.enqueue("aliases", FAKE_ITEM)
-	    Queue.clear()
-	    assert_equals(len(Queue.queued_items["aliases"]), 0)
+	    tiQueue.enqueue("aliases", FAKE_ITEM)
+	    tiQueue.clear()
+	    assert_equals(len(tiQueue.queued_items["aliases"]), 0)
 
 	def test_dequeue(self):
-		Queue.clear()
-		print "before", Queue.queued_items
-		Queue.enqueue("aliases", FAKE_ITEM)
-		print "1 ", Queue.queued_items
-		item = Queue("aliases").dequeue()
-		print "2 ", Queue.queued_items
+		tiQueue.clear()
+		print "before", tiQueue.queued_items
+		tiQueue.enqueue("aliases", FAKE_ITEM)
+		print "1 ", tiQueue.queued_items
+		item = tiQueue("aliases").dequeue()
+		print "2 ", tiQueue.queued_items
 		assert_equals(item["_id"], "IAmTheMockYouAreLookingFor")
-		assert_equals(len(Queue.queued_items["aliases"]), 0)
+		assert_equals(len(tiQueue.queued_items["aliases"]), 0)
 

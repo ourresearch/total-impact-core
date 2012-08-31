@@ -11,6 +11,7 @@ from totalimpact.providers.provider import ProviderError, ProviderFactory
 logger = logging.getLogger('ti.backend')
 logger.setLevel(logging.DEBUG)
 
+
 class backendException(Exception):
     pass
 
@@ -195,6 +196,8 @@ class ProviderThread(StoppableThread):
             return None
 
         provides_method_name = "provides_" + method_name
+        print provider
+        print provides_method_name
         provides_method_to_call = getattr(provider, provides_method_name)
         if not provides_method_to_call:
 
@@ -311,78 +314,240 @@ class ProviderThread(StoppableThread):
 
 class ProvidersAliasThread(ProviderThread):
     
-    def __init__(self, couch_queue, dao, myredis, providers):
+    def __init__(self, couch_queue=None, dao=None, myredis=None, providers=None):
         self.providers = providers
         queue = tiQueue("aliases")
         ProviderThread.__init__(self, dao, myredis, queue)
         self.providers = providers
 
         self.thread_id = "alias_thread"
+        self.worker_id = "alias_thread"
         self.dao = dao
         self.couch_queue = couch_queue
+        self.method_name = "aliases"
+        self.provider_name = "aliases"
 
-
-        
-    def process_item(self, item):
+    def update_loop(self, item):
         logger.info("%20s: initial alias list for %s is %s" 
-                    % (self.thread_id, item["_id"], item["aliases"]))
+                    % (self.worker_id, item["_id"], item["aliases"]))
 
-        if not self.stopped():
-            for provider in self.providers: 
+        new_aliases = item["aliases"]
+        tiid = item["_id"]
+        all_new_aliases = []
+        while (new_aliases):
+            (success, new_aliases) = self.ask_provider(item["aliases"], item["_id"])
+            if success:
+                if new_aliases:
+                    logger.debug("here are the new aliases: {aliases}.".format(
+                        aliases=str(new_aliases)))
+                    all_new_aliases += new_aliases
 
-                (success, new_aliases) = self.process_item_for_provider(item, provider, 'aliases')
-                if success:
-                    if new_aliases:
-                        logger.debug("%20s: %20s new aliases for %s: %s" 
-                                    % (self.thread_id, provider, item["_id"], str(new_aliases)))
-                        # add new aliases
-                        for ns, nid in new_aliases:
-                            try:
-                                item["aliases"][ns].append(nid)
-                                item["aliases"][ns] = list(set(item["aliases"][ns]))
-                            except KeyError: # no ids for that namespace yet. make it.
-                                item["aliases"][ns] = [nid]
-                            except AttributeError:
-                                # nid is a string; overwrite.
-                                item["aliases"][ns] = nid
-                                logger.debug("aliases[{ns}] is a string ('{nid}'); overwriting".format(
-                                    ns=ns,
-                                    nid=nid
-                                ))
+                    #remove title and url new aliases to determine loop
+                    new_aliases = [(namespace, nid) for (namespace, nid) in new_aliases if namespace not in ["url", "title"]]
+            else:
+                logger.info("%20s: NOT SUCCESS in update_looop %s, partial aliases only for provider %s"
+                    % (self.worker_id, item["_id"], self.provider_name))
 
+        if all_new_aliases:
+            item = self.add_aliases(all_new_aliases, item) # to be replaced
+
+        logger.info("%20s: final alias list for %s is %s" 
+                % (self.thread_id, item["_id"], item["aliases"]))
+
+        # Time to add this to the metrics queue
+        logger.debug("%20s: FULL ITEM on metrics queue %s %s"
+            % (self.thread_id, item["_id"], item))
+        logger.debug("%20s: added to metrics queues complete for item %s " % (self.thread_id, item["_id"]))
+        if self.couch_queue:
+            self.couch_queue.put(("alias", item))
+        self.queue.add_to_metrics_queues(item)
+
+        return all_new_aliases
+
+
+    def update(self, item):
+        logger.info("%20s: initial alias list for %s is %s" 
+                    % (self.worker_id, item["_id"], item["aliases"]))
+
+        (success, new_aliases) = self.ask_provider(item["aliases"], item["_id"])
+
+        if success:
+            if new_aliases:
+                logger.debug("here are the new aliases from {provider}: {aliases}.".format(
+                    provider=self.provider_name, aliases=str(new_aliases)))
+                item = self.add_aliases(new_aliases, item)
+        else:
+            logger.info("%20s: NOT SUCCESS in update %s, partial aliases only for provider %s"
+                % (self.worker_id, item["_id"], self.provider_name))
+
+        logger.info("%20s: interm aliases for item %s after %s: %s"
+            % (self.worker_id, item["_id"],  self.provider_name, str(item["aliases"])))
+
+        return item
+
+    def add_aliases(self, new_alias_tuples, item):
+        for ns, nid in new_alias_tuples:
+            try:
+                item["aliases"][ns].append(nid)
+                item["aliases"][ns] = list(set(item["aliases"][ns]))
+            except KeyError: # no ids for that namespace yet. make it.
+                item["aliases"][ns] = [nid]
+            except AttributeError:
+                # nid is a string; overwrite.
+                item["aliases"][ns] = nid
+                logger.debug("aliases[{ns}] is a string ('{nid}'); overwriting".format(
+                    ns=ns, nid=nid))
+        return item
+
+    def alias_tuples_from_dict(self, aliases_dict):
+        """
+        Convert from aliases dict we use in items, to a list of alias tuples.
+
+        The providers need the tuples list, which look like this:
+        [(doi, 10.123), (doi, 10.345), (pmid, 1234567)]
+        """
+        alias_tuples = []
+        for ns, ids in aliases_dict.iteritems():
+            if isinstance(ids, basestring): # it's a date, not a list of ids
+                alias_tuples.append((ns, ids))
+            else:
+                for id in ids:
+                    alias_tuples.append((ns, id))
+
+        return alias_tuples
+
+    def log_error(self, aliases, tiid, error_msg, tb):
+        # This method is called to record any errors which we obtain when
+        # trying to call the provider.
+        logger.error("%20s: exception for item(%s): %s" %
+                     (self.worker_id, tiid, error_msg))
+        
+        e = backendException(error_msg)
+        e.id = tiid
+        e.provider = self.provider_name
+        e.stack_trace = "".join(traceback.format_tb(tb))
+        
+        logger.debug(str(e.stack_trace))
+
+    def decide_provider_to_call(self, alias_dict):
+        '''Uses available aliases to decide the item's genre'''
+
+        provider_name = None
+        if "doi" in alias_dict:
+            if "10.5061/dryad." in "".join(alias_dict["doi"]):
+                provider_name = "dryad"
+            else:
+                provider_name = "crossref"
+        elif "pmid" in alias_dict:
+            provider_name = "pubmed"
+        elif "url" in alias_dict:
+            joined_urls = "".join(alias_dict["url"])
+            if "slideshare.net" in joined_urls:
+                provider_name = "slideshare"
+            elif "github.com" in joined_urls:
+                provider_name = "github"
+        if "title" in alias_dict:
+            provider_name = None
+        return provider_name
+
+
+    def ask_provider(self, aliases, tiid):
+        """ Get a response from the provider, using the supplied aliases
+
+            This will deal with retries and sleep / backoff as per the
+            configuration for the given provider.  Should
+            probably be split into smaller methods; some of these should be
+            in the ItemFactory.
+        """
+
+        error_counts = 0
+        success = False
+        error_limit_reached = False
+        error_msg = False
+        max_retries = 0
+        response = None
+
+        while not error_limit_reached and not success:
+            response = None
+
+            try:
+                cache_enabled = (error_counts == 0)
+
+                if not cache_enabled:
+                    logger.debug("%20s: cache NOT enabled %s for %s"
+                        % (self.worker_id, self.method_name, tiid))
+
+                provider_name = self.decide_provider_to_call(aliases)
+                if provider_name:
+                    provider = ProviderFactory.get_provider(provider_name)
                 else:
-                    logger.info("%20s: NOT SUCCESS in process_item %s, partial aliases only for provider %s" 
-                        % (self.thread_id, item["_id"], provider.provider_name))
+                    provider = None
 
-                (success, new_biblio) = self.process_item_for_provider(item, provider, 'biblio')
-                if success:
-                    if new_biblio:
-                        for (k, v) in new_biblio.iteritems():
-                            if not item["biblio"].has_key(k):
-                                item["biblio"][k] = v
-
-                        logger.info("%20s: in process_item biblio %s provider %s" 
-                            % (self.thread_id, item["_id"], provider.provider_name))
-
+                alias_tuples = self.alias_tuples_from_dict(aliases)
+                if alias_tuples and provider:
+                    logger.debug("%20s: calling %s for %s" %
+                                 (self.worker_id, self.method_name, tiid))
+                    try:
+                        response = self.call_provider_method(
+                            provider, 
+                            self.method_name, 
+                            alias_tuples,
+                            tiid,
+                            cache_enabled=cache_enabled)
+                    except NotImplementedError:
+                        response = None
                 else:
-                    logger.info("%20s: NOT SUCCESS in process_item %s, partial biblio only for provider %s" 
-                        % (self.thread_id, item["_id"], provider.provider_name))
+                    logger.debug("%20s: skipping %s %s %s for %s, no aliases"
+                        % (self.worker_id, self.provider_name, self.method_name, str(aliases), tiid))
+                    response = None
 
-                #logger.debug("%20s: interm aliases for item %s after %s: %s" 
-                #    % (self.thread_id, item["_id"], provider.provider_name, str(item["aliases"])))
-                #logger.debug("%20s: interm biblio for item %s after %s: %s" 
-                #    % (self.thread_id, item["_id"], provider.provider_name, str(item["biblio"])))
+                success = True # didn't get any errors.
 
-            logger.info("%20s: final alias list for %s is %s" 
-                    % (self.thread_id, item["_id"], item["aliases"]))
+            except ProviderError, e:
+                error_msg = repr(e)
+            except Exception, e:
+                # All other fatal errors. These are probably some form of
+                # logic error. We consider these to be fatal.
+                error_msg = repr(e)
+                error_limit_reached = True
 
-            # Time to add this to the metrics queue
-            logger.debug("%20s: FULL ITEM on metrics queue %s %s"
-                % (self.thread_id, item["_id"],item))
-            logger.debug("%20s: added to metrics queues complete for item %s " % (self.thread_id, item["_id"]))
-            self.couch_queue.put(item)
-            self.queue.add_to_metrics_queues(item)
+            if error_msg:
+                # If we had any errors, update the error counts and sleep if
+                # we need to do so, before retrying.
+                tb = sys.exc_info()[2]
+                self.log_error(
+                    aliases,
+                    tiid,
+                    '%s on %s %s' % (error_msg, self.provider_name, self.method_name),
+                    tb)
 
+                error_counts += 1
+
+                if error_counts > max_retries:
+                    logger.error("%20s: error limit reached (%i/%i) for %s, aborting %s %s" % (
+                        self.worker_id, error_counts, max_retries, tiid, self.provider_name, self.method_name))
+                    error_limit_reached = True
+                else:
+                    duration = self.provider.get_sleep_time(error_counts)
+                    logger.warning("%20s: error on %s, pausing thread for %i seconds." %
+                        (self.worker_id, tiid, duration))
+                    time.sleep(duration)
+
+        if success:
+            # response may be None for some methods and inputs
+            if response:
+                logger.debug("%20s: success %s %s for %s, got %i results"
+                    % (self.worker_id, self.provider_name, self.method_name, tiid, len(response)))
+            else:
+                logger.debug("%20s: success %s %s for %s, got 0 results"
+                    % (self.worker_id, self.provider_name, self.method_name, tiid))
+
+        return (success, response)
+
+
+
+    def process_item(self, item):
+        return self.update_loop(item)
 
     
 
@@ -413,7 +578,7 @@ class ProviderMetricsThread(ProviderThread):
                     for metric_name in metrics.keys():
                         if metrics[metric_name]:
                             snap = ItemFactory.build_snap(item["_id"], metrics[metric_name], metric_name)
-                            self.couch_queue.put(snap)
+                            self.couch_queue.put(("snap", snap))
         except ProviderError:
             pass
         finally:
