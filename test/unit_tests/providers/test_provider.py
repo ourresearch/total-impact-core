@@ -11,8 +11,9 @@ sampledir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_pro
 class Test_Provider():
 
     TEST_PROVIDER_CONFIG = [
-        ("wikipedia", {}),
-        ("mendeley", {})
+        ("pubmed", { "workers":1 }),
+        ("wikipedia", {"workers": 3}),
+        ("mendeley", {"workers": 3}),
     ]
     
     TEST_JSON = """{"repository":{"homepage":"","watchers":7,"has_downloads":true,"fork":false,"language":"Java","has_issues":true,"has_wiki":true,"forks":0,"size":4480,"private":false,"created_at":"2008/09/29 04:26:42 -0700","name":"gtd","owner":"egonw","description":"Git-based ToDo tool.","open_issues":2,"url":"https://github.com/egonw/gtd","pushed_at":"2012/02/28 10:21:26 -0800"}}"""
@@ -26,7 +27,28 @@ class Test_Provider():
     def test_get_providers(self):
         providers = ProviderFactory.get_providers(self.TEST_PROVIDER_CONFIG)
         provider_names = [provider.__class__.__name__ for provider in providers]
-        assert_equals(set(provider_names), set(['Mendeley', 'Wikipedia']))
+        assert_equals(set(provider_names), set(['Mendeley', 'Wikipedia', "Pubmed"]))
+
+    def test_get_providers_filters_by_metrics(self):
+        # since all the providers do metrics, "metrics" arg changes nought.
+        providers = ProviderFactory.get_providers(self.TEST_PROVIDER_CONFIG, "metrics")
+        provider_names = [provider.__class__.__name__ for provider in providers]
+        assert_equals(set(provider_names), set(['Mendeley', 'Wikipedia', "Pubmed"]))
+
+    def test_get_providers_filters_by_biblio(self):
+        providers = ProviderFactory.get_providers(self.TEST_PROVIDER_CONFIG, "biblio")
+        provider_names = [provider.__class__.__name__ for provider in providers]
+        assert_equals(set(provider_names), set(['Mendeley', 'Pubmed']))
+
+    def test_get_providers_filters_by_aliases(self):
+        providers = ProviderFactory.get_providers(self.TEST_PROVIDER_CONFIG, "aliases")
+        provider_names = [provider.__class__.__name__ for provider in providers]
+        assert_equals(set(provider_names), set(['Pubmed', "Mendeley"]))
+
+    def test_get_providers_adds_threads_allowed(self):
+        providers = ProviderFactory.get_providers(self.TEST_PROVIDER_CONFIG)
+        threads_allowed = [provider.threads_allowed for provider in providers]
+        assert_equals(set([1,3,3]), set(threads_allowed))
 
     def test_lookup_json(self):
         page = self.TEST_JSON
@@ -81,5 +103,4 @@ class TestProviderFactory():
         print md["delicious"]
         assert md["delicious"]['metrics']["bookmarks"]["description"]
         assert_equals(md["delicious"]['url'], "http://www.delicious.com")
-
 

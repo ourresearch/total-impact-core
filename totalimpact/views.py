@@ -8,7 +8,7 @@ import redis
 import newrelic.agent
 mynewrelic_application = newrelic.agent.application('total-impact-core')
 
-from totalimpact import dao, app, tiredis, collection, tiqueue
+from totalimpact import dao, app, tiredis, collection
 from totalimpact.models import ItemFactory, MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError
 from totalimpact import default_settings
@@ -129,8 +129,9 @@ def create_item(namespace, nid):
     item["aliases"][namespace] = [nid]
     mydao.save(item)
 
-    logger.debug("adding item to queue ******** " + str((namespace, nid)))
-    myredis.lpush("alias", json.dumps(item))
+    queue_string = json.dumps([item["_id"], item["aliases"]])
+    logger.debug("adding item to queue ******* " + queue_string)
+    myredis.lpush(["alias"], queue_string)
 
     logger.info("Created new item '{id}' with alias '{alias}'".format(
         id=item["_id"],
@@ -161,8 +162,6 @@ def create_or_find_items_from_aliases(clean_aliases):
                 ))
             item = ItemFactory.make()
             item["aliases"][namespace] = [nid]
-            logger.debug("adding item to queue ******* " + str((namespace, nid)))
-            myredis.lpush("alias", json.dumps(item))
 
             items.append(item)
             tiids.append(item["_id"])    
@@ -192,12 +191,17 @@ def prep_collection_items(aliases):
         ))
 
     # for each item, set the number of providers that need to run before the update is done
+    # and put them on the update queue
     for item in items:
         myredis.set_num_providers_left(
             item["_id"],
             ProviderFactory.num_providers_with_metrics(
                 default_settings.PROVIDERS)
         )
+        queue_string = json.dumps([item["_id"], item["aliases"]])
+        logger.debug("adding item to queue ******* " + queue_string)
+        myredis.lpush(["alias"], queue_string)
+
 
     # batch upload the new docs to the db
     for doc in mydao.db.update(items):
@@ -505,8 +509,9 @@ def collection_update(cid=""):
         )
 
         item_doc = mydao.get(tiid)
-        logger.debug("adding item to queue ******** " + str(tiid))
-        myredis.lpush("alias", json.dumps(item_doc))
+        queue_string = json.dumps([item_doc["_id"], item_doc["aliases"]])
+        logger.debug("adding item to queue ******* " + queue_string)
+        myredis.lpush(["alias"], queue_string)
 
 
     resp = make_response("true", 200)

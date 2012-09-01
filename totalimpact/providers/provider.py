@@ -25,7 +25,7 @@ class ProviderFactory(object):
         return instance
 
     @classmethod
-    def get_providers(cls, config_providers):
+    def get_providers(cls, config_providers, filter_by=None):
         """ config is the application configuration """
         providers = []
         for provider_name, v in config_providers:
@@ -33,9 +33,13 @@ class ProviderFactory(object):
                 prov = ProviderFactory.get_provider(provider_name)
                 prov.provider_name = provider_name
                 providers.append(prov)
+
+                if filter_by is not None:
+                    if not getattr(prov, "provides_"+filter_by):
+                        providers.pop()
+
             except ProviderConfigurationError:
-                logger.error("%20s Unable to configure provider ... skipping %s" 
-                    %(self.provider_name, str(v)))
+                logger.error("Unable to configure provider ... skipping " + str(v))
         return providers
 
     @classmethod

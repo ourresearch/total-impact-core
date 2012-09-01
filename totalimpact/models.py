@@ -1,6 +1,6 @@
 from werkzeug import generate_password_hash, check_password_hash
 from couchdb import ResourceNotFound, ResourceConflict
-import shortuuid, datetime, hashlib, threading, json, time
+import shortuuid, datetime, hashlib, threading, json, time, copy
 
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact.providers.provider import ProviderTimeout
@@ -106,8 +106,6 @@ class ItemFactory():
         item["last_modified"] = now
         item["created"] = now
         item["type"] = "item"
-        item["providersWithMetricsCount"] = ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-
         return item
 
 
@@ -122,6 +120,8 @@ class ItemFactory():
                 return "article"
         elif "pmid" in alias_dict:
             return "article"
+        elif "github" in alias_dict:
+            return "software"
         elif "url" in alias_dict:
             joined_urls = "".join(alias_dict["url"])
             if "slideshare.net" in joined_urls:
@@ -149,6 +149,33 @@ class ItemFactory():
                 for id in ids:
                     alias_tuples.append((ns, id))
         return alias_tuples
+
+    @classmethod
+    def alias_dict_from_tuples(self, aliases_tuples):
+        alias_dict = {}
+        for (ns, ids) in aliases_tuples:
+            if ns in alias_dict:
+                alias_dict[ns] += [ids]
+            else:
+                alias_dict[ns] = [ids]
+        return alias_dict
+
+    @classmethod
+    def merge_alias_dicts(self, aliases1, aliases2):
+        logger.debug("in MERGE ALIAS DICTS with %s and %s" %(aliases1, aliases2))
+        merged_aliases = copy.deepcopy(aliases1)
+        for ns, nid in aliases2.iteritems():
+            try:
+                merged_aliases[ns].append(nid)
+                merged_aliases[ns] = list(set(aliases2[ns]))
+            except KeyError: # no ids for that namespace yet. make it.
+                merged_aliases[ns] = nid
+            except AttributeError:
+                # nid is a string; overwrite.
+                merged_aliases[ns] = nid
+                logger.debug("aliases[{ns}] is a string ('{nid}'); overwriting".format(
+                    ns=ns, nid=nid))
+        return merged_aliases
 
     @classmethod
     def get_metric_names(self, providers_config):
