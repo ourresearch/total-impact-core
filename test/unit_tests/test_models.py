@@ -178,6 +178,22 @@ class TestItemFactory():
         genre = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "unknown")
 
+    def test_merge_alias_dicts(self):
+        aliases1 = {"ns1":["id1"]}
+        aliases2 = {"ns2":["id2"], "ns1":["id1", "id3", "id4"]}
+        response = models.ItemFactory.merge_alias_dicts(aliases1, aliases2)
+        assert_equals(response, {'ns1': ['id4', 'id3', 'id1'], 'ns2': ['id2']})
+
+    def test_alias_tuples_from_dict(self):
+        aliases = {"unknown_namespace":["myname"]}
+        alias_tuples = models.ItemFactory.alias_tuples_from_dict(aliases)
+        assert_equals(alias_tuples, [('unknown_namespace', 'myname')])
+
+    def test_alias_dict_from_tuples(self):
+        aliases = [('unknown_namespace', 'myname')]
+        alias_dict = models.ItemFactory.alias_dict_from_tuples(aliases)
+        assert_equals(alias_dict, {'unknown_namespace': ['myname']})
+
     def test_build_item_for_client(self):
         item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'providersWithMetricsCount': 11, 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
         snaps = [{'tiid': '4mlln04q1rxy6l9oeb3t7ftv', 'metric_name': 'mendeley:groups', 'created': '2012-08-23T21:41:05.526046', '_rev': '1-5fde8dbb5c3af04114adb18295a42259', 'value': 2, 'drilldown_url': 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/', '_id': '25gvr5xxvbu8mabgzvvkdf65', 'type': 'metric_snap'}]

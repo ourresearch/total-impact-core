@@ -220,11 +220,14 @@ class IdSampler(object):
             return dois
 
         if r.status_code == 200:
-            dois = json.loads(r.text)
-            logger.info("IdSampler got {count} random dois back in {elapsed} seconds".format(
-                    count=len(dois), elapsed=round(time.time() - start, 2)))
-            logger.debug("IdSampler got these dois back: " + str(dois))
-        else:
+            try:
+                dois = json.loads(r.text)
+                logger.info("IdSampler got {count} random dois back in {elapsed} seconds".format(
+                        count=len(dois), elapsed=round(time.time() - start, 2)))
+                logger.debug("IdSampler got these dois back: " + str(dois))
+            except ValueError:
+                pass
+        if not dois:
             logger.warning("the random doi service isn't working right now (got error code); sending back an empty list.")
 
         return dois

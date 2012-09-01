@@ -1,77 +1,10 @@
-import os, unittest, time, logging
-from nose.tools import nottest, assert_equals
-from test.utils import slow
+import json, os, Queue
 
-from totalimpact.backend import TotalImpactBackend, ProviderMetricsThread, ProvidersAliasThread, StoppableThread
-from totalimpact.providers.provider import Provider, ProviderFactory, ProviderTimeout
-from totalimpact import dao, tiredis, backend
+from totalimpact import dao, tiredis, new_backend
+from totalimpact.providers.provider import Provider, ProviderTimeout, ProviderFactory
+from nose.tools import raises, assert_equals, nottest
+from test.utils import http
 
-
-TEST_DB_NAME = "test_dao"
-
-#@TODO this needs lots and lots of work, including using the same local db test
-# approach that test_views.py uses.
-
-
-from test.mocks import ProviderMock, QueueMock
-
-def slow(f):
-    f.slow = True
-    return f
-
-logging.disable(logging.CRITICAL)
-CWD, _ = os.path.split(__file__)
-
-TIME_SCALE = 0.0005 #multiplier to run the tests as fast as possible
-BACKEND_POLL_INTERVAL = 0.5 #seconds
-
-class ProviderNotImplemented(Provider):
-    def __init__(self):
-        Provider.__init__(self, None)
-        self.provider_name = 'not_implemented'
-    def aliases(self, item, provider_url_template=None, cache_enabled=True):
-        raise NotImplementedError()
-    def metrics(self, item, provider_url_template=None, cache_enabled=True):
-        raise NotImplementedError()
-
-
-def save_and_unqueue_mock(self, item):
-    pass
-    
-def get_providers_mock(cls, config):
-    return [ProviderMock("1"), ProviderMock("2"), ProviderMock("3")]
-
-
-
-def dao_init_mock(self, name, url):
-    pass
-
-class InterruptTester(object):
-    def run(self, stop_after=0):
-        st = StoppableThread()
-        st.start()
-        
-        time.sleep(stop_after)
-        st.stop()
-        st.join()
-
-class ProviderNotImplemented(Provider):
-    def __init__(self):
-        Provider.__init__(self, None)
-        self.provider_name = 'not_implemented'
-    def aliases(self, item, provider_url_template=None, cache_enabled=True):
-        raise NotImplementedError()
-    def metrics(self, item, provider_url_template=None, cache_enabled=True):
-        raise NotImplementedError()
-
-def first_mock(self):
-    return {"_id": "testitemid"}
-
-def save_and_unqueue_mock(self, item):
-    pass
-    
-def get_providers_mock(cls, config):
-    return [ProviderMock("1"), ProviderMock("2"), ProviderMock("3")]
 
 class TestBackend():
     
@@ -89,9 +22,9 @@ class TestBackend():
         self.r = tiredis.from_url("redis://localhost:6379")
         self.r.flushdb()
 
+        self.b = new_backend.Backend([Queue.Queue()], self.r, self.d)
 
-        self.providers = [ProviderMock("1"), ProviderMock("2"), ProviderMock("3")]
-        self.item_with_aliases = {
+        self.fake_item = {
             "_id": "1",
             "type": "item",
             "num_providers_still_updating":1,
@@ -99,123 +32,151 @@ class TestBackend():
             "biblio": {},
             "metrics": {}
         }
-        
-        
+        self.fake_aliases = {"pmid":["111"]}
+        self.tiid = "abcd"
+
     def teardown(self):
-        pass
         self.d.delete_db(os.environ["CLOUDANT_DB"])
 
 
+class TestBackendClass(TestBackend):
 
-class TestAliasesWorker(TestBackend):
+    def test_push_on_update_queue(self):
+        self.b.push_on_update_queue(self.tiid, self.fake_aliases)
+        expected = [u'abcd', {u'pmid': [u'111']}]
+        in_queue = json.loads(self.r.rpop("alias"))
+        assert_equals(in_queue, expected)
 
-    @nottest
-    def test_update(self):
-        aw = backend.ProvidersAliasThread(providers=[self.providers[0]])
-        new_item = aw.update(self.item_with_aliases, override=True)
-        print new_item
-        assert_equals(
-            new_item["aliases"]["doi"][0],
-            "10.1"
-        )
+    def test_pop_from_update_queue_when_empty(self):
+        response = self.b.pop_from_update_queue()
+        assert_equals(response, None)
 
-    @nottest
-    def test_update_with_another_doi(self):
-        # put a doi in the item
-        aw = backend.ProvidersAliasThread(providers=[self.providers[0]])
-        item_with_doi = aw.update(self.item_with_aliases, override=True)
+    def test_pop_from_update_queue_after_push(self):
+        self.b.push_on_update_queue(self.tiid, self.fake_aliases)
+        response = self.b.pop_from_update_queue()
+        expected = [u'abcd', {u'pmid': [u'111']}]
+        assert_equals(response, expected)
 
-        # another provider also gets dois...
-        self.providers[1].aliases_returns = [("doi", "10.2")]
-        aw = backend.ProvidersAliasThread(providers=[self.providers[1]])
-        item_with_two_dois = aw.update(item_with_doi, override=True)
+    def test_decide_who_to_call_next_unknown(self):
+        unknown_item = {"aliases":{"unknownnamespace":["111"]},"biblio":{},"metrics":{}}
+        response = self.b.decide_who_to_call_next(unknown_item)
+        print response
+        # expect blanks
+        expected = {'metrics': [], 'biblio': [], 'aliases': []}
+        assert_equals(response, expected)
 
-        print item_with_two_dois
-        assert_equals(
-            item_with_two_dois["aliases"]["doi"],
-            ["10.1", "10.2"]
-        )
+    def test_decide_who_to_call_next_webpage_no_title(self):
+        webpage_item = {"aliases":{"url":["http://a"]},"biblio":{},"metrics":{}}
+        response = self.b.decide_who_to_call_next(webpage_item)
+        print response
+        # expect all metrics and lookup the biblio
+        expected = {'metrics': "all", 'biblio': ["webpage"], 'aliases': []}
+        assert_equals(response, expected)
 
-    @nottest
-    def test_update_with_provider_timeout(self):
-        self.providers[0].exception_to_raise = ProviderTimeout
-        aw = backend.ProvidersAliasThread(providers=[self.providers[0]])
-        new_item = aw.update(self.item_with_aliases)
-        print new_item
+    def test_decide_who_to_call_next_webpage_with_title(self):
+        webpage_item = {"aliases":{"url":["http://a"]},"biblio":{"title":"hi"},"metrics":{}}
+        response = self.b.decide_who_to_call_next(webpage_item)
+        print response
+        # expect all metrics, no need to look up biblio
+        expected = {'metrics': "all", 'biblio': [], 'aliases': []}
+        assert_equals(response, expected)
 
-        assert_equals(len(new_item["aliases"]), 1) # new alias not added
+    def test_decide_who_to_call_next_slideshare_no_title(self):
+        slideshare_item = {"aliases":{"url":["http://abc.slideshare.net/def"]},"biblio":{},"metrics":{}}
+        response = self.b.decide_who_to_call_next(slideshare_item)
+        print response
+        # expect all metrics and look up the biblio
+        expected = {'metrics': "all", 'biblio': ["slideshare"], 'aliases': []}
+        assert_equals(response, expected)
 
-  
+    def test_decide_who_to_call_next_dryad_no_url(self):
+        dryad_item = {"aliases":{"doi":["10.5061/dryad.3td2f"]},"biblio":{},"metrics":{}}
+        response = self.b.decide_who_to_call_next(dryad_item)
+        print response
+        # expect need to resolve the dryad doi before can go get metrics
+        expected = {'metrics': [], 'biblio': [], 'aliases': ['dryad']}
+        assert_equals(response, expected)
 
-class TestOldBackend():
-    
-    def setUp(self):
-        self.config = None #placeholder
-        TEST_PROVIDER_CONFIG = [
-            ("wikipedia", {})
-        ]
-        # hacky way to delete the "ti" db, then make it fresh again for each test.
-        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
-        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+    def test_decide_who_to_call_next_dryad_with_url(self):
+        dryad_item = {"aliases":{   "doi":["10.5061/dryad.3td2f"],
+                                    "url":["http://dryadsomewhere"]},
+                    "biblio":{},"metrics":{}}
+        response = self.b.decide_who_to_call_next(dryad_item)
+        print response
+        # have url so now can go get all the metrics
+        expected = {'metrics': 'all', 'biblio': ['dryad'], 'aliases': []}
+        assert_equals(response, expected)
 
-        # do the same thing for the redis db
-        self.r = tiredis.from_url("redis://localhost:6379")
-        self.r.flushdb()
+    def test_decide_who_to_call_next_pmid_no_urls(self):
+        pubmed_item = {"aliases":{"pmid":["111"]},"biblio":{},"metrics":{}}
+        response = self.b.decide_who_to_call_next(pubmed_item)
+        print response
+        # expect need to get more aliases
+        expected = {'metrics': [], 'biblio': [], 'aliases': ['pubmed', 'crossref']}
+        assert_equals(response, expected)
 
-        self.get_providers = ProviderFactory.get_providers
-        ProviderFactory.get_providers = classmethod(get_providers_mock)
+    def test_decide_who_to_call_next_pmid_with_urls(self):
+        pubmed_item = {"aliases":{   "pmid":["1111"],
+                                    "url":["http://pubmedsomewhere"]},
+                    "biblio":{},"metrics":{}}
+        response = self.b.decide_who_to_call_next(pubmed_item)
+        print response
+        # expect need to get metrics and biblio
+        expected = {'metrics': 'all', 'biblio': ['pubmed'], 'aliases': []}
+        assert_equals(response, expected)
 
-        self.providers = self.get_providers(TEST_PROVIDER_CONFIG)
-        
-        
-    def teardown(self):
-        # FIXME: check that this doesn't need to be wrapped in a classmethod() call
-        ProviderFactory.get_providers = self.get_providers
-        self.d.delete_db(os.environ["CLOUDANT_DB"])
+    def test_decide_who_to_call_next_doi_with_urls(self):
+        doi_item = {"aliases":{   "doi":["10.234/345345"],
+                                    "url":["http://journalsomewhere"]},
+                        "biblio":{},
+                        "metrics":{}}
+        response = self.b.decide_who_to_call_next(doi_item)
+        print response
+        # expect need to get metrics, biblio from crossref
+        expected = {'metrics': 'all', 'biblio': ["crossref"], 'aliases': []}
+        assert_equals(response, expected)     
 
-    def test_01_init_backend(self):
-        watcher = TotalImpactBackend(self.d, self.r, self.providers)
-        
-        assert len(watcher.threads) == 0
-        assert len(watcher.providers) == len(self.providers), len(watcher.providers)
-        
-        
-    def test_05_run_stop(self):
-        st = StoppableThread()
-        assert not st.stopped()
-        
-        st.stop()
-        assert st.stopped()
-   
-    def test_09_alias_stopped(self):
-        # relies on Queue.first mock as per setUp
-        
-        providers = [ProviderMock()]
-        pat = ProvidersAliasThread([], self.d, self.r, providers)
-        pat.queue = QueueMock()
-        
-        pat.start()
-        pat.stop()
-        pat.join()
-        
-        # there are no assertions to make here, only that the
-        # test completes without error
-        assert True
-       
-    def test_12_metrics_stopped(self):
-        # relies on Queue.first mock as per setUp
-        pmt = ProviderMetricsThread([], self.d, self.r, ProviderMock())
-        pmt.queue = QueueMock()
-        
-        pmt.start()
-        pmt.stop()
-        pmt.join()
-        
-        # there are no assertions to make here, only that the
-        # test completes without error
-        assert True
-        
- 
+    def test_decide_who_to_call_next_doi_with_urls_and_title(self):
+        doi_item = {"aliases":{   "doi":["10.234/345345"],
+                                    "url":["http://journalsomewhere"]},
+                        "biblio":{"title":"something"},
+                        "metrics":{}}
+        response = self.b.decide_who_to_call_next(doi_item)
+        print response
+        # expect need to get metrics, no biblio
+        expected = {'metrics': 'all', 'biblio': [], 'aliases': []}
+        assert_equals(response, expected)   
 
- 
+    # warning: calls live provider right now
+    @http
+    def test_wrapper_aliases_to_update_queue(self):      
+        response = self.b.wrapper("mytiid", 
+                {"doi":["10.5061/dryad.3td2f"]}, 
+                ["dryad"], 
+                "aliases", 
+                self.b.add_aliases_to_update_queue)
+
+        # test that it put it on the queue as per the callback
+        in_queue = self.r.rpop("alias")
+        expected = [('url', u'http://hdl.handle.net/10255/dryad.33863'), ('title', u'data from: public sharing of research datasets: a pilot study of associations')]
+        assert_equals(in_queue, expected)
+
+        # test that it returned the correct item        
+        expected = [[('url', u'http://hdl.handle.net/10255/dryad.33863'), ('title', u'data from: public sharing of research datasets: a pilot study of associations')]]
+        assert_equals(response, expected)
+
+    # warning: calls live provider right now
+    @http
+    def test_wrapper_aliases_to_couch_queue(self):     
+        response = self.b.wrapper("mytiid", 
+                {"doi":["10.5061/dryad.3td2f"]}, ["dryad"], "biblio", self.b.push_on_couch_queue)
+
+        # test that it returned the correct item        
+        expected = [{'authors': u'Piwowar, Chapman, Piwowar, Chapman, Piwowar, Chapman', 'year': u'2011', 'repository': 'Dryad Digital Repository', 'title': u'Data from: Public sharing of research datasets: a pilot study of associations'}]
+        assert_equals(response, expected)
+
+        # test that it put it on the queue as per the callback
+        in_queue = self.b.pop_from_couch_queue()
+        expected = ('mytiid', 'biblio', {'authors': u'Piwowar, Chapman, Piwowar, Chapman, Piwowar, Chapman', 'year': u'2011', 'repository': 'Dryad Digital Repository', 'title': u'Data from: Public sharing of research datasets: a pilot study of associations'})
+        assert_equals(in_queue, expected)
+
