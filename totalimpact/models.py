@@ -134,6 +134,23 @@ class ItemFactory():
             return "unknown"
 
     @classmethod
+    def alias_tuples_from_dict(self, aliases_dict):
+        """
+        Convert from aliases dict we use in items, to a list of alias tuples.
+
+        The providers need the tuples list, which look like this:
+        [(doi, 10.123), (doi, 10.345), (pmid, 1234567)]
+        """
+        alias_tuples = []
+        for ns, ids in aliases_dict.iteritems():
+            if isinstance(ids, basestring): # it's a date, not a list of ids
+                alias_tuples.append((ns, ids))
+            else:
+                for id in ids:
+                    alias_tuples.append((ns, id))
+        return alias_tuples
+
+    @classmethod
     def get_metric_names(self, providers_config):
         full_metric_names = []
         providers = ProviderFactory.get_providers(providers_config)
