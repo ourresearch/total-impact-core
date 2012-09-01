@@ -32,6 +32,8 @@ class TestBackend():
             "biblio": {},
             "metrics": {}
         }
+        self.fake_aliases = {"pmid":["111"]}
+        self.tiid = "abcd"
 
     def teardown(self):
         self.d.delete_db(os.environ["CLOUDANT_DB"])
@@ -40,8 +42,8 @@ class TestBackend():
 class TestBackendClass(TestBackend):
 
     def test_push_on_update_queue(self):
-        self.b.push_on_update_queue(self.fake_item)
-        expected = self.fake_item
+        self.b.push_on_update_queue(self.tiid, self.fake_aliases)
+        expected = [u'abcd', {u'pmid': [u'111']}]
         in_queue = json.loads(self.r.rpop("alias"))
         assert_equals(in_queue, expected)
 
@@ -50,9 +52,9 @@ class TestBackendClass(TestBackend):
         assert_equals(response, None)
 
     def test_pop_from_update_queue_after_push(self):
-        self.b.push_on_update_queue(self.fake_item)
+        self.b.push_on_update_queue(self.tiid, self.fake_aliases)
         response = self.b.pop_from_update_queue()
-        expected = self.fake_item
+        expected = [u'abcd', {u'pmid': [u'111']}]
         assert_equals(response, expected)
 
     def test_decide_who_to_call_next_unknown(self):
@@ -147,33 +149,34 @@ class TestBackendClass(TestBackend):
 
     # warning: calls live provider right now
     @http
-    def test_wrapper_aliases_to_update_queue(self):
-        dryad_item = {  "aliases":{"doi":["10.5061/dryad.3td2f"]},
-                        "biblio":{},
-                        "metrics":{}}        
-        response = self.b.wrapper((dryad_item, ["dryad"], "aliases", self.b.push_on_update_queue))
+    def test_wrapper_aliases_to_update_queue(self):      
+        response = self.b.wrapper(("mytiid", 
+                {"doi":["10.5061/dryad.3td2f"]}, 
+                ["dryad"], 
+                "aliases", 
+                self.b.add_aliases_to_update_queue))
 
         # test that it returned the correct item        
-        expected = {'metrics': {}, 'biblio': {}, 'aliases': {'url': [u'http://hdl.handle.net/10255/dryad.33863'], 'doi': ['10.5061/dryad.3td2f'], 'title': [u'data from: public sharing of research datasets: a pilot study of associations']}}
+        expected = [[('url', u'http://hdl.handle.net/10255/dryad.33863'), ('title', u'data from: public sharing of research datasets: a pilot study of associations')]]
         assert_equals(response, expected)
 
         # test that it put it on the queue as per the callback
         in_queue = json.loads(self.r.rpop("alias"))
+        expected = [('url', u'http://hdl.handle.net/10255/dryad.33863'), ('title', u'data from: public sharing of research datasets: a pilot study of associations')]
         assert_equals(in_queue, expected)
 
     # warning: calls live provider right now
     @http
-    def test_wrapper_aliases_to_couch_queue(self):
-        dryad_item = {  "aliases":{"doi":["10.5061/dryad.3td2f"]},
-                        "biblio":{},
-                        "metrics":{}}        
-        response = self.b.wrapper((dryad_item, ["dryad"], "biblio", self.b.push_on_couch_queue))
+    def test_wrapper_aliases_to_couch_queue(self):     
+        response = self.b.wrapper(("mytiid", 
+                {"doi":["10.5061/dryad.3td2f"]}, ["dryad"], "biblio", self.b.push_on_couch_queue))
 
         # test that it returned the correct item        
-        expected = {'metrics': {}, 'biblio': {'authors': u'Piwowar, Chapman, Piwowar, Chapman, Piwowar, Chapman', 'year': u'2011', 'repository': 'Dryad Digital Repository', 'title': u'Data from: Public sharing of research datasets: a pilot study of associations'}, 'aliases': {'doi': ['10.5061/dryad.3td2f']}}
+        expected = [{'authors': u'Piwowar, Chapman, Piwowar, Chapman, Piwowar, Chapman', 'year': u'2011', 'repository': 'Dryad Digital Repository', 'title': u'Data from: Public sharing of research datasets: a pilot study of associations'}]
         assert_equals(response, expected)
 
         # test that it put it on the queue as per the callback
         in_queue = self.b.pop_from_couch_queue()
-        assert_equals(in_queue, ('item', expected))
+        expected = ('mytiid', 'biblio', {'authors': u'Piwowar, Chapman, Piwowar, Chapman, Piwowar, Chapman', 'year': u'2011', 'repository': 'Dryad Digital Repository', 'title': u'Data from: Public sharing of research datasets: a pilot study of associations'})
+        assert_equals(in_queue, expected)
 
