@@ -16,20 +16,20 @@ class Backend(object):
         self.myredis = myredis
         self.dao = dao
 
-    def push_on_update_queue(self, item):
-        item_doc = json.dumps(item)
-        self.myredis.lpush("alias", item_doc)
+    def push_on_update_queue(self, tiid, aliases):
+        aliases_doc = json.dumps((tiid, aliases))
+        self.myredis.lpush("alias", aliases_doc)
 
     def pop_from_update_queue(self):
-        item = None
-        item_doc_json = self.myredis.rpop("alias")
-        if item_doc_json:
-            logger.info('Got fresh item %s' %item_doc_json)
-            item = json.loads(item_doc_json)  
-        return item
+        response = None
+        response_json = self.myredis.rpop("alias")
+        if response_json:
+            logger.info('Got fresh item %s' %response_json)
+            response = json.loads(response_json)  
+        return response
 
-    def push_on_couch_queue(self, item):
-        self.couch_queues[0].put(("item", item))
+    def push_on_couch_queue(self, tiid, method_name, new_stuff):
+        self.couch_queues[0].put((tiid, method_name, new_stuff))
 
     def pop_from_couch_queue(self):
         response = self.couch_queues[0].get()
@@ -102,15 +102,16 @@ class Backend(object):
         print item
         return item
 
-    def add_aliases_to_update_queue(self, item, method_name, response):
-        item = self.add_response_to_item(item, response, method_name)
-        self.push_on_update_queue(item)
+    def add_aliases_to_update_queue(self, tiid, new_aliases, method):
+        self.push_on_couch_queue(tiid, "aliases", new_aliases)
+        self.push_on_update_queue(tiid, new_aliases)
 
     def wrapper(self, args):
         # args all passed in as a tuple from thread launch
-        (item, provider_names, method_name, callback) = args
-        alias_tuples = ItemFactory.alias_tuples_from_dict(item["aliases"])
+        (tiid, aliases, provider_names, method_name, callback) = args
+        alias_tuples = ItemFactory.alias_tuples_from_dict(aliases)
 
+        responses = []
         # call the method for all the listed providers
         for provider_name in provider_names:
             provider = ProviderFactory.get_provider(provider_name)
@@ -118,29 +119,30 @@ class Backend(object):
 
             response = method(alias_tuples)
             print response
+            responses += [response]
 
         # then put the item on the right callback
-        callback(item["_id"], method_name, response)
-        return item
+        callback(tiid, method_name, response)
+        return responses
 
 
     def run(self):
-        item = self.pop_from_update_queue()
-        if item:
-            logger.info("popped item '{tiid}'; beginning update.".format(tiid=item["_id"]))
+        (tiid, aliases) = self.pop_from_update_queue()
+        if aliases:
+            logger.info("popped item '{tiid}'; beginning update.".format(tiid=tiid))
 
-            providers = self.decide_who_to_call_next(item)
+            providers = self.decide_who_to_call_next(aliases)
             logger.info("got decide_who_to_call_next for '{tiid}': {providers}".format(
-                providers=providers))
+                tiid=tiid))
 
             threading.Thread(self.wrapper, 
-                (item, providers["aliases"], "aliases", self.add_aliases_to_update_queue))
+                (tiid, aliases, providers["aliases"], "aliases", self.add_aliases_to_update_queue))
             threading.Thread(self.wrapper, 
-                (item, providers["biblio"], "biblio", self.push_on_couch_queue))
+                (tiid, aliases, providers["biblio"], "biblio", self.push_on_couch_queue))
             threading.Thread(self.wrapper, 
-                (item, providers["metrics"], "metrics", self.push_on_couch_queue))
+                (tiid, aliases, providers["metrics"], "metrics", self.push_on_couch_queue))
 
-            logger.debug("finished launching update threads for '{tiid}'".format(tiid=item["_id"]))
+            logger.debug("finished launching update threads for '{tiid}'".format(tiid=tiid))
         else:
             time.sleep(0.5)
 
