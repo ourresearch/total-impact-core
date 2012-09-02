@@ -70,6 +70,7 @@ class Backend(object):
             else:
                 aliases_providers = ["pubmed", "crossref"]
         else:
+            # relevant alias and biblio providers are always the same
             relevant_providers = simple_products_provider_lookup[genre]
             if has_alias_urls:
                 # aliases are all done
@@ -81,7 +82,10 @@ class Backend(object):
         if metrics_providers == "all":
             metrics_providers = [provider.provider_name for provider in 
                 ProviderFactory.get_providers(default_settings.PROVIDERS, "metrics")]
-        return({"aliases":aliases_providers, "biblio":biblio_providers, "metrics":metrics_providers})
+        return({
+            "aliases_providers":aliases_providers,
+            "biblio_providers":biblio_providers,
+            "metrics_providers":metrics_providers})
 
     def add_aliases_to_update_queue(self, tiid, aliases_tuples, method="aliases"):
         self.push_on_couch_queue(tiid, aliases_tuples, method)
@@ -139,19 +143,26 @@ class Backend(object):
             (tiid, alias_dict) = response
             header = "run-{tiid}".format(tiid=tiid)
 
-            providers = self.decide_who_to_call_next(alias_dict)
+            relevant_provider_names = self.decide_who_to_call_next(alias_dict)
             logger.info("{:20}: decide_who_to_call_next returned {providers}".format(
-                header, providers=providers))
+                header, providers=relevant_provider_names))
 
-            if providers["aliases"]:
+            # alias providers are called in serial, so pass list of provider names to wrapper
+            if relevant_provider_names["aliases_providers"]:
                 t1 = threading.Thread(target=self.wrapper, 
-                    args=(tiid, alias_dict, providers["aliases"], "aliases", self.add_aliases_to_update_queue))
+                    args=(tiid,
+                          alias_dict,
+                          relevant_provider_names["aliases_providers"],
+                          "aliases",
+                          self.add_aliases_to_update_queue))
                 t1.start()
-            for provider in providers["biblio"]:
+
+            # biblio and metrics providers are called in parallel, so launch new thread for each
+            for provider in relevant_provider_names["biblio_providers"]:
                 t2 = threading.Thread(target=self.wrapper, 
-                    args=(tiid, alias_dict, [provider], "biblio", self.push_on_couch_queue))
+                    args=(tiid, alias_dict, [provider], "biblio_providers", self.push_on_couch_queue))
                 t2.start()
-            for provider in providers["metrics"]:
+            for provider in relevant_provider_names["metrics_providers"]:
                 t3 = threading.Thread(target=self.wrapper, 
                     args=(tiid, alias_dict, [provider], "metrics", self.push_on_couch_queue))
                 t3.start()
@@ -184,7 +195,7 @@ def run_couchworker(couch_queue, mydao):
                 logger.info("{:20}: blank doc, nothing to save".format(
                     header))
             else:
-                logger.info("{:20}: about to write to tiid:{tiid}".format(
+                logger.info("{:20}: about to write about tiid:{tiid}".format(
                     header, tiid=tiid))
                 item = mydao.get(tiid)
                 if method_name=="aliases":
@@ -204,12 +215,14 @@ def run_couchworker(couch_queue, mydao):
                     else:
                         logger.info("{:20}: {tiid} already had biblio, not saving".format(
                             header, tiid=item["_id"]))
-                else:
+                elif method_name=="metrics":
                     for metric_name in payload:
                         snap = ItemFactory.build_snap(tiid, payload[metric_name], metric_name)
                         logger.info("{:20}: added metrics, saving snap {snap}".format(
                             header, snap=snap))
                         mydao.save(snap)
+                else:
+                    logger.info("{:20}: ack, supposed to save something i don't know about: " + str(payload))
         else:
             time.sleep(0.1)
 
