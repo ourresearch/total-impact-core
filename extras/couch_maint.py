@@ -237,7 +237,7 @@ function(doc) {
     emit([doc.type, doc._id], doc);
 }
 """
-def put_snaps_in_items():
+def put_snaps_in_items(start="000000000", end="0001"):
     logger.debug("running put_snaps_in_items() now.")
     start = time.time()
     view_name = "queues/by_type_and_id"
@@ -245,8 +245,8 @@ def put_snaps_in_items():
     row_count = 0
 
     for row in view_rows[
-               ["metric_snap", "000000000"]: #startkey
-               ["metric_snap", "01"] #endkey
+               ["metric_snap", start]: #startkey
+               ["metric_snap", end] #endkey
     ]:
         row_count += 1
         logger.info("now on row %i, id %s" % (row_count, row.id))
@@ -268,6 +268,29 @@ def put_snaps_in_items():
         rows=row_count, elapsed=round(time.time() - start)
     ))
 
+"""
+function(doc) {
+    emit([doc.type, doc._id], doc);
+}
+"""
+def delete_snaps(start="000000000", end="001"):
+    logger.debug("deleting snaps now.")
+    start = time.time()
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+
+    for row in view_rows[
+               ["metric_snap", start]: #startkey
+               ["metric_snap", end] #endkey
+    ]:
+        row_count += 1
+        logger.info("now deleting doc on row %i, id %s" % (row_count, row.id))
+        db.delete(row.doc)
+
+    logger.info("updated {rows} rows in {elapsed} seconds".format(
+        rows=row_count, elapsed=round(time.time() - start)
+    ))
 
 if (cloudant_db == "ti"):
     print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
