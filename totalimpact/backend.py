@@ -192,7 +192,7 @@ def run_couchworker(couch_queue, mydao):
 
             (tiid, payload, method_name) = response
             if not payload:
-                logger.info("{:20}: blank doc, nothing to save".format(
+                logger.warning("{:20}: blank doc, nothing to save".format(
                     header))
             else:
                 logger.info("{:20}: about to write about tiid:{tiid}".format(
