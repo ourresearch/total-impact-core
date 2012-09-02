@@ -91,7 +91,20 @@ class ItemFactory():
         (value, drilldown_url) = metric_value_drilldown
         snap["value"] = value
         snap["drilldown_url"] = drilldown_url
-        return snap        
+        return snap
+
+    @classmethod
+    def add_snap(cls, item, snap):
+        """Adds a metrics snap to an item, and returns the item
+
+        Snaps must have keys "metric_name", "timestamp," and "value"
+        """
+
+        metrics = item.setdefault("metrics", {})
+        this_metric = metrics.setdefault(snap["metric_name"], {})
+        this_metric[snap["timestamp"]] = snap["value"]
+
+        return item
 
     @classmethod
     def make(cls):
