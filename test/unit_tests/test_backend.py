@@ -2,8 +2,8 @@ import json, os, Queue
 
 from totalimpact import dao, tiredis, new_backend
 from totalimpact.providers.provider import Provider, ProviderTimeout, ProviderFactory
-from nose.tools import raises, assert_equals, nottest
-from test.utils import http
+from nose.tools import assert_equals, nottest
+from test.utils import slow
 
 
 class TestBackend():
@@ -148,7 +148,7 @@ class TestBackendClass(TestBackend):
         assert_equals(response, expected)   
 
     # warning: calls live provider right now
-    @http
+    @slow
     def test_wrapper_aliases_to_update_queue(self):      
         response = self.b.wrapper("mytiid", 
                 {"doi":["10.5061/dryad.3td2f"]}, 
@@ -166,7 +166,7 @@ class TestBackendClass(TestBackend):
         assert_equals(response, expected)
 
     # warning: calls live provider right now
-    @http
+    @slow
     def test_wrapper_aliases_to_couch_queue(self):     
         response = self.b.wrapper("mytiid", 
                 {"doi":["10.5061/dryad.3td2f"]}, ["dryad"], "biblio", self.b.push_on_couch_queue)
