@@ -1,12 +1,27 @@
-import os, time, json, logging, threading, Queue, copy
-from collections import defaultdict
-
-from totalimpact import dao, tiredis, default_settings
-from totalimpact.models import ItemFactory
-from totalimpact.providers.provider import ProviderFactory, ProviderError
-
+import logging
 logger = logging.getLogger('ti.backend')
 logger.setLevel(logging.DEBUG)
+
+logger.info("os")
+import os
+logger.info("time")
+import time
+logger.info("json")
+import json
+logger.info("threading")
+import threading
+logger.info("Queue")
+import Queue
+logger.info("copy")
+import copy
+logger.info("collections")
+from collections import defaultdict
+logger.info("totalimpact")
+
+from totalimpact import dao, tiredis, default_settings
+logger.info("os")
+from totalimpact.models import ItemFactory
+from totalimpact.providers.provider import ProviderFactory, ProviderError
 
 if False:
     import librato
