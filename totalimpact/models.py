@@ -5,7 +5,7 @@ import shortuuid, datetime, hashlib, threading, json, time, copy
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact.providers.provider import ProviderTimeout
 from totalimpact import default_settings
-from totalimpact.pidsupport import Retry
+from totalimpact.utils import Retry
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
