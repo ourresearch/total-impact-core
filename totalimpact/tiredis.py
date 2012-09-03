@@ -48,12 +48,20 @@ def expire_collection(self, cid):
     self.delete("cid:"+cid)
     return True
 
+def add_to_alias_queue(self, tiid, aliases_dict, aliases_already_run=[]):
+    queue_string = json.dumps([tiid, aliases_dict, aliases_already_run])
+    logger.debug("adding item to queue ******* " + queue_string)
+    self.lpush("aliasqueue", queue_string)
+
+
+
 redis.Redis.set_num_providers_left = set_num_providers_left
 redis.Redis.get_num_providers_left = get_num_providers_left
 redis.Redis.decr_num_providers_left = decr_num_providers_left
 redis.Redis.cache_collection = cache_collection
 redis.Redis.get_collection = get_collection
 redis.Redis.expire_collection = expire_collection
+redis.Redis.add_to_alias_queue = add_to_alias_queue
 
 
 
