@@ -160,12 +160,10 @@ class ProviderWorker(Worker):
             #    provider=self.provider.provider_name.upper()))
 
             thread_count[self.provider.provider_name][tiid+method_name] = 1
-            number_of_threads_for_this_provider = len(thread_count[self.provider.provider_name].keys())
-            number_of_total_provider_threads = sum([len(thread_count[p].keys()) for p in thread_count])
 
-            logger.info("NUMBER of {provider} threads = {num_provider}, all provider threads = {num_total}".format(
-                num_provider=number_of_threads_for_this_provider,
-                num_total=number_of_total_provider_threads,
+            logger.info("NUMBER of {provider} threads = {num_provider}, all threads = {num_total}".format(
+                num_provider=len(thread_count[self.provider.provider_name]),
+                num_total=threading.active_count(),
                 provider=self.provider.provider_name.upper()))
 
             t = threading.Thread(target=ProviderWorker.wrapper, 
