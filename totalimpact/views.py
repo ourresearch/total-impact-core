@@ -129,9 +129,7 @@ def create_item(namespace, nid):
     item["aliases"][namespace] = [nid]
     mydao.save(item)
 
-    queue_string = json.dumps([item["_id"], item["aliases"], []])
-    logger.debug("adding item to queue ******* " + queue_string)
-    myredis.lpush("aliasqueue", queue_string)
+    myredis.add_to_alias_queue(item["_id"], item["aliases"])
 
     logger.info("Created new item '{id}' with alias '{alias}'".format(
         id=item["_id"],
@@ -198,10 +196,7 @@ def prep_collection_items(aliases):
             ProviderFactory.num_providers_with_metrics(
                 default_settings.PROVIDERS)
         )
-        queue_string = json.dumps([item["_id"], item["aliases"], []])
-        logger.debug("adding item to queue ******* " + queue_string)
-        myredis.lpush("aliasqueue", queue_string)
-
+        myredis.add_to_alias_queue(item["_id"], item["aliases"])
 
     # batch upload the new docs to the db
     for doc in mydao.db.update(items):
@@ -509,10 +504,7 @@ def collection_update(cid=""):
         )
 
         item_doc = mydao.get(tiid)
-        queue_string = json.dumps([item_doc["_id"], item_doc["aliases"], []])
-        logger.debug("adding item to queue ******* " + queue_string)
-        myredis.lpush("aliasqueue", queue_string)
-
+        myredis.add_to_alias_queue(item_doc["_id"], item_doc["aliases"])
 
     resp = make_response("true", 200)
     resp.mimetype = "application/json"
