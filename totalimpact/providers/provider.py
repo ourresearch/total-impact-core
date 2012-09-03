@@ -119,11 +119,11 @@ class Provider(object):
             text = ""           
         if status_code >= 500:
             error = ProviderServerError(response)
-            self.logger.info("%20s ProviderServerError status code=%i, %s, %s" 
+            self.logger.info("%s ProviderServerError status code=%i, %s, %s" 
                 % (self.provider_name, status_code, text, str(headers)))
         else:
             error = ProviderClientError(response)
-            self.logger.info("%20s ProviderClientError status code=%i, %s, %s" 
+            self.logger.info("%s ProviderClientError status code=%i, %s, %s" 
                 % (self.provider_name, status_code, text, str(headers)))
 
         raise(error)
@@ -136,7 +136,7 @@ class Provider(object):
     def relevant_aliases(self, aliases):
         filtered = [alias for alias in aliases 
                         if self.is_relevant_alias(alias)]
-        #self.logger.debug("%20s relevant_aliases are %s given %s" % (self.provider_name, str(filtered), str(aliases)))
+        #self.logger.debug("%s relevant_aliases are %s given %s" % (self.provider_name, str(filtered), str(aliases)))
 
         return filtered
 
@@ -207,7 +207,7 @@ class Provider(object):
         if not self.provides_members:
             raise NotImplementedError()
 
-        self.logger.debug("%20s getting member_items for %s" % (self.provider_name, query_string))
+        self.logger.debug("%s getting member_items for %s" % (self.provider_name, query_string))
 
         if not provider_url_template:
             provider_url_template = self.member_items_url_template
@@ -219,7 +219,7 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
 
         if response.status_code != 200:
-            self.logger.info("%20s status_code=%i" 
+            self.logger.info("%s status_code=%i" 
                 % (self.provider_name, response.status_code))            
             if response.status_code == 404:
                 raise ProviderItemNotFoundError
@@ -246,7 +246,7 @@ class Provider(object):
 
         # Only lookup biblio for items with appropriate ids
         if not id:
-            #self.logger.debug("%20s not checking biblio, no relevant alias" % (self.provider_name))
+            #self.logger.debug("%s not checking biblio, no relevant alias" % (self.provider_name))
             return None
 
         if not provider_url_template:
@@ -263,7 +263,7 @@ class Provider(object):
         if not self.provides_biblio:
             return {}
 
-        self.logger.debug("%20s getting biblio for %s" % (self.provider_name, id))
+        self.logger.debug("%s getting biblio for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.biblio_url_template
@@ -273,7 +273,7 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
         
         if response.status_code != 200:
-            self.logger.info("%20s status_code=%i" 
+            self.logger.info("%s status_code=%i" 
                 % (self.provider_name, response.status_code))            
             if response.status_code == 404: #not found
                 return {}
@@ -302,7 +302,7 @@ class Provider(object):
         relevant_aliases = self.relevant_aliases(aliases)
 
         if not relevant_aliases:
-            #self.logger.debug("%20s not checking aliases, no relevant alias" % (self.provider_name))
+            #self.logger.debug("%s not checking aliases, no relevant alias" % (self.provider_name))
             return []
 
         new_aliases = []
@@ -323,7 +323,7 @@ class Provider(object):
         if not self.provides_aliases:
             return []
 
-        self.logger.debug("%20s getting aliases for %s" % (self.provider_name, id))
+        self.logger.debug("%s getting aliases for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.aliases_url_template
@@ -333,7 +333,7 @@ class Provider(object):
         response = self.http_get(url, cache_enabled=cache_enabled)
         
         if response.status_code != 200:
-            self.logger.info("%20s status_code=%i" 
+            self.logger.info("%s status_code=%i" 
                 % (self.provider_name, response.status_code))            
             if response.status_code == 404:
                 return []
@@ -364,7 +364,7 @@ class Provider(object):
 
         # Only lookup metrics for items with appropriate ids
         if not id:
-            #self.logger.debug("%20s not checking metrics, no relevant alias" % (self.provider_name))
+            #self.logger.debug("%s not checking metrics, no relevant alias" % (self.provider_name))
             return {}
 
         if not provider_url_template:
@@ -388,7 +388,7 @@ class Provider(object):
         if not self.provides_metrics:
             return {}
 
-        self.logger.debug("%20s getting metrics for %s" % (self.provider_name, id))
+        self.logger.debug("%s getting metrics for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.metrics_url_template
@@ -397,7 +397,7 @@ class Provider(object):
         # try to get a response from the data provider                
         response = self.http_get(url, cache_enabled=cache_enabled, allow_redirects=True)
 
-        #self.logger.debug("%20s get_metrics_for_id response.status_code %i" % (self.provider_name, response.status_code))
+        #self.logger.debug("%s get_metrics_for_id response.status_code %i" % (self.provider_name, response.status_code))
         
         # extract the metrics
         metrics_dict = self._extract_metrics(response.text, response.status_code, id=id)
@@ -468,7 +468,7 @@ class Provider(object):
             self.logger.debug("LIVE %s" %(url))
             r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=allow_redirects, verify=False)
         except requests.exceptions.Timeout as e:
-            self.logger.info("%20s Attempt to connect to provider timed out during GET on %s" %(self.provider_name, url))
+            self.logger.info("%s Attempt to connect to provider timed out during GET on %s" %(self.provider_name, url))
             raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
         except requests.exceptions.RequestException as e:
             raise ProviderHttpError("RequestException during GET on: " + url, e)
@@ -540,7 +540,7 @@ def _load_json(page):
     try:
         data = simplejson.loads(page) 
     except simplejson.JSONDecodeError, e:
-        logger.error("%20s json decode fail '%s'. Here's the string: %s" %("_load_json", e.msg, page))
+        logger.error("%s json decode fail '%s'. Here's the string: %s" %("_load_json", e.msg, page))
         raise ProviderContentMalformedError
     return(data)
 
@@ -667,7 +667,7 @@ def _extract_from_xml(page, dict_of_keylists):
 
 # given a url that has a doi embedded in it, return the doi
 def doi_from_url_string(url):
-    logger.info("%20s parsing url %s" %("doi_from_url_string", url))
+    logger.info("%s parsing url %s" %("doi_from_url_string", url))
 
     result = re.findall("(10\.\d+.[0-9a-wA-W_/\.\-%]+)" , url, re.DOTALL)
     try:

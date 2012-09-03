@@ -11,27 +11,6 @@ logger = logging.getLogger('ti.backend')
 logger.setLevel(logging.DEBUG)
 
 thread_count = defaultdict(dict)
-#import librato
-# mylibrato = librato.LibratoConnection(os.environ["LIBRATO_METRICS_USER"], os.environ["LIBRATO_METRICS_TOKEN"])
-# def get_or_create(metric_type, name, description):
-#     if metric_type=="counter":
-#         try:
-#             metric = mylibrato.get_counter(name)
-#         except librato.exceptions.ClientError:
-#             metric = mylibrato.create_counter(name, description)
-#     else:
-#         try:
-#             metric = mylibrato.get_gauge(name)
-#         except librato.exceptions.ClientError:
-#             metric = mylibrato.create_gauge(name, description)
-#     return metric
-
-# librato_provider_thread_start = get_or_create("guage", "provider_thread_start", "+1 when a provider thread is started")
-# librato_provider_thread_end = get_or_create("guage", "provider_thread_end", "+1 when a provider thread is ended")
-# librato_provider_thread_run_duration = get_or_create("gauge", "provider_thread_run_duration", "elapsed time for a provider thread to run")
-# librato_provider_thread_launch_duration = get_or_create("gauge", "provider_thread_launch_duration", "elapsed time for a provider thread to launch")
-# librato_provider_thread_count = get_or_create("gauge", "provider_thread_count", "number of threads running")
-
 
 class RedisQueue(object):
     def __init__(self, queue_name, myredis):
@@ -103,7 +82,7 @@ class ProviderWorker(Worker):
         self.couch_queues = couch_queues
         self.wrapper = wrapper
         self.myredis = myredis
-        self.name = "worker_"+self.provider_name
+        self.name = self.provider_name+"_worker"
 
     # last variable is an artifact so it has same call signature as other callbacks
     def add_to_couch_queue_if_nonzero(self, tiid, new_content, method_name, dummy=None):
@@ -132,7 +111,7 @@ class ProviderWorker(Worker):
         #    "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=aliases))
 
         provider_name = provider.provider_name
-        worker_name = "worker_"+provider_name
+        worker_name = provider_name+"_worker"
 
         input_alias_tuples = ItemFactory.alias_tuples_from_dict(input_aliases_dict)
         method = getattr(provider, method_name)
@@ -158,12 +137,9 @@ class ProviderWorker(Worker):
         logger.info("{:20}: RETURNED {tiid} {method_name} {provider_name} : {response}".format(
             worker_name, tiid=tiid, method_name=method_name.upper(), 
             provider_name=provider_name.upper(), response=response))
-        
+
         callback(tiid, response, method_name, aliases_providers_run)
 
-        # librato_provider_thread_run_duration.add(time.time()-start_time, source=provider_name)
-        # librato_provider_thread_end.add(1, source=provider_name)
-        # librato_provider_thread_count.add(len(thread_count[provider_name].keys()), source=provider_name)
         del thread_count[provider_name][tiid+method_name]
 
         return response
@@ -171,33 +147,31 @@ class ProviderWorker(Worker):
     def run(self):
         provider_message = self.provider_queue.pop()
         if provider_message:
-            logger.info("POPPED from queue for {provider}".format(
-                provider=self.provider_name))
+            #logger.info("POPPED from queue for {provider}".format(
+            #    provider=self.provider_name))
             (tiid, alias_dict, method_name, aliases_providers_run) = provider_message
             if method_name == "aliases":
                 callback = self.add_to_alias_and_couch_queues
             else:
                 callback = self.add_to_couch_queue_if_nonzero
 
+            #logger.info("BEFORE STARTING thread for {tiid} {method_name} {provider}".format(
+            #    method_name=method_name.upper(), tiid=tiid, num=len(thread_count[self.provider.provider_name].keys()),
+            #    provider=self.provider.provider_name.upper()))
+
             thread_count[self.provider.provider_name][tiid+method_name] = 1
+            number_of_threads_for_this_provider = len(thread_count[self.provider.provider_name].keys())
+            number_of_total_provider_threads = sum([len(thread_count[p].keys()) for p in thread_count])
 
-            logger.info("BEFORE STARTING thread for {tiid} {method_name} {provider}, now at {num} {provider} threads".format(
-                method_name=method_name.upper(), tiid=tiid, num=len(thread_count[self.provider.provider_name].keys()),
+            logger.info("NUMBER of {provider} threads = {num_provider}, all provider threads = {num_total}".format(
+                num_provider=number_of_threads_for_this_provider,
+                num_total=number_of_total_provider_threads,
                 provider=self.provider.provider_name.upper()))
-
-            logger.info("NUMBER of {provider} threads = {num}".format(
-                num=len(thread_count[self.provider.provider_name].keys()),
-                provider=self.provider.provider_name.upper()))
-
-            # librato_provider_thread_start.add(1, source=self.provider.provider_name)
-            # librato_provider_thread_count.add(len(thread_count[self.provider.provider_name].keys()), source=self.provider.provider_name)
 
             t = threading.Thread(target=ProviderWorker.wrapper, 
                 args=(tiid, alias_dict, self.provider, method_name, aliases_providers_run, callback), 
                 name=self.provider_name+"-"+method_name.upper()+"-"+tiid[0:4])
             t.start()
-
-            # librato_provider_thread_launch_duration.add(time.time()-start_time, source=self.provider.provider_name)
 
             # sleep to give the provider a rest :)
             time.sleep(self.polling_interval)
@@ -209,7 +183,7 @@ class CouchWorker(Worker):
         self.couch_queue = couch_queue
         self.myredis = myredis
         self.mydao = mydao
-        self.name = "worker_" + self.couch_queue.queue_name 
+        self.name = self.couch_queue.queue_name + "_worker"
 
     def update_item_with_new_aliases(self, alias_dict, item):
         if alias_dict == item["aliases"]:
@@ -324,15 +298,15 @@ class Backend(Worker):
     def run(self):
         alias_message = self.alias_queue.pop()
         if alias_message:
-            logger.info("{:20}: alias_message said {alias_message}".format(
-                "Backend.run", alias_message=alias_message))            
+            logger.info("alias_message said {alias_message}".format(
+                alias_message=alias_message))            
             (tiid, alias_dict, aliases_providers_run) = alias_message
 
             relevant_provider_names = self.sniffer(alias_dict, aliases_providers_run)
-            logger.info("{:20}: for {tiid} sniffer got input {alias_dict}".format(
-                "Backend", tiid=tiid, alias_dict=alias_dict))
-            logger.info("{:20}: for {tiid} sniffer returned {providers}".format(
-                "Backend", tiid=tiid, providers=relevant_provider_names))
+            logger.info("backend for {tiid} sniffer got input {alias_dict}".format(
+                tiid=tiid, alias_dict=alias_dict))
+            logger.info("backend for {tiid} sniffer returned {providers}".format(
+                tiid=tiid, providers=relevant_provider_names))
 
             # list out the method names so they are run in that priority, biblio before metrics
             for method_name in ["aliases", "biblio", "metrics"]:
@@ -356,11 +330,11 @@ def main():
     # these need to match the tiid alphabet defined in models:
     couch_queues = {}
     for i in "abcdefghijklmnopqrstuvwxyz1234567890":
-        couch_queues[i] = PythonQueue("couch_queue_"+i)
+        couch_queues[i] = PythonQueue(i+"_couch_queue")
         couch_worker = CouchWorker(couch_queues[i], myredis, mydao)
         couch_worker.spawn_and_loop() 
-        logger.info("{:20}: launched backend couch worker with couch_queue_{i}".format(
-            "Backend", i=i))
+        logger.info("launched backend couch worker with {i}_couch_queue".format(
+            i=i))
 
 
     polling_interval = 0.1   # how many seconds between polling to talk to provider

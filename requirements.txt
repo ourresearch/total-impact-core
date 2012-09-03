@@ -13,7 +13,6 @@ certifi==0.0.8
 chardet==1.0.1
 distribute==0.6.10
 iso8601==0.1.4
-librato==0.2
 lxml==2.3.4
 newrelic==1.4.0.137
 nose==1.1.2
