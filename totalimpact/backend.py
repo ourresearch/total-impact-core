@@ -26,7 +26,7 @@ def get_or_create(metric_type, name, description):
             metric = mylibrato.create_gauge(name, description)
     return metric
 
-thread_count = defaultdict(int)
+thread_count = defaultdict(dict)
 librato_provider_thread_start = get_or_create("guage", "provider_thread_start", "+1 when a provider thread is started")
 librato_provider_thread_end = get_or_create("guage", "provider_thread_end", "+1 when a provider thread is ended")
 librato_provider_thread_run_duration = get_or_create("gauge", "provider_thread_run_duration", "elapsed time for a provider thread to run")
@@ -172,8 +172,8 @@ class ProviderWorker(Worker):
 
         librato_provider_thread_run_duration.add(time.time()-start_time, source=provider_name)
         librato_provider_thread_end.add(1, source=provider_name)
-        thread_count[provider_name] += -1
-        librato_provider_thread_count.add(thread_count[provider_name], source=provider_name)
+        del thread_count[provider_name][tiid+method_name]
+        librato_provider_thread_count.add(len(thread_count[provider_name].keys()), source=provider_name)
 
         return response
 
@@ -195,8 +195,8 @@ class ProviderWorker(Worker):
                 provider=self.provider.provider_name.upper()))
 
             librato_provider_thread_start.add(1, source=self.provider.provider_name)
-            thread_count[self.provider.provider_name] += 1
-            librato_provider_thread_count.add(thread_count[self.provider.provider_name], source=self.provider.provider_name)
+            thread_count[self.provider.provider_name][tiid+method_name] = 1
+            librato_provider_thread_count.add(len(thread_count[self.provider.provider_name].keys()), source=self.provider.provider_name)
 
             t = threading.Thread(target=ProviderWorker.wrapper, 
                 args=(tiid, alias_dict, self.provider, method_name, aliases_providers_run, callback), 
