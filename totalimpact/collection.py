@@ -58,11 +58,10 @@ def get_titles(cids, mydao):
 
 def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao):
     
-    ## disable caching for now
-    ##coll = myredis.get_collection(cid)
-    ##if coll:
+    coll = myredis.get_collection(cid)
+    if coll:
         # got the collection_with_items successfully out of cache.  
-    ##    return (coll, False)
+        return (coll, False)
     coll = mydao.get(cid)
     logging.info("Got collection doc for %s" %cid)
     tiids = coll["alias_tiids"].values()
