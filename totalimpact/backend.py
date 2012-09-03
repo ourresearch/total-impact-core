@@ -1,5 +1,4 @@
 import os, time, json, logging, threading, Queue, copy
-import librato
 from collections import defaultdict
 
 from totalimpact import dao, tiredis, default_settings
@@ -9,27 +8,29 @@ from totalimpact.providers.provider import ProviderFactory, ProviderError
 logger = logging.getLogger('ti.backend')
 logger.setLevel(logging.DEBUG)
 
-mylibrato = librato.LibratoConnection(os.environ["LIBRATO_METRICS_USER"], os.environ["LIBRATO_METRICS_TOKEN"])
+if False:
+    import librato
+    mylibrato = librato.LibratoConnection(os.environ["LIBRATO_METRICS_USER"], os.environ["LIBRATO_METRICS_TOKEN"])
 
-def get_or_create(metric_type, name, description):
-    if metric_type=="counter":
-        try:
-            metric = mylibrato.get_counter(name)
-        except librato.exceptions.ClientError:
-            metric = mylibrato.create_counter(name, description)
-    else:
-        try:
-            metric = mylibrato.get_gauge(name)
-        except librato.exceptions.ClientError:
-            metric = mylibrato.create_gauge(name, description)
-    return metric
+    def get_or_create(metric_type, name, description):
+        if metric_type=="counter":
+            try:
+                metric = mylibrato.get_counter(name)
+            except librato.exceptions.ClientError:
+                metric = mylibrato.create_counter(name, description)
+        else:
+            try:
+                metric = mylibrato.get_gauge(name)
+            except librato.exceptions.ClientError:
+                metric = mylibrato.create_gauge(name, description)
+        return metric
 
-thread_count = defaultdict(int)
-librato_provider_thread_start = get_or_create("guage", "provider_thread_start", "+1 when a provider thread is started")
-librato_provider_thread_end = get_or_create("guage", "provider_thread_end", "+1 when a provider thread is ended")
-librato_provider_thread_run_duration = get_or_create("gauge", "provider_thread_run_duration", "elapsed time for a provider thread to run")
-librato_provider_thread_launch_duration = get_or_create("gauge", "provider_thread_launch_duration", "elapsed time for a provider thread to launch")
-librato_provider_thread_count = get_or_create("gauge", "provider_thread_count", "number of threads running")
+    thread_count = defaultdict(int)
+    librato_provider_thread_start = get_or_create("guage", "provider_thread_start", "+1 when a provider thread is started")
+    librato_provider_thread_end = get_or_create("guage", "provider_thread_end", "+1 when a provider thread is ended")
+    librato_provider_thread_run_duration = get_or_create("gauge", "provider_thread_run_duration", "elapsed time for a provider thread to run")
+    librato_provider_thread_launch_duration = get_or_create("gauge", "provider_thread_launch_duration", "elapsed time for a provider thread to launch")
+    librato_provider_thread_count = get_or_create("gauge", "provider_thread_count", "number of threads running")
 
 
 class RedisQueue(object):
@@ -168,10 +169,10 @@ class ProviderWorker(Worker):
             worker_name, method_name=method_name.upper(), tiid=tiid,
             provider=provider_name.upper(), elapsed=time.time()-start_time))
 
-        librato_provider_thread_run_duration.add(time.time()-start_time, source=provider_name)
-        librato_provider_thread_end.add(1, source=provider_name)
-        thread_count[provider_name] += -1
-        librato_provider_thread_count.add(thread_count[provider_name], source=provider_name)
+        #librato_provider_thread_run_duration.add(time.time()-start_time, source=provider_name)
+        #librato_provider_thread_end.add(1, source=provider_name)
+        #thread_count[provider_name] += -1
+        #librato_provider_thread_count.add(thread_count[provider_name], source=provider_name)
 
         return response
 
@@ -192,9 +193,9 @@ class ProviderWorker(Worker):
                 method_name=method_name.upper(), tiid=tiid,
                 provider=self.provider.provider_name.upper()))
 
-            librato_provider_thread_start.add(1, source=self.provider.provider_name)
-            thread_count[self.provider.provider_name] += 1
-            librato_provider_thread_count.add(thread_count[self.provider.provider_name], source=self.provider.provider_name)
+            #librato_provider_thread_start.add(1, source=self.provider.provider_name)
+            #thread_count[self.provider.provider_name] += 1
+            #librato_provider_thread_count.add(thread_count[self.provider.provider_name], source=self.provider.provider_name)
 
             t = threading.Thread(target=ProviderWorker.wrapper, 
                 args=(tiid, alias_dict, self.provider, method_name, aliases_providers_run, callback), 
@@ -205,7 +206,7 @@ class ProviderWorker(Worker):
                 tiid=tiid, elapsed=time.time() - start_time, method_name=method_name.upper(), 
                 provider=self.provider.provider_name.upper()))
 
-            librato_provider_thread_launch_duration.add(time.time()-start_time, source=self.provider.provider_name)
+            #librato_provider_thread_launch_duration.add(time.time()-start_time, source=self.provider.provider_name)
 
             # sleep to give the provider a rest :)
             time.sleep(self.polling_interval)
