@@ -1,5 +1,6 @@
 import os, time, json, logging, threading, Queue, copy, sys
 import librato
+from collections import defaultdict
 
 from totalimpact import dao, tiredis, default_settings
 from totalimpact.models import ItemFactory
@@ -13,20 +14,22 @@ mylibrato = librato.LibratoConnection(os.environ["LIBRATO_METRICS_USER"], os.env
 def get_or_create(metric_type, name, description):
     if metric_type=="counter":
         try:
-            metric = mylibrato.create_counter(name, description)
-        except librato.exceptions.ClientError:
             metric = mylibrato.get_counter(name)
+        except librato.exceptions.ClientError:
+            metric = mylibrato.create_counter(name, description)
     else:
         try:
-            metric = mylibrato.create_gauge(name, description)
-        except librato.exceptions.ClientError:
             metric = mylibrato.get_gauge(name)
+        except librato.exceptions.ClientError:
+            metric = mylibrato.create_gauge(name, description)
     return metric
 
+thread_count = defaultdict(int)
 librato_provider_thread_start = get_or_create("guage", "provider_thread_start", "+1 when a provider thread is started")
 librato_provider_thread_end = get_or_create("guage", "provider_thread_end", "+1 when a provider thread is ended")
 librato_provider_thread_run_duration = get_or_create("gauge", "provider_thread_run_duration", "elapsed time for a provider thread to run")
 librato_provider_thread_launch_duration = get_or_create("gauge", "provider_thread_launch_duration", "elapsed time for a provider thread to launch")
+librato_provider_thread_count = get_or_create("gauge", "provider_thread_count", "number of threads running")
 
 
 class RedisQueue(object):
@@ -99,7 +102,7 @@ class ProviderWorker(Worker):
         self.couch_queues = couch_queues
         self.wrapper = wrapper
         self.myredis = myredis
-        self.name = "provider_worker"
+        self.name = "worker_"+self.provider_name
 
     # last variable is an artifact so it has same call signature as other callbacks
     def add_to_couch_queue_if_nonzero(self, tiid, new_content, method_name, dummy=None):
@@ -110,8 +113,8 @@ class ProviderWorker(Worker):
                 self.myredis.decr_num_providers_left(tiid, "(unknown)")
             return
         else:
-            logger.info("{:20}: Adding to couch queue {method_name} from {tiid} for {provider_name}".format(
-                "provider_worker", method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
+            logger.info("Adding to couch queue {method_name} from {tiid} for {provider_name}".format(
+                method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
             couch_message = (tiid, new_content, method_name)
             couch_queue_index = tiid[0] #index them by the first letter in the tiid
             selected_couch_queue = self.couch_queues[couch_queue_index] 
@@ -127,10 +130,12 @@ class ProviderWorker(Worker):
         #logger.info("{:20}: **Starting {tiid} {provider_name} {method_name} with {aliases}".format(
         #    "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=aliases))
 
+        provider_name = provider.provider_name
+        worker_name = "worker_"+provider_name
         start_time = time.time()
 
         logger.info("{:20}: STARTING WRAPPER for {tiid} {method_name} {provider}".format(
-            "wrapper", method_name=method_name.upper(), tiid=tiid,
+            worker_name, method_name=method_name.upper(), tiid=tiid,
             provider=provider.provider_name.upper()))
 
         input_alias_tuples = ItemFactory.alias_tuples_from_dict(input_aliases_dict)
@@ -141,11 +146,11 @@ class ProviderWorker(Worker):
         except ProviderError:
             method_response = None
             logger.info("{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
-                "provider_worker", tiid=tiid, provider_name=provider.provider_name.upper(), method_name=method_name.upper()))
+                worker_name, tiid=tiid, provider_name=provider_name.upper(), method_name=method_name.upper()))
 
         if method_name == "aliases":
             # update aliases to include the old ones too
-            aliases_providers_run += [provider.provider_name]
+            aliases_providers_run += [provider_name]
             if method_response:
                 new_aliases_dict = ItemFactory.alias_dict_from_tuples(method_response)
                 response = ItemFactory.merge_alias_dicts(new_aliases_dict, input_aliases_dict)
@@ -155,24 +160,26 @@ class ProviderWorker(Worker):
             response = method_response
 
         logger.info("{:20}: RETURNED {tiid} {method_name} {provider_name} : {response}".format(
-            "provider_worker", tiid=tiid, method_name=method_name.upper(), 
-            provider_name=provider.provider_name.upper(), response=response))
+            worker_name, tiid=tiid, method_name=method_name.upper(), 
+            provider_name=provider_name.upper(), response=response))
         callback(tiid, response, method_name, aliases_providers_run)
 
         logger.info("{:20}: ENDING WRAPPER for {tiid} {method_name} {provider}, finished in {elapsed} seconds".format(
-            "wrapper", method_name=method_name.upper(), tiid=tiid,
-            provider=provider.provider_name.upper(), elapsed=time.time()-start_time))
+            worker_name, method_name=method_name.upper(), tiid=tiid,
+            provider=provider_name.upper(), elapsed=time.time()-start_time))
 
-        librato_provider_thread_run_duration.add(time.time()-start_time, source=provider.provider_name)
-        librato_provider_thread_end.add(1, source=provider.provider_name)
+        librato_provider_thread_run_duration.add(time.time()-start_time, source=provider_name)
+        librato_provider_thread_end.add(1, source=provider_name)
+        thread_count[provider_name] += -1
+        librato_provider_thread_count.add(thread_count[provider_name], source=provider_name)
 
         return response
 
     def run(self):
         provider_message = self.provider_queue.pop()
         if provider_message:
-            logger.info("{:20}: POPPED from queue for {provider}".format(
-                "provider_worker", provider=self.provider_name))
+            logger.info("POPPED from queue for {provider}".format(
+                provider=self.provider_name))
             (tiid, alias_dict, method_name, aliases_providers_run) = provider_message
             if method_name == "aliases":
                 callback = self.add_to_alias_and_couch_queues
@@ -181,19 +188,21 @@ class ProviderWorker(Worker):
 
             start_time = time.time()
 
-            logger.info("{:20}: BEFORE STARTING thread for {tiid} {method_name} {provider}".format(
-                "provider_worker", method_name=method_name.upper(), tiid=tiid,
+            logger.info("BEFORE STARTING thread for {tiid} {method_name} {provider}".format(
+                method_name=method_name.upper(), tiid=tiid,
                 provider=self.provider.provider_name.upper()))
 
             librato_provider_thread_start.add(1, source=self.provider.provider_name)
+            thread_count[self.provider.provider_name] += 1
+            librato_provider_thread_count.add(thread_count[self.provider.provider_name], source=self.provider.provider_name)
 
             t = threading.Thread(target=ProviderWorker.wrapper, 
                 args=(tiid, alias_dict, self.provider, method_name, aliases_providers_run, callback), 
                 name=self.provider_name+"-"+method_name.upper()+"-"+tiid[0:4])
             t.start()
 
-            logger.info("{:20}: LAUNCHED THREAD for {tiid} {method_name} {provider} took {elapsed} seconds".format(
-                "provider_worker", tiid=tiid, elapsed=time.time() - start_time, method_name=method_name.upper(), 
+            logger.info("LAUNCHED THREAD for {tiid} {method_name} {provider} took {elapsed} seconds".format(
+                tiid=tiid, elapsed=time.time() - start_time, method_name=method_name.upper(), 
                 provider=self.provider.provider_name.upper()))
 
             librato_provider_thread_launch_duration.add(time.time()-start_time, source=self.provider.provider_name)
