@@ -80,6 +80,7 @@ class ItemFactory():
     def build_snap(cls, tiid, metric_value_drilldown, metric_name):
 
         now = datetime.datetime.now().isoformat()
+        # if the alphabet below changes, need to update couch queue lookups        
         shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
 
         snap = {}
@@ -97,6 +98,7 @@ class ItemFactory():
     def make(cls):
 
         now = datetime.datetime.now().isoformat()
+        # if the alphabet below changes, need to update couch queue lookups
         shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
 
         item = {}
@@ -112,7 +114,6 @@ class ItemFactory():
     @classmethod
     def decide_genre(self, alias_dict):
         '''Uses available aliases to decide the item's genre'''
-
         if "doi" in alias_dict:
             if "10.5061/dryad." in "".join(alias_dict["doi"]):
                 return "dataset"
@@ -162,7 +163,7 @@ class ItemFactory():
 
     @classmethod
     def merge_alias_dicts(self, aliases1, aliases2):
-        logger.debug("in MERGE ALIAS DICTS with %s and %s" %(aliases1, aliases2))
+        #logger.debug("in MERGE ALIAS DICTS with %s and %s" %(aliases1, aliases2))
         merged_aliases = copy.deepcopy(aliases1)
         for ns, nid in aliases2.iteritems():
             try:
@@ -249,6 +250,7 @@ class MemberItems():
         pages = self.provider.paginate(str)
         hash = hashlib.md5(str.encode('utf-8')).hexdigest()
         t = threading.Thread(target=self._update, args=(pages, hash))
+        t.daemon = True
         t.start()
         return hash
 
