@@ -1,4 +1,4 @@
-import os, time, json, logging, threading, Queue, copy, sys
+import os, time, json, logging, threading, Queue, copy
 import librato
 from collections import defaultdict
 
@@ -391,7 +391,8 @@ def main():
         backend.run_in_loop() # don't need to spawn this one
     except (KeyboardInterrupt, SystemExit): 
         # this approach is per http://stackoverflow.com/questions/2564137/python-how-to-terminate-a-thread-when-main-program-ends
-        sys.exit()
+        #sys.exit()
+        pass
  
 if __name__ == "__main__":
     main()
