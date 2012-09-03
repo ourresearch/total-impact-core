@@ -24,7 +24,7 @@ def get_num_providers_left(self, item_id):
 
 def decr_num_providers_left(self, item_id, provider_name):
     num_providers_left = self.decr(item_id)
-    logger.info("%20s bumped providers_run with %s for %s. %s left to run." % ("tiredis",
+    logger.info("bumped providers_run with %s for %s. %s left to run." % (
         provider_name, item_id, num_providers_left))
     return int(num_providers_left)
 

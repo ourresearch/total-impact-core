@@ -107,18 +107,18 @@ class Dao(object):
         if "_id" not in doc:
             raise KeyError("tried to save doc with '_id' key unset.")
 
-        logger.info("%20s saving id '%s'" %("dao", doc["_id"]))
+        #logger.info("dao saving id '%s'" %(doc["_id"]))
         retry = True
         while retry:
             try:
                 response = self.db.save(doc)
                 retry = False
             except couchdb.ResourceConflict, e:
-                logger.info("%20s Couch conflict saving %s; will retry" % ("dao", doc["_id"]))
+                logger.info("dao Couch conflict saving %s; will retry" % (doc["_id"]))
                 newer_doc = self.get(doc["_id"])
                 doc["_rev"] = newer_doc["_rev"]
                 time.sleep(0.1)
-        logger.info("%20s saved %s" %("dao", doc["_id"]))
+        logger.info("dao saved %s" %(doc["_id"]))
         return response
 
        
