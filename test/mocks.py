@@ -1,6 +1,5 @@
 import time, logging
 
-from totalimpact.backend import StoppableThread
 from totalimpact.providers.provider import Provider
 from totalimpact.providers.provider import ProviderClientError, ProviderServerError
 from totalimpact.models import ItemFactory
@@ -34,15 +33,7 @@ class MockDao(object):
         return None
 
 
-class InterruptTester(object):
 
-    def run(self, stop_after=0):
-        st = StoppableThread()
-        st.start()
-        
-        time.sleep(stop_after)
-        st.stop()
-        st.join()
 
 
 
