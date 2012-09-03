@@ -217,6 +217,10 @@ class CouchWorker(Worker):
                     self.name))
             else:
                 item = self.mydao.get(tiid)
+                if not item:
+                    logger.warning("ack, got empty item from couch named {tiid}, can't save {method_name}".format(
+                        tiid=tiid, method_name=method_name))
+                    return
                 if method_name=="aliases":
                     updated_item = self.update_item_with_new_aliases(new_content, item)
                     if updated_item:
@@ -239,7 +243,7 @@ class CouchWorker(Worker):
                     self.myredis.decr_num_providers_left(tiid, provider_name)
 
                 else:
-                    logger.info("{:20}: ack, supposed to save something i don't know about: " + str(new_content))
+                    logger.warning("ack, supposed to save something i don't know about: " + str(new_content))
         else:
             #time.sleep(0.1)  # is this necessary?
             pass
