@@ -3,7 +3,7 @@ from copy import deepcopy
 from urllib import quote_plus
 from nose.tools import assert_equals
 
-from totalimpact import app, dao, views
+from totalimpact import app, dao, views, tiredis
 from totalimpact.providers.dryad import Dryad
 import os
 
@@ -51,6 +51,10 @@ class ViewsTester(unittest.TestCase):
         temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
         temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+
+        # do the same thing for the redis db
+        self.r = tiredis.from_url("redis://localhost:6379")
+        self.r.flushdb()
 
         #setup api test client
         self.app = app
@@ -263,13 +267,13 @@ class TestCollection(ViewsTester):
         print rows
         assert_equals(len(rows), 5) # header plus 3 items plus csvDictWriter adds an extra line
 
-    def test_collection_update_puts_items_on_RQ(self):
+    def test_collection_update_puts_items_on_alias_queue(self):
         # put some stuff in the collection:
         # put some items in the db
         for doc in mydao.db.update([
-                {"_id":"larry"},
-                {"_id":"curly"},
-                {"_id":"moe"}
+                {"_id":"larry", "aliases":{}},
+                {"_id":"curly", "aliases":{}},
+                {"_id":"moe", "aliases":{}}
         ]):
             pass # no need to do anything, just put 'em in couch.
 
@@ -286,8 +290,9 @@ class TestCollection(ViewsTester):
         larry = mydao.get("larry")
         print larry
 
-        ### somehow test this made its way onto RQ
-        pass
+        # test it is on the redis queue
+        response = self.r.rpop("aliasqueue")
+        assert_equals(response, '["moe", {}, []]')
         
     def test_collection_owner_set_at_creation(self):
 

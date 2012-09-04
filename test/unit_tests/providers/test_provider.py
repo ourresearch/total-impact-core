@@ -45,11 +45,6 @@ class Test_Provider():
         provider_names = [provider.__class__.__name__ for provider in providers]
         assert_equals(set(provider_names), set(['Pubmed', "Mendeley"]))
 
-    def test_get_providers_adds_threads_allowed(self):
-        providers = ProviderFactory.get_providers(self.TEST_PROVIDER_CONFIG)
-        threads_allowed = [provider.threads_allowed for provider in providers]
-        assert_equals(set([1,3,3]), set(threads_allowed))
-
     def test_lookup_json(self):
         page = self.TEST_JSON
         data = simplejson.loads(page)
