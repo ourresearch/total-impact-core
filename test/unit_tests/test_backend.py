@@ -61,7 +61,7 @@ class TestProviderWorker(TestBackend):
                 self.b.add_aliases_to_update_queue)
 
         # test that it put it on the queue as per the callback
-        in_queue = self.r.rpop("alias")
+        in_queue = self.r.rpop("aliasqueue")
         expected = [('url', u'http://hdl.handle.net/10255/dryad.33863'), ('title', u'data from: public sharing of research datasets: a pilot study of associations')]
         assert_equals(in_queue, expected)
 

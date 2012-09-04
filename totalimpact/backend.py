@@ -222,7 +222,7 @@ class CouchWorker(Worker):
                     logger.error("Empty item from couch for tiid {tiid}, can't save {method_name}".format(
                         tiid=tiid, method_name=method_name))
                     if method_name=="metrics":
-                        self.myredis.decr_num_providers_left(tiid, provider_name)
+                        self.myredis.decr_num_providers_left(tiid, "(unknown)")
                     return
                 if method_name=="aliases":
                     updated_item = self.update_item_with_new_aliases(new_content, item)
@@ -243,6 +243,8 @@ class CouchWorker(Worker):
                             self.name, tiid=tiid, snap=snap["_id"]))
                         self.mydao.save(snap)
                         provider_name = metric_name.split(":")[0]
+                    if not provider_name:
+                        provider_name = "(unknown)"
                     self.myredis.decr_num_providers_left(tiid, provider_name)
 
                 else:
