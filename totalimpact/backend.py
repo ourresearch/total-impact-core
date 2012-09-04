@@ -288,7 +288,8 @@ class Backend(Worker):
             # relevant alias and biblio providers are always the same
             relevant_providers = simple_products_provider_lookup[genre]
             # if all the relevant providers have already run, then all the aliases are done
-            if set(relevant_providers).issubset(set(aliases_providers_run)):
+            # or if it already has urls
+            if has_alias_urls or set(relevant_providers).issubset(set(aliases_providers_run)):
                 metrics_providers = all_metrics_providers
                 biblio_providers = relevant_providers
             else:
