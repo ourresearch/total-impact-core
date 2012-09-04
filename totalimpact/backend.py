@@ -140,7 +140,10 @@ class ProviderWorker(Worker):
 
         callback(tiid, response, method_name, aliases_providers_run)
 
-        del thread_count[provider_name][tiid+method_name]
+        try:
+            del thread_count[provider_name][tiid+method_name]
+        except KeyError:  # thread isn't there when we call wrapper in unit tests
+            pass
 
         return response
 
