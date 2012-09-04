@@ -124,6 +124,10 @@ class TestItemFactory():
                         "facebook:comments": {0: [1, 99], 1: [91, 99]}, "mendeley:groups": {0: [1, 99], 3: [91, 99]}
                     }}}
 
+        # setup a clean new redis instance
+        self.r = tiredis.from_url("redis://localhost:6379")
+        self.r.flushdb()
+
 #    def test_make_new(self):
 #        '''create an item from scratch.'''
 #        item = models.ItemFactory.make()
@@ -202,11 +206,22 @@ class TestItemFactory():
         expected = {'raw': 2, 'nih': [91, 99]}
         assert_equals(response["metrics"]['mendeley:groups']["values"], expected)
 
+    def test_is_currently_updating_unknown(self):
+        response = models.ItemFactory.is_currently_updating("tiidnotinredis", self.r)
+        assert_equals(response, False)
 
+    def test_is_currently_updating_yes(self):
+        self.r.set_num_providers_left("tiidthatisnotdone", 11)        
+        response = models.ItemFactory.is_currently_updating("tiidthatisnotdone", self.r)
+        assert_equals(response, True)
+
+    def test_is_currently_updating_no(self):
+        self.r.set_num_providers_left("tiidthatisnotdone", 0)        
+        response = models.ItemFactory.is_currently_updating("tiidthatisdone", self.r)
+        assert_equals(response, False)
 
 
 class TestMemberItems():
-
 
     def setUp(self):
         # setup a clean new redis instance
