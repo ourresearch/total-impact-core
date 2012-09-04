@@ -216,8 +216,10 @@ class CouchWorker(Worker):
             else:
                 item = self.mydao.get(tiid)
                 if not item:
-                    logger.warning("ack, got empty item from couch named {tiid}, can't save {method_name}".format(
+                    logger.error("Empty item from couch for tiid {tiid}, can't save {method_name}".format(
                         tiid=tiid, method_name=method_name))
+                    if method_name=="metrics":
+                        self.myredis.decr_num_providers_left(tiid, provider_name)
                     return
                 if method_name=="aliases":
                     updated_item = self.update_item_with_new_aliases(new_content, item)

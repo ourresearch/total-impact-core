@@ -1,6 +1,8 @@
 import json, uuid, couchdb, time, logging, os, re, threading, redis
 from couchdb import ResourceNotFound, PreconditionFailed
 
+from totalimpact.utils import Retry
+
 # set up logging
 logger = logging.getLogger("ti.dao")
 lock = threading.Lock()
@@ -97,6 +99,7 @@ class Dao(object):
     def json(self):
         return json.dumps(self.data, sort_keys=True, indent=4)
 
+    @Retry(3, KeyError, 0.1)
     def get(self,_id):
         if (_id):
             return self.db.get(_id)
