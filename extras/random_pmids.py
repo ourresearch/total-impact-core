@@ -49,6 +49,10 @@ def get_random_pmids(sample_size, email, query, seed=None):
 		print "Seed has been set before sampling."
 
 	pmid_pattern = re.compile("<Id>(?P<pmid>\d+)</Id>")  # do this as an re because it is simple and fast
+
+	if sample_size > population_size:
+		print "sample size is bigger than population size, so using population size"
+		sample_size = population_size
 	random_indexes = random.sample(range(1, population_size), sample_size)
 
 	pmids = []
