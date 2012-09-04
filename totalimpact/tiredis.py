@@ -13,17 +13,19 @@ def set_num_providers_left(self, item_id, num_providers_left):
         num=num_providers_left,
         tiid=item_id
     ))
-    self.set(item_id, num_providers_left)
+    key = "num:"+item_id
+    self.set(key, num_providers_left)
+    self.expire(key, 60*60*24)  # for a day    
 
 def get_num_providers_left(self, item_id):
-    r = self.get(item_id)
+    r = self.get("num:"+item_id)
     if r is None:
         return None
     else:
         return int(r)
 
 def decr_num_providers_left(self, item_id, provider_name):
-    num_providers_left = self.decr(item_id)
+    num_providers_left = self.decr("num:"+item_id)
     logger.info("bumped providers_run with %s for %s. %s left to run." % (
         provider_name, item_id, num_providers_left))
     return int(num_providers_left)
@@ -31,7 +33,9 @@ def decr_num_providers_left(self, item_id, provider_name):
 def cache_collection(self, collection_doc):
     cid = collection_doc["_id"]
     logger.debug("caching collection {cid} into redis".format(cid=cid))
-    self.set("cid:"+cid, json.dumps(collection_doc))
+    key = "cid:"+cid
+    self.set(key, json.dumps(collection_doc))
+    self.expire(key, 60*60*24*7)  # for a week
     return True
 
 def get_collection(self, cid):

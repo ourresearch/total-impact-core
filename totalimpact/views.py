@@ -247,7 +247,7 @@ def item(tiid, format=None):
     if not item:
         abort(404)
 
-    if myredis.get_num_providers_left(tiid) > 0:
+    if ItemFactory.is_currently_updating(tiid, myredis):
         response_code = 210 # not complete yet
         item["currently_updating"] = True
     else:

@@ -230,14 +230,21 @@ class ItemFactory():
                 logger.warning("Looks like there's no item with tiid '{tiid}': ".format(
                         tiid=tiid))
                 raise LookupError
-
-            currently_updating = myredis.get_num_providers_left(tiid) > 0
-            item["currently_updating"] = currently_updating
-            something_currently_updating = something_currently_updating or currently_updating
+                
+            item["currently_updating"] = cls.is_currently_updating(tiid, myredis)
+            something_currently_updating = something_currently_updating or item["currently_updating"]
 
             items.append(item)
         return (items, something_currently_updating)
 
+    @classmethod
+    def is_currently_updating(cls, tiid, myredis):
+        num_providers_left = myredis.get_num_providers_left(tiid)
+        if num_providers_left:
+            currently_updating = myredis.get_num_providers_left(tiid) > 0
+        else: # not in redis, maybe because it expired.  Assume it is not currently updating.
+            currently_updating = False        
+        return currently_updating
 
 
 class MemberItems():
