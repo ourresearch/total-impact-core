@@ -85,7 +85,6 @@ class ProviderMock(Provider):
     """ Mock object to simulate a provider for testing 
 
     """
-    threads_allowed = 3
     provides_members = True
     provides_aliases = True
     provides_metrics = True
@@ -110,12 +109,6 @@ class ProviderMock(Provider):
 
     def metric_names(self):
         return(["wikipedia:mentions"])
-
-    def get_max_retries(self):
-        return 3
-
-    def get_sleep_time(self, attempts):
-        return attempts * .1
 
     def aliases(self, aliases, url=None, cache_enabled=True):
         self._raise_preset_exception()

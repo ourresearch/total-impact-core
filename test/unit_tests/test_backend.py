@@ -84,28 +84,17 @@ class TestProviderWorker(TestBackend):
         expected = ('mytiid', 'biblio', {'authors': u'Piwowar, Chapman, Piwowar, Chapman, Piwowar, Chapman', 'year': u'2011', 'repository': 'Dryad Digital Repository', 'title': u'Data from: Public sharing of research datasets: a pilot study of associations'})
         assert_equals(in_queue, expected)
 
-    def test_get_aliases_for_wrapper_response(self):     
-        response = backend.ProviderWorker.get_aliases_for_wrapper_response(
-                "dryad", [("url","http://dryadurl")], {"doi":["10.5061/dryad.3td2f"]})
-        expected = {'url': ['http://dryadurl'], 'doi': ['10.5061/dryad.3td2f']}
-        assert_equals(response, expected)
-
-    def test_get_aliases_for_wrapper_response_pubmed_no_pmid(self):     
-        response = backend.ProviderWorker.get_aliases_for_wrapper_response(
-                "pubmed", [], {'url': ['http://somewhere'], 'doi': ['10.123']})
-        expected = {'url': ['http://somewhere'], 'pmid': None, 'doi': ['10.123']}
-        assert_equals(response, expected)
-
     def test_wrapper(self):     
-        def fake_callback(tiid, new_content, method_name):
+        def fake_callback(tiid, new_content, method_name, aliases_providers_run):
             pass
 
         response = backend.ProviderWorker.wrapper("123", 
-                {'url': ['http://somewhere'], 'pmid': None, 'doi': ['10.123']}, 
-                mocks.ProviderMock(1), 
+                {'url': ['http://somewhere'], 'doi': ['10.123']}, 
+                mocks.ProviderMock("myfakeprovider"), 
                 "aliases", 
+                [], # aliases previously run
                 fake_callback)
-        expected = {'url': ['http://somewhere'], 'pmid': None, 'doi': ['10.123']}
+        expected = {'url': ['http://somewhere'], 'doi': ['10.123']}
         assert_equals(response, expected)
 
 
@@ -113,15 +102,17 @@ class TestBackendClass(TestBackend):
 
     def test_decide_who_to_call_next_unknown(self):
         aliases_dict = {"unknownnamespace":["111"]}
-        response = backend.Backend.sniffer(aliases_dict, self.TEST_PROVIDER_CONFIG)
+        prev_aliases = []
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect blanks
-        expected = {'metrics': [], 'biblio': [], 'aliases': []}
+        expected = {'metrics': ["wikipedia"], 'biblio': [], 'aliases': []}
         assert_equals(response, expected)
 
     def test_decide_who_to_call_next_webpage_no_title(self):
         aliases_dict = {"url":["http://a"]}
-        response = backend.Backend.sniffer(aliases_dict, self.TEST_PROVIDER_CONFIG)
+        prev_aliases = []
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect all metrics and lookup the biblio
         expected = {'metrics': ['wikipedia'], 'biblio': ['webpage'], 'aliases': []}
@@ -129,7 +120,8 @@ class TestBackendClass(TestBackend):
 
     def test_decide_who_to_call_next_webpage_with_title(self):
         aliases_dict = {"url":["http://a"], "title":["A Great Paper"]}
-        response = backend.Backend.sniffer(aliases_dict, self.TEST_PROVIDER_CONFIG)
+        prev_aliases = []
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect all metrics, no need to look up biblio
         expected = {'metrics': ['wikipedia'], 'biblio': ['webpage'], 'aliases': []}
@@ -137,7 +129,8 @@ class TestBackendClass(TestBackend):
 
     def test_decide_who_to_call_next_slideshare_no_title(self):
         aliases_dict = {"url":["http://abc.slideshare.net/def"]}
-        response = backend.Backend.sniffer(aliases_dict, self.TEST_PROVIDER_CONFIG)
+        prev_aliases = []
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect all metrics and look up the biblio
         expected = {'metrics': ['wikipedia'], 'biblio': ['slideshare'], 'aliases': []}
@@ -145,7 +138,8 @@ class TestBackendClass(TestBackend):
 
     def test_decide_who_to_call_next_dryad_no_url(self):
         aliases_dict = {"doi":["10.5061/dryad.3td2f"]}
-        response = backend.Backend.sniffer(aliases_dict, self.TEST_PROVIDER_CONFIG)
+        prev_aliases = []
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to resolve the dryad doi before can go get metrics
         expected = {'metrics': [], 'biblio': [], 'aliases': ['dryad']}
@@ -154,24 +148,27 @@ class TestBackendClass(TestBackend):
     def test_decide_who_to_call_next_dryad_with_url(self):
         aliases_dict = {   "doi":["10.5061/dryad.3td2f"],
                                     "url":["http://dryadsomewhere"]}
-        response = backend.Backend.sniffer(aliases_dict, self.TEST_PROVIDER_CONFIG)
+        prev_aliases = []
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # have url so now can go get all the metrics
         expected = {'metrics': ['wikipedia'], 'biblio': ['dryad'], 'aliases': []}
         assert_equals(response, expected)
 
-    def test_decide_who_to_call_next_pmid_no_urls(self):
+    def test_decide_who_to_call_next_pmid_not_run(self):
         aliases_dict = {"pmid":["111"]}
-        response = backend.Backend.sniffer(aliases_dict, self.TEST_PROVIDER_CONFIG)
+        prev_aliases = []
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get more aliases
         expected = {'metrics': [], 'biblio': [], 'aliases': ['pubmed']}
         assert_equals(response, expected)
 
-    def test_decide_who_to_call_next_pmid_with_urls(self):
+    def test_decide_who_to_call_next_pmid_prev_run(self):
         aliases_dict = {  "pmid":["1111"],
                          "url":["http://pubmedsomewhere"]}
-        response = backend.Backend.sniffer(aliases_dict, self.TEST_PROVIDER_CONFIG)
+        prev_aliases = ["pubmed"]
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics and biblio
         expected = {'metrics': [], 'biblio': [], 'aliases': ['crossref']}
@@ -180,20 +177,41 @@ class TestBackendClass(TestBackend):
     def test_decide_who_to_call_next_doi_with_urls(self):
         aliases_dict = {  "doi":["10.234/345345"],
                                 "url":["http://journalsomewhere"]}
-        response = backend.Backend.sniffer(aliases_dict, self.TEST_PROVIDER_CONFIG)
+        prev_aliases = ["pubmed"]
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics, biblio from crossref
-        expected = {'metrics': [], 'biblio': [], 'aliases': ['pubmed']}
+        expected = {'metrics': [], 'biblio': [], 'aliases': ['crossref']}
         assert_equals(response, expected)     
 
-    def test_decide_who_to_call_next_doi_with_urls_and_title(self):
+    def test_decide_who_to_call_next_doi_crossref_prev_called(self):
         aliases_dict = { "doi":["10.234/345345"],
                         "url":["http://journalsomewhere"]}
-        response = backend.Backend.sniffer(aliases_dict, self.TEST_PROVIDER_CONFIG)
+        prev_aliases = ["crossref"]                        
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics, no biblio
         expected = {'metrics': [], 'biblio': [], 'aliases': ['pubmed']}
         assert_equals(response, expected)   
 
+    def test_decide_who_to_call_next_doi_crossref_pubmed_prev_called(self):
+        aliases_dict = { "doi":["10.234/345345"],
+                        "url":["http://journalsomewhere"]}
+        prev_aliases = ["crossref", "pubmed"]                        
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
+        print response
+        # expect need to get metrics, no biblio
+        expected = {'metrics': ["wikipedia"], 'biblio': ['pubmed', 'crossref'], 'aliases': []}
+        assert_equals(response, expected)   
+
+    def test_decide_who_to_call_next_pmid_crossref_pubmed_prev_called(self):
+        aliases_dict = { "pmid":["1111"],
+                        "url":["http://journalsomewhere"]}
+        prev_aliases = ["crossref", "pubmed"]                        
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
+        print response
+        # expect need to get metrics, no biblio
+        expected = {'metrics': ["wikipedia"], 'biblio': ['pubmed', 'crossref'], 'aliases': []}
+        assert_equals(response, expected)   
 
 
