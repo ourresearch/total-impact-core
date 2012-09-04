@@ -24,7 +24,7 @@ class TestTiRedis():
 
     def test_set_num_providers_left(self):
         self.r.set_num_providers_left("abcd", 11)
-        assert_equals("11", self.r.get("abcd"))
+        assert_equals("11", self.r.get("num_providers_left:abcd"))
 
     def test_get_num_providers_left(self):
         self.r.set_num_providers_left("abcd", 11)
@@ -35,13 +35,12 @@ class TestTiRedis():
         num_left = self.r.get_num_providers_left("notinthedatabase")
         assert_equals(None, num_left)
 
-
     def test_decr_num_providers_left(self):
         self.r.set_num_providers_left("abcd", 11)
-        assert_equals("11", self.r.get("abcd"))
+        assert_equals("11", self.r.get("num_providers_left:abcd"))
 
         self.r.decr_num_providers_left("abcd", "myprovider")
-        assert_equals("10", self.r.get("abcd"))
+        assert_equals("10", self.r.get("num_providers_left:abcd"))
 
     def test_cache_collection(self):
         success = self.r.cache_collection(SAMPLE_COLLECTION)
