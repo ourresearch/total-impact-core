@@ -256,7 +256,9 @@ class MemberItems():
     def start_update(self, str):
         pages = self.provider.paginate(str)
         hash = hashlib.md5(str.encode('utf-8')).hexdigest()
-        t = threading.Thread(target=self._update, args=(pages, hash))
+        t = threading.Thread(target=self._update, 
+                            args=(pages, hash), 
+                            name=hash[0:4]+"_memberitems_thread")
         t.daemon = True
         t.start()
         return hash
