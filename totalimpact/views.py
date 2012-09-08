@@ -21,12 +21,15 @@ logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
+mydao.update_design_doc()
+
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
 
 logger.debug("Building reference sets")
 myrefsets = None
+myrefsets_histograms = None
 try:
-    myrefsets = collection.build_all_reference_lookups(myredis, mydao)
+    (myrefsets, myrefsets_histograms) = collection.build_all_reference_lookups(myredis, mydao)
     logger.debug("Reference sets dict has %i keys" %len(myrefsets.keys()))
 except (couchdb.ResourceNotFound, LookupError, AttributeError), e:
     logger.error("Exception %s: Unable to load reference sets" % (e.__repr__()))
@@ -614,6 +617,29 @@ def reference_sets():
     resp.mimetype = "application/json"
     return resp
 
+@app.route("/collections/reference-sets-histograms")
+def reference_sets_histograms():
+    rows = []
+    header_added = False
+    for genre in myrefsets_histograms:
+        for refset in myrefsets_histograms[genre]:
+            for year in myrefsets_histograms[genre][refset]:
+                if not header_added:
+                    first_metric_name = myrefsets_histograms[genre][refset][year].keys()[0]
+                    data_labels = [str(i)+"th" for i in range(len(myrefsets_histograms[genre][refset][year][first_metric_name]))]
+                    header = ",".join(["genre", "refset", "year", "metric_name"] + data_labels)
+                    rows.append(header)
+                    header_added = True
+                for metric_name in myrefsets_histograms[genre][refset][year]:
+                    metadata = [genre, refset, str(year), metric_name]
+                    metrics = [str(i) for i in myrefsets_histograms[genre][refset][year][metric_name]]
+                    rows.append(",".join(metadata+metrics))
+    resp = make_response("\n".join(rows), 200)
+    # Do we want it to pop up to save?  kinda nice to just see it in browser
+    #resp.mimetype = "text/csv;charset=UTF-8"
+    #resp.headers.add("Content-Disposition", "attachment; filename=refsets.csv")
+    #resp.headers.add("Content-Encoding", "UTF-8")
+    return resp
 
 @app.route("/user/<userid>", methods=["GET"])
 def get_user(userid=''):

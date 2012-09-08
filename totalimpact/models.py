@@ -191,25 +191,31 @@ class ItemFactory():
     @classmethod
     def get_normalized_values(cls, genre, year, metric_name, value, myrefsets):
         # Will be passed None as myrefsets type when loading items in reference collections :)
+        #logging.info("In get_normalized_values")
         if not myrefsets:
             return {}
 
+        logging.info("Have refsets!")
+
         # for now, only normalize articles
-        if genre != "article":
+        if genre not in myrefsets.keys():
             return {}
 
         # treat the f1000 "Yes" as a 1 for normalization
         if value=="Yes":
             value = 1
 
+
         response = {}
-        for refsetname in myrefsets:
+        for refsetname in myrefsets[genre]:
+            logging.info("trying refset type {refsetname}".format(
+                refsetname=refsetname))
             try:
-                fencepost_values = myrefsets[refsetname][str(year)][metric_name].keys()
+                fencepost_values = myrefsets[genre][refsetname][str(year)][metric_name].keys()
                 myclosest = closest(value, fencepost_values)
-                response[refsetname] = myrefsets[refsetname][str(year)][metric_name][myclosest]
+                response[refsetname] = myrefsets[genre][refsetname][str(year)][metric_name][myclosest]
             except KeyError:
-                #logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
+                logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
                 pass
                 
         return response
@@ -256,7 +262,9 @@ class MemberItems():
     def start_update(self, str):
         pages = self.provider.paginate(str)
         hash = hashlib.md5(str.encode('utf-8')).hexdigest()
-        t = threading.Thread(target=self._update, args=(pages, hash))
+        t = threading.Thread(target=self._update, 
+                            args=(pages, hash), 
+                            name=hash[0:4]+"_memberitems_thread")
         t.daemon = True
         t.start()
         return hash
