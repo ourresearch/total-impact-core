@@ -1,11 +1,10 @@
-import json, uuid, couchdb, time, logging, os, re, threading, redis
+import json, uuid, couchdb, time, logging, os, re, redis
 from couchdb import ResourceNotFound, PreconditionFailed
 
 from totalimpact.utils import Retry
 
 # set up logging
 logger = logging.getLogger("ti.dao")
-lock = threading.Lock()
 
 class DbUrl(object):
     
@@ -99,7 +98,7 @@ class Dao(object):
     def json(self):
         return json.dumps(self.data, sort_keys=True, indent=4)
 
-    @Retry(3, KeyError, 0.1)
+    @Retry(3, Exception, 0.1)
     def get(self,_id):
         if (_id):
             return self.db.get(_id)
@@ -145,11 +144,6 @@ class Dao(object):
         self.create_db(db_name)
 
     def __getstate__(self):
-        '''Returns None when you try to pickle this object.
-
-        Otherwise a threadlock from couch prevents pickling of other stuff that
-        may contain this object.'''
-
         return None
 
 

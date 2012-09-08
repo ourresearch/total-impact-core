@@ -98,8 +98,15 @@ class Bibtex(Provider):
 
         for key, doi in zip(line_keys, dois):
             if not doi:
-                logger.debug("%20s NO DOI from %s, %s" %(self.provider_name, arg_dict[key], key))
-                logger.debug("%20s full bibtex for NO DOI is %s" %(self.provider_name, biblio.entries[key]))
+                try:
+                    logger.debug("%20s NO DOI from %s, %s" %(self.provider_name, arg_dict[key], key))
+                except KeyError:
+                    logger.debug("%20s NO DOI from %s, %s" %(self.provider_name, "", key))                    
+                
+                try:
+                    logger.debug("%20s full bibtex for NO DOI is %s" %(self.provider_name, biblio.entries[key]))
+                except KeyError:
+                    pass
 
         non_empty_dois = [doi for doi in dois if doi]
         logger.debug("%20s found %i dois" % (self.provider_name, len(non_empty_dois)))

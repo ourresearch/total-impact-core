@@ -336,6 +336,11 @@ def main():
 
     myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
     alias_queue = RedisQueue("aliasqueue", myredis)
+    # to clear alias_queue:
+    #import redis, os
+    #myredis = redis.from_url(os.getenv("REDISTOGO_URL"))
+    #myredis.delete(["aliasqueue"])
+
 
     # these need to match the tiid alphabet defined in models:
     couch_queues = {}
