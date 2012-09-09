@@ -61,7 +61,10 @@ class ItemFactory():
         try:
             year = item["biblio"]["year"]
         except KeyError:
-            year = 2011 # hack.  what else to do?
+            year = 99 # hack so that it won't match anything.  what else to do?
+
+        if year < 2002:
+            year = 2002
 
         for snap in snaps:
             metric_name = snap["metric_name"]
