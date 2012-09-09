@@ -42,14 +42,12 @@ class Scienceseeker(Provider):
 
         (doc, lookup_function) = provider._get_doc_from_xml(page)  
         if not doc:
-            return None
-        #try:
-        feed_doc = doc.getElementsByTagName("feed")
-        print feed_doc[0]
-        entry_doc = feed_doc[0].getElementsByTagName("entry")
-        print entry_doc
-        #except (KeyError, IndexError, TypeError):
-        #    return {}
+            return {}
+        try:
+            feed_doc = doc.getElementsByTagName("feed")
+            entry_doc = feed_doc[0].getElementsByTagName("entry")
+        except (KeyError, IndexError, TypeError):
+            return {}
 
         entry_link_doc = entry_doc[0].getElementsByTagName("id")
         number_blog_posts = len(entry_link_doc)
