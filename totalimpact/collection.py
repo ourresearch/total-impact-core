@@ -162,16 +162,22 @@ def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_
         if (len(confidence_interval_table) != len(metric_values)):
             logging.error("BAD BAD")
         matches[metric_name] = defaultdict(list)
-        for i in range(len(metric_values)):
-            matches[metric_name][metric_values[i]] += [confidence_interval_table[i]]
+        num_normalization_points = len(metric_values) + 0.0 # make it a float
+        for i in range(num_normalization_points):
+            matches[metric_name][metric_values[i]] += [[i/num_normalization_points, confidence_interval_table[i][0], confidence_interval_table[i][1]]]
 
         response[metric_name] = {}
         for metric_value in matches[metric_name]:
-            lowers = [lower for (lower, upper) in matches[metric_name][metric_value]]
-            lowest = min(lowers)
-            uppers = [upper for (lower, upper) in matches[metric_name][metric_value]]
-            highest = max(uppers)
-            response[metric_name][metric_value] = (lowest, highest)
+            lowers = [lower for (est, lower, upper) in matches[metric_name][metric_value]]
+            CI95_lowest = min(lowers)
+            uppers = [upper for (est, lower, upper) in matches[metric_name][metric_value]]
+            CI95_highest = max(uppers)
+
+            estimates = [est for (est, lower, upper) in matches[metric_name][metric_value]]
+            est_lowest = min(estimates)
+            est_highest = max(estimates)
+
+            response[metric_name][metric_value] = {"CI95": (CI95_lowest, CI95_highest), "estimate_range": (est_lowest, est_highest)}
     return response  
 
 def build_reference_lookup(coll_with_items, myrefsets):
