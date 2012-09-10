@@ -210,7 +210,7 @@ class ItemFactory():
             try:
                 fencepost_values = myrefsets[refsetname][str(year)][metric_name].keys()
                 myclosest = closest(value, fencepost_values)
-                response[refsetname] = myrefsets[refsetname][str(year)][metric_name][myclosest]
+                response[refsetname] = {"CI95": myrefsets[refsetname][str(year)][metric_name][myclosest]}
             except KeyError:
                 #logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
                 pass
