@@ -332,7 +332,6 @@ class Backend(Worker):
 
 def main():
     mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
-    mydao.update_design_doc()
 
     myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
     alias_queue = RedisQueue("aliasqueue", myredis)
