@@ -162,9 +162,9 @@ def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_
         if (len(confidence_interval_table) != len(metric_values)):
             logging.error("BAD BAD")
         matches[metric_name] = defaultdict(list)
-        num_normalization_points = len(metric_values) + 0.0 # make it a float
+        num_normalization_points = len(metric_values)
         for i in range(num_normalization_points):
-            matches[metric_name][metric_values[i]] += [[i/num_normalization_points, confidence_interval_table[i][0], confidence_interval_table[i][1]]]
+            matches[metric_name][metric_values[i]] += [[(i+0.0)/num_normalization_points, confidence_interval_table[i][0], confidence_interval_table[i][1]]]
 
         response[metric_name] = {}
         for metric_value in matches[metric_name]:
