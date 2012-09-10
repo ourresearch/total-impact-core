@@ -51,6 +51,7 @@ class ViewsTester(unittest.TestCase):
         temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
         temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        self.d.update_design_doc()
 
         # do the same thing for the redis db
         self.r = tiredis.from_url("redis://localhost:6379")
