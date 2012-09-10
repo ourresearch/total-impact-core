@@ -4,8 +4,8 @@ import redis, logging, json
 logger = logging.getLogger("ti.tiredis")
 
 
-def from_url(url):
-    r = redis.from_url(url)
+def from_url(url, db=0):
+    r = redis.from_url(url, db)
     return r
 
 def set_num_providers_left(self, item_id, num_providers_left):

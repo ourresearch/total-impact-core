@@ -126,8 +126,8 @@ class TestItemFactory():
                         "facebook:comments": {0: [1, 99], 1: [91, 99]}, "mendeley:groups": {0: [1, 99], 3: [91, 99]}
                     }}}
 
-        # setup a clean new redis instance
-        self.r = tiredis.from_url("redis://localhost:6379")
+        # setup a clean new redis test database.  We're putting unittest redis at DB Number 8.
+        self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
 
 #    def test_make_new(self):
@@ -226,8 +226,8 @@ class TestItemFactory():
 class TestMemberItems():
 
     def setUp(self):
-        # setup a clean new redis instance
-        self.r = tiredis.from_url("redis://localhost:6379")
+        # setup a clean new redis database at our unittest redis DB location: Number 8
+        self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
 
         bibtex.Bibtex.paginate = lambda self, x: [1,2,3,4]

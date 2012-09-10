@@ -14,7 +14,8 @@ SAMPLE_COLLECTION = {
 class TestTiRedis():
 
     def setUp(self):
-        self.r = tiredis.from_url("redis://localhost:6379")
+        # we're putting unittests for redis in their own db (number 8) so they can be deleted with abandon
+        self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
 
 
