@@ -116,10 +116,11 @@ class Pubmed(Provider):
         except (IndexError, TypeError):
             pass
 
+        #sometimes no doi, or PMID has a doi-fragment in the doi field:
+        aliases_list = []
         if doi:
-            aliases_list = [("doi", doi)]
-        else:
-            aliases_list = []
+            if "10." in doi:  
+                aliases_list = [("doi", doi)]
         return aliases_list
 
     def _get_eutils_page(self, id, url, cache_enabled=True):

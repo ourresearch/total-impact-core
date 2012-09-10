@@ -76,6 +76,13 @@ class TestPubmed(ProviderTestCase):
         assert_equals(set(aliases_dict), set([("url", 'http://www.ncbi.nlm.nih.gov/pubmed/16060722'), ('doi', u'10.1371/journal.pmed.0020124')]))
 
     @http
+    def test_aliases_from_pmid_when_doi_fragment(self):
+        #this pmid has a partial doi in its doi field.  Make sure we don't include it in our doi field.
+        aliases_dict = self.provider.aliases([("pmid", "11244366")])
+        assert_equals(set(aliases_dict), set([("url", 'http://www.ncbi.nlm.nih.gov/pubmed/11244366')]))
+
+
+    @http
     def test_aliases_from_doi(self):
         aliases_dict = self.provider.aliases([("doi", TEST_DOI)])
         assert_equals(set(aliases_dict), set([('pmid', '19381256')]))
