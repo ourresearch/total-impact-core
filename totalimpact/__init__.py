@@ -6,7 +6,7 @@ from flask import Flask
 logging.basicConfig(
     stream=sys.stdout,
     level=logging.DEBUG,
-    format='%(levelname)8s %(name)s - %(message)s'
+    format='%(threadName)s %(levelname)8s %(name)s - %(message)s'
 )
 
 logger = logging.getLogger("ti")

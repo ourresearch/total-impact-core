@@ -92,7 +92,9 @@ class Dao(object):
             print("Error, maybe because database name cannot include uppercase, must match [a-z][a-z0-9_\$\(\)\+-/]*$")
             raise ValueError
         
-        self.update_design_doc()
+        # don't update the design docs because it risks adding an accidental change and 
+        ## triggering an app-halting reindex
+        #self.update_design_doc()
 
     @property
     def json(self):
