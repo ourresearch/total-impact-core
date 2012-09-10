@@ -19,8 +19,8 @@ class TestBackend():
         temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
-        # do the same thing for the redis db
-        self.r = tiredis.from_url("redis://localhost:6379")
+        # do the same thing for the redis db, set up the test redis database.  We're using DB Number 8
+        self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
 
         provider_queues = {}
