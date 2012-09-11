@@ -52,37 +52,60 @@ class TestBackend():
 
 class TestProviderWorker(TestBackend):
     # warning: calls live provider right now
-    @nottest
-    def test_wrapper_aliases_to_update_queue(self):      
-        response = backend.ProviderWorker.wrapper("mytiid", 
+    def test_add_to_couch_queue_if_nonzero(self):    
+        test_couch_queue = backend.PythonQueue("test_couch_queue")
+        provider_worker = backend.ProviderWorker(mocks.ProviderMock("myfakeprovider"), 
+                                        None, None, None, {"a": test_couch_queue}, None, self.r)  
+        response = provider_worker.add_to_couch_queue_if_nonzero("aaatiid", #start fake tiid with "a" so in first couch queue
                 {"doi":["10.5061/dryad.3td2f"]}, 
-                ["dryad"], 
                 "aliases", 
-                self.b.add_aliases_to_update_queue)
+                "dummy")
 
-        # test that it put it on the queue as per the callback
-        in_queue = self.r.rpop("aliasqueue")
-        expected = [('url', u'http://hdl.handle.net/10255/dryad.33863'), ('title', u'data from: public sharing of research datasets: a pilot study of associations')]
+        # test that it put it on the queue
+        in_queue = test_couch_queue.pop()
+        expected = ('aaatiid', {'doi': ['10.5061/dryad.3td2f']}, 'aliases')
         assert_equals(in_queue, expected)
 
-        # test that it returned the correct item        
-        expected = [[('url', u'http://hdl.handle.net/10255/dryad.33863'), ('title', u'data from: public sharing of research datasets: a pilot study of associations')]]
-        assert_equals(response, expected)
+    def test_add_to_couch_queue_if_nonzero_given_metrics(self):    
+        test_couch_queue = backend.PythonQueue("test_couch_queue")
+        provider_worker = backend.ProviderWorker(mocks.ProviderMock("myfakeprovider"), 
+                                        None, None, None, {"a": test_couch_queue}, None, self.r)  
+        metrics_method_response = {'dryad:package_views': (361, 'http://dx.doi.org/10.5061/dryad.7898'), 
+                    'dryad:total_downloads': (176, 'http://dx.doi.org/10.5061/dryad.7898'), 
+                    'dryad:most_downloaded_file': (65, 'http://dx.doi.org/10.5061/dryad.7898')}        
+        response = provider_worker.add_to_couch_queue_if_nonzero("aaatiid", #start fake tiid with "a" so in first couch queue
+                metrics_method_response,
+                "metrics", 
+                "dummy")
 
-    # warning: calls live provider right now
-    @nottest
-    def test_wrapper_aliases_to_couch_queue(self):     
-        response = backend.ProviderWorker.wrapper("mytiid", 
-                {"doi":["10.5061/dryad.3td2f"]}, ["dryad"], "biblio", self.b.push_on_couch_queue)
+        # test that it put it on the queue
+        in_queue = test_couch_queue.pop()
+        expected = ('aaatiid', metrics_method_response, "metrics")
+        print in_queue
+        assert_equals(in_queue, expected)        
 
-        # test that it returned the correct item        
-        expected = [{'authors': u'Piwowar, Chapman, Piwowar, Chapman, Piwowar, Chapman', 'year': u'2011', 'repository': 'Dryad Digital Repository', 'title': u'Data from: Public sharing of research datasets: a pilot study of associations'}]
-        assert_equals(response, expected)
+        # check nothing in redis since it had a value
+        response = num_left = self.r.get_num_providers_left("aaatiid")
+        assert_equals(response, None)
 
-        # test that it put it on the queue as per the callback
-        in_queue = self.b.pop_from_couch_queue()
-        expected = ('mytiid', 'biblio', {'authors': u'Piwowar, Chapman, Piwowar, Chapman, Piwowar, Chapman', 'year': u'2011', 'repository': 'Dryad Digital Repository', 'title': u'Data from: Public sharing of research datasets: a pilot study of associations'})
-        assert_equals(in_queue, expected)
+    def test_add_to_couch_queue_if_nonzero_given_empty_metrics_response(self):    
+        test_couch_queue = backend.PythonQueue("test_couch_queue")
+        provider_worker = backend.ProviderWorker(mocks.ProviderMock("myfakeprovider"), 
+                                        None, None, None, {"a": test_couch_queue}, None, self.r)  
+        metrics_method_response = {}
+        response = provider_worker.add_to_couch_queue_if_nonzero("aaatiid", #start fake tiid with "a" so in first couch queue
+                metrics_method_response,
+                "metrics", 
+                "dummy")
+
+        # test that it did not put it on the queue
+        in_queue = test_couch_queue.pop()
+        expected = None
+        assert_equals(in_queue, expected)        
+
+        # check decremented in redis since the payload was null
+        response = num_left = self.r.get_num_providers_left("aaatiid")
+        assert_equals(response, -1)
 
     def test_wrapper(self):     
         def fake_callback(tiid, new_content, method_name, aliases_providers_run):
@@ -110,6 +133,84 @@ class TestCouchWorker(TestBackend):
         response = backend.CouchWorker.update_item_with_new_aliases(dup_alias_dict, self.fake_item)
         expected = None # don't return the item if it already has all the aliases in it
         assert_equals(response, expected)
+
+    def test_update_item_with_new_biblio(self):
+        new_biblio_dict = {"title":"A very good paper", "authors":"Smith, Lee, Khun"}
+        response = backend.CouchWorker.update_item_with_new_biblio(new_biblio_dict, self.fake_item)
+        expected = new_biblio_dict
+        assert_equals(response["biblio"], expected)
+
+    def test_update_item_with_new_biblio_existing_biblio(self):
+        item_with_some_biblio = self.fake_item
+        item_with_some_biblio["biblio"] = {"title":"Different title"}
+        new_biblio_dict = {"title":"A very good paper", "authors":"Smith, Lee, Khun"}
+        response = backend.CouchWorker.update_item_with_new_biblio(new_biblio_dict, item_with_some_biblio)
+        expected = None # return None if item already has aliases in it
+        assert_equals(response, expected)
+
+    def test_update_item_with_new_snap(self):
+        snap = {'tiid': '4mlln04q1rxy6l9oeb3t7ftv', 'metric_name': 'mendeley:groups', 'created': '2012-08-23T21:41:05.526046', '_rev': '1-5fde8dbb5c3af04114adb18295a42259', 'value': 2, 'drilldown_url': 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/', '_id': '25gvr5xxvbu8mabgzvvkdf65', 'type': 'metric_snap'}
+        response = backend.CouchWorker.update_item_with_new_snap(snap, self.fake_item)
+        expected = {'mendeley:groups': {'provenance_url': 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/', 'values': {'raw': 2, 'raw_history': {'2012-08-23T21:41:05.526046': 2}}}}
+        assert_equals(response["metrics"], expected)
+
+    def test_run_nothing_in_queue(self):
+        test_couch_queue = backend.PythonQueue("test_couch_queue")
+        couch_worker = backend.CouchWorker(test_couch_queue, self.r, self.d)
+        response = couch_worker.run()
+        expected = None
+        assert_equals(response, expected)
+
+    def test_run_aliases_in_queue(self):
+        test_couch_queue = backend.PythonQueue("test_couch_queue")
+        test_couch_queue_dict = {self.fake_item["_id"][0]:test_couch_queue}
+        provider_worker = backend.ProviderWorker(mocks.ProviderMock("myfakeprovider"), 
+                                        None, None, None, test_couch_queue_dict, None, self.r)  
+        response = provider_worker.add_to_couch_queue_if_nonzero(self.fake_item["_id"], 
+                {"doi":["10.5061/dryad.3td2f"]}, 
+                "aliases", 
+                "dummy")
+
+        # save basic item beforehand
+        self.d.save(self.fake_item)
+
+        # run
+        couch_worker = backend.CouchWorker(test_couch_queue, self.r, self.d)
+        response = couch_worker.run()
+        expected = None
+        assert_equals(response, expected)
+
+        # check couch_queue has value after
+        couch_response = self.d.get(self.fake_item["_id"])
+        print couch_response
+        expected = {'pmid': ['111'], 'doi': ['10.5061/dryad.3td2f']}
+        assert_equals(couch_response["aliases"], expected)
+
+    def test_run_metrics_in_queue(self):
+        test_couch_queue = backend.PythonQueue("test_couch_queue")
+        test_couch_queue_dict = {self.fake_item["_id"][0]:test_couch_queue}
+        provider_worker = backend.ProviderWorker(mocks.ProviderMock("myfakeprovider"), 
+                                        None, None, None, test_couch_queue_dict, None, self.r) 
+        metrics_method_response = {'dryad:package_views': (361, 'http://dx.doi.org/10.5061/dryad.7898'), 
+                            'dryad:total_downloads': (176, 'http://dx.doi.org/10.5061/dryad.7898'), 
+                            'dryad:most_downloaded_file': (65, 'http://dx.doi.org/10.5061/dryad.7898')}                                         
+        response = provider_worker.add_to_couch_queue_if_nonzero(self.fake_item["_id"], 
+                metrics_method_response,
+                "metrics", 
+                "dummy")
+
+        # save basic item beforehand
+        self.d.save(self.fake_item)
+
+        # run
+        couch_worker = backend.CouchWorker(test_couch_queue, self.r, self.d)    
+        couch_worker.run()
+            
+        # check couch_queue has value after
+        couch_response = self.d.get(self.fake_item["_id"])
+        print couch_response
+        expected = 361
+        assert_equals(couch_response["metrics"]['dryad:package_views']['values']["raw"], expected)
 
 
 class TestBackendClass(TestBackend):

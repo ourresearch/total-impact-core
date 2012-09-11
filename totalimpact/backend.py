@@ -207,7 +207,7 @@ class CouchWorker(Worker):
 
     @classmethod
     def update_item_with_new_snap(cls, snap, item):
-        item = ItemFactory.add_snap_data(snap, item)
+        item = ItemFactory.add_snap_data(item, snap)  #note the flipped order.  hrm.
         return(item)        
 
     def decr_num_providers_left(self, metric_name, tiid):
@@ -257,8 +257,8 @@ class CouchWorker(Worker):
                         item = self.update_item_with_new_snap(snap, item)
                     logger.info("{:20}: added snaps, saving item {tiid}".format(
                         self.name, tiid=tiid))
-                    self.mydao.save(updated_item)
-                    cls.decr_num_providers_left(metric_name, tiid)
+                    self.mydao.save(item)
+                    self.decr_num_providers_left(metric_name, tiid)
 
                 else:
                     logger.warning("ack, supposed to save something i don't know about: " + str(new_content))
