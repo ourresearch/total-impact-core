@@ -1,4 +1,4 @@
-import json, os, Queue
+import json, os, Queue, datetime
 
 from totalimpact import dao, tiredis, backend, default_settings
 from totalimpact.providers.provider import Provider, ProviderTimeout, ProviderFactory
@@ -186,6 +186,10 @@ class TestCouchWorker(TestBackend):
         expected = {'pmid': ['111'], 'doi': ['10.5061/dryad.3td2f']}
         assert_equals(couch_response["aliases"], expected)
 
+        # check has updated last_modified time
+        now = datetime.datetime.now().isoformat()
+        assert_equals(couch_response["last_modified"][0:10], now[0:10])
+
     def test_run_metrics_in_queue(self):
         test_couch_queue = backend.PythonQueue("test_couch_queue")
         test_couch_queue_dict = {self.fake_item["_id"][0]:test_couch_queue}
@@ -211,6 +215,10 @@ class TestCouchWorker(TestBackend):
         print couch_response
         expected = 361
         assert_equals(couch_response["metrics"]['dryad:package_views']['values']["raw"], expected)
+
+        # check has updated last_modified time
+        now = datetime.datetime.now().isoformat()
+        assert_equals(couch_response["last_modified"][0:10], now[0:10])
 
 
 class TestBackendClass(TestBackend):
