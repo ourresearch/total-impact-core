@@ -186,28 +186,35 @@ class CouchWorker(Worker):
         self.mydao = mydao
         self.name = self.couch_queue.queue_name + "_worker"
 
-    def update_item_with_new_aliases(self, alias_dict, item):
+    @classmethod
+    def update_item_with_new_aliases(cls, alias_dict, item):
         if alias_dict == item["aliases"]:
             item = None
         else:
             merged_aliases = ItemFactory.merge_alias_dicts(alias_dict, item["aliases"])
             item["aliases"] = merged_aliases
-            #logger.info("{:20}: added aliases, saving item {item}".format(
-            #    self.name, item=item))
         return(item)
 
-    def update_item_with_new_biblio(self, biblio_dict, item):
+    @classmethod
+    def update_item_with_new_biblio(cls, biblio_dict, item):
         # return None if no changes
         # don't change if biblio already there
         if item["biblio"]:
-            #logger.info("{:20}: {tiid} already had biblio, not saving".format(
-            #    self.name, tiid=item["_id"]))
             item = None
         else:
             item["biblio"] = biblio_dict
-            #logger.info("{:20}: added biblio, saving item {item}".format(
-            #    self.name, item=item))
         return(item)
+
+    @classmethod
+    def update_item_with_new_snap(cls, snap, item):
+        item = ItemFactory.add_snap_data(snap, item)
+        return(item)        
+
+    def decr_num_providers_left(self, metric_name, tiid):
+        provider_name = metric_name.split(":")[0]
+        if not provider_name:
+            provider_name = "(unknown)"
+        self.myredis.decr_num_providers_left(tiid, provider_name)
 
     def run(self):
         couch_message = self.couch_queue.pop()
@@ -237,15 +244,21 @@ class CouchWorker(Worker):
                             self.name, tiid=tiid))
                         self.mydao.save(updated_item)
                 elif method_name=="metrics":
+                    # keep doing this for legacy reasons.  Delete this when snaps migrated into items.
                     for metric_name in new_content:
                         snap = ItemFactory.build_snap(tiid, new_content[metric_name], metric_name)
                         logger.info("{:20}: added metrics to {tiid}, saving snap {snap}".format(
                             self.name, tiid=tiid, snap=snap["_id"]))
                         self.mydao.save(snap)
-                        provider_name = metric_name.split(":")[0]
-                    if not provider_name:
-                        provider_name = "(unknown)"
-                    self.myredis.decr_num_providers_left(tiid, provider_name)
+
+                    # this is the loop we are going to keep.  add all the snaps, then write the item.
+                    for metric_name in new_content:
+                        snap = ItemFactory.build_snap(tiid, new_content[metric_name], metric_name)
+                        item = self.update_item_with_new_snap(snap, item)
+                    logger.info("{:20}: added snaps, saving item {tiid}".format(
+                        self.name, tiid=tiid))
+                    self.mydao.save(updated_item)
+                    cls.decr_num_providers_left(metric_name, tiid)
 
                 else:
                     logger.warning("ack, supposed to save something i don't know about: " + str(new_content))
