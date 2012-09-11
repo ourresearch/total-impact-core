@@ -5,9 +5,6 @@ from werkzeug.security import check_password_hash
 from collections import defaultdict
 import redis
 
-import newrelic.agent
-mynewrelic_application = newrelic.agent.application('total-impact-core')
-
 from totalimpact import dao, app, tiredis, collection
 from totalimpact.models import ItemFactory, MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError
@@ -21,7 +18,6 @@ logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
-mydao.update_design_doc()
 
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
 
@@ -493,8 +489,6 @@ def collection_update(cid=""):
 
     # expire it from redis
     myredis.expire_collection(cid)
-
-    mynewrelic_application.record_metric("Custom/Collection/Update", 1)
 
     # put each of them on the update queue
     for tiid in tiids:
