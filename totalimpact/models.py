@@ -54,35 +54,49 @@ class ItemFactory():
     @classmethod
     def build_item_for_client(cls, item, snaps, myrefsets):
         item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
-           
         item["metrics"] = {} #not using what is in stored item for this
 
         # need year to calculate normalization below
         try:
             year = item["biblio"]["year"]
+            if year < 2002:
+                year = 2002
         except KeyError:
             year = 99 # hack so that it won't match anything.  what else to do?
-
-        if year < 2002:
-            year = 2002
 
         for snap in snaps:
             metric_name = snap["metric_name"]
             if metric_name in cls.all_static_meta.keys():
+                # add snap values. this line can go away once all snap values migrated into items in db.  
                 item["metrics"][metric_name] = {}
                 item["metrics"][metric_name]["values"] = {}
-                item["metrics"][metric_name]["provenance_url"] = snap["drilldown_url"]
+                item = cls.add_snap_data(item, snap)
+
+                # add static data
                 item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
-                item["metrics"][metric_name]["values"]["raw"] = snap["value"]
+
+                # add normalization values
                 normalized_values = cls.get_normalized_values(item["biblio"]['genre'], year, metric_name, snap["value"], myrefsets)
                 item["metrics"][metric_name]["values"].update(normalized_values)
 
         return item
 
     @classmethod
-    def build_snap(cls, tiid, metric_value_drilldown, metric_name):
+    def add_snap_data(cls, item, snap):
+        metrics = item.setdefault("metrics", {})
+        
+        this_metric = metrics.setdefault(snap["metric_name"], {})
+        this_metric["provenance_url"] = snap["drilldown_url"]
 
-        now = datetime.datetime.now().isoformat()
+        this_metric_values = this_metric.setdefault("values", {})
+        this_metric_values["raw"] = snap["value"]
+
+        this_metric_values_raw_history = this_metric_values.setdefault("raw_history", {})
+        this_metric_values_raw_history[snap["created"]] = snap["value"]
+        return item
+
+    @classmethod
+    def build_snap(cls, tiid, metric_value_drilldown, metric_name):
         # if the alphabet below changes, need to update couch queue lookups        
         shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
 
@@ -91,24 +105,12 @@ class ItemFactory():
         snap["type"] = "metric_snap"
         snap["metric_name"] = metric_name
         snap["tiid"] = tiid
-        snap["created"] = now
+        snap["created"] = datetime.datetime.now().isoformat
         (value, drilldown_url) = metric_value_drilldown
         snap["value"] = value
         snap["drilldown_url"] = drilldown_url
         return snap
 
-    @classmethod
-    def add_snap(cls, item, snap):
-        """Adds a metrics snap to an item, and returns the item
-
-        Snaps must have keys "metric_name", "timestamp," and "value"
-        """
-
-        metrics = item.setdefault("metrics", {})
-        this_metric = metrics.setdefault(snap["metric_name"], {})
-        this_metric[snap["timestamp"]] = snap["value"]
-
-        return item
 
     @classmethod
     def make(cls):
@@ -181,17 +183,13 @@ class ItemFactory():
     def merge_alias_dicts(self, aliases1, aliases2):
         #logger.debug("in MERGE ALIAS DICTS with %s and %s" %(aliases1, aliases2))
         merged_aliases = copy.deepcopy(aliases1)
-        for ns, nid in aliases2.iteritems():
-            try:
-                merged_aliases[ns].append(nid)
-                merged_aliases[ns] = list(set(aliases2[ns]))
-            except KeyError: # no ids for that namespace yet. make it.
-                merged_aliases[ns] = nid
-            except AttributeError:
-                # nid is a string; overwrite.
-                merged_aliases[ns] = nid
-                logger.debug("aliases[{ns}] is a string ('{nid}'); overwriting".format(
-                    ns=ns, nid=nid))
+        for ns, nid_list in aliases2.iteritems():
+            for nid in nid_list:
+                try:
+                    if not nid in merged_aliases[ns]:
+                        merged_aliases[ns].append(nid)
+                except KeyError: # no ids for that namespace yet. make it.
+                    merged_aliases[ns] = [nid]
         return merged_aliases
 
     @classmethod

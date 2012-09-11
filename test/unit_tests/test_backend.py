@@ -42,7 +42,7 @@ class TestBackend():
             "biblio": {},
             "metrics": {}
         }
-        self.fake_aliases = {"pmid":["111"]}
+        self.fake_aliases_dict = {"pmid":["222"]}
         self.tiid = "abcd"
 
     def teardown(self):
@@ -94,7 +94,21 @@ class TestProviderWorker(TestBackend):
                 "aliases", 
                 [], # aliases previously run
                 fake_callback)
-        expected = {'url': ['http://somewhere'], 'doi': ['10.123']}
+        print response
+        expected = {'url': ['http://somewhere'], 'doi': ['10.1', '10.123']}
+        assert_equals(response, expected)
+
+class TestCouchWorker(TestBackend):
+    def test_update_item_with_new_aliases(self):
+        response = backend.CouchWorker.update_item_with_new_aliases(self.fake_aliases_dict, self.fake_item)
+        expected = {'metrics': {}, 'num_providers_still_updating': 1, 'biblio': {}, '_id': '1', 'type': 'item', 
+            'aliases': {'pmid': ['222', '111']}}
+        assert_equals(response, expected)
+
+    def test_update_item_with_new_aliases_using_dup_alias(self):
+        dup_alias_dict = self.fake_item["aliases"]
+        response = backend.CouchWorker.update_item_with_new_aliases(dup_alias_dict, self.fake_item)
+        expected = None # don't return the item if it already has all the aliases in it
         assert_equals(response, expected)
 
 
