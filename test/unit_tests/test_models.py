@@ -209,10 +209,11 @@ class TestItemFactory():
 
         expected_values = {'raw': 2, 'nih': [91, 99], 'raw_history': {'2012-08-23T21:41:05.526046': 2}}
         assert_equals(set(response.keys()), set(['created', '_rev', 'providersWithMetricsCount', 'metrics', 'last_modified', 'biblio', '_id', 'type', 'aliases']))
-        assert_equals(set(response["metrics"]['mendeley:groups']["values"].keys()), set(expected_values.keys()))
+
+        # raw_history is not returned to client        
+        assert_equals(set(response["metrics"]['mendeley:groups']["values"].keys()), set(["raw", "nih"])) 
         assert_equals(response["metrics"]['mendeley:groups']["values"]["raw"], expected_values["raw"])
         assert_equals(response["metrics"]['mendeley:groups']["values"]["nih"], expected_values["nih"])
-        assert_equals(response["metrics"]['mendeley:groups']["values"]["raw_history"].items(), expected_values["raw_history"].items())
 
     def test_add_snap_data(self):
         item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'providersWithMetricsCount': 11, 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
