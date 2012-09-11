@@ -105,7 +105,7 @@ class ItemFactory():
         snap["type"] = "metric_snap"
         snap["metric_name"] = metric_name
         snap["tiid"] = tiid
-        snap["created"] = datetime.datetime.now().isoformat
+        snap["created"] = datetime.datetime.now().isoformat()
         (value, drilldown_url) = metric_value_drilldown
         snap["value"] = value
         snap["drilldown_url"] = drilldown_url
