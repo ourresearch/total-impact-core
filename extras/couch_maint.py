@@ -1,5 +1,6 @@
 import couchdb, os, logging, sys
 from pprint import pprint
+import time
 
 # run in heroku with:
 # heroku run python extras/couch_maint.py
@@ -203,6 +204,7 @@ def build_alias_items_in_collections():
             logger.info("saving")
 
 
+
 """
 function(doc) {
     emit([doc.type, doc._id], doc);
@@ -228,6 +230,68 @@ def delete_item_tiids_from_collection():
             db.save(collection)
             logger.info("saving")
 
+
+
+"""
+function(doc) {
+    emit([doc.type, doc._id], doc);
+}
+"""
+def put_snaps_in_items(start="000000000", end="0001"):
+    logger.debug("running put_snaps_in_items() now.")
+    start = time.time()
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+
+    for row in view_rows[
+               ["metric_snap", start]: #startkey
+               ["metric_snap", end] #endkey
+    ]:
+        row_count += 1
+        logger.info("now on row %i, id %s" % (row_count, row.id))
+        snap = row.doc
+
+        # write the snap into the item's "metrics" section
+        item = db.get(snap["tiid"])
+        metrics = item.setdefault("metrics", {})
+        this_metric = metrics.setdefault(snap["metric_name"], {})
+        this_metric[snap["created"]] = snap["value"]
+
+        #put the metrics section back in the item and save it
+        item["metrics"] = metrics
+
+        logger.info("now saving item %s back to db" % item["_id"])
+        db.save(item)
+
+    logger.info("updated {rows} rows in {elapsed} seconds".format(
+        rows=row_count, elapsed=round(time.time() - start)
+    ))
+
+"""
+function(doc) {
+    emit([doc.type, doc._id], doc);
+}
+"""
+def delete_snaps(start="000000000", end="001"):
+    logger.debug("deleting snaps now.")
+    start = time.time()
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+
+    for row in view_rows[
+               ["metric_snap", start]: #startkey
+               ["metric_snap", end] #endkey
+    ]:
+        row_count += 1
+        logger.info("now deleting doc on row %i, id %s" % (row_count, row.id))
+        db.delete(row.doc)
+
+    logger.info("updated {rows} rows in {elapsed} seconds".format(
+        rows=row_count, elapsed=round(time.time() - start)
+    ))
+
 if (cloudant_db == "ti"):
     print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
 else:
@@ -236,7 +300,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    delete_item_tiids_from_collection()
+    put_snaps_in_items()
 else:
     print "nevermind, then."
 
