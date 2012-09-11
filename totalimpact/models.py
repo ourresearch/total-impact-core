@@ -68,9 +68,10 @@ class ItemFactory():
             metric_name = snap["metric_name"]
             if metric_name in cls.all_static_meta.keys():
                 # add snap values. this line can go away once all snap values migrated into items in db.  
-                item["metrics"][metric_name] = {}
-                item["metrics"][metric_name]["values"] = {}
                 item = cls.add_snap_data(item, snap)
+
+                #delete the raw history from what we return to the client for now
+                del item["metrics"][metric_name]["values"]["raw_history"]
 
                 # add static data
                 item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
