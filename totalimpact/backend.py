@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, time, json, logging, threading, Queue, copy, sys
+import os, time, json, logging, threading, Queue, copy, sys, datetime
 from collections import defaultdict
 
 from totalimpact import dao, tiredis, default_settings
@@ -226,23 +226,15 @@ class CouchWorker(Worker):
             else:
                 item = self.mydao.get(tiid)
                 if not item:
-                    logger.error("Empty item from couch for tiid {tiid}, can't save {method_name}".format(
-                        tiid=tiid, method_name=method_name))
                     if method_name=="metrics":
                         self.myredis.decr_num_providers_left(tiid, "(unknown)")
+                    logger.error("Empty item from couch for tiid {tiid}, can't save {method_name}".format(
+                        tiid=tiid, method_name=method_name))
                     return
                 if method_name=="aliases":
                     updated_item = self.update_item_with_new_aliases(new_content, item)
-                    if updated_item:
-                        logger.info("{:20}: added aliases, saving item {tiid}".format(
-                            self.name, tiid=tiid))
-                        self.mydao.save(updated_item)
                 elif method_name=="biblio":
                     updated_item = self.update_item_with_new_biblio(new_content, item)
-                    if updated_item:
-                        logger.info("{:20}: added biblio, saving item {tiid}".format(
-                            self.name, tiid=tiid))
-                        self.mydao.save(updated_item)
                 elif method_name=="metrics":
                     # keep doing this for legacy reasons.  Delete this when snaps migrated into items.
                     for metric_name in new_content:
@@ -251,14 +243,21 @@ class CouchWorker(Worker):
                             self.name, tiid=tiid, snap=snap["_id"]))
                         self.mydao.save(snap)
 
-                    # this is the loop we are going to keep.  add all the snaps, then write the item.
+                    # this is the loop we are going to keep.  add all the snaps into the item.
+                    updated_item = item
                     for metric_name in new_content:
                         snap = ItemFactory.build_snap(tiid, new_content[metric_name], metric_name)
-                        item = self.update_item_with_new_snap(snap, item)
-                    logger.info("{:20}: added snaps, saving item {tiid}".format(
-                        self.name, tiid=tiid))
-                    self.mydao.save(item)
-                    self.decr_num_providers_left(metric_name, tiid)
+                        updated_item = self.update_item_with_new_snap(snap, updated_item)
+
+                # now that is has been updated it, change last_modified and save
+                if updated_item:
+                    updated_item["last_modified"] = datetime.datetime.now().isoformat()
+                    logger.info("{:20}: added {method_name}, saving item {tiid}".format(
+                        self.name, method_name=method_name, tiid=tiid))
+                    self.mydao.save(updated_item)
+
+                if method_name=="metrics":
+                    self.decr_num_providers_left(metric_name, tiid) # have to do this after the item save
 
                 else:
                     logger.warning("ack, supposed to save something i don't know about: " + str(new_content))
