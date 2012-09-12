@@ -2,7 +2,7 @@ import couchdb, os, logging, sys
 from pprint import pprint
 import time
 
-# run in heroku with:
+# run in heroku by a) commiting, b) pushing to heroku, and c) running
 # heroku run python extras/couch_maint.py
 
 logging.basicConfig(
@@ -259,7 +259,7 @@ def put_snaps_in_items(start="000000000", end="zzzzzzzzzzzzzzzzzzzzzzzz"):
         item_last_modified = item["last_modified"]
         updated_item["last_modified"] = max(snap_last_modified, item_last_modified)
 
-        logger.info("now on snap row %i, saving item %s back to db" % (row_count, updated_item["_id"])
+        logger.info("now on snap row %i, saving item %s back to db" % (row_count, updated_item["_id"]))
         db.save(updated_item)
 
     logger.info("updated {rows} rows in {elapsed} seconds".format(
