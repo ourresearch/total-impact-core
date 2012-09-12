@@ -45,13 +45,6 @@ class TestDAO(unittest.TestCase):
     def teardown(self):
         pass
 
-
-    @raises(KeyError)
-    def test_create_item_fails_if_item_exists(self):
-        doc = {"id": "123"} # no leading underscore...
-        ret = self.d.save(doc)
-
-
     def test_create_db_uploads_views(self):
         design_doc = self.d.db.get("_design/queues")
         assert_equals(set(design_doc["views"].keys()),
