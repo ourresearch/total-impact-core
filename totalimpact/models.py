@@ -54,7 +54,7 @@ class ItemFactory():
     @classmethod
     def build_item_for_client(cls, item, snaps, myrefsets):
         item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
-        item["metrics"] = {} #not using what is in stored item for this
+        #item["metrics"] = {} #not using what is in stored item for this
 
         # need year to calculate normalization below
         try:
