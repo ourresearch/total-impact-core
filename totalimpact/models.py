@@ -80,7 +80,8 @@ class ItemFactory():
                 item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
 
                 # add normalization values
-                normalized_values = cls.get_normalized_values(item["biblio"]['genre'], year, metric_name, snap["value"], myrefsets)
+                raw = item["metrics"][metric_name]["values"]["raw"]
+                normalized_values = cls.get_normalized_values(item["biblio"]['genre'], year, metric_name, raw, myrefsets)
                 item["metrics"][metric_name]["values"].update(normalized_values)
 
         return item
