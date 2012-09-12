@@ -237,35 +237,33 @@ function(doc) {
     emit([doc.type, doc._id], doc);
 }
 """
-def put_snaps_in_items(start="000000000", end="0001"):
+def put_snaps_in_items(start="000000000", end="zzzzzzzzzzzzzzzzzzzzzzzz"):
     logger.debug("running put_snaps_in_items() now.")
-    start = time.time()
+    starttime = time.time()
     view_name = "queues/by_type_and_id"
     view_rows = db.view(view_name, include_docs=True)
     row_count = 0
 
-    for row in view_rows[
-               ["metric_snap", start]: #startkey
-               ["metric_snap", end] #endkey
-    ]:
+    startkey = ["metric_snap", start]
+    endkey = ["metric_snap", end]
+    for row in view_rows[startkey:endkey]:
         row_count += 1
-        logger.info("now on row %i, id %s" % (row_count, row.id))
         snap = row.doc
-
-        # write the snap into the item's "metrics" section
         item = db.get(snap["tiid"])
-        metrics = item.setdefault("metrics", {})
-        this_metric = metrics.setdefault(snap["metric_name"], {})
-        this_metric[snap["created"]] = snap["value"]
 
-        #put the metrics section back in the item and save it
-        item["metrics"] = metrics
+        from totalimpact.models import ItemFactory
+        updated_item = ItemFactory.add_snap_data(item, snap)
 
-        logger.info("now saving item %s back to db" % item["_id"])
-        db.save(item)
+        # to decide the proper last modified date
+        snap_last_modified = snap["created"]
+        item_last_modified = item["last_modified"]
+        updated_item["last_modified"] = max(snap_last_modified, item_last_modified)
+
+        logger.info("now on snap row %i, saving item %s back to db" % (row_count, updated_item["_id"])
+        db.save(updated_item)
 
     logger.info("updated {rows} rows in {elapsed} seconds".format(
-        rows=row_count, elapsed=round(time.time() - start)
+        rows=row_count, elapsed=round(time.time() - starttime)
     ))
 
 """
@@ -273,24 +271,24 @@ function(doc) {
     emit([doc.type, doc._id], doc);
 }
 """
-def delete_snaps(start="000000000", end="001"):
+def delete_snaps(start="000000000", end="zzzzzzzzzzzzzzzzzzzzzzzz"):
     logger.debug("deleting snaps now.")
-    start = time.time()
+    starttime = time.time()
     view_name = "queues/by_type_and_id"
     view_rows = db.view(view_name, include_docs=True)
     row_count = 0
 
-    for row in view_rows[
-               ["metric_snap", start]: #startkey
-               ["metric_snap", end] #endkey
-    ]:
+    startkey = ["metric_snap", start]
+    endkey = ["metric_snap", end]
+    for row in view_rows[startkey:endkey]:
         row_count += 1
         logger.info("now deleting doc on row %i, id %s" % (row_count, row.id))
         db.delete(row.doc)
 
     logger.info("updated {rows} rows in {elapsed} seconds".format(
-        rows=row_count, elapsed=round(time.time() - start)
+        rows=row_count, elapsed=round(time.time() - starttime)
     ))
+
 
 if (cloudant_db == "ti"):
     print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
