@@ -99,7 +99,12 @@ class CouchPaginator(object):
                 self.has_previous = True
                 #in case there is a previous page, use this current
                 #page index to use as base index for the next one
-                self.previous = results.rows[0].key
+                try:
+                    self.previous = results.rows[0].key
+                except IndexError:
+                    self.next = None
+                    self.results = None
+                    self.has_next = False
 
         else:
             results.rows.reverse()

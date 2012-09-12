@@ -252,7 +252,7 @@ def put_snaps_in_items():
     page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
 
     #for row in view_rows[startkey:endkey]:
-    while page:
+    while page.has_next:
         for row in page:
             if not "metric_snap" in row.key[0]:
                 #print "not a metric_snap so skipping", row.key
@@ -272,7 +272,7 @@ def put_snaps_in_items():
 
             logger.info("now on snap row %i, saving item %s back to db, deleting snap %s" % 
                 (row_count, updated_item["_id"], snap["_id"]))
-            
+
             db.save(updated_item)
             db.delete(snap)
 
