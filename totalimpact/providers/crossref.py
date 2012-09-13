@@ -58,13 +58,14 @@ class Crossref(Provider):
 
         (doc, lookup_function) = provider._get_doc_from_xml(page)
         surname_list = []
-        try:
-            contributors = doc.getElementsByTagName("contributors")[0]
-            for person in contributors.getElementsByTagName("person_name"):
-                if (person.getAttribute("contributor_role") == u"author"):
-                    surname_list += [person.getElementsByTagName("surname")[0].firstChild.data]
-        except IndexError:
-            surname_list = []
+        if doc:
+            try:
+                contributors = doc.getElementsByTagName("contributors")[0]
+                for person in contributors.getElementsByTagName("person_name"):
+                    if (person.getAttribute("contributor_role") == u"author"):
+                        surname_list += [person.getElementsByTagName("surname")[0].firstChild.data]
+            except IndexError:
+                surname_list = []
         authors = ", ".join(surname_list)
         if authors:
             biblio_dict["authors"] = authors

@@ -56,7 +56,7 @@ class TestGithub(ProviderTestCase):
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
         print metrics_dict
-        expected = {'github:forks': (29, 'https://github.com/egonw/cdk/network/members'), 'github:watchers': (31, 'https://github.com/egonw/cdk/watchers')}
+        expected = {'github:forks': (20, 'https://github.com/egonw/cdk/network/members'), 'github:watchers': (25, 'https://github.com/egonw/cdk/watchers')}
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
