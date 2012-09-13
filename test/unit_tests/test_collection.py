@@ -100,7 +100,7 @@ class TestCollection():
         table = [(10, 30), (10, 60), (40, 80), (50, 90), (60, 90)]
         response = collection.get_normalization_confidence_interval_ranges(input, table)
         print response
-        expected = {'facebook:shares': {0: {'CI95': (10, 80), 'estimate_range': (0, 50)}, 1: {'CI95': (50, 90), 'estimate_range': (75, 75)}}, 'mendeley:readers': {8: {'CI95': (10, 60), 'estimate_range': (25, 25)}, 9: {'CI95': (40, 80), 'estimate_range': (50, 50)}, 10: {'CI95': (50, 90), 'estimate_range': (75, 75)}, 7: {'CI95': (10, 30), 'estimate_range': (0, 0)}}}
+        expected = {'facebook:shares': {0: {'CI95_upper': 80, 'estimate_lower': 0, 'CI95_lower': 10, 'estimate_upper': 50}, 1: {'CI95_upper': 90, 'estimate_lower': 75, 'CI95_lower': 50, 'estimate_upper': 75}}, 'mendeley:readers': {8: {'CI95_upper': 60, 'estimate_lower': 25, 'CI95_lower': 10, 'estimate_upper': 25}, 9: {'CI95_upper': 80, 'estimate_lower': 50, 'CI95_lower': 40, 'estimate_upper': 50}, 10: {'CI95_upper': 90, 'estimate_lower': 75, 'CI95_lower': 50, 'estimate_upper': 75}, 7: {'CI95_upper': 30, 'estimate_lower': 0, 'CI95_lower': 10, 'estimate_upper': 0}}}
         assert_equals(response, expected)
 
     def test_calc_table_internals(self):
