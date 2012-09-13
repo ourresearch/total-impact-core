@@ -248,6 +248,9 @@ class CouchWorker(Worker):
                     for metric_name in new_content:
                         snap = ItemFactory.build_snap(tiid, new_content[metric_name], metric_name)
                         updated_item = self.update_item_with_new_snap(snap, updated_item)
+                else:
+                    logger.warning("ack, supposed to save something i don't know about: " + str(new_content))
+                    updated_item = None
 
                 # now that is has been updated it, change last_modified and save
                 if updated_item:
@@ -258,9 +261,6 @@ class CouchWorker(Worker):
 
                 if method_name=="metrics":
                     self.decr_num_providers_left(metric_name, tiid) # have to do this after the item save
-
-                else:
-                    logger.warning("ack, supposed to save something i don't know about: " + str(new_content))
         else:
             #time.sleep(0.1)  # is this necessary?
             pass
