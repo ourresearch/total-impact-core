@@ -280,7 +280,7 @@ def put_snaps_in_items():
                         db.save(updated_item)
                         db.delete(snap)
                         saving = False
-                    except couchdb.http.ResourceConflict
+                    except couchdb.http.ResourceConflict:
                         logger.warning("couch conflict.  trying again")
                         pass
             else:
