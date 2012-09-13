@@ -177,8 +177,13 @@ def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_
             est_lowest = min(estimates)
             est_highest = max(estimates)
 
-            response[metric_name][metric_value] = {"CI95": (CI95_lowest, CI95_highest), "estimate_range": (est_lowest, est_highest)}
-    return response  
+            response[metric_name][metric_value] = {
+                "CI95_lower": CI95_lowest,
+                "CI95_upper": CI95_highest,
+                "estimate_upper": est_highest,
+                "estimate_lower": est_lowest
+                }
+    return response
 
 def build_reference_lookup(coll_with_items, myrefsets):
     normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])

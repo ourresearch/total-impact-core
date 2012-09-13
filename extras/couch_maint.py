@@ -318,7 +318,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    put_snaps_in_items()
+    put_snaps_in_items("000000000000", "001")
 else:
     print "nevermind, then."
 
