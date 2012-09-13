@@ -262,19 +262,23 @@ def put_snaps_in_items():
             snap = row.doc
             item = db.get(snap["tiid"])
 
-            from totalimpact.models import ItemFactory
-            updated_item = ItemFactory.add_snap_data(item, snap)
+            if item:
+                from totalimpact.models import ItemFactory
+                updated_item = ItemFactory.add_snap_data(item, snap)
 
-            # to decide the proper last modified date
-            snap_last_modified = snap["created"]
-            item_last_modified = item["last_modified"]
-            updated_item["last_modified"] = max(snap_last_modified, item_last_modified)
+                # to decide the proper last modified date
+                snap_last_modified = snap["created"]
+                item_last_modified = item["last_modified"]
+                updated_item["last_modified"] = max(snap_last_modified, item_last_modified)
+                
+                logger.info("now on snap row %i, saving item %s back to db, deleting snap %s" % 
+                    (row_count, updated_item["_id"], snap["_id"]))
+                db.save(updated_item)
+                db.delete(snap)
+            else:
+                logger.warning("now on snap row %i, couldn't get item %s for snap %s" % 
+                    (row_count, snap["tiid"], snap["_id"]))
 
-            logger.info("now on snap row %i, saving item %s back to db, deleting snap %s" % 
-                (row_count, updated_item["_id"], snap["_id"]))
-
-            db.save(updated_item)
-            db.delete(snap)
 
         page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
 
