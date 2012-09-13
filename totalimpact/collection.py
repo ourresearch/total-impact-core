@@ -203,7 +203,7 @@ def build_all_reference_lookups(myredis, mydao):
         try:
             (header, genre, reference_set_name, year, seed) = row.key.split("|")
         except ValueError:
-            logging.error("Normalization title '%s' not formatted as expected, not loading its normalizations" %coll_with_items["title"])
+            logging.error("Normalization title '%s' not formatted as expected, not loading its normalizations" %str(row.key))
             reference_set_name = None
 
         if not "250" in seed:
