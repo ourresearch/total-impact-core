@@ -50,8 +50,11 @@ METRICS_DATA = {
     "static_meta": STATIC_META,
     "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
     "values":{
+        "raw": VAL1,
+        "raw_history": {
         KEY1: VAL1,
         KEY2: VAL2
+        }
     }
 }
 
@@ -61,8 +64,11 @@ METRICS_DATA2 = {
     "static_meta": STATIC_META,
     "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
     "values":{
+        "raw": VAL1,
+        "raw_history": {
         KEY1: VAL1,
         KEY2: VAL2
+        }
     }
 } 
 
@@ -72,8 +78,11 @@ METRICS_DATA3 = {
     "static_meta": STATIC_META,
     "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
     "values":{
+        "raw": VAL1,
+        "raw_history": {
         KEY1: VAL1,
         KEY2: VAL2
+        }
     }
 }
 

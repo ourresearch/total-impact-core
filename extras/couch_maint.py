@@ -237,30 +237,46 @@ function(doc) {
     emit([doc.type, doc._id], doc);
 }
 """
-def put_snaps_in_items(start="000000000", end="zzzzzzzzzzzzzzzzzzzzzzzz"):
+def put_snaps_in_items():
     logger.debug("running put_snaps_in_items() now.")
     starttime = time.time()
     view_name = "queues/by_type_and_id"
     view_rows = db.view(view_name, include_docs=True)
     row_count = 0
+    page_size = 500
 
-    startkey = ["metric_snap", start]
-    endkey = ["metric_snap", end]
-    for row in view_rows[startkey:endkey]:
-        row_count += 1
-        snap = row.doc
-        item = db.get(snap["tiid"])
+    start_key = ["metric_snap", "000000000"]
+    end_key = ["metric_snap", "zzzzzzzzzzzzzzzzzzzzzzzz"]
 
-        from totalimpact.models import ItemFactory
-        updated_item = ItemFactory.add_snap_data(item, snap)
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
 
-        # to decide the proper last modified date
-        snap_last_modified = snap["created"]
-        item_last_modified = item["last_modified"]
-        updated_item["last_modified"] = max(snap_last_modified, item_last_modified)
+    #for row in view_rows[startkey:endkey]:
+    while page.has_next:
+        for row in page:
+            if not "metric_snap" in row.key[0]:
+                #print "not a metric_snap so skipping", row.key
+                continue
+            #print row.key
+            row_count += 1
+            snap = row.doc
+            item = db.get(snap["tiid"])
 
-        logger.info("now on snap row %i, saving item %s back to db" % (row_count, updated_item["_id"]))
-        db.save(updated_item)
+            from totalimpact.models import ItemFactory
+            updated_item = ItemFactory.add_snap_data(item, snap)
+
+            # to decide the proper last modified date
+            snap_last_modified = snap["created"]
+            item_last_modified = item["last_modified"]
+            updated_item["last_modified"] = max(snap_last_modified, item_last_modified)
+
+            logger.info("now on snap row %i, saving item %s back to db, deleting snap %s" % 
+                (row_count, updated_item["_id"], snap["_id"]))
+
+            db.save(updated_item)
+            db.delete(snap)
+
+        page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
 
     logger.info("updated {rows} rows in {elapsed} seconds".format(
         rows=row_count, elapsed=round(time.time() - starttime)

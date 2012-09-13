@@ -54,7 +54,7 @@ class ItemFactory():
     @classmethod
     def build_item_for_client(cls, item, snaps, myrefsets):
         item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
-        item["metrics"] = {} #not using what is in stored item for this
+        #item["metrics"] = {} #not using what is in stored item for this
 
         # need year to calculate normalization below
         try:
@@ -64,21 +64,29 @@ class ItemFactory():
         except KeyError:
             year = 99 # hack so that it won't match anything.  what else to do?
 
+        # temporary while we still have snaps
         for snap in snaps:
             metric_name = snap["metric_name"]
             if metric_name in cls.all_static_meta.keys():
                 # add snap values. this line can go away once all snap values migrated into items in db.  
                 item = cls.add_snap_data(item, snap)
 
+        metrics = item.setdefault("metrics", {})
+        for metric_name in metrics:
+            if metric_name in cls.all_static_meta.keys():  # make sure we still support this metrics type
                 #delete the raw history from what we return to the client for now
-                del item["metrics"][metric_name]["values"]["raw_history"]
+                try:
+                    del metrics[metric_name]["values"]["raw_history"]
+                except KeyError:
+                    pass
 
                 # add static data
-                item["metrics"][metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
+                metrics[metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
 
                 # add normalization values
-                normalized_values = cls.get_normalized_values(item["biblio"]['genre'], year, metric_name, snap["value"], myrefsets)
-                item["metrics"][metric_name]["values"].update(normalized_values)
+                raw = metrics[metric_name]["values"]["raw"]
+                normalized_values = cls.get_normalized_values(item["biblio"]['genre'], year, metric_name, raw, myrefsets)
+                metrics[metric_name]["values"].update(normalized_values)
 
         return item
 
