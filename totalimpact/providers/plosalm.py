@@ -139,8 +139,11 @@ class Plosalm(Provider):
 
     def _aggregate_monthly_stats(self, metric_name, section):
         total = 0
-        for monthly_views in section["events"]:
-            total += int(monthly_views[metric_name])
+        try:
+            for monthly_views in section["events"]:
+                total += int(monthly_views[metric_name])
+        except KeyError:
+            pass
         return (total)
 
     def _extract_metrics(self, page, status_code=200, id=None):
