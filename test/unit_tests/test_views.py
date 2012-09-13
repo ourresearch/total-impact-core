@@ -38,7 +38,9 @@ def MOCK_member_items(self, query_string, url=None, cache_enabled=True):
 # ensures that all the functions in the views.py module will use a local db,
 # which we can in turn use for these unit tests.
 mydao = views.set_db("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-
+# do the same for redis, handing it local redis and instruction to use "DB 8" 
+# to isolate unit testing
+myredis = views.set_redis("redis://localhost:6379", db=8)
 
 class ViewsTester(unittest.TestCase):
 
@@ -53,8 +55,8 @@ class ViewsTester(unittest.TestCase):
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
         self.d.update_design_doc()
 
-        # do the same thing for the redis db
-        self.r = tiredis.from_url("redis://localhost:6379")
+        # do the same thing for the redis db.  We're using DB 8 for unittests.
+        self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
 
         #setup api test client

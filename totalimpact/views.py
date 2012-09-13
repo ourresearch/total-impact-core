@@ -18,8 +18,7 @@ logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
-
-myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
+myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0) #main app is on DB 0
 
 logger.debug("Building reference sets")
 myrefsets = None
@@ -48,6 +47,12 @@ def set_db(url, db):
     mydao = dao.Dao(url, db)
     return mydao
 
+def set_redis(url, db):
+    """useful for unit testing, where you want to use a local database
+    """
+    global myredis 
+    myredis = tiredis.from_url(url, db)
+    return myredis
 
 #@app.before_request
 def check_api_key():

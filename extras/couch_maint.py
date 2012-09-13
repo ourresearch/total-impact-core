@@ -2,7 +2,7 @@ import couchdb, os, logging, sys
 from pprint import pprint
 import time
 
-# run in heroku with:
+# run in heroku by a) commiting, b) pushing to heroku, and c) running
 # heroku run python extras/couch_maint.py
 
 logging.basicConfig(
@@ -237,35 +237,53 @@ function(doc) {
     emit([doc.type, doc._id], doc);
 }
 """
-def put_snaps_in_items(start="000000000", end="0001"):
+def put_snaps_in_items():
     logger.debug("running put_snaps_in_items() now.")
-    start = time.time()
+    starttime = time.time()
     view_name = "queues/by_type_and_id"
     view_rows = db.view(view_name, include_docs=True)
     row_count = 0
+    page_size = 500
 
-    for row in view_rows[
-               ["metric_snap", start]: #startkey
-               ["metric_snap", end] #endkey
-    ]:
-        row_count += 1
-        logger.info("now on row %i, id %s" % (row_count, row.id))
-        snap = row.doc
+    start_key = ["metric_snap", "000000000"]
+    end_key = ["metric_snap", "zzzzzzzzzzzzzzzzzzzzzzzz"]
 
-        # write the snap into the item's "metrics" section
-        item = db.get(snap["tiid"])
-        metrics = item.setdefault("metrics", {})
-        this_metric = metrics.setdefault(snap["metric_name"], {})
-        this_metric[snap["created"]] = snap["value"]
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
 
-        #put the metrics section back in the item and save it
-        item["metrics"] = metrics
+    #for row in view_rows[startkey:endkey]:
+    while page.has_next:
+        for row in page:
+            if not "metric_snap" in row.key[0]:
+                #print "not a metric_snap so skipping", row.key
+                continue
+            #print row.key
+            row_count += 1
+            snap = row.doc
+            item = db.get(snap["tiid"])
 
-        logger.info("now saving item %s back to db" % item["_id"])
-        db.save(item)
+            if item:
+                from totalimpact.models import ItemFactory
+                updated_item = ItemFactory.add_snap_data(item, snap)
+
+                # to decide the proper last modified date
+                snap_last_modified = snap["created"]
+                item_last_modified = item["last_modified"]
+                updated_item["last_modified"] = max(snap_last_modified, item_last_modified)
+                
+                logger.info("now on snap row %i, saving item %s back to db, deleting snap %s" % 
+                    (row_count, updated_item["_id"], snap["_id"]))
+                db.save(updated_item)
+                db.delete(snap)
+            else:
+                logger.warning("now on snap row %i, couldn't get item %s for snap %s" % 
+                    (row_count, snap["tiid"], snap["_id"]))
+
+
+        page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
 
     logger.info("updated {rows} rows in {elapsed} seconds".format(
-        rows=row_count, elapsed=round(time.time() - start)
+        rows=row_count, elapsed=round(time.time() - starttime)
     ))
 
 """
@@ -273,24 +291,24 @@ function(doc) {
     emit([doc.type, doc._id], doc);
 }
 """
-def delete_snaps(start="000000000", end="001"):
+def delete_snaps(start="000000000", end="zzzzzzzzzzzzzzzzzzzzzzzz"):
     logger.debug("deleting snaps now.")
-    start = time.time()
+    starttime = time.time()
     view_name = "queues/by_type_and_id"
     view_rows = db.view(view_name, include_docs=True)
     row_count = 0
 
-    for row in view_rows[
-               ["metric_snap", start]: #startkey
-               ["metric_snap", end] #endkey
-    ]:
+    startkey = ["metric_snap", start]
+    endkey = ["metric_snap", end]
+    for row in view_rows[startkey:endkey]:
         row_count += 1
         logger.info("now deleting doc on row %i, id %s" % (row_count, row.id))
         db.delete(row.doc)
 
     logger.info("updated {rows} rows in {elapsed} seconds".format(
-        rows=row_count, elapsed=round(time.time() - start)
+        rows=row_count, elapsed=round(time.time() - starttime)
     ))
+
 
 if (cloudant_db == "ti"):
     print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"

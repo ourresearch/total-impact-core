@@ -107,21 +107,11 @@ class Dao(object):
         else:
             return None
 
+    @Retry(3, Exception, 0.1)
     def save(self, doc):
         if "_id" not in doc:
             raise KeyError("tried to save doc with '_id' key unset.")
-
-        #logger.info("dao saving id '%s'" %(doc["_id"]))
-        retry = True
-        while retry:
-            try:
-                response = self.db.save(doc)
-                retry = False
-            except couchdb.ResourceConflict, e:
-                logger.info("dao Couch conflict saving %s; will retry" % (doc["_id"]))
-                newer_doc = self.get(doc["_id"])
-                doc["_rev"] = newer_doc["_rev"]
-                time.sleep(0.1)
+        response = self.db.save(doc)
         logger.info("dao saved %s" %(doc["_id"]))
         return response
 
@@ -129,6 +119,7 @@ class Dao(object):
     def view(self, viewname):
         return self.db.view(viewname)
 
+    @Retry(3, Exception, 0.1)
     def delete(self, id):
         doc = self.db.get(id)
         self.db.delete(doc)
