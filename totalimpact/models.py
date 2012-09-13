@@ -218,8 +218,6 @@ class ItemFactory():
         if not myrefsets:
             return {}
 
-        logging.info("Have refsets!")
-
         # for now, only normalize articles
         if genre not in myrefsets.keys():
             return {}
@@ -228,17 +226,14 @@ class ItemFactory():
         if value=="Yes":
             value = 1
 
-
         response = {}
         for refsetname in myrefsets[genre]:
-            logging.info("trying refset type {refsetname}".format(
-                refsetname=refsetname))
             try:
                 fencepost_values = myrefsets[genre][refsetname][str(year)][metric_name].keys()
                 myclosest = closest(value, fencepost_values)
                 response[refsetname] = myrefsets[genre][refsetname][str(year)][metric_name][myclosest]
             except KeyError:
-                logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
+                #logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
                 pass
                 
         return response
