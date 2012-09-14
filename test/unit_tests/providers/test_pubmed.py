@@ -72,14 +72,18 @@ class TestPubmed(ProviderTestCase):
 
     @http
     def test_aliases_from_pmid(self):
-        aliases_dict = self.provider.aliases([self.testitem_aliases])
-        assert_equals(set(aliases_dict), set([("url", 'http://www.ncbi.nlm.nih.gov/pubmed/16060722'), ('doi', u'10.1371/journal.pmed.0020124')]))
+        aliases = self.provider.aliases([self.testitem_aliases])
+        print aliases
+        expected = [('biblio', {'authors': u'Ioannidis', 'journal': u'PLoS medicine', 'year': 2005, 'title': u'Why most published research findings are false.'}), ('doi', u'10.1371/journal.pmed.0020124'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/16060722')]
+        assert_equals(aliases, expected)
 
     @http
     def test_aliases_from_pmid_when_doi_fragment(self):
         #this pmid has a partial doi in its doi field.  Make sure we don't include it in our doi field.
-        aliases_dict = self.provider.aliases([("pmid", "11244366")])
-        assert_equals(set(aliases_dict), set([("url", 'http://www.ncbi.nlm.nih.gov/pubmed/11244366')]))
+        aliases = self.provider.aliases([("pmid", "11244366")])
+        print aliases
+        expected = [('biblio', {'journal': u'ORL; journal for oto-rhino-laryngology and its related specialties', 'authors': u'Oshima, Ikeda, Furukawa, Suzuki, Takasaka', 'title': u'Expression of the voltage-dependent chloride channel ClC-3 in human nasal tissue.'}), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/11244366')]
+        assert_equals(aliases, expected)
 
 
     @http

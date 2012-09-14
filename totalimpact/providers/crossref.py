@@ -73,18 +73,20 @@ class Crossref(Provider):
         return biblio_dict    
        
     def _extract_aliases(self, page, id=None):
-        dict_of_keylists = {"url": ["doi_record", "journal_article", "doi_data", "resource"], 
-                            "title" : ["doi_record", "title"]}
+        dict_of_keylists = {"url": ["doi_record", "journal_article", "doi_data", "resource"]}
 
         aliases_dict = provider._extract_from_xml(page, dict_of_keylists)
+
+        # add biblio to aliases
+        biblio_dict = self._extract_biblio(page, id)
+        if biblio_dict:
+            aliases_dict["biblio"] = biblio_dict
 
         if aliases_dict:
             aliases_list = [(namespace, nid) for (namespace, nid) in aliases_dict.iteritems()]
         else:
             aliases_list = []
         return aliases_list
-
-
 
 
     def member_items(self, 

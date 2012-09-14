@@ -39,5 +39,6 @@ class TestCrossRef(ProviderTestCase):
         # ensure that the dryad reader can interpret an xml doc appropriately
         f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
         aliases = self.provider._extract_aliases(f.read())
-        expected = [('url', u'http://dx.plos.org/10.1371/journal.pone.0000308'), ('title', u'Sharing Detailed Research Data Is Associated with Increased Citation Rate')]
-        assert_equals(set(aliases), set(expected))
+        print aliases
+        expected = [('url', u'http://dx.plos.org/10.1371/journal.pone.0000308'), ('biblio', {'authors': u'Piwowar, Day, Fridsma', 'journal': u'PLoS ONE', 'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'year': 2007})]
+        assert_equals(sorted(aliases), sorted(expected))
