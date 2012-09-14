@@ -1,27 +1,28 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderClientError, ProviderServerError
 from test.utils import http
 
 import os
 import collections
-from nose.tools import assert_equals, raises
+from nose.tools import assert_equals, raises, nottest
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/mendeley")
+SAMPLE_EXTRACT_UUID_PAGE = os.path.join(datadir, "uuidlookup")
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
 SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, "aliases")
 SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
 SAMPLE_EXTRACT_PROVENANCE_URL_PAGE = SAMPLE_EXTRACT_METRICS_PAGE
 
-TEST_DOI = "10.1371/journal.pbio.1000056"
+TEST_DOI = "10.1038/nature10658"  # matches UUID sample page
 
 class TestMendeley(ProviderTestCase):
 
     provider_name = "mendeley"
 
     testitem_aliases = ("doi", TEST_DOI)
-    testitem_metrics = ("doi", TEST_DOI)
-    testitem_biblio = ("doi", TEST_DOI)
+    testitem_metrics = [("title", "This is a title"), ("doi", TEST_DOI)]
+    testitem_metrics_dict = {"title": ["This is a title"], "doi":[TEST_DOI]}
 
     def setUp(self):
         ProviderTestCase.setUp(self)
@@ -32,31 +33,35 @@ class TestMendeley(ProviderTestCase):
 
         assert_equals(self.provider.is_relevant_alias(("github", "egonw,cdk")), False)
   
-    def test_extract_biblio(self):
-        f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
-        ret = self.provider._extract_biblio(f.read())
-        assert_equals(ret, {'authors': u'Shotton, Portwin, Klyne, Miles', 'journal': u'PLoS Computational Biology', 'year': 2009, 'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article'})
-
-    def test_extract_aliases(self):
-        # ensure that the dryad reader can interpret an xml doc appropriately
-        f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
-        aliases = self.provider._extract_aliases(f.read())
-        assert_equals(aliases, [('url', u'http://dx.doi.org/10.1371/journal.pcbi.1000361'), ('title', u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article')])        
-
     def test_extract_metrics_success(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         metrics_dict = self.provider._extract_metrics(f.read())
-        assert_equals(metrics_dict["mendeley:readers"], 50)
-        assert_equals(metrics_dict["mendeley:groups"], 4)
-        assert_equals(metrics_dict["mendeley:discipline"], [{'id': 6, 'value': 40, 'name': 'Computer and Information Science'}, {'id': 3, 'value': 24, 'name': 'Biological Sciences'}, {'id': 23, 'value': 12, 'name': 'Social Sciences'}])
-        assert_equals(metrics_dict["mendeley:career_stage"][0], {'name': 'Librarian', 'value': 22})
-        assert_equals(metrics_dict["mendeley:country"][0], {'name': 'United States', 'value': 22})
+        assert_equals(metrics_dict["mendeley:readers"], 102)
 
     def test_extract_provenance_url(self):
         f = open(SAMPLE_EXTRACT_PROVENANCE_URL_PAGE, "r")
         provenance_url = self.provider._extract_provenance_url(f.read())
-        assert_equals(provenance_url, "http://api.mendeley.com/research/snps-prescriptions-predict-drug-response/")
+        assert_equals(provenance_url, "http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/")
 
+    def test_get_uuid_from_title(self):
+        f = open(SAMPLE_EXTRACT_UUID_PAGE, "r")
+        uuid = self.provider._get_uuid_from_title(self.testitem_metrics_dict["doi"][0], f.read())
+        expected = "1f471f70-1e4f-11e1-b17d-0024e8453de6"
+        assert_equals(uuid, expected)
+
+    def test_get_uuid_from_title(self):
+        f = open(SAMPLE_EXTRACT_UUID_PAGE, "r")
+        uuid = self.provider._get_uuid_from_title(self.testitem_metrics_dict["doi"][0], f.read())
+        expected = "1f471f70-1e4f-11e1-b17d-0024e8453de6"
+        assert_equals(uuid, expected)
+
+    def test__get_metrics_and_drilldown_from_uuid(self):
+        f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
+        response = self.provider._get_metrics_and_drilldown_from_uuid(f.read())
+        expected = {'mendeley:discipline': ([{'id': 3, 'value': 80, 'name': 'Biological Sciences'}, {'id': 19, 'value': 14, 'name': 'Medicine'}, {'id': 22, 'value': 2, 'name': 'Psychology'}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:country': ([{'name': 'United States', 'value': 42}, {'name': 'Japan', 'value': 12}, {'name': 'United Kingdom', 'value': 9}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:career_stage': ([{'name': 'Ph.D. Student', 'value': 31}, {'name': 'Post Doc', 'value': 21}, {'name': 'Professor', 'value': 7}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:readers': (102, 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/')}
+        assert_equals(response, expected)
+
+    @nottest
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
@@ -64,4 +69,40 @@ class TestMendeley(ProviderTestCase):
         print metrics_dict
         assert_equals(set(metrics_dict.keys()), set(expected.keys())) 
         # can't tell more about dicsciplines etc because they are percentages and may go up or down
+
+    # override common tests
+    @raises(ProviderClientError, ProviderServerError)
+    def test_provider_metrics_400(self):
+        if not self.provider.provides_metrics:
+            raise SkipTest
+        Provider.http_get = common.get_400
+        metrics = self.provider.metrics(self.testitem_metrics)
+
+    @raises(ProviderServerError)
+    def test_provider_metrics_500(self):
+        if not self.provider.provides_metrics:
+            raise SkipTest
+        Provider.http_get = common.get_500
+        metrics = self.provider.metrics(self.testitem_metrics)
+
+    @raises(ProviderContentMalformedError)
+    def test_provider_metrics_empty(self):
+        if not self.provider.provides_metrics:
+            raise SkipTest
+        Provider.http_get = common.get_empty
+        metrics = self.provider.metrics(self.testitem_metrics)
+
+    @raises(ProviderContentMalformedError)
+    def test_provider_metrics_nonsense_txt(self):
+        if not self.provider.provides_metrics:
+            raise SkipTest
+        Provider.http_get = common.get_nonsense_txt
+        metrics = self.provider.metrics(self.testitem_metrics)
+
+    @raises(ProviderContentMalformedError)
+    def test_provider_metrics_nonsense_xml(self):
+        if not self.provider.provides_metrics:
+            raise SkipTest
+        Provider.http_get = common.get_nonsense_xml
+        metrics = self.provider.metrics(self.testitem_metrics)
 

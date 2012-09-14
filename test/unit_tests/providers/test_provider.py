@@ -38,12 +38,12 @@ class Test_Provider():
     def test_get_providers_filters_by_biblio(self):
         providers = ProviderFactory.get_providers(self.TEST_PROVIDER_CONFIG, "biblio")
         provider_names = [provider.__class__.__name__ for provider in providers]
-        assert_equals(set(provider_names), set(['Mendeley', 'Pubmed']))
+        assert_equals(set(provider_names), set(['Pubmed']))
 
     def test_get_providers_filters_by_aliases(self):
         providers = ProviderFactory.get_providers(self.TEST_PROVIDER_CONFIG, "aliases")
         provider_names = [provider.__class__.__name__ for provider in providers]
-        assert_equals(set(provider_names), set(['Pubmed', "Mendeley"]))
+        assert_equals(set(provider_names), set(['Pubmed']))
 
     def test_lookup_json(self):
         page = self.TEST_JSON

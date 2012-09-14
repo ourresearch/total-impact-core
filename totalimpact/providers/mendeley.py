@@ -12,11 +12,8 @@ class Mendeley(Provider):
 
     url = "http://www.mendeley.com"
     descr = " A research management tool for desktop and web."
-    everything_url_template = "http://api.mendeley.com/oapi/documents/details/%s?type=doi&consumer_key=" + os.environ["MENDELEY_KEY"]
-    biblio_url_template = everything_url_template
-    aliases_url_template = everything_url_template
-    metrics_url_template = everything_url_template
-    provenance_url_template = everything_url_template
+    uuid_from_title_template = 'http://api.mendeley.com/oapi/documents/search/"%s"/?consumer_key=' + os.environ["MENDELEY_KEY"]
+    metrics_from_uuid_template = "http://api.mendeley.com/oapi/documents/details/%s?consumer_key=" + os.environ["MENDELEY_KEY"]
 
     static_meta_dict = {
         "readers": {
@@ -62,54 +59,14 @@ class Mendeley(Provider):
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
+        # right now restricted to doi because we check the title lookup matches doi
+        ## to keep precision high.  Later could experiment with opening this up.
         relevant = (namespace=="doi")
         return(relevant)
 
-    #override because need to break up id
-    def _get_templated_url(self, template, id, method=None):
-        double_encoded_id = urllib.quote(urllib.quote(id, safe=""), safe="")
-        query_url = template % double_encoded_id    
-        return(query_url)
-
-
-    def _extract_biblio(self, page, id=None):
-        dict_of_keylists = {
-            'title' : ['title'],
-            'year' : ['year'],
-            'journal' : ['publication_outlet'],
-            'authors' : ["authors"]
-        }
-        biblio_dict = provider._extract_from_json(page, dict_of_keylists)
-
-        # return authors as a string of last names
-        try:
-            author_list = biblio_dict["authors"]
-            author_string = ", ".join([author["surname"] for author in author_list])
-            if author_string:
-                biblio_dict["authors"] = author_string
-        except (TypeError, KeyError):
-            pass
-
-        return biblio_dict    
-       
-    def _extract_aliases(self, page, id=None):
-        dict_of_keylists = {"url": ["website"], 
-                            "title" : ["title"]}
-
-        aliases_dict = provider._extract_from_json(page, dict_of_keylists)
-        if aliases_dict:
-            aliases_list = [(namespace, nid) for (namespace, nid) in aliases_dict.iteritems()]
-        else:
-            aliases_list = []
-        return aliases_list
-
-
     def _extract_metrics(self, page, status_code=200, id=None):
-        if status_code != 200:
-            if status_code == 404:
-                return {}
-            else:
-                raise(self._get_error(status_code))
+        if not "identifiers" in page:
+            raise ProviderContentMalformedError()
 
         dict_of_keylists = {"mendeley:readers": ["stats", "readers"], 
                             "mendeley:discipline": ["stats", "discipline"],
@@ -137,21 +94,70 @@ class Mendeley(Provider):
             provenance_url = ""
         return provenance_url        
 
-    def provenance_url(self, metric_name, aliases):
-
-        id = self.get_best_id(aliases)     
-        if not id:
-            # not relevant to Mendeley
-            return None
-
-        url = self._get_templated_url(self.provenance_url_template, id, "provenance")
-
-        # try to get a response from the data provider        
+    def _get_page(self, url):
         response = self.http_get(url)
         if response.status_code != 200:
-            # not in Mendeley database
-            return []
+            if response.status_code == 404:
+                return None
+            else:
+                raise(self._get_error(response.status_code))
+        return response.text
+         
+    def _get_uuid_lookup_page(self, title):
+        uuid_from_title_url = self.uuid_from_title_template % title     
+        page = self._get_page(uuid_from_title_url)
+        if not "documents" in page:
+            raise ProviderContentMalformedError()
+        return page
 
-        page = response.text
-        provenance_url = self._extract_provenance_url(page, response.status_code, id)
-        return provenance_url
+    def _get_metrics_lookup_page(self, uuid):
+        metrics_from_uuid_url = self.metrics_from_uuid_template %uuid
+        page = self._get_page(metrics_from_uuid_url)
+        if not "identifiers" in page:
+            raise ProviderContentMalformedError()
+        return page
+
+    def _get_uuid_from_title(self, doi, page):
+        uuid = None
+        data = provider._load_json(page)
+        for match in data["documents"]:
+            if match["doi"] == doi:
+                uuid = match["uuid"]
+                break
+        return uuid
+
+    def _get_metrics_and_drilldown_from_uuid(self, page):
+        metrics_dict = self._extract_metrics(page)
+        metrics_and_drilldown = {}
+        for metric_name in metrics_dict:
+            drilldown_url = self._extract_provenance_url(page)
+            metrics_and_drilldown[metric_name] = (metrics_dict[metric_name], drilldown_url)
+        return metrics_and_drilldown  
+
+
+    # default method; providers can override
+    def metrics(self, 
+            aliases,
+            provider_url_template=None, # ignore this because multiple url steps
+            cache_enabled=True):
+
+        # Only lookup metrics for items with appropriate ids
+        from totalimpact.models import ItemFactory
+        aliases_dict = ItemFactory.alias_dict_from_tuples(aliases)
+        if (not "title" in aliases_dict) or (not "doi" in aliases_dict):
+            return {}
+
+        page = self._get_uuid_lookup_page(aliases_dict["title"][0])
+        if not page:
+            return {}
+        uuid = self._get_uuid_from_title(aliases_dict["doi"][0], page)
+        if not uuid:
+            return {}
+
+        page = self._get_metrics_lookup_page(uuid)
+        if not page:
+            return {}
+        metrics_and_drilldown = self._get_metrics_and_drilldown_from_uuid(page)
+
+        return metrics_and_drilldown
+
