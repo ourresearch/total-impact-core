@@ -236,13 +236,6 @@ class CouchWorker(Worker):
                 elif method_name=="biblio":
                     updated_item = self.update_item_with_new_biblio(new_content, item)
                 elif method_name=="metrics":
-                    # keep doing this for legacy reasons.  Delete this when snaps migrated into items.
-                    for metric_name in new_content:
-                        snap = ItemFactory.build_snap(tiid, new_content[metric_name], metric_name)
-                        logger.info("{:20}: added metrics to {tiid}, saving snap {snap}".format(
-                            self.name, tiid=tiid, snap=snap["_id"]))
-                        self.mydao.save(snap)
-
                     # this is the loop we are going to keep.  add all the snaps into the item.
                     updated_item = item
                     for metric_name in new_content:
