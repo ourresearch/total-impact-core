@@ -407,23 +407,6 @@ class Provider(object):
 
     # Core methods
     # These should be consistent for all providers
-
-    def get_sleep_time(self, retry_count):
-        max_retries = self.get_max_retries()
-
-        # Check we haven't reached max retries
-        if retry_count > max_retries:
-            raise ValueError("Exceeded max retries %i" %max_retries)
-
-        # exponential delay
-        initial_delay = 1  # number of seconds for initial delay
-        delay_time = initial_delay * 2**(retry_count-1)
-
-        return delay_time
-    
-    def get_max_retries(self):
-        return self.max_retries
-
     
     def http_get(self, url, headers=None, timeout=10, cache_enabled=True, allow_redirects=False):
         """ Returns a requests.models.Response object or raises exception
