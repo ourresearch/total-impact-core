@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, urllib, os
+import simplejson, urllib, os, string
 
 import logging
 logger = logging.getLogger('ti.providers.mendeley')
@@ -117,26 +117,34 @@ class Mendeley(Provider):
             raise ProviderContentMalformedError()
         return page
 
+    @classmethod
+    def remove_punctuation(cls, str):
+        # from http://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
+        table = string.maketrans("","")
+        str.translate(table, string.punctuation)        
+        return str
+
     def _get_uuid_from_title(self, aliases_dict, page):
         doi = aliases_dict["doi"][0]
         data = provider._load_json(page)
+        biblio = aliases_dict["biblio"][0]
         for mendeley_record in data["documents"]:
             if mendeley_record["doi"] == doi:
                 uuid = mendeley_record["uuid"]
                 # our job here is done
                 return uuid
             else:
-                if mendeley_record["year"] == aliases_dict["biblio"][0]["year"]:
-
-                    # check if author name in common. if not, yell, but continue anyway
-                    first_mendeley_surname = mendeley_record["authors"][0]["surname"]
-                    has_matching_authors = first_mendeley_surname in aliases_dict["biblio"][0]["authors"]
-                    if not has_matching_authors:
-                        logger.warning("Mendeley: NO MATCHING AUTHORS between %s and %s" %(
-                            first_mendeley_surname, aliases_dict["biblio"][0]["authors"]))
-
-                    uuid = mendeley_record["uuid"]
-                    return uuid
+                if remove_punctuation(mendeley_record["title"]) == remove_punctuation(biblio["title"]):
+                    if mendeley_record["year"] == biblio["year"]:
+                        # check if author name in common. if not, yell, but continue anyway
+                        first_mendeley_surname = mendeley_record["authors"][0]["surname"]
+                        has_matching_authors = first_mendeley_surname in biblio["authors"]
+                        if not has_matching_authors:
+                            logger.warning("Mendeley: NO MATCHING AUTHORS between %s and %s" %(
+                                first_mendeley_surname, biblio["authors"]))
+                        # but return it anyway
+                        uuid = mendeley_record["uuid"]
+                        return uuid
         return None
 
     def _get_metrics_and_drilldown_from_uuid(self, page):
