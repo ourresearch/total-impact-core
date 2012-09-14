@@ -3,7 +3,7 @@ from totalimpact.dao import Dao
 from totalimpact import providers
 from totalimpact import default_settings
 
-import requests, os, time, threading, sys, traceback, importlib, urllib, logging
+import requests, os, time, threading, sys, traceback, importlib, urllib, logging, itertools
 import simplejson
 import BeautifulSoup
 from xml.dom import minidom 
@@ -310,7 +310,8 @@ class Provider(object):
             (namespace, nid) = alias
             new_aliases += self._get_aliases_for_id(nid, provider_url_template, cache_enabled)
         
-        new_aliases_unique = list(set(new_aliases))
+        # get uniques for things that are unhashable
+        new_aliases_unique = [k for k,v in itertools.groupby(sorted(new_aliases))]
 
         return new_aliases_unique
 
