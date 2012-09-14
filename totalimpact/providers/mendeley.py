@@ -132,7 +132,8 @@ class Mendeley(Provider):
                     first_mendeley_surname = mendeley_record["authors"][0]["surname"]
                     has_matching_authors = first_mendeley_surname in aliases_dict["biblio"][0]["authors"]
                     if not has_matching_authors:
-                        logger.warning("NO MATCHING AUTHORS")
+                        logger.warning("Mendeley: NO MATCHING AUTHORS between %s and %s", %(
+                            first_mendeley_surname, aliases_dict["biblio"][0]["authors"]))
 
                     uuid = mendeley_record["uuid"]
                     return uuid
@@ -165,8 +166,10 @@ class Mendeley(Provider):
             return {}
         uuid = self._get_uuid_from_title(aliases_dict, page)
         if not uuid:
+            logger.info("Mendeley: couldn't find uuid for %s" %(aliases_dict["biblio"][0]["title"]))
             return {}
 
+        logger.info("Mendeley: uuid for %s is %s" %(aliases_dict["biblio"][0]["title"], uuid))
         page = self._get_metrics_lookup_page(uuid)
         if not page:
             return {}
