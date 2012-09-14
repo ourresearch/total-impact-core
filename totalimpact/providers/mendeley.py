@@ -117,14 +117,26 @@ class Mendeley(Provider):
             raise ProviderContentMalformedError()
         return page
 
-    def _get_uuid_from_title(self, doi, page):
-        uuid = None
+    def _get_uuid_from_title(self, aliases_dict, page):
+        doi = aliases_dict["doi"][0]
         data = provider._load_json(page)
-        for match in data["documents"]:
-            if match["doi"] == doi:
-                uuid = match["uuid"]
-                break
-        return uuid
+        for mendeley_record in data["documents"]:
+            if mendeley_record["doi"] == doi:
+                uuid = mendeley_record["uuid"]
+                # our job here is done
+                return uuid
+            else:
+                if mendeley_record["year"] == aliases_dict["biblio"][0]["year"]:
+
+                    # check if author name in common. if not, yell, but continue anyway
+                    first_mendeley_surname = mendeley_record["authors"][0]["surname"]
+                    has_matching_authors = first_mendeley_surname in aliases_dict["biblio"][0]["authors"]
+                    if not has_matching_authors:
+                        logger.warning("NO MATCHING AUTHORS")
+
+                    uuid = mendeley_record["uuid"]
+                    return uuid
+        return None
 
     def _get_metrics_and_drilldown_from_uuid(self, page):
         metrics_dict = self._extract_metrics(page)
@@ -144,13 +156,14 @@ class Mendeley(Provider):
         # Only lookup metrics for items with appropriate ids
         from totalimpact.models import ItemFactory
         aliases_dict = ItemFactory.alias_dict_from_tuples(aliases)
-        if (not "title" in aliases_dict) or (not "doi" in aliases_dict):
+
+        if (not "biblio" in aliases_dict) or (not "doi" in aliases_dict):
             return {}
 
-        page = self._get_uuid_lookup_page(aliases_dict["title"][0])
+        page = self._get_uuid_lookup_page(aliases_dict["biblio"][0]["title"])
         if not page:
             return {}
-        uuid = self._get_uuid_from_title(aliases_dict["doi"][0], page)
+        uuid = self._get_uuid_from_title(aliases_dict, page)
         if not uuid:
             return {}
 

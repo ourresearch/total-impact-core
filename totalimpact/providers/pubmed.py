@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, urllib, os
+import simplejson, urllib, os, itertools
 
 import logging
 logger = logging.getLogger('ti.providers.pubmed')
@@ -17,9 +17,9 @@ class Pubmed(Provider):
     provenance_url_f1000_template = "http://f1000.com/pubmed/%s"
 
     metrics_url_template = None # have specific metrics urls instead
-    metrics_pmc_citations_url_template = "http://www.pubmedcentral.nih.gov/utils/entrez2pmcciting.cgi?view=xml&id=%s"
-    metrics_pmc_filter_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=(%s)"
-    metrics_f1000_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=%s&cmd=llinks"
+    metrics_pmc_citations_url_template = "http://www.pubmedcentral.nih.gov/utils/entrez2pmcciting.cgi?view=xml&id=%s&email=team@total-impact.org&tool=total-impact"
+    metrics_pmc_filter_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=(%s)&email=team@total-impact.org&tool=total-impact"
+    metrics_f1000_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=%s&cmd=llinks&email=team@total-impact.org&tool=total-impact"
 
     aliases_from_doi_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?term=%s&email=team@total-impact.org&tool=total-impact" 
     aliases_from_pmid_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml&email=team@total-impact.org&tool=total-impact" 
@@ -87,7 +87,7 @@ class Pubmed(Provider):
         dom_authors = provider._find_all_in_xml(page, "LastName")
         try:
             biblio_dict["authors"] = ", ".join([author.firstChild.data for author in dom_authors])
-        except AttributeError:
+        except (AttributeError, TypeError):
             pass
         return biblio_dict  
 
@@ -154,11 +154,16 @@ class Pubmed(Provider):
                 aliases_from_pmid_url = self.aliases_from_pmid_url_template %nid
                 page = self._get_eutils_page(nid, aliases_from_pmid_url, cache_enabled)
                 new_aliases += self._extract_aliases_from_pmid(page, nid)
+                biblio = self._extract_biblio(page, nid)
+                if biblio:
+                    new_aliases += [("biblio", biblio)]
 
                 # also, add link to paper on pubmed
                 new_aliases += [("url", self.aliases_pubmed_url_template %nid)] 
 
-        new_aliases_unique = list(set(new_aliases))
+        # get uniques for things that are unhashable
+        new_aliases_unique = [k for k,v in itertools.groupby(sorted(new_aliases))]
+
         return new_aliases_unique
 
     def _filter(self, id, citing_pmcids, filter_ptype):
