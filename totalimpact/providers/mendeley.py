@@ -132,7 +132,7 @@ class Mendeley(Provider):
                     first_mendeley_surname = mendeley_record["authors"][0]["surname"]
                     has_matching_authors = first_mendeley_surname in aliases_dict["biblio"][0]["authors"]
                     if not has_matching_authors:
-                        logger.warning("Mendeley: NO MATCHING AUTHORS between %s and %s", %(
+                        logger.warning("Mendeley: NO MATCHING AUTHORS between %s and %s" %(
                             first_mendeley_surname, aliases_dict["biblio"][0]["authors"]))
 
                     uuid = mendeley_record["uuid"]
