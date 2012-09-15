@@ -181,10 +181,11 @@ class Mendeley(Provider):
             page = self._get_uuid_lookup_page(aliases_dict["biblio"][0]["title"])
             if page:
                 uuid = self._get_uuid_from_title(aliases_dict, page)
-                logger.info("Mendeley: uuid is %s for %s" %(uuid, aliases_dict["biblio"][0]["title"]))
-                metrics_page = self._get_metrics_lookup_page(self.metrics_from_uuid_template, uuid)
-            if not uuid:
-                logger.info("Mendeley: couldn't find uuid for %s" %(aliases_dict["biblio"][0]["title"]))
+                if uuid:
+                    logger.debug("Mendeley: uuid is %s for %s" %(uuid, aliases_dict["biblio"][0]["title"]))
+                    metrics_page = self._get_metrics_lookup_page(self.metrics_from_uuid_template, uuid)
+                else:
+                    logger.debug("Mendeley: couldn't find uuid for %s" %(aliases_dict["biblio"][0]["title"]))
         except KeyError:
             pass
         if not metrics_page:
