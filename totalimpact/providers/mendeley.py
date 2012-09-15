@@ -120,8 +120,7 @@ class Mendeley(Provider):
     @classmethod
     def remove_punctuation(cls, str):
         # from http://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
-        exclude = set(string.punctuation)
-        return ''.join(ch for ch in str if ch not in exclude)   
+        return "".join(e for e in str if (e.isalnum() or e.isspace()))
 
     def _get_uuid_from_title(self, aliases_dict, page):
         doi = aliases_dict["doi"][0]
