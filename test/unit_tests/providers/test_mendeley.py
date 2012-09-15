@@ -68,6 +68,10 @@ class TestMendeley(ProviderTestCase):
         expected = {'mendeley:discipline': ([{'id': 3, 'value': 80, 'name': 'Biological Sciences'}, {'id': 19, 'value': 14, 'name': 'Medicine'}, {'id': 22, 'value': 2, 'name': 'Psychology'}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:country': ([{'name': 'United States', 'value': 42}, {'name': 'Japan', 'value': 12}, {'name': 'United Kingdom', 'value': 9}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:career_stage': ([{'name': 'Ph.D. Student', 'value': 31}, {'name': 'Post Doc', 'value': 21}, {'name': 'Professor', 'value': 7}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:readers': (102, 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/')}
         assert_equals(response, expected)
 
+    def test_remove_punctuation(self):
+        response = self.provider.remove_punctuation(u"sdflkdsjf4r42432098@#$#@$sdlkfj..sdfsdf")
+        assert_equals(response, u'sdflkdsjf4r42432098sdlkfjsdfsdf')
+
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics(self.testitem_metrics)
