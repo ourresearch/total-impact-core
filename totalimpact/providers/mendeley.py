@@ -134,7 +134,7 @@ class Mendeley(Provider):
                 # our job here is done
                 return uuid
             else:
-                if remove_punctuation(mendeley_record["title"]) == remove_punctuation(biblio["title"]):
+                if self.remove_punctuation(mendeley_record["title"]) == self.remove_punctuation(biblio["title"]):
                     if mendeley_record["year"] == biblio["year"]:
                         # check if author name in common. if not, yell, but continue anyway
                         first_mendeley_surname = mendeley_record["authors"][0]["surname"]
