@@ -132,11 +132,13 @@ class Mendeley(Provider):
                 # our job here is done
                 return uuid
             else:
-                if self.remove_punctuation(mendeley_record["title"]) == self.remove_punctuation(biblio["title"]):
+                mendeley_title = self.remove_punctuation(mendeley_record["title"]).lower()
+                aliases_title = self.remove_punctuation(biblio["title"].lower()
+                if mendeley_title == aliases_title:
                     if mendeley_record["year"] == biblio["year"]:
                         # check if author name in common. if not, yell, but continue anyway
                         first_mendeley_surname = mendeley_record["authors"][0]["surname"]
-                        has_matching_authors = first_mendeley_surname in biblio["authors"]
+                        has_matching_authors = first_mendeley_surname.lower() in biblio["authors"].lower()
                         if not has_matching_authors:
                             logger.warning("Mendeley: NO MATCHING AUTHORS between %s and %s" %(
                                 first_mendeley_surname, biblio["authors"]))
