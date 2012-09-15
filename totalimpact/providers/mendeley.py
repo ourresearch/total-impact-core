@@ -143,6 +143,13 @@ class Mendeley(Provider):
                         # but return it anyway
                         uuid = mendeley_record["uuid"]
                         return uuid
+                    else:
+                        logger.debug("Mendeley: years don't match %s and %s" %(
+                            str(mendeley_record["year"]), str(biblio["year"])))
+                else:
+                    logger.debug("Mendeley: titles don't match %s and %s" %(
+                        self.remove_punctuation(mendeley_record["title"]), self.remove_punctuation(biblio["title"])))
+
         return None
 
     def _get_metrics_and_drilldown_from_uuid(self, page):
@@ -175,7 +182,7 @@ class Mendeley(Provider):
             logger.info("Mendeley: couldn't find uuid for %s" %(aliases_dict["biblio"][0]["title"]))
             return {}
 
-        logger.info("Mendeley: uuid for %s is %s" %(aliases_dict["biblio"][0]["title"], uuid))
+        logger.info("Mendeley: uuid is %s for %s" %(uuid, aliases_dict["biblio"][0]["title"]))
         page = self._get_metrics_lookup_page(uuid)
         if not page:
             return {}
