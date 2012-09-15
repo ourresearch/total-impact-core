@@ -116,8 +116,9 @@ class Mendeley(Provider):
         double_encoded_id = urllib.quote(urllib.quote(id, safe=""), safe="")
         metrics_url = template %double_encoded_id
         page = self._get_page(metrics_url)
-        if not "identifiers" in page:
-            raise ProviderContentMalformedError()
+        if page:
+            if not "identifiers" in page:
+                page = None
         return page
 
     @classmethod
