@@ -62,9 +62,9 @@ class TestMendeley(ProviderTestCase):
         expected = None
         assert_equals(uuid, expected)
 
-    def test__get_metrics_and_drilldown_from_uuid(self):
+    def test_get_metrics_and_drilldown_from_metrics_page(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
-        response = self.provider._get_metrics_and_drilldown_from_uuid(f.read())
+        response = self.provider._get_metrics_and_drilldown_from_metrics_page(f.read())
         expected = {'mendeley:discipline': ([{'id': 3, 'value': 80, 'name': 'Biological Sciences'}, {'id': 19, 'value': 14, 'name': 'Medicine'}, {'id': 22, 'value': 2, 'name': 'Psychology'}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:country': ([{'name': 'United States', 'value': 42}, {'name': 'Japan', 'value': 12}, {'name': 'United Kingdom', 'value': 9}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:career_stage': ([{'name': 'Ph.D. Student', 'value': 31}, {'name': 'Post Doc', 'value': 21}, {'name': 'Professor', 'value': 7}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:readers': (102, 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/')}
         assert_equals(response, expected)
 

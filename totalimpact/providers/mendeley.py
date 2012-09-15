@@ -14,6 +14,8 @@ class Mendeley(Provider):
     descr = " A research management tool for desktop and web."
     uuid_from_title_template = 'http://api.mendeley.com/oapi/documents/search/"%s"/?consumer_key=' + os.environ["MENDELEY_KEY"]
     metrics_from_uuid_template = "http://api.mendeley.com/oapi/documents/details/%s?consumer_key=" + os.environ["MENDELEY_KEY"]
+    metrics_from_doi_template = "http://api.mendeley.com/oapi/documents/details/%s?type=doi&consumer_key=" + os.environ["MENDELEY_KEY"]
+    metrics_from_pmid_template = "http://api.mendeley.com/oapi/documents/details/%s?type=pmid&consumer_key=" + os.environ["MENDELEY_KEY"]
 
     static_meta_dict = {
         "readers": {
@@ -110,9 +112,10 @@ class Mendeley(Provider):
             raise ProviderContentMalformedError()
         return page
 
-    def _get_metrics_lookup_page(self, uuid):
-        metrics_from_uuid_url = self.metrics_from_uuid_template %uuid
-        page = self._get_page(metrics_from_uuid_url)
+    def _get_metrics_lookup_page(self, template, id):
+        double_encoded_id = urllib.quote(urllib.quote(id, safe=""), safe="")
+        metrics_url = template %double_encoded_id
+        page = self._get_page(metrics_url)
         if not "identifiers" in page:
             raise ProviderContentMalformedError()
         return page
@@ -123,15 +126,15 @@ class Mendeley(Provider):
         return "".join(e for e in str if (e.isalnum() or e.isspace()))
 
     def _get_uuid_from_title(self, aliases_dict, page):
-        doi = aliases_dict["doi"][0]
         data = provider._load_json(page)
+        doi = aliases_dict["doi"][0]
         biblio = aliases_dict["biblio"][0]
         for mendeley_record in data["documents"]:
             if mendeley_record["doi"] == doi:
                 uuid = mendeley_record["uuid"]
-                # our job here is done
                 return uuid
             else:
+                # more complicated.  Try to match title and year.
                 mendeley_title = self.remove_punctuation(mendeley_record["title"]).lower()
                 aliases_title = self.remove_punctuation(biblio["title"]).lower()
                 if mendeley_title == aliases_title:
@@ -151,10 +154,10 @@ class Mendeley(Provider):
                 else:
                     logger.debug("Mendeley: titles don't match %s and %s" %(
                         self.remove_punctuation(mendeley_record["title"]), self.remove_punctuation(biblio["title"])))
-
+        # no joy
         return None
 
-    def _get_metrics_and_drilldown_from_uuid(self, page):
+    def _get_metrics_and_drilldown_from_metrics_page(self, page):
         metrics_dict = self._extract_metrics(page)
         metrics_and_drilldown = {}
         for metric_name in metrics_dict:
@@ -173,22 +176,24 @@ class Mendeley(Provider):
         from totalimpact.models import ItemFactory
         aliases_dict = ItemFactory.alias_dict_from_tuples(aliases)
 
-        if (not "biblio" in aliases_dict) or (not "doi" in aliases_dict):
+        metrics_page = None    
+        try:
+            page = self._get_uuid_lookup_page(aliases_dict["biblio"][0]["title"])
+            if page:
+                uuid = self._get_uuid_from_title(aliases_dict, page)
+                logger.info("Mendeley: uuid is %s for %s" %(uuid, aliases_dict["biblio"][0]["title"]))
+                metrics_page = self._get_metrics_lookup_page(self.metrics_from_uuid_template, uuid)
+            if not uuid:
+                logger.info("Mendeley: couldn't find uuid for %s" %(aliases_dict["biblio"][0]["title"]))
+        except KeyError:
+            pass
+        if not metrics_page:
+            metrics_page = self._get_metrics_lookup_page(self.metrics_from_doi_template, aliases_dict["doi"][0])
+        if not metrics_page and ("pmid" in aliases_dict):
+            metrics_page = self._get_metrics_lookup_page(self.metrics_from_pmid_template, aliases_dict["pmid"][0])
+        if not metrics_page:
             return {}
-
-        page = self._get_uuid_lookup_page(aliases_dict["biblio"][0]["title"])
-        if not page:
-            return {}
-        uuid = self._get_uuid_from_title(aliases_dict, page)
-        if not uuid:
-            logger.info("Mendeley: couldn't find uuid for %s" %(aliases_dict["biblio"][0]["title"]))
-            return {}
-
-        logger.info("Mendeley: uuid is %s for %s" %(uuid, aliases_dict["biblio"][0]["title"]))
-        page = self._get_metrics_lookup_page(uuid)
-        if not page:
-            return {}
-        metrics_and_drilldown = self._get_metrics_and_drilldown_from_uuid(page)
+        metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(metrics_page)
 
         return metrics_and_drilldown
 
