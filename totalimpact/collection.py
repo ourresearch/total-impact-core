@@ -94,7 +94,7 @@ def get_collection_with_items_for_client_new(cid, myrefsets, myredis, mydao):
     
     something_currently_updating = True
     for item in collection["items"]:
-        item["currently_updating"] = cls.is_currently_updating(item["id"], myredis)
+        item["currently_updating"] = ItemFactory.is_currently_updating(item["id"], myredis)
         something_currently_updating = something_currently_updating or item["currently_updating"]
 
     logging.info("Got items for collection %s" %cid)
