@@ -419,7 +419,7 @@ def collection_get(cid='', format="json"):
             resp.mimetype = "application/json"
     else:
         try:
-            (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao)
+            (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client_new(cid, myrefsets, myredis, mydao)
         except (LookupError, AttributeError):  
             logger.error("couldn't get tiids for collection '{cid}'".format(cid=cid))
             abort(404)  # not found
