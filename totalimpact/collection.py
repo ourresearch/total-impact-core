@@ -79,6 +79,28 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao):
     # print json.dumps(coll, sort_keys=True, indent=4)
     return (coll, something_currently_updating)
 
+def get_collection_with_items_for_client_new(cid, myrefsets, myredis, mydao):
+    startkey = [cid, 0]
+    endkey = [cid, "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"]
+    view_response = mydao.db.view("collections_with_items/collections_with_items", 
+                        include_docs=True, 
+                        startkey=startkey, 
+                        endkey=endkey)
+    # the first row is the collection document
+    first_row = view_response.rows[0]
+    collection = first_row.doc
+    del collection["alias_tiids"]
+    collection["items"] = [ItemFactory.build_item_for_client(row.doc, myrefsets) for row in rows[1:]]
+    
+    something_currently_updating = True
+    for item in collection["items"]:
+        item["currently_updating"] = cls.is_currently_updating(item["id"], myredis)
+        something_currently_updating = something_currently_updating or item["currently_updating"]
+
+    logging.info("Got items for collection %s" %cid)
+    # print json.dumps(collection, sort_keys=True, indent=4)
+    return (collection, something_currently_updating)
+
 def clean_value_for_csv(value_to_store):
     try:
         value_to_store = value_to_store.encode("utf-8").strip()
@@ -209,7 +231,7 @@ def build_all_reference_lookups(myredis, mydao):
         cid = row.id
         try:
             # send it without reference sets because we are trying to load the reference sets here!
-            (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)
+            (coll_with_items, is_updating) = get_collection_with_items_for_client_new(cid, None, myredis, mydao)
         except (LookupError, AttributeError):       
             raise #not found
 
