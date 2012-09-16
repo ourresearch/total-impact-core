@@ -93,7 +93,7 @@ def get_collection_with_items_for_client_new(cid, myrefsets, myredis, mydao):
     del collection["alias_tiids"]
     collection["items"] = [ItemFactory.build_item_for_client(row.doc, myrefsets) for row in view_response.rows[1:]]
     
-    something_currently_updating = True
+    something_currently_updating = False
     for item in collection["items"]:
         item["currently_updating"] = ItemFactory.is_currently_updating(item["_id"], myredis)
         something_currently_updating = something_currently_updating or item["currently_updating"]
