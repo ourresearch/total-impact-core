@@ -50,7 +50,10 @@ class Scienceseeker(Provider):
         except (KeyError, IndexError, TypeError):
             return {}
 
-        metrics_dict = {'scienceseeker:blog_posts': number_blog_posts}
+        if number_blog_posts:
+            metrics_dict = {'scienceseeker:blog_posts': number_blog_posts}
+        else:
+            metrics_dict = {}
         return metrics_dict
 
 
