@@ -90,7 +90,7 @@ def get_collection_with_items_for_client_new(cid, myrefsets, myredis, mydao):
     first_row = view_response.rows[0]
     collection = first_row.doc
     del collection["alias_tiids"]
-    collection["items"] = [ItemFactory.build_item_for_client(row.doc, myrefsets) for row in rows[1:]]
+    collection["items"] = [ItemFactory.build_item_for_client(row.doc, myrefsets) for row in view_response.rows[1:]]
     
     something_currently_updating = True
     for item in collection["items"]:
