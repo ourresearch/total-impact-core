@@ -9,7 +9,7 @@ logger = logging.getLogger('ti.providers.scienceseeker')
 class Scienceseeker(Provider):  
 
     example_id = ("doi", "10.1016/j.cbpa.2010.06.169")
-    metrics_url_template = "http://scienceseeker.org/subjectseeker/ss-search.php?type=post&filter0=citation&modifier0=doi&value0=%s"
+    metrics_url_template = "http://scienceseeker.org/search/default/?type=post&filter0=citation&modifier0=doi&value0=%s"
     provenance_url_template = "http://scienceseeker.org/displayfeed/?type=post&filter0=citation&modifier0=doi&value0=%s"
     url = "http://www.scienceseeker.org"
     descr = "Science news from science newsmakers"
