@@ -43,57 +43,7 @@ def del_pmids():
     logger.info("finished looking, found {num_tiids} tiids with pmids".format(
         num_tiids=len(tiids)))
 
-"""
-admin/snaps_by_metric_name
 
-function(doc) {
-    // lists tiids by metric name
-    if (doc.type == "metric_snap") {
-       emit(doc.metric_name, 1)
-   }
-}
-"""
-def delete_all_pmccitation_snaps():
-    view_name = "admin/snaps_by_metric_name"
-    snap_id_count = 0
-    for row in db.view(view_name, include_docs=True, key="pubmed:pmc_citations"):
-        snap_id = row.value
-        snap_id_count += 1
-        print ".",
-        #logger.info("pmc snap id {snap_id}".format(snap_id=snap_id))
-        db.delete(row.doc)
-    logger.info("finished deleting, found {num} tiids".format(num=snap_id_count))
-
-"""
-admin/old-wikipedia-snaps
-function(doc) {
-    if (doc.type == "metric_snap") {
-       if (doc.metric_name == "wikipedia:mentions") {
-        if (doc.drilldown_url.indexOf('search=\"') == -1) {
-           emit([doc.created, doc._id], doc);
-            }
-        }
-    }
-}
-"""
-def wikipedia_snap_cleanup():
-    view_name = "admin/old-wikipedia-snaps"
-
-    for row in db.view(view_name, include_docs=True):
-
-        doc = row.doc
-        logger.info("got doc '{id}' back from {view_name}, with drilldown_url {url}".format(
-            id=row.id,
-            view_name=view_name,
-            url=doc["drilldown_url"]
-
-        ))
-        logger.info("deleting doc '{id}'.".format(
-            id=row.id
-        ))
-        db.delete(doc)
-
-    logger.info("finished the update.")
 
 """
 admin/multiple_dois
@@ -293,28 +243,7 @@ def put_snaps_in_items():
         rows=row_count, elapsed=round(time.time() - starttime)
     ))
 
-"""
-function(doc) {
-    emit([doc.type, doc._id], doc);
-}
-"""
-def delete_snaps(start="000000000", end="zzzzzzzzzzzzzzzzzzzzzzzz"):
-    logger.debug("deleting snaps now.")
-    starttime = time.time()
-    view_name = "queues/by_type_and_id"
-    view_rows = db.view(view_name, include_docs=True)
-    row_count = 0
 
-    startkey = ["metric_snap", start]
-    endkey = ["metric_snap", end]
-    for row in view_rows[startkey:endkey]:
-        row_count += 1
-        logger.info("now deleting doc on row %i, id %s" % (row_count, row.id))
-        db.delete(row.doc)
-
-    logger.info("updated {rows} rows in {elapsed} seconds".format(
-        rows=row_count, elapsed=round(time.time() - starttime)
-    ))
 
 
 if (cloudant_db == "ti"):

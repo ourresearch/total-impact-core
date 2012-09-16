@@ -148,11 +148,15 @@ class TestCouchWorker(TestBackend):
         expected = None # return None if item already has aliases in it
         assert_equals(response, expected)
 
-    def test_update_item_with_new_snap(self):
-        snap = {'tiid': '4mlln04q1rxy6l9oeb3t7ftv', 'metric_name': 'mendeley:groups', 'created': '2012-08-23T21:41:05.526046', '_rev': '1-5fde8dbb5c3af04114adb18295a42259', 'value': 2, 'drilldown_url': 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/', '_id': '25gvr5xxvbu8mabgzvvkdf65', 'type': 'metric_snap'}
-        response = backend.CouchWorker.update_item_with_new_snap(snap, self.fake_item)
-        expected = {'mendeley:groups': {'provenance_url': 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/', 'values': {'raw': 2, 'raw_history': {'2012-08-23T21:41:05.526046': 2}}}}
-        assert_equals(response["metrics"], expected)
+    def test_update_item_with_new_metrics(self):
+        response = backend.CouchWorker.update_item_with_new_metrics("mendeley:groups", (3, "http://provenance"), self.fake_item)
+        expected = {'mendeley:groups': {'provenance_url': 'http://provenance', 'values': {'raw': 3, 'raw_history': {'2012-09-15T21:39:39.563710': 3}}}}
+        print response["metrics"]        
+        assert_equals(response["metrics"]['mendeley:groups']["provenance_url"], 'http://provenance')
+        assert_equals(response["metrics"]['mendeley:groups']["values"]["raw"], 3)
+        assert_equals(response["metrics"]['mendeley:groups']["values"]["raw_history"].values(), [3])
+        # check year starts with 20
+        assert_equals(response["metrics"]['mendeley:groups']["values"]["raw_history"].keys()[0][0:2], "20")
 
     def test_run_nothing_in_queue(self):
         test_couch_queue = backend.PythonQueue("test_couch_queue")

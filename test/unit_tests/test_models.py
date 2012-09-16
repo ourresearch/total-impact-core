@@ -213,21 +213,13 @@ class TestItemFactory():
 
     def test_build_item_for_client(self):
         item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'providersWithMetricsCount': 11, 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
-        snaps = [{'tiid': '4mlln04q1rxy6l9oeb3t7ftv', 'metric_name': 'mendeley:groups', 'created': '2012-08-23T21:41:05.526046', '_rev': '1-5fde8dbb5c3af04114adb18295a42259', 'value': 2, 'drilldown_url': 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/', '_id': '25gvr5xxvbu8mabgzvvkdf65', 'type': 'metric_snap'}]
-        response = models.ItemFactory.build_item_for_client(item, snaps, self.myrefsets)
-
-        expected_values = {'raw': 2, 'nih': [91, 99], 'raw_history': {'2012-08-23T21:41:05.526046': 2}}
+        response = models.ItemFactory.build_item_for_client(item, self.myrefsets)
         assert_equals(set(response.keys()), set(['created', '_rev', 'providersWithMetricsCount', 'metrics', 'last_modified', 'biblio', '_id', 'type', 'aliases']))
 
-        # raw_history is not returned to client        
-        assert_equals(set(response["metrics"]['mendeley:groups']["values"].keys()), set(["raw", "nih"])) 
-        assert_equals(response["metrics"]['mendeley:groups']["values"]["raw"], expected_values["raw"])
-        assert_equals(response["metrics"]['mendeley:groups']["values"]["nih"], expected_values["nih"])
-
-    def test_add_snap_data(self):
+    def add_metrics_data(self):
         item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'providersWithMetricsCount': 11, 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
-        snap = {'tiid': '4mlln04q1rxy6l9oeb3t7ftv', 'metric_name': 'mendeley:groups', 'created': '2012-08-23T21:41:05.526046', '_rev': '1-5fde8dbb5c3af04114adb18295a42259', 'value': 2, 'drilldown_url': 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/', '_id': '25gvr5xxvbu8mabgzvvkdf65', 'type': 'metric_snap'}
-        response = models.ItemFactory.add_snap_data(item, snap)
+        metrics_method_response = (2, 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/')
+        response = models.ItemFactory.add_metrics_data("mendeley:readers", metrics_method_response, item)
         print response
 
         expected = {'metrics': {'mendeley:groups': {'provenance_url': 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/', 
