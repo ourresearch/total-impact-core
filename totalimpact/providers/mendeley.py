@@ -190,9 +190,15 @@ class Mendeley(Provider):
         except KeyError:
             pass
         if not metrics_page:
-            metrics_page = self._get_metrics_lookup_page(self.metrics_from_doi_template, aliases_dict["doi"][0])
-        if not metrics_page and ("pmid" in aliases_dict):
-            metrics_page = self._get_metrics_lookup_page(self.metrics_from_pmid_template, aliases_dict["pmid"][0])
+            try:
+                metrics_page = self._get_metrics_lookup_page(self.metrics_from_doi_template, aliases_dict["doi"][0])
+            except KeyError:
+                pass
+        if not metrics_page:
+            try:
+                metrics_page = self._get_metrics_lookup_page(self.metrics_from_pmid_template, aliases_dict["pmid"][0])
+            except KeyError:
+                pass
         if not metrics_page:
             return {}
         metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(metrics_page)
