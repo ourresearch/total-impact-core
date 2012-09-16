@@ -51,33 +51,44 @@ class Dao(object):
 
 
     def update_design_doc(self):
-        design_doc = {
-            "_id": "_design/queues",
-            "language": "javascript",
-            "views": {
-                "by_alias": {},
-                "by_type_and_id": {},
-                "collections_with_items": {},
-                "latest-collections": {},
-                "reference-sets": {}
+        design_docs = [
+            {
+                "_id": "_design/queues",
+                "language": "javascript",
+                "views": {
+                    "by_alias": {},
+                    "by_type_and_id": {},
+                    "latest-collections": {},
+                    "reference-sets": {}
+                }
+            },
+            {
+                "_id": "_design/collections_with_items",
+                "language": "javascript",
+                "views": {
+                    "collections_with_items": {}
+                }
             }
-        }
+        ]
 
-        for view_name in design_doc["views"]:
-            file = open('./config/couch/views/{0}.js'.format(view_name))
-            design_doc["views"][view_name]["map"] = file.read()        
+        for design_doc in design_docs:
+            design_doc_name = design_doc["_id"]
+            for view_name in design_doc["views"]:
+                file = open('./config/couch/views/{0}.js'.format(view_name))
+                design_doc["views"][view_name]["map"] = file.read()        
 
-        logger.info("overwriting the design/queues doc with the latest version in dao.")
-#        logger.debug("overwriting the design/queues doc with this, from dao: " + str(design_doc))
-        
-        try:
-            current_design_doc_rev = self.db["_design/queues"]["_rev"]
-            design_doc["_rev"] = current_design_doc_rev
-        except ResourceNotFound:
-            logger.info("brand new db; there's no design/queues doc. That's fine, we'll make it.")
+            logger.info("overwriting the design doc with the latest version in dao.")
             
-        self.db.save(design_doc)
-        logger.info("saved the new design doc.")
+            try:
+                current_design_doc_rev = self.db[design_doc_name]["_rev"]
+                design_doc["_rev"] = current_design_doc_rev
+            except ResourceNotFound:
+                logger.info("No existing design doc found for {design_doc_name}. That's fine, we'll make it.".format(
+                    design_doc_name=design_doc_name))
+                
+            self.db.save(design_doc)
+            logger.info("saved the new design doc {design_doc_name}".format(
+                design_doc_name=design_doc_name))
 
 
     def create_db(self, db_name):

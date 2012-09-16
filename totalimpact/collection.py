@@ -83,7 +83,6 @@ def get_collection_with_items_for_client_new(cid, myrefsets, myredis, mydao):
     startkey = [cid, 0]
     endkey = [cid, "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"]
     view_response = mydao.db.view("collections_with_items/collections_with_items", 
-#    view_response = mydao.db.view("queues/collections_with_items", 
                         include_docs=True, 
                         startkey=startkey, 
                         endkey=endkey)
