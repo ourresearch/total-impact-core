@@ -46,11 +46,10 @@ class Scienceseeker(Provider):
         try:
             feed_doc = doc.getElementsByTagName("feed")
             entry_doc = feed_doc[0].getElementsByTagName("entry")
+            entry_link_doc = entry_doc[0].getElementsByTagName("id")
+            number_blog_posts = len(entry_link_doc)
         except (KeyError, IndexError, TypeError):
             return {}
-
-        entry_link_doc = entry_doc[0].getElementsByTagName("id")
-        number_blog_posts = len(entry_link_doc)
 
         metrics_dict = {'scienceseeker:blog_posts': number_blog_posts}
         return metrics_dict
