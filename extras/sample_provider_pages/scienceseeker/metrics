@@ -1,55 +1,56 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"
-      xmlns:ss="http://scienceseeker.org/ns/1">
-  <title type="text">ScienceSeeker</title>
-  <subtitle type="text">Recent Posts</subtitle>
-  <link href="http://scienceseeker.org/subjectseeker/ss-search.php" rel="self"
-    type="application/atom+xml" />
-  <link href="http://scienceseeker.org" rel="alternate" type="text/html" />
-  <id>http://scienceseeker.org/subjectseeker/ss-search.php</id>
-  <updated>2012-09-07T20:50:18-04:00</updated>
-  <rights>No copyright asserted over individual posts; see original
-    posts for copyright and/or licensing.</rights>
-  <generator>ScienceSeeker Atom serializer</generator>
-  <entry xml:lang="en">
-    <title type="html">Cytobalancing: Coming soon to a cell near you</title>
-    <id>http://scienceseeker.org/post/157123</id>
-    <link href="http://blogs.biochem.ncsu.edu/?p=2964&amp;utm_source=rss&amp;utm_medium=rss&amp;utm_campaign=cytobalancing-coming-soon-to-a-cell-near-you" rel="alternate" />
-    <updated>2012-09-07T17:10:01-04:00</updated>
-    <author>
-      <name>Clay Clark</name>
-    </author>
-    <summary type="html">IDPs (intrinsically disordered polypeptides), these naturally occurring regions with no specific structural motifs, can cause quite a bit of trouble. They also help to maintain your life throughout the day, so they should not be considered completely horrible. IDPs are &amp;#8230; Continue reading &amp;#8594;</summary>
-    <ss:citations>
-      <ss:citation>
-        <ss:citationId type="scienceseeker">2661</ss:citationId>
-        <ss:citationId type="doi">10.1074/jbc.M110.210765</ss:citationId>
-        <ss:citationText>&lt;span class=&quot;Z3988&quot; title=&quot;ctx_ver=Z39.88-2004&amp;amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&amp;amp;rft.atitle=The+Cancer%2FTestis+Antigen+Prostate-associated+Gene+4+%28PAGE4%29+Is+a+Highly+Intrinsically+Disordered+Protein&amp;amp;rft.jtitle=Journal+of+Biological+Chemistry&amp;amp;rft.artnum=http%3A%2F%2Fwww.jbc.org%2Fcgi%2Fdoi%2F10.1074%2Fjbc.M110.210765&amp;amp;rft.volume=286&amp;amp;rft.issue=16&amp;amp;rft.issn=0021-9258&amp;amp;rft.spage=13994&amp;amp;rft.date=2011&amp;amp;rfr_id=info%3Asid%2Fscienceseeker.org&amp;amp;rft_id=info%3Adoi%2F10.1074%2Fjbc.M110.210765&amp;amp;rft.au=Zeng+Y.&amp;amp;rft.aulast=Zeng&amp;amp;rft.aufirst=Y.&amp;amp;rft.au=He+Y.&amp;amp;rft.aulast=He&amp;amp;rft.aufirst=Y.&amp;amp;rft.au=Yang+F.&amp;amp;rft.aulast=Yang&amp;amp;rft.aufirst=F.&amp;amp;rft.au=Mooney+S.+M.&amp;amp;rft.aulast=Mooney&amp;amp;rft.aufirst=S.+M.&amp;amp;rft.au=Getzenberg+R.+H.&amp;amp;rft.aulast=Getzenberg&amp;amp;rft.aufirst=R.+H.&amp;amp;rft.au=Orban+J.&amp;amp;rft.aulast=Orban&amp;amp;rft.aufirst=J.&amp;amp;rft.au=Kulkarni+P.&amp;amp;rft.aulast=Kulkarni&amp;amp;rft.aufirst=P.&amp;rfs_dat=ss.included=1&amp;rfe_dat=bpr3.included=1&quot;&gt;Zeng, Y., He, Y., Yang, F., Mooney, S.M., Getzenberg, R.H., Orban, J. &amp; Kulkarni, P. (2011). The Cancer/Testis Antigen Prostate-associated Gene 4 (PAGE4) Is a Highly Intrinsically Disordered Protein, &lt;span style=&quot;font-style:italic;&quot;&gt;Journal of Biological Chemistry, 286&lt;/span&gt; (16) 13994. DOI: &lt;a rev=&quot;review&quot; href=&quot;http://dx.doi.org/10.1074%2Fjbc.M110.210765&quot;&gt;10.1074/jbc.M110.210765&lt;/a&gt;&lt;/span&gt;</ss:citationText>
-      </ss:citation>
-      <ss:citation>
-        <ss:citationId type="scienceseeker">2662</ss:citationId>
-        <ss:citationId type="doi">10.1016/j.cbpa.2010.06.169</ss:citationId>
-        <ss:citationText>&lt;span class=&quot;Z3988&quot; title=&quot;ctx_ver=Z39.88-2004&amp;amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&amp;amp;rft.atitle=Intrinsically+disordered+proteins+are+potential+drug+targets&amp;amp;rft.jtitle=Current+Opinion+in+Chemical+Biology&amp;amp;rft.artnum=http%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS1367593110000748&amp;amp;rft.volume=14&amp;amp;rft.issue=4&amp;amp;rft.issn=13675931&amp;amp;rft.spage=488&amp;amp;rft.date=2010&amp;amp;rfr_id=info%3Asid%2Fscienceseeker.org&amp;amp;rft_id=info%3Adoi%2F10.1016%2Fj.cbpa.2010.06.169&amp;amp;rft.au=Metallo+Steven+J&amp;amp;rft.aulast=Metallo&amp;amp;rft.aufirst=Steven+J&amp;rfs_dat=ss.included=1&amp;rfe_dat=bpr3.included=1&quot;&gt;Metallo, S.J. (2010). Intrinsically disordered proteins are potential drug targets, &lt;span style=&quot;font-style:italic;&quot;&gt;Current Opinion in Chemical Biology, 14&lt;/span&gt; (4) 488. DOI: &lt;a rev=&quot;review&quot; href=&quot;http://dx.doi.org/10.1016%2Fj.cbpa.2010.06.169&quot;&gt;10.1016/j.cbpa.2010.06.169&lt;/a&gt;&lt;/span&gt;</ss:citationText>
-      </ss:citation>
-    </ss:citations>
-    <ss:community>
-      <ss:recommendations userlevel="user" count="0"/>
-      <ss:recommendations userlevel="editor" count="0"/>
-      <ss:comments count="0" />
-    </ss:community>
-    <category term="journal club" />
-    <category term="binding specificity" />
-    <category term="cancer biology" />
-    <category term="cell signaling" />
-    <category term="idp" />
-    <category term="Biology" />
-    <category term="Chemistry" />
-    <source>
-      <title type="text">Biochem Blog</title>
-      <link href="http://blogs.biochem.ncsu.edu/?feed=rss2" rel="self" />
-      <link href="http://blogs.biochem.ncsu.edu/" rel="alternate" type="text/html" />
-      <category term="Biology" />
-      <category term="Chemistry" />
-    </source>
-  </entry>
-</feed>
+   <?xml version="1.0" encoding="utf-8"?>
+   <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"
+         xmlns:ss="http://scienceseeker.org/ns/1">
+     <title type="text">ScienceSeeker</title>
+     <subtitle type="text">Recent Posts</subtitle>
+     <link href="http://scienceseeker.org/subjectseeker/ss-search.php" rel="self"
+       type="application/atom+xml" />
+     <link href="http://scienceseeker.org" rel="alternate" type="text/html" />
+     <id>http://scienceseeker.org/subjectseeker/ss-search.php</id>
+     <updated>2012-09-15T22:27:56-04:00</updated>
+     <rights>No copyright asserted over individual posts; see original
+       posts for copyright and/or licensing.</rights>
+     <generator>ScienceSeeker Atom serializer</generator>
+     <entry xml:lang="en">
+       <title type="html">Cytobalancing: Coming soon to a cell near you</title>
+       <id>http://scienceseeker.org/post/157123</id>
+       <link href="http://blogs.biochem.ncsu.edu/?p=2964&amp;utm_source=rss&amp;utm_medium=rss&amp;utm_campaign=cytobalancing-coming-soon-to-a-cell-near-you" rel="alternate" />
+       <updated>2012-09-07T17:10:01-04:00</updated>
+       <author>
+         <name>Clay Clark</name>
+       </author>
+       <summary type="html">IDPs (intrinsically disordered polypeptides), these naturally occurring regions with no specific structural motifs, can cause quite a bit of trouble. They also help to maintain your life throughout the day, so they should not be considered completely horrible. IDPs are &amp;#8230; Continue reading &amp;#8594;</summary>
+       <ss:citations>
+         <ss:citation>
+           <ss:citationId type="scienceseeker">2662</ss:citationId>
+           <ss:citationId type="doi">10.1016/j.cbpa.2010.06.169</ss:citationId>
+           <ss:citationText>&lt;span class=&quot;Z3988&quot; title=&quot;ctx_ver=Z39.88-2004&amp;amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&amp;amp;rft.atitle=Intrinsically+disordered+proteins+are+potential+drug+targets&amp;amp;rft.jtitle=Current+Opinion+in+Chemical+Biology&amp;amp;rft.artnum=http%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS1367593110000748&amp;amp;rft.volume=14&amp;amp;rft.issue=4&amp;amp;rft.issn=13675931&amp;amp;rft.spage=488&amp;amp;rft.date=2010&amp;amp;rfr_id=info%3Asid%2Fscienceseeker.org&amp;amp;rft_id=info%3Adoi%2F10.1016%2Fj.cbpa.2010.06.169&amp;amp;rft.au=Metallo+Steven+J&amp;amp;rft.aulast=Metallo&amp;amp;rft.aufirst=Steven+J&amp;rfs_dat=ss.included=1&amp;rfe_dat=bpr3.included=1&quot;&gt;Metallo, S.J. (2010). Intrinsically disordered proteins are potential drug targets, &lt;span style=&quot;font-style:italic;&quot;&gt;Current Opinion in Chemical Biology, 14&lt;/span&gt; (4) 488. DOI: &lt;a rev=&quot;review&quot; href=&quot;http://dx.doi.org/10.1016%2Fj.cbpa.2010.06.169&quot;&gt;10.1016/j.cbpa.2010.06.169&lt;/a&gt;&lt;/span&gt;</ss:citationText>
+         </ss:citation>
+         <ss:citation>
+           <ss:citationId type="scienceseeker">2661</ss:citationId>
+           <ss:citationId type="doi">10.1074/jbc.M110.210765</ss:citationId>
+           <ss:citationText>&lt;span class=&quot;Z3988&quot; title=&quot;ctx_ver=Z39.88-2004&amp;amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&amp;amp;rft.atitle=The+Cancer%2FTestis+Antigen+Prostate-associated+Gene+4+%28PAGE4%29+Is+a+Highly+Intrinsically+Disordered+Protein&amp;amp;rft.jtitle=Journal+of+Biological+Chemistry&amp;amp;rft.artnum=http%3A%2F%2Fwww.jbc.org%2Fcgi%2Fdoi%2F10.1074%2Fjbc.M110.210765&amp;amp;rft.volume=286&amp;amp;rft.issue=16&amp;amp;rft.issn=0021-9258&amp;amp;rft.spage=13994&amp;amp;rft.date=2011&amp;amp;rfr_id=info%3Asid%2Fscienceseeker.org&amp;amp;rft_id=info%3Adoi%2F10.1074%2Fjbc.M110.210765&amp;amp;rft.au=Zeng+Y.&amp;amp;rft.aulast=Zeng&amp;amp;rft.aufirst=Y.&amp;amp;rft.au=He+Y.&amp;amp;rft.aulast=He&amp;amp;rft.aufirst=Y.&amp;amp;rft.au=Yang+F.&amp;amp;rft.aulast=Yang&amp;amp;rft.aufirst=F.&amp;amp;rft.au=Mooney+S.+M.&amp;amp;rft.aulast=Mooney&amp;amp;rft.aufirst=S.+M.&amp;amp;rft.au=Getzenberg+R.+H.&amp;amp;rft.aulast=Getzenberg&amp;amp;rft.aufirst=R.+H.&amp;amp;rft.au=Orban+J.&amp;amp;rft.aulast=Orban&amp;amp;rft.aufirst=J.&amp;amp;rft.au=Kulkarni+P.&amp;amp;rft.aulast=Kulkarni&amp;amp;rft.aufirst=P.&amp;rfs_dat=ss.included=1&amp;rfe_dat=bpr3.included=1&quot;&gt;Zeng, Y., He, Y., Yang, F., Mooney, S.M., Getzenberg, R.H., Orban, J. &amp; Kulkarni, P. (2011). The Cancer/Testis Antigen Prostate-associated Gene 4 (PAGE4) Is a Highly Intrinsically Disordered Protein, &lt;span style=&quot;font-style:italic;&quot;&gt;Journal of Biological Chemistry, 286&lt;/span&gt; (16) 13994. DOI: &lt;a rev=&quot;review&quot; href=&quot;http://dx.doi.org/10.1074%2Fjbc.M110.210765&quot;&gt;10.1074/jbc.M110.210765&lt;/a&gt;&lt;/span&gt;</ss:citationText>
+         </ss:citation>
+       </ss:citations>
+       <ss:community>
+         <ss:recommendations userlevel="user" count="0"/>
+         <ss:recommendations userlevel="editor" count="0"/>
+         <ss:comments count="0" />
+       </ss:community>
+       <category term="journal club" />
+       <category term="binding specificity" />
+       <category term="cancer biology" />
+       <category term="cell signaling" />
+       <category term="idp" />
+       <category term="Biology" />
+       <category term="Chemistry" />
+       <source>
+         <title type="text">Biochem Blog</title>
+         <link href="http://blogs.biochem.ncsu.edu/?feed=rss2" rel="self" />
+         <link href="http://blogs.biochem.ncsu.edu/" rel="alternate" type="text/html" />
+         <category term="Biology" />
+         <category term="Chemistry" />
+       </source>
+     </entry>
+   </feed>
+   

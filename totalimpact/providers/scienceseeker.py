@@ -30,7 +30,7 @@ class Scienceseeker(Provider):
         (namespace, nid) = alias
         return("doi" == namespace)
 
-    def _extract_metrics(self, page, status_code=200, id=None):            
+    def _extract_metrics(self, page, status_code=200, id=None): 
         if status_code != 200:
             if status_code == 404:
                 return {}
@@ -45,9 +45,8 @@ class Scienceseeker(Provider):
             return {}
         try:
             feed_doc = doc.getElementsByTagName("feed")
-            entry_doc = feed_doc[0].getElementsByTagName("entry")
-            entry_link_doc = entry_doc[0].getElementsByTagName("id")
-            number_blog_posts = len(entry_link_doc)
+            entry_docs = feed_doc[0].getElementsByTagName("entry")
+            number_blog_posts = len(entry_docs)
         except (KeyError, IndexError, TypeError):
             return {}
 

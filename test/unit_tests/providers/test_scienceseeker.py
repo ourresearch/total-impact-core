@@ -49,3 +49,11 @@ class TestScienceseeker(ProviderTestCase):
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
+    @http
+    def test_metrics_another(self):
+        metrics_dict = self.provider.metrics([("doi", "10.1371/journal.pone.0035769")])
+        expected = {'scienceseeker:blog_posts': (1, 'http://scienceseeker.org/displayfeed/?type=post&filter0=citation&modifier0=doi&value0=10.1371/journal.pone.0035769')}
+        print metrics_dict
+        for key in expected:
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
