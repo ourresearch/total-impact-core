@@ -419,7 +419,7 @@ def collection_get(cid='', format="json"):
             resp.mimetype = "application/json"
     else:
         try:
-            (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client_new(cid, myrefsets, myredis, mydao)
+            (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao)
         except (LookupError, AttributeError):  
             logger.error("couldn't get tiids for collection '{cid}'".format(cid=cid))
             abort(404)  # not found
@@ -467,9 +467,6 @@ def put_collection(cid=""):
     print coll
     mydao.db.save(coll)
 
-    # expire it from redis
-    myredis.expire_collection(cid)
-
     resp = make_response(json.dumps(coll, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
@@ -490,9 +487,6 @@ def collection_update(cid=""):
             cid=cid
         ))
         abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")
-
-    # expire it from redis
-    myredis.expire_collection(cid)
 
     # put each of them on the update queue
     for tiid in tiids:

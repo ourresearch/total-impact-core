@@ -43,39 +43,7 @@ class TestTiRedis():
         self.r.decr_num_providers_left("abcd", "myprovider")
         assert_equals("10", self.r.get("num_providers_left:abcd"))
 
-    def test_cache_collection(self):
-        success = self.r.cache_collection(SAMPLE_COLLECTION)
-        assert_equals(success, True)
-        stored_doc = self.r.get("cid:kn5auf")
-        assert_equals(stored_doc, json.dumps(SAMPLE_COLLECTION))
 
-    def test_get_collection(self):
-        self.r.cache_collection(SAMPLE_COLLECTION)
-        stored_doc = self.r.get_collection("kn5auf")
-        assert_equals(stored_doc, SAMPLE_COLLECTION)
-
-    def test_get_collection_that_is_not_there(self):
-        stored_doc = self.r.get_collection("kn5auf")
-        assert_equals(stored_doc, None)
-
-    def test_expire_collection(self):
-        self.r.cache_collection(SAMPLE_COLLECTION)
-
-        # check it is there
-        stored_doc = self.r.get("cid:kn5auf")
-        assert_equals(stored_doc, json.dumps(SAMPLE_COLLECTION))
-
-        # now expire it
-        success = self.r.expire_collection("kn5auf")
-        assert_equals(success, True)
-
-        # now check it is gone
-        stored_doc = self.r.get("cid:kn5auf")
-        assert_equals(stored_doc, None)
-
-    def test_expire_collection_that_is_not_there(self):
-        success = self.r.expire_collection("abcdef")
-        assert_equals(success, True)
 
 
 

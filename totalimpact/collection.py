@@ -57,29 +57,6 @@ def get_titles(cids, mydao):
     return ret
 
 def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao):
-    
-    coll = myredis.get_collection(cid)
-    if coll:
-        # got the collection_with_items successfully out of cache.  
-        return (coll, False)
-    coll = mydao.get(cid)
-    logging.info("Got collection doc for %s" %cid)
-    tiids = coll["alias_tiids"].values()
-    try:
-        (items, something_currently_updating) = ItemFactory.retrieve_items(tiids, myrefsets, myredis, mydao)
-    except (LookupError, AttributeError):       
-        raise
-    logging.info("Got items for collection %s" %cid)
-    coll["items"] = items
-    del coll["alias_tiids"]
-
-    if not something_currently_updating:
-        myredis.cache_collection(coll)
-
-    # print json.dumps(coll, sort_keys=True, indent=4)
-    return (coll, something_currently_updating)
-
-def get_collection_with_items_for_client_new(cid, myrefsets, myredis, mydao):
     startkey = [cid, 0]
     endkey = [cid, "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"]
     view_response = mydao.db.view("collections_with_items/collections_with_items", 
@@ -231,7 +208,7 @@ def build_all_reference_lookups(myredis, mydao):
         cid = row.id
         try:
             # send it without reference sets because we are trying to load the reference sets here!
-            (coll_with_items, is_updating) = get_collection_with_items_for_client_new(cid, None, myredis, mydao)
+            (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)
         except (LookupError, AttributeError):       
             raise #not found
 
