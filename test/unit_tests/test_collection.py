@@ -1,4 +1,4 @@
-from totalimpact import collection, dao
+from totalimpact import collection, dao, tiredis
 from collections import OrderedDict
 import os, json
 
@@ -18,6 +18,11 @@ class TestCollection():
         temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
         temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        self.d.update_design_doc()
+
+        # do the same thing for the redis db, set up the test redis database.  We're using DB Number 8
+        self.r = tiredis.from_url("redis://localhost:6379", db=8)
+        self.r.flushdb()
 
 
     def test_make_creates_identifier(self):
@@ -78,6 +83,23 @@ class TestCollection():
         response = collection.get_metric_value_lists(API_ITEMS_JSON)
         expected = {u'plosalm:pmc_abstract': [70, 37, 29, 0], u'dryad:package_views': [537, 0, 0, 0], u'plosalm:pmc_unique-ip': [580, 495, 251, 0], u'wikipedia:mentions': [1, 0, 0, 0], u'plosalm:html_views': [11521, 3361, 2075, 0], u'plosalm:pmc_supp-data': [41, 6, 0, 0], u'plosalm:pdf_views': [1112, 1097, 484, 0], u'plosalm:scopus': [19, 19, 11, 0], u'dryad:most_downloaded_file': [70, 0, 0, 0], u'plosalm:pmc_pdf': [285, 149, 113, 0], u'plosalm:pubmed_central': [12, 9, 2, 0], u'plosalm:pmc_figure': [54, 39, 13, 0], u'mendeley:readers': [57, 52, 13, 0], u'dryad:total_downloads': [114, 0, 0, 0], u'plosalm:pmc_full-text': [624, 434, 232, 0], u'mendeley:groups': [4, 4, 1, 0], u'plosalm:crossref': [16, 13, 7, 0]}
         assert_equals(response, expected)
+
+    def test_get_collection_with_items_for_client_new(self):
+        test_collection = {"_id": "testcollectionid", "title": "mycollection", "type":"collection", "alias_tiids": {
+                                                   "pmid:16023720": "iaw9rzldigp4xc7p20bycnkg",
+                                                   "pmid:16413797": "itsq6fgx8ogi9ixysbipmtxx"}}
+        self.d.db.save(test_collection)
+        test_items = [
+            {"_id": "iaw9rzldigp4xc7p20bycnkg", "type":"item", "biblio":{}, "aliases":[("pmid", "16023720")]},
+            {"_id": "itsq6fgx8ogi9ixysbipmtxx", "type":"item", "biblio":{}, "aliases":[("pmid", "16413797")]}
+        ]
+        for item_doc in test_items:
+            self.d.db.save(item_doc)
+        response = collection.get_collection_with_items_for_client_new("testcollectionid", None, self.r, self.d)
+        expected = "heather"
+        assert_equals(response[1], True)
+        assert_equals(response[0].keys(), ['items', '_rev', '_id', 'type', 'title'])
+        assert_equals(response[0]["items"][0].keys(), ['_rev', 'currently_updating', 'metrics', 'biblio', '_id', 'type', 'aliases'])
 
     def test_make_csv_rows(self):
         csv = collection.make_csv_rows(API_ITEMS_JSON)
