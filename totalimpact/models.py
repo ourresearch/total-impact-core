@@ -24,35 +24,21 @@ class ItemFactory():
 
     all_static_meta = ProviderFactory.get_all_static_meta()
 
-
     @classmethod
     def get_item(cls, tiid, myrefsets, dao):
-        res = dao.view("queues/by_tiid_with_snaps")
-        rows = res[[tiid,0]:[tiid,"zzzzzzzzzzzzzz"]].rows
-
-        if not rows:
+        item_doc = dao.get(tiid)
+        if not item_doc:
             return None
-        else:
-            item = rows[0]["value"]
-            most_recent_snaps = {}
-            for row in rows[1:]:
-                snap = row["value"]
-                # they are in reverse order of creation, so overwrite
-                # and most recent one will be on top.
-                most_recent_snaps[snap["metric_name"]] = snap
-
-            snaps = most_recent_snaps.values()
-
-            try:
-                item = cls.build_item_for_client(item, snaps, myrefsets)
-            except Exception, e:
-                item = None
-                logger.error("Exception %s: Unable to build item %s, %s, %s" % (e.__repr__(), tiid, str(item), str(snaps)))
-                raise
+        try:
+            item = cls.build_item_for_client(item_doc, myrefsets)
+        except Exception, e:
+            item = None
+            logger.error("Exception %s: Unable to build item %s, %s" % (e.__repr__(), tiid, str(item)))
+            raise
         return item
 
     @classmethod
-    def build_item_for_client(cls, item, snaps, myrefsets):
+    def build_item_for_client(cls, item, myrefsets):
         item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
         #item["metrics"] = {} #not using what is in stored item for this
 
@@ -63,13 +49,6 @@ class ItemFactory():
                 year = 2002
         except KeyError:
             year = 99 # hack so that it won't match anything.  what else to do?
-
-        # temporary while we still have snaps
-        for snap in snaps:
-            metric_name = snap["metric_name"]
-            if metric_name in cls.all_static_meta.keys():
-                # add snap values. this line can go away once all snap values migrated into items in db.  
-                item = cls.add_snap_data(item, snap)
 
         metrics = item.setdefault("metrics", {})
         for metric_name in metrics:
@@ -91,39 +70,25 @@ class ItemFactory():
         return item
 
     @classmethod
-    def add_snap_data(cls, item, snap):
+    def add_metrics_data(cls, metric_name, metrics_method_response, item):
         metrics = item.setdefault("metrics", {})
         
-        this_metric = metrics.setdefault(snap["metric_name"], {})
-        this_metric["provenance_url"] = snap["drilldown_url"]
+        (metric_value, provenance_url) = metrics_method_response
+
+        this_metric = metrics.setdefault(metric_name, {})
+        this_metric["provenance_url"] = provenance_url
 
         this_metric_values = this_metric.setdefault("values", {})
-        this_metric_values["raw"] = snap["value"]
+        this_metric_values["raw"] = metric_value
 
         this_metric_values_raw_history = this_metric_values.setdefault("raw_history", {})
-        this_metric_values_raw_history[snap["created"]] = snap["value"]
+        now = datetime.datetime.now().isoformat()
+        this_metric_values_raw_history[now] = metric_value
         return item
-
-    @classmethod
-    def build_snap(cls, tiid, metric_value_drilldown, metric_name):
-        # if the alphabet below changes, need to update couch queue lookups        
-        shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
-
-        snap = {}
-        snap["_id"] = shortuuid.uuid()[0:24]
-        snap["type"] = "metric_snap"
-        snap["metric_name"] = metric_name
-        snap["tiid"] = tiid
-        snap["created"] = datetime.datetime.now().isoformat()
-        (value, drilldown_url) = metric_value_drilldown
-        snap["value"] = value
-        snap["drilldown_url"] = drilldown_url
-        return snap
 
 
     @classmethod
     def make(cls):
-
         now = datetime.datetime.now().isoformat()
         # if the alphabet below changes, need to update couch queue lookups
         shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')

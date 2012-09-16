@@ -206,8 +206,8 @@ class CouchWorker(Worker):
         return(item)
 
     @classmethod
-    def update_item_with_new_snap(cls, snap, item):
-        item = ItemFactory.add_snap_data(item, snap)  #note the flipped order.  hrm.
+    def update_item_with_new_metrics(cls, metric_name, metrics_method_response, item):
+        item = ItemFactory.add_metrics_data(metric_name, metrics_method_response, item)
         return(item)        
 
     def decr_num_providers_left(self, metric_name, tiid):
@@ -236,11 +236,9 @@ class CouchWorker(Worker):
                 elif method_name=="biblio":
                     updated_item = self.update_item_with_new_biblio(new_content, item)
                 elif method_name=="metrics":
-                    # this is the loop we are going to keep.  add all the snaps into the item.
                     updated_item = item
                     for metric_name in new_content:
-                        snap = ItemFactory.build_snap(tiid, new_content[metric_name], metric_name)
-                        updated_item = self.update_item_with_new_snap(snap, updated_item)
+                        updated_item = self.update_item_with_new_metrics(metric_name, new_content[metric_name], updated_item)
                 else:
                     logger.warning("ack, supposed to save something i don't know about: " + str(new_content))
                     updated_item = None

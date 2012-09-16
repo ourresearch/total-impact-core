@@ -56,9 +56,7 @@ class Dao(object):
             "language": "javascript",
             "views": {
                 "by_alias": {},
-                "by_tiid_with_snaps": {},
                 "by_type_and_id": {},
-                "needs_aliases": {},
                 "latest-collections": {},
                 "reference-sets": {}
             }

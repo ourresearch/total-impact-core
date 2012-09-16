@@ -48,7 +48,7 @@ class TestDAO(unittest.TestCase):
     def test_create_db_uploads_views(self):
         design_doc = self.d.db.get("_design/queues")
         assert_equals(set(design_doc["views"].keys()),
-            set([u'by_alias', u'by_tiid_with_snaps', "by_type_and_id", "needs_aliases", "latest-collections", "reference-sets"]))
+            set([u'by_alias', "by_type_and_id", "latest-collections", "reference-sets"]))
 
     def test_connect_db(self):
         assert self.d.db.__class__.__name__ == "Database"
@@ -62,13 +62,6 @@ class TestDAO(unittest.TestCase):
         del_worked = self.d.delete(id)
         assert_equals(del_worked, True)
         assert_equals(self.d.get(id), None)
-
-    def test_needs_aliases_view(self):
-        res = self.d.view('queues/needs_aliases')
-        nrows = len(res.rows)
-        assert_equals(nrows, 0)
-
-        self.assertTrue( isinstance(res.rows, list), res )
 
 
 
