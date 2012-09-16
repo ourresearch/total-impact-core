@@ -57,6 +57,7 @@ class Dao(object):
             "views": {
                 "by_alias": {},
                 "by_type_and_id": {},
+                "collections_with_items": {},
                 "latest-collections": {},
                 "reference-sets": {}
             }
