@@ -67,7 +67,19 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao):
     first_row = view_response.rows[0]
     collection = first_row.doc
     del collection["alias_tiids"]
-    collection["items"] = [ItemFactory.build_item_for_client(row.doc, myrefsets) for row in view_response.rows[1:]]
+
+    # start with the 2nd row, since 1st row is the collection document
+    collection["items"] = []
+    for row in view_response.rows[1:]:
+        item_doc = row.doc 
+        try:
+            item_for_client = ItemFactory.build_item_for_client(item_doc, myrefsets)
+        except (KeyError, TypeError):
+            logging.info("Couldn't build item {tiid}, excluding it from the returned collection {cid}".format(
+                tiid=item_doc["_id"], cid=cid))
+            item_for_client = None
+        if item_for_client:
+            collection["items"] += [item_for_client]
     
     something_currently_updating = False
     for item in collection["items"]:
