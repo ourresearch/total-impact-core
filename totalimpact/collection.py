@@ -172,7 +172,8 @@ def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_
     for metric_name in metric_value_lists:
         metric_values = sorted(metric_value_lists[metric_name], reverse=False)
         if (len(confidence_interval_table) != len(metric_values)):
-            logging.error("BAD BAD")
+            logging.error("Was expecting normalization set to be {expected_len} but it is {actual_len}. Not loading.".format(
+                expected_len=len(confidence_interval_table), actual_len=len(metric_values) ))
         matches[metric_name] = defaultdict(list)
         num_normalization_points = len(metric_values)
         for i in range(num_normalization_points):
@@ -197,15 +198,11 @@ def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_
                 }
     return response
 
-def build_reference_lookup(coll_with_items, myrefsets):
-    normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])
-    lookup = get_normalization_confidence_interval_ranges(normalization_numbers, myrefsets)
-    return lookup
 
 def build_all_reference_lookups(myredis, mydao):
     # for expediency, assuming all reference collections are this size
     # risky assumption, but run with it for now!
-    size_of_reference_collections = 50
+    size_of_reference_collections = 250 #100
     confidence_interval_level = 0.95
     percentiles = range(100)
 
@@ -215,31 +212,39 @@ def build_all_reference_lookups(myredis, mydao):
     confidence_interval_table = table_return["lookup_table"]
     #print(json.dumps(confidence_interval_table, indent=4))
 
-    res = mydao.db.view("queues/reference-sets", descending=True, include_docs=False)
-    reference_lookup_dict = defaultdict(dict)
+    res = mydao.db.view("queues/reference-sets", descending=True, include_docs=False, limits=100)
+    logging.info("Number rows = " + str(len(res.rows)))
+    reference_lookup_dict = {"article": defaultdict(dict)}
+    reference_histogram_dict = {"article": defaultdict(dict)}
     for row in res.rows:
-        cid = row.id
         try:
-            # send it without reference sets because we are trying to load the reference sets here!
-            (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)
-        except (LookupError, AttributeError):       
-            raise #not found
-
-        logging.info("Loading normalizations for %s" %coll_with_items["title"])
-
-        try:
-            # ugly workaround while we play with testing and production reference sets
-            title = coll_with_items["title"].replace("[reference-set]", "").replace("[refset-test]", "")
-            (reference_set_name, year) = title.split(":")
+            (header, genre, reference_set_name, year, seed) = row.key.split("|")
         except ValueError:
-            logging.error("Normalization title '%s' not formatted as expected, not loading its normalizations" %coll_with_items["title"])
-            reference_set_name = None
+            logging.error("Normalization title '%s' not formatted as expected, not loading its normalizations" %str(row.key))
+            continue
+
+        if not "250" in seed:
+            # skip this one, keep going
+            continue
 
         if reference_set_name:
-            reference_lookup = build_reference_lookup(coll_with_items, confidence_interval_table)
-            reference_lookup_dict[reference_set_name][year] = reference_lookup
+            cid = row.id
+            try:
+                # send it without reference sets because we are trying to load the reference sets here!
+                (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)
+            except (LookupError, AttributeError):       
+                raise #not found
 
-    return(reference_lookup_dict)
+            logging.info("Loading normalizations for %s" %coll_with_items["title"])
+
+            # hack for now to get big collections
+            normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])
+            reference_histogram_dict[genre][reference_set_name][year] = normalization_numbers
+
+            reference_lookup = get_normalization_confidence_interval_ranges(normalization_numbers, confidence_interval_table)
+            reference_lookup_dict[genre][reference_set_name][year] = reference_lookup
+
+    return(reference_lookup_dict, reference_histogram_dict)
 
 # from http://userpages.umbc.edu/~rcampbel/Computers/Python/probstat.html
 # also called binomial coefficient

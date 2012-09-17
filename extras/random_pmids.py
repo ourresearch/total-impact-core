@@ -31,6 +31,11 @@ def parse_random_doi_args():
 
 url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&email={email}&term={query}&retmax=1&retstart={random_index}"
 
+def get_nth_pmid(index, query, email):
+	url = url_template.format(random_index=index, query=query, email=email)
+	r = requests.get(url)
+	return(r)
+
 def get_random_pmids(sample_size, email, query, seed=None):
 	# Do an initial query to get the total number of hits
 	url = url_template.format(random_index=1, query=query, email=email)
@@ -57,9 +62,16 @@ def get_random_pmids(sample_size, email, query, seed=None):
 
 	pmids = []
 	for random_index in random_indexes:
-		url = url_template.format(random_index=random_index, query=query, email=email)
-		r = requests.get(url)
-		pmid = pmid_pattern.search(r.text).group("pmid")
+		r = get_nth_pmid(random_index, query, email)
+		try:
+			pmid = pmid_pattern.search(r.text).group("pmid")
+
+		#hope this is transient, try the random number + 1
+		except AttributeError:
+			print "got an error extracting pmid, trying again with subsequent index"
+			r = get_nth_pmid(random_index+1, query, email)
+			pmid = pmid_pattern.search(r.text).group("pmid")
+
 		print "pmid:" + pmid
 		pmids.append(pmid)
 		time.sleep(1/3)  #NCBI requests no more than three requests per second at http://www.ncbi.nlm.nih.gov/books/NBK25497/#chapter2.Usage_Guidelines_and_Requiremen
