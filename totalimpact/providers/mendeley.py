@@ -178,29 +178,34 @@ class Mendeley(Provider):
         aliases_dict = ItemFactory.alias_dict_from_tuples(aliases)
 
         metrics_page = None    
+        # try lookup by doi
         try:
-            page = self._get_uuid_lookup_page(aliases_dict["biblio"][0]["title"])
-            if page:
-                uuid = self._get_uuid_from_title(aliases_dict, page)
-                if uuid:
-                    logger.debug("Mendeley: uuid is %s for %s" %(uuid, aliases_dict["biblio"][0]["title"]))
-                    metrics_page = self._get_metrics_lookup_page(self.metrics_from_uuid_template, uuid)
-                else:
-                    logger.debug("Mendeley: couldn't find uuid for %s" %(aliases_dict["biblio"][0]["title"]))
+            metrics_page = self._get_metrics_lookup_page(self.metrics_from_doi_template, aliases_dict["doi"][0])
         except KeyError:
             pass
-        if not metrics_page:
-            try:
-                metrics_page = self._get_metrics_lookup_page(self.metrics_from_doi_template, aliases_dict["doi"][0])
-            except KeyError:
-                pass
+        # try lookup by pmid
         if not metrics_page:
             try:
                 metrics_page = self._get_metrics_lookup_page(self.metrics_from_pmid_template, aliases_dict["pmid"][0])
             except KeyError:
                 pass
+        # try lookup by title
+        if not metrics_page:
+            try:
+                page = self._get_uuid_lookup_page(aliases_dict["biblio"][0]["title"])
+                if page:
+                    uuid = self._get_uuid_from_title(aliases_dict, page)
+                    if uuid:
+                        logger.debug("Mendeley: uuid is %s for %s" %(uuid, aliases_dict["biblio"][0]["title"]))
+                        metrics_page = self._get_metrics_lookup_page(self.metrics_from_uuid_template, uuid)
+                    else:
+                        logger.debug("Mendeley: couldn't find uuid for %s" %(aliases_dict["biblio"][0]["title"]))
+            except KeyError:
+                pass
+        # give up!
         if not metrics_page:
             return {}
+
         metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(metrics_page)
 
         return metrics_and_drilldown
