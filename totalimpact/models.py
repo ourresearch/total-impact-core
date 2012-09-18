@@ -193,9 +193,10 @@ class ItemFactory():
         if value=="Yes":
             value = 1
 
-        logger.info("about to loop")
         response = {}
         for refsetname in myrefsets[genre]:
+            logger.info("refsetname {refsetname}".format(
+                refsetname=refsetname))
             try:
                 fencepost_values = myrefsets[genre][refsetname][str(year)][metric_name].keys()
                 logger.info("Fencepost_values {fencepost_values}".format(
@@ -207,7 +208,7 @@ class ItemFactory():
                 logger.info("response[refsetname] {resp}".format(
                     resp=str(response[refsetname])))
             except KeyError:
-                #logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
+                logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
                 pass
                 
         return response
