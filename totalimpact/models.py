@@ -17,8 +17,9 @@ class NotAuthenticatedError(Exception):
     pass
 
 
-def largest_value_that_is_less_than_or_equal_to(target, collection) :
-    return max(i for i in collection if (i<=target))
+def largest_value_that_is_less_than_or_equal_to(target, collection):
+    collection_as_numbers = [int(i) for i in collection]
+    return max(i for i in collection_as_numbers if (i<=target))
 
 class ItemFactory():
 
@@ -179,7 +180,7 @@ class ItemFactory():
     @classmethod
     def get_normalized_values(cls, genre, year, metric_name, value, myrefsets):
         # Will be passed None as myrefsets type when loading items in reference collections :)
-        #logging.info("In get_normalized_values")
+        logging.info("In get_normalized_values")
         if not myrefsets:
             return {}
 
