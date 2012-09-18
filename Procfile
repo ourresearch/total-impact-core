@@ -1,2 +1,2 @@
-web: gunicorn totalimpact:app -b 0.0.0.0:$PORT -w 3
+web: gunicorn totalimpact:app -b 0.0.0.0:$PORT -w 1
 worker: totalimpact/backend.py
