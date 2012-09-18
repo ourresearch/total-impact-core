@@ -195,22 +195,24 @@ class ItemFactory():
 
         response = {}
         for refsetname in myrefsets[genre]:
-            logger.info("genre:{genre}, {my}".format(genre=genre, my=str(myrefsets[genre].keys())))
-            logger.info("refsetname:{refsetname}, {my}".format(refsetname=refsetname, my=str(myrefsets[genre][refsetname].keys())))
-            logger.info("year:{year}, {my}".format(year=str(year), my=str(myrefsets[genre][refsetname][str(year)].keys())))
-            logger.info("metric_name:{metric_name}, {my}".format(metric_name=metric_name, my=str(myrefsets[genre][refsetname][str(year)][metric_name].keys())))
+            #logger.info("genre:{genre}, {my}".format(genre=genre, my=str(myrefsets[genre].keys())))
+            #logger.info("refsetname:{refsetname}, {my}".format(refsetname=refsetname, my=str(myrefsets[genre][refsetname].keys())))
+            #logger.info("year:{year}, {my}".format(year=str(year), my=str(myrefsets[genre][refsetname][str(year)].keys())))
+            #logger.info("metric_name:{metric_name}, {my}".format(metric_name=metric_name, my=str(myrefsets[genre][refsetname][str(year)][metric_name].keys())))
 
-            fencepost_values = myrefsets[genre][refsetname][str(year)][metric_name].keys()
+            # year is a number
+            
+            fencepost_values = myrefsets[genre][refsetname][year][metric_name].keys()
             logger.info("Fencepost_values {fencepost_values}".format(
                 fencepost_values=str(fencepost_values)))
             myclosest = largest_value_that_is_less_than_or_equal_to(value, fencepost_values)
             logger.info("myclosest {myclosest}".format(
                 myclosest=str(myclosest)))
-            response[refsetname] = myrefsets[genre][refsetname][str(year)][metric_name][myclosest]
+            response[refsetname] = myrefsets[genre][refsetname][year][metric_name][myclosest]
             logger.info("response[refsetname] {resp}".format(
                 resp=str(response[refsetname])))
 #            except KeyError:
-#                logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
+#                logger.info("No good lookup in %s %s for %s" %(refsetname, year, metric_name))
 #                pass
                 
         return response
