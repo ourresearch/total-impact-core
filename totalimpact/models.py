@@ -180,24 +180,32 @@ class ItemFactory():
     @classmethod
     def get_normalized_values(cls, genre, year, metric_name, value, myrefsets):
         # Will be passed None as myrefsets type when loading items in reference collections :)
-        logging.info("In get_normalized_values")
         if not myrefsets:
             return {}
 
         # for now, only normalize articles
         if genre not in myrefsets.keys():
+            logger.info("Genre {genre} not in refsets so give up".format(
+                genre=genre))
             return {}
 
         # treat the f1000 "Yes" as a 1 for normalization
         if value=="Yes":
             value = 1
 
+        logger.info("about to loop")
         response = {}
         for refsetname in myrefsets[genre]:
             try:
                 fencepost_values = myrefsets[genre][refsetname][str(year)][metric_name].keys()
+                logger.info("Fencepost_values {fencepost_values}".format(
+                    fencepost_values=str(fencepost_values)))
                 myclosest = largest_value_that_is_less_than_or_equal_to(value, fencepost_values)
+                logger.info("myclosest {myclosest}".format(
+                    myclosest=str(myclosest)))
                 response[refsetname] = myrefsets[genre][refsetname][str(year)][metric_name][myclosest]
+                logger.info("response[refsetname] {resp}".format(
+                    resp=str(response[refsetname])))
             except KeyError:
                 #logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
                 pass
