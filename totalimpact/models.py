@@ -17,8 +17,8 @@ class NotAuthenticatedError(Exception):
     pass
 
 
-def closest(target, collection) :
-    return min((abs(target - i), i) for i in collection)[1]
+def largest_value_that_is_less_than_or_equal_to(target, collection) :
+    return max(i for i in collection if (i<=target))
 
 class ItemFactory():
 
@@ -195,7 +195,7 @@ class ItemFactory():
         for refsetname in myrefsets[genre]:
             try:
                 fencepost_values = myrefsets[genre][refsetname][str(year)][metric_name].keys()
-                myclosest = closest(value, fencepost_values)
+                myclosest = largest_value_that_is_less_than_or_equal_to(value, fencepost_values)
                 response[refsetname] = myrefsets[genre][refsetname][str(year)][metric_name][myclosest]
             except KeyError:
                 #logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))

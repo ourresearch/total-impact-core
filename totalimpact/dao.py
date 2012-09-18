@@ -59,7 +59,6 @@ class Dao(object):
                     "by_alias": {},
                     "by_type_and_id": {},
                     "latest-collections": {},
-                    "reference-sets": {}
                 }
             },
             {
@@ -67,6 +66,13 @@ class Dao(object):
                 "language": "javascript",
                 "views": {
                     "collections_with_items": {}
+                }
+            },
+            {
+                "_id": "_design/reference-sets",
+                "language": "javascript",
+                "views": {
+                    "reference-sets": {}
                 }
             }
         ]

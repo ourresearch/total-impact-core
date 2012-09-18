@@ -1,7 +1,7 @@
 function(doc) {
     if (doc.type == "collection") {
-        if (doc.title.indexOf("[refset-test]") == 0) {
-           emit(doc.title, 1)
+        if (typeof doc["refset_metadata"] != "undefined") {
+           emit([doc._id, doc.title], doc["refsets_metadata"])
         }
     }
 }

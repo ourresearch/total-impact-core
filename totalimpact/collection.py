@@ -202,7 +202,7 @@ def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_
 def build_all_reference_lookups(myredis, mydao):
     # for expediency, assuming all reference collections are this size
     # risky assumption, but run with it for now!
-    size_of_reference_collections = 250 #100
+    size_of_reference_collections = 100
     confidence_interval_level = 0.95
     percentiles = range(100)
 
@@ -212,22 +212,27 @@ def build_all_reference_lookups(myredis, mydao):
     confidence_interval_table = table_return["lookup_table"]
     #print(json.dumps(confidence_interval_table, indent=4))
 
-    res = mydao.db.view("queues/reference-sets", descending=True, include_docs=False, limits=100)
+    res = mydao.db.view("reference-sets/reference-sets", descending=True, include_docs=False, limits=100)
     logging.info("Number rows = " + str(len(res.rows)))
     reference_lookup_dict = {"article": defaultdict(dict)}
     reference_histogram_dict = {"article": defaultdict(dict)}
     for row in res.rows:
         try:
-            (header, genre, reference_set_name, year, seed) = row.key.split("|")
+            (cid, title) = row.key
+            refset_metadata = row.value
+            genre = refset_metadata["genre"]
+            year = refset_metadata["year"]
+            refset_name = refset_metadata["name"]
+            revset_version = refset_metadata["version"]
         except ValueError:
-            logging.error("Normalization title '%s' not formatted as expected, not loading its normalizations" %str(row.key))
+            logging.error("Normalization '%s' not formatted as expected, not loading its normalizations" %str(row.key))
             continue
 
-        if not "250" in seed:
-            # skip this one, keep going
+        if refset_version < 0.1:
+            logging.error("Refset version too low for '%s', not loading its normalizations" %str(row.key))
             continue
 
-        if reference_set_name:
+        if refset_name:
             cid = row.id
             try:
                 # send it without reference sets because we are trying to load the reference sets here!
@@ -239,10 +244,10 @@ def build_all_reference_lookups(myredis, mydao):
 
             # hack for now to get big collections
             normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])
-            reference_histogram_dict[genre][reference_set_name][year] = normalization_numbers
+            reference_histogram_dict[genre][refset_name][year] = normalization_numbers
 
             reference_lookup = get_normalization_confidence_interval_ranges(normalization_numbers, confidence_interval_table)
-            reference_lookup_dict[genre][reference_set_name][year] = reference_lookup
+            reference_lookup_dict[genre][refset_name][year] = reference_lookup
 
     return(reference_lookup_dict, reference_histogram_dict)
 
