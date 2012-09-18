@@ -14,7 +14,7 @@ def get_random_dois(year, sample_size):
     dois = json.loads(r.text)
     return dois
 
-def make_collection(namespace, nids, title, owner):
+def make_collection(namespace, nids, title, refset_metadata):
     aliases = [(namespace, nid) for nid in nids]
     url = api_url + "/collection"
     resp = requests.post(
@@ -22,14 +22,14 @@ def make_collection(namespace, nids, title, owner):
         data=json.dumps({
             "aliases": aliases,
             "title": title,
-            "owner": owner
+            "refset_metadata": refset_metadata
         }),
         headers={'Content-type': 'application/json'}
     )
     collection_id = json.loads(resp.text)["collection"]["_id"]
     return collection_id
 
-def build_reference_sets(query_templates, years, sample_size, seed, owner_template):
+def build_reference_sets(query_templates, years, sample_size, seed):
     collection_ids = []
     for refset_name in query_templates["eutils"]:
         print refset_name
@@ -39,9 +39,16 @@ def build_reference_sets(query_templates, years, sample_size, seed, owner_templa
             pmids = random_pmids.get_random_pmids(sample_size, email, query, seed)
             if pmids:
                 print pmids
-                title = title_template.format(genre="article", name=refset_name, year=year, seed=seed, sample_size=sample_size)
-                owner = owner_template.format(genre="article", name=refset_name, year=year, seed=seed, sample_size=sample_size)
-                collection_id = make_collection("pmid", pmids, title, owner)
+                refset_metadata = {
+                    "genre":"article", 
+                    "version":0.1,
+                    "name":refset_name, 
+                    "year":year, 
+                    "seed":seed,
+                    "sample_size":sample_size
+                }                
+                title = title_template.format(**refset_metadata)
+                collection_id = make_collection("pmid", pmids, title, refset_metadata)
                 print collection_id
                 collection_ids.append(collection_id)
     for refset_name in query_templates["random_doi"]:
@@ -50,9 +57,16 @@ def build_reference_sets(query_templates, years, sample_size, seed, owner_templa
             dois = get_random_dois(year, sample_size)
             if dois:
                 print dois
-                title = title_template.format(genre="article", name=refset_name, year=year, seed="", sample_size=sample_size)
-                owner = owner_template.format(genre="article", name=refset_name, year=year, seed="", sample_size=sample_size)
-                collection_id = make_collection("doi", dois, title, owner)
+                refset_metadata = {
+                    "genre":"article", 
+                    "version":0.1,
+                    "name":refset_name, 
+                    "year":year, 
+                    "seed":"",
+                    "sample_size":sample_size
+                }
+                title = title_template.format(**refset_metadata)
+                collection_id = make_collection("doi", dois, title, refset_metadata)
                 collection_ids.append(collection_id)
     return(collection_ids)
 
@@ -74,13 +88,12 @@ query_templates = {
     }
 
 
-sample_size = 250
+sample_size = 100
 seed = 42
 years = range(2001, 2012)
-title_template = "[refset-test]|{genre}|{name}|{year}|{seed}:{sample_size}"
-owner_template = "{genre}|{name}|{seed}|{sample_size}"
+title_template = "REFSET {genre}: {name} {year}. n={sample_size}, seed={seed}"
 email = "team@total-impact.org"
 api_url = "http://" + os.getenv("API_ROOT")
 
-build_reference_sets(query_templates, years, sample_size, seed, owner_template)
+build_reference_sets(query_templates, years, sample_size, seed)
 

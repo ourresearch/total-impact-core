@@ -48,11 +48,15 @@ class TestDAO(unittest.TestCase):
     def test_create_db_uploads_views(self):
         design_doc = self.d.db.get("_design/queues")
         assert_equals(set(design_doc["views"].keys()),
-            set([u'by_alias', "by_type_and_id", "latest-collections", "reference-sets"]))
+            set([u'by_alias', "by_type_and_id", "latest-collections"]))
 
         design_doc = self.d.db.get("_design/collections_with_items")
         assert_equals(set(design_doc["views"].keys()),
             set([u"collections_with_items"]))
+
+        design_doc = self.d.db.get("_design/reference-sets")
+        assert_equals(set(design_doc["views"].keys()),
+            set([u"reference-sets"]))
 
     def test_connect_db(self):
         assert self.d.db.__class__.__name__ == "Database"

@@ -508,7 +508,7 @@ def collection_update(cid=""):
 
 
 
-# creates a collectino with aliases
+# creates a collection with aliases
 @app.route('/collection', methods=['POST'])
 def collection_create():
     """
@@ -516,7 +516,10 @@ def collection_create():
     creates new collection
     """
     response_code = None
-    coll, key = collection.make(owner=request.json.get("owner", None))
+    coll, key = collection.make(request.json.get("owner", None))
+    refset_metadata = request.json.get("refset_metadata", None)
+    if refset_metadata:
+        coll["refset_metadata"] = refset_metadata
     coll["ip_address"] = request.remote_addr
     try:
         coll["title"] = request.json["title"]
