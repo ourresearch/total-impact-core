@@ -79,6 +79,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao):
                 logging.info("Couldn't build item {item_doc}, excluding it from the returned collection {cid}".format(
                     item_doc=item_doc, cid=cid))
                 item_for_client = None
+                raise
             if item_for_client:
                 collection["items"] += [item_for_client]
     
