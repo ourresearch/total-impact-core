@@ -196,8 +196,10 @@ class ItemFactory():
         response = {}
         for refsetname in myrefsets[genre]:
             logger.info("genre:{genre}, {my}".format(genre=genre, my=str(myrefsets[genre].keys())))
-            logger.info("year:{year}, {my}".format(year=str(year), my=str(myrefsets[genre][str(year)].keys())))
-            logger.info("metric_name:{metric_name}, {my}".format(metric_name=metric_name, my=str(myrefsets[genre][str(year)][metric_name].keys())))
+            logger.info("refsetname:{refsetname}, {my}".format(refsetname=refsetname, my=str(myrefsets[genre][refsetname].keys())))
+            logger.info("year:{year}, {my}".format(year=str(year), my=str(myrefsets[genre][refsetname][str(year)].keys())))
+            logger.info("metric_name:{metric_name}, {my}".format(metric_name=metric_name, my=str(myrefsets[genre][refsetname][str(year)][metric_name].keys())))
+
             fencepost_values = myrefsets[genre][refsetname][str(year)][metric_name].keys()
             logger.info("Fencepost_values {fencepost_values}".format(
                 fencepost_values=str(fencepost_values)))
