@@ -130,7 +130,7 @@ class Provider(object):
         return error
 
     def _get_templated_url(self, template, id, method=None):
-        url = template % id
+        url = template % urllib.quote(id)
         return(url)
 
     def relevant_aliases(self, aliases):
@@ -212,8 +212,7 @@ class Provider(object):
         if not provider_url_template:
             provider_url_template = self.member_items_url_template
 
-        enc = urllib.quote(query_string)
-        url = self._get_templated_url(provider_url_template, enc, "members")
+        url = self._get_templated_url(provider_url_template, query_string, "members")
         
         # try to get a response from the data provider  
         response = self.http_get(url, cache_enabled=cache_enabled)
