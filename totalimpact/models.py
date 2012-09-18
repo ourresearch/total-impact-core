@@ -195,21 +195,18 @@ class ItemFactory():
 
         response = {}
         for refsetname in myrefsets[genre]:
-            logger.info("refsetname {refsetname}".format(
-                refsetname=refsetname))
-            try:
-                fencepost_values = myrefsets[genre][refsetname][str(year)][metric_name].keys()
-                logger.info("Fencepost_values {fencepost_values}".format(
-                    fencepost_values=str(fencepost_values)))
-                myclosest = largest_value_that_is_less_than_or_equal_to(value, fencepost_values)
-                logger.info("myclosest {myclosest}".format(
-                    myclosest=str(myclosest)))
-                response[refsetname] = myrefsets[genre][refsetname][str(year)][metric_name][myclosest]
-                logger.info("response[refsetname] {resp}".format(
-                    resp=str(response[refsetname])))
-            except KeyError:
-                logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
-                pass
+            fencepost_values = myrefsets[genre][refsetname][str(year)][metric_name].keys()
+            logger.info("Fencepost_values {fencepost_values}".format(
+                fencepost_values=str(fencepost_values)))
+            myclosest = largest_value_that_is_less_than_or_equal_to(value, fencepost_values)
+            logger.info("myclosest {myclosest}".format(
+                myclosest=str(myclosest)))
+            response[refsetname] = myrefsets[genre][refsetname][str(year)][metric_name][myclosest]
+            logger.info("response[refsetname] {resp}".format(
+                resp=str(response[refsetname])))
+#            except KeyError:
+#                logger.info("No good lookup in %s %s for %s" %(refsetname, str(year), metric_name))
+#                pass
                 
         return response
 
