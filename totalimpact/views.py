@@ -11,8 +11,6 @@ from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFound
 from totalimpact import default_settings
 import logging
 
-# temporary, do it here for experimenting
-
 
 logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
