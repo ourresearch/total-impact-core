@@ -223,7 +223,7 @@ def build_all_reference_lookups(myredis, mydao):
             genre = refset_metadata["genre"]
             year = refset_metadata["year"]
             refset_name = refset_metadata["name"]
-            revset_version = refset_metadata["version"]
+            refset_version = refset_metadata["version"]
         except ValueError:
             logging.error("Normalization '%s' not formatted as expected, not loading its normalizations" %str(row.key))
             continue
