@@ -39,8 +39,11 @@ class ItemFactory():
 
     @classmethod
     def build_item_for_client(cls, item, myrefsets):
-        item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
-        #item["metrics"] = {} #not using what is in stored item for this
+        try:
+            item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
+        except (KeyError, TypeError):
+            logger.error("Skipping item, unable to lookup aliases or biblio in %s" % str(item))
+            return None
 
         # need year to calculate normalization below
         try:
