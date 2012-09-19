@@ -133,7 +133,7 @@ class Provider(object):
         return error
 
     def _get_templated_url(self, template, id, method=None):
-        if "template" != "%s":
+        if template != "%s":
             id = urllib.quote(id)
         url = template % id
         return(url)
