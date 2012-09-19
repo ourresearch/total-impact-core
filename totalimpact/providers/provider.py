@@ -1,7 +1,10 @@
+ # -*- coding: utf-8 -*-  # need this line because test utf-8 strings later
+
 from totalimpact.cache import Cache
 from totalimpact.dao import Dao
 from totalimpact import providers
 from totalimpact import default_settings
+from totalimpact import utils
 
 import requests, os, time, threading, sys, traceback, importlib, urllib, logging, itertools
 import simplejson
@@ -130,7 +133,9 @@ class Provider(object):
         return error
 
     def _get_templated_url(self, template, id, method=None):
-        url = template % urllib.quote(id)
+        if "template" != "%s":
+            id = urllib.quote(id)
+        url = template % id
         return(url)
 
     def relevant_aliases(self, aliases):
@@ -270,7 +275,7 @@ class Provider(object):
 
         # try to get a response from the data provider        
         response = self.http_get(url, cache_enabled=cache_enabled)
-        
+
         if response.status_code != 200:
             self.logger.info("%s status_code=%i" 
                 % (self.provider_name, response.status_code))            
@@ -659,6 +664,5 @@ def doi_from_url_string(url):
         doi = None
 
     return(doi)
-
 
 

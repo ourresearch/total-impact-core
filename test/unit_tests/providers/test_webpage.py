@@ -1,9 +1,13 @@
-from test.unit_tests.providers import common
-from test.unit_tests.providers.common import ProviderTestCase
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+ # -*- coding: utf-8 -*-  # need this line because test utf-8 strings later
 
 import os
 import collections
+
+from test.unit_tests.providers import common
+from test.unit_tests.providers.common import ProviderTestCase
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from test.utils import slow
+
 from nose.tools import assert_equals, raises
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/webpage")
@@ -31,6 +35,18 @@ class TestWebpage(ProviderTestCase):
         expected = {'h1': u'WELCOME', 'title': u'NESCent: The National Evolutionary Synthesis Center'}
         assert_equals(ret, expected)
 
+    def test_extract_biblio_russian(self):
+        #from http://www.youtube.com/watch?v=9xBmU0TPZC4
+        page = """<html><head><title>День города. Донецк 2010 - YouTube</title></head>
+                <body>
+                <h1 id="watch-headline-title">
+                День города. Донецк 2010
+                </h1>
+              </body></html>"""
+        ret = self.provider._extract_biblio(page)
+        expected = {'h1': u'День города. Донецк 2010', 'title': u"День города. Донецк 2010 - YouTube"} 
+        assert_equals(ret, expected)
+
     # override common because does not raise errors, unlike most other providers
     def test_provider_biblio_400(self):
         Provider.http_get = common.get_400
@@ -42,3 +58,4 @@ class TestWebpage(ProviderTestCase):
         Provider.http_get = common.get_500
         biblio = self.provider.biblio([self.testitem_biblio])
         assert_equals(biblio, {})
+
