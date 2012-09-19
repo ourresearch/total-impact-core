@@ -34,8 +34,7 @@ class ItemFactory():
             item = cls.build_item_for_client(item_doc, myrefsets)
         except Exception, e:
             item = None
-            logger.error("Exception %s: Unable to build item %s, %s" % (e.__repr__(), tiid, str(item)))
-            raise
+            logger.error("Exception %s: Skipping item, unable to build %s, %s" % (e.__repr__(), tiid, str(item)))
         return item
 
     @classmethod
