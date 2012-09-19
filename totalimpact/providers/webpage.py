@@ -1,5 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact import utils
+
 import lxml.html
 
 import logging
@@ -63,11 +65,13 @@ class Webpage(Provider):
     # use lxml because is html
     def _extract_biblio(self, page, id=None):
         biblio_dict = {}
+
         if not page:
             return biblio_dict
-            
-        parsed_html = lxml.html.document_fromstring(page.encode("utf-8"))
         
+        unicode_page = utils.to_unicode_or_bust(page)
+        parsed_html = lxml.html.document_fromstring(unicode_page)
+
         try:
             response = parsed_html.find(".//title").text
             if response:
