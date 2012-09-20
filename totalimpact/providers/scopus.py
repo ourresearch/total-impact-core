@@ -12,9 +12,9 @@ class Scopus(Provider):
 
     url = "http://www.info.sciverse.com/scopus/about"
     descr = "The world's largest abstract and citation database of peer-reviewed literature."
-    random_string = "".join(random.sample(string.letters, 10))
-    metrics_url_template = 'http://searchapi.scopus.com/documentSearch.url?&search="%s"&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
-    provenance_url_template = metrics_url_template
+    # template urls below because they need a freshly-minted random string
+    metrics_url_template = None
+    provenance_url_template = None
 
     static_meta_dict =  { 
         "citations": {
@@ -41,7 +41,7 @@ class Scopus(Provider):
             # from http://codereview.stackexchange.com/questions/2561/converting-jsonp-to-json-is-this-regex-correct
             page = fullpage[ fullpage.index("(")+1 : fullpage.rindex(")") ]
         except ValueError:
-            raise ProviderContentMalformedError
+            raise ProviderContentMalformedError()
 
         data = provider._load_json(page)
         try:
@@ -84,6 +84,10 @@ class Scopus(Provider):
             provider_url_template=None, # ignore this because multiple url steps
             cache_enabled=True):
 
+        random_string = "".join(random.sample(string.letters, 10))
+        metrics_url_template = 'http://searchapi.scopus.com/documentSearch.url?&search="%s"&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
+        provenance_url_template = metrics_url_template
+
         id = self.get_best_id(aliases)
         # Only lookup metrics for items with appropriate ids
         if not id:
@@ -102,7 +106,7 @@ class Scopus(Provider):
                 raise(self._get_error(response.status_code))
         page = response.text
         if not page:
-            raise ProviderContentMalformedError
+            raise ProviderContentMalformedError()
 
         metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(page)
 
