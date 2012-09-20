@@ -45,8 +45,8 @@ class Scopus(Provider):
 
         data = provider._load_json(page)
         try:
-            citations = data["OK"]["results"][0]["citedbycount"]
-        except KeyError:
+            citations = int(data["OK"]["results"][0]["citedbycount"])
+        except (KeyError, ValueError):
             # not in Scopus database
             return {}
 
