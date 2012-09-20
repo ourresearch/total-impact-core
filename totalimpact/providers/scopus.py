@@ -47,7 +47,8 @@ class Scopus(Provider):
         try:
             citations = data["OK"]["results"][0]["citedbycount"]
         except KeyError:
-            raise ProviderContentMalformedError
+            # not in Scopus database
+            return {}
 
         metrics_dict = {}
         if citations:
