@@ -147,6 +147,9 @@ def get_metric_value_lists(items):
     (ordered_fieldnames, rows) = make_csv_rows(items)
     metric_values = {}
     for metric_name in ordered_fieldnames:
+        logging.debug("ordering metric name {metric_name}".format(
+            metric_name=metric_name))
+
         if metric_name in ["tiid", "title", "doi"]:
             pass
         else:
