@@ -30,7 +30,7 @@ class TestScopus(ProviderTestCase):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         good_page = f.read()
         metrics_dict = self.provider._extract_metrics(good_page)
-        expected = {'scopus:citations': '65'}
+        expected = {'scopus:citations': 65}
         assert_equals(metrics_dict, expected)
 
     def test_provenance_url(self):
@@ -43,7 +43,7 @@ class TestScopus(ProviderTestCase):
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'scopus:citations': (u'65', u'http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=36248970413')}
+        expected = {'scopus:citations': (65, u'http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=36248970413')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
