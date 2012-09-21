@@ -33,7 +33,7 @@ PROVIDERS = [
     ("plosalm", {}),
     ("scienceseeker", {}),
     # ("researchblogging", {}), # takes too long
-    ("scopus", {}),
+    # ("scopus", {}),
     ("topsy", {}),
     ("wikipedia", {}),
 ]
