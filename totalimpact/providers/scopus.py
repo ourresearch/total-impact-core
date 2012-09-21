@@ -81,9 +81,8 @@ class Scopus(Provider):
     # default method; providers can override
     def metrics(self, 
             aliases,
-            provider_url_template=None, # ignore this because multiple url steps
+            provider_url_template=None,
             cache_enabled=True):
-
 
         id = self.get_best_id(aliases)
         # Only lookup metrics for items with appropriate ids
@@ -98,6 +97,10 @@ class Scopus(Provider):
 
         if not provider_url_template:
             provider_url_template = self.metrics_url_template
+
+        logger.debug("id = {id}".format(id=id))
+        logger.debug("provider_url_template = {provider_url_template}".format(
+            provider_url_template=provider_url_template))
 
         url = self._get_templated_url(provider_url_template, id, "metrics")
 
