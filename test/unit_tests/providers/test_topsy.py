@@ -36,13 +36,13 @@ class TestTopsy(ProviderTestCase):
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("tweets", 
             [self.testitem_aliases])
-        expected = 'http://topsy.com/"total-impact.org"?utm_source=otter'
+        expected = 'http://topsy.com/total-impact.org?utm_source=otter'
         assert_equals(provenance_url, expected)
 
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'topsy:influential_tweets': (36, 'http://topsy.com/"total-impact.org"?utm_source=otter'), 'topsy:tweets': (358, 'http://topsy.com/"total-impact.org"?utm_source=otter')}
+        expected = {'topsy:influential_tweets': (36, 'http://topsy.com/total-impact.org?utm_source=otter'), 'topsy:tweets': (358, 'http://topsy.com/total-impact.org?utm_source=otter')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]

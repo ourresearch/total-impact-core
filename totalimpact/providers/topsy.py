@@ -13,7 +13,7 @@ class Topsy(Provider):
     url = "http://www.topsy.com/"
     descr = "Real-time search for the social web, <a href='http://topsy.com'><img src='http://cdn.topsy.com/img/powered.png'/></a>"
     metrics_url_template = 'http://otter.topsy.com/stats.json?url="%s"&apikey=' + os.environ["TOPSY_KEY"]
-    provenance_url_template = 'http://topsy.com/"%s"?utm_source=otter'
+    provenance_url_template = 'http://topsy.com/%s?utm_source=otter'
 
     static_meta_dict =  {
         "tweets": {
