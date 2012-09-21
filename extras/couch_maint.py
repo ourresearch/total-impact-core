@@ -13,8 +13,11 @@ logging.basicConfig(
 
 logger = logging.getLogger("couch_maint")
   
-cloudant_db = os.getenv("CLOUDANT_DB")
-cloudant_url = os.getenv("CLOUDANT_URL")
+cloudant_db = "ti"
+cloudant_url = "https://app5109761.heroku:TuLL8oXFh4k0iAcAPnDMlSjC@app5109761.heroku.cloudant.com"
+
+#cloudant_db = os.getenv("CLOUDANT_DB")
+#cloudant_url = os.getenv("CLOUDANT_URL")
 
 couch = couchdb.Server(url=cloudant_url)
 db = couch[cloudant_db]
