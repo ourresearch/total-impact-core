@@ -244,6 +244,58 @@ def put_snaps_in_items():
     ))
 
 
+"""
+function(doc) {
+    emit([doc.type, doc._id], doc);
+}
+"""
+def ensure_all_metric_values_are_ints():
+    #except F1000 Yes's
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+    page_size = 500
+
+    start_key = ["item", "000000000"]
+    end_key = ["item", "zzzzzzzzzzzzzzzzzzzzzzzz"]
+
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
+
+    #for row in view_rows[startkey:endkey]:
+    while page.has_next:
+        for row in page:
+            row_count += 1
+            item = row.doc
+            save_me = False
+            try:
+                metric_names = item["metrics"].keys()
+                for metric_name in metric_names:
+                    raw = item["metrics"][metric_name]["values"]["raw"]
+                    if "scopus:citation" in metric_name:
+                        logger.info(item["metrics"][metric_name])
+                    if isinstance(raw, basestring):
+                        if raw != "Yes":
+                            logger.info("casting to int")
+                            #logger.info(item)
+                            item["metrics"][metric_name]["values"]["raw"] = int(raw)
+                            raw = int(raw)
+                            save_me=True
+                    if not raw:
+                        logger.info("removing a zero")
+                        #logger.info(item)
+                        del item["metrics"][metric_name]
+                        save_me=True
+                if save_me:
+                    logger.info("saving")
+                    db.save(item)
+                else:
+                    #logger.info("%i." %row_count)
+                    pass
+            except KeyError:
+                pass
+        logger.info("%i. getting new page" %row_count)
+        page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
 
 
 if (cloudant_db == "ti"):
@@ -254,7 +306,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    put_snaps_in_items()
+    ensure_all_metric_values_are_ints()
 else:
     print "nevermind, then."
 
