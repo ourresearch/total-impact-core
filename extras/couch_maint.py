@@ -12,7 +12,11 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("couch_maint")
-  
+ 
+# hardcode it to production db 
+#cloudant_db = "ti"
+#cloudant_url = "https://app5109761.heroku:TuLL8oXFh4k0iAcAPnDMlSjC@app5109761.heroku.cloudant.com"
+
 cloudant_db = os.getenv("CLOUDANT_DB")
 cloudant_url = os.getenv("CLOUDANT_URL")
 
@@ -202,7 +206,7 @@ def put_snaps_in_items():
     page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
 
     #for row in view_rows[startkey:endkey]:
-    while page.has_next:
+    while page:
         for row in page:
             if not "metric_snap" in row.key[0]:
                 #print "not a metric_snap so skipping", row.key
@@ -237,13 +241,70 @@ def put_snaps_in_items():
                 logger.warning("now on snap row %i, couldn't get item %s for snap %s" % 
                     (row_count, snap["tiid"], snap["_id"]))
 
-        page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
 
     logger.info("updated {rows} rows in {elapsed} seconds".format(
         rows=row_count, elapsed=round(time.time() - starttime)
     ))
 
 
+"""
+function(doc) {
+    emit([doc.type, doc._id], doc);
+}
+"""
+def ensure_all_metric_values_are_ints():
+    #except F1000 Yes's
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+    page_size = 500
+
+    start_key = ["item", "000000000"]
+    end_key = ["item", "zzzzzzzzzzzzzzzzzzzzzzzz"]
+
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
+
+    while page:
+        for row in page:
+            row_count += 1
+            item = row.doc
+            save_me = False
+            try:
+                metric_names = item["metrics"].keys()
+                for metric_name in metric_names:
+                    raw = item["metrics"][metric_name]["values"]["raw"]
+                    if "scopus:citations" in metric_name:
+                        logger.info(item["metrics"][metric_name])
+                    if isinstance(raw, basestring):
+                        if raw != "Yes":
+                            logger.info("casting to int")
+                            #logger.info(item)
+                            item["metrics"][metric_name]["values"]["raw"] = int(raw)
+                            raw = int(raw)
+                            save_me=True
+                    if not raw:
+                        logger.info("removing a zero")
+                        #logger.info(item)
+                        del item["metrics"][metric_name]
+                        save_me=True
+                if save_me:
+                    logger.info("saving")
+                    db.save(item)
+                else:
+                    #logger.info("%i." %row_count)
+                    pass
+            except KeyError:
+                pass
+        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
 
 
 if (cloudant_db == "ti"):
@@ -254,7 +315,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    put_snaps_in_items()
+    ensure_all_metric_values_are_ints()
 else:
     print "nevermind, then."
 
