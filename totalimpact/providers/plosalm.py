@@ -174,7 +174,8 @@ class Plosalm(Provider):
                     normalized_metric_name = "pmc_" + self._normalize_source(metric_name)
                     if (normalized_metric_name in self.static_meta_dict.keys()):
                         total = self._aggregate_monthly_stats(metric_name, section)
-                        metrics_dict[normalized_metric_name] = total
+                        if total:
+                            metrics_dict[normalized_metric_name] = total
             elif (self._normalize_source(source) in self.static_meta_dict.keys()):
                 total = provider._lookup_json(section, ["count"])
                 if total:
