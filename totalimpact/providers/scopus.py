@@ -90,8 +90,8 @@ class Scopus(Provider):
             #self.logger.debug("%s not checking metrics, no relevant alias" % (self.provider_name))
             return {}
 
-        # use the doi without punctuation, so that can cache
-        random_string = "".join(ch for ch in id if ch in string.letters)
+        # pick a new random string so don't time out.  Unfort, url now can't cache.
+        random_string = "".join(random.sample(string.letters, 10))
         self.metrics_url_template = 'http://searchapi.scopus.com/documentSearch.url?&search="%s"&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
         self.provenance_url_template = self.metrics_url_template
 
