@@ -206,7 +206,7 @@ def put_snaps_in_items():
     page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
 
     #for row in view_rows[startkey:endkey]:
-    while page.has_next:
+    while page:
         for row in page:
             if not "metric_snap" in row.key[0]:
                 #print "not a metric_snap so skipping", row.key
@@ -241,7 +241,10 @@ def put_snaps_in_items():
                 logger.warning("now on snap row %i, couldn't get item %s for snap %s" % 
                     (row_count, snap["tiid"], snap["_id"]))
 
-        page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
 
     logger.info("updated {rows} rows in {elapsed} seconds".format(
         rows=row_count, elapsed=round(time.time() - starttime)
@@ -266,8 +269,7 @@ def ensure_all_metric_values_are_ints():
     from couch_paginator import CouchPaginator
     page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
 
-    #for row in view_rows[startkey:endkey]:
-    while page
+    while page:
         for row in page:
             row_count += 1
             item = row.doc
