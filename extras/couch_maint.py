@@ -12,12 +12,13 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("couch_maint")
-  
-cloudant_db = "ti"
-cloudant_url = "https://app5109761.heroku:TuLL8oXFh4k0iAcAPnDMlSjC@app5109761.heroku.cloudant.com"
+ 
+# hardcode it to production db 
+#cloudant_db = "ti"
+#cloudant_url = "https://app5109761.heroku:TuLL8oXFh4k0iAcAPnDMlSjC@app5109761.heroku.cloudant.com"
 
-#cloudant_db = os.getenv("CLOUDANT_DB")
-#cloudant_url = os.getenv("CLOUDANT_URL")
+cloudant_db = os.getenv("CLOUDANT_DB")
+cloudant_url = os.getenv("CLOUDANT_URL")
 
 couch = couchdb.Server(url=cloudant_url)
 db = couch[cloudant_db]
@@ -266,7 +267,7 @@ def ensure_all_metric_values_are_ints():
     page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
 
     #for row in view_rows[startkey:endkey]:
-    while page.has_next:
+    while page
         for row in page:
             row_count += 1
             item = row.doc
@@ -275,7 +276,7 @@ def ensure_all_metric_values_are_ints():
                 metric_names = item["metrics"].keys()
                 for metric_name in metric_names:
                     raw = item["metrics"][metric_name]["values"]["raw"]
-                    if "scopus:citation" in metric_name:
+                    if "scopus:citations" in metric_name:
                         logger.info(item["metrics"][metric_name])
                     if isinstance(raw, basestring):
                         if raw != "Yes":
@@ -297,8 +298,11 @@ def ensure_all_metric_values_are_ints():
                     pass
             except KeyError:
                 pass
-        logger.info("%i. getting new page" %row_count)
-        page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
 
 
 if (cloudant_db == "ti"):
