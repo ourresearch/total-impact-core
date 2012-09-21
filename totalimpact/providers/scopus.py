@@ -104,7 +104,7 @@ class Scopus(Provider):
 
         url = self._get_templated_url(provider_url_template, id, "metrics")
 
-        response = self.http_get(url)
+        response = self.http_get(url, timeout=30)
         if response.status_code != 200:
             if response.status_code == 404:
                 return None
