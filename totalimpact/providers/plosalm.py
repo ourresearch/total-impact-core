@@ -13,7 +13,7 @@ class Plosalm(Provider):
     url = "http://www.plos.org/"
     descr = "PLoS article level metrics."
     metrics_url_template = "http://alm.plos.org/articles/%s.json?history=1&api_key=" + os.environ["PLOS_KEY"] + "&events=1"
-    provenance_url_template = metrics_url_template
+    provenance_url_template = "http://dx.doi.org/%s"
 
     PLOS_ICON = "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg"
     PMC_ICON = "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif"
@@ -106,33 +106,6 @@ class Plosalm(Provider):
         (namespace, nid) = alias
         relevant = (("doi" == namespace) and ("10.1371/" in nid))
         return(relevant)
-
-    def provenance_url(self, metric_name, aliases, cache_enabled=True):
-        id = self.get_best_id(aliases)
-        logger.debug("%20s getting provenance for %s %s" % (self.provider_name, id, metric_name))
-        if not id:
-            return None
-
-        url = self.provenance_url_template % id
-        response = self.http_get(url, cache_enabled=cache_enabled)
-        if response.status_code != 200:
-            if response.status_code == 404:
-                return {}
-            else:
-                raise(self._get_error(response.status_code))
-        page = response.text
-        data = provider._load_json(page)
-
-        response = "http://www.plosreports.org/services/rest?method=usage.stats&doi=%s" % id
-        for source in data["article"]["source"]:
-            if self._normalize_source(source["source"]) in metric_name:
-                try:
-                    response = source["public_url"]
-                except KeyError:
-                    # this one doesn't have a provenance url, use default
-                    pass
-        return(response)
-
 
     def _normalize_source(self, keyname):
         return(keyname.lower().replace(" ", "_"))
