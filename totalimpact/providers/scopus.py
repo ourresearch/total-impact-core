@@ -81,9 +81,8 @@ class Scopus(Provider):
     # default method; providers can override
     def metrics(self, 
             aliases,
-            provider_url_template=None, # ignore this because multiple url steps
+            provider_url_template=None,
             cache_enabled=True):
-
 
         id = self.get_best_id(aliases)
         # Only lookup metrics for items with appropriate ids
@@ -91,17 +90,21 @@ class Scopus(Provider):
             #self.logger.debug("%s not checking metrics, no relevant alias" % (self.provider_name))
             return {}
 
-        # use the doi without punctuation, so that can cache
-        random_string = "".join(ch for ch in id if ch in string.letters)
+        # pick a new random string so don't time out.  Unfort, url now can't cache.
+        random_string = "".join(random.sample(string.letters, 10))
         self.metrics_url_template = 'http://searchapi.scopus.com/documentSearch.url?&search="%s"&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
         self.provenance_url_template = self.metrics_url_template
 
         if not provider_url_template:
             provider_url_template = self.metrics_url_template
 
+        logger.debug("id = {id}".format(id=id))
+        logger.debug("provider_url_template = {provider_url_template}".format(
+            provider_url_template=provider_url_template))
+
         url = self._get_templated_url(provider_url_template, id, "metrics")
 
-        response = self.http_get(url)
+        response = self.http_get(url, timeout=30)
         if response.status_code != 200:
             if response.status_code == 404:
                 return None

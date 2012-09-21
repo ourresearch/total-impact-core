@@ -107,6 +107,22 @@ class ItemFactory():
 
 
     @classmethod
+    def clean_for_export(cls, item, supplied_key=None, secret_key=None):
+        if supplied_key:
+            if supplied_key == secret_key:
+                return(item)
+
+        # if still here, then need to remove sensitive data
+        cleaned_item = copy.deepcopy(item)
+        metrics = cleaned_item.setdefault("metrics", {})
+        metric_names = metrics.keys()
+        for metric_name in metric_names:
+            if "scopus:" in metric_name:
+                del cleaned_item["metrics"][metric_name]
+        return cleaned_item
+
+
+    @classmethod
     def decide_genre(self, alias_dict):
         '''Uses available aliases to decide the item's genre'''
         if "doi" in alias_dict:

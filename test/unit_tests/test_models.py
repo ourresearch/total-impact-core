@@ -246,6 +246,33 @@ class TestItemFactory():
         response = models.ItemFactory.is_currently_updating("tiidthatisdone", self.r)
         assert_equals(response, False)
 
+    def test_clean_for_export_no_key(self):
+        self.d.save(ITEM_DATA)
+        item = models.ItemFactory.get_item("test", self.myrefsets, self.d)
+        item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
+        response = models.ItemFactory.clean_for_export(item)
+        print response["metrics"].keys()
+        expected = ['bar:views', 'wikipedia:mentions']
+        assert_equals(response["metrics"].keys(), expected)
+
+    def test_clean_for_export_given_correct_secret_key(self):
+        self.d.save(ITEM_DATA)
+        item = models.ItemFactory.get_item("test", self.myrefsets, self.d)
+        item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
+        response = models.ItemFactory.clean_for_export(item, "SECRET", "SECRET")
+        print response["metrics"].keys()
+        expected = ['bar:views', 'wikipedia:mentions', 'scopus:citations']
+        assert_equals(response["metrics"].keys(), expected)
+
+    def test_clean_for_export_given_wrong_secret_key(self):
+        self.d.save(ITEM_DATA)
+        item = models.ItemFactory.get_item("test", self.myrefsets, self.d)
+        item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
+        response = models.ItemFactory.clean_for_export(item, "WRONG", "SECRET")
+        print response["metrics"].keys()
+        expected = ['bar:views', 'wikipedia:mentions']
+        assert_equals(response["metrics"].keys(), expected)
+
 
 class TestMemberItems():
 
@@ -281,7 +308,6 @@ class TestMemberItems():
         assert_equals(status["complete"], 4 )
 
     def test_get_sync(self):
-
         github.Github.member_items = lambda self, x: \
                 [("github", name) for name in ["project1", "project2", "project3"]]
         synch_mi = models.MemberItems(github.Github(), self.r)
