@@ -89,13 +89,24 @@ class Test_Provider():
 
 class TestProviderFactory():
 
+    TEST_PROVIDER_CONFIG = [
+        ("pubmed", { "workers":1 }),
+        ("wikipedia", {"workers": 3}),
+        ("mendeley", {"workers": 3}),
+    ]
+
     def test_get_all_static_meta(self):
-        sm = ProviderFactory.get_all_static_meta()
-        assert sm["delicious:bookmarks"]["description"], sm["delicious:bookmarks"]
+        sm = ProviderFactory.get_all_static_meta(self.TEST_PROVIDER_CONFIG)
+        expected = 'The number of citations by papers in PubMed Central'
+        assert_equals(sm["pubmed:pmc_citations"]["description"], expected)
+
+    def test_get_all_metric_names(self):
+        response = ProviderFactory.get_all_metric_names(self.TEST_PROVIDER_CONFIG)
+        expected = ['wikipedia:mentions', 'mendeley:country', 'pubmed:pmc_citations_reviews', 'mendeley:discipline', 'pubmed:f1000', 'mendeley:career_stage', 'pubmed:pmc_citations_editorials', 'mendeley:readers', 'pubmed:pmc_citations', 'mendeley:groups']
+        assert_equals(response, expected)
 
     def test_get_all_metadata(self):
-        md = ProviderFactory.get_all_metadata()
-        print md["delicious"]
-        assert md["delicious"]['metrics']["bookmarks"]["description"]
-        assert_equals(md["delicious"]['url'], "http://www.delicious.com")
+        md = ProviderFactory.get_all_metadata(self.TEST_PROVIDER_CONFIG)
+        print md["pubmed"]
+        assert_equals(md["pubmed"]['url'], 'http://pubmed.gov')
 

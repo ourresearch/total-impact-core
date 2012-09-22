@@ -4,6 +4,7 @@ import csv, StringIO, json
 from collections import OrderedDict, defaultdict
 
 from totalimpact.models import ItemFactory
+from totalimpact.providers.provider import ProviderFactory
 
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
@@ -146,15 +147,18 @@ def make_csv_stream(items):
 def get_metric_value_lists(items):
     (ordered_fieldnames, rows) = make_csv_rows(items)
     metric_values = {}
-    for metric_name in ordered_fieldnames:
-        if metric_name in ["tiid", "title", "doi"]:
-            pass
+    for metric_name in ProviderFactory.get_all_metric_names():
+        if metric_name in ordered_fieldnames:
+            if metric_name in ["tiid", "title", "doi"]:
+                pass
+            else:
+                values = [row[metric_name] for row in rows]
+                values = [value if value else 0 for value in values]
+                # treat "Yes" as 1 for normalizaations
+                values = [1 if value=="Yes" else value for value in values]
+                metric_values[metric_name] = sorted(values, reverse=True)
         else:
-            values = [row[metric_name] for row in rows]
-            values = [value if value else 0 for value in values]
-            # treat "Yes" as 1 for normalizaations
-            values = [1 if value=="Yes" else value for value in values]
-            metric_values[metric_name] = sorted(values, reverse=True)
+            metric_values[metric_name] = [0 for row in rows]
     return metric_values
 
 def get_metric_values_of_reference_sets(items):
@@ -197,6 +201,20 @@ def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_
                 "estimate_upper": est_highest,
                 "estimate_lower": est_lowest
                 }
+
+        # add a value that is one larger than the biggest value, hack the lower 95 bound to be a bit higher
+        # than the 99th percentile
+        largest_metric_value = max(matches[metric_name].keys())
+        onehundredth_percentile_value = largest_metric_value + 1
+        final_entry_in_conf_table = confidence_interval_table[-1]
+        final_entry_CI95_lower = final_entry_in_conf_table[0]
+        response[metric_name][onehundredth_percentile_value] = {
+                "CI95_lower": final_entry_CI95_lower+1,
+                "CI95_upper": 100,
+                "estimate_upper": 100,
+                "estimate_lower": 100
+                }
+
     return response
 
 
