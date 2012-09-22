@@ -201,7 +201,6 @@ class ItemFactory():
         if not myrefsets:
             return {}
 
-        # for now, only normalize articles
         if genre not in myrefsets.keys():
             #logger.info("Genre {genre} not in refsets so give up".format(
             #    genre=genre))
