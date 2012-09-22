@@ -256,7 +256,8 @@ def item(tiid, format=None):
         response_code = 200
         item["currently_updating"] = False
 
-    resp = make_response(json.dumps(item, sort_keys=True, indent=4),
+    clean_item = ItemFactory.clean_for_export(item)
+    resp = make_response(json.dumps(clean_item, sort_keys=True, indent=4),
                          response_code)
     resp.mimetype = "application/json"
 
@@ -430,8 +431,9 @@ def collection_get(cid='', format="json"):
             response_code = 200
 
         if format == "csv":
-            items = coll_with_items["items"]
-            csv = collection.make_csv_stream(items)
+            # remove scopus before exporting to csv, so don't add magic keep-scopus keys to clean method
+            clean_items = [ItemFactory.clean_for_export(item) for item in coll_with_items["items"]]
+            csv = collection.make_csv_stream(clean_items)
             resp = make_response(csv, response_code)
             resp.mimetype = "text/csv;charset=UTF-8"
             resp.headers.add("Content-Disposition",
@@ -439,6 +441,10 @@ def collection_get(cid='', format="json"):
             resp.headers.add("Content-Encoding",
                              "UTF-8")
         else:
+            api_key = request.args.get("api_key", None)
+            clean_if_necessary_items = [ItemFactory.clean_for_export(item, api_key, os.getenv("API_KEY")) 
+                for item in coll_with_items["items"]]
+            coll_with_items["items"] = clean_if_necessary_items
             resp = make_response(json.dumps(coll_with_items, sort_keys=True, indent=4),
                                  response_code)
             resp.mimetype = "application/json"
