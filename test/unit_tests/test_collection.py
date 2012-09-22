@@ -81,7 +81,8 @@ class TestCollection():
 
     def test_get_metric_value_lists(self):
         response = collection.get_metric_value_lists(API_ITEMS_JSON)
-        expected = {u'plosalm:pmc_abstract': [70, 37, 29, 0], u'dryad:package_views': [537, 0, 0, 0], u'plosalm:pmc_unique-ip': [580, 495, 251, 0], u'wikipedia:mentions': [1, 0, 0, 0], u'plosalm:html_views': [11521, 3361, 2075, 0], u'plosalm:pmc_supp-data': [41, 6, 0, 0], u'plosalm:pdf_views': [1112, 1097, 484, 0], u'plosalm:scopus': [19, 19, 11, 0], u'dryad:most_downloaded_file': [70, 0, 0, 0], u'plosalm:pmc_pdf': [285, 149, 113, 0], u'plosalm:pubmed_central': [12, 9, 2, 0], u'plosalm:pmc_figure': [54, 39, 13, 0], u'mendeley:readers': [57, 52, 13, 0], u'dryad:total_downloads': [114, 0, 0, 0], u'plosalm:pmc_full-text': [624, 434, 232, 0], u'mendeley:groups': [4, 4, 1, 0], u'plosalm:crossref': [16, 13, 7, 0]}
+        print response
+        expected = {'plosalm:pmc_abstract': [70, 37, 29, 0], 'dryad:package_views': [537, 0, 0, 0], 'plosalm:pmc_supp-data': [41, 6, 0, 0], 'plosalm:pmc_unique-ip': [580, 495, 251, 0], 'plosalm:pmc_pdf': [285, 149, 113, 0], 'facebook:shares': [0, 0, 0, 0], 'mendeley:country': [0, 0, 0, 0], 'mendeley:career_stage': [0, 0, 0, 0], 'mendeley:readers': [57, 52, 13, 0], 'dryad:total_downloads': [114, 0, 0, 0], 'mendeley:groups': [4, 4, 1, 0], 'topsy:influential_tweets': [0, 0, 0, 0], 'topsy:tweets': [0, 0, 0, 0], 'github:forks': [0, 0, 0, 0], 'scienceseeker:blog_posts': [0, 0, 0, 0], 'pubmed:pmc_citations_reviews': [0, 0, 0, 0], 'pubmed:pmc_citations_editorials': [0, 0, 0, 0], 'pubmed:pmc_citations': [0, 0, 0, 0], 'plosalm:pubmed_central': [12, 9, 2, 0], 'plosalm:scopus': [19, 19, 11, 0], 'facebook:comments': [0, 0, 0, 0], 'plosalm:html_views': [11521, 3361, 2075, 0], 'delicious:bookmarks': [0, 0, 0, 0], 'dryad:most_downloaded_file': [70, 0, 0, 0], 'citeulike:bookmarks': [0, 0, 0, 0], 'pubmed:f1000': [0, 0, 0, 0], 'plosalm:pmc_figure': [54, 39, 13, 0], 'facebook:likes': [0, 0, 0, 0], 'github:watchers': [0, 0, 0, 0], 'plosalm:crossref': [16, 13, 7, 0], 'facebook:clicks': [0, 0, 0, 0], 'wikipedia:mentions': [1, 0, 0, 0], 'slideshare:downloads': [0, 0, 0, 0], 'plosalm:pdf_views': [1112, 1097, 484, 0], 'slideshare:favorites': [0, 0, 0, 0], 'plosalm:pmc_full-text': [624, 434, 232, 0], 'slideshare:views': [0, 0, 0, 0], 'mendeley:discipline': [0, 0, 0, 0], 'slideshare:comments': [0, 0, 0, 0]}
         assert_equals(response, expected)
 
     def test_get_collection_with_items_for_client(self):
@@ -113,16 +114,59 @@ class TestCollection():
 
     def test_get_metric_values_of_reference_sets(self):
         response = collection.get_metric_values_of_reference_sets(API_ITEMS_JSON)
-        expected = {u'dryad:package_views': [537, 0, 0, 0], u'wikipedia:mentions': [1, 0, 0, 0], u'dryad:most_downloaded_file': [70, 0, 0, 0], u'mendeley:readers': [57, 52, 13, 0], u'dryad:total_downloads': [114, 0, 0, 0], u'mendeley:groups': [4, 4, 1, 0]}
+        print response
+        expected = {'dryad:package_views': [537, 0, 0, 0], 'facebook:shares': [0, 0, 0, 0], 'mendeley:country': [0, 0, 0, 0], 'mendeley:career_stage': [0, 0, 0, 0], 'mendeley:readers': [57, 52, 13, 0], 'dryad:total_downloads': [114, 0, 0, 0], 'mendeley:groups': [4, 4, 1, 0], 'topsy:influential_tweets': [0, 0, 0, 0], 'topsy:tweets': [0, 0, 0, 0], 'github:forks': [0, 0, 0, 0], 'scienceseeker:blog_posts': [0, 0, 0, 0], 'pubmed:pmc_citations_reviews': [0, 0, 0, 0], 'pubmed:pmc_citations_editorials': [0, 0, 0, 0], 'pubmed:pmc_citations': [0, 0, 0, 0], 'facebook:comments': [0, 0, 0, 0], 'delicious:bookmarks': [0, 0, 0, 0], 'dryad:most_downloaded_file': [70, 0, 0, 0], 'citeulike:bookmarks': [0, 0, 0, 0], 'pubmed:f1000': [0, 0, 0, 0], 'facebook:likes': [0, 0, 0, 0], 'github:watchers': [0, 0, 0, 0], 'facebook:clicks': [0, 0, 0, 0], 'wikipedia:mentions': [1, 0, 0, 0], 'slideshare:downloads': [0, 0, 0, 0], 'slideshare:favorites': [0, 0, 0, 0], 'slideshare:views': [0, 0, 0, 0], 'mendeley:discipline': [0, 0, 0, 0], 'slideshare:comments': [0, 0, 0, 0]}
         assert_equals(response, expected)
 
     def test_get_normalization_confidence_interval_ranges(self):
         input = {"facebook:shares": [1, 0, 0, 0],
-            "mendeley:readers": [10, 9, 8, 7]}
-        table = [(10, 30), (10, 60), (40, 80), (50, 90), (60, 90)]
+            "mendeley:readers": [10, 9, 8, 7],
+            'mendeley:groups': [0, 0, 0, 0]
+            }
+        table = [(0, 30), (10, 60), (40, 80), (50, 90), (60, 97)]
         response = collection.get_normalization_confidence_interval_ranges(input, table)
         print response
-        expected = {'facebook:shares': {0: {'CI95_upper': 80, 'estimate_lower': 0, 'CI95_lower': 10, 'estimate_upper': 50}, 1: {'CI95_upper': 90, 'estimate_lower': 75, 'CI95_lower': 50, 'estimate_upper': 75}}, 'mendeley:readers': {8: {'CI95_upper': 60, 'estimate_lower': 25, 'CI95_lower': 10, 'estimate_upper': 25}, 9: {'CI95_upper': 80, 'estimate_lower': 50, 'CI95_lower': 40, 'estimate_upper': 50}, 10: {'CI95_upper': 90, 'estimate_lower': 75, 'CI95_lower': 50, 'estimate_upper': 75}, 7: {'CI95_upper': 30, 'estimate_lower': 0, 'CI95_lower': 10, 'estimate_upper': 0}}}
+        expected = {'facebook:shares': {0: {'CI95_lower': 0,
+                                       'CI95_upper': 80,
+                                       'estimate_lower': 0,
+                                       'estimate_upper': 50},
+                                      1: {'CI95_lower': 50,
+                                       'CI95_upper': 90,
+                                       'estimate_lower': 75,
+                                       'estimate_upper': 75},
+                                      2: {'CI95_upper': 100,
+                                       'CI_lower': 61,
+                                       'estimate_lower': 100,
+                                       'estimate_upper': 100}},
+                    'mendeley:groups': {0: {'CI95_lower': 0,
+                                       'CI95_upper': 90,
+                                       'estimate_lower': 0,
+                                       'estimate_upper': 75},
+                                      1: {'CI95_upper': 100,
+                                       'CI_lower': 61,
+                                       'estimate_lower': 100,
+                                       'estimate_upper': 100}},
+                    'mendeley:readers': {7: {'CI95_lower': 0,
+                                       'CI95_upper': 30,
+                                       'estimate_lower': 0,
+                                       'estimate_upper': 0},
+                                      8: {'CI95_lower': 10,
+                                       'CI95_upper': 60,
+                                       'estimate_lower': 25,
+                                       'estimate_upper': 25},
+                                      9: {'CI95_lower': 40,
+                                       'CI95_upper': 80,
+                                       'estimate_lower': 50,
+                                       'estimate_upper': 50},
+                                      10: {'CI95_lower': 50,
+                                       'CI95_upper': 90,
+                                       'estimate_lower': 75,
+                                       'estimate_upper': 75},
+                                      11: {'CI95_upper': 100,
+                                       'CI_lower': 61,
+                                       'estimate_lower': 100,
+                                       'estimate_upper': 100}}}
+
         assert_equals(response, expected)
 
     def test_calc_table_internals(self):
@@ -149,6 +193,7 @@ class TestCollection():
         response = collection.calc_confidence_interval_table(9, 0.95, [10])
         assert_equals(response["range_sum"][10], 0.9916689060000002)
         assert_equals(response["limits"][10], (0,4))
+
 
     def test_calc_table(self):
         response = collection.calc_confidence_interval_table(9, 0.95, [i*10 for i in range(10)])

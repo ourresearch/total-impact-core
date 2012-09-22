@@ -67,6 +67,12 @@ class ProviderFactory(object):
         return(all_static_meta)
 
     @classmethod
+    def get_all_metric_names(cls, config_providers=default_settings.PROVIDERS):
+        all_static_meta = cls.get_all_static_meta(config_providers)
+        metric_names = all_static_meta.keys()
+        return(metric_names)
+
+    @classmethod
     def get_all_metadata(cls, config_providers=default_settings.PROVIDERS):
         ret = {}
         providers = cls.get_providers(config_providers)

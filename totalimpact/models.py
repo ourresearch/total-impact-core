@@ -203,8 +203,8 @@ class ItemFactory():
 
         # for now, only normalize articles
         if genre not in myrefsets.keys():
-            logger.info("Genre {genre} not in refsets so give up".format(
-                genre=genre))
+            #logger.info("Genre {genre} not in refsets so give up".format(
+            #    genre=genre))
             return {}
 
         # treat the f1000 "Yes" as a 1 for normalization
