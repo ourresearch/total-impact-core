@@ -233,8 +233,8 @@ def build_all_reference_lookups(myredis, mydao):
 
     res = mydao.db.view("reference-sets/reference-sets", descending=True, include_docs=False, limits=100)
     logging.info("Number rows = " + str(len(res.rows)))
-    reference_lookup_dict = {"article": defaultdict(dict)}
-    reference_histogram_dict = {"article": defaultdict(dict)}
+    reference_lookup_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict)}
+    reference_histogram_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict)}
     for row in res.rows:
         try:
             (cid, title) = row.key
