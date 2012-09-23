@@ -504,7 +504,13 @@ def collection_update(cid=""):
         )
 
         item_doc = mydao.get(tiid)
-        myredis.add_to_alias_queue(item_doc["_id"], item_doc["aliases"])
+        try:
+            myredis.add_to_alias_queue(item_doc["_id"], item_doc["aliases"])
+        except (KeyError, TypeError):
+            logger.debug("couldn't get item_doc for {tiid}. Skipping its update".format(
+                tiid=tiid))
+            pass
+
 
     resp = make_response("true", 200)
     resp.mimetype = "application/json"
