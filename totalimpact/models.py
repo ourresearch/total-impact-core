@@ -18,8 +18,8 @@ class NotAuthenticatedError(Exception):
 
 
 def largest_value_that_is_less_than_or_equal_to(target, collection):
-    collection_as_numbers = [int(i) for i in collection]
-    return max(i for i in collection_as_numbers if (i<=target))
+    collection_as_numbers = [(int(i), i) for i in collection if int(i) <= target]
+    return max(collection_as_numbers)[1]
 
 class ItemFactory():
 
@@ -68,6 +68,7 @@ class ItemFactory():
                 # add normalization values
                 raw = metrics[metric_name]["values"]["raw"]
                 normalized_values = cls.get_normalized_values(item["biblio"]['genre'], year, metric_name, raw, myrefsets)
+
                 metrics[metric_name]["values"].update(normalized_values)
 
         return item
@@ -214,11 +215,11 @@ class ItemFactory():
         for refsetname in myrefsets[genre]:
             # year is a number
             try:
-                fencepost_values = myrefsets[genre][refsetname][year][metric_name].keys()
+                fencepost_values = myrefsets[genre][refsetname][int(year)][metric_name].keys()
                 myclosest = largest_value_that_is_less_than_or_equal_to(value, fencepost_values)
-                response[refsetname] = myrefsets[genre][refsetname][year][metric_name][myclosest]
+                response[refsetname] = myrefsets[genre][refsetname][int(year)][metric_name][myclosest]
             except KeyError:
-                #logger.info("No good lookup in %s %s for %s" %(refsetname, year, metric_name))
+                logger.info("No good lookup in %s %s %s for %s" %(genre, refsetname, year, metric_name))
                 pass
                 
         return response
