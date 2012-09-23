@@ -34,13 +34,6 @@ class Dryad(Provider):
             "description": "Dryad total downloads: combined number of downloads of the data package and data files",
             "icon": "http:\/\/datadryad.org\/favicon.ico",
         },
-        "most_downloaded_file":{
-            "display_name": "most downloaded file",
-            "provider": "Dryad",
-            "provider_url": "http:\/\/www.datadryad.org\/",
-            "description": "Dryad most downloaded file: number of downloads of the most commonly downloaded data package component",
-            "icon": "http:\/\/datadryad.org\/favicon.ico",
-        }
     }
         
     DRYAD_DOI_PATTERN = re.compile(r"(10\.5061/.*)")
@@ -150,14 +143,12 @@ class Dryad(Provider):
         try:
             downloads = [int(download_match.group("downloads")) for download_match in download_matches]
             total_downloads = sum(downloads)
-            max_downloads = max(downloads)
         except (ValueError, AttributeError):
             raise ProviderContentMalformedError("Content does not contain expected text")            
 
         metrics_dict = {
             "dryad:package_views": int(view_package),
             "dryad:total_downloads": int(total_downloads),
-            "dryad:most_downloaded_file": int(max_downloads)
         }
 
         return metrics_dict

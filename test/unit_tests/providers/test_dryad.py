@@ -66,8 +66,7 @@ class TestDryad(ProviderTestCase):
     def test_extract_stats(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         metrics_dict = self.provider._extract_metrics(f.read())
-        assert len(metrics_dict) == 3, ret
-        assert_equals(metrics_dict['dryad:most_downloaded_file'], 63)
+        assert_equals(len(metrics_dict), 2)
         assert_equals(metrics_dict['dryad:package_views'], 149)
         assert_equals(metrics_dict['dryad:total_downloads'], 169)
 
@@ -81,8 +80,7 @@ class TestDryad(ProviderTestCase):
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
         expected = {'dryad:package_views': (361, 'http://dx.doi.org/10.5061/dryad.7898'), 
-            'dryad:total_downloads': (176, 'http://dx.doi.org/10.5061/dryad.7898'), 
-            'dryad:most_downloaded_file': (65, 'http://dx.doi.org/10.5061/dryad.7898')}
+            'dryad:total_downloads': (176, 'http://dx.doi.org/10.5061/dryad.7898')}
         print metrics_dict            
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
