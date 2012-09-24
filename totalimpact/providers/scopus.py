@@ -103,8 +103,9 @@ class Scopus(Provider):
             provider_url_template=provider_url_template))
 
         url = self._get_templated_url(provider_url_template, id, "metrics")
-        print url
         page = self._get_page(url)
+        if "Result set was empty" in page:
+            return None
         relevant_record = self._get_relevant_record(page, id)
         if not relevant_record:
             data = self._get_json(page, id)
@@ -114,17 +115,17 @@ class Scopus(Provider):
                 return None            
             url = "{previous_url}&offset={last_record}".format(
                 previous_url=url, last_record=(int(number_results)-1))
-            print url
             page = self._get_page(url)
             relevant_record = self._get_relevant_record(page, id)
             if not relevant_record:
+                logging.warning("not empty result set, yet couldn't find a page with doi {id}".format(id=id))
                 return None
         return page
 
     def _get_metrics_and_drilldown_from_metrics_page(self, provider_url_template, id):
         page = self._get_page_with_doi(provider_url_template, id)
         if not page:
-            logging.warning("couldn't find a page with doi {id}".format(id=id))
+            logging.info("no scopus page with doi {id}".format(id=id))
             return {}
         metrics_dict = self._extract_metrics(page, id=id)
         metrics_and_drilldown = {}
