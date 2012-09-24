@@ -29,14 +29,14 @@ class TestScopus(ProviderTestCase):
     def test_extract_metrics_success(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         good_page = f.read()
-        metrics_dict = self.provider._extract_metrics(good_page)
+        metrics_dict = self.provider._extract_metrics(good_page, id=TEST_ID)
         expected = {'scopus:citations': 65}
         assert_equals(metrics_dict, expected)
 
     def test_provenance_url(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         good_page = f.read()
-        provenance_url = self.provider._extract_provenance_url(good_page)
+        provenance_url = self.provider._extract_provenance_url(good_page, id=TEST_ID)
         expected = "http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=36248970413"
         assert_equals(provenance_url, expected)
 
@@ -49,4 +49,12 @@ class TestScopus(ProviderTestCase):
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
+    @http
+    def test_metrics2(self):
+        metrics_dict = self.provider.metrics([("doi", "10.1371/journal.pbio.0040286")])
+        expected = {'scopus:citations': (106, u'http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=34250706218')}
+        print metrics_dict
+        for key in expected:
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
