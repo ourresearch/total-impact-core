@@ -219,7 +219,7 @@ class ItemFactory():
                 myclosest = largest_value_that_is_less_than_or_equal_to(value, fencepost_values)
                 response[refsetname] = myrefsets[genre][refsetname][int(year)][metric_name][myclosest]
             except KeyError:
-                logger.info("No good lookup in %s %s %s for %s" %(genre, refsetname, year, metric_name))
+                #logger.info("No good lookup in %s %s %s for %s" %(genre, refsetname, year, metric_name))
                 pass
                 
         return response

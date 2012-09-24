@@ -35,7 +35,7 @@ class Scopus(Provider):
         return("doi" == namespace)
 
 
-    def _extract_metrics(self, fullpage, status_code=200, id=None):
+    def _get_json(self, fullpage, id):
         try:
             # extract json from inside the first and last parens
             # from http://codereview.stackexchange.com/questions/2561/converting-jsonp-to-json-is-this-regex-correct
@@ -44,37 +44,92 @@ class Scopus(Provider):
             raise ProviderContentMalformedError()
 
         data = provider._load_json(page)
+        return(data)
+
+    def _get_relevant_record(self, fullpage, id):
+        data = self._get_json(fullpage, id)
+        response = None
         try:
-            citations = int(data["OK"]["results"][0]["citedbycount"])
+            citation_rows = data["OK"]["results"]
+            for citation_row in citation_rows:
+                if citation_row["doi"]==id:
+                    response = citation_row
         except (KeyError, ValueError):
             # not in Scopus database
-            return {}
+            return None
+        return response
 
-        metrics_dict = {}
+    def _extract_metrics(self, fullpage, status_code=200, id=None):
+        record = self._get_relevant_record(fullpage, id)
+        try:
+            citations = int(record["citedbycount"])    
+        except (KeyError, TypeError):
+            return {}
         if citations:
-            metrics_dict["scopus:citations"] = citations
+            metrics_dict = {"scopus:citations": citations}
         return metrics_dict
 
     def _extract_provenance_url(self, fullpage, status_code=200, id=None):
+        record = self._get_relevant_record(fullpage, id)
         try:
-            # extract json from inside the first and last parens
-            # from http://codereview.stackexchange.com/questions/2561/converting-jsonp-to-json-is-this-regex-correct
-            page = fullpage[ fullpage.index("(")+1 : fullpage.rindex(")") ]
-        except ValueError:
-            return ""
-        data = provider._load_json(page)
-        try:
-            provenance_url = data["OK"]["results"][0]["inwardurl"]
-        except KeyError:
+            provenance_url = record["inwardurl"] 
+        except (KeyError, TypeError):
             provenance_url = ""
-        return provenance_url        
+        return provenance_url
 
+    def _get_page(self, url):
+        response = self.http_get(url, timeout=30)
+        if response.status_code != 200:
+            if response.status_code == 404:
+                return None
+            else:
+                raise(self._get_error(response.status_code))
+        page = response.text
+        if not page:
+            raise ProviderContentMalformedError()
+        return page
 
-    def _get_metrics_and_drilldown_from_metrics_page(self, page):
-        metrics_dict = self._extract_metrics(page)
+    def _get_page_with_doi(self, provider_url_template, id):
+        # pick a new random string so don't time out.  Unfort, url now can't cache.
+        random_string = "".join(random.sample(string.letters, 10))
+        self.metrics_url_template = 'http://searchapi.scopus.com/documentSearch.url?&search=%s&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
+        self.provenance_url_template = self.metrics_url_template
+
+        if not provider_url_template:
+            provider_url_template = self.metrics_url_template
+
+        logger.debug("id = {id}".format(id=id))
+        logger.debug("provider_url_template = {provider_url_template}".format(
+            provider_url_template=provider_url_template))
+
+        url = self._get_templated_url(provider_url_template, id, "metrics")
+        print url
+        page = self._get_page(url)
+        relevant_record = self._get_relevant_record(page, id)
+        if not relevant_record:
+            data = self._get_json(page, id)
+            try:
+                number_results = data["OK"]["totalResults"]
+            except (KeyError, ValueError):
+                return None            
+            url = "{previous_url}&offset={last_record}".format(
+                previous_url=url, last_record=(int(number_results)-1))
+            print url
+            page = self._get_page(url)
+            relevant_record = self._get_relevant_record(page, id)
+            if not relevant_record:
+                return None
+        return page
+
+    def _get_metrics_and_drilldown_from_metrics_page(self, provider_url_template, id):
+        page = self._get_page_with_doi(provider_url_template, id)
+        if not page:
+            logging.warning("couldn't find a page with doi {id}".format(id=id))
+            return {}
+        metrics_dict = self._extract_metrics(page, id=id)
         metrics_and_drilldown = {}
         for metric_name in metrics_dict:
-            drilldown_url = self._extract_provenance_url(page)
+            drilldown_url = self._extract_provenance_url(page, id=id)
             metrics_and_drilldown[metric_name] = (metrics_dict[metric_name], drilldown_url)
         return metrics_and_drilldown  
 
@@ -90,30 +145,6 @@ class Scopus(Provider):
             #self.logger.debug("%s not checking metrics, no relevant alias" % (self.provider_name))
             return {}
 
-        # pick a new random string so don't time out.  Unfort, url now can't cache.
-        random_string = "".join(random.sample(string.letters, 10))
-        self.metrics_url_template = 'http://searchapi.scopus.com/documentSearch.url?&search="%s"&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
-        self.provenance_url_template = self.metrics_url_template
-
-        if not provider_url_template:
-            provider_url_template = self.metrics_url_template
-
-        logger.debug("id = {id}".format(id=id))
-        logger.debug("provider_url_template = {provider_url_template}".format(
-            provider_url_template=provider_url_template))
-
-        url = self._get_templated_url(provider_url_template, id, "metrics")
-
-        response = self.http_get(url, timeout=30)
-        if response.status_code != 200:
-            if response.status_code == 404:
-                return None
-            else:
-                raise(self._get_error(response.status_code))
-        page = response.text
-        if not page:
-            raise ProviderContentMalformedError()
-
-        metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(page)
+        metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(provider_url_template, id=id)
 
         return metrics_and_drilldown
