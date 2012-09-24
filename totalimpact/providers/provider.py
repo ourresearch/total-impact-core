@@ -419,7 +419,7 @@ class Provider(object):
     # Core methods
     # These should be consistent for all providers
     
-    def http_get(self, url, headers=None, timeout=10, cache_enabled=True, allow_redirects=False):
+    def http_get(self, url, headers=None, timeout=20, cache_enabled=True, allow_redirects=False):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
