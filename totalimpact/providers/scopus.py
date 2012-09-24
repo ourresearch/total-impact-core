@@ -65,8 +65,11 @@ class Scopus(Provider):
             citations = int(record["citedbycount"])    
         except (KeyError, TypeError):
             return {}
+
         if citations:
             metrics_dict = {"scopus:citations": citations}
+        else:
+            metrics_dict = {}                    
         return metrics_dict
 
     def _extract_provenance_url(self, fullpage, status_code=200, id=None):
