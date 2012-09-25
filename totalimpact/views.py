@@ -304,7 +304,7 @@ def provider_memberitems(provider_name):
     memberitems = MemberItems(provider, myredis)
     query_hash = memberitems.start_update(query)
 
-    resp = make_response('"'+query_hash+'"', 201) # created
+    resp = make_response(json.dumps(query_hash), 201) # created
     resp.mimetype = "application/json"
     resp.headers['Access-Control-Allow-Origin'] = "*"
     return resp
