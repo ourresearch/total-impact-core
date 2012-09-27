@@ -53,6 +53,7 @@ def get_memberitems_status(self, memberitems_key):
 redis.Redis.set_num_providers_left = set_num_providers_left
 redis.Redis.get_num_providers_left = get_num_providers_left
 redis.Redis.decr_num_providers_left = decr_num_providers_left
+redis.Redis.add_to_alias_queue = add_to_alias_queue
 redis.Redis.set_memberitems_status = set_memberitems_status
 redis.Redis.get_memberitems_status = get_memberitems_status
 
