@@ -61,9 +61,7 @@ class TestBibtex(ProviderTestCase):
         assert_equals(set(members), set(expected))
 
     def test_extract_members_none(self):        
-        file_contents = ""
-        query_response = self.provider.paginate(file_contents)
-        members = self.provider.member_items(query_response["pages"][0])
+        members = self.provider.member_items([])
         assert_equals(members, [])
 
     @raises(ProviderServerError)
@@ -83,7 +81,7 @@ class TestBibtex(ProviderTestCase):
     def test_paginate_none(self):
         file_contents = ""
         response = self.provider.paginate(file_contents)
-        assert_equals(len(response["pages"]), 1)
+        assert_equals(len(response["pages"]), 0)
         assert_equals(response["number_entries"], 0)
 
     def test_paginate_short(self):
@@ -100,7 +98,7 @@ class TestBibtex(ProviderTestCase):
         assert_equals(len(response["pages"]), 16)
         assert_equals(response["number_entries"], 79)
 
-    @raises(ProviderContentMalformedError)
+    # check it doesn't throw an error
     def test_paginate_broken(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_BROKEN
         response = self.provider.paginate(file_contents)
