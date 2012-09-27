@@ -49,7 +49,8 @@ class TestBibtex(ProviderTestCase):
         query_response = self.provider.paginate(file_contents)
         members = self.provider.member_items(query_response["pages"][1])
         print members
-        assert_equals(set(members), set([('doi', u'10.1093/bioinformatics/btm001'), ('doi', u'10.1104/pp.103.023085'), ('doi', u'10.1093/bioinformatics/btg1008')]))
+        expected = [('doi', u'10.1093/bioinformatics/btm001'), ('doi', u'10.1104/pp.103.023085'), ('doi', u'10.1186/1471-2148-8-95')]
+        assert_equals(set(members), set(expected))
 
     def test_paginate_short(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_SHORT
@@ -64,6 +65,6 @@ class TestBibtex(ProviderTestCase):
         response = self.provider.paginate(file_contents)
         assert_equals(len(response), 2)
         assert_equals(set(response.keys()), set(['number_entries', 'pages']))
-        assert_equals(len(response["pages"]), 17)
-        assert_equals(response["number_entries"], 80)
+        assert_equals(len(response["pages"]), 16)
+        assert_equals(response["number_entries"], 79)
 

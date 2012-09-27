@@ -117,8 +117,8 @@ class Bibtex(Provider):
     def paginate(self, bibtex_contents):
         logger.debug("%20s paginate in member_items" % (self.provider_name))
 
-        cleaned_string = bibtex_contents.replace("\&", "").replace("%", "")
-        entries = ["@"+entry for entry in cleaned_string.split("@")]
+        cleaned_string = bibtex_contents.replace("\&", "").replace("%", "").strip()
+        entries = ["@"+entry for entry in cleaned_string.split("@") if entry]
         #print entries
 
         items_per_page = 5
