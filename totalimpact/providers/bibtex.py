@@ -26,7 +26,10 @@ class Bibtex(Provider):
     def _parse_bibtex_entries(self, entries):
         stream = StringIO("\n".join(entries))
         parser = bibtex.Parser()
-        biblio = parser.parse_stream(stream)
+        try:
+            biblio = parser.parse_stream(stream)
+        except:
+            raise ProviderContentMalformedError()
         return biblio
 
     def _lookup_dois_from_biblio(self, biblio, cache_enabled):
@@ -123,7 +126,7 @@ class Bibtex(Provider):
 
         items_per_page = 5
         layout = divmod(len(entries), items_per_page)
-        last_page = min(1+layout[0], 25)  # 20 items/page * 25 pages = 500 items max  
+        last_page = min(1+layout[0], 50)  # 5 items/page * 50 pages = 250 items max  
 
         biblio_pages = []
         for i in xrange(0, last_page):

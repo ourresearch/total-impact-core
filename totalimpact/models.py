@@ -316,7 +316,7 @@ class MemberItems():
             "number_entries": number_entries
         }
         for page in pages:
-            status["memberitems"] += self.provider.member_items(page)
+            status["memberitems"].append(self.provider.member_items(page))
             status["complete"] += 1
             self.redis.set_memberitems_status(query_key, status)
 
