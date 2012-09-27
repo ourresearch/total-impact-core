@@ -264,10 +264,10 @@ class MemberItems():
         self.redis = redis
 
     def start_update(self, str):
-        pages = self.provider.paginate(str)
+        paginate_dict = self.provider.paginate(str)
         hash = hashlib.md5(str.encode('utf-8')).hexdigest()
         t = threading.Thread(target=self._update, 
-                            args=(pages, hash), 
+                            args=(paginate_dict["pages"], paginate_dict["number_entries"], hash), 
                             name=hash[0:4]+"_memberitems_thread")
         t.daemon = True
         t.start()
@@ -281,44 +281,45 @@ class MemberItems():
             "pages": 1,
             "complete": 1
         }
-        logger.debug("got {num_memberitems} synchronous memberitems for query '{query}' in {elapsed} seconds.".format(
-            num_memberitems=len(ret["memberitems"]),
+        ret["number_entries"] = len(ret["memberitems"])
+
+        logger.debug("got {number_finished_memberitems} synchronous memberitems for query '{query}' in {elapsed} seconds.".format(
+            number_finished_memberitems=len(ret["memberitems"]),
             query=query,
             elapsed=round(time.time() - start, 2)
         ))
         return ret
 
     def get_async(self, query_hash):
-        query_status_str = self.redis.get(query_hash)
+        query_status = self.redis.get_memberitems_status(query_hash)
         start = time.time()
 
-        try:
-            ret = json.loads(query_status_str)
-        except TypeError:
-            # if redis returns None, the update hasn't started yet (likely still
-            # parsing the input string; give the client some information, though:
-            ret = {"memberitems": [], "pages": 1, "complete": 0 }
+        if not query_status:
+            query_status = {"memberitems": [], "pages": 1, "complete": 0} # don't know number_entries yet
 
-        logger.debug("have finished {num_memberitems} asynchronous memberitems for query hash '{query_hash}' in {elapsed} seconds.".format(
-                num_memberitems=len(ret["memberitems"]),
+        logger.debug("have finished {number_finished_memberitems} of {number_entries} asynchronous memberitems for query hash '{query_hash}' in {elapsed} seconds.".format(
+                number_finished_memberitems=len(query_status["memberitems"]),
+                number_entries=query_status["number_entries"],
                 query_hash=query_hash,
                 elapsed=round(time.time() - start, 2)
             ))
 
-        return ret
+        return query_status
+
 
     @Retry(3, ProviderTimeout, 0.1)
-    def _update(self, pages, key):
+    def _update(self, pages, number_entries, query_key):
 
         status = {
             "memberitems": [],
             "pages": len(pages),
-            "complete": 0
+            "complete": 0,
+            "number_entries": number_entries
         }
         for page in pages:
             status["memberitems"].append(self.provider.member_items(page))
             status["complete"] += 1
-            self.redis.set(key, json.dumps(status))
+            self.redis.set_memberitems_status(query_key, status)
 
         return True
 

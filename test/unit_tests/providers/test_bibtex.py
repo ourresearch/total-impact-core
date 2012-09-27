@@ -9,6 +9,32 @@ from nose.tools import assert_equals, raises, nottest
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/bibtex")
 SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(datadir, "Vision.bib")
 
+SAMPLE_EXTRACT_MEMBER_ITEMS_SHORT = """
+@phdthesis{rogers2006identity,
+  title={Identity crisis| Modernity and fragmentation},
+  author={Rogers, K.L.},
+  year={2006},
+  school={UNIVERSITY OF COLORADO AT BOULDER}
+}
+
+@article{rogers2008affirming,
+  title={Affirming Complexity:" White Teeth" and Cosmopolitanism},
+  author={Rogers, K.},
+  journal={Interdisciplinary Literary Studies},
+  volume={9},
+  number={2},
+  pages={45--61},
+  year={2008},
+  publisher={Penn State Altoona}
+}
+
+@phdthesis{rogers2010trauma,
+  title={Trauma and the representation of the unsayable in late twentieth-century fiction},
+  author={Rogers, K.L.},
+  year={2010},
+  school={UNIVERSITY OF COLORADO AT BOULDER}
+}"""
+
 class TestBibtex(ProviderTestCase):
 
     provider_name = "bibtex"
@@ -20,12 +46,24 @@ class TestBibtex(ProviderTestCase):
 
     def test_extract_members_success(self):        
         file_contents = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r").read()
-        pages = self.provider.paginate(file_contents)
-        members = self.provider.member_items(pages[1])
+        query_response = self.provider.paginate(file_contents)
+        members = self.provider.member_items(query_response["pages"][1])
         print members
         assert_equals(set(members), set([('doi', u'10.1093/bioinformatics/btm001'), ('doi', u'10.1104/pp.103.023085'), ('doi', u'10.1093/bioinformatics/btg1008')]))
 
-    def test_paginate(self):
+    def test_paginate_short(self):
+        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_SHORT
+        response = self.provider.paginate(file_contents)
+        assert_equals(len(response), 2)
+        assert_equals(set(response.keys()), set(['number_entries', 'pages']))
+        assert_equals(len(response["pages"]), 1)
+        assert_equals(response["number_entries"], 3)
+
+    def test_paginate_long(self):
         file_contents = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r").read()
         response = self.provider.paginate(file_contents)
-        assert_equals(len(response), 17)
+        assert_equals(len(response), 2)
+        assert_equals(set(response.keys()), set(['number_entries', 'pages']))
+        assert_equals(len(response["pages"]), 17)
+        assert_equals(response["number_entries"], 80)
+
