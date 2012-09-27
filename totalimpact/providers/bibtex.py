@@ -1,10 +1,12 @@
 from totalimpact.providers import provider
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout, ProviderServerError
 
 import simplejson
 import pybtex
 from pybtex.database.input import bibtex
-from pyparsing import ParseException
+from pybtex.errors import enable_strict_mode, format_error
+from pybtex.scanner import PybtexSyntaxError, PybtexError
+from pyparsing import ParseException 
 from StringIO import StringIO
 import re
 
@@ -21,16 +23,8 @@ class Bibtex(Provider):
 
     def __init__(self):
         super(Bibtex, self).__init__()
+        enable_strict_mode(True) #throw errors
 
-
-    def _parse_bibtex_entries(self, entries):
-        stream = StringIO("\n".join(entries))
-        parser = bibtex.Parser()
-        try:
-            biblio = parser.parse_stream(stream)
-        except:
-            raise ProviderContentMalformedError()
-        return biblio
 
     def _lookup_dois_from_biblio(self, biblio, cache_enabled):
         if not biblio:
@@ -89,7 +83,10 @@ class Bibtex(Provider):
         try:
             response = self.http_get(url, timeout=30, cache_enabled=cache_enabled)
         except ProviderTimeout:
-            return []
+            raise ProviderTimeout("CrossRef timeout")
+
+        if response.status_code != 200:
+            raise ProviderServerError("CrossRef status code was not 200")
 
         response_lines = response.text.split("\n")
         #import pprint
@@ -116,13 +113,21 @@ class Bibtex(Provider):
 
         return non_empty_dois
 
+    def _parse_bibtex_entries(self, entries):
+        stream = StringIO("\n".join(entries))
+        parser = bibtex.Parser()
+        try:
+            biblio = parser.parse_stream(stream)
+        except (PybtexSyntaxError, PybtexError), error:
+            logger.error(format_error(error, prefix='BIBTEX_ERROR: '))
+            raise ProviderContentMalformedError(error.message)
+        return biblio
 
     def paginate(self, bibtex_contents):
         logger.debug("%20s paginate in member_items" % (self.provider_name))
 
         cleaned_string = bibtex_contents.replace("\&", "").replace("%", "").strip()
         entries = ["@"+entry for entry in cleaned_string.split("@") if entry]
-        #print entries
 
         items_per_page = 5
         layout = divmod(len(entries), items_per_page)
@@ -132,7 +137,7 @@ class Bibtex(Provider):
         for i in xrange(0, last_page):
             last_item = min(i*items_per_page+items_per_page, len(entries))
             logger.debug("%20s parsing bibtex entries %i-%i of %i" % (self.provider_name, 1+i*items_per_page, last_item, len(entries)))
-            biblio_pages += [self._parse_bibtex_entries(entries[1+i*items_per_page : last_item])]
+            biblio_pages += [self._parse_bibtex_entries(entries[0+i*items_per_page : last_item])]
         response_dict = {"pages":biblio_pages, "number_entries":len(entries)}
         return response_dict
 

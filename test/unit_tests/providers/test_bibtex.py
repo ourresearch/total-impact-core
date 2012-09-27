@@ -1,6 +1,6 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderServerError
 
 import os
 import collections
@@ -8,6 +8,13 @@ from nose.tools import assert_equals, raises, nottest
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/bibtex")
 SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(datadir, "Vision.bib")
+
+SAMPLE_EXTRACT_MEMBER_ITEMS_BROKEN = """
+@article{22test,
+  year={ThisIsNotANumber},
+  test={{{unbalanced braces}
+}
+"""
 
 SAMPLE_EXTRACT_MEMBER_ITEMS_SHORT = """
 @phdthesis{rogers2006identity,
@@ -35,10 +42,11 @@ SAMPLE_EXTRACT_MEMBER_ITEMS_SHORT = """
   school={UNIVERSITY OF COLORADO AT BOULDER}
 }"""
 
+
+
 class TestBibtex(ProviderTestCase):
 
     provider_name = "bibtex"
-
     testitem_members = "egonw"
 
     def setUp(self):
@@ -49,11 +57,25 @@ class TestBibtex(ProviderTestCase):
         query_response = self.provider.paginate(file_contents)
         members = self.provider.member_items(query_response["pages"][1])
         print members
-        expected = [('doi', u'10.1093/bioinformatics/btm001'), ('doi', u'10.1104/pp.103.023085'), ('doi', u'10.1186/1471-2148-8-95')]
+        expected = [('doi', u'10.1093/bioinformatics/btm001'), ('doi', u'10.1104/pp.103.023085'), ('doi', u'10.1093/bioinformatics/btg1008'), ('doi', u'10.1186/1471-2148-8-95')]
         assert_equals(set(members), set(expected))
 
     def test_extract_members_none(self):        
         file_contents = ""
+        query_response = self.provider.paginate(file_contents)
+        members = self.provider.member_items(query_response["pages"][0])
+        assert_equals(members, [])
+
+    @raises(ProviderServerError)
+    def test_extract_members_500(self):        
+        file_contents = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r").read()
+        Provider.http_get = common.get_500
+        query_response = self.provider.paginate(file_contents)
+        members = self.provider.member_items(query_response["pages"][0])
+
+    def test_extract_members_empty(self):        
+        file_contents = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r").read()
+        Provider.http_get = common.get_empty
         query_response = self.provider.paginate(file_contents)
         members = self.provider.member_items(query_response["pages"][0])
         assert_equals(members, [])
@@ -77,4 +99,9 @@ class TestBibtex(ProviderTestCase):
         assert_equals(set(response.keys()), set(['number_entries', 'pages']))
         assert_equals(len(response["pages"]), 16)
         assert_equals(response["number_entries"], 79)
+
+    @raises(ProviderContentMalformedError)
+    def test_paginate_broken(self):
+        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_BROKEN
+        response = self.provider.paginate(file_contents)
 

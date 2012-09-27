@@ -7,7 +7,7 @@ import redis
 
 from totalimpact import dao, app, tiredis, collection
 from totalimpact.models import ItemFactory, MemberItems, UserFactory, NotAuthenticatedError
-from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError
+from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderContentMalformedError, ProviderTimeout
 from totalimpact import default_settings
 import logging
 
@@ -290,10 +290,10 @@ def provider_memberitems(provider_name):
     Returns a hash of the file's contents, which is needed to get memberitems'
     output. To get output, poll GET /provider/<provider_name>/memberitems/<hash>?method=async
     """
-    logger.debug("Query POSTed to {provider_name}/memberitems with request headers '{headers}'".format(
-        provider_name=provider_name,
-        headers=request.headers
-    ))
+    #logger.debug("Query POSTed to {provider_name}/memberitems with request headers '{headers}'".format(
+    #    provider_name=provider_name,
+    #    headers=request.headers
+    #))
 
     file = request.files['file']
     logger.debug("In provider_memberitems got file")
@@ -302,9 +302,12 @@ def provider_memberitems(provider_name):
 
     provider = ProviderFactory.get_provider(provider_name)
     memberitems = MemberItems(provider, myredis)
-    query_hash = memberitems.start_update(query)
-    response_dict = {"query_hash":query_hash}
+    try:
+        query_hash = memberitems.start_update(query)
+    except ProviderContentMalformedError:
+        abort(500, "error parsing BibTeX file")
 
+    response_dict = {"query_hash":query_hash}
     resp = make_response(json.dumps(response_dict), 201) # created
     resp.mimetype = "application/json"
     resp.headers['Access-Control-Allow-Origin'] = "*"
@@ -329,6 +332,8 @@ def provider_memberitems_get(provider_name, query):
         ret = getattr(memberitems, "get_"+request.args.get('method', "sync"))(query)
     except ProviderItemNotFoundError:
         abort(404)
+    except (ProviderTimeout, ProviderServerError):
+        abort(503)  # crossref lookup error
     except ProviderError:
         abort(500)
 
