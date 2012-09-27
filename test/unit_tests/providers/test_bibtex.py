@@ -52,10 +52,21 @@ class TestBibtex(ProviderTestCase):
         expected = [('doi', u'10.1093/bioinformatics/btm001'), ('doi', u'10.1104/pp.103.023085'), ('doi', u'10.1186/1471-2148-8-95')]
         assert_equals(set(members), set(expected))
 
+    def test_extract_members_none(self):        
+        file_contents = ""
+        query_response = self.provider.paginate(file_contents)
+        members = self.provider.member_items(query_response["pages"][0])
+        assert_equals(members, [])
+
+    def test_paginate_none(self):
+        file_contents = ""
+        response = self.provider.paginate(file_contents)
+        assert_equals(len(response["pages"]), 1)
+        assert_equals(response["number_entries"], 0)
+
     def test_paginate_short(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_SHORT
         response = self.provider.paginate(file_contents)
-        assert_equals(len(response), 2)
         assert_equals(set(response.keys()), set(['number_entries', 'pages']))
         assert_equals(len(response["pages"]), 1)
         assert_equals(response["number_entries"], 3)
@@ -63,7 +74,6 @@ class TestBibtex(ProviderTestCase):
     def test_paginate_long(self):
         file_contents = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r").read()
         response = self.provider.paginate(file_contents)
-        assert_equals(len(response), 2)
         assert_equals(set(response.keys()), set(['number_entries', 'pages']))
         assert_equals(len(response["pages"]), 16)
         assert_equals(response["number_entries"], 79)
