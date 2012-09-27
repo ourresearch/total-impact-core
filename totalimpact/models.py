@@ -297,9 +297,8 @@ class MemberItems():
         if not query_status:
             query_status = {"memberitems": [], "pages": 1, "complete": 0} # don't know number_entries yet
 
-        logger.debug("have finished {number_finished_memberitems} of {number_entries} asynchronous memberitems for query hash '{query_hash}' in {elapsed} seconds.".format(
+        logger.debug("have finished {number_finished_memberitems} of asynchronous memberitems for query hash '{query_hash}' in {elapsed} seconds.".format(
                 number_finished_memberitems=len(query_status["memberitems"]),
-                number_entries=query_status["number_entries"],
                 query_hash=query_hash,
                 elapsed=round(time.time() - start, 2)
             ))
@@ -317,7 +316,7 @@ class MemberItems():
             "number_entries": number_entries
         }
         for page in pages:
-            status["memberitems"].append(self.provider.member_items(page))
+            status["memberitems"] += self.provider.member_items(page)
             status["complete"] += 1
             self.redis.set_memberitems_status(query_key, status)
 
