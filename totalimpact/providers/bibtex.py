@@ -130,7 +130,8 @@ class Bibtex(Provider):
             last_item = min(i*items_per_page+items_per_page, len(entries))
             logger.debug("%20s parsing bibtex entries %i-%i of %i" % (self.provider_name, 1+i*items_per_page, last_item, len(entries)))
             biblio_pages += [self._parse_bibtex_entries(entries[1+i*items_per_page : last_item])]
-        return(biblio_pages)
+        response_dict = {"pages":biblio_pages, "number_entries":len(entries)}
+        return response_dict
 
 
     def member_items(self, parsed_bibtex, cache_enabled=True):

@@ -281,7 +281,7 @@ class TestMemberItems():
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
 
-        bibtex.Bibtex.paginate = lambda self, x: [1,2,3,4]
+        bibtex.Bibtex.paginate = lambda self, x: {"pages": [1,2,3,4], "number_entries":10}
         bibtex.Bibtex.member_items = lambda self, x: ("doi", str(x))
         self.memberitems_resp = [
             ["doi", "1"],
@@ -302,7 +302,7 @@ class TestMemberItems():
         assert_equals(input_hash, ret)
 
         sleep(.1) # give the thread a chance to finish.
-        status = json.loads(self.r.get(input_hash))
+        status = self.r.get_memberitems_status(input_hash)
 
         assert_equals(status["memberitems"], self.memberitems_resp )
         assert_equals(status["complete"], 4 )
