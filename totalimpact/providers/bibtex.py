@@ -26,13 +26,14 @@ class Bibtex(Provider):
         enable_strict_mode(True) #throw errors
 
 
-    def _lookup_dois_from_biblio(self, biblio, cache_enabled):
-        if not biblio:
+    def _lookup_dois_from_biblio(self, biblio_list, cache_enabled):
+        if not biblio_list:
             return []
 
         arg_dict = {}
-        for mykey in biblio.entries:
+        for biblio in biblio_list:
             #print "** parsing", biblio.entries[mykey]
+            mykey = biblio.entries.keys()[0]
 
             try:
                 journal = biblio.entries[mykey].fields["journal"]
@@ -114,14 +115,17 @@ class Bibtex(Provider):
         return non_empty_dois
 
     def _parse_bibtex_entries(self, entries):
-        stream = StringIO("\n".join(entries))
-        parser = bibtex.Parser()
-        try:
-            biblio = parser.parse_stream(stream)
-        except (PybtexSyntaxError, PybtexError), error:
-            logger.error(format_error(error, prefix='BIBTEX_ERROR: '))
-            raise ProviderContentMalformedError(error.message)
-        return biblio
+        biblio_list = []
+        for entry in entries:
+            stream = StringIO(entry)
+            parser = bibtex.Parser()
+            try:
+                biblio = parser.parse_stream(stream)
+                biblio_list += [biblio]
+            except (PybtexSyntaxError, PybtexError), error:
+                logger.error(format_error(error, prefix='BIBTEX_ERROR: '))
+                #raise ProviderContentMalformedError(error.message)
+        return biblio_list
 
     def paginate(self, bibtex_contents):
         logger.debug("%20s paginate in member_items" % (self.provider_name))
@@ -137,7 +141,9 @@ class Bibtex(Provider):
         for i in xrange(0, last_page):
             last_item = min(i*items_per_page+items_per_page, len(entries))
             logger.debug("%20s parsing bibtex entries %i-%i of %i" % (self.provider_name, 1+i*items_per_page, last_item, len(entries)))
-            biblio_pages += [self._parse_bibtex_entries(entries[0+i*items_per_page : last_item])]
+            biblio = self._parse_bibtex_entries(entries[0+i*items_per_page : last_item])
+            if biblio:
+                biblio_pages += [biblio]
         response_dict = {"pages":biblio_pages, "number_entries":len(entries)}
         return response_dict
 

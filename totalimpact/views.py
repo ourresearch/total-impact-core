@@ -302,10 +302,7 @@ def provider_memberitems(provider_name):
 
     provider = ProviderFactory.get_provider(provider_name)
     memberitems = MemberItems(provider, myredis)
-    try:
-        query_hash = memberitems.start_update(query)
-    except ProviderContentMalformedError:
-        abort(500, "error parsing BibTeX file")
+    query_hash = memberitems.start_update(query)
 
     response_dict = {"query_hash":query_hash}
     resp = make_response(json.dumps(response_dict), 201) # created
@@ -327,15 +324,18 @@ def provider_memberitems_get(provider_name, query):
     """
     provider = ProviderFactory.get_provider(provider_name)
     memberitems = MemberItems(provider, myredis)
+    method = request.args.get('method', "sync")
 
     try:
-        ret = getattr(memberitems, "get_"+request.args.get('method', "sync"))(query)
+        ret = getattr(memberitems, "get_"+method)(query)
     except ProviderItemNotFoundError:
         abort(404)
-    except (ProviderTimeout, ProviderServerError):
-        abort(503)  # crossref lookup error
     except ProviderError:
         abort(500)
+
+    if ret:
+        if ret["error"]:
+            abort(503)  # crossref lookup error, might be transient
 
     resp = make_response(json.dumps(ret, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"

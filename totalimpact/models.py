@@ -3,7 +3,7 @@ from couchdb import ResourceNotFound, ResourceConflict
 import shortuuid, datetime, hashlib, threading, json, time, copy
 
 from totalimpact.providers.provider import ProviderFactory
-from totalimpact.providers.provider import ProviderTimeout
+from totalimpact.providers.provider import ProviderTimeout, ProviderServerError
 from totalimpact import default_settings
 from totalimpact.utils import Retry
 
@@ -279,7 +279,8 @@ class MemberItems():
         ret = {
             "memberitems": self.provider.member_items(query),
             "pages": 1,
-            "complete": 1
+            "complete": 1,
+            "error": False
         }
         ret["number_entries"] = len(ret["memberitems"])
 
@@ -295,7 +296,7 @@ class MemberItems():
         start = time.time()
 
         if not query_status:
-            query_status = {"memberitems": [], "pages": 1, "complete": 0} # don't know number_entries yet
+            query_status = {"memberitems": [], "pages": 1, "complete": 0, "error": False} # don't know number_entries yet
 
         logger.debug("have finished {number_finished_memberitems} of asynchronous memberitems for query hash '{query_hash}' in {elapsed} seconds.".format(
                 number_finished_memberitems=len(query_status["memberitems"]),
@@ -313,10 +314,16 @@ class MemberItems():
             "memberitems": [],
             "pages": len(pages),
             "complete": 0,
-            "number_entries": number_entries
+            "number_entries": number_entries,
+            "error": False            
         }
+        self.redis.set_memberitems_status(query_key, status)
         for page in pages:
-            status["memberitems"].append(self.provider.member_items(page))
+            try:
+                memberitems = self.provider.member_items(page)
+                status["memberitems"].append(memberitems)
+            except (ProviderTimeout, ProviderServerError):
+                status["error"] = True
             status["complete"] += 1
             self.redis.set_memberitems_status(query_key, status)
 
