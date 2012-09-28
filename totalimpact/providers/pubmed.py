@@ -179,6 +179,7 @@ class Pubmed(Provider):
             id_docs = doc.getElementsByTagName("Id")
             pmids = [id_doc.firstChild.data for id_doc in id_docs]
         except TypeError:
+            logger.warning("%20s no Id xml tags for %s" % (self.provider_name, id))
             pmids = []
         return pmids
 
@@ -229,6 +230,7 @@ class Pubmed(Provider):
             pmcid_doms = doc.getElementsByTagName("PMCID")
             pmcids = [pmcid_dom.firstChild.data for pmcid_dom in pmcid_doms]
         except TypeError:
+            logger.warning("%20s no PMCID xml tags for %s" % (self.provider_name, id))            
             pmcids = []
         return pmcids
 
