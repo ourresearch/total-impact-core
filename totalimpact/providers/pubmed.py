@@ -174,9 +174,12 @@ class Pubmed(Provider):
         query_string = filter_ptype + "[ptyp] AND (" + pmcids_string + ")"
         pmcid_filter_url = self.metrics_pmc_filter_url_template %query_string
         page = self._get_eutils_page(id, pmcid_filter_url)
-        (doc, lookup_function) = provider._get_doc_from_xml(page)        
-        id_docs = doc.getElementsByTagName("Id")
-        pmids = [id_doc.firstChild.data for id_doc in id_docs]
+        (doc, lookup_function) = provider._get_doc_from_xml(page)  
+        try:    
+            id_docs = doc.getElementsByTagName("Id")
+            pmids = [id_doc.firstChild.data for id_doc in id_docs]
+        except TypeError:
+            pmids = []
         return pmids
 
     def _check_reviewed_by_f1000(self, id, cache_enabled):
@@ -222,8 +225,11 @@ class Pubmed(Provider):
             raise ProviderContentMalformedError()
         dict_of_keylists = {"pubmed:pmc_citations": ["PubMedToPMCcitingformSET", "REFORM"]}
         (doc, lookup_function) = provider._get_doc_from_xml(page)
-        pmcid_doms = doc.getElementsByTagName("PMCID")
-        pmcids = [pmcid_dom.firstChild.data for pmcid_dom in pmcid_doms]
+        try:
+            pmcid_doms = doc.getElementsByTagName("PMCID")
+            pmcids = [pmcid_dom.firstChild.data for pmcid_dom in pmcid_doms]
+        except TypeError:
+            pmcids = []
         return pmcids
 
     # documentation for pubmedtopmcciting: http://www.pubmedcentral.nih.gov/utils/entrez2pmcciting.cgi
