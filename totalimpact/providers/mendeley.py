@@ -139,8 +139,12 @@ class Mendeley(Provider):
                 return uuid
             else:
                 # more complicated.  Try to match title and year.
-                mendeley_title = self.remove_punctuation(mendeley_record["title"]).lower()
-                aliases_title = self.remove_punctuation(biblio["title"]).lower()
+                try:
+                    mendeley_title = self.remove_punctuation(mendeley_record["title"]).lower()
+                    aliases_title = self.remove_punctuation(biblio["title"]).lower()
+                except (TypeError, KeyError, AttributeError):
+                    continue  # nothing to see here.  Skip to next record
+
                 if mendeley_title == aliases_title:
                     if mendeley_record["year"] == biblio["year"]:
                         # check if author name in common. if not, yell, but continue anyway
