@@ -67,6 +67,10 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao):
     # the first row is the collection document
     first_row = view_response.rows[0]
     collection = first_row.doc
+    try:
+        del item["ip_address"]
+    except KeyError:
+        pass
     del collection["alias_tiids"]
 
     # start with the 2nd row, since 1st row is the collection document
