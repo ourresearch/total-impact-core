@@ -132,6 +132,8 @@ class Pubmed(Provider):
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
                 return []
+            if response.status_code == 414:  #Request-URI Too Large
+                return []
             else:
                 self._get_error(response.status_code, response)
         return response.text
