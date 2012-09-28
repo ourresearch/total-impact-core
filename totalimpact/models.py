@@ -39,6 +39,12 @@ class ItemFactory():
 
     @classmethod
     def build_item_for_client(cls, item, myrefsets):
+
+        try:
+            del item["ip_address"]
+        except KeyError:
+            pass
+            
         try:
             item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
         except (KeyError, TypeError):
