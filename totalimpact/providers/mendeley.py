@@ -122,9 +122,12 @@ class Mendeley(Provider):
         return page
 
     @classmethod
-    def remove_punctuation(cls, str):
+    def remove_punctuation(cls, input):
         # from http://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
-        return "".join(e for e in str if (e.isalnum() or e.isspace()))
+        no_punc = input
+        if input:
+            no_punc = "".join(e for e in input if (e.isalnum() or e.isspace()))
+        return no_punc
 
     def _get_uuid_from_title(self, aliases_dict, page):
         data = provider._load_json(page)
