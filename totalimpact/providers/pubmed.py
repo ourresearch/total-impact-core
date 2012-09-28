@@ -131,9 +131,9 @@ class Pubmed(Provider):
             logger.warning("%20s WARNING, status_code=%i getting %s" 
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
-                return []
+                return ""
             if response.status_code == 414:  #Request-URI Too Large
-                return []
+                return ""
             else:
                 self._get_error(response.status_code, response)
         return response.text
@@ -150,16 +150,17 @@ class Pubmed(Provider):
             if (namespace == "doi"):
                 aliases_from_doi_url = self.aliases_from_doi_url_template %nid
                 page = self._get_eutils_page(nid, aliases_from_doi_url, cache_enabled)
-                new_aliases += self._extract_aliases_from_doi(page, nid)
+                if page:
+                    new_aliases += self._extract_aliases_from_doi(page, nid)
             if (namespace == "pmid"):
                 # look up doi and other things on pubmed page
                 aliases_from_pmid_url = self.aliases_from_pmid_url_template %nid
                 page = self._get_eutils_page(nid, aliases_from_pmid_url, cache_enabled)
-                new_aliases += self._extract_aliases_from_pmid(page, nid)
-                biblio = self._extract_biblio(page, nid)
-                if biblio:
-                    new_aliases += [("biblio", biblio)]
-
+                if page:
+                    new_aliases += self._extract_aliases_from_pmid(page, nid)
+                    biblio = self._extract_biblio(page, nid)
+                    if biblio:
+                        new_aliases += [("biblio", biblio)]
                 # also, add link to paper on pubmed
                 new_aliases += [("url", self.aliases_pubmed_url_template %nid)] 
 
