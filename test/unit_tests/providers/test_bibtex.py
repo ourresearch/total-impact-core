@@ -10,9 +10,12 @@ datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provi
 SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(datadir, "Vision.bib")
 
 SAMPLE_EXTRACT_MEMBER_ITEMS_BROKEN = """
-@article{22test,
-  year={ThisIsNotANumber},
-  test={{{unbalanced braces}
+@999{test1,
+  year={2009},
+},
+@article{test2,
+  year={2009},
+  test={no closing
 }
 """
 
@@ -102,4 +105,5 @@ class TestBibtex(ProviderTestCase):
     def test_paginate_broken(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_BROKEN
         response = self.provider.paginate(file_contents)
+        #print 1/0
 
