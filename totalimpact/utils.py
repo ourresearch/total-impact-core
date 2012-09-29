@@ -27,7 +27,7 @@ class Retry(object):
                 try:
                     return f(*args, **kwargs)
                 except self.exceptions, e:
-                    logger.debug("Retry, exception: "+e.__repr__())
+                    logger.debug("Retry: "+e.__repr__())
                     time.sleep(self.delay)
                     exception = e
 
