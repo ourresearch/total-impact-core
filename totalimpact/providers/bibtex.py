@@ -124,6 +124,8 @@ class Bibtex(Provider):
                 biblio_list += [biblio]
             except (PybtexSyntaxError, PybtexError), error:
                 logger.error(format_error(error, prefix='BIBTEX_ERROR: '))
+                logger.error("BIBTEX_ERROR error input: '{entry}'".format(
+                    entry=entry))
                 #raise ProviderContentMalformedError(error.message)
         return biblio_list
 
