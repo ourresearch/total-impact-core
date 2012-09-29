@@ -33,7 +33,12 @@ class Bibtex(Provider):
         arg_dict = {}
         for biblio in biblio_list:
             #print "** parsing", biblio.entries[mykey]
-            mykey = biblio.entries.keys()[0]
+            try:
+                mykey = biblio.entries.keys()[0]
+            except AttributeError:
+                # doesn't seem to be a valid biblio object, so skip to the next one
+                logger.info("%20s NO DOI because no entries attribute in %s" % (self.provider_name, biblio))                
+                continue
 
             try:
                 journal = biblio.entries[mykey].fields["journal"]
