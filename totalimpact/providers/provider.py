@@ -124,7 +124,7 @@ class Provider(object):
             headers = {}
         try:
             text = response.text
-        except AttributeError:
+        except (AttributeError, TypeError):
             text = ""           
         if status_code >= 500:
             error = ProviderServerError(response)
@@ -239,7 +239,10 @@ class Provider(object):
                 self._get_error(response.status_code, response)
 
         # extract the member ids
-        members = self._extract_members(response.text, query_string)
+        try:
+            members = self._extract_members(response.text, query_string)
+        except (AttributeError, TypeError):
+            members = []
 
         return(members)
 
@@ -295,7 +298,10 @@ class Provider(object):
                 self._get_error(response.status_code, response)
         
         # extract the aliases
-        biblio_dict = self._extract_biblio(response.text, id)
+        try:
+            biblio_dict = self._extract_biblio(response.text, id)
+        except (AttributeError, TypeError):
+            biblio_dict = {}
 
         return biblio_dict
 
@@ -354,11 +360,12 @@ class Provider(object):
                 pass                
             else:
                 self._get_error(response.status_code, response)
-        
-        if not response.text:
-            return []
 
-        new_aliases = self._extract_aliases(response.text, id)
+        try:       
+            new_aliases = self._extract_aliases(response.text, id)
+        except (TypeError, AttributeError):
+            new_aliases = []
+
         return new_aliases
 
 
@@ -411,7 +418,10 @@ class Provider(object):
         #self.logger.debug("%s get_metrics_for_id response.status_code %i" % (self.provider_name, response.status_code))
         
         # extract the metrics
-        metrics_dict = self._extract_metrics(response.text, response.status_code, id=id)
+        try:
+            metrics_dict = self._extract_metrics(response.text, response.status_code, id=id)
+        except (AttributeError, TypeError):  # throws type error if response.text is none
+            metrics_dict = {}
 
         return metrics_dict
 
