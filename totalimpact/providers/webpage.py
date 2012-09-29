@@ -70,7 +70,12 @@ class Webpage(Provider):
             return biblio_dict
         
         unicode_page = utils.to_unicode_or_bust(page)
-        parsed_html = lxml.html.document_fromstring(unicode_page)
+        try:
+            parsed_html = lxml.html.document_fromstring(unicode_page)
+        except ValueError:
+            logger.warning("%20s couldn't parse %s so giving up on webpage biblio" 
+                            % (self.provider_name, id))            
+            return {}
 
         try:
             response = parsed_html.find(".//title").text
