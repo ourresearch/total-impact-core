@@ -190,6 +190,11 @@ def prep_collection_items(aliases):
             items=str(items)
         ))
 
+    # batch upload the new docs to the db
+    # make sure they are there before the provider updates start happening
+    for doc in mydao.db.update(items):
+        pass
+
     # for each item, set the number of providers that need to run before the update is done
     # and put them on the update queue
     for item in items:
@@ -199,10 +204,6 @@ def prep_collection_items(aliases):
                 default_settings.PROVIDERS)
         )
         myredis.add_to_alias_queue(item["_id"], item["aliases"])
-
-    # batch upload the new docs to the db
-    for doc in mydao.db.update(items):
-        pass
 
     return tiids
 
