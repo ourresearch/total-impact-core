@@ -247,7 +247,6 @@ class TestCollection(ViewsTester):
              u'_rev',
              u'created',
              u'last_modified',
-             u'ip_address',
              u'_id',
              u'key_hash',
              u'owner',
