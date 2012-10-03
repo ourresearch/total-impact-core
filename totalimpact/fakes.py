@@ -104,7 +104,7 @@ class ReportPage:
                 items = json.loads(resp.text)["items"]
             except ValueError:
                 items = []
-                logger.warning("POSTing '{url}' returned no json, only '{resp}') ".format(
+                logger.warning("get '{url}' returned no json, only '{resp}') ".format(
                         url=url, resp=resp.text))
 
             tries += 1
