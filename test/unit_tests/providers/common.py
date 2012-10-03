@@ -169,6 +169,7 @@ class ProviderTestCase:
         Provider.http_get = get_500
         new_aliases = self.provider.aliases([self.testitem_aliases])
 
+    @nottest
     def test_provider_aliases_empty(self):
         if not self.provider.provides_aliases:
             raise SkipTest
