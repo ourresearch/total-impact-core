@@ -237,7 +237,7 @@ class TestItemFactory():
         assert_equals(response, False)
 
     def test_is_currently_updating_yes(self):
-        self.r.set_num_providers_left("tiidthatisnotdone", 11)        
+        self.r.set_num_providers_left("tiidthatisnotdone", 10)
         response = models.ItemFactory.is_currently_updating("tiidthatisnotdone", self.r)
         assert_equals(response, True)
 
