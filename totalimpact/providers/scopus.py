@@ -107,7 +107,11 @@ class Scopus(Provider):
 
         url = self._get_templated_url(provider_url_template, id, "metrics")
         page = self._get_page(url)
+        if not page:
+            logging.info("empty page with doi {id}".format(id=id))
+            return None
         if "Result set was empty" in page:
+            logging.warning("empty result set with doi {id}".format(id=id))
             return None
         relevant_record = self._get_relevant_record(page, id)
         if not relevant_record:
