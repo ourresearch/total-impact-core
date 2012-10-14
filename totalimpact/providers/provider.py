@@ -461,7 +461,7 @@ class Provider(object):
         # ensure that a user-agent string is set
         if headers is None:
             headers = {}
-        headers["User-Agent"] = "ImpactStory"    
+        headers["User-Agent"] = "ImpactStory"   
         
         # make the request        
         try:
