@@ -28,13 +28,10 @@ class TestOrcid(ProviderTestCase):
         expected = [('doi', '10.1002/meet.14504701413'), ('doi', '10.1038/npre.2007.425.2'), ('doi', '10.1002/meet.14504701421'), ('doi', '10.1038/npre.2008.2152.1'), ('doi', '10.1038/npre.2007.361'), ('doi', '10.1038/473285a'), ('doi', '10.1038/npre.2010.4267.1'), ('doi', '10.1016/j.joi.2009.11.010'), ('doi', '10.1038/npre.2010.5452.1')]
         assert_equals(members, expected)
 
-    @raises(ProviderItemNotFoundError)
     def test_extract_members_zero_items(self):
-        page = """<orcid-message xmlns="http://www.orcid.org/ns/orcid">
-    <message-version>1.0.6</message-version>
-    <orcid-profile type="user">
-        <orcid>0000-0003-1613-5981</orcid></orcid-profile></orcid-message>"""
+        page = """{"message-version":"1.0.6","orcid-profile":{"orcid":{"value":"0000-0003-1613-5981"}}}"""
         members = self.provider._extract_members(page, TEST_ORCID_ID)
+        assert_equals(members, [])
 
     @http
     def test_member_items(self):

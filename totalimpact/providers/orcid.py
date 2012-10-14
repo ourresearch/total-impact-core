@@ -1,8 +1,5 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderItemNotFoundError
-from xml.dom import minidom 
-from xml.parsers.expat import ExpatError
-import re
 
 import logging
 logger = logging.getLogger('ti.providers.orcid')
@@ -12,16 +9,27 @@ class Orcid(Provider):
     url = "http://www.orcid.org"
     member_items_url_template = "http://pub.orcid.org/%s/orcid-works"
         
-    DOI_PATTERN = re.compile("<work-external-identifier-id>(?P<downloads>10\..+)</work-external-identifier-id>")
-
     def __init__(self):
         super(Orcid, self).__init__()
         
     def _extract_members(self, page, query_string=None):
-        if '<orcid-profile' not in page:
+        if 'orcid-profile' not in page:
             raise ProviderContentMalformedError("Content does not contain expected text")
 
-        dois = self.DOI_PATTERN.findall(page)
+        data = provider._load_json(page)
+        dois = []
+        try:
+            orcid_works = data["orcid-profile"]["orcid-activities"]["orcid-works"]["orcid-work"]
+        except KeyError:
+            return []
+
+        for work in orcid_works:
+            ids = work["work-external-identifiers"]["work-external-identifier"]
+            for myid in ids:
+                if myid['work-external-identifier-type'] == "DOI":
+                    doi = myid['work-external-identifier-id']['value']
+                    dois += [doi]
+
         if not dois:
             raise ProviderItemNotFoundError
 
@@ -39,9 +47,12 @@ class Orcid(Provider):
             provider_url_template = self.member_items_url_template
 
         url = self._get_templated_url(provider_url_template, query_string, "members")
+        headers = {}
+        headers["accept"] = "application/json"
 
         # try to get a response from the data provider  
-        response = self.http_get(url, cache_enabled=cache_enabled)
+        # cache FALSE for now because people probably changing ORCIDs a lot
+        response = self.http_get(url, headers=headers, cache_enabled=False) 
 
         if response.status_code != 200:
             self.logger.info("%s status_code=%i" 
