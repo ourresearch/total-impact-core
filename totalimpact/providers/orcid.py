@@ -24,11 +24,15 @@ class Orcid(Provider):
             return []
 
         for work in orcid_works:
-            ids = work["work-external-identifiers"]["work-external-identifier"]
-            for myid in ids:
-                if myid['work-external-identifier-type'] == "DOI":
-                    doi = myid['work-external-identifier-id']['value']
-                    dois += [doi]
+            try:
+                ids = work["work-external-identifiers"]["work-external-identifier"]
+                for myid in ids:
+                    if myid['work-external-identifier-type'] == "DOI":
+                        doi = myid['work-external-identifier-id']['value']
+                        dois += [doi]
+            except KeyError:
+                logger.info("no external identifiers for %s, so skipping" %(str(work)))
+                pass
 
         if not dois:
             raise ProviderItemNotFoundError
