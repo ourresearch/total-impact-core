@@ -1,0 +1,268 @@
+<orcid-message xmlns="http://www.orcid.org/ns/orcid">
+    <message-version>1.0.6</message-version>
+    <orcid-profile type="user">
+        <orcid>0000-0003-1613-5981</orcid>
+        <orcid-history>
+            <creation-method>website</creation-method>
+            <completion-date>2012-10-13T18:44:43.683+01:00</completion-date>
+            <submission-date>2012-10-13T18:15:32.021+01:00</submission-date>
+            <claimed>true</claimed>
+            <email-verified>true</email-verified>
+        </orcid-history>
+        <orcid-activities>
+            <orcid-works>
+                <orcid-work put-code="3000">
+                    <work-title>
+                        <title>Data archiving is a good investment</title>
+                    </work-title>
+                    <work-citation>
+                        <work-citation-type>formatted-unspecified</work-citation-type>
+                        <citation>Piwowar, H, Vision, T &amp; Whitlock, M, 2011, 'Data archiving is a good investment', &lt;i&gt;Nature&lt;/i&gt;, vol. 473, no. 7347, p. 285.</citation>
+                    </work-citation>
+                    <publication-date>
+                        <year>2011</year>
+                        <month>05</month>
+                        <day>19</day>
+                    </publication-date>
+                    <work-external-identifiers>
+                        <work-external-identifier>
+                            <work-external-identifier-type>doi</work-external-identifier-type>
+                            <work-external-identifier-id>10.1038/473285a</work-external-identifier-id>
+                        </work-external-identifier>
+                    </work-external-identifiers>
+                    <work-contributors>
+                        <contributor>
+                            <contributor-attributes>
+<contributor-sequence>first</contributor-sequence>
+<contributor-role>author</contributor-role>
+                            </contributor-attributes>
+                        </contributor>
+                    </work-contributors>
+                </orcid-work>
+                <orcid-work put-code="3001">
+                    <work-title>
+                        <title>Data citation in the wild</title>
+                    </work-title>
+                    <work-citation>
+                        <work-citation-type>formatted-unspecified</work-citation-type>
+                        <citation>Enriquez, V, Walker Judson, S, Walker, N, Allard, S, Cook, R, Piwowar, H, Sandusky, R, Vision, T &amp; Wilson, B, 2010, 'Data citation in the wild', &lt;i&gt;Nature Precedings&lt;/i&gt;.</citation>
+                    </work-citation>
+                    <publication-date>
+                        <year>2010</year>
+                        <month>12</month>
+                        <day>29</day>
+                    </publication-date>
+                    <work-external-identifiers>
+                        <work-external-identifier>
+                            <work-external-identifier-type>doi</work-external-identifier-type>
+                            <work-external-identifier-id>10.1038/npre.2010.5452.1</work-external-identifier-id>
+                        </work-external-identifier>
+                    </work-external-identifiers>
+                    <work-contributors>
+                        <contributor>
+                            <contributor-attributes>
+<contributor-sequence>first</contributor-sequence>
+<contributor-role>author</contributor-role>
+                            </contributor-attributes>
+                        </contributor>
+                    </work-contributors>
+                </orcid-work>
+                <orcid-work put-code="3002">
+                    <work-title>
+                        <title>Envisioning a data reuse registry</title>
+                    </work-title>
+                    <work-citation>
+                        <work-citation-type>formatted-unspecified</work-citation-type>
+                        <citation>Piwowar, H &amp; Chapman, W, 2008, 'Envisioning a data reuse registry', &lt;i&gt;Nature Precedings&lt;/i&gt;.</citation>
+                    </work-citation>
+                    <publication-date>
+                        <year>2008</year>
+                        <month>08</month>
+                        <day>04</day>
+                    </publication-date>
+                    <work-external-identifiers>
+                        <work-external-identifier>
+                            <work-external-identifier-type>doi</work-external-identifier-type>
+                            <work-external-identifier-id>10.1038/npre.2008.2152.1</work-external-identifier-id>
+                        </work-external-identifier>
+                    </work-external-identifiers>
+                    <work-contributors>
+                        <contributor>
+                            <contributor-attributes>
+<contributor-sequence>first</contributor-sequence>
+<contributor-role>author</contributor-role>
+                            </contributor-attributes>
+                        </contributor>
+                    </work-contributors>
+                </orcid-work>
+                <orcid-work put-code="3003">
+                    <work-title>
+                        <title>Examining the uses of shared data</title>
+                    </work-title>
+                    <work-citation>
+                        <work-citation-type>formatted-unspecified</work-citation-type>
+                        <citation>Piwowar, H, Piwowar, H &amp; Fridsma, D, 2007, 'Examining the uses of shared data', &lt;i&gt;Nature Precedings&lt;/i&gt;.</citation>
+                    </work-citation>
+                    <publication-date>
+                        <year>2007</year>
+                        <month>07</month>
+                        <day>17</day>
+                    </publication-date>
+                    <work-external-identifiers>
+                        <work-external-identifier>
+                            <work-external-identifier-type>doi</work-external-identifier-type>
+                            <work-external-identifier-id>10.1038/npre.2007.425.2</work-external-identifier-id>
+                        </work-external-identifier>
+                    </work-external-identifiers>
+                    <work-contributors>
+                        <contributor>
+                            <contributor-attributes>
+<contributor-sequence>first</contributor-sequence>
+<contributor-role>author</contributor-role>
+                            </contributor-attributes>
+                        </contributor>
+                    </work-contributors>
+                </orcid-work>
+                <orcid-work put-code="3004">
+                    <work-title>
+                        <title>Expediting medical literature coding with query-building</title>
+                    </work-title>
+                    <work-citation>
+                        <work-citation-type>formatted-unspecified</work-citation-type>
+                        <citation>Garnett, A, Piwowar, H, Rasmussen, E &amp; Illes, J, 2011, 'Expediting medical literature coding with query-building', &lt;i&gt;Proceedings of the American Society for Information Science and Technology&lt;/i&gt;, vol. 94, no. 2, pp. 1-2.</citation>
+                    </work-citation>
+                    <publication-date>
+                        <year>2011</year>
+                        <month>02</month>
+                        <day>03</day>
+                    </publication-date>
+                    <work-external-identifiers>
+                        <work-external-identifier>
+                            <work-external-identifier-type>doi</work-external-identifier-type>
+                            <work-external-identifier-id>10.1002/meet.14504701421</work-external-identifier-id>
+                        </work-external-identifier>
+                    </work-external-identifiers>
+                    <work-contributors>
+                        <contributor>
+                            <contributor-attributes>
+<contributor-sequence>first</contributor-sequence>
+<contributor-role>author</contributor-role>
+                            </contributor-attributes>
+                        </contributor>
+                    </work-contributors>
+                </orcid-work>
+                <orcid-work put-code="3005">
+                    <work-title>
+                        <title>Public sharing of research datasets: A pilot study of associations</title>
+                    </work-title>
+                    <work-citation>
+                        <work-citation-type>formatted-unspecified</work-citation-type>
+                        <citation>Piwowar, H &amp; Chapman, W, 2010, 'Public sharing of research datasets: A pilot study of associations', &lt;i&gt;Journal of Informetrics&lt;/i&gt;, vol. 4, no. 1, pp. 1-156.</citation>
+                    </work-citation>
+                    <publication-date>
+                        <year>2010</year>
+                        <month>04</month>
+                    </publication-date>
+                    <work-external-identifiers>
+                        <work-external-identifier>
+                            <work-external-identifier-type>doi</work-external-identifier-type>
+                            <work-external-identifier-id>10.1016/j.joi.2009.11.010</work-external-identifier-id>
+                        </work-external-identifier>
+                    </work-external-identifiers>
+                    <work-contributors>
+                        <contributor>
+                            <contributor-attributes>
+<contributor-sequence>first</contributor-sequence>
+<contributor-role>author</contributor-role>
+                            </contributor-attributes>
+                        </contributor>
+                    </work-contributors>
+                </orcid-work>
+                <orcid-work put-code="3006">
+                    <work-title>
+                        <title>Sharing Detailed Research Data Is Associated with Increased Citation Rate</title>
+                    </work-title>
+                    <work-citation>
+                        <work-citation-type>formatted-unspecified</work-citation-type>
+                        <citation>Piwowar, H &amp; Piwowar, H, 2007, 'Sharing Detailed Research Data Is Associated with Increased Citation Rate', &lt;i&gt;Nature Precedings&lt;/i&gt;.</citation>
+                    </work-citation>
+                    <publication-date>
+                        <year>2007</year>
+                        <month>07</month>
+                        <day>05</day>
+                    </publication-date>
+                    <work-external-identifiers>
+                        <work-external-identifier>
+                            <work-external-identifier-type>doi</work-external-identifier-type>
+                            <work-external-identifier-id>10.1038/npre.2007.361</work-external-identifier-id>
+                        </work-external-identifier>
+                    </work-external-identifiers>
+                    <work-contributors>
+                        <contributor>
+                            <contributor-attributes>
+<contributor-sequence>first</contributor-sequence>
+<contributor-role>author</contributor-role>
+                            </contributor-attributes>
+                        </contributor>
+                    </work-contributors>
+                </orcid-work>
+                <orcid-work put-code="3007">
+                    <work-title>
+                        <title>Using open access literature to guide full-text query formulation</title>
+                    </work-title>
+                    <work-citation>
+                        <work-citation-type>formatted-unspecified</work-citation-type>
+                        <citation>Piwowar, H, Piwowar, H &amp; Chapman, W, 2010, 'Using open access literature to guide full-text query formulation', &lt;i&gt;Nature Precedings&lt;/i&gt;.</citation>
+                    </work-citation>
+                    <publication-date>
+                        <year>2010</year>
+                        <month>03</month>
+                        <day>09</day>
+                    </publication-date>
+                    <work-external-identifiers>
+                        <work-external-identifier>
+                            <work-external-identifier-type>doi</work-external-identifier-type>
+                            <work-external-identifier-id>10.1038/npre.2010.4267.1</work-external-identifier-id>
+                        </work-external-identifier>
+                    </work-external-identifiers>
+                    <work-contributors>
+                        <contributor>
+                            <contributor-attributes>
+<contributor-sequence>first</contributor-sequence>
+<contributor-role>author</contributor-role>
+                            </contributor-attributes>
+                        </contributor>
+                    </work-contributors>
+                </orcid-work>
+                <orcid-work put-code="3008">
+                    <work-title>
+                        <title>Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets</title>
+                    </work-title>
+                    <work-citation>
+                        <work-citation-type>formatted-unspecified</work-citation-type>
+                        <citation>Piwowar, H, 2011, 'Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets', &lt;i&gt;Proceedings of the American Society for Information Science and Technology&lt;/i&gt;, vol. 3, no. 3, pp. 7-2.</citation>
+                    </work-citation>
+                    <publication-date>
+                        <year>2011</year>
+                        <month>02</month>
+                        <day>03</day>
+                    </publication-date>
+                    <work-external-identifiers>
+                        <work-external-identifier>
+                            <work-external-identifier-type>doi</work-external-identifier-type>
+                            <work-external-identifier-id>10.1002/meet.14504701413</work-external-identifier-id>
+                        </work-external-identifier>
+                    </work-external-identifiers>
+                    <work-contributors>
+                        <contributor>
+                            <contributor-attributes>
+<contributor-sequence>first</contributor-sequence>
+<contributor-role>author</contributor-role>
+                            </contributor-attributes>
+                        </contributor>
+                    </work-contributors>
+                </orcid-work>
+            </orcid-works>
+        </orcid-activities>
+    </orcid-profile>
+</orcid-message>
