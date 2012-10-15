@@ -229,11 +229,16 @@ def build_all_reference_lookups(myredis, mydao):
     confidence_interval_level = 0.95
     percentiles = range(100)
 
-    table_return = calc_confidence_interval_table(size_of_reference_collections, 
-            confidence_interval_level=confidence_interval_level, 
-            percentiles=percentiles)
-    confidence_interval_table = table_return["lookup_table"]
-    #print(json.dumps(confidence_interval_table, indent=4))
+    confidence_interval_table = myredis.get_confidence_interval_table(size_of_reference_collections, confidence_interval_level)
+    if not confidence_interval_table:
+        table_return = calc_confidence_interval_table(size_of_reference_collections, 
+                confidence_interval_level=confidence_interval_level, 
+                percentiles=percentiles)
+        confidence_interval_table = table_return["lookup_table"]
+        myredis.set_confidence_interval_table(size_of_reference_collections, 
+                                                confidence_interval_level, 
+                                                confidence_interval_table)        
+        #print(json.dumps(confidence_interval_table, indent=4))
 
     res = mydao.db.view("reference-sets/reference-sets", descending=True, include_docs=False, limits=100)
     logging.info("Number rows = " + str(len(res.rows)))
