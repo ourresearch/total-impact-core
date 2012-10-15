@@ -50,12 +50,30 @@ def get_memberitems_status(self, memberitems_key):
         query_status = None
     return query_status
 
+def set_confidence_interval_table(self, size, level, table):
+    key = "confidence_interval_table:{size},{level}".format(
+        size=size, level=level)
+    table_str = json.dumps(table)
+    self.set(key, table_str)
+    self.expire(key, 60*60*24*7)  # for a week
+
+def get_confidence_interval_table(self, size, level):
+    key = "confidence_interval_table:{size},{level}".format(
+        size=size, level=level)
+    try:
+        table_str = self.get(key)
+        table = json.loads(table_str)
+    except TypeError:
+        table = None
+    return table
+
 redis.Redis.set_num_providers_left = set_num_providers_left
 redis.Redis.get_num_providers_left = get_num_providers_left
 redis.Redis.decr_num_providers_left = decr_num_providers_left
 redis.Redis.add_to_alias_queue = add_to_alias_queue
 redis.Redis.set_memberitems_status = set_memberitems_status
-redis.Redis.get_memberitems_status = get_memberitems_status
+redis.Redis.set_confidence_interval_table = set_confidence_interval_table
+redis.Redis.get_confidence_interval_table = get_confidence_interval_table
 
 
 
