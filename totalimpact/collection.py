@@ -277,7 +277,10 @@ def build_all_reference_lookups(myredis, mydao):
 # from http://userpages.umbc.edu/~rcampbel/Computers/Python/probstat.html
 # also called binomial coefficient
 def choose(n, k):
-    return 1 if (k == 0) else n*choose(n-1, k-1)/k  
+   accum = 1
+   for m in range(1,k+1):
+      accum = accum*(n-k+m)/m
+   return accum
 
 # from formula at http://www.milefoot.com/math/stat/ci-medians.htm
 def probPercentile(p, n, i):
