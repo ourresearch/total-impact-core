@@ -72,6 +72,7 @@ redis.Redis.get_num_providers_left = get_num_providers_left
 redis.Redis.decr_num_providers_left = decr_num_providers_left
 redis.Redis.add_to_alias_queue = add_to_alias_queue
 redis.Redis.set_memberitems_status = set_memberitems_status
+redis.Redis.get_memberitems_status = get_memberitems_status
 redis.Redis.set_confidence_interval_table = set_confidence_interval_table
 redis.Redis.get_confidence_interval_table = get_confidence_interval_table
 
