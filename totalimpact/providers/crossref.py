@@ -52,9 +52,23 @@ class Crossref(Provider):
         dict_of_keylists = {
             'title' : ['doi_record', 'title'],
             'year' : ['doi_record', 'year'],
-            'journal' : ['doi_record', 'abbrev_title'],
+            'journal_abbrev' : ['doi_record', 'abbrev_title'],
+            'journal_full' : ['doi_record', 'full_title'],
         }
         biblio_dict = provider._extract_from_xml(page, dict_of_keylists)
+        if not biblio_dict:
+          return {}
+
+        try:
+            if "journal_abbrev" in biblio_dict:
+                biblio_dict["journal"] = biblio_dict["journal_abbrev"]
+                del biblio_dict["journal_abbrev"]
+                del biblio_dict["journal_full"]
+            elif "journal_full" in biblio_dict:
+                biblio_dict["journal"] = biblio_dict["journal_full"]
+                del biblio_dict["journal_full"]
+        except (KeyError, TypeError):
+            pass
 
         (doc, lookup_function) = provider._get_doc_from_xml(page)
         surname_list = []
