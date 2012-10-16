@@ -2,6 +2,7 @@ from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from totalimpact.providers import provider
+from test.utils import http
 
 import os
 import collections
@@ -33,6 +34,7 @@ class TestCrossRef(ProviderTestCase):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
         biblio = self.provider._extract_biblio(f.read())
         expected = {'authors': 'Piwowar, Day, Fridsma', 'journal': u'PLoS ONE', 'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'year': 2007}
+        print biblio
         assert_equals(biblio, expected)
 
     def test_extract_aliases(self):
@@ -42,3 +44,17 @@ class TestCrossRef(ProviderTestCase):
         print aliases
         expected = [('url', u'http://dx.plos.org/10.1371/journal.pone.0000308'), ('biblio', {'authors': u'Piwowar, Day, Fridsma', 'journal': u'PLoS ONE', 'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'year': 2007})]
         assert_equals(sorted(aliases), sorted(expected))
+
+    @http
+    def test_biblio(self):
+        biblio = self.provider.biblio([("doi", "10.7554/eLife.00048")])
+        expected = {'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Arag\xf3n, Li, Walter', 'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': 2012}
+        print biblio
+        assert_equals(biblio, expected)        
+
+    @http
+    def test_biblio(self):
+        biblio = self.provider.biblio([self.testitem_biblio])
+        expected = {'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'authors': u'Shotton, Portwin, Klyne, Miles', 'journal': u'PLoS Comput Biol', 'year': 2009}
+        print biblio
+        assert_equals(biblio, expected)        
