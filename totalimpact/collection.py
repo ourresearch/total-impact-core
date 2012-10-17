@@ -244,38 +244,52 @@ def build_all_reference_lookups(myredis, mydao):
     logging.info("Number rows = " + str(len(res.rows)))
     reference_lookup_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict)}
     reference_histogram_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict)}
-    for row in res.rows:
-        try:
-            (cid, title) = row.key
-            refset_metadata = row.value
-            genre = refset_metadata["genre"]
-            year = refset_metadata["year"]
-            refset_name = refset_metadata["name"]
-            refset_version = refset_metadata["version"]
-        except ValueError:
-            logging.error("Normalization '%s' not formatted as expected, not loading its normalizations" %str(row.key))
-            continue
 
-        if refset_version < 0.1:
-            logging.error("Refset version too low for '%s', not loading its normalizations" %str(row.key))
-            continue
+    # randomize rows so that multiple gunicorn instances hit them in different orders
+    randomized_rows = random.shuffle(res.rows)
+    if randomized_rows:
+        for row in randomized_rows:
+            histogram = myredis.get_reference_histogram_dict(genre, refset_name, year)
+            lookup = myredis.get_reference_lookup_dict(genre, refset_name, year)
+            if histogram and lookup:
+                reference_histogram_dict[genre][refset_name][year] = histogram
+                reference_lookup_dict[genre][refset_name][year] = lookup
+            else:
+                try:
+                    (cid, title) = row.key
+                    refset_metadata = row.value
+                    genre = refset_metadata["genre"]
+                    year = refset_metadata["year"]
+                    refset_name = refset_metadata["name"]
+                    refset_version = refset_metadata["version"]
+                except ValueError:
+                    logging.error("Normalization '%s' not formatted as expected, not loading its normalizations" %str(row.key))
+                    continue
 
-        if refset_name:
-            cid = row.id
-            try:
-                # send it without reference sets because we are trying to load the reference sets here!
-                (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)
-            except (LookupError, AttributeError):       
-                raise #not found
+                if refset_version < 0.1:
+                    logging.error("Refset version too low for '%s', not loading its normalizations" %str(row.key))
+                    continue
 
-            logging.info("Loading normalizations for %s" %coll_with_items["title"])
+                if refset_name:
+                    cid = row.id
+                    try:
+                        # send it without reference sets because we are trying to load the reference sets here!
+                        (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)
+                    except (LookupError, AttributeError):       
+                        raise #not found
 
-            # hack for now to get big collections
-            normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])
-            reference_histogram_dict[genre][refset_name][year] = normalization_numbers
+                    logging.info("Loading normalizations for %s" %coll_with_items["title"])
 
-            reference_lookup = get_normalization_confidence_interval_ranges(normalization_numbers, confidence_interval_table)
-            reference_lookup_dict[genre][refset_name][year] = reference_lookup
+                    # hack for now to get big collections
+                    normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])
+                    reference_histogram_dict[genre][refset_name][year] = normalization_numbers
+
+                    reference_lookup = get_normalization_confidence_interval_ranges(normalization_numbers, confidence_interval_table)
+                    reference_lookup_dict[genre][refset_name][year] = reference_lookup
+
+                    # save to redis
+                    myredis.set_reference_histogram_dict(genre, refset_name, year, normalization_numbers)
+                    myredis.set_reference_lookup_dict(genre, refset_name, year, reference_lookup)
 
     return(reference_lookup_dict, reference_histogram_dict)
 
