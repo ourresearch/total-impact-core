@@ -246,7 +246,8 @@ def build_all_reference_lookups(myredis, mydao):
     reference_histogram_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict)}
 
     # randomize rows so that multiple gunicorn instances hit them in different orders
-    randomized_rows = random.shuffle(list(res.rows))
+    randomized_rows = res.rows
+    random.shuffle(randomized_rows)
     if randomized_rows:
         for row in randomized_rows:
             try:
