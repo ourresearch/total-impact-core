@@ -246,30 +246,31 @@ def build_all_reference_lookups(myredis, mydao):
     reference_histogram_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict)}
 
     # randomize rows so that multiple gunicorn instances hit them in different orders
-    randomized_rows = random.shuffle(res.rows)
+    randomized_rows = random.shuffle(list(res.rows))
     if randomized_rows:
         for row in randomized_rows:
-            histogram = myredis.get_reference_histogram_dict(genre, refset_name, year)
-            lookup = myredis.get_reference_lookup_dict(genre, refset_name, year)
-            if histogram and lookup:
-                reference_histogram_dict[genre][refset_name][year] = histogram
-                reference_lookup_dict[genre][refset_name][year] = lookup
-            else:
-                try:
-                    (cid, title) = row.key
-                    refset_metadata = row.value
-                    genre = refset_metadata["genre"]
-                    year = refset_metadata["year"]
-                    refset_name = refset_metadata["name"]
-                    refset_version = refset_metadata["version"]
-                except ValueError:
-                    logging.error("Normalization '%s' not formatted as expected, not loading its normalizations" %str(row.key))
-                    continue
-
+            try:
+                (cid, title) = row.key
+                refset_metadata = row.value
+                genre = refset_metadata["genre"]
+                year = refset_metadata["year"]
+                refset_name = refset_metadata["name"]
+                refset_version = refset_metadata["version"]
                 if refset_version < 0.1:
                     logging.error("Refset version too low for '%s', not loading its normalizations" %str(row.key))
                     continue
+            except ValueError:
+                logging.error("Normalization '%s' not formatted as expected, not loading its normalizations" %str(row.key))
+                continue
 
+            histogram = myredis.get_reference_histogram_dict(genre, refset_name, year)
+            lookup = myredis.get_reference_lookup_dict(genre, refset_name, year)
+            if histogram and lookup:
+                logging.info("Loaded successfully from cache")
+                reference_histogram_dict[genre][refset_name][year] = histogram
+                reference_lookup_dict[genre][refset_name][year] = lookup
+            else:
+                logging.info("Not found in cache, so now building from items")
                 if refset_name:
                     cid = row.id
                     try:
