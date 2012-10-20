@@ -269,7 +269,7 @@ class TestBackendClass(TestBackend):
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to resolve the dryad doi before can go get metrics
-        expected = {'metrics': [], 'biblio': [], 'aliases': ['dryad']}
+        expected = {'metrics': [], 'biblio': [], 'aliases': ['dryad', 'figshare']}
         assert_equals(response, expected)
 
     def test_decide_who_to_call_next_dryad_with_url(self):
@@ -279,7 +279,7 @@ class TestBackendClass(TestBackend):
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # have url so now can go get all the metrics
-        expected = {'metrics': ['wikipedia'], 'biblio': ['dryad'], 'aliases': []}
+        expected = {'metrics': ['wikipedia'], 'biblio': ['dryad', 'figshare'], 'aliases': []}
         assert_equals(response, expected)
 
     def test_decide_who_to_call_next_pmid_not_run(self):

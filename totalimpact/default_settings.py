@@ -17,6 +17,7 @@ PROVIDERS = [
     # best biblio providers go here, in order with best first
     ("crossref", {}),
     ("dryad", {}),            
+    ("figshare", {}),            
     ("github", {}),
     ("slideshare", {}),
 

@@ -126,24 +126,34 @@ class ItemFactory():
 
     @classmethod
     def decide_genre(self, alias_dict):
+
         '''Uses available aliases to decide the item's genre'''
         if "doi" in alias_dict:
-            if "10.5061/dryad." in "".join(alias_dict["doi"]):
+            joined_doi_string = "".join(alias_dict["doi"])
+            joined_doi_string = joined_doi_string.lower()
+            if "10.5061/dryad." in joined_doi_string:
+                return "dataset"
+            elif ".figshare." in joined_doi_string:
                 return "dataset"
             else:
                 return "article"
+
         elif "pmid" in alias_dict:
             return "article"
+
         elif "github" in alias_dict:
             return "software"
+
         elif "url" in alias_dict:
-            joined_urls = "".join(alias_dict["url"])
-            if "slideshare.net" in joined_urls:
+            joined_url_string = "".join(alias_dict["url"])
+            joined_url_string = joined_url_string.lower()
+            if "slideshare.net" in joined_url_string:
                 return "slides"
-            elif "github.com" in joined_urls:
+            elif "github.com" in joined_url_string:
                 return "software"
             else:
                 return "webpage"
+                
         else:
             return "unknown"
 

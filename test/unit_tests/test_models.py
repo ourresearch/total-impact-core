@@ -178,8 +178,13 @@ class TestItemFactory():
         genre = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "software")
 
-    def test_decide_genre_dataset(self):
+    def test_decide_genre_dataset_dryad(self):
         aliases = {"doi":["10.5061/dryad.18"]}
+        genre = models.ItemFactory.decide_genre(aliases)
+        assert_equals(genre, "dataset")
+
+    def test_decide_genre_dataset_figshare(self):
+        aliases = {"doi":["10.6084/m9.figshare.92393"]}
         genre = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "dataset")
 
