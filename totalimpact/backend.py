@@ -268,7 +268,7 @@ class Backend(Worker):
     @classmethod
     def sniffer(cls, item_aliases, aliases_providers_run, provider_config=default_settings.PROVIDERS):
         simple_products_provider_lookup = {
-            "dataset":["dryad"], 
+            "dataset":["dryad", "figshare"], 
             "software":["github"],
             "slides":["slideshare"], 
             "webpage":["webpage"], 
