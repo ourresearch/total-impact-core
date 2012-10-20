@@ -31,6 +31,13 @@ class Figshare(Provider):
             "provider_url": "http://figshare.com",
             "description": "The number of times this has been downloaded",
             "icon": "http://figshare.com/static/img/favicon.png",
+            },
+        "views": {
+            "display_name": "views",
+            "provider": "figshare",
+            "provider_url": "http://figshare.com",
+            "description": "The number of times this item has been viewed",
+            "icon": "http://figshare.com/static/img/favicon.png",
             }
     }     
 
@@ -94,7 +101,8 @@ class Figshare(Provider):
 
         dict_of_keylists = {
             'figshare:shares' : ['shares'],
-            'figshare:downloads' : ['downloads']
+            'figshare:downloads' : ['downloads'],
+            'figshare:views' : ['views']
         }
         item = self._extract_item(page, id)
         metrics_dict = provider._extract_from_data_dict(item, dict_of_keylists)
