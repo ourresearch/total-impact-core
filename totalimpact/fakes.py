@@ -148,8 +148,7 @@ class CreateCollectionPage:
             logger.info("loaded the create-collection page in {elapsed} seconds.".format(
                 elapsed=elapsed))
         else:
-            logger.warning("create-collection page for '{collection_id}' failed to load!".format(
-                    collection_id=collection_id))
+            logger.warning("create-collection page failed to load!")
         self.aliases = []
         self.collection_name = "My collection"
 

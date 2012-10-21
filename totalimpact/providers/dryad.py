@@ -133,23 +133,27 @@ class Dryad(Provider):
             else:
                 raise(self._get_error(status_code))
 
+        if "Dryad" not in page:
+            raise ProviderContentMalformedError
+
+        metrics_dict = {}
+
         view_matches_package = self.DRYAD_VIEWS_PACKAGE_PATTERN.search(page)
         try:
-            view_package = view_matches_package.group("views")
+            views = int(view_matches_package.group("views"))
+            if views:
+                metrics_dict["dryad:package_views"] = views
         except (ValueError, AttributeError):
-            raise ProviderContentMalformedError("Content does not contain expected text")
+            pass
         
         download_matches = self.DRYAD_DOWNLOADS_PATTERN.finditer(page)
         try:
             downloads = [int(download_match.group("downloads")) for download_match in download_matches]
-            total_downloads = sum(downloads)
+            downloads_sum = sum(downloads)
+            if downloads_sum:
+                metrics_dict["dryad:total_downloads"] = downloads_sum
         except (ValueError, AttributeError):
-            raise ProviderContentMalformedError("Content does not contain expected text")            
-
-        metrics_dict = {
-            "dryad:package_views": int(view_package),
-            "dryad:total_downloads": int(total_downloads),
-        }
+            pass
 
         return metrics_dict
 

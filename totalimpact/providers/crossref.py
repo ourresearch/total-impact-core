@@ -52,9 +52,23 @@ class Crossref(Provider):
         dict_of_keylists = {
             'title' : ['doi_record', 'title'],
             'year' : ['doi_record', 'year'],
-            'journal' : ['doi_record', 'abbrev_title'],
+            'journal_abbrev' : ['doi_record', 'abbrev_title'],
+            'journal_full' : ['doi_record', 'full_title'],
         }
         biblio_dict = provider._extract_from_xml(page, dict_of_keylists)
+        if not biblio_dict:
+          return {}
+
+        try:
+            if "journal_abbrev" in biblio_dict:
+                biblio_dict["journal"] = biblio_dict["journal_abbrev"]
+                del biblio_dict["journal_abbrev"]
+                del biblio_dict["journal_full"]
+            elif "journal_full" in biblio_dict:
+                biblio_dict["journal"] = biblio_dict["journal_full"]
+                del biblio_dict["journal_full"]
+        except (KeyError, TypeError):
+            pass
 
         (doc, lookup_function) = provider._get_doc_from_xml(page)
         surname_list = []
@@ -73,7 +87,7 @@ class Crossref(Provider):
         return biblio_dict    
        
     def _extract_aliases(self, page, id=None):
-        dict_of_keylists = {"url": ["doi_record", "journal_article", "doi_data", "resource"]}
+        dict_of_keylists = {"url": ["doi_record", "doi_data", "resource"]}
 
         aliases_dict = provider._extract_from_xml(page, dict_of_keylists)
 
@@ -89,64 +103,3 @@ class Crossref(Provider):
         return aliases_list
 
 
-    def member_items(self, 
-            query_string, 
-            provider_url_template=None, 
-            cache_enabled=True):
-
-        logger.debug("%20s getting member_items for %s" % (self.provider_name, query_string))
-
-        dois = []
-        lines = query_string.split("\n")
-        for line in lines:
-            (first_author, title) = line.split("|")
-            data = searchdoi(title, first_author)
-            print data
-
-            text_str = """<?xml version = "1.0" encoding="UTF-8"?>
-                    <query_batch xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.0" xmlns="http://www.crossref.org/qschema/2.0"
-                      xsi:schemaLocation="http://www.crossref.org/qschema/2.0 http://www.crossref.org/qschema/crossref_query_input2.0.xsd">
-                    <head>
-                       <email_address>totalimpactdev@gmail.com</email_address>
-                       <doi_batch_id>test</doi_batch_id>
-                    </head>
-                    <body>
-                      <query enable-multiple-hits="true"
-                                list-components="false"
-                                expanded-results="false" key="key">
-                        <article_title match="fuzzy">Sharing Detailed Research Data Is Associated</article_title>
-                        <author search-all-authors="false">Piwowar</author>
-                        <component_number></component_number>
-                        <edition_number></edition_number>
-                        <institution_name></institution_name>
-                        <volume></volume>
-                        <issue></issue>
-                        <year></year>
-                        <first_page></first_page>
-                        <journal_title></journal_title>
-                        <proceedings_title></proceedings_title>
-                        <series_title></series_title>
-                        <volume_title></volume_title>
-                        <unstructured_citation></unstructured_citation>
-                      </query>
-                    </body>
-                    </query_batch>""" 
-
-            #url = "http://doi.crossref.org/servlet/query?pid=totalimpactdev@gmail.com&qdata=%s" % text_str
-
-
-            #print url
-
-            #response = self.http_get(url, cache_enabled=cache_enabled)
-            #print response.text
-
-
-            dois += [data]
-
-        aliases = []
-        for doi in dois:
-            if doi and ("10." in doi):
-                aliases += [("doi", doi)]
-
-        print aliases
-        return(aliases)
