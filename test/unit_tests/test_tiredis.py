@@ -43,7 +43,24 @@ class TestTiRedis():
         self.r.decr_num_providers_left("abcd", "myprovider")
         assert_equals("10", self.r.get("num_providers_left:abcd"))
 
+    def test_memberitems_status(self):
+        self.r.set_memberitems_status("abcd", 11)
+        response = self.r.get_memberitems_status("abcd")
+        assert_equals(response, 11)
 
+    def test_confidence_interval_table(self):
+        self.r.set_confidence_interval_table(100, 0.95, {"hi":"there"})
+        response = self.r.get_confidence_interval_table(100, 0.95)
+        assert_equals(response, {"hi":"there"})
 
+    def test_reference_histogram_dict(self):
+        self.r.set_reference_histogram_dict("article", "WoS", 2010, {"hi":"hist"})
+        response = self.r.get_reference_histogram_dict("article", "WoS", 2010)
+        assert_equals(response, {"hi":"hist"})
+
+    def test_lookup_histogram_dict(self):
+        self.r.set_reference_lookup_dict("article", "WoS", 2010, {"hi":"lookup"})
+        response = self.r.get_reference_lookup_dict("article", "WoS", 2010)
+        assert_equals(response, {"hi":"lookup"})
 
 

@@ -229,55 +229,79 @@ def build_all_reference_lookups(myredis, mydao):
     confidence_interval_level = 0.95
     percentiles = range(100)
 
-    table_return = calc_confidence_interval_table(size_of_reference_collections, 
-            confidence_interval_level=confidence_interval_level, 
-            percentiles=percentiles)
-    confidence_interval_table = table_return["lookup_table"]
-    #print(json.dumps(confidence_interval_table, indent=4))
+    confidence_interval_table = myredis.get_confidence_interval_table(size_of_reference_collections, confidence_interval_level)
+    if not confidence_interval_table:
+        table_return = calc_confidence_interval_table(size_of_reference_collections, 
+                confidence_interval_level=confidence_interval_level, 
+                percentiles=percentiles)
+        confidence_interval_table = table_return["lookup_table"]
+        myredis.set_confidence_interval_table(size_of_reference_collections, 
+                                                confidence_interval_level, 
+                                                confidence_interval_table)        
+        #print(json.dumps(confidence_interval_table, indent=4))
 
     res = mydao.db.view("reference-sets/reference-sets", descending=True, include_docs=False, limits=100)
     logging.info("Number rows = " + str(len(res.rows)))
     reference_lookup_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict)}
     reference_histogram_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict)}
-    for row in res.rows:
-        try:
-            (cid, title) = row.key
-            refset_metadata = row.value
-            genre = refset_metadata["genre"]
-            year = refset_metadata["year"]
-            refset_name = refset_metadata["name"]
-            refset_version = refset_metadata["version"]
-        except ValueError:
-            logging.error("Normalization '%s' not formatted as expected, not loading its normalizations" %str(row.key))
-            continue
 
-        if refset_version < 0.1:
-            logging.error("Refset version too low for '%s', not loading its normalizations" %str(row.key))
-            continue
-
-        if refset_name:
-            cid = row.id
+    # randomize rows so that multiple gunicorn instances hit them in different orders
+    randomized_rows = res.rows
+    random.shuffle(randomized_rows)
+    if randomized_rows:
+        for row in randomized_rows:
             try:
-                # send it without reference sets because we are trying to load the reference sets here!
-                (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)
-            except (LookupError, AttributeError):       
-                raise #not found
+                (cid, title) = row.key
+                refset_metadata = row.value
+                genre = refset_metadata["genre"]
+                year = refset_metadata["year"]
+                refset_name = refset_metadata["name"]
+                refset_version = refset_metadata["version"]
+                if refset_version < 0.1:
+                    logging.error("Refset version too low for '%s', not loading its normalizations" %str(row.key))
+                    continue
+            except ValueError:
+                logging.error("Normalization '%s' not formatted as expected, not loading its normalizations" %str(row.key))
+                continue
 
-            logging.info("Loading normalizations for %s" %coll_with_items["title"])
+            histogram = myredis.get_reference_histogram_dict(genre, refset_name, year)
+            lookup = myredis.get_reference_lookup_dict(genre, refset_name, year)
+            if histogram and lookup:
+                logging.info("Loaded successfully from cache")
+                reference_histogram_dict[genre][refset_name][year] = histogram
+                reference_lookup_dict[genre][refset_name][year] = lookup
+            else:
+                logging.info("Not found in cache, so now building from items")
+                if refset_name:
+                    cid = row.id
+                    try:
+                        # send it without reference sets because we are trying to load the reference sets here!
+                        (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)
+                    except (LookupError, AttributeError):       
+                        raise #not found
 
-            # hack for now to get big collections
-            normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])
-            reference_histogram_dict[genre][refset_name][year] = normalization_numbers
+                    logging.info("Loading normalizations for %s" %coll_with_items["title"])
 
-            reference_lookup = get_normalization_confidence_interval_ranges(normalization_numbers, confidence_interval_table)
-            reference_lookup_dict[genre][refset_name][year] = reference_lookup
+                    # hack for now to get big collections
+                    normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])
+                    reference_histogram_dict[genre][refset_name][year] = normalization_numbers
+
+                    reference_lookup = get_normalization_confidence_interval_ranges(normalization_numbers, confidence_interval_table)
+                    reference_lookup_dict[genre][refset_name][year] = reference_lookup
+
+                    # save to redis
+                    myredis.set_reference_histogram_dict(genre, refset_name, year, normalization_numbers)
+                    myredis.set_reference_lookup_dict(genre, refset_name, year, reference_lookup)
 
     return(reference_lookup_dict, reference_histogram_dict)
 
 # from http://userpages.umbc.edu/~rcampbel/Computers/Python/probstat.html
 # also called binomial coefficient
 def choose(n, k):
-    return 1 if (k == 0) else n*choose(n-1, k-1)/k  
+   accum = 1
+   for m in range(1,k+1):
+      accum = accum*(n-k+m)/m
+   return accum
 
 # from formula at http://www.milefoot.com/math/stat/ci-medians.htm
 def probPercentile(p, n, i):

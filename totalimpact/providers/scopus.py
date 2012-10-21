@@ -40,7 +40,7 @@ class Scopus(Provider):
             # extract json from inside the first and last parens
             # from http://codereview.stackexchange.com/questions/2561/converting-jsonp-to-json-is-this-regex-correct
             page = fullpage[ fullpage.index("(")+1 : fullpage.rindex(")") ]
-        except ValueError:
+        except (AttributeError, ValueError):
             raise ProviderContentMalformedError()
 
         data = provider._load_json(page)
@@ -107,7 +107,11 @@ class Scopus(Provider):
 
         url = self._get_templated_url(provider_url_template, id, "metrics")
         page = self._get_page(url)
+        if not page:
+            logging.info("empty page with doi {id}".format(id=id))
+            return None
         if "Result set was empty" in page:
+            #logging.warning("empty result set with doi {id}".format(id=id))
             return None
         relevant_record = self._get_relevant_record(page, id)
         if not relevant_record:

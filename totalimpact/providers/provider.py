@@ -461,7 +461,7 @@ class Provider(object):
         # ensure that a user-agent string is set
         if headers is None:
             headers = {}
-        headers["User-Agent"] = "total-impact"    
+        headers["User-Agent"] = "ImpactStory"   
         
         # make the request        
         try:
@@ -556,11 +556,7 @@ def _lookup_json(data, keylist):
             return None
     return(data)
 
-def _extract_from_json(page, dict_of_keylists):
-    data = _load_json(page)
-    if not data:
-        return {}
-    
+def _extract_from_data_dict(data, dict_of_keylists):
     return_dict = {}
     if dict_of_keylists:
         for (metric, keylist) in dict_of_keylists.iteritems():
@@ -569,6 +565,13 @@ def _extract_from_json(page, dict_of_keylists):
             # only set metrics for non-zero and non-null metrics
             if value:
                 return_dict[metric] = value
+    return return_dict
+
+def _extract_from_json(page, dict_of_keylists):
+    data = _load_json(page)
+    if not data:
+        return {}
+    return_dict = _extract_from_data_dict(data, dict_of_keylists)
     return return_dict
 
 def _get_doc_from_xml(page):
