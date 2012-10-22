@@ -70,11 +70,15 @@ class Figshare(Provider):
         }
         item = self._extract_item(page, id)
         biblio_dict = provider._extract_from_data_dict(item, dict_of_keylists)
+
         if "published_date" in biblio_dict:
             biblio_dict["year"] = biblio_dict["published_date"][-4:]
             del biblio_dict["published_date"]
         if "authors" in biblio_dict:
             biblio_dict["authors"] = ", ".join(author["last_name"] for author in biblio_dict["authors"])
+
+        biblio_dict["repository"] = "figshare"
+
         return biblio_dict    
        
     def _extract_aliases(self, page, id=None):
