@@ -267,13 +267,6 @@ class Backend(Worker):
 
     @classmethod
     def sniffer(cls, item_aliases, aliases_providers_run, provider_config=default_settings.PROVIDERS):
-        simple_products_provider_lookup = {
-            "dataset":["dryad", "figshare"], 
-            "software":["github"],
-            "slides":["slideshare"], 
-            "webpage":["webpage"], 
-            "unknown":[]}
-
         # default to nothing
         aliases_providers = []
         biblio_providers = []
@@ -281,7 +274,7 @@ class Backend(Worker):
 
         all_metrics_providers = [provider.provider_name for provider in 
                         ProviderFactory.get_providers(provider_config, "metrics")]
-        genre = ItemFactory.decide_genre(item_aliases)
+        (genre, host) = ItemFactory.decide_genre(item_aliases)
         has_alias_urls = "url" in item_aliases
 
         if (genre == "article"):
@@ -294,10 +287,12 @@ class Backend(Worker):
                 biblio_providers = ["pubmed", "crossref"]
         else:
             # relevant alias and biblio providers are always the same
-            relevant_providers = simple_products_provider_lookup[genre]
+            relevant_providers = [host]
+            if relevant_providers == ["unknown"]:
+                relevant_providers = ["webpage"]
             # if all the relevant providers have already run, then all the aliases are done
             # or if it already has urls
-            if has_alias_urls or set(relevant_providers).issubset(set(aliases_providers_run)):
+            if has_alias_urls or (set(relevant_providers) == set(aliases_providers_run)):
                 metrics_providers = all_metrics_providers
                 biblio_providers = relevant_providers
             else:
