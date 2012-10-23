@@ -41,7 +41,8 @@ class Cache(object):
         """ Get an entry from the cache, returns None if not found """
         mc = self._get_memcached_client()
         hash_key = self._build_hash_key(key)
-        return mc.get(hash_key)
+        response = mc.get(hash_key)
+        return response
 
     @Retry(3, pylibmc.Error, 0.1)
     def set_cache_entry(self, key, data):
@@ -54,7 +55,7 @@ class Cache(object):
                 raise CacheException("Unable to store into Memcached. Make sure memcached server is running.")
         except UnpickleableError:
             # This happens when trying to cache a thread.lock object, for example.  Just don't cache.
-            logger.debug("In set_cache_entry with " + url + " but got Error")
+            logger.debug("In set_cache_entry with " + data + " but got Error")
             set_response = None
         return (set_response)
   
