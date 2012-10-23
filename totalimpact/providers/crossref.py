@@ -14,77 +14,101 @@ class Crossref(Provider):
     example_id = ("doi", "10.1371/journal.pcbi.1000361")
     url = "http://www.crossref.org/"
     descr = "An official Digital Object Identifier (DOI) Registration Agency of the International DOI Foundation."
-    biblio_url_template = None  #set in init
     aliases_url_template = "http://dx.doi.org/%s"
+    biblio_url_template = "http://dx.doi.org/%s"
 
     def __init__(self):
         super(Crossref, self).__init__()
-        common_url_template = "http://doi.crossref.org/servlet/query?pid=" + self.tool_email + "&qdata=%s&format=unixref"
-        self.biblio_url_template = common_url_template
-
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
         return("doi" == namespace)
 
-
-    def _extract_biblio(self, page, id=None):
-        dict_of_keylists = {
-            'title' : ['doi_record', 'title'],
-            'year' : ['doi_record', 'year'],
-            'journal_abbrev' : ['doi_record', 'abbrev_title'],
-            'journal_full' : ['doi_record', 'full_title'],
-        }
-        biblio_dict = provider._extract_from_xml(page, dict_of_keylists)
-        if not biblio_dict:
-          return {}
-
-        try:
-            if "journal_abbrev" in biblio_dict:
-                biblio_dict["journal"] = biblio_dict["journal_abbrev"]
-                del biblio_dict["journal_abbrev"]
-                del biblio_dict["journal_full"]
-            elif "journal_full" in biblio_dict:
-                biblio_dict["journal"] = biblio_dict["journal_full"]
-                del biblio_dict["journal_full"]
-        except (KeyError, TypeError):
-            pass
-
-        (doc, lookup_function) = provider._get_doc_from_xml(page)
-        surname_list = []
-        if doc:
-            try:
-                contributors = doc.getElementsByTagName("contributors")[0]
-                for person in contributors.getElementsByTagName("person_name"):
-                    if (person.getAttribute("contributor_role") == u"author"):
-                        surname_list += [person.getElementsByTagName("surname")[0].firstChild.data]
-            except IndexError:
-                surname_list = []
-        authors = ", ".join(surname_list)
-        if authors:
-            biblio_dict["authors"] = authors
-
-        return biblio_dict    
-       
-    def _extract_aliases_old(self, page, id=None):
-        dict_of_keylists = {"url": ["doi_record", "doi_data", "resource"]}
-
-        aliases_dict = provider._extract_from_xml(page, dict_of_keylists)
-
-        # add biblio to aliases
-        biblio_dict = self._extract_biblio(page, id)
-        if biblio_dict:
-            aliases_dict["biblio"] = biblio_dict
-
-        if aliases_dict:
-            aliases_list = [(namespace, nid) for (namespace, nid) in aliases_dict.iteritems()]
-        else:
-            aliases_list = []
-        return aliases_list
-
     @property
     def provides_aliases(self):
          return True
+
+    # default method; providers can override
+    def get_biblio_for_id(self, 
+            id,
+            provider_url_template=None, 
+            cache_enabled=True):
+
+        self.logger.debug("%s getting biblio for %s" % (self.provider_name, id))
+
+        if not provider_url_template:
+            provider_url_template = self.biblio_url_template
+        url = self._get_templated_url(provider_url_template, id, "biblio")
+
+        # try to get a response from the data provider        
+        response = self.http_get(url, 
+            cache_enabled=cache_enabled, 
+            allow_redirects=True,
+            headers={"Accept": "application/vnd.citationstyles.csl+json"})
+
+        if response.status_code != 200:
+            self.logger.info("%s status_code=%i" 
+                % (self.provider_name, response.status_code))            
+            if response.status_code == 404: #not found
+                return {}
+            elif response.status_code == 403: #forbidden
+                return {}
+            elif ((response.status_code >= 300) and (response.status_code < 400)): #redirect
+                return {}
+            else:
+                self._get_error(response.status_code, response)
+
+
+        # extract the aliases
+        try:
+            response.encoding = "utf-8"
+            biblio_dict = self._extract_biblio(response.text, id)
+        except (AttributeError, TypeError):
+            biblio_dict = {}
+
+        return biblio_dict
+
+    def _extract_biblio(self, page, id=None):
+        dict_of_keylists = {
+            'title' : ['title'],
+            'year' : ['issued'],
+            'repository' : ['publisher'],
+            'journal' : ['container-title'],
+            'authors' : ['author']
+        }
+        biblio_dict = provider._extract_from_json(page, dict_of_keylists)
+        if not biblio_dict:
+          return {}
+
+        surname_list = []
+        try:
+            surname_list = [author["family"] for author in biblio_dict["authors"]]
+        except (IndexError, KeyError):
+            try:
+                for author in biblio_dict["authors"]:
+                    if "," in author["literal"]:
+                        surname_list += [author["literal"].split(",")[0]]
+                    else:
+                        surname_list += [author["literal"]]
+            except (IndexError, KeyError):
+                pass
+        if surname_list:
+            biblio_dict["authors"] = ", ".join(surname_list)
+
+        try:
+            if "year" in biblio_dict:
+                if "raw" in biblio_dict["year"]:
+                    biblio_dict["year"] = biblio_dict["year"]["raw"]
+                elif "date-parts" in biblio_dict["year"]:
+                    biblio_dict["year"] = biblio_dict["year"]["date-parts"][0][0]
+        except IndexError:
+            logger.info("could not parse year {biblio_dict}".format(
+                biblio_dict=biblio_dict))
+            del biblio_dict["year"]
+            pass
+
+        return biblio_dict  
+
 
     # overriding default
     def _get_aliases_for_id(self, 

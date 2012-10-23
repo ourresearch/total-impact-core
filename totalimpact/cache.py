@@ -3,7 +3,7 @@ import pylibmc
 import hashlib
 import logging
 import json
-from cPickle import UnpickleableError
+from cPickle import PicklingError
 
 from totalimpact.utils import Retry
 
@@ -53,9 +53,9 @@ class Cache(object):
             set_response = mc.set(hash_key, data, time=self.max_cache_age)
             if not set_response:
                 raise CacheException("Unable to store into Memcached. Make sure memcached server is running.")
-        except UnpickleableError:
+        except PicklingError:
             # This happens when trying to cache a thread.lock object, for example.  Just don't cache.
-            logger.debug("In set_cache_entry with " + data + " but got Error")
+            #logger.debug("In set_cache_entry but got PicklingError")
             set_response = None
         return (set_response)
   
