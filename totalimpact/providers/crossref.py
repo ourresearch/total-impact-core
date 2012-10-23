@@ -34,13 +34,12 @@ class Crossref(Provider):
     url = "http://www.crossref.org/"
     descr = "An official Digital Object Identifier (DOI) Registration Agency of the International DOI Foundation."
     biblio_url_template = None  #set in init
-    aliases_url_template = None  #set in init
+    aliases_url_template = "http://dx.doi.org/%s"
 
     def __init__(self):
         super(Crossref, self).__init__()
         common_url_template = "http://doi.crossref.org/servlet/query?pid=" + self.tool_email + "&qdata=%s&format=unixref"
         self.biblio_url_template = common_url_template
-        self.aliases_url_template = common_url_template
 
 
     def is_relevant_alias(self, alias):
@@ -86,7 +85,7 @@ class Crossref(Provider):
 
         return biblio_dict    
        
-    def _extract_aliases(self, page, id=None):
+    def _extract_aliases_old(self, page, id=None):
         dict_of_keylists = {"url": ["doi_record", "doi_data", "resource"]}
 
         aliases_dict = provider._extract_from_xml(page, dict_of_keylists)
@@ -102,4 +101,42 @@ class Crossref(Provider):
             aliases_list = []
         return aliases_list
 
+    @property
+    def provides_aliases(self):
+         return True
+
+    # overriding default
+    def _get_aliases_for_id(self, 
+            id, 
+            provider_url_template=None, 
+            cache_enabled=True):
+
+        self.logger.debug("%s getting aliases for %s" % (self.provider_name, id))
+
+        if not provider_url_template:
+            provider_url_template = self.aliases_url_template
+        url = self._get_templated_url(provider_url_template, id, "aliases")
+
+        # add url for http://dx.doi.org/
+        new_aliases = [("url", url)] # adds http://dx.doi.org/ url
+
+        # add biblio
+        biblio_dict = self.biblio([("doi", id)])
+        if biblio_dict:
+            new_aliases += [("biblio", biblio_dict)]
+
+        # try to get the redirect as well
+        response = self.http_get(url, cache_enabled=cache_enabled, allow_redirects=True)
+
+        if response.status_code >= 400:
+            self.logger.info("%s http_get status code=%i" 
+                % (self.provider_name, response.status_code))
+            raise provider.ProviderServerError("doi resolve")
+
+        try:       
+            new_aliases += [("url", response.url)]
+        except (TypeError, AttributeError):
+            pass
+
+        return new_aliases
 
