@@ -442,7 +442,7 @@ class Provider(object):
         cache_data = None
         if use_cache:
             c = Cache(self.max_cache_duration)
-            cache_data = c.get_cache_entry(url)
+            cache_data = c.get_cache_entry({url:url, allow_redirects:allow_redirects})
         if cache_data:
             # Return a stripped down equivalent of requests.models.Response
             # We don't store headers or other information here. If we need
@@ -483,7 +483,7 @@ class Provider(object):
                 response_text = r.text
             except TypeError:
                 response_text = None
-            c.set_cache_entry(url, {'text' : response_text, 'status_code' : r.status_code})
+            c.set_cache_entry({url:url, allow_redirects:allow_redirects}, {'text' : response_text, 'status_code' : r.status_code})
         return r
 
 
