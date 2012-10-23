@@ -9,25 +9,6 @@ logger = logging.getLogger('ti.providers.crossref')
 
 import httplib, urllib, re
 
-# from http://tex.stackexchange.com/questions/6810/automatically-adding-doi-fields-to-a-hand-made-bibliography
-# Search for the DOI given a title; e.g.  "computation in Noisy Radio Networks"
-def searchdoi(title, author):
-  params = urllib.urlencode({"titlesearch":"titlesearch", "auth2" : author, "atitle2" : title, "multi_hit" : "on", "article_title_search" : "Search", "queryType" : "author-title"})
-  headers = {"User-Agent": "Mozilla/5.0" , "Accept": "text/html", "Content-Type" : "application/x-www-form-urlencoded", "Host" : "www.crossref.org"}
-  conn = httplib.HTTPConnection("www.crossref.org:80")
-  conn.request("POST", "/guestquery/", params, headers)
-  response = conn.getresponse()
-  #print response.status, response.reason
-  data = response.read()
-  conn.close()
-  result = re.findall(r"doi:(10.\d+.[0-9a-zA-Z_/\.\-]+)" , data, re.DOTALL)
-  if (len(result) > 0):
-    doi = result[0]
-  else:
-      print("Bad response from server<br><br>") 
-      doi = [] 
-  return doi
-
 class Crossref(Provider):  
 
     example_id = ("doi", "10.1371/journal.pcbi.1000361")
