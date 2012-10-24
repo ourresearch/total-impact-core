@@ -65,13 +65,13 @@ class TestDryad(ProviderTestCase):
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides', 'year': u'2010', 'repository': u'Dryad Digital Repository', 'authors': u'Ally, Dilara; Ritland, Kermit; Otto, Sarah P.'}
+        expected = {'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides', 'year': u'2010', 'repository': u'Dryad Digital Repository', 'authors_literal': u'Ally, Dilara; Ritland, Kermit; Otto, Sarah P.'}
         assert_equals(biblio_dict, expected)
 
     @http
     def test_alias(self):
         aliases = self.provider.aliases([self.testitem_aliases])
         print aliases
-        expected = [('biblio', {'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides', 'year': u'2010', 'repository': u'Dryad Digital Repository', 'authors': u'Ally, Dilara; Ritland, Kermit; Otto, Sarah P.'}), ('url', u'http://datadryad.org/handle/10255/dryad.7898'), ('url', 'http://dx.doi.org/10.5061/dryad.7898')]
+        expected = [('biblio', {'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides', 'year': u'2010', 'repository': u'Dryad Digital Repository', 'authors_literal': u'Ally, Dilara; Ritland, Kermit; Otto, Sarah P.'}), ('url', u'http://datadryad.org/handle/10255/dryad.7898'), ('url', 'http://dx.doi.org/10.5061/dryad.7898')]
         assert_equals(sorted(aliases), sorted(expected))
 
