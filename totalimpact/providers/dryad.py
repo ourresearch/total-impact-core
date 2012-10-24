@@ -1,4 +1,5 @@
 from totalimpact.providers import provider
+from totalimpact.providers import crossref
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderItemNotFoundError
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
@@ -14,7 +15,6 @@ class Dryad(Provider):
     descr = "An international repository of data underlying peer-reviewed articles in the basic and applied biology."
     url = "http://www.datadryad.org"
     provenance_url_template = "http://dx.doi.org/%s"
-    member_items_url_template = "http://datadryad.org/solr/search/select/?q=dc.contributor.author%%3A%%22%s%%22&fl=dc.identifier"
     aliases_url_template = "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.identifier.uri,dc.title"
     biblio_url_template = "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.date.accessioned.year,dc.identifier.uri,dc.title_ac,dc.contributor.author_ac"
     metrics_url_template = "http://dx.doi.org/%s"
@@ -42,6 +42,7 @@ class Dryad(Provider):
 
     def __init__(self):
         super(Dryad, self).__init__()
+        self.crossref = crossref.Crossref()
         
     def _is_dryad_doi(self, doi):
         response = self.DRYAD_DOI_PATTERN.search(doi)
@@ -63,66 +64,27 @@ class Dryad(Provider):
         is_relevant = (namespace=="doi" and self._is_dryad_doi(nid))
         return is_relevant
 
-    def _extract_members(self, page, query_string=None):
-        if '<result name="response"' not in page:
-            raise ProviderContentMalformedError("Content does not contain expected text")
+    @property
+    def provides_aliases(self):
+         return True
 
-        identifiers = self._get_named_arr_str_from_xml(page, "dc.identifier", is_expected=False)
-        if not identifiers:
-            raise ProviderItemNotFoundError
+    @property
+    def provides_biblio(self):
+         return True
 
-        members = [("doi", hit.replace("doi:", "")) for hit in list(set(identifiers))]
-        return(members)
+    def aliases(self, 
+            aliases, 
+            provider_url_template=None,
+            cache_enabled=True):  
+        logger.info("calling crossref to handle aliases")
+        return self.crossref.aliases(aliases, provider_url_template, cache_enabled)          
 
-
-    def _extract_aliases(self, xml, id=None):
-        aliases = []
-        url_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.identifier.uri')
-        aliases += [("url", url) for url in url_identifiers if url]
-
-        title_identifiers = self._get_named_arr_str_from_xml(xml, u'dc.title')
-        aliases += [("title", title) for title in title_identifiers if title]
-
-        return aliases
-
-
-    def _extract_biblio(self, xml, id=None):
-        biblio_dict = {}
-
-        biblio_dict["repository"] = "Dryad Digital Repository"
-
-        try:
-            title = self._get_named_arr_str_from_xml(xml, 'dc.title_ac')
-            if title:
-                biblio_dict["title"] = title[0]
-        except AttributeError:
-            raise ProviderContentMalformedError("Content does not contain expected text")
-
-        try:
-            year = self._get_named_arr_int_from_xml(xml, 'dc.date.accessioned.year')
-            if year:
-                biblio_dict["year"] = year[0]
-        except AttributeError:
-            raise ProviderContentMalformedError("Content does not contain expected text")
-
-        try:
-            arrs = self._get_named_arrs_from_xml(xml, 'dc.contributor.author_ac')
-
-            authors = []
-            for arr in arrs:
-                node = arr.getElementsByTagName('str')
-                for author in node:
-                    full_name = author.firstChild.nodeValue
-                    last_name = full_name.split(",")[0]
-                    authors.append(last_name)
-
-            if authors:
-                biblio_dict["authors"] = (", ").join(authors)
-        except AttributeError:
-            raise ProviderContentMalformedError("Content does not contain expected text")
-
-        return biblio_dict
-
+    def biblio(self, 
+            aliases, 
+            provider_url_template=None,
+            cache_enabled=True):  
+        logger.info("calling crossref to handle aliases")
+        return self.crossref.biblio(aliases, provider_url_template, cache_enabled)          
 
     def _extract_metrics(self, page, status_code=200, id=None):
         if status_code != 200:
