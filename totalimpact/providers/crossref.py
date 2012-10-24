@@ -74,22 +74,24 @@ class Crossref(Provider):
             'year' : ['issued'],
             'repository' : ['publisher'],
             'journal' : ['container-title'],
-            'authors' : ['author']
+            'authors_literal' : ['author']
         }
         biblio_dict = provider._extract_from_json(page, dict_of_keylists)
         if not biblio_dict:
           return {}
 
-        surname_list = []
         try:
-            surname_list = [author["family"] for author in biblio_dict["authors"]]
+            surname_list = [author["family"] for author in biblio_dict["authors_literal"]]
+            if surname_list:
+                biblio_dict["authors"] = ", ".join(surname_list)
+                del biblio_dict["authors_literal"]
         except (IndexError, KeyError):
             try:
-                surname_list = [author["literal"] for author in biblio_dict["authors"]]
+                literal_list = [author["literal"] for author in biblio_dict["authors_literal"]]
+                if literal_list:
+                    biblio_dict["authors_literal"] = "; ".join(literal_list)
             except (IndexError, KeyError):
                 pass
-        if surname_list:
-            biblio_dict["authors"] = "; ".join(surname_list)
 
         try:
             if "year" in biblio_dict:
