@@ -54,13 +54,13 @@ class TestFigshare(ProviderTestCase):
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'title': u'Gaussian Job Archive for B2(2-)', 'year': u'2012', 'repository': u'Figshare', 'authors': u'M J Harvey, Henry Rzepa'}
+        expected = {'title': u'Gaussian Job Archive for B2(2-)', 'year': u'2012', 'repository': u'Figshare', 'authors_literal': u'M J Harvey, Henry Rzepa'}
         assert_equals(biblio_dict, expected)
 
     @http
     def test_alias(self):
         aliases = self.provider.aliases([self.testitem_aliases])
         print aliases
-        expected = [('biblio', {'title': u'Gaussian Job Archive for B2(2-)', 'year': u'2012', 'repository': u'Figshare', 'authors': u'M J Harvey, Henry Rzepa'}), ('url', 'http://dx.doi.org/10.6084/m9.figshare.92393'), ('url', u'http://figshare.com/articles/Gaussian_Job_Archive_for_B2(2-)/92393')]
+        expected = [('biblio', {'title': u'Gaussian Job Archive for B2(2-)', 'year': u'2012', 'repository': u'Figshare', 'authors_literal': u'M J Harvey, Henry Rzepa'}), ('url', 'http://dx.doi.org/10.6084/m9.figshare.92393'), ('url', u'http://figshare.com/articles/Gaussian_Job_Archive_for_B2(2-)/92393')]
         assert_equals(sorted(aliases), sorted(expected))
 
