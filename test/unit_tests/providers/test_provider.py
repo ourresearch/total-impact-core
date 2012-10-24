@@ -18,7 +18,7 @@ class Test_Provider():
     
     TEST_JSON = """{"repository":{"homepage":"","watchers":7,"has_downloads":true,"fork":false,"language":"Java","has_issues":true,"has_wiki":true,"forks":0,"size":4480,"private":false,"created_at":"2008/09/29 04:26:42 -0700","name":"gtd","owner":"egonw","description":"Git-based ToDo tool.","open_issues":2,"url":"https://github.com/egonw/gtd","pushed_at":"2012/02/28 10:21:26 -0800"}}"""
 
-    TEST_XML = open(os.path.join(sampledir, "crossref", "aliases")).read()
+    TEST_XML = open(os.path.join(sampledir, "facebook", "metrics")).read()
 
     def test_get_provider(self):
         provider = ProviderFactory.get_provider("wikipedia")
@@ -63,23 +63,22 @@ class Test_Provider():
     def test_lookup_xml_from_dom(self):
         page = self.TEST_XML
         doc = minidom.parseString(page.strip())
-        response = provider._lookup_xml_from_dom(doc, ['title'])
-        assert_equals(response, u'Sharing Detailed Research Data Is Associated with Increased Citation Rate')
+        response = provider._lookup_xml_from_dom(doc, ['total_count'])
+        assert_equals(response, 17)
 
     def test_lookup_xml_from_soup(self):
         page = self.TEST_XML
         doc = BeautifulSoup.BeautifulStoneSoup(page) 
-        response = provider._lookup_xml_from_soup(doc, ['title'])
-        assert_equals(response, u'Sharing Detailed Research Data Is Associated with Increased Citation Rate')        
+        response = provider._lookup_xml_from_soup(doc, ['total_count'])
+        assert_equals(response, 17)
 
     def test_extract_xml(self):
         page = self.TEST_XML
         dict_of_keylists = {
-            'title' : ['doi_record', 'title'],
-            'year' : ['doi_record', 'year']}
+            'count' : ['total_count']}
 
         response = provider._extract_from_xml(page, dict_of_keylists)
-        assert_equals(response, {'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'year': 2007})
+        assert_equals(response, {'count': 17})
 
     def test_doi_from_url_string(self):
         test_url = "https://knb.ecoinformatics.org/knb/d1/mn/v1/object/doi:10.5063%2FAA%2Fnrs.373.1"

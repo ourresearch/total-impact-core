@@ -85,15 +85,11 @@ class Crossref(Provider):
             surname_list = [author["family"] for author in biblio_dict["authors"]]
         except (IndexError, KeyError):
             try:
-                for author in biblio_dict["authors"]:
-                    if "," in author["literal"]:
-                        surname_list += [author["literal"].split(",")[0]]
-                    else:
-                        surname_list += [author["literal"]]
+                surname_list = [author["literal"] for author in biblio_dict["authors"]]
             except (IndexError, KeyError):
                 pass
         if surname_list:
-            biblio_dict["authors"] = ", ".join(surname_list)
+            biblio_dict["authors"] = "; ".join(surname_list)
 
         try:
             if "year" in biblio_dict:
