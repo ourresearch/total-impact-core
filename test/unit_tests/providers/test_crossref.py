@@ -41,7 +41,7 @@ class TestCrossRef(ProviderTestCase):
     def test_get_aliases_for_id(self):
         new_aliases = self.provider._get_aliases_for_id(self.testitem_aliases[1])
         print new_aliases
-        expected = [('url', 'http://dx.doi.org/10.1371/journal.pcbi.1000361'), ('biblio', {'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': 2009, 'repository': u'Public Library of Science', 'authors': u'Shotton, Portwin, Klyne, Miles'}), ('url', u'http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1000361')]
+        expected = [('biblio', {'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': 2009, 'repository': u'Public Library of Science', 'authors': u'Shotton, Portwin, Klyne, Miles'}), ('url', u'http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1000361')]
         assert_equals(sorted(new_aliases), sorted(expected))
 
     @http
@@ -90,7 +90,7 @@ class TestCrossRef(ProviderTestCase):
     @http
     def test_aliases_elife(self):
         aliases = self.provider.aliases([("doi", "10.7554/eLife.00048")])
-        expected = [('biblio', {'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': 2012, 'repository': u'eLife Sciences Publications, Ltd.', 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Arag\xf3n, Li, Walter'}), ('url', 'http://dx.doi.org/10.7554/eLife.00048'), ('url', u'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3470409/')]
+        expected = [('biblio', {'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': 2012, 'repository': u'eLife Sciences Publications, Ltd.', 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Arag\xf3n, Li, Walter'}), ('url', u'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3470409/')]
 
         print aliases
         assert_equals(sorted(aliases), sorted(expected))
@@ -98,6 +98,6 @@ class TestCrossRef(ProviderTestCase):
     @http
     def test_aliases_elife_figure(self):
         aliases = self.provider.aliases([("doi", "10.7554/eLife.00048.002")])
-        expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.'}), ('url', 'http://dx.doi.org/10.7554/eLife.00048.002'), ('url', u'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3470409/')]
+        expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.'}), ('url', u'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3470409/')]
         print aliases
         assert_equals(sorted(aliases), sorted(expected))
