@@ -121,7 +121,9 @@ class Crossref(Provider):
         url = self._get_templated_url(provider_url_template, id, "aliases")
 
         # add url for http://dx.doi.org/
-        new_aliases = [("url", url)] # adds http://dx.doi.org/ url
+        # disable for now, till providers can handle multiple urls
+        #new_aliases = [("url", url)] # adds http://dx.doi.org/ url
+        new_aliases = []
 
         # add biblio
         biblio_dict = self.biblio([("doi", id)])
