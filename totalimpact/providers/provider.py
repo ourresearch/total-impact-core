@@ -467,7 +467,7 @@ class Provider(object):
         # ensure that a user-agent string is set
         if headers is None:
             headers = {}
-        headers["User-Agent"] = app.config["USER-AGENT"]
+        headers["User-Agent"] = app.config["USER_AGENT"]
         
         # make the request        
         try:
