@@ -19,7 +19,7 @@ class Scienceseeker(Provider):
             "provider": "Science Seeker",
             "provider_url": "http://www.scienceseeker.org",
             "description": "The number of blog posts that cite this item.",
-            "icon": "http://scienceseeker.org/wp-content/themes/eximius/images/favicon.ico",
+            "icon": "http://scienceseeker.org/images/misc/favicon.ico"
         }
     }
 
