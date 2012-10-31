@@ -1,4 +1,5 @@
 from totalimpact.providers import provider
+from totalimpact.providers import crossref
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
 import simplejson
@@ -43,12 +44,34 @@ class Figshare(Provider):
 
     def __init__(self):
         super(Figshare, self).__init__()
-
+        self.crossref = crossref.Crossref()
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
         is_figshare_doi = (namespace == "doi") and (".figshare." in nid.lower())
         return is_figshare_doi
+
+    @property
+    def provides_aliases(self):
+         return True
+
+    @property
+    def provides_biblio(self):
+         return True
+
+    def aliases(self, 
+            aliases, 
+            provider_url_template=None,
+            cache_enabled=True):  
+        logger.info("calling crossref to handle aliases")
+        return self.crossref.aliases(aliases, provider_url_template, cache_enabled)          
+
+    def biblio(self, 
+            aliases, 
+            provider_url_template=None,
+            cache_enabled=True):  
+        logger.info("calling crossref to handle aliases")
+        return self.crossref.biblio(aliases, provider_url_template, cache_enabled) 
 
     def _extract_item(self, page, id):
         data = provider._load_json(page)
@@ -59,38 +82,6 @@ class Figshare(Provider):
             return item
         else:
             return {}
-
-
-    def _extract_biblio(self, page, id=None):
-        dict_of_keylists = {
-            'title' : ['title'],
-            'authors' : ['authors'],
-            'published_date' : ['published_date'],
-            'url' : ['doi']
-        }
-        item = self._extract_item(page, id)
-        biblio_dict = provider._extract_from_data_dict(item, dict_of_keylists)
-        if "published_date" in biblio_dict:
-            biblio_dict["year"] = biblio_dict["published_date"][-4:]
-            del biblio_dict["published_date"]
-        if "authors" in biblio_dict:
-            biblio_dict["authors"] = ", ".join(author["last_name"] for author in biblio_dict["authors"])
-        return biblio_dict    
-       
-    def _extract_aliases(self, page, id=None):
-        dict_of_keylists = {
-            'title' : ['title'],
-            'url' : ['doi']
-        }
-        item = self._extract_item(page, id)
-        aliases_dict = provider._extract_from_data_dict(item, dict_of_keylists)
-
-        if aliases_dict:
-            aliases_list = [(namespace, nid) for (namespace, nid) in aliases_dict.iteritems()]
-        else:
-            aliases_list = []
-        return aliases_list
-
 
     def _extract_metrics(self, page, status_code=200, id=None):
         if status_code != 200:

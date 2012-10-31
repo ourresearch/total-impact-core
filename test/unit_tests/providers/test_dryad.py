@@ -37,32 +37,6 @@ class TestDryad(ProviderTestCase):
         # ensure that it doesn't match an inappropriate TEST_DRYAD_DOI
         assert_equals(self.provider.is_relevant_alias(("doi", "11.12354/NOTDRYADDOI")), False)
     
-    def test_extract_members(self):
-        f = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r")
-        members = self.provider._extract_members(f.read(), TEST_DRYAD_AUTHOR)
-        assert len(members) == 4, str(members)
-        assert_equals(members, [('doi', u'10.5061/dryad.j1fd7'), ('doi', u'10.5061/dryad.mf1sd'), ('doi', u'10.5061/dryad.3td2f'), ('doi', u'10.5061/dryad.j2c4g')])
-
-    @raises(ProviderItemNotFoundError)
-    def test_extract_members_zero_items(self):
-        page = """<?xml version="1.0" encoding="UTF-8"?>
-                <response>
-                <lst name="responseHeader"><int name="status">0</int><int name="QTime">0</int><lst name="params"><str name="fl">dc.identifier</str><str name="q">dc.contributor.author:"Piwowar, Heather A."</str></lst></lst><result name="response" numFound="0" start="0"></result>
-                </response>"""
-        members = self.provider._extract_members(page, TEST_DRYAD_AUTHOR)
-
-    def test_extract_aliases(self):
-        # ensure that the dryad reader can interpret an xml doc appropriately
-        f = open(SAMPLE_EXTRACT_ALIASES_PAGE, "r")
-        aliases = self.provider._extract_aliases(f.read())
-        assert_equals(aliases, [('url', u'http://hdl.handle.net/10255/dryad.7898'), 
-            ('title', u'data from: can clone size serve as a proxy for clone age? an exploration using microsatellite divergence in populus tremuloides')])        
-
-    def test_extract_biblio(self):
-        f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
-        ret = self.provider._extract_biblio(f.read())
-        assert_equals(ret, {'authors': u'Ally, Ritland, Otto', 'year': u'2010', 'repository': 'Dryad Digital Repository', 'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides'})
-
     def test_extract_stats(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         metrics_dict = self.provider._extract_metrics(f.read())
@@ -86,4 +60,18 @@ class TestDryad(ProviderTestCase):
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+
+    @http
+    def test_biblio(self):
+        biblio_dict = self.provider.biblio([self.testitem_biblio])
+        print biblio_dict
+        expected = {'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides', 'year': u'2010', 'repository': u'Dryad Digital Repository', 'authors_literal': u'Ally, Dilara; Ritland, Kermit; Otto, Sarah P.'}
+        assert_equals(biblio_dict, expected)
+
+    @http
+    def test_alias(self):
+        aliases = self.provider.aliases([self.testitem_aliases])
+        print aliases
+        expected = [('biblio', {'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides', 'year': u'2010', 'repository': u'Dryad Digital Repository', 'authors_literal': u'Ally, Dilara; Ritland, Kermit; Otto, Sarah P.'}), ('url', u'http://datadryad.org/handle/10255/dryad.7898')]
+        assert_equals(sorted(aliases), sorted(expected))
 

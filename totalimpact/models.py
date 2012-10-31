@@ -41,7 +41,8 @@ class ItemFactory():
     def build_item_for_client(cls, item, myrefsets):
 
         try:
-            item["biblio"]['genre'] = cls.decide_genre(item['aliases'])
+            (genre, host) = cls.decide_genre(item['aliases'])
+            item["biblio"]['genre'] = genre
         except (KeyError, TypeError):
             logger.error("Skipping item, unable to lookup aliases or biblio in %s" % str(item))
             return None
@@ -126,26 +127,42 @@ class ItemFactory():
 
     @classmethod
     def decide_genre(self, alias_dict):
+        genre = "unknown"
+        host = "unknown"
+
         '''Uses available aliases to decide the item's genre'''
         if "doi" in alias_dict:
-            if "10.5061/dryad." in "".join(alias_dict["doi"]):
-                return "dataset"
+            joined_doi_string = "".join(alias_dict["doi"])
+            joined_doi_string = joined_doi_string.lower()
+            if "10.5061/dryad." in joined_doi_string:
+                genre = "dataset"
+                host = "dryad"
+            elif ".figshare." in joined_doi_string:
+                genre = "dataset"
+                host = "figshare"
             else:
-                return "article"
+                genre = "article"
+
         elif "pmid" in alias_dict:
-            return "article"
+            genre = "article"
+
         elif "github" in alias_dict:
-            return "software"
+            genre = "software"
+
         elif "url" in alias_dict:
-            joined_urls = "".join(alias_dict["url"])
-            if "slideshare.net" in joined_urls:
-                return "slides"
-            elif "github.com" in joined_urls:
-                return "software"
+            joined_url_string = "".join(alias_dict["url"])
+            joined_url_string = joined_url_string.lower()
+            if "slideshare.net" in joined_url_string:
+                genre = "slides"
+                host = "slideshare"
+            elif "github.com" in joined_url_string:
+                genre = "software"
+                host = "github"
             else:
-                return "webpage"
-        else:
-            return "unknown"
+                genre = "webpage"
+                host = "webpage"
+
+        return (genre, host)
 
     @classmethod
     def alias_tuples_from_dict(self, aliases_dict):

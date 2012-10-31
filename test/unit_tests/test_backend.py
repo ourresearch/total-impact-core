@@ -233,7 +233,16 @@ class TestBackendClass(TestBackend):
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect blanks
-        expected = {'metrics': ["wikipedia"], 'biblio': [], 'aliases': []}
+        expected = {'metrics': [], 'biblio': [], 'aliases': ['webpage']}
+        assert_equals(response, expected)
+
+    def test_decide_who_to_call_next_unknown_after_webpage(self):
+        aliases_dict = {"unknownnamespace":["111"]}
+        prev_aliases = ["webpage"]
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
+        print response
+        # expect blanks
+        expected = {'metrics': ["wikipedia"], 'biblio': ["webpage"], 'aliases': []}
         assert_equals(response, expected)
 
     def test_decide_who_to_call_next_webpage_no_title(self):
