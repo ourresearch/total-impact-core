@@ -312,7 +312,8 @@ class Provider(object):
             cache_enabled=True):            
 
         if not self.provides_aliases:
-            raise NotImplementedError()
+            #raise NotImplementedError()
+            return []
 
         # Get a list of relevant aliases
         relevant_aliases = self.relevant_aliases(aliases)
