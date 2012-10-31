@@ -440,28 +440,34 @@ class Provider(object):
         use_cache = app.config["CACHE_ENABLED"] and cache_enabled
 
         cache_data = None
+        if headers:
+            cache_key = headers.copy()
+        else:
+            cache_key = {}
+        cache_key.update({"url":url, "allow_redirects":allow_redirects})
         if use_cache:
             c = Cache(self.max_cache_duration)
-            cache_data = c.get_cache_entry(url)
-        if cache_data:
-            # Return a stripped down equivalent of requests.models.Response
-            # We don't store headers or other information here. If we need
-            # that later, we can add it
-            class CachedResponse:
-                pass
-            r = CachedResponse()
-            r.status_code = cache_data['status_code']
+            cache_data = c.get_cache_entry(cache_key)
+            if cache_data:
+                class CachedResponse:
+                    pass
+                r = CachedResponse()
+                r.status_code = cache_data['status_code']
 
-            # use it if it was a 200, otherwise go get it again
-            if (r.status_code == 200):
-                r.text = cache_data['text']
-                self.logger.debug("cache %s" %(url))
-                return r
+                # Return a stripped down equivalent of requests.models.Response
+                # We don't store headers or other information here. If we need
+                # that later, we can add it
+                # use it if it was a 200, otherwise go get it again
+                if (r.status_code == 200):
+                    r.url = cache_data['url']
+                    r.text = cache_data['text']
+                    self.logger.debug("returning from cache: %s" %(url))
+                    return r
             
         # ensure that a user-agent string is set
         if headers is None:
             headers = {}
-        headers["User-Agent"] = "ImpactStory"   
+        headers["User-Agent"] = app.config["USER_AGENT"]
         
         # make the request        
         try:
@@ -476,14 +482,16 @@ class Provider(object):
             raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
         except requests.exceptions.RequestException as e:
             raise ProviderHttpError("RequestException during GET on: " + url, e)
+
+        if not r.encoding:
+            r.encoding = "utf-8"            
         
         # cache the response and return
-        if use_cache:
-            try:
-                response_text = r.text
-            except TypeError:
-                response_text = None
-            c.set_cache_entry(url, {'text' : response_text, 'status_code' : r.status_code})
+        if r and use_cache:
+            cache_data = {'text' : r.text, 
+                'status_code' : r.status_code, 
+                'url': r.url}
+            c.set_cache_entry(cache_key, cache_data)
         return r
 
 

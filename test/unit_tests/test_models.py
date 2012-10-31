@@ -160,37 +160,42 @@ class TestItemFactory():
 
     def test_decide_genre_article_doi(self):
         aliases = {"doi":["10:123", "10:456"]}
-        genre = models.ItemFactory.decide_genre(aliases)
+        (genre, host) = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "article")
 
     def test_decide_genre_article_pmid(self):
         aliases = {"pmid":["12345678"]}
-        genre = models.ItemFactory.decide_genre(aliases)
+        (genre, host) = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "article")
 
     def test_decide_genre_slides(self):
         aliases = {"url":["http://www.slideshare.net/jason/my-slides"]}
-        genre = models.ItemFactory.decide_genre(aliases)
+        (genre, host) = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "slides")
 
     def test_decide_genre_software(self):
         aliases = {"url":["http://www.github.com/jasonpriem/my-sofware"]}
-        genre = models.ItemFactory.decide_genre(aliases)
+        (genre, host) = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "software")
 
-    def test_decide_genre_dataset(self):
+    def test_decide_genre_dataset_dryad(self):
         aliases = {"doi":["10.5061/dryad.18"]}
-        genre = models.ItemFactory.decide_genre(aliases)
+        (genre, host) = models.ItemFactory.decide_genre(aliases)
+        assert_equals(genre, "dataset")
+
+    def test_decide_genre_dataset_figshare(self):
+        aliases = {"doi":["10.6084/m9.figshare.92393"]}
+        (genre, host) = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "dataset")
 
     def test_decide_genre_webpage(self):
         aliases = {"url":["http://www.google.com"]}
-        genre = models.ItemFactory.decide_genre(aliases)
+        (genre, host) = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "webpage")
 
     def test_decide_genre_unknown(self):
         aliases = {"unknown_namespace":["myname"]}
-        genre = models.ItemFactory.decide_genre(aliases)
+        (genre, host) = models.ItemFactory.decide_genre(aliases)
         assert_equals(genre, "unknown")
 
     def test_merge_alias_dicts(self):
