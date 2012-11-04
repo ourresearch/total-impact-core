@@ -52,15 +52,17 @@ def set_redis(url, db):
     myredis = tiredis.from_url(url, db)
     return myredis
 
-#@app.before_request
-def check_api_key():
-    ti_api_key = request.values.get('api_key', '')
-    logger.debug("In check_api_key with " + ti_api_key)
-    if not ti_api_key:
-        response = make_response(
-            "please get an api key and include api_key=YOURKEY in your query",
-            403)
-        return response
+@app.before_request
+def check_email():
+    if "v1" in request.url:
+        email = request.values.get('email', '')
+        logger.debug("In check_api_key with " + email)
+        if not email:
+            response = make_response(
+                "you must include email=EMAIL in your query",
+                403)
+            return response
+    return # otherwise don't return any content
 
 
 @app.after_request
