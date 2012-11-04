@@ -75,6 +75,18 @@ class DaoTester(unittest.TestCase):
     def test_dao(self):
         assert_equals(mydao.db.name, os.getenv("CLOUDANT_DB"))
 
+class TestGeneral(ViewsTester):
+    def test_does_not_require_email_if_preversioned_url(self):
+        resp = self.client.get("/")
+        assert_equals(resp.status_code, 200)
+
+    def test_forbidden_if_no_email_in_v1(self):
+        resp = self.client.get("/v1")
+        assert_equals(resp.status_code, 403)
+
+    def test_ok_if_email_in_v1(self):
+        resp = self.client.get("/v1?email=example@example.com")
+        assert_equals(resp.status_code, 200)
 
 class TestMemberItems(ViewsTester):
 
