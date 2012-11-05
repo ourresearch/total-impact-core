@@ -109,6 +109,7 @@ GET /tiid/:namespace/:id
 303 else list of tiids
 '''
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
+# not supported in v1
 def tiid(ns, nid):
     tiid = get_tiid_by_alias(ns, nid)
 
@@ -210,6 +211,7 @@ def prep_collection_items(aliases):
 
 
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
+@app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
     """Creates a new item using the given namespace and id.
 
@@ -240,6 +242,7 @@ def item_namespace_post(namespace, nid):
 404 if tiid not found in db
 '''
 @app.route('/item/<tiid>', methods=['GET'])
+@app.route('/v1/item/<tiid>', methods=['GET'])
 def item(tiid, format=None):
     # TODO check request headers for format as well.
 
@@ -267,6 +270,7 @@ def item(tiid, format=None):
 
 
 @app.route('/provider', methods=['GET'])
+@app.route('/v1/provider', methods=['GET'])
 def provider():
     ret = ProviderFactory.get_all_metadata()
     resp = make_response(json.dumps(ret, sort_keys=True, indent=4), 200)
@@ -283,6 +287,7 @@ if > 100 memberitems, return the first 100 with a response code that indicates t
 examples : /provider/github/memberitems?query=jasonpriem&type=github_user
 '''
 @app.route('/provider/<provider_name>/memberitems', methods=['POST'])
+@app.route('/v1/provider/<provider_name>/memberitems', methods=['POST'])
 def provider_memberitems(provider_name):
     """
     Starts a memberitems update for a specified provider, using a supplied file.
@@ -320,6 +325,7 @@ method=async will look up the query in total-impact's db and return the current
              status of that query.
 """
 @app.route("/provider/<provider_name>/memberitems/<query>", methods=['GET'])
+@app.route("/v1/provider/<provider_name>/memberitems/<query>", methods=['GET'])
 def provider_memberitems_get(provider_name, query):
 
     provider = ProviderFactory.get_provider(provider_name)
@@ -349,7 +355,9 @@ GET /collection/:collection_ID
 returns a collection object and the items
 '''
 @app.route('/collection/<cid>', methods=['GET'])
+@app.route('/v1/collection/<cid>', methods=['GET'])
 @app.route('/collection/<cid>.<format>', methods=['GET'])
+@app.route('/v1/collection/<cid>.<format>', methods=['GET'])
 def collection_get(cid='', format="json"):
     coll = mydao.get(cid)
     if not coll:
@@ -399,6 +407,7 @@ def collection_get(cid='', format="json"):
     return resp
 
 @app.route("/collection/<cid>", methods=["PUT"])
+@app.route("/v1/collection/<cid>", methods=["PUT"])
 def put_collection(cid=""):
     key = request.args.get("key", None)
     if key is None:
@@ -428,6 +437,7 @@ def put_collection(cid=""):
 """ Updates all the items in a given collection.
 """
 @app.route("/collection/<cid>", methods=["POST"])
+# not officially supported in api
 def collection_update(cid=""):
 
     # first, get the tiids in this collection:
@@ -467,6 +477,7 @@ def collection_update(cid=""):
 
 # creates a collection with aliases
 @app.route('/collection', methods=['POST'])
+@app.route('/v1/collection', methods=['POST'])
 def collection_create():
     """
     POST /collection
@@ -510,7 +521,7 @@ def collection_create():
     return resp
 
 
-
+# for internal use only
 @app.route('/test/collection/<action_type>', methods=['GET'])
 def tests_interactions(action_type=''):
     logger.info("getting test/collection/" + action_type)
@@ -526,7 +537,7 @@ def tests_interactions(action_type=''):
         report=report
     )
 
-
+# for internal use only
 @app.route("/collections/recent")
 @app.route("/collections/recent.<format>")
 def latest_collections(format=""):
@@ -554,6 +565,7 @@ def latest_collections(format=""):
 
 
 @app.route("/collections/<cids>")
+@app.route("/v1/collections/<cids>")
 def get_collection_titles(cids=''):
     from time import sleep
     sleep(1)
@@ -565,12 +577,14 @@ def get_collection_titles(cids=''):
 
 
 @app.route("/collections/reference-sets")
+@app.route("/v1/collections/reference-sets")
 def reference_sets():
     resp = make_response(json.dumps(myrefsets, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
 @app.route("/collections/reference-sets-histograms")
+@app.route("/v1/collections/reference-sets-histograms")
 def reference_sets_histograms():
     rows = []
     header_added = False
@@ -595,6 +609,7 @@ def reference_sets_histograms():
     return resp
 
 @app.route("/user/<userid>", methods=["GET"])
+@app.route("/v1/user/<userid>", methods=["GET"])
 def get_user(userid=''):
     """
     GET /user
@@ -617,6 +632,7 @@ def get_user(userid=''):
 
 
 @app.route('/user', methods=['PUT'])
+@app.route('/v1/user', methods=['PUT'])
 def update_user(userid=''):
     """
     PUT /collection
