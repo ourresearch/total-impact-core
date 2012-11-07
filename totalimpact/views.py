@@ -246,13 +246,20 @@ def item_namespace_post(namespace, nid):
     resp = make_response(json.dumps("ok"), response_code)
     return resp
 
+# For /v1 support interface as get from namespace:nid instead of get from tiid
+@app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
+def get_item_from_namespace_nid(namespace, nid, format=None):
+    # remove unprintable characters
+    nid = clean_id(nid)
+    tiid = get_tiid_by_alias(namespace, nid)
+    return get_item_from_tiid(tiid, format)
+
 
 '''GET /item/:tiid
 404 if tiid not found in db
 '''
 @app.route('/item/<tiid>', methods=['GET'])
-@app.route('/v1/item/<tiid>', methods=['GET'])
-def item(tiid, format=None):
+def get_item_from_tiid(tiid, format=None):
     # TODO check request headers for format as well.
 
     try:
