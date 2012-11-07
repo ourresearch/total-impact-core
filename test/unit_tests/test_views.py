@@ -76,16 +76,16 @@ class DaoTester(unittest.TestCase):
         assert_equals(mydao.db.name, os.getenv("CLOUDANT_DB"))
 
 class TestGeneral(ViewsTester):
-    def test_does_not_require_email_if_preversioned_url(self):
+    def test_does_not_require_key_if_preversioned_url(self):
         resp = self.client.get("/")
         assert_equals(resp.status_code, 200)
 
-    def test_forbidden_if_no_email_in_v1(self):
+    def test_forbidden_if_no_key_in_v1(self):
         resp = self.client.get("/v1")
         assert_equals(resp.status_code, 403)
 
-    def test_ok_if_email_in_v1(self):
-        resp = self.client.get("/v1?email=example@example.com")
+    def test_ok_if_key_in_v1(self):
+        resp = self.client.get("/v1?key=EXAMPLE")
         assert_equals(resp.status_code, 200)
 
 class TestMemberItems(ViewsTester):
@@ -142,6 +142,12 @@ class TestItem(ViewsTester):
         saved_item = json.loads(response.data)
 
         assert_equals([unicode(TEST_DRYAD_DOI)], saved_item["aliases"]["doi"])
+
+    def test_v1_item_post_success(self):
+        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE"
+        response = self.client.post(url)
+        assert_equals(response.status_code, 201)
+        assert_equals(json.loads(response.data), "ok")
 
     def test_item_get_success_realid(self):
         # First put something in

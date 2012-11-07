@@ -53,13 +53,13 @@ def set_redis(url, db):
     return myredis
 
 @app.before_request
-def check_email():
+def check_key():
     if "v1" in request.url:
-        email = request.values.get('email', '')
-        logger.debug("In check_api_key with " + email)
-        if not email:
+        key = request.values.get('key', '')
+        logger.debug("In check_key with " + key)
+        if not key:
             response = make_response(
-                "you must include email=EMAIL in your query",
+                "you must include key=YOURKEY in your query",
                 403)
             return response
     return # otherwise don't return any content
@@ -210,16 +210,7 @@ def prep_collection_items(aliases):
     return tiids
 
 
-@app.route('/item/<namespace>/<path:nid>', methods=['POST'])
-@app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
-def item_namespace_post(namespace, nid):
-    """Creates a new item using the given namespace and id.
-
-    POST /item/:namespace/:nid
-    201 location: {tiid}
-    500?  if fails to create
-    example /item/PMID/234234232
-    """
+def create_item_from_namespace_nid(namespace, nid):
     # remove unprintable characters
     nid = clean_id(nid)
 
@@ -230,11 +221,29 @@ def item_namespace_post(namespace, nid):
         tiid = create_item(namespace, nid)
         logger.debug("new item created with tiid " + tiid)
 
-    response_code = 201 # Created
+    return tiid
 
+"""Creates a new item using the given namespace and id.
+POST /item/:namespace/:nid
+201
+500?  if fails to create
+example /item/PMID/234234232
+original api returned tiid
+/v1 returns nothing in body
+"""
+@app.route('/item/<namespace>/<path:nid>', methods=['POST'])
+def item_namespace_post_with_tiid(namespace, nid):
+    tiid = create_item_from_namespace_nid(namespace, nid)
+    response_code = 201 # Created
     resp = make_response(json.dumps(tiid), response_code)
     resp.mimetype = "application/json"
+    return resp
 
+@app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
+def item_namespace_post(namespace, nid):
+    tiid = create_item_from_namespace_nid(namespace, nid)
+    response_code = 201 # Created
+    resp = make_response(json.dumps("ok"), response_code)
     return resp
 
 
