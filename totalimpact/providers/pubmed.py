@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, urllib, os, itertools
+import simplejson, urllib, os, itertools, datetime
 
 import logging
 logger = logging.getLogger('ti.providers.pubmed')
@@ -93,8 +93,10 @@ class Pubmed(Provider):
             pass
 
         try:
-            biblio_dict["date"] = "{year}-{month}-{day}T01:01:01Z".format(
-                year=biblio_dict["year"], month=biblio_dict["month"], day=biblio_dict["day"])
+            datetime_published = datetime.datetime(year=biblio_dict["year"], 
+                                                    month=biblio_dict["month"], 
+                                                    day=biblio_dict["day"])
+            biblio_dict["date"] = datetime_published.isoformat()
             del biblio_dict["month"]
             del biblio_dict["day"]
         except (AttributeError, TypeError, KeyError):
