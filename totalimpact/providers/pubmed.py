@@ -79,7 +79,9 @@ class Pubmed(Provider):
         return True
 
     def _extract_biblio(self, page, id=None):
-        dict_of_keylists = {"year": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "PubDate", "Year"], 
+        dict_of_keylists = {"year": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Year"], 
+                            "month": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Month"],
+                            "day": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Day"],
                             "title": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleTitle"],
                             "journal": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "Title"],
                             }
@@ -88,6 +90,15 @@ class Pubmed(Provider):
         try:
             biblio_dict["authors"] = ", ".join([author.firstChild.data for author in dom_authors])
         except (AttributeError, TypeError):
+            pass
+
+        try:
+            biblio_dict["date"] = "{year}-{month}-{day}T01:01:01Z".format(
+                year=biblio_dict["year"], month=biblio_dict["month"], day=biblio_dict["day"])
+            del biblio_dict["month"]
+            del biblio_dict["day"]
+        except (AttributeError, TypeError, KeyError):
+            logger.debug("%20s don't have full date information %s" % (self.provider_name, id))
             pass
         return biblio_dict  
 
