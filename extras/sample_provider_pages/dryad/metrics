@@ -1,7 +1,9 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:dri="http://di.tamu.edu/DRI/1.0/" xmlns:i18n="http://apache.org/cocoon/i18n/2.1">
 <head xmlns:exslt="http://exslt.org/dynamic" xmlns:xlink="http://www.w3.org/TR/xlink/" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:dim="http://www.dspace.org/xmlns/dspace/dim" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:mets="http://www.loc.gov/METS/">
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
 <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
 <meta content="IqB7A6dUGs-0ncAgB3f0PXxeO_OcjyVAtRNdBFie4AM" name="google-site-verification" />
 <link type="text/css" rel="stylesheet" media="screen" href="/themes/Dryad/lib/style.css" />
@@ -9,20 +11,20 @@
 <link href="/feed/rss_2.0/10255/3" rel="alternate" type="application/rss+xml" />
 <link href="/feed/atom_1.0/10255/3" rel="alternate" type="application/atom+xml" />
 <link href="/themes/Dryad/images/favicon.ico" type="image/ico" rel="icon" />
-<script src="http://platform.twitter.com/widgets.js" language="javascript" type="text/javascript"> </script>
-<script src="/themes/Dryad/lib/editor.js" language="javascript" type="text/javascript"> </script>
-<script src="/themes/Dryad/lib/util.js" language="javascript" type="text/javascript"> </script>
+<script src="http://platform.twitter.com/widgets.js" language="javascript" type="text/javascript"> </script>
+<script src="/themes/Dryad/lib/editor.js" language="javascript" type="text/javascript"> </script>
+<script src="/themes/Dryad/lib/util.js" language="javascript" type="text/javascript"> </script>
 <script type="text/javascript" src="/themes/Dryad/lib/jquery-1.4.2.min.js">
-                     
+                     
                 </script>
 <script type="text/javascript" src="/themes/Dryad/lib/utils.js">
-                     
+                     
                 </script>
 <script type="text/javascript" src="/themes/Dryad/lib/jquery.tooltip.js">
-                     
+                     
                 </script>
 <script type="text/javascript" src="/themes/Dryad/lib/jquery-ui-1.8.5.custom.min.js">
-                     
+                     
                 </script>
 <script type="text/javascript">var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));</script>
 <script type="text/javascript">try {var pageTracker = _gat._getTracker("UA-16949847-1");pageTracker._trackPageview();} catch(err) {}</script>
@@ -33,21 +35,18 @@
 <div id="ds-main">
 <div xmlns:exslt="http://exslt.org/dynamic" xmlns:xlink="http://www.w3.org/TR/xlink/" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:dim="http://www.dspace.org/xmlns/dspace/dim" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:mets="http://www.loc.gov/METS/" id="ds-header">
 <a href="/">
-<img src="/themes/Dryad/images/dryadLogo.png" id="ds-header-logo" />
+<img alt="dryad logo" src="/themes/Dryad/images/dryadLogo.png" id="ds-header-logo" />
 </a>
 <span class="ds-trail">
 <span class="ds-trail-link first-link">
 <a href="/">Dryad Digital Repository</a>
-                    &gt;
-                    </span>
+</span>
 <span xmlns="http://di.tamu.edu/DRI/1.0/" class="ds-trail-link ">
 <a href="/handle/10255/1">Main</a>
-                    &gt;
-                    </span>
+</span>
 <span class="ds-trail-link ">
 <a href="/handle/10255/3">Dryad Data Packages</a>
-                    &gt;
-                    </span>
+</span>
 <span class="ds-trail-link last-link">View Item</span>
 </span>
 <div xmlns="http://di.tamu.edu/DRI/1.0/" id="ds-user-box">
@@ -95,14 +94,14 @@
 </tr>
 <tr>
 <td>
-                                              
+                                              
                                             <a href="/resource/doi:10.5061/dryad.7898/citation/ris">RIS </a>
 <span class="italics">(compatible with EndNote, Reference Manager, ProCite, RefWorks)</span>
 </td>
 </tr>
 <tr>
 <td>
-                                              
+                                              
                                             <a href="/resource/doi:10.5061/dryad.7898/citation/bib">BibTex </a>
 <span class="italics">(compatible with BibDesk, LaTeX)</span>
 </td>
@@ -138,7 +137,7 @@
 </td>
 <td>
 <a href="http://www.mendeley.com/import/?url=http://datadryad.org/resource/doi:10.5061/dryad.7898">
-<img src="http://www.mendeley.com/graphics/mendeley.png" border="0px;" />
+<img alt="Mendeley" src="http://www.mendeley.com/graphics/mendeley.png" border="0px;" />
 </a>
 </td>
 </tr>
@@ -155,7 +154,8 @@
 <td width="15%">
 <span class="bold">Dryad Package Identifier</span>
 </td>
-<td width="55%">doi:10.5061/dryad.7898   149 views<span class="Z3988" title="ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Adc&amp;rft_id=doi%3A10.5061%2Fdryad.7898&amp;rft_id=Ally+D%2C+Ritland+K%2C+Otto+SP+%282008%29+Can+clone+size+serve+as+a+proxy+for+clone+age%3F+An+exploration+using+microsatellite+divergence+in+Populus+tremuloides.+Molecular+Ecology+17%2822%29%3A+4897-4911.&amp;rft_id=http%3A%2F%2Fhdl.handle.net%2F10255%2Fdryad.7898&amp;rft_id=MolEcol-11905036MEC-08-0315.R1-1287768841963&amp;rfr_id=info%3Asid%2Fdatadryad.org%3Arepo&amp;rft.contributor=Ally%2C+Dilara&amp;rft.contributor=Ritland%2C+Kermit&amp;rft.contributor=Otto%2C+Sarah+P.&amp;rft.coverage=British+Columbia&amp;rft.coverage=Canada&amp;rft.coverage=Alberta&amp;rft.date=2010-10-22T19%3A21%3A44Z&amp;rft.date=2010-10-22T19%3A21%3A44Z&amp;rft.date=2008-12-03&amp;rft.identifier=doi%3A10.5061%2Fdryad.7898&amp;rft.identifier=Ally+D%2C+Ritland+K%2C+Otto+SP+%282008%29+Can+clone+size+serve+as+a+proxy+for+clone+age%3F+An+exploration+using+microsatellite+divergence+in+Populus+tremuloides.+Molecular+Ecology+17%2822%29%3A+4897-4911.&amp;rft.identifier=http%3A%2F%2Fhdl.handle.net%2F10255%2Fdryad.7898&amp;rft.description=In+long-lived+clonal+plant+species%2C+the+overall+size+of+a+clone+has+previously+been+used+to+estimate+clone+age.++The+size+of+a+clone%2C+however%2C+might+be+largely+determined+by+physical+or+biotic+interactions%2C+obscuring+the+relationship+between+clone+size+and+age.++Here%2C+we+use+the+accumulation+of+mutations+at+14+microsatellite+loci+to+estimate+clone+age+in+trembling+aspen%2C+Populus+tremuloides%2C+from+southwestern+Canada.++We+show+that+the+observed+patterns+of+genetic+divergence+are+consistent+with+a+model+of+clonal+growth%2C+allowing+us+to+use+pairwise+genetic+divergence+as+an+estimator+of+clone+age.++In+the+populations+studied%2C+clone+size+did+not+exhibit+a+significant+relationship+with+microsatellite+divergence%2C+indicating+that+clone+size+is+not+a+good+proxy+for+clone+age.&amp;rft.relation=17%3B22%3B2008&amp;rft.relation=doi%3A10.5061%2Fdryad.7898%2F1&amp;rft.relation=doi%3A10.5061%2Fdryad.7898%2F2&amp;rft.relation=doi%3A10.5061%2Fdryad.7898%2F3&amp;rft.relation=doi%3A10.1111%2Fj.1365-294X.2008.03962.x&amp;rft.subject=Angiosperms&amp;rft.subject=Ecological+Genetics&amp;rft.subject=Evolutionary+Theory&amp;rft.subject=Population+Genetics+-+Empirical&amp;rft.title=Data+from%3A+Can+clone+size+serve+as+a+proxy+for+clone+age%3F+An+exploration+using+microsatellite+divergence+in+Populus+tremuloides&amp;rft.ScientificName=Populus+tremuloides&amp;rft.contributor=Ally%2C+Dilara&amp;rft.identifier=MolEcol-11905036MEC-08-0315.R1-1287768841963&amp;rft.publicationName=Molecular+Ecology"> </span>
+<td width="55%">doi:10.5061/dryad.7898<span style="font-size: smaller; font-weight: bold;">    542 views</span>
+<span class="Z3988" title="ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Adc&amp;rft_id=doi%3A10.5061%2Fdryad.7898&amp;rft_id=Ally+D%2C+Ritland+K%2C+Otto+SP+%282008%29+Can+clone+size+serve+as+a+proxy+for+clone+age%3F+An+exploration+using+microsatellite+divergence+in+Populus+tremuloides.+Molecular+Ecology+17%2822%29%3A+4897-4911.&amp;rft_id=http%3A%2F%2Fhdl.handle.net%2F10255%2Fdryad.7898&amp;rft_id=MolEcol-11905036MEC-08-0315.R1-1287768841963&amp;rfr_id=info%3Asid%2Fdatadryad.org%3Arepo&amp;rft.contributor=Ally%2C+Dilara&amp;rft.contributor=Ritland%2C+Kermit&amp;rft.contributor=Otto%2C+Sarah+P.&amp;rft.coverage=British+Columbia&amp;rft.coverage=Canada&amp;rft.coverage=Alberta&amp;rft.date=2010-10-22T19%3A21%3A44Z&amp;rft.date=2010-10-22T19%3A21%3A44Z&amp;rft.date=2008-12-03&amp;rft.identifier=doi%3A10.5061%2Fdryad.7898&amp;rft.identifier=Ally+D%2C+Ritland+K%2C+Otto+SP+%282008%29+Can+clone+size+serve+as+a+proxy+for+clone+age%3F+An+exploration+using+microsatellite+divergence+in+Populus+tremuloides.+Molecular+Ecology+17%2822%29%3A+4897-4911.&amp;rft.identifier=http%3A%2F%2Fhdl.handle.net%2F10255%2Fdryad.7898&amp;rft.description=In+long-lived+clonal+plant+species%2C+the+overall+size+of+a+clone+has+previously+been+used+to+estimate+clone+age.++The+size+of+a+clone%2C+however%2C+might+be+largely+determined+by+physical+or+biotic+interactions%2C+obscuring+the+relationship+between+clone+size+and+age.++Here%2C+we+use+the+accumulation+of+mutations+at+14+microsatellite+loci+to+estimate+clone+age+in+trembling+aspen%2C+Populus+tremuloides%2C+from+southwestern+Canada.++We+show+that+the+observed+patterns+of+genetic+divergence+are+consistent+with+a+model+of+clonal+growth%2C+allowing+us+to+use+pairwise+genetic+divergence+as+an+estimator+of+clone+age.++In+the+populations+studied%2C+clone+size+did+not+exhibit+a+significant+relationship+with+microsatellite+divergence%2C+indicating+that+clone+size+is+not+a+good+proxy+for+clone+age.&amp;rft.relation=17%3B22%3B2008&amp;rft.relation=doi%3A10.5061%2Fdryad.7898%2F1&amp;rft.relation=doi%3A10.5061%2Fdryad.7898%2F2&amp;rft.relation=doi%3A10.5061%2Fdryad.7898%2F3&amp;rft.relation=doi%3A10.1111%2Fj.1365-294X.2008.03962.x&amp;rft.subject=Angiosperms&amp;rft.subject=Ecological+Genetics&amp;rft.subject=Evolutionary+Theory&amp;rft.subject=Population+Genetics+-+Empirical&amp;rft.title=Data+from%3A+Can+clone+size+serve+as+a+proxy+for+clone+age%3F+An+exploration+using+microsatellite+divergence+in+Populus+tremuloides&amp;rft.ScientificName=Populus+tremuloides&amp;rft.contributor=Ally%2C+Dilara&amp;rft.identifier=MolEcol-11905036MEC-08-0315.R1-1287768841963&amp;rft.publicationName=Molecular+Ecology"> </span>
 </td>
 </tr>
 <tr class="ds-table-row">
@@ -169,7 +169,7 @@
 <td>
 <span class="bold">Keywords</span>
 </td>
-<td colspan="2">Angiosperms, Ecological Genetics, Evolutionary Theory, Population Genetics - Empirical, </td>
+<td colspan="2">Angiosperms, Ecological Genetics, Evolutionary Theory, Population Genetics - Empirical</td>
 <td />
 </tr>
 <tr class="ds-table-row">
@@ -185,14 +185,14 @@
 <td>
 <span class="bold">Scientific Names</span>
 </td>
-<td colspan="2">Populus tremuloides, </td>
+<td colspan="2">Populus tremuloides</td>
 <td />
 </tr>
 <tr class="ds-table-row">
 <td>
 <span class="bold">Spatial Coverage</span>
 </td>
-<td colspan="2">British Columbia, Canada, Alberta, </td>
+<td colspan="2">British Columbia, Canada, Alberta</td>
 <td />
 </tr>
 </table>
@@ -206,8 +206,8 @@
 <span class="filename">
 <dim:field xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" element="title" language="en" mdschema="dc">SSR_Data_11905036MEC-08-0315.R1</dim:field>
 </span>
-<span style="font-size: smaller; font-weight: bold;">   50 downloads</span>
-<a href="/resource/doi:10.5061/dryad.7898/1">View File Details</a>
+<span style="font-size: smaller; font-weight: bold;">   54 downloads</span>
+<a href="/resource/doi:10.5061/dryad.7898/1">View File Details</a>
 </div>
 <div xmlns:confman="org.dspace.core.ConfigurationManager" style="padding-left:1px; padding-top:2px;">
 <span>
@@ -244,7 +244,7 @@ Any loci that did not amplify are indicated with an question mark.</dim:field>
 <table xmlns:confman="org.dspace.core.ConfigurationManager" class="license-line">
 <tr>
 <td style="padding-left:2px">To the extent possible under law, the authors
-		have waived all copyright and related or neighboring rights to this data. </td>
+        have waived all copyright and related or neighboring rights to this data. </td>
 <td style="padding-left:0px">
 <a target="_blank" href="http://creativecommons.org/publicdomain/zero/1.0/">
 <img src="/themes/Dryad/images/cc-zero.png" />
@@ -256,7 +256,7 @@ Any loci that did not amplify are indicated with an question mark.</dim:field>
 </a>
 </td>
 </tr>
-</table>   <br xmlns:confman="org.dspace.core.ConfigurationManager" />
+</table>   <br xmlns:confman="org.dspace.core.ConfigurationManager" />
 <br xmlns:confman="org.dspace.core.ConfigurationManager" />
 <!--External Metadata URL:
             cocoon://metadata/handle/10255/dryad.7900/mets.xml-->
@@ -265,8 +265,8 @@ Any loci that did not amplify are indicated with an question mark.</dim:field>
 <span class="filename">
 <dim:field xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" element="title" language="en" mdschema="dc">Riske_Creek_sizedata</dim:field>
 </span>
-<span style="font-size: smaller; font-weight: bold;">   63 downloads</span>
-<a href="/resource/doi:10.5061/dryad.7898/2">View File Details</a>
+<span style="font-size: smaller; font-weight: bold;">   68 downloads</span>
+<a href="/resource/doi:10.5061/dryad.7898/2">View File Details</a>
 </div>
 <div xmlns:confman="org.dspace.core.ConfigurationManager" style="padding-left:1px; padding-top:2px;">
 <span>
@@ -299,7 +299,7 @@ Any loci that did not amplify are indicated with an question mark.</dim:field>
 <table xmlns:confman="org.dspace.core.ConfigurationManager" class="license-line">
 <tr>
 <td style="padding-left:2px">To the extent possible under law, the authors
-		have waived all copyright and related or neighboring rights to this data. </td>
+        have waived all copyright and related or neighboring rights to this data. </td>
 <td style="padding-left:0px">
 <a target="_blank" href="http://creativecommons.org/publicdomain/zero/1.0/">
 <img src="/themes/Dryad/images/cc-zero.png" />
@@ -311,7 +311,7 @@ Any loci that did not amplify are indicated with an question mark.</dim:field>
 </a>
 </td>
 </tr>
-</table>   <br xmlns:confman="org.dspace.core.ConfigurationManager" />
+</table>   <br xmlns:confman="org.dspace.core.ConfigurationManager" />
 <br xmlns:confman="org.dspace.core.ConfigurationManager" />
 <!--External Metadata URL:
             cocoon://metadata/handle/10255/dryad.7901/mets.xml-->
@@ -320,8 +320,8 @@ Any loci that did not amplify are indicated with an question mark.</dim:field>
 <span class="filename">
 <dim:field xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" element="title" language="en" mdschema="dc">RR_SizeData</dim:field>
 </span>
-<span style="font-size: smaller; font-weight: bold;">   56 downloads</span>
-<a href="/resource/doi:10.5061/dryad.7898/3">View File Details</a>
+<span style="font-size: smaller; font-weight: bold;">   61 downloads</span>
+<a href="/resource/doi:10.5061/dryad.7898/3">View File Details</a>
 </div>
 <div xmlns:confman="org.dspace.core.ConfigurationManager" style="padding-left:1px; padding-top:2px;">
 <span>
@@ -354,7 +354,7 @@ Any loci that did not amplify are indicated with an question mark.</dim:field>
 <table xmlns:confman="org.dspace.core.ConfigurationManager" class="license-line">
 <tr>
 <td style="padding-left:2px">To the extent possible under law, the authors
-		have waived all copyright and related or neighboring rights to this data. </td>
+        have waived all copyright and related or neighboring rights to this data. </td>
 <td style="padding-left:0px">
 <a target="_blank" href="http://creativecommons.org/publicdomain/zero/1.0/">
 <img src="/themes/Dryad/images/cc-zero.png" />
@@ -366,7 +366,7 @@ Any loci that did not amplify are indicated with an question mark.</dim:field>
 </a>
 </td>
 </tr>
-</table>   <br xmlns:confman="org.dspace.core.ConfigurationManager" />
+</table>   <br xmlns:confman="org.dspace.core.ConfigurationManager" />
 <br xmlns:confman="org.dspace.core.ConfigurationManager" />
 </div>
 </div>
@@ -406,19 +406,19 @@ Any loci that did not amplify are indicated with an question mark.</dim:field>
 <div id="aspect_dryadinfo_Navigation_list_DryadInfo" class="ds-option-set">
 <ul class="ds-simple-list">
 <li>
-<a href="/depositing">Depositing Data</a>
+<a href="/pages/depositing">Depositing Data</a>
 </li>
 <li>
-<a href="/using">Using Data</a>
+<a href="/pages/using">Using Data</a>
 </li>
 <li>
-<a href="/partners">Dryad Partners</a>
+<a href="/pages/members">Dryad Members</a>
 </li>
 <li>
-<a href="/jdap">Journal Archiving Policy</a>
+<a href="/pages/jdap">Journal Archiving Policy</a>
 </li>
 <li>
-<a href="/about">About Dryad</a>
+<a href="/pages/about">About Dryad</a>
 </li>
 <li>
 <a href="http://blog.datadryad.org">Dryad Blog</a>
@@ -433,18 +433,18 @@ Any loci that did not amplify are indicated with an question mark.</dim:field>
 <div xmlns:xlink="http://www.w3.org/TR/xlink/" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:dim="http://www.dspace.org/xmlns/dspace/dim" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:mets="http://www.loc.gov/METS/" id="ds-footer">
 <div id="ds-footer-links">
 <p>Have questions, problems, or suggestions
-		for improvement? <a href="mailto:help@datadryad.org">Send us email</a> or let us know through
-		our <a href="/feedback">feedback form.
+        for improvement? <a href="mailto:help@datadryad.org">Send us email</a> or let us know through
+        our <a href="/feedback">feedback form.
                     </a>
 </p>
 </div>
 <div id="ds-footer-credit">
 <p style="font-size: smaller;">Dryad is developed by the <a class="footerLink" href="http://www.nescent.org">National Evolutionary Synthesis Center</a>
-		and UNC <a class="footerLink" href="http://ils.unc.edu/mrc/">Metadata Research Center</a> in
-		collaboration with several <a class="footerLink" href="/partners">Partner
-		Organizations</a>.</p>
-<p style="font-size: smaller; text-align:right; padding-top: 15px;">Dryad version 1.11 
-                    (2012-4-13)
+        and UNC <a class="footerLink" href="http://ils.unc.edu/mrc/">Metadata Research Center</a> in
+        collaboration with several <a class="footerLink" href="/partners">Partner
+        Organizations</a>.</p>
+<p style="font-size: smaller; text-align:right; padding-top: 15px;">Dryad version 1.11.2 
+                    (2012-6-15)
                      served by North Carolina State University<a href="/htmlmap" />
 </p>
 </div>
