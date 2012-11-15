@@ -58,11 +58,6 @@ class ItemFactory():
         metrics = item.setdefault("metrics", {})
         for metric_name in metrics:
             if metric_name in cls.all_static_meta.keys():  # make sure we still support this metrics type
-                #delete the raw history from what we return to the client for now
-                try:
-                    del metrics[metric_name]["values"]["raw_history"]
-                except KeyError:
-                    pass
 
                 # add static data
                 metrics[metric_name]["static_meta"] = cls.all_static_meta[metric_name]            
