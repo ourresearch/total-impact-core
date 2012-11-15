@@ -254,6 +254,7 @@ class TestCollection(ViewsTester):
         )
         assert_equals(len(collection_data["items"]), len(self.aliases))
 
+
     def test_get_csv(self):
         response = self.client.post(
             '/collection',
