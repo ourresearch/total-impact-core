@@ -56,7 +56,15 @@ class ItemFactory():
             year = 99 # hack so that it won't match anything.  what else to do?
 
         metrics = item.setdefault("metrics", {})
+
         for metric_name in metrics:
+
+            #delete the raw history from what we return to the client for now
+            try:
+                del metrics[metric_name]["values"]["raw_history"]
+            except KeyError:
+                pass
+
             if metric_name in cls.all_static_meta.keys():  # make sure we still support this metrics type
 
                 # add static data
