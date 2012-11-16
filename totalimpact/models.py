@@ -38,7 +38,7 @@ class ItemFactory():
         return item
 
     @classmethod
-    def build_item_for_client(cls, item, myrefsets):
+    def build_item_for_client(cls, item, myrefsets, include_history=False):
 
         try:
             (genre, host) = cls.decide_genre(item['aliases'])
@@ -60,10 +60,12 @@ class ItemFactory():
         for metric_name in metrics:
 
             #delete the raw history from what we return to the client for now
-            try:
-                del metrics[metric_name]["values"]["raw_history"]
-            except KeyError:
-                pass
+            print include_history
+            if not include_history:
+                try:
+                    del metrics[metric_name]["values"]["raw_history"]
+                except KeyError:
+                    pass
 
             if metric_name in cls.all_static_meta.keys():  # make sure we still support this metrics type
 
