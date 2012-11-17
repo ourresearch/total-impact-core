@@ -7,6 +7,9 @@ from totalimpact.models import ItemFactory
 logger = logging.getLogger('ti.updater')
 logger.setLevel(logging.DEBUG)
 
+# run in heroku by a) commiting, b) pushing to heroku, and c) running
+# heroku run python totalimpact/updater.py
+
 
 def get_elife_dois(mydao):
     db = mydao.db
@@ -29,7 +32,7 @@ def update_elife_dois(myredis, mydao):
     dois = get_elife_dois(mydao)
     aliases = [("doi", doi) for doi in dois]
     (tiids, new_items) = ItemFactory.create_or_find_items_from_aliases(aliases, myredis, mydao)
-    QUEUE_DELAY_IN_SECONDS = 0.1
+    QUEUE_DELAY_IN_SECONDS = 1.0
     ItemFactory.start_item_update(tiids, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
     return tiids
 
