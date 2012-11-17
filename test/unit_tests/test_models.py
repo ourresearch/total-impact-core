@@ -146,6 +146,10 @@ class TestItemFactory():
 #        assert item["created"] < datetime.datetime.now().isoformat()
 #        assert_equals(item["aliases"], {})
 
+    def test_clean_id(self):
+        nid = u"10.1000/\u200bna\tture "
+        response = models.ItemFactory.clean_id(nid)
+        assert_equals(response, u'10.1000/nature')
 
     def test_adds_genre(self):
         # put the item in the db
