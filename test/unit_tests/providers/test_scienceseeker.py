@@ -37,13 +37,13 @@ class TestScienceseeker(ProviderTestCase):
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("blog_posts", 
             [self.testitem_aliases])
-        expected = 'http://scienceseeker.org/displayfeed/?type=post&filter0=citation&modifier0=doi&value0=10.1016/j.cbpa.2010.06.169'
+        expected = 'http://scienceseeker.org/posts/?type=post&filter0=citation&modifier0=id-all&value0=10.1016/j.cbpa.2010.06.169'
         assert_equals(provenance_url, expected)
 
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'scienceseeker:blog_posts': (1, 'http://scienceseeker.org/displayfeed/?type=post&filter0=citation&modifier0=doi&value0=10.1016/j.cbpa.2010.06.169')}
+        expected = {'scienceseeker:blog_posts': (1, 'http://scienceseeker.org/posts/?type=post&filter0=citation&modifier0=id-all&value0=10.1016/j.cbpa.2010.06.169')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
@@ -52,7 +52,7 @@ class TestScienceseeker(ProviderTestCase):
     @http
     def test_metrics_another(self):
         metrics_dict = self.provider.metrics([("doi", "10.1371/journal.pone.0035769")])
-        expected = {'scienceseeker:blog_posts': (1, 'http://scienceseeker.org/displayfeed/?type=post&filter0=citation&modifier0=doi&value0=10.1371/journal.pone.0035769')}
+        expected = {'scienceseeker:blog_posts': (1, 'http://scienceseeker.org/posts/?type=post&filter0=citation&modifier0=id-all&value0=10.1371/journal.pone.0035769')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
