@@ -340,24 +340,7 @@ def collection_update(cid=""):
         ))
         abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")
 
-    # put each of them on the update queue
-    for tiid in tiids:
-        logger.debug("In update_item with tiid " + tiid)
-
-        # set this so we know when it's still updating later on
-        myredis.set_num_providers_left(
-            tiid,
-            ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-        )
-
-        item_doc = mydao.get(tiid)
-        try:
-            myredis.add_to_alias_queue(item_doc["_id"], item_doc["aliases"])
-        except (KeyError, TypeError):
-            logger.debug("couldn't get item_doc for {tiid}. Skipping its update".format(
-                tiid=tiid))
-            pass
-
+    ItemFactory.start_item_update(tiids, myredis, mydao)
 
     resp = make_response("true", 200)
     resp.mimetype = "application/json"

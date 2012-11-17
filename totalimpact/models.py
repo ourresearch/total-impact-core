@@ -303,16 +303,16 @@ class ItemFactory():
                 aliases=str(clean_aliases)
             ))
 
-        (tiids, items) = cls.create_or_find_items_from_aliases(clean_aliases, myredis, mydao)
+        (tiids, new_items) = cls.create_or_find_items_from_aliases(clean_aliases, myredis, mydao)
 
-        logger.debug("POST /collection saving a group of {num} new items: {items}".format(
-                num=len(items),
-                items=str(items)
+        logger.debug("POST /collection saving a group of {num} new items: {new_items}".format(
+                num=len(new_items),
+                items=str(new_items)
             ))
 
         # batch upload the new docs to the db
         # make sure they are there before the provider updates start happening
-        for doc in mydao.db.update(items):
+        for doc in mydao.db.update(new_items):
             pass
 
         # for each item, set the number of providers that need to run before the update is done
@@ -356,7 +356,7 @@ class ItemFactory():
     @classmethod
     def create_or_find_items_from_aliases(cls, clean_aliases, myredis, mydao):
         tiids = []
-        items = []
+        new_items = []
         for alias in clean_aliases:
             (namespace, nid) = alias
             existing_tiid = cls.get_tiid_by_alias(namespace, nid, myredis, mydao)
@@ -373,9 +373,9 @@ class ItemFactory():
                 item = ItemFactory.make()
                 item["aliases"][namespace] = [nid]
 
-                items.append(item)
+                new_items.append(item)
                 tiids.append(item["_id"])    
-        return(tiids, items)
+        return(tiids, new_items)
 
     @classmethod
     def create_item_from_namespace_nid(cls, namespace, nid, myredis, mydao):
@@ -405,6 +405,29 @@ class ItemFactory():
         else:
             tiid = None
         return tiid
+
+    @classmethod
+    def start_item_update(cls, tiids, myredis, mydao, sleep_in_seconds=0):
+        # put each of them on the update queue
+        for tiid in tiids:
+            logger.debug("In start_item_update with tiid " + tiid)
+
+            # set this so we know when it's still updating later on
+            myredis.set_num_providers_left(
+                tiid,
+                ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
+            )
+
+            item_doc = mydao.get(tiid)
+            try:
+                myredis.add_to_alias_queue(item_doc["_id"], item_doc["aliases"])
+            except (KeyError, TypeError):
+                logger.debug("couldn't get item_doc for {tiid}. Skipping its update".format(
+                    tiid=tiid))
+                pass
+
+            time.sleep(sleep_in_seconds)
+
 
 class MemberItems():
 
