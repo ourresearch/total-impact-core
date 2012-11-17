@@ -1,6 +1,6 @@
 from werkzeug import generate_password_hash, check_password_hash
 from couchdb import ResourceNotFound, ResourceConflict
-import shortuuid, datetime, hashlib, threading, json, time, copy
+import shortuuid, datetime, hashlib, threading, json, time, copy, re
 
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact.providers.provider import ProviderTimeout, ProviderServerError
@@ -13,9 +13,13 @@ from totalimpact.utils import Retry
 import logging
 logger = logging.getLogger('ti.models')
 
+# setup to remove control characters from received IDs
+# from http://stackoverflow.com/questions/92438/stripping-non-printable-characters-from-a-string-in-python
+control_chars = ''.join(map(unichr, range(0,32) + range(127,160)))
+control_char_re = re.compile('[%s]' % re.escape(control_chars))
+
 class NotAuthenticatedError(Exception):
     pass
-
 
 def largest_value_that_is_less_than_or_equal_to(target, collection):
     collection_as_numbers = [(int(i), i) for i in collection if int(i) <= target]
@@ -24,6 +28,15 @@ def largest_value_that_is_less_than_or_equal_to(target, collection):
 class ItemFactory():
 
     all_static_meta = ProviderFactory.get_all_static_meta()
+
+
+    @classmethod
+    def clean_id(cls, nid):
+
+        nid = control_char_re.sub('', nid)
+        nid = nid.replace(u'\u200b', "")
+        nid = nid.strip()
+        return(nid)
 
     @classmethod
     def get_item(cls, tiid, myrefsets, dao):
@@ -274,6 +287,124 @@ class ItemFactory():
             currently_updating = False        
         return currently_updating
 
+    @classmethod
+    def create_or_update_items_from_aliases(cls, aliases, myredis, mydao):
+        logger.info("got a list of aliases; creating new items for them.")
+        try:
+            # remove unprintable characters and change list to tuples
+            clean_aliases = [(cls.clean_id(namespace), cls.clean_id(nid)) for [namespace, nid] in aliases]
+        except ValueError:
+            logger.error("bad input to POST /collection (requires [namespace, id] pairs):{input}".format(
+                    input=str(aliases)
+                ))
+            return None
+
+        logger.debug("POST /collection got list of aliases; creating new items for {aliases}".format(
+                aliases=str(clean_aliases)
+            ))
+
+        (tiids, items) = cls.create_or_find_items_from_aliases(clean_aliases, myredis, mydao)
+
+        logger.debug("POST /collection saving a group of {num} new items: {items}".format(
+                num=len(items),
+                items=str(items)
+            ))
+
+        # batch upload the new docs to the db
+        # make sure they are there before the provider updates start happening
+        for doc in mydao.db.update(items):
+            pass
+
+        # for each item, set the number of providers that need to run before the update is done
+        # and put them on the update queue
+        for item in items:
+            myredis.set_num_providers_left(
+                item["_id"],
+                ProviderFactory.num_providers_with_metrics(
+                    default_settings.PROVIDERS)
+            )
+            myredis.add_to_alias_queue(item["_id"], item["aliases"])
+
+        return tiids
+
+    @classmethod
+    def create_item(cls, namespace, nid, myredis, mydao):
+        logger.debug("In create_item with alias" + str((namespace, nid)))
+        item = ItemFactory.make()
+
+        # set this so we know when it's still updating later on
+        myredis.set_num_providers_left(
+            item["_id"],
+            ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
+        )
+
+        item["aliases"][namespace] = [nid]
+        mydao.save(item)
+
+        myredis.add_to_alias_queue(item["_id"], item["aliases"])
+
+        logger.info("Created new item '{id}' with alias '{alias}'".format(
+            id=item["_id"],
+            alias=str((namespace, nid))
+        ))
+
+        try:
+            return item["_id"]
+        except AttributeError:
+            abort(500)
+
+    @classmethod
+    def create_or_find_items_from_aliases(cls, clean_aliases, myredis, mydao):
+        tiids = []
+        items = []
+        for alias in clean_aliases:
+            (namespace, nid) = alias
+            existing_tiid = cls.get_tiid_by_alias(namespace, nid, myredis, mydao)
+            if existing_tiid:
+                tiids.append(existing_tiid)
+                logger.debug("found an existing tiid ({tiid}) for alias {alias}".format(
+                        tiid=existing_tiid,
+                        alias=str(alias)
+                    ))
+            else:
+                logger.debug("alias {alias} isn't in the db; making a new item for it.".format(
+                        alias=alias
+                    ))
+                item = ItemFactory.make()
+                item["aliases"][namespace] = [nid]
+
+                items.append(item)
+                tiids.append(item["_id"])    
+        return(tiids, items)
+
+    @classmethod
+    def create_item_from_namespace_nid(cls, namespace, nid, myredis, mydao):
+        # remove unprintable characters
+        nid = ItemFactory.clean_id(nid)
+
+        tiid = cls.get_tiid_by_alias(namespace, nid, myredis, mydao)
+        if tiid:
+            logger.debug("... found with tiid " + tiid)
+        else:
+            tiid = cls.create_item(namespace, nid, myredis, mydao)
+            logger.debug("new item created with tiid " + tiid)
+
+        return tiid
+
+    @classmethod
+    def get_tiid_by_alias(cls, ns, nid, myredis, mydao):
+        res = mydao.view('queues/by_alias')
+
+        matches = res[[ns,
+                       nid]] # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
+
+        if matches.rows:
+            if len(matches.rows) > 1:
+                logger.warning("More than one tiid for alias (%s, %s)" % (ns, nid))
+            tiid = matches.rows[0]["id"]
+        else:
+            tiid = None
+        return tiid
 
 class MemberItems():
 
