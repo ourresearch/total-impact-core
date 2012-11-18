@@ -217,6 +217,7 @@ def item_namespace_post(namespace, nid):
     500?  if fails to create
     example /item/PMID/234234232
     """
+
     # remove unprintable characters
     nid = clean_id(nid)
 
