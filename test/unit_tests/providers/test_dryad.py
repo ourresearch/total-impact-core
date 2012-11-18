@@ -42,8 +42,8 @@ class TestDryad(ProviderTestCase):
         metrics_dict = self.provider._extract_metrics(f.read())
         print metrics_dict
         assert_equals(len(metrics_dict), 2)
-        assert_equals(metrics_dict['dryad:package_views'], 149)
-        assert_equals(metrics_dict['dryad:total_downloads'], 169)
+        assert_equals(metrics_dict['dryad:package_views'], 542)
+        assert_equals(metrics_dict['dryad:total_downloads'], 183)
 
     def test_extract_stats_invalid_id(self):
         # If the item has a DOI alias but it's not recognised by dryad, 

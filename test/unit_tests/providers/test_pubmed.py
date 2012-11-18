@@ -61,20 +61,20 @@ class TestPubmed(ProviderTestCase):
     def test_extract_biblio(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
         ret = self.provider._extract_biblio(f.read())
-        expected = {'authors': u'Ioannidis', 'journal': u'PLoS medicine', 'year': 2005, 'title': u'Why most published research findings are false.'}
+        expected = {'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00', 'journal': u'PLoS medicine', 'year': 2005, 'title': u'Why most published research findings are false.'}
         assert_equals(ret, expected)
 
     @http
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
-        expected = {'authors': u'Ioannidis', 'journal': u'PLoS medicine', 'year': 2005, 'title': u'Why most published research findings are false.'}
+        expected = {'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00', 'journal': u'PLoS medicine', 'year': 2005, 'title': u'Why most published research findings are false.'}
         assert_equals(biblio_dict, expected)
 
     @http
     def test_aliases_from_pmid(self):
         aliases = self.provider.aliases([self.testitem_aliases])
         print aliases
-        expected = [('biblio', {'authors': u'Ioannidis', 'journal': u'PLoS medicine', 'year': 2005, 'title': u'Why most published research findings are false.'}), ('doi', u'10.1371/journal.pmed.0020124'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/16060722')]
+        expected = [('biblio', {'title': u'Why most published research findings are false.', 'journal': u'PLoS medicine', 'year': 2005, 'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00'}), ('doi', u'10.1371/journal.pmed.0020124'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/16060722')]
         assert_equals(aliases, expected)
 
     @http

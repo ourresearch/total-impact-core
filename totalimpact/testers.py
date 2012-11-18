@@ -10,7 +10,7 @@ class ContextFilter(logging.Filter):
         )
         return True
 
-logger = logging.getLogger("ti.fakes")
+logger = logging.getLogger("ti.testers")
 
 class CollectionTester(object):
 

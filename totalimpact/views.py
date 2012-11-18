@@ -52,15 +52,17 @@ def set_redis(url, db):
     myredis = tiredis.from_url(url, db)
     return myredis
 
-#@app.before_request
-def check_api_key():
-    ti_api_key = request.values.get('api_key', '')
-    logger.debug("In check_api_key with " + ti_api_key)
-    if not ti_api_key:
-        response = make_response(
-            "please get an api key and include api_key=YOURKEY in your query",
-            403)
-        return response
+@app.before_request
+def check_key():
+    if "v1" in request.url:
+        key = request.values.get('key', '')
+        logger.debug("In check_key with " + key)
+        if not key:
+            response = make_response(
+                "you must include key=YOURKEY in your query",
+                403)
+            return response
+    return # otherwise don't return any content
 
 
 @app.after_request
@@ -106,8 +108,8 @@ GET /tiid/:namespace/:id
 404 if not found because not created yet
 303 else list of tiids
 '''
-
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
+# not supported in v1
 def tiid(ns, nid):
     tiid = get_tiid_by_alias(ns, nid)
 
@@ -208,16 +210,7 @@ def prep_collection_items(aliases):
     return tiids
 
 
-@app.route('/item/<namespace>/<path:nid>', methods=['POST'])
-def item_namespace_post(namespace, nid):
-    """Creates a new item using the given namespace and id.
-
-    POST /item/:namespace/:nid
-    201 location: {tiid}
-    500?  if fails to create
-    example /item/PMID/234234232
-    """
-
+def create_item_from_namespace_nid(namespace, nid):
     # remove unprintable characters
     nid = clean_id(nid)
 
@@ -228,19 +221,45 @@ def item_namespace_post(namespace, nid):
         tiid = create_item(namespace, nid)
         logger.debug("new item created with tiid " + tiid)
 
-    response_code = 201 # Created
+    return tiid
 
+"""Creates a new item using the given namespace and id.
+POST /item/:namespace/:nid
+201
+500?  if fails to create
+example /item/PMID/234234232
+original api returned tiid
+/v1 returns nothing in body
+"""
+@app.route('/item/<namespace>/<path:nid>', methods=['POST'])
+def item_namespace_post_with_tiid(namespace, nid):
+    tiid = create_item_from_namespace_nid(namespace, nid)
+    response_code = 201 # Created
     resp = make_response(json.dumps(tiid), response_code)
     resp.mimetype = "application/json"
-
     return resp
+
+@app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
+def item_namespace_post(namespace, nid):
+    tiid = create_item_from_namespace_nid(namespace, nid)
+    response_code = 201 # Created
+    resp = make_response(json.dumps("ok"), response_code)
+    return resp
+
+# For /v1 support interface as get from namespace:nid instead of get from tiid
+@app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
+def get_item_from_namespace_nid(namespace, nid, format=None):
+    # remove unprintable characters
+    nid = clean_id(nid)
+    tiid = get_tiid_by_alias(namespace, nid)
+    return get_item_from_tiid(tiid, format)
 
 
 '''GET /item/:tiid
 404 if tiid not found in db
 '''
 @app.route('/item/<tiid>', methods=['GET'])
-def item(tiid, format=None):
+def get_item_from_tiid(tiid, format=None):
     # TODO check request headers for format as well.
 
     try:
@@ -267,6 +286,7 @@ def item(tiid, format=None):
 
 
 @app.route('/provider', methods=['GET'])
+@app.route('/v1/provider', methods=['GET'])
 def provider():
     ret = ProviderFactory.get_all_metadata()
     resp = make_response(json.dumps(ret, sort_keys=True, indent=4), 200)
@@ -281,10 +301,9 @@ returns member ids associated with the group in a json list of (key, value) pair
 of type :type (when this needs disambiguating)
 if > 100 memberitems, return the first 100 with a response code that indicates the list has been truncated
 examples : /provider/github/memberitems?query=jasonpriem&type=github_user
-
 '''
-
 @app.route('/provider/<provider_name>/memberitems', methods=['POST'])
+@app.route('/v1/provider/<provider_name>/memberitems', methods=['POST'])
 def provider_memberitems(provider_name):
     """
     Starts a memberitems update for a specified provider, using a supplied file.
@@ -313,17 +332,18 @@ def provider_memberitems(provider_name):
     return resp
 
 
+"""
+Gets aliases associated with a query from a given provider.
+
+method=sync will call a provider's memberitems method with the supplied query,
+            and wait for the result.
+method=async will look up the query in total-impact's db and return the current
+             status of that query.
+"""
 @app.route("/provider/<provider_name>/memberitems/<query>", methods=['GET'])
+@app.route("/v1/provider/<provider_name>/memberitems/<query>", methods=['GET'])
 def provider_memberitems_get(provider_name, query):
-    """
-    Gets aliases associated with a query from a given provider.
 
-    method=sync will call a provider's memberitems method with the supplied query,
-                and wait for the result.
-    method=async will look up the query in total-impact's db and return the current
-                 status of that query.
-
-    """
     provider = ProviderFactory.get_provider(provider_name)
     memberitems = MemberItems(provider, myredis)
     method = request.args.get('method', "sync")
@@ -345,71 +365,15 @@ def provider_memberitems_get(provider_name, query):
     return resp
 
 
-# For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5001/provider/dryad/aliases/10.5061/dryad.7898
-@app.route('/provider/<provider_name>/aliases/<path:id>', methods=['GET'])
-def provider_aliases(provider_name, id):
-    provider = ProviderFactory.get_provider(provider_name)
-    if id == "example":
-        id = provider.example_id[1]
-        url = "http://localhost:8080/" + provider_name + "/aliases?%s"
-    else:
-        url = None
-
-    try:
-        new_aliases = provider._get_aliases_for_id(id, url, cache_enabled=False)
-    except NotImplementedError:
-        new_aliases = []
-
-    all_aliases = [(provider.example_id[0], id)] + new_aliases
-
-    resp = make_response(json.dumps(all_aliases, sort_keys=True, indent=4))
-    resp.mimetype = "application/json"
-
-    return resp
-
-# For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5001/provider/dryad/metrics/10.5061/dryad.7898
-@app.route('/provider/<provider_name>/metrics/<path:id>', methods=['GET'])
-def provider_metrics(provider_name, id):
-    provider = ProviderFactory.get_provider(provider_name)
-    if id == "example":
-        id = provider.example_id[1]
-        url = "http://localhost:8080/" + provider_name + "/metrics?%s"
-    else:
-        url = None
-
-    metrics = provider.get_metrics_for_id(id, url, cache_enabled=False)
-
-    resp = make_response(json.dumps(metrics, sort_keys=True, indent=4))
-    resp.mimetype = "application/json"
-
-    return resp
-
-# For internal use only.  Useful for testing before end-to-end working
-# Example: http://127.0.0.1:5001/provider/dryad/biblio/10.5061/dryad.7898
-@app.route('/provider/<provider_name>/biblio/<path:id>', methods=['GET'])
-def provider_biblio(provider_name, id):
-    provider = ProviderFactory.get_provider(provider_name)
-    if id == "example":
-        id = provider.example_id[1]
-        url = "http://localhost:8080/" + provider_name + "/biblio?%s"
-    else:
-        url = None
-
-    biblio = provider.get_biblio_for_id(id, url, cache_enabled=False)
-    resp = make_response(json.dumps(biblio, sort_keys=True, indent=4))
-    resp.mimetype = "application/json"
-
-    return resp
-
 
 '''
 GET /collection/:collection_ID
 returns a collection object and the items
 '''
 @app.route('/collection/<cid>', methods=['GET'])
+@app.route('/v1/collection/<cid>', methods=['GET'])
 @app.route('/collection/<cid>.<format>', methods=['GET'])
+@app.route('/v1/collection/<cid>.<format>', methods=['GET'])
 def collection_get(cid='', format="json"):
     coll = mydao.get(cid)
     if not coll:
@@ -459,6 +423,7 @@ def collection_get(cid='', format="json"):
     return resp
 
 @app.route("/collection/<cid>", methods=["PUT"])
+@app.route("/v1/collection/<cid>", methods=["PUT"])
 def put_collection(cid=""):
     key = request.args.get("key", None)
     if key is None:
@@ -485,11 +450,11 @@ def put_collection(cid=""):
     return resp
 
 
-
+""" Updates all the items in a given collection.
+"""
 @app.route("/collection/<cid>", methods=["POST"])
+# not officially supported in api
 def collection_update(cid=""):
-    """ Updates all the items in a given collection.
-    """
 
     # first, get the tiids in this collection:
     try:
@@ -528,6 +493,7 @@ def collection_update(cid=""):
 
 # creates a collection with aliases
 @app.route('/collection', methods=['POST'])
+@app.route('/v1/collection', methods=['POST'])
 def collection_create():
     """
     POST /collection
@@ -571,7 +537,7 @@ def collection_create():
     return resp
 
 
-
+# for internal use only
 @app.route('/test/collection/<action_type>', methods=['GET'])
 def tests_interactions(action_type=''):
     logger.info("getting test/collection/" + action_type)
@@ -587,7 +553,7 @@ def tests_interactions(action_type=''):
         report=report
     )
 
-
+# for internal use only
 @app.route("/collections/recent")
 @app.route("/collections/recent.<format>")
 def latest_collections(format=""):
@@ -615,6 +581,7 @@ def latest_collections(format=""):
 
 
 @app.route("/collections/<cids>")
+@app.route("/v1/collections/<cids>")
 def get_collection_titles(cids=''):
     from time import sleep
     sleep(1)
@@ -626,12 +593,14 @@ def get_collection_titles(cids=''):
 
 
 @app.route("/collections/reference-sets")
+@app.route("/v1/collections/reference-sets")
 def reference_sets():
     resp = make_response(json.dumps(myrefsets, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
 @app.route("/collections/reference-sets-histograms")
+@app.route("/v1/collections/reference-sets-histograms")
 def reference_sets_histograms():
     rows = []
     header_added = False
@@ -656,6 +625,7 @@ def reference_sets_histograms():
     return resp
 
 @app.route("/user/<userid>", methods=["GET"])
+@app.route("/v1/user/<userid>", methods=["GET"])
 def get_user(userid=''):
     """
     GET /user
@@ -678,6 +648,7 @@ def get_user(userid=''):
 
 
 @app.route('/user', methods=['PUT'])
+@app.route('/v1/user', methods=['PUT'])
 def update_user(userid=''):
     """
     PUT /collection

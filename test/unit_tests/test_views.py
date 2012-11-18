@@ -75,6 +75,18 @@ class DaoTester(unittest.TestCase):
     def test_dao(self):
         assert_equals(mydao.db.name, os.getenv("CLOUDANT_DB"))
 
+class TestGeneral(ViewsTester):
+    def test_does_not_require_key_if_preversioned_url(self):
+        resp = self.client.get("/")
+        assert_equals(resp.status_code, 200)
+
+    def test_forbidden_if_no_key_in_v1(self):
+        resp = self.client.get("/v1")
+        assert_equals(resp.status_code, 403)
+
+    def test_ok_if_key_in_v1(self):
+        resp = self.client.get("/v1?key=EXAMPLE")
+        assert_equals(resp.status_code, 200)
 
 class TestMemberItems(ViewsTester):
 
@@ -131,12 +143,29 @@ class TestItem(ViewsTester):
 
         assert_equals([unicode(TEST_DRYAD_DOI)], saved_item["aliases"]["doi"])
 
+    def test_v1_item_post_success(self):
+        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE"
+        response = self.client.post(url)
+        assert_equals(response.status_code, 201)
+        assert_equals(json.loads(response.data), "ok")
+
     def test_item_get_success_realid(self):
         # First put something in
         response = self.client.get('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
         tiid = response.data
         print response
         print tiid
+
+    def test_v1_item_get_success_realid(self):
+        # First put something in
+        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE"
+        response_post = self.client.post(url)
+        # now check response
+        response_get = self.client.get(url)
+        assert_equals(response_get.status_code, 210)
+        expected = {u'created': u'2012-11-06T19:57:15.937961', u'_rev': u'1-05e5d8a964a0fe9af4284a2a7804815f', u'currently_updating': True, u'metrics': {}, u'last_modified': u'2012-11-06T19:57:15.937961', u'biblio': {u'genre': u'dataset'}, u'_id': u'jku42e6ogs8ghxbr7p390nz8', u'type': u'item', u'aliases': {u'doi': [u'10.5061/dryad.7898']}}
+        response_data = json.loads(response_get.data)        
+        assert_equals(response_data["aliases"], {u'doi': [u'10.5061/dryad.7898']})
 
     def test_item_post_unknown_namespace(self):
         response = self.client.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
