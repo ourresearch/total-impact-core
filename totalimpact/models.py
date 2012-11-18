@@ -307,7 +307,7 @@ class ItemFactory():
 
         logger.debug("POST /collection saving a group of {num} new items: {new_items}".format(
                 num=len(new_items),
-                items=str(new_items)
+                new_items=str(new_items)
             ))
 
         # batch upload the new docs to the db
@@ -317,7 +317,7 @@ class ItemFactory():
 
         # for each item, set the number of providers that need to run before the update is done
         # and put them on the update queue
-        for item in items:
+        for item in new_items:
             myredis.set_num_providers_left(
                 item["_id"],
                 ProviderFactory.num_providers_with_metrics(
