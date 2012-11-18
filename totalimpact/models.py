@@ -374,7 +374,8 @@ class ItemFactory():
                 item["aliases"][namespace] = [nid]
 
                 new_items.append(item)
-                tiids.append(item["_id"])    
+                tiids.append(item["_id"]) 
+
         return(tiids, new_items)
 
     @classmethod
@@ -507,9 +508,7 @@ class UserFactory():
     @classmethod
     def get(cls, id, dao, key):
         try:
-            print id
             doc = dao.db[id]
-            print dict(doc)
         except ResourceNotFound:
             raise KeyError("User doesn't exist.")
 
