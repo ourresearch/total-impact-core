@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import logging, couchdb, os
+import logging, couchdb, os, sys
 from totalimpact import dao, tiredis
 from totalimpact.models import ItemFactory
 
@@ -33,13 +33,9 @@ def update_elife_dois(myredis, mydao):
     dois = get_elife_dois(mydao)
     aliases = [("doi", doi) for doi in dois]
     (tiids, new_items) = ItemFactory.create_or_find_items_from_aliases(aliases, myredis, mydao)
-
-    # make sure to remove duplicates.  not sure how we'd get duplicates.
-    unique_tiids = list(set(tiids))
-
     QUEUE_DELAY_IN_SECONDS = 1.0
-    ItemFactory.start_item_update(unique_tiids, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
-    return unique_tiids
+    ItemFactory.start_item_update(tiids, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
+    return tiids
 
 def main():
     cloudant_db = os.getenv("CLOUDANT_DB")

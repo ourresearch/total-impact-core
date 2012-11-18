@@ -376,7 +376,9 @@ class ItemFactory():
                 new_items.append(item)
                 tiids.append(item["_id"]) 
 
-        return(tiids, new_items)
+        # could be duplicate tiids if two aliases were synonymns. Return list of uniques
+        unique_tiids = list(set(tiids))
+        return(unique_tiids, new_items)
 
     @classmethod
     def create_item_from_namespace_nid(cls, namespace, nid, myredis, mydao):
