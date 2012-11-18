@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, urllib, os, itertools
+import simplejson, urllib, os, itertools, datetime
 
 import logging
 logger = logging.getLogger('ti.providers.pubmed')
@@ -79,7 +79,9 @@ class Pubmed(Provider):
         return True
 
     def _extract_biblio(self, page, id=None):
-        dict_of_keylists = {"year": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "PubDate", "Year"], 
+        dict_of_keylists = {"year": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Year"], 
+                            "month": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Month"],
+                            "day": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Day"],
                             "title": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleTitle"],
                             "journal": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "Title"],
                             }
@@ -88,6 +90,17 @@ class Pubmed(Provider):
         try:
             biblio_dict["authors"] = ", ".join([author.firstChild.data for author in dom_authors])
         except (AttributeError, TypeError):
+            pass
+
+        try:
+            datetime_published = datetime.datetime(year=biblio_dict["year"], 
+                                                    month=biblio_dict["month"], 
+                                                    day=biblio_dict["day"])
+            biblio_dict["date"] = datetime_published.isoformat()
+            del biblio_dict["month"]
+            del biblio_dict["day"]
+        except (AttributeError, TypeError, KeyError):
+            logger.debug("%20s don't have full date information %s" % (self.provider_name, id))
             pass
         return biblio_dict  
 

@@ -15,8 +15,8 @@ class Dryad(Provider):
     descr = "An international repository of data underlying peer-reviewed articles in the basic and applied biology."
     url = "http://www.datadryad.org"
     provenance_url_template = "http://dx.doi.org/%s"
-    aliases_url_template = "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.identifier.uri,dc.title"
-    biblio_url_template = "http://datadryad.org/solr/search/select/?q=dc.identifier:%s&fl=dc.date.accessioned.year,dc.identifier.uri,dc.title_ac,dc.contributor.author_ac"
+    # No aliases_url_template because uses crossref
+    # No biblio_url_template because uses crossref
     metrics_url_template = "http://dx.doi.org/%s"
 
     static_meta_dict = {
@@ -37,7 +37,7 @@ class Dryad(Provider):
     }
         
     DRYAD_DOI_PATTERN = re.compile(r"(10\.5061/.*)")
-    DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+)\W*views<span", re.DOTALL)
+    DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+)\W*views</span", re.DOTALL)
     DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+)\W*downloads</span", re.DOTALL)
 
     def __init__(self):
