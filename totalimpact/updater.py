@@ -24,7 +24,8 @@ def get_elife_dois(mydao):
     for row in view_rows:
         row_count += 1
         doi = row.key[1]
-        dois += [doi]
+        if doi not in dois:
+            dois += [doi]
         #logger.info("\n%s" % (doi))
     return dois
 
@@ -32,9 +33,13 @@ def update_elife_dois(myredis, mydao):
     dois = get_elife_dois(mydao)
     aliases = [("doi", doi) for doi in dois]
     (tiids, new_items) = ItemFactory.create_or_find_items_from_aliases(aliases, myredis, mydao)
+
+    # make sure to remove duplicates.  not sure how we'd get duplicates.
+    unique_tiids = list(set(tiids))
+
     QUEUE_DELAY_IN_SECONDS = 1.0
-    ItemFactory.start_item_update(tiids, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
-    return tiids
+    ItemFactory.start_item_update(unique_tiids, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
+    return unique_tiids
 
 def main():
     cloudant_db = os.getenv("CLOUDANT_DB")
@@ -46,7 +51,6 @@ def main():
 
     try:
         tiids = update_elife_dois(myredis, mydao)
-        print tiids
     except (KeyboardInterrupt, SystemExit): 
         # this approach is per http://stackoverflow.com/questions/2564137/python-how-to-terminate-a-thread-when-main-program-ends
         sys.exit()
