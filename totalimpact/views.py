@@ -248,22 +248,25 @@ def item_namespace_post(namespace, nid):
 
 # For /v1 support interface as get from namespace:nid instead of get from tiid
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
-def get_item_from_namespace_nid(namespace, nid, format=None):
+def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
+
+    include_history = (request.args.get("include_history", 0) in ["1", "true", "True"])
+
     # remove unprintable characters
     nid = clean_id(nid)
     tiid = get_tiid_by_alias(namespace, nid)
-    return get_item_from_tiid(tiid, format)
+    return get_item_from_tiid(tiid, format, include_history)
 
 
 '''GET /item/:tiid
 404 if tiid not found in db
 '''
 @app.route('/item/<tiid>', methods=['GET'])
-def get_item_from_tiid(tiid, format=None):
+def get_item_from_tiid(tiid, format=None, include_history=False):
     # TODO check request headers for format as well.
 
     try:
-        item = ItemFactory.get_item(tiid, myrefsets, mydao)
+        item = ItemFactory.get_item(tiid, myrefsets, mydao, include_history)
     except (LookupError, AttributeError):
         abort(404)
 
