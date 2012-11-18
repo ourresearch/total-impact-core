@@ -26,12 +26,12 @@ class ItemFactory():
     all_static_meta = ProviderFactory.get_all_static_meta()
 
     @classmethod
-    def get_item(cls, tiid, myrefsets, dao):
+    def get_item(cls, tiid, myrefsets, dao, include_history=False):
         item_doc = dao.get(tiid)
         if not item_doc:
             return None
         try:
-            item = cls.build_item_for_client(item_doc, myrefsets)
+            item = cls.build_item_for_client(item_doc, myrefsets, include_history)
         except Exception, e:
             item = None
             logger.error("Exception %s: Skipping item, unable to build %s, %s" % (e.__repr__(), tiid, str(item)))
@@ -60,7 +60,6 @@ class ItemFactory():
         for metric_name in metrics:
 
             #delete the raw history from what we return to the client for now
-            print include_history
             if not include_history:
                 try:
                     del metrics[metric_name]["values"]["raw_history"]

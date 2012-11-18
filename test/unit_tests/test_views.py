@@ -49,6 +49,11 @@ class ViewsTester(unittest.TestCase):
         pass
 
     def setUp(self):
+
+        """
+        This test item is a lightly-modified version of a real doc from our
+        demo collection; it's available at http://total-impact-core.herokuapp.com/collection/kn5auf
+        """
         test_item = '''
             {
             "_id": "1aff9dfebea711e1bdf912313d1a5e63",
@@ -90,12 +95,6 @@ class ViewsTester(unittest.TestCase):
                         "provider_url": "http://www.delicious.com/"
                     },
                     "values": {
-                        "dryad": {
-                            "CI95_lower": 97,
-                            "CI95_upper": 100,
-                            "estimate_lower": 100,
-                            "estimate_upper": 100
-                        },
                         "raw": 1
                     }
                 },
@@ -103,6 +102,12 @@ class ViewsTester(unittest.TestCase):
                     "provenance_url": "http://dx.doi.org/10.5061/dryad.j1fd7",
                     "values": {
                         "raw": 128,
+                        "dryad": {
+                            "CI95_lower": 97,
+                            "CI95_upper": 100,
+                            "estimate_lower": 100,
+                            "estimate_upper": 100
+                        },
                         "raw_history": {
                             "2012-06-25T09:21:16.117375": 103,
                             "2012-06-26T18:05:19.655009": 103,
@@ -253,6 +258,35 @@ class TestItem(ViewsTester):
         response = self.client.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
         # cheerfully creates items whether we know their namespaces or not.
         assert_equals(response.status_code, 201)
+
+    def test_item_removes_history_by_default(self):
+        url = 'v1/item/doi/10.5061/dryad.j1fd7?key=example'
+        response = self.client.get(url)
+        metrics = json.loads(response.data)["metrics"]
+
+        assert_equals(
+                metrics["dryad:most_downloaded_file"]["values"]["raw"],
+                128
+            )
+        assert_equals(
+            set(metrics["dryad:most_downloaded_file"]["values"].keys()),
+            set(["dryad", "raw"]) # no raw_history
+        )
+
+    def test_item_include_history_param(self):
+        url = 'v1/item/doi/10.5061/dryad.j1fd7?key=example&include_history=true'
+        response = self.client.get(url)
+
+        metrics = json.loads(response.data)["metrics"]
+        assert_equals(
+            set(metrics["dryad:most_downloaded_file"]["values"].keys()),
+            set(["dryad", "raw", "raw_history"])
+        )
+
+#        assert_equals(
+#            metrics["dryad:most_downloaded_file"]["values"]["raw_history"].values(),
+#            ["103", "103", "103"]
+#        )
 
 
 class TestItems(ViewsTester):
