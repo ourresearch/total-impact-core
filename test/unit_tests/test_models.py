@@ -1,5 +1,5 @@
 from nose.tools import raises, assert_equals, nottest
-import os, unittest, hashlib, json, pprint
+import os, unittest, hashlib, json, pprint, datetime
 from time import sleep
 from werkzeug.security import generate_password_hash
 from totalimpact import models, dao, tiredis
@@ -121,6 +121,12 @@ class TestItemFactory():
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
 
+    def test_make_new(self):
+        '''create an item from scratch.'''
+        item = models.ItemFactory.make()
+        assert_equals(len(item["_id"]), 24)
+        assert item["created"] < datetime.datetime.now().isoformat()
+        assert_equals(item["aliases"], {})
 
     def test_adds_genre(self):
         # put the item in the db

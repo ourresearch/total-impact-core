@@ -28,15 +28,6 @@ except (couchdb.ResourceNotFound, LookupError, AttributeError), e:
     logger.error("Exception %s: Unable to load reference sets" % (e.__repr__()))
 
 
-# setup to remove control characters from received IDs
-# from http://stackoverflow.com/questions/92438/stripping-non-printable-characters-from-a-string-in-python
-control_chars = ''.join(map(unichr, range(0,32) + range(127,160)))
-control_char_re = re.compile('[%s]' % re.escape(control_chars))
-def clean_id(nid):
-    nid = control_char_re.sub('', nid)
-    nid = nid.replace(u'\u200b', "")
-    nid = nid.strip()
-    return(nid)
 
 def set_db(url, db):
     """useful for unit testing, where you want to use a local database
@@ -89,20 +80,6 @@ def hello():
     return resp
 
 
-def get_tiid_by_alias(ns, nid):
-    res = mydao.view('queues/by_alias')
-
-    matches = res[[ns,
-                   nid]] # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
-
-    if matches.rows:
-        if len(matches.rows) > 1:
-            logger.warning("More than one tiid for alias (%s, %s)" % (ns, nid))
-        tiid = matches.rows[0]["id"]
-    else:
-        tiid = None
-    return tiid
-
 '''
 GET /tiid/:namespace/:id
 404 if not found because not created yet
@@ -111,7 +88,7 @@ GET /tiid/:namespace/:id
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
 # not supported in v1
 def tiid(ns, nid):
-    tiid = get_tiid_by_alias(ns, nid)
+    tiid = ItemFactory.get_tiid_by_alias(ns, nid, myredis, mydao)
 
     if not tiid:
         abort(404)
@@ -119,109 +96,6 @@ def tiid(ns, nid):
     resp.mimetype = "application/json"
     return resp
 
-
-def create_item(namespace, nid):
-    logger.debug("In create_item with alias" + str((namespace, nid)))
-    item = ItemFactory.make()
-
-    # set this so we know when it's still updating later on
-    myredis.set_num_providers_left(
-        item["_id"],
-        ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-    )
-
-    item["aliases"][namespace] = [nid]
-    mydao.save(item)
-
-    myredis.add_to_alias_queue(item["_id"], item["aliases"])
-
-    logger.info("Created new item '{id}' with alias '{alias}'".format(
-        id=item["_id"],
-        alias=str((namespace, nid))
-    ))
-
-    try:
-        return item["_id"]
-    except AttributeError:
-        abort(500)
-
-
-def create_or_find_items_from_aliases(clean_aliases):
-    tiids = []
-    items = []
-    for alias in clean_aliases:
-        (namespace, nid) = alias
-        existing_tiid = get_tiid_by_alias(namespace, nid)
-        if existing_tiid:
-            tiids.append(existing_tiid)
-            logger.debug("found an existing tiid ({tiid}) for alias {alias}".format(
-                    tiid=existing_tiid,
-                    alias=str(alias)
-                ))
-        else:
-            logger.debug("alias {alias} isn't in the db; making a new item for it.".format(
-                    alias=alias
-                ))
-            item = ItemFactory.make()
-            item["aliases"][namespace] = [nid]
-
-            items.append(item)
-            tiids.append(item["_id"])    
-    return(tiids, items)
-
-
-def prep_collection_items(aliases):
-    logger.info("got a list of aliases; creating new items for them.")
-    try:
-        # remove unprintable characters and change list to tuples
-        clean_aliases = [(clean_id(namespace), clean_id(nid)) for [namespace, nid] in aliases]
-    except ValueError:
-        logger.error("bad input to POST /collection (requires [namespace, id] pairs):{input}".format(
-                input=str(clean_aliases)
-            ))
-        abort(404, "POST /collection requires a list of [namespace, id] pairs.")
-
-    logger.debug("POST /collection got list of aliases; creating new items for {aliases}".format(
-            aliases=str(clean_aliases)
-        ))
-
-    (tiids, items) = create_or_find_items_from_aliases(clean_aliases)
-
-    logger.debug("POST /collection saving a group of {num} new items: {items}".format(
-            num=len(items),
-            items=str(items)
-        ))
-
-    # batch upload the new docs to the db
-    # make sure they are there before the provider updates start happening
-    for doc in mydao.db.update(items):
-        pass
-
-    # for each item, set the number of providers that need to run before the update is done
-    # and put them on the update queue
-    for item in items:
-        myredis.set_num_providers_left(
-            item["_id"],
-            ProviderFactory.num_providers_with_metrics(
-                default_settings.PROVIDERS)
-        )
-        myredis.add_to_alias_queue(item["_id"], item["aliases"])
-
-    return tiids
-
-
-def create_item_from_namespace_nid(namespace, nid):
-    # remove unprintable characters
-    nid = clean_id(nid)
-
-    tiid = get_tiid_by_alias(namespace, nid)
-    if tiid:
-        logger.debug("... found with tiid " + tiid)
-    else:
-        tiid = create_item(namespace, nid)
-        logger.debug("new item created with tiid " + tiid)
-
-    return tiid
 
 """Creates a new item using the given namespace and id.
 POST /item/:namespace/:nid
@@ -233,7 +107,7 @@ original api returned tiid
 """
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post_with_tiid(namespace, nid):
-    tiid = create_item_from_namespace_nid(namespace, nid)
+    tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     response_code = 201 # Created
     resp = make_response(json.dumps(tiid), response_code)
     resp.mimetype = "application/json"
@@ -241,7 +115,7 @@ def item_namespace_post_with_tiid(namespace, nid):
 
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
-    tiid = create_item_from_namespace_nid(namespace, nid)
+    tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     response_code = 201 # Created
     resp = make_response(json.dumps("ok"), response_code)
     return resp
@@ -253,8 +127,8 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
     include_history = (request.args.get("include_history", 0) in ["1", "true", "True"])
 
     # remove unprintable characters
-    nid = clean_id(nid)
-    tiid = get_tiid_by_alias(namespace, nid)
+    nid = ItemFactory.clean_id(nid)
+    tiid = ItemFactory.get_tiid_by_alias(namespace, nid, myredis, mydao)
     return get_item_from_tiid(tiid, format, include_history)
 
 
@@ -469,24 +343,7 @@ def collection_update(cid=""):
         ))
         abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")
 
-    # put each of them on the update queue
-    for tiid in tiids:
-        logger.debug("In update_item with tiid " + tiid)
-
-        # set this so we know when it's still updating later on
-        myredis.set_num_providers_left(
-            tiid,
-            ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
-        )
-
-        item_doc = mydao.get(tiid)
-        try:
-            myredis.add_to_alias_queue(item_doc["_id"], item_doc["aliases"])
-        except (KeyError, TypeError):
-            logger.debug("couldn't get item_doc for {tiid}. Skipping its update".format(
-                tiid=tiid))
-            pass
-
+    ItemFactory.start_item_update(tiids, myredis, mydao)
 
     resp = make_response("true", 200)
     resp.mimetype = "application/json"
@@ -511,8 +368,9 @@ def collection_create():
     try:
         coll["title"] = request.json["title"]
         aliases = request.json["aliases"]
-        tiids = prep_collection_items(aliases)
-        aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
+        tiids = ItemFactory.create_or_update_items_from_aliases(aliases, myredis, mydao)
+        if not tiids:
+            abort(404, "POST /collection requires a list of [namespace, id] pairs.")
     except (AttributeError, TypeError):
         # we got missing or improperly formated data.
         logger.error(
@@ -521,6 +379,7 @@ def collection_create():
                 json=str(request.json)))
         abort(404, "Missing arguments.")
 
+    aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
     # save dict of alias:tiid
     coll["alias_tiids"] = dict(zip(aliases_strings, tiids))
 
