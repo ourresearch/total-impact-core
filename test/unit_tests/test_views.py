@@ -526,11 +526,6 @@ class TestApi(ViewsTester):
     def tearDown(self):
         pass
 
-    def test_clean_id(self):
-        nid = u"10.1000/\u200bna\tture "
-        response = views.clean_id(nid)
-        assert_equals(response, u'10.1000/nature')
-
     def test_tiid_get_with_unknown_alias(self):
         # try to retrieve tiid id for something that doesn't exist yet
         plos_no_tiid_resp = self.client.get('/tiid/doi/' +
