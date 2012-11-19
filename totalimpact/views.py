@@ -251,7 +251,7 @@ returns a collection object and the items
 @app.route('/v1/collection/<cid>', methods=['GET'])
 @app.route('/collection/<cid>.<format>', methods=['GET'])
 @app.route('/v1/collection/<cid>.<format>', methods=['GET'])
-def collection_get(cid='', format="json"):
+def collection_get(cid='', format="json", include_history=False):
     coll = mydao.get(cid)
     if not coll:
         abort(404)
@@ -268,7 +268,8 @@ def collection_get(cid='', format="json"):
             resp.mimetype = "application/json"
     else:
         try:
-            (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao)
+            include_history = (request.args.get("include_history", 0) in ["1", "true", "True"])
+            (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history)
         except (LookupError, AttributeError):  
             logger.error("couldn't get tiids for collection '{cid}'".format(cid=cid))
             abort(404)  # not found

@@ -57,7 +57,7 @@ def get_titles(cids, mydao):
         ret[cid] = coll["title"]
     return ret
 
-def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao):
+def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
     startkey = [cid, 0]
     endkey = [cid, "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"]
     view_response = mydao.db.view("collections_with_items/collections_with_items", 
@@ -79,7 +79,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao):
         for row in view_response.rows[1:]:
             item_doc = row.doc 
             try:
-                item_for_client = ItemFactory.build_item_for_client(item_doc, myrefsets)
+                item_for_client = ItemFactory.build_item_for_client(item_doc, myrefsets, include_history)
             except (KeyError, TypeError):
                 logging.info("Couldn't build item {item_doc}, excluding it from the returned collection {cid}".format(
                     item_doc=item_doc, cid=cid))
