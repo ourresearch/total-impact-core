@@ -70,9 +70,9 @@ def add_crossdomain_header(resp):
 def hello():
     msg = {
         "hello": "world",
-        "message": "Congratulations! You have found the total-Impact API.",
-        "moreinfo": "http://total-impact.tumblr.com/",
-        "contact": "totalimpactdev@gmail.com",
+        "message": "Congratulations! You have found the ImpactStory API.",
+        "more-info": "http://impactstory.org/api-docs",
+        "contact": "team@impactstory.org",
         "version": app.config["VERSION"]
     }
     resp = make_response(json.dumps(msg, sort_keys=True, indent=4), 200)
