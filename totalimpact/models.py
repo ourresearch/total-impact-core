@@ -165,6 +165,7 @@ class ItemFactory():
 
         elif "github" in alias_dict:
             genre = "software"
+            host = "github"
 
         elif "url" in alias_dict:
             joined_url_string = "".join(alias_dict["url"])

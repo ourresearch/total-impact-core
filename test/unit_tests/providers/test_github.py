@@ -21,6 +21,7 @@ class TestGithub(ProviderTestCase):
     testitem_aliases = ("github", "egonw,cdk")
     testitem_metrics = ("github", "egonw,cdk")
     testitem_biblio = ("github", "egonw,cdk")
+    testitem_biblio_org = ("github", "openphacts,BridgeDb")
 
     def setUp(self):
         ProviderTestCase.setUp(self) 
@@ -61,5 +62,10 @@ class TestGithub(ProviderTestCase):
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
-
+    @http
+    def test_biblio(self):
+        biblio_dict = self.provider.biblio([self.testitem_biblio_org])
+        print biblio_dict
+        expected = {'last_push_date': u'2012-11-21T13:16:19Z', 'url': u'https://github.com/openphacts/BridgeDb', 'create_date': u'2012-01-18T10:49:04Z', 'owner': u'openphacts', 'title': u'BridgeDb'}
+        assert_equals(biblio_dict, expected)
 
