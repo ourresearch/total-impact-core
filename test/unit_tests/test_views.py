@@ -168,11 +168,11 @@ class TestGeneral(ViewsTester):
         assert_equals(resp.status_code, 200)
 
     def test_forbidden_if_no_key_in_v1(self):
-        resp = self.client.get("/v1")
+        resp = self.client.get("/v1/provider")
         assert_equals(resp.status_code, 403)
 
     def test_ok_if_key_in_v1(self):
-        resp = self.client.get("/v1?key=EXAMPLE")
+        resp = self.client.get("/v1/provider?key=EXAMPLE")
         assert_equals(resp.status_code, 200)
 
 class TestMemberItems(ViewsTester):
