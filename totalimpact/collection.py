@@ -191,20 +191,30 @@ def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_
         response[metric_name] = {}
         for metric_value in matches[metric_name]:
             lowers = [lower for (est, lower, upper) in matches[metric_name][metric_value]]
-            CI95_lowest = min(lowers)
             uppers = [upper for (est, lower, upper) in matches[metric_name][metric_value]]
-            CI95_highest = max(uppers)
 
             estimates = [est for (est, lower, upper) in matches[metric_name][metric_value]]
-            est_lowest = min(estimates)
-            est_highest = max(estimates)
 
             response[metric_name][metric_value] = {
-                "CI95_lower": CI95_lowest,
-                "CI95_upper": CI95_highest,
-                "estimate_upper": est_highest,
-                "estimate_lower": est_lowest
+                "CI95_lower": min(lowers),
+                "CI95_upper": max(uppers),
+                "estimate_upper":  max(estimates),
+                "estimate_lower": min(estimates)
                 }
+
+            # If ties, check and see if next higher metric value already has an estimate.
+            # If not, assign it the estimate of the top range of the tied values, so 
+            # that the metric_value+1 isn't conservatively assigned percentiles for the 
+            # tie of the value below it
+            if len(lowers) > 1:
+                if not (metric_value+1 in response[metric_name]):
+                    response[metric_name][metric_value+1] = {
+                        "CI95_lower": max(lowers),
+                        "CI95_upper": max(uppers),
+                        "estimate_upper":  max(estimates),
+                        "estimate_lower": max(estimates)
+                        }
+
 
         # add a value that is one larger than the biggest value, hack the lower 95 bound to be a bit higher
         # than the 99th percentile
@@ -266,6 +276,7 @@ def build_all_reference_lookups(myredis, mydao):
 
             histogram = myredis.get_reference_histogram_dict(genre, refset_name, year)
             lookup = myredis.get_reference_lookup_dict(genre, refset_name, year)
+            
             if histogram and lookup:
                 logging.info("Loaded successfully from cache")
                 reference_histogram_dict[genre][refset_name][year] = histogram
