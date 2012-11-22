@@ -277,9 +277,7 @@ def build_all_reference_lookups(myredis, mydao):
             histogram = myredis.get_reference_histogram_dict(genre, refset_name, year)
             lookup = myredis.get_reference_lookup_dict(genre, refset_name, year)
             
-            # temporarily to overwrite cache
-            #if histogram and lookup:
-            if False:
+            if histogram and lookup:
                 logging.info("Loaded successfully from cache")
                 reference_histogram_dict[genre][refset_name][year] = histogram
                 reference_lookup_dict[genre][refset_name][year] = lookup
