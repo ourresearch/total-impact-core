@@ -54,6 +54,52 @@ GET /v1/item/pmid/22075173?key=YOURKEY
 }
 
 Get metrics and biblio information on the item
+GET /v1/item/doi/10.1186/1756-0500-4-487?key=YOURKEY
+> Content-Type: application/json
+{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
+< 200
+< Content-Type: application/json
+{
+    "_id": "",
+    "_rev": "",
+    "aliases": {},
+    "biblio":{},
+    "metrics": {},
+    "type": "item"
+}
+
+Get metrics and biblio information on the item
+GET /v1/item/github/egonw,cdk
+> Content-Type: application/json
+{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
+< 200
+< Content-Type: application/json
+{
+    "_id": "",
+    "_rev": "",
+    "aliases": {},
+    "biblio":{},
+    "metrics": {},
+    "type": "item"
+}
+
+Get metrics and biblio information on the item
+GET /v1/item/url/http://www.slideshare.net/cavlec/who-owns-our-work
+> Content-Type: application/json
+{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
+< 200
+< Content-Type: application/json
+{
+    "_id": "",
+    "_rev": "",
+    "aliases": {},
+    "biblio":{},
+    "metrics": {},
+    "type": "item"
+}
+
+
+Get metrics and biblio information on the item
 GET /v1/item/pmid/22075173?key=EXAMPLE
 < 200
 < Content-Type: application/json
