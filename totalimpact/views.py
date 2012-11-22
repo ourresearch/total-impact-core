@@ -45,7 +45,7 @@ def set_redis(url, db):
 
 @app.before_request
 def check_key():
-    if "v1" in request.url:
+    if "/v1/" in request.url:
         key = request.values.get('key', '')
         logger.debug("In check_key with " + key)
         if not key:
