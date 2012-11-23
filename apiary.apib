@@ -2,18 +2,38 @@ HOST: http://api.impactstory.org/
 
 --- ImpactStory v1 api ---
 ---
-Welcome to the our version 1 API documentation. All comments can be written in (support [Markdown](http://daringfireball.net/projects/markdown/syntax) syntax)
+Welcome to the our version 1 API documentation.
+
+
+## embed code
+
+You may prefer to user our embed code.  See HERE for details.
+
+## fresh metrics
+
+We gather fresh metrics at the following times:
+- the first time we have ever seen an item
+- someone presses "update" on the web interface
+- it is an item that has been POSTed by someone with an api key who has requested updates.  
+Up to 1000 items can be kept updated for free: more will cost a small fee to facilitate sustainability of our service.
+
+## keys
 
 We only guarantee updated metrics for items with an ImpactStory-supplied api key. 
 To request an ImpactStory-supplied api key, send an email to team@impactstory.org
 
-The examples below are for getting metrics for a [BMC Research Notes paper](http://www.biomedcentral.com/1756-0500/4/487) using its [PubMed ID 22075173](http://www.ncbi.nlm.nih.gov/pubmed/22075173). 
-Alternatively, it could be queried by its DOI (10.1186/1756-0500-4-487) by replacing the namespace and identifier in the examples below.  For example, /v1/item/pmid/22075173?key=YOURKEY returns the same values as /v1/item/doi/10.1186/1756-0500-4-487?key=YOURKEY
+## data licenses
+
+## rate limiting
+
+
+## contact info
+
 
 ---
 
 --
-about
+hello world
 --
 GET /v1?key=YOURKEY
 < 200
@@ -26,22 +46,42 @@ GET /v1?key=YOURKEY
     "version": "cristhian"
 }
 
+
 --
-item
+add an item to ImpactStory
+<a id="post_item"></a>
 The following is a section of resources related to research items
+[link to get](#get_item)
 --
 Add a research item to the ImpactStory database.  Required to initiate collection of metrics.
 POST /v1/item/pmid/22075173?key=YOURKEY
-> Content-Type: application/json
-{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
 < 201
 < Content-Type: application/json
 { "status": "created", "url": "/shopping-cart/2" }
 
-Get metrics and biblio information on the item
+
+
+
+--
+get item data
+<a id="get_item"></a>
+The following is a section of resources related to research items
+[link to post](#post_item)
+--
+
+**PubMed papers** Get metrics and biblio information on the item
+will return a `210` while still updating, then a `200`
 GET /v1/item/pmid/22075173?key=YOURKEY
-> Content-Type: application/json
-{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
+< 210
+< Content-Type: application/json
+{
+    "_id": "",
+    "_rev": "",
+    "aliases": {},
+    "biblio":{},
+    "metrics": {},
+    "type": "item"
+}
 < 200
 < Content-Type: application/json
 {
@@ -53,10 +93,8 @@ GET /v1/item/pmid/22075173?key=YOURKEY
     "type": "item"
 }
 
-Get metrics and biblio information on the item
+*DOIs* Get metrics and biblio information on the item
 GET /v1/item/doi/10.1186/1756-0500-4-487?key=YOURKEY
-> Content-Type: application/json
-{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
 < 200
 < Content-Type: application/json
 {
@@ -68,10 +106,8 @@ GET /v1/item/doi/10.1186/1756-0500-4-487?key=YOURKEY
     "type": "item"
 }
 
-Get metrics and biblio information on the item
-GET /v1/item/github/egonw,cdk
-> Content-Type: application/json
-{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
+##GitHub software repositories: Get metrics and biblio information on the item
+GET /v1/item/github/egonw,cdk?key=EXAMPLE
 < 200
 < Content-Type: application/json
 {
@@ -83,10 +119,8 @@ GET /v1/item/github/egonw,cdk
     "type": "item"
 }
 
-Get metrics and biblio information on the item
-GET /v1/item/url/http://www.slideshare.net/cavlec/who-owns-our-work
-> Content-Type: application/json
-{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
+_SlideShare slides_ Get metrics and biblio information on the item
+GET /v1/item/url/http://www.slideshare.net/cavlec/who-owns-our-work?key=EXAMPLE
 < 200
 < Content-Type: application/json
 {
@@ -104,323 +138,10 @@ GET /v1/item/pmid/22075173?key=EXAMPLE
 < 200
 < Content-Type: application/json
 {
-    "_id": "b229e24abec811e1887612313d1a5e63",
-    "_rev": "48-9db4640518e4a03df634d25cb3692f85",
-    "aliases": {
-        "created": "2012-06-25T13:21:38.965215",
-        "doi": [
-            "10.1371/journal.pcbi.1000355"
-        ],
-        "last_modified": "2012-06-25T13:21:40.293053",
-        "title": [
-            "An Analytically Solvable Model for Rapid Evolution of Modular Structure"
-        ],
-        "url": [
-            "http://www.ncbi.nlm.nih.gov/pubmed/19360090",
-            "http://dx.plos.org/10.1371/journal.pcbi.1000355"
-        ]
-    },
-    "biblio": {
-        "authors": "Kashtan, Mayo, Kalisky, Alon",
-        "genre": "article",
-        "h1": "An Analytically Solvable Model for Rapid Evolution of Modular Structure",
-        "journal": "PLoS Comput Biol",
-        "title": "An Analytically Solvable Model for Rapid Evolution of Modular Structure",
-        "year": 2009
-    },
-    "created": "2012-06-25T13:21:38.965201",
-    "currently_updating": false,
-    "last_modified": "2012-08-04T07:46:46.449842",
-    "metrics": {
-        "citeulike:bookmarks": {
-            "provenance_url": "http://www.citeulike.org/doi/10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "Number of users who have bookmarked this item.",
-                "display_name": "bookmarks",
-                "icon": "http://citeulike.org/favicon.ico",
-                "provider": "CiteULike",
-                "provider_url": "http://www.citeulike.org/"
-            },
-            "values": {
-                "WoS": {
-                    "CI95_lower": 97,
-                    "CI95_upper": 100,
-                    "estimate_lower": 100,
-                    "estimate_upper": 100
-                },
-                "raw": 9
-            }
-        },
-        "mendeley:career_stage": {
-            "provenance_url": "http://api.mendeley.com/research/an-analytically-solvable-model-for-rapid-evolution-of-modular-structure/",
-            "static_meta": {
-                "description": "Percent of readers by career stage, for top three career stages (csv, api only)",
-                "display_name": "career stage, top 3 percentages",
-                "icon": "http://www.mendeley.com/favicon.ico",
-                "provider": "Mendeley",
-                "provider_url": "http://www.mendeley.com/"
-            },
-            "values": {
-                "raw": [
-                    {
-                        "name": "Ph.D. Student",
-                        "value": 36
-                    },
-                    {
-                        "name": "Post Doc",
-                        "value": 22
-                    },
-                    {
-                        "name": "Student (Bachelor)",
-                        "value": 8
-                    }
-                ]
-            }
-        },
-        "mendeley:country": {
-            "provenance_url": "http://api.mendeley.com/research/an-analytically-solvable-model-for-rapid-evolution-of-modular-structure/",
-            "static_meta": {
-                "description": "Percent of readers by country, for top three countries (csv, api only)",
-                "display_name": "country, top 3 percentages",
-                "icon": "http://www.mendeley.com/favicon.ico",
-                "provider": "Mendeley",
-                "provider_url": "http://www.mendeley.com/"
-            },
-            "values": {
-                "raw": [
-                    {
-                        "name": "United States",
-                        "value": 38
-                    },
-                    {
-                        "name": "United Kingdom",
-                        "value": 11
-                    },
-                    {
-                        "name": "Germany",
-                        "value": 8
-                    }
-                ]
-            }
-        },
-        "mendeley:discipline": {
-            "provenance_url": "http://api.mendeley.com/research/an-analytically-solvable-model-for-rapid-evolution-of-modular-structure/",
-            "static_meta": {
-                "description": "Percent of readers by discipline, for top three disciplines (csv, api only)",
-                "display_name": "discipline, top 3 percentages",
-                "icon": "http://www.mendeley.com/favicon.ico",
-                "provider": "Mendeley",
-                "provider_url": "http://www.mendeley.com/"
-            },
-            "values": {
-                "raw": [
-                    {
-                        "id": 3,
-                        "name": "Biological Sciences",
-                        "value": 70
-                    },
-                    {
-                        "id": 21,
-                        "name": "Physics",
-                        "value": 14
-                    },
-                    {
-                        "id": 6,
-                        "name": "Computer and Information Science",
-                        "value": 8
-                    }
-                ]
-            }
-        },
-        "mendeley:groups": {
-            "provenance_url": "http://api.mendeley.com/research/an-analytically-solvable-model-for-rapid-evolution-of-modular-structure/",
-            "static_meta": {
-                "description": "The number of groups who have added the article to their libraries",
-                "display_name": "groups",
-                "icon": "http://www.mendeley.com/favicon.ico",
-                "provider": "Mendeley",
-                "provider_url": "http://www.mendeley.com/"
-            },
-            "values": {
-                "WoS": {
-                    "CI95_lower": 97,
-                    "CI95_upper": 100,
-                    "estimate_lower": 100,
-                    "estimate_upper": 100
-                },
-                "raw": 4
-            }
-        },
-        "mendeley:readers": {
-            "provenance_url": "http://api.mendeley.com/research/an-analytically-solvable-model-for-rapid-evolution-of-modular-structure/",
-            "static_meta": {
-                "description": "The number of readers who have added the article to their libraries",
-                "display_name": "readers",
-                "icon": "http://www.mendeley.com/favicon.ico",
-                "provider": "Mendeley",
-                "provider_url": "http://www.mendeley.com/"
-            },
-            "values": {
-                "WoS": {
-                    "CI95_lower": 94,
-                    "CI95_upper": 99,
-                    "estimate_lower": 98,
-                    "estimate_upper": 98
-                },
-                "raw": 63
-            }
-        },
-        "plosalm:crossref": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the citation data reported for an article from CrossRef",
-                "display_name": "citations",
-                "icon": "http://www.crossref.org/favicon.ico",
-                "provider": "CrossRef",
-                "provider_url": "http://www.crossref.org"
-            },
-            "values": {
-                "raw": 4
-            }
-        },
-        "plosalm:html_views": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of views of the PLoS HTML article",
-                "display_name": "html views",
-                "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg",
-                "provider": "PLoS",
-                "provider_url": "http://www.plos.org/"
-            },
-            "values": {
-                "raw": 1744
-            }
-        },
-        "plosalm:pdf_views": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of downloads of the PDF",
-                "display_name": "pdf views",
-                "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg",
-                "provider": "PLoS",
-                "provider_url": "http://www.plos.org/"
-            },
-            "values": {
-                "raw": 453
-            }
-        },
-        "plosalm:pmc_abstract": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of times the abstracts have been viewed on PubMed Central",
-                "display_name": "abstract views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 15
-            }
-        },
-        "plosalm:pmc_figure": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of times the figures have been viewed on PubMed Central",
-                "display_name": "figure views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 19
-            }
-        },
-        "plosalm:pmc_full-text": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of times the full-text has been viewed on PubMed Central",
-                "display_name": "full-text views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 313
-            }
-        },
-        "plosalm:pmc_pdf": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of times the pdf has been viewed on PubMed Central",
-                "display_name": "pdf views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 164
-            }
-        },
-        "plosalm:pmc_supp-data": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of times the supplementary data has been viewed on PubMed Central",
-                "display_name": "supp-data views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 11
-            }
-        },
-        "plosalm:pmc_unique-ip": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of unique IP addresess that have viewed the paper on PubMed Central",
-                "display_name": "unique-ip views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 297
-            }
-        },
-        "plosalm:pubmed_central": {
-            "provenance_url": "http://www.ncbi.nlm.nih.gov/sites/entrez?db=pubmed&cmd=link&LinkName=pubmed_pmc_refs&from_uid=19360090",
-            "static_meta": {
-                "description": "the citation data reported for an article from PubMed Central",
-                "display_name": "citations",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 1
-            }
-        },
-        "plosalm:scopus": {
-            "provenance_url": "http://www.scopus.com/scopus/inward/citedby.url?doi=10.1371%2Fjournal.pcbi.1000355&rel=R3.0.0&partnerID=OIVxnoIl&md5=6c7eaa459379828bb70627b8b8a5923f",
-            "static_meta": {
-                "description": "the citation data reported for an article from Scopus",
-                "display_name": "citations",
-                "icon": "http://scopus.com/static/images/favicon.ico",
-                "provider": "Scopus",
-                "provider_url": "http://scopus.com"
-            },
-            "values": {
-                "raw": 8
-            }
-        }
-    },
-    "providersRunCounter": 10,
-    "providersWithMetricsCount": 10,
-    "type": "item"
 }
 
 
--- collection --
+-- work with collections --
 This resource allows you to view information on collections
 POST /v1/collection?key=YOURKEY
 { "cc": "12345678900", "cvc": "123", "expiry": "0112" }
