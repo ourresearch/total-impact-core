@@ -1,20 +1,69 @@
 HOST: http://api.impactstory.org/
 
---- ImpactStory v1 api ---
+--- ImpactStory API, v1 ---
 ---
-Welcome to the our version 1 API documentation. All comments can be written in (support [Markdown](http://daringfireball.net/projects/markdown/syntax) syntax)
+Welcome to the the ImpactStory API, version 1.
 
-We only guarantee updated metrics for items with an ImpactStory-supplied api key. 
-To request an ImpactStory-supplied api key, send an email to team@impactstory.org
+ImpactStory is a service that makes it quick and easy to view the impact of a wide range of research output. It goes beyond traditional measurements of research output -- citations to papers -- to embrace a much broader evidence of use across a wide range of scholarly output types. The system aggregates impact data from many sources and displays it in a single report, which is given a permaurl for dissemination and can be updated any time.
 
-The examples below are for getting metrics for a [BMC Research Notes paper](http://www.biomedcentral.com/1756-0500/4/487) using its [PubMed ID 22075173](http://www.ncbi.nlm.nih.gov/pubmed/22075173). 
-Alternatively, it could be queried by its DOI (10.1186/1756-0500-4-487) by replacing the namespace and identifier in the examples below.  For example, /v1/item/pmid/22075173?key=YOURKEY returns the same values as /v1/item/doi/10.1186/1756-0500-4-487?key=YOURKEY
+## javascript display embed code
+
+If you are collecting metrics to display on a webpage, we recommend you use our javascript embed code.  [Details here](http://impactstory.org/api-docs).
+
+## api base url
+
+The base url of the REST api is [**http://api.impactstory.org/**](http://api.impactstory.org/).
+
+You may notice the example code below uses an api base of http://impactstory.apiary.io --  we strongly recommend you replace this with our primary api base in your own code.
+
+[CORS](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing) is enabled.
+
+
+## keys, fresh metrics, and sponsored items
+
+ImpactStory gathers metrics on any type of scholarly object with a url (or doi, or pubmed id, or github id, ...).  Because we cover such a large span of scholarly resources (and do not yet have the resources of Google), we only gather metrics on items once they have been specifically requested.
+
+We gather fresh metrics at the following times:
+
+- the first time an item is added to ImpactStory (through the [web interface](http://impactstory.org), the javascript embed code, or the REST api)
+- while-you-wait when someone clicks the "update" button on the web interface
+- regularly, behind-the-scenes, for **sponsored items**
+
+With an api key you can "sponsor" various items to keep them up-to-date with fresh metrics.  
+These fresh metrics are made openly available to anyone who requests metrics for that item.
+Open dissemination for the win!
+
+We only guarantee an item requested through the API will have fresh metrics if that item has been sponsored.
+Items are sponsored by adding them to the ImpactStory database through a [POST /item](#post_item) API call.
+
+Up to 1000 items can be sponsored for free by each API key.  Sponsoring more than 1000 items will have an annual fee to provide sustainability for our nonprofit service.
+
+To request an ImpactStory API key, send an email to [team@impactstory.org](mailto:team@impactstory.org).
+
+## rate limits
+
+We do not impose rate limits at the moment, but we recommend delaying for a few seconds between each request.  It often takes us 5-10 seconds to collect metrics on an item, due to the latency of our external metrics providers.
+
+## data licenses
+
+- All data in the ImpactStory API is released under as open a data licence as the primary data providers permit it to be.  We plan to inventory these licenses but haven't got an updated list at the moment, so please check with the primary data providers.
+- Native ImpactStory data in the API (if there is any?) is released under a [CC0 waiver](http://creativecommons.org/publicdomain/zero/1.0/).  
+- Scopus citation data is available through our web application but not through the API.
+
+## contact info
+
+You can find our more about ImpactStory on our [webapp](http://impactstory.org/) and [FAQ](http://impactstory.org/faq).  
+Contact us with questions or ideas, we'd love to hear from you!  [team@impactstory.org](mailto:team@impactstory.org) or [@impactstory](https://twitter.com/impactstory).  Thanks!    - Heather and Jason.
 
 ---
 
 --
-about
+hello world
 --
+Check to make sure everything is working!  
+
+See information above to get your own ImpactStory key after you've kicked the tires a bit.
+Click the blue `/v1?key=YOURKEY` to see example return code.  Don't forget to replace the API base with **http://api.impactstory.org/** in your own code.
 GET /v1?key=YOURKEY
 < 200
 < Content-Type: application/json
@@ -26,114 +75,77 @@ GET /v1?key=YOURKEY
     "version": "cristhian"
 }
 
+
 --
-item
-The following is a section of resources related to research items
+add an item
+<a id="post_item"></a>
+Add an item to the ImpactStory system using the given namespace and id.  
+Returns `201` even if the item is already in the database, because this call also registers the item as sponsored under the supplied API Key (see top of this page for more information).
+
+After POSTing an item, the item data can be obtained through [GET /item](#get_item) calls.
 --
-Add a research item to the ImpactStory database.  Required to initiate collection of metrics.
-POST /v1/item/pmid/22075173?key=YOURKEY
-> Content-Type: application/json
-{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
+Add an item to the ImpactStory system using the given namespace and id.  There is no data payload to the POST.
+
+This example uses a PubMed ID.  See the [GET /item](#get_item) section for more examples of valid namespaces and ids.
+POST /v1/item/pmid/20807452?key=YOURKEY
 < 201
-< Content-Type: application/json
-{ "status": "created", "url": "/shopping-cart/2" }
+"ok"
 
-Get metrics and biblio information on the item
-GET /v1/item/pmid/22075173?key=YOURKEY
-> Content-Type: application/json
-{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
+
+
+
+--
+get item data
+<a id="get_item"></a>
+The following is a section of resources related to research items
+
+- Returns `200` if the item metrics are available.
+- Returns `210` if the item is currently being updated.  Updating an item usually takes less than ten seconds, but can take longer depending on ImpactServer 
+server load or lag/errors from our metrics providers.  The API caller can poll slowly until a `200` is received.
+- Returns `404` if item has not yet been added to ImpactStory.  In that case, a [POST /item](#post_item) call must be made before a GET call will be successful.
+--
+**Articles with PubMed IDs** Get metrics and biblio information on the item
+will return a `210` while still updating, then a `200`
+GET /v1/item/pmid/20807452?key=YOURKEY
 < 200
 < Content-Type: application/json
 {
-    "_id": "",
-    "_rev": "",
-    "aliases": {},
-    "biblio":{},
-    "metrics": {},
-    "type": "item"
-}
-
-Get metrics and biblio information on the item
-GET /v1/item/doi/10.1186/1756-0500-4-487?key=YOURKEY
-> Content-Type: application/json
-{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
-< 200
-< Content-Type: application/json
-{
-    "_id": "",
-    "_rev": "",
-    "aliases": {},
-    "biblio":{},
-    "metrics": {},
-    "type": "item"
-}
-
-Get metrics and biblio information on the item
-GET /v1/item/github/egonw,cdk
-> Content-Type: application/json
-{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
-< 200
-< Content-Type: application/json
-{
-    "_id": "",
-    "_rev": "",
-    "aliases": {},
-    "biblio":{},
-    "metrics": {},
-    "type": "item"
-}
-
-Get metrics and biblio information on the item
-GET /v1/item/url/http://www.slideshare.net/cavlec/who-owns-our-work
-> Content-Type: application/json
-{ "namespace":"doi", "id": "10.1371/journal.pcbi.1000355" }
-< 200
-< Content-Type: application/json
-{
-    "_id": "",
-    "_rev": "",
-    "aliases": {},
-    "biblio":{},
-    "metrics": {},
-    "type": "item"
-}
-
-
-Get metrics and biblio information on the item
-GET /v1/item/pmid/22075173?key=EXAMPLE
-< 200
-< Content-Type: application/json
-{
-    "_id": "b229e24abec811e1887612313d1a5e63",
-    "_rev": "48-9db4640518e4a03df634d25cb3692f85",
+    "_id": "c5vh88e15ad42z9dmo1h08wi",
+    "_rev": "8-6a7ece51607be9657d25cb979574e4db",
     "aliases": {
-        "created": "2012-06-25T13:21:38.965215",
-        "doi": [
-            "10.1371/journal.pcbi.1000355"
+        "biblio": [
+            {
+                "authors": "Nyman, Vikberg, Smith, Boev\u00e9",
+                "journal": "BMC Evolutionary Biology",
+                "repository": "Springer (Biomed Central Ltd.)",
+                "title": "How common is ecological speciation in plant-feeding insects? A 'Higher' Nematinae perspective",
+                "year": 2010
+            }
         ],
-        "last_modified": "2012-06-25T13:21:40.293053",
-        "title": [
-            "An Analytically Solvable Model for Rapid Evolution of Modular Structure"
+        "doi": [
+            "10.1186/1471-2148-10-266"
+        ],
+        "pmid": [
+            "20807452"
         ],
         "url": [
-            "http://www.ncbi.nlm.nih.gov/pubmed/19360090",
-            "http://dx.plos.org/10.1371/journal.pcbi.1000355"
+            "http://www.biomedcentral.com/1471-2148/10/266"
         ]
     },
     "biblio": {
-        "authors": "Kashtan, Mayo, Kalisky, Alon",
+        "authors": "Nyman, Vikberg, Smith, Boev\u00e9",
         "genre": "article",
-        "h1": "An Analytically Solvable Model for Rapid Evolution of Modular Structure",
-        "journal": "PLoS Comput Biol",
-        "title": "An Analytically Solvable Model for Rapid Evolution of Modular Structure",
-        "year": 2009
+        "journal": "BMC Evolutionary Biology",
+        "repository": "Springer (Biomed Central Ltd.)",
+        "title": "How common is ecological speciation in plant-feeding insects? A 'Higher' Nematinae perspective",
+        "year": 2010
     },
-    "created": "2012-06-25T13:21:38.965201",
+    "created": "2012-11-23T22:00:37.209395",
     "currently_updating": false,
-    "last_modified": "2012-08-04T07:46:46.449842",
+    "last_modified": "2012-11-23T22:00:44.087665",
     "metrics": {
         "citeulike:bookmarks": {
-            "provenance_url": "http://www.citeulike.org/doi/10.1371/journal.pcbi.1000355",
+            "provenance_url": "http://www.citeulike.org/doi/10.1186/1471-2148-10-266",
             "static_meta": {
                 "description": "Number of users who have bookmarked this item.",
                 "display_name": "bookmarks",
@@ -143,16 +155,16 @@ GET /v1/item/pmid/22075173?key=EXAMPLE
             },
             "values": {
                 "WoS": {
-                    "CI95_lower": 97,
-                    "CI95_upper": 100,
-                    "estimate_lower": 100,
-                    "estimate_upper": 100
+                    "CI95_lower": 87,
+                    "CI95_upper": 98,
+                    "estimate_lower": 93,
+                    "estimate_upper": 96
                 },
-                "raw": 9
+                "raw": 1
             }
         },
         "mendeley:career_stage": {
-            "provenance_url": "http://api.mendeley.com/research/an-analytically-solvable-model-for-rapid-evolution-of-modular-structure/",
+            "provenance_url": "http://api.mendeley.com/research/common-ecological-speciation-plant-feeding-insects-higher-nematinae-perspective/",
             "static_meta": {
                 "description": "Percent of readers by career stage, for top three career stages (csv, api only)",
                 "display_name": "career stage, top 3 percentages",
@@ -164,21 +176,21 @@ GET /v1/item/pmid/22075173?key=EXAMPLE
                 "raw": [
                     {
                         "name": "Ph.D. Student",
-                        "value": 36
+                        "value": 31
                     },
                     {
                         "name": "Post Doc",
-                        "value": 22
+                        "value": 16
                     },
                     {
-                        "name": "Student (Bachelor)",
-                        "value": 8
+                        "name": "Researcher (at an Academic Institution)",
+                        "value": 9
                     }
                 ]
             }
         },
         "mendeley:country": {
-            "provenance_url": "http://api.mendeley.com/research/an-analytically-solvable-model-for-rapid-evolution-of-modular-structure/",
+            "provenance_url": "http://api.mendeley.com/research/common-ecological-speciation-plant-feeding-insects-higher-nematinae-perspective/",
             "static_meta": {
                 "description": "Percent of readers by country, for top three countries (csv, api only)",
                 "display_name": "country, top 3 percentages",
@@ -190,21 +202,21 @@ GET /v1/item/pmid/22075173?key=EXAMPLE
                 "raw": [
                     {
                         "name": "United States",
-                        "value": 38
+                        "value": 25
                     },
                     {
                         "name": "United Kingdom",
-                        "value": 11
+                        "value": 13
                     },
                     {
-                        "name": "Germany",
-                        "value": 8
+                        "name": "Brazil",
+                        "value": 6
                     }
                 ]
             }
         },
         "mendeley:discipline": {
-            "provenance_url": "http://api.mendeley.com/research/an-analytically-solvable-model-for-rapid-evolution-of-modular-structure/",
+            "provenance_url": "http://api.mendeley.com/research/common-ecological-speciation-plant-feeding-insects-higher-nematinae-perspective/",
             "static_meta": {
                 "description": "Percent of readers by discipline, for top three disciplines (csv, api only)",
                 "display_name": "discipline, top 3 percentages",
@@ -217,23 +229,23 @@ GET /v1/item/pmid/22075173?key=EXAMPLE
                     {
                         "id": 3,
                         "name": "Biological Sciences",
-                        "value": 70
+                        "value": 78
                     },
                     {
-                        "id": 21,
-                        "name": "Physics",
-                        "value": 14
+                        "id": 12,
+                        "name": "Environmental Sciences",
+                        "value": 13
                     },
                     {
-                        "id": 6,
-                        "name": "Computer and Information Science",
-                        "value": 8
+                        "id": 7,
+                        "name": "Earth Sciences",
+                        "value": 3
                     }
                 ]
             }
         },
         "mendeley:groups": {
-            "provenance_url": "http://api.mendeley.com/research/an-analytically-solvable-model-for-rapid-evolution-of-modular-structure/",
+            "provenance_url": "http://api.mendeley.com/research/common-ecological-speciation-plant-feeding-insects-higher-nematinae-perspective/",
             "static_meta": {
                 "description": "The number of groups who have added the article to their libraries",
                 "display_name": "groups",
@@ -243,16 +255,16 @@ GET /v1/item/pmid/22075173?key=EXAMPLE
             },
             "values": {
                 "WoS": {
-                    "CI95_lower": 97,
-                    "CI95_upper": 100,
-                    "estimate_lower": 100,
-                    "estimate_upper": 100
+                    "CI95_lower": 81,
+                    "CI95_upper": 96,
+                    "estimate_lower": 88,
+                    "estimate_upper": 93
                 },
-                "raw": 4
+                "raw": 1
             }
         },
         "mendeley:readers": {
-            "provenance_url": "http://api.mendeley.com/research/an-analytically-solvable-model-for-rapid-evolution-of-modular-structure/",
+            "provenance_url": "http://api.mendeley.com/research/common-ecological-speciation-plant-feeding-insects-higher-nematinae-perspective/",
             "static_meta": {
                 "description": "The number of readers who have added the article to their libraries",
                 "display_name": "readers",
@@ -267,170 +279,485 @@ GET /v1/item/pmid/22075173?key=EXAMPLE
                     "estimate_lower": 98,
                     "estimate_upper": 98
                 },
-                "raw": 63
+                "raw": 32
             }
         },
-        "plosalm:crossref": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
+        "pubmed:pmc_citations": {
+            "provenance_url": "http://www.ncbi.nlm.nih.gov/pubmed?linkname=pubmed_pubmed_citedin&from_uid=20807452",
             "static_meta": {
-                "description": "the citation data reported for an article from CrossRef",
+                "description": "The number of citations by papers in PubMed Central",
                 "display_name": "citations",
-                "icon": "http://www.crossref.org/favicon.ico",
-                "provider": "CrossRef",
-                "provider_url": "http://www.crossref.org"
+                "icon": "http://www.ncbi.nlm.nih.gov/favicon.ico",
+                "provider": "PubMed Central",
+                "provider_url": "http://pubmed.gov"
+            },
+            "values": {
+                "WoS": {
+                    "CI95_lower": 87,
+                    "CI95_upper": 96,
+                    "estimate_lower": 93,
+                    "estimate_upper": 93
+                },
+                "raw": 5
+            }
+        }
+    },
+    "type": "item"
+}
+
+**Articles or Datasets with DOIs** Get metrics and biblio information on the item
+GET /v1/item/doi/10.1186/1756-0500-4-487?key=YOURKEY
+< 200
+{
+    "_id": "c5vh88e15ad42z9dmo1h08wi",
+    "_rev": "5-e02fab86d760d22e13b8812513b5cce0",
+    "aliases": {
+        "biblio": [
+            {
+                "authors": "Nyman, Vikberg, Smith, Boev\u00e9",
+                "journal": "BMC Evolutionary Biology",
+                "repository": "Springer (Biomed Central Ltd.)",
+                "title": "How common is ecological speciation in plant-feeding insects? A 'Higher' Nematinae perspective",
+                "year": 2010
+            }
+        ],
+        "doi": [
+            "10.1186/1471-2148-10-266"
+        ],
+        "pmid": [
+            "20807452"
+        ],
+        "url": [
+            "http://www.biomedcentral.com/1471-2148/10/266"
+        ]
+    },
+    "biblio": {
+        "authors": "Nyman, Vikberg, Smith, Boev\u00e9",
+        "genre": "article",
+        "journal": "BMC Evolutionary Biology",
+        "repository": "Springer (Biomed Central Ltd.)",
+        "title": "How common is ecological speciation in plant-feeding insects? A 'Higher' Nematinae perspective",
+        "year": 2010
+    },
+    "created": "2012-11-23T22:00:37.209395",
+    "currently_updating": true,
+    "last_modified": "2012-11-23T22:00:43.085957",
+    "metrics": {
+        "mendeley:career_stage": {
+            "provenance_url": "http://api.mendeley.com/research/common-ecological-speciation-plant-feeding-insects-higher-nematinae-perspective/",
+            "static_meta": {
+                "description": "Percent of readers by career stage, for top three career stages (csv, api only)",
+                "display_name": "career stage, top 3 percentages",
+                "icon": "http://www.mendeley.com/favicon.ico",
+                "provider": "Mendeley",
+                "provider_url": "http://www.mendeley.com/"
+            },
+            "values": {
+                "raw": [
+                    {
+                        "name": "Ph.D. Student",
+                        "value": 31
+                    },
+                    {
+                        "name": "Post Doc",
+                        "value": 16
+                    },
+                    {
+                        "name": "Researcher (at an Academic Institution)",
+                        "value": 9
+                    }
+                ]
+            }
+        },
+        "mendeley:country": {
+            "provenance_url": "http://api.mendeley.com/research/common-ecological-speciation-plant-feeding-insects-higher-nematinae-perspective/",
+            "static_meta": {
+                "description": "Percent of readers by country, for top three countries (csv, api only)",
+                "display_name": "country, top 3 percentages",
+                "icon": "http://www.mendeley.com/favicon.ico",
+                "provider": "Mendeley",
+                "provider_url": "http://www.mendeley.com/"
+            },
+            "values": {
+                "raw": [
+                    {
+                        "name": "United States",
+                        "value": 25
+                    },
+                    {
+                        "name": "United Kingdom",
+                        "value": 13
+                    },
+                    {
+                        "name": "Brazil",
+                        "value": 6
+                    }
+                ]
+            }
+        },
+        "mendeley:discipline": {
+            "provenance_url": "http://api.mendeley.com/research/common-ecological-speciation-plant-feeding-insects-higher-nematinae-perspective/",
+            "static_meta": {
+                "description": "Percent of readers by discipline, for top three disciplines (csv, api only)",
+                "display_name": "discipline, top 3 percentages",
+                "icon": "http://www.mendeley.com/favicon.ico",
+                "provider": "Mendeley",
+                "provider_url": "http://www.mendeley.com/"
+            },
+            "values": {
+                "raw": [
+                    {
+                        "id": 3,
+                        "name": "Biological Sciences",
+                        "value": 78
+                    },
+                    {
+                        "id": 12,
+                        "name": "Environmental Sciences",
+                        "value": 13
+                    },
+                    {
+                        "id": 7,
+                        "name": "Earth Sciences",
+                        "value": 3
+                    }
+                ]
+            }
+        },
+        "mendeley:groups": {
+            "provenance_url": "http://api.mendeley.com/research/common-ecological-speciation-plant-feeding-insects-higher-nematinae-perspective/",
+            "static_meta": {
+                "description": "The number of groups who have added the article to their libraries",
+                "display_name": "groups",
+                "icon": "http://www.mendeley.com/favicon.ico",
+                "provider": "Mendeley",
+                "provider_url": "http://www.mendeley.com/"
+            },
+            "values": {
+                "WoS": {
+                    "CI95_lower": 81,
+                    "CI95_upper": 96,
+                    "estimate_lower": 88,
+                    "estimate_upper": 93
+                },
+                "raw": 1
+            }
+        },
+        "mendeley:readers": {
+            "provenance_url": "http://api.mendeley.com/research/common-ecological-speciation-plant-feeding-insects-higher-nematinae-perspective/",
+            "static_meta": {
+                "description": "The number of readers who have added the article to their libraries",
+                "display_name": "readers",
+                "icon": "http://www.mendeley.com/favicon.ico",
+                "provider": "Mendeley",
+                "provider_url": "http://www.mendeley.com/"
+            },
+            "values": {
+                "WoS": {
+                    "CI95_lower": 94,
+                    "CI95_upper": 99,
+                    "estimate_lower": 98,
+                    "estimate_upper": 98
+                },
+                "raw": 32
+            }
+        }
+    },
+    "type": "item"
+}
+
+**GitHub software repositories** Get metrics and biblio information on the item
+GET /v1/item/github/egonw,cdk?key=YOURKEY
+< 200
+< Content-Type: application/json
+{
+    "_id": "k58vwwqzxxj0dq7ao4lchaxp",
+    "_rev": "7-ba3054fac4f85f22a37bd3b88b102b34",
+    "aliases": {
+        "github": [
+            "egonw,cdk"
+        ],
+        "title": [
+            "cdk"
+        ],
+        "url": [
+            "https://github.com/egonw/cdk"
+        ]
+    },
+    "biblio": {
+        "create_date": "2009-07-29T11:52:22Z",
+        "description": "The Chemistry Development Kit",
+        "genre": "software",
+        "h1": "\n            ",
+        "last_push_date": "2012-08-02T13:05:20Z",
+        "owner": "egonw",
+        "title": "cdk",
+        "url": "https://github.com/egonw/cdk"
+    },
+    "created": "2012-08-02T10:40:10.941687",
+    "currently_updating": false,
+    "last_modified": "2012-09-26T00:30:45.049499",
+    "metrics": {
+        "github:forks": {
+            "provenance_url": "https://github.com/egonw/cdk/network/members",
+            "static_meta": {
+                "description": "The number of people who have forked the GitHub repository",
+                "display_name": "forks",
+                "icon": "https://github.com/fluidicon.png",
+                "provider": "GitHub",
+                "provider_url": "http://github.com"
+            },
+            "values": {
+                "raw": 28
+            }
+        },
+        "github:watchers": {
+            "provenance_url": "https://github.com/egonw/cdk/watchers",
+            "static_meta": {
+                "description": "The number of people who are watching the GitHub repository",
+                "display_name": "watchers",
+                "icon": "https://github.com/fluidicon.png",
+                "provider": "GitHub",
+                "provider_url": "http://github.com"
+            },
+            "values": {
+                "raw": 31
+            }
+        }
+    },
+    "providersWithMetricsCount": 10,
+    "type": "item"
+}
+
+**SlideShare slides** Get metrics and biblio information on the item
+GET /v1/item/url/http://www.slideshare.net/cavlec/who-owns-our-work?key=YOURKEY
+< 200
+< Content-Type: application/json
+{
+    "_id": "8yxrcdddi6npbhd675r7mqf1",
+    "_rev": "7-9d98f382d10c8d5b63430dadfb69ec68",
+    "aliases": {
+        "title": [
+            "Who owns our work?"
+        ],
+        "url": [
+            "http://www.slideshare.net/cavlec/who-owns-our-work"
+        ]
+    },
+    "biblio": {
+        "created": "Tue Apr 13 03:42:30 -0500 2010",
+        "genre": "slides",
+        "h1": "Who owns our work?",
+        "repository": "Slideshare",
+        "title": "Who owns our work?",
+        "username": "cavlec"
+    },
+    "created": "2012-08-14T19:59:21.805081",
+    "currently_updating": false,
+    "last_modified": "2012-08-14T19:59:51.597151",
+    "metrics": {
+        "slideshare:downloads": {
+            "provenance_url": "http://www.slideshare.net/cavlec/who-owns-our-work",
+            "static_meta": {
+                "description": "The number of times the presentation has been downloaded",
+                "display_name": "downloads",
+                "icon": "http://www.slideshare.net/favicon.ico",
+                "provider": "Slideshare",
+                "provider_url": "http://www.slideshare.net/"
+            },
+            "values": {
+                "raw": 36
+            }
+        },
+        "slideshare:favorites": {
+            "provenance_url": "http://www.slideshare.net/cavlec/who-owns-our-work",
+            "static_meta": {
+                "description": "The number of times the presentation has been favorited",
+                "display_name": "favorites",
+                "icon": "http://www.slideshare.net/favicon.ico",
+                "provider": "Slideshare",
+                "provider_url": "http://www.slideshare.net/"
             },
             "values": {
                 "raw": 4
             }
         },
-        "plosalm:html_views": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
+        "slideshare:views": {
+            "provenance_url": "http://www.slideshare.net/cavlec/who-owns-our-work",
             "static_meta": {
-                "description": "the number of views of the PLoS HTML article",
-                "display_name": "html views",
-                "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg",
-                "provider": "PLoS",
-                "provider_url": "http://www.plos.org/"
+                "description": "The number of times the presentation has been viewed",
+                "display_name": "views",
+                "icon": "http://www.slideshare.net/favicon.ico",
+                "provider": "Slideshare",
+                "provider_url": "http://www.slideshare.net/"
             },
             "values": {
-                "raw": 1744
+                "raw": 2409
             }
         },
-        "plosalm:pdf_views": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
+        "topsy:tweets": {
+            "provenance_url": "http://topsy.com/www.slideshare.net/cavlec/who-owns-our-work?utm_source=otter",
             "static_meta": {
-                "description": "the number of downloads of the PDF",
-                "display_name": "pdf views",
-                "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg",
-                "provider": "PLoS",
-                "provider_url": "http://www.plos.org/"
+                "description": "Number of times the item has been tweeted",
+                "display_name": "tweets",
+                "icon": "http://twitter.com/phoenix/favicon.ico",
+                "provider": "Topsy",
+                "provider_url": "http://www.topsy.com/"
             },
             "values": {
-                "raw": 453
+                "raw": 3
             }
-        },
-        "plosalm:pmc_abstract": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
+        }
+    },
+    "providersWithMetricsCount": 11,
+    "type": "item"
+}
+
+**Any url** Get metrics and biblio information on the item
+GET /v1/item/url/http://www.carlboettiger.info?key=YOURKEY
+< 200
+< Content-Type: application/json
+{
+    "_id": "uosyks697znfvx9fb7nnmjav",
+    "_rev": "5-4e2923c9aefd29fbde630b30f9b978e2",
+    "aliases": {
+        "url": [
+            "http://www.carlboettiger.info"
+        ]
+    },
+    "biblio": {
+        "genre": "webpage",
+        "h1": "Carl Boettiger",
+        "title": "Carl Boettiger"
+    },
+    "created": "2012-10-02T10:09:50.051559",
+    "currently_updating": false,
+    "last_modified": "2012-10-02T20:14:00.848206",
+    "metrics": {
+        "facebook:likes": {
+            "provenance_url": "",
             "static_meta": {
-                "description": "the number of times the abstracts have been viewed on PubMed Central",
-                "display_name": "abstract views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 15
-            }
-        },
-        "plosalm:pmc_figure": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of times the figures have been viewed on PubMed Central",
-                "display_name": "figure views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 19
-            }
-        },
-        "plosalm:pmc_full-text": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of times the full-text has been viewed on PubMed Central",
-                "display_name": "full-text views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 313
-            }
-        },
-        "plosalm:pmc_pdf": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of times the pdf has been viewed on PubMed Central",
-                "display_name": "pdf views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 164
-            }
-        },
-        "plosalm:pmc_supp-data": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of times the supplementary data has been viewed on PubMed Central",
-                "display_name": "supp-data views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 11
-            }
-        },
-        "plosalm:pmc_unique-ip": {
-            "provenance_url": "http://www.plosreports.org/services/rest?method=usage.stats&doi=10.1371/journal.pcbi.1000355",
-            "static_meta": {
-                "description": "the number of unique IP addresess that have viewed the paper on PubMed Central",
-                "display_name": "unique-ip views",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
-            },
-            "values": {
-                "raw": 297
-            }
-        },
-        "plosalm:pubmed_central": {
-            "provenance_url": "http://www.ncbi.nlm.nih.gov/sites/entrez?db=pubmed&cmd=link&LinkName=pubmed_pmc_refs&from_uid=19360090",
-            "static_meta": {
-                "description": "the citation data reported for an article from PubMed Central",
-                "display_name": "citations",
-                "icon": "http://www.pubmedcentral.gov/corehtml/pmc/pmcgifs/pmclogo.gif",
-                "provider": "PMC",
-                "provider_url": "http://www.ncbi.nlm.nih.gov/pmc/"
+                "description": "Number of users who Liked a post about the item",
+                "display_name": "likes",
+                "icon": "http://www.facebook.com/favicon.ico",
+                "provider": "Facebook",
+                "provider_url": "http://www.facebook.com/"
             },
             "values": {
                 "raw": 1
             }
         },
-        "plosalm:scopus": {
-            "provenance_url": "http://www.scopus.com/scopus/inward/citedby.url?doi=10.1371%2Fjournal.pcbi.1000355&rel=R3.0.0&partnerID=OIVxnoIl&md5=6c7eaa459379828bb70627b8b8a5923f",
+        "topsy:tweets": {
+            "provenance_url": "http://topsy.com/www.carlboettiger.info?utm_source=otter",
             "static_meta": {
-                "description": "the citation data reported for an article from Scopus",
-                "display_name": "citations",
-                "icon": "http://scopus.com/static/images/favicon.ico",
-                "provider": "Scopus",
-                "provider_url": "http://scopus.com"
+                "description": "Number of times the item has been tweeted",
+                "display_name": "tweets",
+                "icon": "http://twitter.com/phoenix/favicon.ico",
+                "provider": "Topsy",
+                "provider_url": "http://www.topsy.com/"
             },
             "values": {
-                "raw": 8
+                "raw": 4
             }
         }
     },
-    "providersRunCounter": 10,
-    "providersWithMetricsCount": 10,
     "type": "item"
 }
 
 
--- collection --
-This resource allows you to view information on collections
-POST /v1/collection?key=YOURKEY
-{ "cc": "12345678900", "cvc": "123", "expiry": "0112" }
-< 200
-{ "receipt": "/payment/receipt/1" }
+--
+work with collections 
 
-Get metrics and biblio information on the item
+Collections are groups of items.  
+Collections can be viewed in the webapp as http://impactstory.org/collection/`_id`.  For example: [http://impactstory.org/collection/kn5auf](http://impactstory.org/collection/kn5auf).
+--
+Create a collection of items.  
+Data payload should contain a list of [namespace, id] pairs and a collection title, as JSON.  
+
+`{"aliases": [["doi", "10.1371/journal.pcbi.1000361"], ["url", "http://www.carlboettiger.info/"]], "title": "My Collection"}`
+
+Returns a collection object with a collection `_id` and status code `201`.  
+POST /v1/collection?key=YOURKEY
+> Content-Type: application/json;charset=utf-8
+{"aliases": [["doi", "10.1371/journal.pcbi.1000361"], ["url", "http://www.carlboettiger.info/"]], "title": "My Collection"}
+< 201
+< Content-Type: application/json
+{
+    "collection": {
+        "_id": "hr5mxg",
+        "_rev": "1-63390a28dc923bb2df6c49aa2080fa6a",
+        "alias_tiids": {
+            "doi:10.1371/journal.pcbi.1000361": "8kgmw95as0o47piqee09k7of",
+            "url:http://www.carlboettiger.info/": "1b2f4fc2bea711e1bdf912313d1a5e63"
+        },
+        "created": "2012-11-23T21:04:58.910101",
+        "ip_address": "",
+        "title": "My Collection",
+        "type": "collection"
+    },
+}
+
+Get the items and metadata associated with a collection.  Returns `210` when some items are currently updating, else `200`.
 GET /v1/collection/kn5auf?key=YOURKEY
 < 200
 < Content-Type: application/json
-{ "items": [
-  { "url": "/shopping-cart/1", "product":"2ZY48XPZ", "quantity": 1, "name": "New socks", "price": 1.25 }
-] }
+{
+    "_id": "kn5auf",
+    "_rev": "15-0d1e7171fb34eefcfcdd275131b25a16",
+    "created": "2012-06-25T09:21:12.673503",
+    "title": "My Collection",
+    "type": "collection"
+    "items": [
+        {
+            "_id": "ql992e8bavpa1xdmncddlkee",
+            "_rev": "179-6444a627050dfa65d3c3ed119e1db0eb",
+            "type": "item",
+            "created": "2012-08-07T16:34:59.689481",
+            "currently_updating": false,
+            "aliases": {..},
+            "biblio": {..},
+            "metrics": {..}
+        }
+    ]
+}
+
+-- metadata --
+
+Get metadata for the providers that ImpactStory uses to obtain metrics, aliases, and bibliometric data.
+GET /v1/provider?key=YOURKEY
+< 200
+< Content-Type: application/json
+{
+    "citeulike": {
+        "descr": "CiteULike is a free service to help you to store, organise and share the scholarly papers you are reading.",
+        "metrics": {
+            "bookmarks": {
+                "description": "Number of users who have bookmarked this item.",
+                "display_name": "bookmarks",
+                "icon": "http://citeulike.org/favicon.ico",
+                "provider": "CiteULike",
+                "provider_url": "http://www.citeulike.org/"
+            }
+        },
+        "provides_aliases": false,
+        "provides_metrics": true,
+        "url": "http://www.citeulike.org/"
+    },
+    {
+    "wikipedia": {
+        "descr": "The free encyclopedia that anyone can edit.",
+        "metrics": {
+            "mentions": {
+                "description": "The number of Wikipedia articles that mentioned this object.",
+                "display_name": "mentions",
+                "icon": "http://wikipedia.org/favicon.ico",
+                "provider": "Wikipedia",
+                "provider_url": "http://www.wikipedia.org/"
+            }
+        },
+        "provides_aliases": false,
+        "provides_metrics": true,
+        "url": "http://www.wikipedia.org/"
+    }
+}
+
