@@ -1,0 +1,10 @@
+<pmc-web-stat>
+<request year="2012" month="10" jrid="sample" eissn="sample"></request>
+<response status="0" collection="sample"></response>
+<articles>
+<article id="PMC111">
+<meta-data doi="10.111/111" pmcid="PMC111" pubmed-id="111" pub-year="2012" volume="1" issue="" first-page="1"/><usage unique-ip="1368" full-text="1464" pdf="722" abstract="119" scanned-summary="0" scanned-page-browse="0" figure="144" supp-data="0" cited-by="0"/></article>
+<article id="PMC456">
+<meta-data doi="10.111/222" pmcid="PMC222" pubmed-id="222" pub-year="2012" volume="1" issue="" first-page="1"/><usage unique-ip="514" full-text="606" pdf="230" abstract="0" scanned-summary="0" scanned-page-browse="0" figure="9" supp-data="0" cited-by="0"/></article>
+</articles>
+</pmc-web-stat>
