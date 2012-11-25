@@ -133,8 +133,12 @@ class Mendeley(Provider):
 
     def _get_uuid_from_title(self, aliases_dict, page):
         data = provider._load_json(page)
-        doi = aliases_dict["doi"][0]
-        biblio = aliases_dict["biblio"][0]
+        try:
+            doi = aliases_dict["doi"][0]
+            biblio = aliases_dict["biblio"][0]
+        except KeyError:
+            return None
+
         for mendeley_record in data["documents"]:
             if mendeley_record["doi"] == doi:
                 uuid = mendeley_record["uuid"]
