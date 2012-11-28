@@ -88,6 +88,11 @@ GET /tiid/:namespace/:id
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
 # not supported in v1
 def tiid(ns, nid):
+
+    # temporary
+    logger.debug("got request GET /tiid/<ns>/<path:nid> from IP " + request.remote_addr)
+    abort(500)
+    
     tiid = ItemFactory.get_tiid_by_alias(ns, nid, myredis, mydao)
 
     if not tiid:
@@ -107,6 +112,10 @@ original api returned tiid
 """
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post_with_tiid(namespace, nid):
+    # temporary
+    logger.debug("got request POST /item/<namespace>/<path:nid> from IP " + request.remote_addr)
+    abort(500)
+
     tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     response_code = 201 # Created
     resp = make_response(json.dumps(tiid), response_code)
@@ -137,6 +146,11 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
 '''
 @app.route('/item/<tiid>', methods=['GET'])
 def get_item_from_tiid(tiid, format=None, include_history=False):
+
+    # temporary
+    logger.debug("got request GET /item/<namespace>/<path:nid> from IP " + request.remote_addr)    
+    abort(500)
+
     # TODO check request headers for format as well.
 
     try:
