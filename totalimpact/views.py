@@ -44,6 +44,17 @@ def set_redis(url, db):
     return myredis
 
 @app.before_request
+def stop_user_who_is_swamping_us():
+    ip = request.remote_addr
+    if ip == "132.229.72.74":
+        logger.debug("got a call from 132.229.72.74; aborting with 403.")
+        abort(403, """Sorry, we're blocking your IP address {ip} because \
+            we can't handle requests as quickly as you're sending them, and so
+            they're swamping our system. Please email us at \
+            team@impactstory.org for details and possible workarounds.
+        """.format(ip=ip))
+
+@app.before_request
 def check_key():
     if "/v1/" in request.url:
         key = request.values.get('key', '')
@@ -89,10 +100,6 @@ GET /tiid/:namespace/:id
 # not supported in v1
 def tiid(ns, nid):
 
-    # temporary
-    logger.debug("got request GET /tiid/<ns>/<path:nid> from IP " + request.remote_addr)
-    abort(500)
-    
     tiid = ItemFactory.get_tiid_by_alias(ns, nid, myredis, mydao)
 
     if not tiid:
@@ -112,9 +119,6 @@ original api returned tiid
 """
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post_with_tiid(namespace, nid):
-    # temporary
-    logger.debug("got request POST /item/<namespace>/<path:nid> from IP " + request.remote_addr)
-    abort(500)
 
     tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     response_code = 201 # Created
@@ -146,10 +150,6 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
 '''
 @app.route('/item/<tiid>', methods=['GET'])
 def get_item_from_tiid(tiid, format=None, include_history=False):
-
-    # temporary
-    logger.debug("got request GET /item/<namespace>/<path:nid> from IP " + request.remote_addr)    
-    abort(500)
 
     # TODO check request headers for format as well.
 
