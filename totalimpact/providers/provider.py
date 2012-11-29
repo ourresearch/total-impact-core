@@ -1,7 +1,6 @@
  # -*- coding: utf-8 -*-  # need this line because test utf-8 strings later
 
 from totalimpact.cache import Cache
-from totalimpact.dao import Dao
 from totalimpact import providers
 from totalimpact import default_settings
 from totalimpact import utils
