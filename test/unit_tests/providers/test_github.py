@@ -67,5 +67,7 @@ class TestGithub(ProviderTestCase):
         biblio_dict = self.provider.biblio([self.testitem_biblio_org])
         print biblio_dict
         expected = {'last_push_date': u'2012-11-21T13:16:19Z', 'url': u'https://github.com/openphacts/BridgeDb', 'create_date': u'2012-01-18T10:49:04Z', 'owner': u'openphacts', 'title': u'BridgeDb'}
-        assert_equals(biblio_dict, expected)
+        assert_equals(biblio_dict.keys(), expected.keys())
+        for key in ["url", "owner", "title", "create_date"]:
+            assert_equals(biblio_dict[key], expected[key])
 
