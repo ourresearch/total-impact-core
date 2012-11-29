@@ -43,9 +43,19 @@ class TestPmc(ProviderTestCase):
                 "max_event_date": "2012-10-31T07:34:01.126892"
             }
         ]
-        print test_monthly_data
+        #print test_monthly_data
         for doc in test_monthly_data:
             self.d.db.save(doc)
+
+    def test_has_applicable_batch_data_true(self):
+        # ensure that it matches an appropriate ids
+        response = self.provider.has_applicable_batch_data("pmid", "111", self.d)
+        assert_equals(response, True)
+
+    def test_has_applicable_batch_data_false(self):
+        # ensure that it matches an appropriate ids
+        response = self.provider.has_applicable_batch_data("pmid", "notapmidintheview", self.d)
+        assert_equals(response, False)
 
     def test_is_relevant_alias(self):
         # ensure that it matches an appropriate ids
