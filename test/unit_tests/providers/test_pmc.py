@@ -57,6 +57,11 @@ class TestPmc(ProviderTestCase):
         response = self.provider.has_applicable_batch_data("pmid", "notapmidintheview", self.d)
         assert_equals(response, False)
 
+    def test_build_batch_data_dict(self):
+        # ensure that it matches an appropriate ids
+        response = self.provider.build_batch_data_dict(self.d)
+        assert_equals(response.keys(), [('pmid', '222'), ('pmid', '111')])
+
     def test_is_relevant_alias(self):
         # ensure that it matches an appropriate ids
         assert_equals(self.provider.is_relevant_alias(self.testitem_aliases), True)
@@ -75,11 +80,19 @@ class TestPmc(ProviderTestCase):
     def test_provider_metrics_400(self):
         pass  # Not applicable
 
+    def test_provider_metrics_nonsense_xml(self):
+        pass  # Not applicable
+
+    def test_provider_metrics_nonsense_txt(self):
+        pass  # Not applicable
+
+    def test_provider_metrics_empty(self):
+        pass  # Not applicable
+
     @http
-    @nottest
     def test_metrics(self):
-        metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'scienceseeker:blog_posts': (1, 'http://scienceseeker.org/posts/?type=post&filter0=citation&modifier0=id-all&value0=10.1016/j.cbpa.2010.06.169')}
+        metrics_dict = self.provider.metrics([("pmid", "222")])
+        expected = {'pmc:unique_ip': (514, ''), 'pmc:pdf_downloads': (230, ''), 'pmc:fulltext_views': (606, ''), 'pmc:figure_views': (9, '')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]

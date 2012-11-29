@@ -1,10 +1,12 @@
+import hashlib, simplejson, os
+
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
-import hashlib
-import simplejson
 
 import logging
 logger = logging.getLogger('ti.providers.pmc')
+
+batch_data = {}
 
 class Pmc(Provider):  
 
@@ -58,11 +60,28 @@ class Pmc(Provider):
     }
 
     def __init__(self):
+        global batch_data
+        if not batch_data:
+            batch_data = self.build_batch_data_dict()
         super(Pmc, self).__init__()
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
         return("pmid" == namespace)
+
+    def build_batch_data_dict(self, mydao=None):
+        if not mydao:
+            from totalimpact import dao
+            mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
+
+        results = mydao.db.view('provider_batch_data/by_alias_provider_batch_data', include_docs=True)
+
+        for row in results.rows:
+            [provider, [namespace, nid]] = row.key
+            if provider == "pmc":
+                batch_data[(namespace, nid)] = row.doc
+
+        return batch_data
 
     def has_applicable_batch_data(self, namespace, nid, mydao):
         has_applicable_batch_data = False
@@ -128,8 +147,8 @@ class Pmc(Provider):
 
         return metrics_dict
 
-    def _get_metrics_and_drilldown(self, page=""):
-        metrics_dict = self._extract_metrics(page)
+    def _get_metrics_and_drilldown(self, page, pmid):
+        metrics_dict = self._extract_metrics(page, id=pmid)
         metrics_and_drilldown = {}
         for metric_name in metrics_dict:
             drilldown_url = ""
@@ -141,11 +160,20 @@ class Pmc(Provider):
             provider_url_template=None, # ignore this because multiple url steps
             cache_enabled=True):
 
+        metrics_and_drilldown = {}
+
         # Only lookup metrics for items with appropriate ids
         from totalimpact.models import ItemFactory
         aliases_dict = ItemFactory.alias_dict_from_tuples(aliases)
+        pmid = aliases_dict["pmid"][0]
+        pmid_alias = ("pmid", pmid)
+        page = ""
 
-        metrics_and_drilldown = self._get_metrics_and_drilldown()
+        global batch_data
+        if pmid_alias in batch_data:
+            page = simplejson.loads(batch_data[pmid_alias]["raw"])
+        if page:
+            metrics_and_drilldown = self._get_metrics_and_drilldown(page, pmid)
 
         return metrics_and_drilldown
 
