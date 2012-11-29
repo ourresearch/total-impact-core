@@ -74,6 +74,13 @@ class Dao(object):
                 "views": {
                     "reference-sets": {}
                 }
+            },
+            {
+                "_id": "_design/provider_batch_data",
+                "language": "javascript",
+                "views": {
+                    "by_alias_provider_batch_data": {}
+                }
             }
         ]
 

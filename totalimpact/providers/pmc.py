@@ -64,6 +64,19 @@ class Pmc(Provider):
         (namespace, nid) = alias
         return("pmid" == namespace)
 
+    def has_applicable_batch_data(self, namespace, nid, mydao):
+        has_applicable_batch_data = False
+
+        res = mydao.view('provider_batch_data/by_alias_provider_batch_data')
+        # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
+        matches = res["pmc", [namespace, nid]] 
+
+        if matches.rows:
+            if len(matches.rows) > 0:
+                has_applicable_batch_data = True
+
+        return has_applicable_batch_data
+
     def _extract_metrics(self, page, status_code=200, id=None): 
         if status_code != 200:
             if status_code == 404:
