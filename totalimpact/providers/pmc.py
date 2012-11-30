@@ -6,7 +6,7 @@ from totalimpact.providers.provider import Provider, ProviderContentMalformedErr
 import logging
 logger = logging.getLogger('ti.providers.pmc')
 
-batch_data = {}
+batch_data = None
 
 class Pmc(Provider):  
 
@@ -59,10 +59,10 @@ class Pmc(Provider):
         }               
     }
 
-    def __init__(self):
+    def __init__(self, mydao=None):
         global batch_data
         if not batch_data:
-            batch_data = self.build_batch_data_dict()
+            batch_data = self.build_batch_data_dict(mydao)
         super(Pmc, self).__init__()
 
     def is_relevant_alias(self, alias):
@@ -76,10 +76,17 @@ class Pmc(Provider):
 
         results = mydao.db.view('provider_batch_data/by_alias_provider_batch_data', include_docs=True)
 
+        batch_data = {}
         for row in results.rows:
             [provider, [namespace, nid]] = row.key
             if provider == "pmc":
-                batch_data[(namespace, nid)] = row.doc
+                pmid_alias = (namespace, nid)
+                if pmid_alias in batch_data:
+                    if batch_data[pmid_alias]["max_event_date"] < row.value:
+                        # add more recent value
+                        batch_data[pmid_alias] = {"raw": row.doc["raw"], "max_event_date":row.value}
+                else:
+                    batch_data[pmid_alias] = {"raw": row.doc["raw"], "max_event_date":row.value}
 
         return batch_data
 
@@ -106,14 +113,13 @@ class Pmc(Provider):
         if "<pmc-web-stat>" not in page:
             raise ProviderContentMalformedError
 
-        (doc, lookup_function) = provider._get_doc_from_xml(page)  
+        (doc, lookup_function) = provider._get_doc_from_xml(page)
         if not doc:
             return {}
-        metrics_dict = {}            
         try:
-            number_downloads = None
             articles = doc.getElementsByTagName("article")
             for article in articles:
+                metrics_dict = {}            
                 meta_data = article.getElementsByTagName("meta-data")[0]
                 pmid = meta_data.getAttribute("pubmed-id")
                 if id == pmid:
@@ -130,9 +136,9 @@ class Pmc(Provider):
                     if fulltext_views:
                         metrics_dict.update({'pmc:fulltext_views': fulltext_views})
 
-                    unique_ip = int(metrics.getAttribute("unique-ip"))
-                    if unique_ip:
-                        metrics_dict.update({'pmc:unique_ip': unique_ip})
+                    unique_ip_views = int(metrics.getAttribute("unique-ip"))
+                    if unique_ip_views:
+                        metrics_dict.update({'pmc:unique_ip_views': unique_ip_views})
 
                     figure_views = int(metrics.getAttribute("figure"))
                     if figure_views:
@@ -142,10 +148,12 @@ class Pmc(Provider):
                     if suppdata_views:
                         metrics_dict.update({'pmc:suppdata_views': suppdata_views})
 
-        except (KeyError, IndexError, TypeError):
-            return {}
+                    return metrics_dict
 
-        return metrics_dict
+        except (KeyError, IndexError, TypeError):
+            pass
+
+        return {}
 
     def _get_metrics_and_drilldown(self, page, pmid):
         metrics_dict = self._extract_metrics(page, id=pmid)
