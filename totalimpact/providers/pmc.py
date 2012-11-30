@@ -179,7 +179,11 @@ class Pmc(Provider):
         # Only lookup metrics for items with appropriate ids
         from totalimpact.models import ItemFactory
         aliases_dict = ItemFactory.alias_dict_from_tuples(aliases)
-        pmid = aliases_dict["pmid"][0]
+        try:
+            pmid = aliases_dict["pmid"][0]
+        except KeyError:
+            return {}
+            
         pmid_alias = ("pmid", pmid)
         page = ""
 
