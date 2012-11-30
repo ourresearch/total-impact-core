@@ -1,4 +1,4 @@
-import hashlib, simplejson, os
+import hashlib, simplejson, os, couchdb
 
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
@@ -77,6 +77,12 @@ class Pmc(Provider):
         results = mydao.db.view('provider_batch_data/by_alias_provider_batch_data', include_docs=True)
 
         batch_data = {}
+
+        try:
+            rows = results.rows
+        except couchdb.ResourceNotFound:
+            return None
+
         for row in results.rows:
             [provider, [namespace, nid]] = row.key
             if provider == "pmc":
@@ -179,7 +185,7 @@ class Pmc(Provider):
 
         global batch_data
         if pmid_alias in batch_data:
-            page = simplejson.loads(batch_data[pmid_alias]["raw"])
+            page = batch_data[pmid_alias]["raw"]
         if page:
             metrics_and_drilldown = self._get_metrics_and_drilldown(page, pmid)
 
