@@ -180,7 +180,6 @@ class Mendeley(Provider):
         return metrics_and_drilldown  
 
 
-    # default method; providers can override
     def metrics(self, 
             aliases,
             provider_url_template=None, # ignore this because multiple url steps

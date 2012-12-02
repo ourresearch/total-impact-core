@@ -1,0 +1,9 @@
+<pmc-web-stat>
+<request year="2012" month="11" jrid="sample" eissn="sample"></request>
+<response status="0" collection="sample"></response>
+<articles>
+<article id="PMC111">
+<meta-data doi="10.111/111" pmcid="PMC111" pubmed-id="111" pub-year="2012" volume="1" issue="" first-page="1"/><usage unique-ip="555" full-text="66" pdf="88" abstract="99" scanned-summary="0" scanned-page-browse="0" figure="33" supp-data="0" cited-by="0"/>
+</article>
+</articles>
+</pmc-web-stat>
