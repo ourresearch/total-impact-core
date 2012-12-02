@@ -85,7 +85,7 @@ class ReportPage:
         the page. this method parses the page to get them...it's brittle, though,
         since if the report page changes this breaks."""
 
-        m = re.search('var collectionId = "([^"]+)"', text)
+        m = re.search('var reportId = "([^"]+)"', text)
         collectionId = m.group(1)
         return collectionId
 
