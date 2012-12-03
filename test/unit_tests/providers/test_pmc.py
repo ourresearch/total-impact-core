@@ -146,7 +146,7 @@ class TestPmc(ProviderTestCase):
     @http
     def test_metrics_multiple_months(self):
         metrics_dict = self.provider.metrics([("pmid", "111")])
-        expected = {'pmc:abstract_views': (99, ''), 'pmc:pdf_downloads': (88, ''), 'pmc:unique_ip_views': (555, ''), 'pmc:fulltext_views': (66, ''), 'pmc:figure_views': (33, '')}
+        expected = {'pmc:abstract_views': (218, ''), 'pmc:pdf_downloads': (810, ''), 'pmc:fulltext_views': (1530, ''), 'pmc:figure_views': (177, ''), 'pmc:unique_ip_views': (1923, '')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
@@ -155,7 +155,7 @@ class TestPmc(ProviderTestCase):
     @http
     def test_metrics_real(self):
         metrics_dict = self.provider.metrics([("pmid", "23066504")])
-        expected = {'pmc:abstract_views': (119, ''), 'pmc:pdf_downloads': (722, ''), 'pmc:unique_ip_views': (1368, ''), 'pmc:fulltext_views': (1464, ''), 'pmc:figure_views': (144, '')}
+        expected = {'pmc:abstract_views': (119, ''), 'pmc:pdf_downloads': (722, ''), 'pmc:fulltext_views': (1464, ''), 'pmc:figure_views': (144, ''), 'pmc:unique_ip_views': (1368, '')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
