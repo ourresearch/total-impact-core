@@ -1,4 +1,3 @@
-
 import re
 import random
 import json
@@ -21,7 +20,8 @@ def make_collection(api_url, namespace, nids, title, refset_metadata):
     return collection_id
 
 # cat */*.bib > all.bib
-filename = "/Users/hpiwowar/Dropbox/ti/wos-refset/all.bib"
+#filename = "/Users/hpiwowar/Dropbox/ti/wos-refset/all.bib"
+filename = "/Users/hpiwowar/Dropbox/ti/wos-refset/2012/all2012.bib"
 contents = open(filename, "r").read()
 doi_pattern = re.compile("DOI = {{(.+)}},")
 all_dois = doi_pattern.findall(contents)
@@ -32,10 +32,10 @@ all_years = year_pattern.findall(contents)
 doi_years = zip(all_dois, all_years)
 
 title_template = "REFSET {name}, {year} ({genre}) n={sample_size}"
-api_url = "http://total-impact-core-staging.herokuapp.com"
-#api_url = "http://total-impact-core.herokuapp.com"
+#api_url = "http://total-impact-core-staging.herokuapp.com"
+api_url = "http://total-impact-core.herokuapp.com"
 
-for refset_year in range(2002, 2012):
+for refset_year in range(2012, 2013):
     print refset_year
     dois = [doi for (doi, year) in doi_years if year==unicode(refset_year)]
     print len(dois)
@@ -52,5 +52,6 @@ for refset_year in range(2002, 2012):
         "sample_size": sample_size
     }
     title = title_template.format(**refset_metadata)
-    make_collection(api_url, "doi", selected, title, refset_metadata)
+    collection_id = make_collection(api_url, "doi", selected, title, refset_metadata)
+    print collection_id
 
