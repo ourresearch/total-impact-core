@@ -30,7 +30,9 @@ COLLECTION_SEED_MODIFIED["alias_tiids"] = dict(zip(["doi:1", "doi:2"], TEST_COLL
 api_items_loc = os.path.join(
     os.path.split(__file__)[0],
     '../data/items.json')
-API_ITEMS_JSON = json.loads(open(api_items_loc, "r").read())
+
+with open(api_items_loc, "r") as f:
+    API_ITEMS_JSON = json.loads(f.read())
 
 def MOCK_member_items(self, query_string, url=None, cache_enabled=True):
     return(GOLD_MEMBER_ITEM_CONTENT)

@@ -8,6 +8,8 @@ from nose.tools import assert_equals, raises, nottest
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/bibtex")
 SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(datadir, "Vision.bib")
+with open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r") as f:
+  SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS = f.read()
 
 SAMPLE_EXTRACT_MEMBER_ITEMS_BROKEN = """
 @999{test1,
@@ -56,7 +58,7 @@ class TestBibtex(ProviderTestCase):
         ProviderTestCase.setUp(self) 
 
     def test_extract_members_success(self):        
-        file_contents = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r").read()
+        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
         query_response = self.provider.paginate(file_contents)
         members = self.provider.member_items(query_response["pages"][1])
         print members
@@ -69,13 +71,13 @@ class TestBibtex(ProviderTestCase):
 
     @raises(ProviderServerError)
     def test_extract_members_500(self):        
-        file_contents = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r").read()
+        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
         Provider.http_get = common.get_500
         query_response = self.provider.paginate(file_contents)
         members = self.provider.member_items(query_response["pages"][0])
 
     def test_extract_members_empty(self):        
-        file_contents = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r").read()
+        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
         Provider.http_get = common.get_empty
         query_response = self.provider.paginate(file_contents)
         members = self.provider.member_items(query_response["pages"][0])
@@ -95,7 +97,7 @@ class TestBibtex(ProviderTestCase):
         assert_equals(response["number_entries"], 3)
 
     def test_paginate_long(self):
-        file_contents = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r").read()
+        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
         response = self.provider.paginate(file_contents)
         assert_equals(set(response.keys()), set(['number_entries', 'pages']))
         assert_equals(len(response["pages"]), 16)
