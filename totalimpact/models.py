@@ -404,7 +404,7 @@ class ItemFactory():
         res = mydao.view('queues/by_alias')
 
         # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
-        matches = res[[ns, nid.lower()]] 
+        matches = res[[ns, nid]] 
 
         if matches.rows:
             if len(matches.rows) > 1:
