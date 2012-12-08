@@ -12,7 +12,8 @@ function(doc) {
 
             // emit a row for every id in the namespace id list except meta
             for (var i in namespaceid_list) {
-                emit([doc.provider, [namespace, namespaceid_list[i]]], doc.max_event_date);
+                var nid = namespaceid_list[i].toLowerCase();                
+                emit([doc.provider, [namespace, nid]], doc.max_event_date);
             }
         }
     }
