@@ -404,13 +404,21 @@ class ItemFactory():
         res = mydao.view('queues/by_alias')
 
         # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
-        matches = res[[ns, nid]] 
+        logger.debug("In get_tiid_by_alias with {ns}, {nid}".format(
+            ns=ns, nid=nid))
+        nid_lower = nid.lower()
+        logger.debug("In get_tiid_by_alias with {nid_lower}".format(
+            nid_lower=nid_lower))
+        matches = res[[ns, 
+                        nid_lower]] 
 
         if matches.rows:
             if len(matches.rows) > 1:
                 logger.warning("More than one tiid for alias (%s, %s)" % (ns, nid))
             tiid = matches.rows[0]["id"]
+            logger.debug("found a match for {nid}!".format(nid=nid))
         else:
+            logger.debug("no match for {nid}!".format(nid=nid))
             tiid = None
         return tiid
 
