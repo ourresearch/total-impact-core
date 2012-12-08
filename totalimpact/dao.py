@@ -87,8 +87,8 @@ class Dao(object):
         for design_doc in design_docs:
             design_doc_name = design_doc["_id"]
             for view_name in design_doc["views"]:
-                file = open('./config/couch/views/{0}.js'.format(view_name))
-                design_doc["views"][view_name]["map"] = file.read()        
+                with open('./config/couch/views/{0}.js'.format(view_name)) as f:
+                    design_doc["views"][view_name]["map"] = f.read()
 
             logger.info("overwriting the design doc with the latest version in dao.")
             
