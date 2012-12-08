@@ -99,7 +99,7 @@ def main():
     myredis = tiredis.from_url(redis_url)
 
     try:
-        tiids = update_active_publisher_items(myreds, mydao)
+        tiids = update_active_publisher_items(myredis, mydao)
     except (KeyboardInterrupt, SystemExit): 
         # this approach is per http://stackoverflow.com/questions/2564137/python-how-to-terminate-a-thread-when-main-program-ends
         sys.exit()
