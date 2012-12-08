@@ -49,7 +49,6 @@ class ViewsTester(unittest.TestCase):
         pass
 
     def setUp(self):
-
         """
         This test item is a lightly-modified version of a real doc from our
         demo collection; it's available at http://total-impact-core.herokuapp.com/collection/kn5auf
@@ -177,7 +176,7 @@ class TestGeneral(ViewsTester):
 
 class TestMemberItems(ViewsTester):
 
-    def setUp(self): 
+    def setUp(self):                 
         super(TestMemberItems, self).setUp()
         # Mock out relevant methods of the Dryad provider
         self.orig_Dryad_member_items = Dryad.member_items
@@ -186,7 +185,7 @@ class TestMemberItems(ViewsTester):
     def tearDown(self):
         Dryad.member_items = self.orig_Dryad_member_items
 
-    def test_memberitems_get(self):
+    def test_memberitems_get(self):        
         response = self.client.get('/provider/dryad/memberitems/Otto%2C%20Sarah%20P.?method=sync')
         print response
         print response.data
@@ -316,8 +315,8 @@ class TestItems(ViewsTester):
         )
         new_coll = json.loads(resp2.data)["collection"]
 
-        # 3 new items + 1 new item + 3 design docs + 2 collections + one test_item
-        assert_equals(self.d.db.info()["doc_count"], 10)
+        # 3 new items + 1 new item + 4 design docs + 2 collections + one test_item
+        assert_equals(self.d.db.info()["doc_count"], 11)
 
 
 
