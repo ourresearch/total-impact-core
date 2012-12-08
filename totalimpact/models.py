@@ -409,8 +409,10 @@ class ItemFactory():
         nid_lower = nid.lower()
         logger.debug("In get_tiid_by_alias with {nid_lower}".format(
             nid_lower=nid_lower))
+
+        # not lower now
         matches = res[[ns, 
-                        nid_lower]] 
+                        nid]] 
 
         if matches.rows:
             if len(matches.rows) > 1:
