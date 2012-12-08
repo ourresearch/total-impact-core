@@ -22,7 +22,8 @@ function(doc) {
 
     		// emit a row for every id in the namespace id list except meta
     		for (var i in namespaceid_list) {
-                emit([namespace, namespaceid_list[i]], tiid);
+                var nid = namespaceid_list[i].toLowerCase();
+                emit([namespace, nid], tiid);
             }
         }
     }
