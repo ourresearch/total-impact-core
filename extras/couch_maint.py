@@ -360,7 +360,7 @@ def delete_orphan_items():
     view_name = "queues/by_type_and_id"
     view_rows = db.view(view_name, include_docs=True)
     row_count = 0
-    page_size = 50
+    page_size = 500
 
     start_key = ["item", "000000000"]
     end_key = ["item", "zzzzzzzzzz"]
