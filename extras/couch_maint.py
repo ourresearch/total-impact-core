@@ -387,7 +387,7 @@ def delete_orphan_items():
                     db.delete(item)
                     number_deleted += 1
                     date_deleted[item["created"][0:10]] += 1
-                except TypeError:  #happens sometimes if already deleted
+                except (TypeError, couchdb.http.ResourceNotFound):  #happens sometimes if already deleted
                     pass
 
         logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
