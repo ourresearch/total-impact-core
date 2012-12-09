@@ -1,4 +1,4 @@
-import couchdb, os, logging, sys
+import couchdb, os, logging, sys, collections
 from pprint import pprint
 import time
 import requests
@@ -360,13 +360,15 @@ def delete_orphan_items():
     view_name = "queues/by_type_and_id"
     view_rows = db.view(view_name, include_docs=True)
     row_count = 0
-    page_size = 500
+    page_size = 50
 
     start_key = ["item", "000000000"]
     end_key = ["item", "zzzzzzzzzz"]
 
     from couch_paginator import CouchPaginator
     page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
+    number_deleted = 0
+    date_deleted = collections.defaultdict(int)
 
     while page:
         for row in page:
@@ -374,19 +376,24 @@ def delete_orphan_items():
             tiid = row.key[1]
             item = row.doc
 
-            url = 'https://app5492954.heroku:Tkvx8JlwIoNkCJcnTscpKcRl@app5492954.heroku.cloudant.com/staging-ti2/_design/admin/_view/tiids_in_collections?limit=1&startkey=["{tiid}"]'.format(tiid=tiid)
-            response = requests.get(url).json
-            if len(response["rows"] > 0):
-                logger.info("in a collection, not deleting")
+            tiid_in_collection_response = db.view("tiids_in_collections/tiids_in_collections", include_docs=False, key=tiid)
+            tiid_in_collection = tiid_in_collection_response.rows
+            print tiid_in_collection
+            if len(tiid_in_collection) > 0:
+                logger.info("\nbitem is in a collection, not deleting")
             else:
-                logger.info("not in a collection, deleting")
-                #db.delete(item)
+                logger.info("\nitem is not in a collection, deleting.")
+                db.delete(item)
+                number_deleted += 1
+                date_deleted[item["created"][0:10]] += 1
 
         logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
         if page.has_next:
             page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
         else:
             page = None
+        print "number of items deleted", number_deleted
+        print date_deleted
 
 if (cloudant_db == "ti"):
     print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
@@ -396,7 +403,8 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    delete_test_collections()
+    #delete_test_collections()
+    delete_orphan_items()
 else:
     print "nevermind, then."
 
