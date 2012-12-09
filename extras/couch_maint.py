@@ -380,12 +380,15 @@ def delete_orphan_items():
             tiid_in_collection = tiid_in_collection_response.rows
             print tiid_in_collection
             if len(tiid_in_collection) > 0:
-                logger.info("\nbitem is in a collection, not deleting")
+                logger.info("\nitem {tiid} is in a collection, not deleting".format(tiid=tiid))
             else:
-                logger.info("\nitem is not in a collection, deleting.")
-                db.delete(item)
-                number_deleted += 1
-                date_deleted[item["created"][0:10]] += 1
+                logger.info("\nitem {tiid} is not in a collection, deleting.".format(tiid=tiid))
+                try:
+                    db.delete(item)
+                    number_deleted += 1
+                    date_deleted[item["created"][0:10]] += 1
+                except TypeError:  #happens sometimes if already deleted
+                    pass
 
         logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
         if page.has_next:
@@ -403,7 +406,6 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    #delete_test_collections()
     delete_orphan_items()
 else:
     print "nevermind, then."
