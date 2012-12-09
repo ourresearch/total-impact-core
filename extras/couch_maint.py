@@ -1,6 +1,7 @@
 import couchdb, os, logging, sys
 from pprint import pprint
 import time
+import requests
 
 # run in heroku by a) commiting, b) pushing to heroku, and c) running
 # heroku run python extras/couch_maint.py
@@ -14,8 +15,9 @@ logging.basicConfig(
 logger = logging.getLogger("couch_maint")
  
 # hardcode it to production db 
-#cloudant_db = "ti"
 #cloudant_url = "https://app5109761.heroku:TuLL8oXFh4k0iAcAPnDMlSjC@app5109761.heroku.cloudant.com"
+#cloudant_db = "backup_ti_20121205"
+#cloudant_db = "ti"
 
 cloudant_db = os.getenv("CLOUDANT_DB")
 cloudant_url = os.getenv("CLOUDANT_URL")
@@ -306,6 +308,85 @@ def ensure_all_metric_values_are_ints():
         else:
             page = None
 
+def delete_test_collections():
+    view_name = "queues/latest-collections"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+    page_size = 500
+
+    start_key = [1, "000000000"]
+    end_key = [1, "9999999"]
+
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
+    number_deleted = 0
+    number_items = 0
+
+    try:
+        while page:
+            for row in page:
+                row_count += 1
+                collection = row.doc
+                logger.info("deleting test collection {cid}:{title}".format(
+                    cid=collection["_id"], title=collection["title"]))
+                number_deleted += 1
+                number_items += len(collection["alias_tiids"])
+                db.delete(collection)
+            logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+            if page.has_next:
+                page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+            else:
+                page = None
+
+    except TypeError:
+        pass
+
+    print "number deleted = ", number_deleted
+    print "number items = ", number_items
+
+"""
+function(doc) {
+  if (doc.type=="collection") {
+    if (doc.alias_tiids) {
+      for (var alias in doc.alias_tiids) {
+    var item_id = doc.alias_tiids[alias]
+        emit(item_id, 1);
+      }
+    }
+  }
+}
+"""
+def delete_orphan_items():
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+    page_size = 500
+
+    start_key = ["item", "000000000"]
+    end_key = ["item", "zzzzzzzzzz"]
+
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
+
+    while page:
+        for row in page:
+            row_count += 1
+            tiid = row.key[1]
+            item = row.doc
+
+            url = 'https://app5492954.heroku:Tkvx8JlwIoNkCJcnTscpKcRl@app5492954.heroku.cloudant.com/staging-ti2/_design/admin/_view/tiids_in_collections?limit=1&startkey=["{tiid}"]'.format(tiid=tiid)
+            response = requests.get(url).json
+            if len(response["rows"] > 0):
+                logger.info("in a collection, not deleting")
+            else:
+                logger.info("not in a collection, deleting")
+                #db.delete(item)
+
+        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
 
 if (cloudant_db == "ti"):
     print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
@@ -315,7 +396,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    ensure_all_metric_values_are_ints()
+    delete_test_collections()
 else:
     print "nevermind, then."
 
