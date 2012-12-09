@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import logging, couchdb, os, sys
+import logging, couchdb, os, sys, random
 from totalimpact import dao, tiredis
 from totalimpact.models import ItemFactory
 
@@ -74,11 +74,13 @@ def get_matching_dois_in_db(doi_prefix, mydao):
 def update_dois(doi_prefix, myredis, mydao):
     dois = get_matching_dois_in_db(doi_prefix, mydao)
     aliases = [("doi", doi) for doi in dois]
-    (tiids, new_items) = ItemFactory.create_or_find_items_from_aliases(aliases, myredis, mydao)
-    print tiids
+    (old_and_new_tiids, new_items) = ItemFactory.create_or_find_items_from_aliases(aliases, myredis, mydao)
+    print old_and_new_tiids
+    number_to_sample = min(200, len(old_and_new_tiids))
+    tiids_to_update = random.sample(old_and_new_tiids, number_to_sample)
     QUEUE_DELAY_IN_SECONDS = 1.0
-    ItemFactory.start_item_update(tiids, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
-    return tiids
+    ItemFactory.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
+    return tiids_to_update
 
 def update_active_publisher_items(myredis, mydao):
     all_tiids = []

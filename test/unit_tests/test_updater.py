@@ -46,7 +46,7 @@ class TestUpdater():
     def test_get_matching_dois_in_db(self):
         dois = updater.get_matching_dois_in_db("10.7554/elife.", self.d)
         print dois
-        assert_equals(dois, ['10.7554/elife.1', '10.7554/elife.2'])
+        assert_equals(dois, ['10.7554/elife.1', '10.7554/ELIFE.2'])
 
     def test_create_and_update_dois(self):
         tiids = updater.update_dois("10.7554/elife.", self.r, self.d)
