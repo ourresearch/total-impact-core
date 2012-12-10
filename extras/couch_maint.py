@@ -415,6 +415,8 @@ def remove_unused_item_doc_keys():
     while page:
         for row in page:
             item = row.doc
+            if not item:
+                continue
             row_count += 1
             edited = False
             if "providers_run" in item:
