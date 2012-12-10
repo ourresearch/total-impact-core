@@ -231,6 +231,20 @@ class TestItem(ViewsTester):
 
         assert_equals([unicode(TEST_DRYAD_DOI)], saved_item["aliases"]["doi"])
 
+
+    def test_item_get_missing_no_create_param_returns_404(self):
+        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE"
+        response = self.client.get(url)
+        assert_equals(response.status_code, 404) # created but still updating
+
+    def test_item_get_create_param_makes_new_item(self):
+        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE&create=true"
+        response = self.client.get(url)
+        assert_equals(response.status_code, 210) # created and still updating
+        item_info = json.loads(response.data)
+        assert_equals(item_info["aliases"]["doi"][0], TEST_DRYAD_DOI)
+
+
     def test_v1_item_post_success(self):
         url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE"
         response = self.client.post(url)
