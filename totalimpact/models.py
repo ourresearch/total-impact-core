@@ -304,13 +304,13 @@ class ItemFactory():
                 ))
             return None
 
-        logger.debug("POST /collection got list of aliases; creating new items for {aliases}".format(
+        logger.debug("POST /collection got list of aliases; create or find items for {aliases}".format(
                 aliases=str(clean_aliases)
             ))
 
         (tiids, new_items) = cls.create_or_find_items_from_aliases(clean_aliases, myredis, mydao)
 
-        logger.debug("POST /collection saving a group of {num} new items: {new_items}".format(
+        logger.debug("POST /collection included {num} new items: {new_items}".format(
                 num=len(new_items),
                 new_items=str(new_items)
             ))
@@ -403,14 +403,24 @@ class ItemFactory():
     def get_tiid_by_alias(cls, ns, nid, myredis, mydao):
         res = mydao.view('queues/by_alias')
 
-        matches = res[[ns,
-                       nid]] # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
+        # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
+        logger.debug("In get_tiid_by_alias with {ns}, {nid}".format(
+            ns=ns, nid=nid))
+        nid_lower = nid.lower()
+        logger.debug("In get_tiid_by_alias with {nid_lower}".format(
+            nid_lower=nid_lower))
+
+        # not lower now
+        matches = res[[ns, 
+                        nid]] 
 
         if matches.rows:
             if len(matches.rows) > 1:
                 logger.warning("More than one tiid for alias (%s, %s)" % (ns, nid))
             tiid = matches.rows[0]["id"]
+            logger.debug("found a match for {nid}!".format(nid=nid))
         else:
+            logger.debug("no match for {nid}!".format(nid=nid))
             tiid = None
         return tiid
 

@@ -23,6 +23,7 @@ class TestUpdater():
         self.fake_item = {
             "_id": "tiid1",
             "type": "item",
+            "last_modified": "2012-12-08T23:56:06.004925",
             "aliases":{"doi":["10.7554/elife.1"]},
             "biblio": {},
             "metrics": {}
@@ -31,26 +32,36 @@ class TestUpdater():
 
         another_elife = copy.copy(self.fake_item)
         another_elife["_id"] = "tiid2"
-        another_elife["aliases"] = {"doi":["10.7554/eLife.2"]}
+        another_elife["aliases"] = {"doi":["10.7554/ELIFE.2"]}
+        another_elife["last_modified"] = "2010-01-01T23:56:06.004925",
         self.d.save(another_elife)
 
         different_journal = copy.copy(self.fake_item)
         different_journal["_id"] = "tiid3"
-        different_journal["aliases"] = {"doi":["10.7554/anotherjournal.2"]}
+        different_journal["aliases"] = {"doi":["10.3897/zookeys.3"]}
+        different_journal["last_modified"] = "2011-10-01T23:56:06.004925",
         self.d.save(different_journal)
 
     def teardown(self):
         self.d.delete_db(os.environ["CLOUDANT_DB"])
         self.r.flushdb()
 
-    def test_show_elife_ids(self):
-        dois = updater.get_elife_dois(self.d)
+    def test_get_matching_dois_in_db(self):
+        dois = updater.get_matching_dois_in_db("10.7554/elife.", self.d)
         print dois
-        assert_equals(dois, ['10.7554/elife.1', '10.7554/eLife.2'])
+        assert_equals(dois, ['10.7554/elife.1', '10.7554/ELIFE.2'])
 
-    def test_create_and_update_elife_dois(self):
-        tiids = updater.update_elife_dois(self.r, self.d)
+    def test_update_dois_from_doi_prefix(self):
+        tiids = updater.update_dois_from_doi_prefix("10.7554/elife.", self.r, self.d)
         print tiids
         assert_equals(sorted(tiids), sorted(['tiid1', 'tiid2']))
 
+    def test_update_active_publisher_items(self):
+        tiids = updater.update_active_publisher_items(self.r, self.d)
+        print tiids
+        assert_equals(sorted(tiids), sorted(['tiid2', 'tiid1', 'tiid3']))
 
+    def test_get_least_recently_updated_tiids_in_db(self):
+        tiids = updater.get_least_recently_updated_tiids_in_db(2, self.d)
+        print tiids
+        assert_equals(sorted(tiids), sorted(['tiid3', 'tiid2']))

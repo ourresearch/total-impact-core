@@ -1,4 +1,4 @@
-import hashlib, simplejson, os, couchdb
+import hashlib, simplejson, os, couchdb, collections
 
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
@@ -76,7 +76,7 @@ class Pmc(Provider):
 
         results = mydao.db.view('provider_batch_data/by_alias_provider_batch_data', include_docs=True)
 
-        batch_data = {}
+        batch_data = collections.defaultdict(list)
 
         try:
             rows = results.rows
@@ -87,12 +87,7 @@ class Pmc(Provider):
             [provider, [namespace, nid]] = row.key
             if provider == "pmc":
                 pmid_alias = (namespace, nid)
-                if pmid_alias in batch_data:
-                    if batch_data[pmid_alias]["max_event_date"] < row.value:
-                        # add more recent value
-                        batch_data[pmid_alias] = {"raw": row.doc["raw"], "max_event_date":row.value}
-                else:
-                    batch_data[pmid_alias] = {"raw": row.doc["raw"], "max_event_date":row.value}
+                batch_data[pmid_alias] += [{"raw": row.doc["raw"], "max_event_date":row.value}]
 
         return batch_data
 
@@ -161,8 +156,16 @@ class Pmc(Provider):
 
         return {}
 
-    def _get_metrics_and_drilldown(self, page, pmid):
-        metrics_dict = self._extract_metrics(page, id=pmid)
+    def _get_metrics_and_drilldown(self, pages, pmid):
+        metrics_dict = {}
+        for page in pages:
+            one_month_metrics_dict = self._extract_metrics(page, id=pmid)
+            print one_month_metrics_dict
+            for metric in one_month_metrics_dict:
+                try:
+                    metrics_dict[metric] += one_month_metrics_dict[metric]
+                except KeyError:
+                    metrics_dict[metric] = one_month_metrics_dict[metric]
         metrics_and_drilldown = {}
         for metric_name in metrics_dict:
             drilldown_url = ""
@@ -189,9 +192,9 @@ class Pmc(Provider):
 
         global batch_data
         if pmid_alias in batch_data:
-            page = batch_data[pmid_alias]["raw"]
+            pages = [page["raw"] for page in batch_data[pmid_alias]]
         if page:
-            metrics_and_drilldown = self._get_metrics_and_drilldown(page, pmid)
+            metrics_and_drilldown = self._get_metrics_and_drilldown(pages, pmid)
 
         return metrics_and_drilldown
 
