@@ -14,12 +14,6 @@ logging.basicConfig(
 
 logger = logging.getLogger("couch_maint")
  
-# hardcode it
-#cloudant_url = "http://app5109761.heroku:TuLL8oXFh4k0iAcAPnDMlSjC@app5109761.heroku.cloudant.com"  #production
-#cloudant_url = "http://app5492954.heroku:Tkvx8JlwIoNkCJcnTscpKcRl@app5492954.heroku.cloudant.com"  #staging
-#cloudant_db = "heather_ti"
-#cloudant_db = "ti"
-
 cloudant_db = os.getenv("CLOUDANT_DB")
 cloudant_url = os.getenv("CLOUDANT_URL")
 
