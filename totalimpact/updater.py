@@ -147,7 +147,7 @@ def get_least_recently_updated_tiids_in_db(number_to_update, mydao):
             include_docs=False, 
             descending=True, 
             limit=number_to_update)
-    tiids = [row.key[1] for row in view_rows]
+    tiids = [row.id for row in view_rows]
     return tiids
 
 def update_least_recently_modified(number_to_update, myredis, mydao):
