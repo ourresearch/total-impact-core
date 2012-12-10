@@ -145,7 +145,7 @@ def get_least_recently_updated_tiids_in_db(number_to_update, mydao):
     view_name = "update/items_by_last_modified"
     view_rows = db.view(view_name, 
             include_docs=False, 
-            descending=True, 
+            descending=False, 
             limit=number_to_update)
     tiids = [row.id for row in view_rows]
     return tiids
