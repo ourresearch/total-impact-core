@@ -415,35 +415,36 @@ def remove_unused_item_doc_keys():
     while page:
         for row in page:
             item = row.doc
-            if not item:
-                continue
-            row_count += 1
             edited = False
-            if "providers_run" in item:
-                del item["providers_run"]
-                edited = True
-            if "providersRunCounter" in item:
-                del item["providersRunCounter"]
-                edited = True
-            if "providersWithMetricsCount" in item:
-                del item["providersWithMetricsCount"]
-                edited = True
-            if "created" in item["aliases"]:
-                del item["aliases"]["created"]
-                edited = True
-            if "last_modified" in item["aliases"]:
-                del item["aliases"]["last_modified"]
-                edited = True
-            if "h1" in item["biblio"]:
-                h1_orig = item["biblio"]["h1"]
-                h1_updated = item["biblio"]["h1"].strip()
-                if h1_updated:
-                    if h1_updated != h1_orig:
-                        item["biblio"]["h1"] = h1_updated    
-                        edited = True
-                else:                        
-                    del item["biblio"]["h1"]
+            row_count += 1
+            try:
+                if "providers_run" in item:
+                    del item["providers_run"]
                     edited = True
+                if "providersRunCounter" in item:
+                    del item["providersRunCounter"]
+                    edited = True
+                if "providersWithMetricsCount" in item:
+                    del item["providersWithMetricsCount"]
+                    edited = True
+                if "created" in item["aliases"]:
+                    del item["aliases"]["created"]
+                    edited = True
+                if "last_modified" in item["aliases"]:
+                    del item["aliases"]["last_modified"]
+                    edited = True
+                if "h1" in item["biblio"]:
+                    h1_orig = item["biblio"]["h1"]
+                    h1_updated = item["biblio"]["h1"].strip()
+                    if h1_updated:
+                        if h1_updated != h1_orig:
+                            item["biblio"]["h1"] = h1_updated    
+                            edited = True
+                    else:                        
+                        del item["biblio"]["h1"]
+                        edited = True
+            except TypeError:  #item sometimes NoneType
+                pass
 
             if edited:
                 print row.id
