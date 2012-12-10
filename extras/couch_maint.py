@@ -412,58 +412,55 @@ def remove_unused_item_doc_keys():
     page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
     number_edited = 0
 
-    try:
-        while page:
-            for row in page:
-                item = row.doc
-                row_count += 1
-                edited = False
-                if "providers_run" in item:
-                    del item["providers_run"]
-                    edited = True
-                if "providersRunCounter" in item:
-                    del item["providersRunCounter"]
-                    edited = True
-                if "providersWithMetricsCount" in item:
-                    del item["providersWithMetricsCount"]
-                    edited = True
-                if "created" in item["aliases"]:
-                    del item["aliases"]["created"]
-                    edited = True
-                if "last_modified" in item["aliases"]:
-                    del item["aliases"]["last_modified"]
-                    edited = True
-                if "h1" in item["biblio"]:
-                    h1_orig = item["biblio"]["h1"]
-                    h1_updated = item["biblio"]["h1"].strip()
-                    if h1_updated:
-                        if h1_updated != h1_orig:
-                            item["biblio"]["h1"] = h1_updated    
-                            edited = True
-                    else:                        
-                        del item["biblio"]["h1"]
+    while page:
+        for row in page:
+            item = row.doc
+            row_count += 1
+            edited = False
+            if "providers_run" in item:
+                del item["providers_run"]
+                edited = True
+            if "providersRunCounter" in item:
+                del item["providersRunCounter"]
+                edited = True
+            if "providersWithMetricsCount" in item:
+                del item["providersWithMetricsCount"]
+                edited = True
+            if "created" in item["aliases"]:
+                del item["aliases"]["created"]
+                edited = True
+            if "last_modified" in item["aliases"]:
+                del item["aliases"]["last_modified"]
+                edited = True
+            if "h1" in item["biblio"]:
+                h1_orig = item["biblio"]["h1"]
+                h1_updated = item["biblio"]["h1"].strip()
+                if h1_updated:
+                    if h1_updated != h1_orig:
+                        item["biblio"]["h1"] = h1_updated    
                         edited = True
+                else:                        
+                    del item["biblio"]["h1"]
+                    edited = True
 
-                if edited:
-                    print row.id
-                    print row.doc.keys(), row.doc["aliases"].keys(), row.doc["biblio"].keys()
-                    print item.keys(), item["aliases"].keys(), item["biblio"].keys()
-                    logger.info("saving modified item {tiid}\n".format(
-                        tiid=item["_id"]))
-                    number_edited += 1
-                    db.save(item)
-                else:
-                    logger.info(".")
-
-            print "number edited = ", number_edited
-            logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
-            if page.has_next:
-                page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+            if edited:
+                print row.id
+                print row.doc.keys(), row.doc["aliases"].keys(), row.doc["biblio"].keys()
+                print item.keys(), item["aliases"].keys(), item["biblio"].keys()
+                logger.info("saving modified item {tiid}\n".format(
+                    tiid=item["_id"]))
+                number_edited += 1
+                db.save(item)
             else:
-                page = None
+                logger.info(".")
 
-    except TypeError:
-        pass
+        print "number edited = ", number_edited
+        print "number items = ", row_count
+        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
 
     print "number edited = ", number_edited
     print "number items = ", row_count
