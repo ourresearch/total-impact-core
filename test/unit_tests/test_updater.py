@@ -23,6 +23,7 @@ class TestUpdater():
         self.fake_item = {
             "_id": "tiid1",
             "type": "item",
+            "last_modified": "2012-12-08T23:56:06.004925",
             "aliases":{"doi":["10.7554/elife.1"]},
             "biblio": {},
             "metrics": {}
@@ -32,11 +33,13 @@ class TestUpdater():
         another_elife = copy.copy(self.fake_item)
         another_elife["_id"] = "tiid2"
         another_elife["aliases"] = {"doi":["10.7554/ELIFE.2"]}
+        another_elife["last_modified"] = "2010-01-01T23:56:06.004925",
         self.d.save(another_elife)
 
         different_journal = copy.copy(self.fake_item)
         different_journal["_id"] = "tiid3"
         different_journal["aliases"] = {"doi":["10.3897/zookeys.3"]}
+        different_journal["last_modified"] = "2011-10-01T23:56:06.004925",
         self.d.save(different_journal)
 
     def teardown(self):
@@ -48,8 +51,8 @@ class TestUpdater():
         print dois
         assert_equals(dois, ['10.7554/elife.1', '10.7554/ELIFE.2'])
 
-    def test_create_and_update_dois(self):
-        tiids = updater.update_dois("10.7554/elife.", self.r, self.d)
+    def test_update_dois_from_doi_prefix(self):
+        tiids = updater.update_dois_from_doi_prefix("10.7554/elife.", self.r, self.d)
         print tiids
         assert_equals(sorted(tiids), sorted(['tiid1', 'tiid2']))
 
@@ -58,3 +61,7 @@ class TestUpdater():
         print tiids
         assert_equals(sorted(tiids), sorted(['tiid2', 'tiid1', 'tiid3']))
 
+    def test_get_least_recently_updated_tiids_in_db(self):
+        tiids = updater.get_least_recently_updated_tiids_in_db(2, self.d)
+        print tiids
+        assert_equals(sorted(tiids), sorted(['tiid3', 'tiid2']))
