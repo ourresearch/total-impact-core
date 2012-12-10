@@ -101,3 +101,10 @@ class TestCrossRef(ProviderTestCase):
         expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.'}), ('url', u'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3470409/')]
         print aliases
         assert_equals(sorted(aliases), sorted(expected))
+
+    @http
+    def test_aliases_bad_title(self):
+        aliases = self.provider.aliases([("doi", "10.1021/np070361t")])
+        expected = [('biblio', {'repository': u'American Chemical Society', 'title': u' 13 C\u2212 15 N Correlation via Unsymmetrical Indirect Covariance NMR: Application to Vinblastine ', 'journal': u'Journal of Natural Products', 'year': 2007, 'authors': u'Martin, Hilton, Blinov, Williams'}), ('url', u'http://pubs.acs.org/doi/abs/10.1021/np070361t')]
+        print aliases
+        assert_equals(sorted(aliases), sorted(expected))        

@@ -16,6 +16,8 @@ class Crossref(Provider):
     descr = "An official Digital Object Identifier (DOI) Registration Agency of the International DOI Foundation."
     aliases_url_template = "http://dx.doi.org/%s"
     biblio_url_template = "http://dx.doi.org/%s"
+    # example code to test 
+    # curl -D - -L -H   "Accept: application/vnd.citationstyles.csl+json" "http://dx.doi.org/10.1021/np070361t" 
 
     def __init__(self):
         super(Crossref, self).__init__()
@@ -103,6 +105,12 @@ class Crossref(Provider):
             logger.info("could not parse year {biblio_dict}".format(
                 biblio_dict=biblio_dict))
             del biblio_dict["year"]
+            pass
+
+        # replace many white spaces and \n with just one space
+        try:
+            biblio_dict["title"] = re.sub(u"\s+", u" ", biblio_dict["title"])
+        except KeyError:
             pass
 
         return biblio_dict  
