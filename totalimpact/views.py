@@ -137,21 +137,27 @@ def item_namespace_post(namespace, nid):
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
 def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
 
-    include_history = (request.args.get("include_history", 0) in ["1", "true", "True"])
+    include_history = request.args.get("include_history", 0) in ["1", "true", "True"]
+    create = request.args.get("create", 0) in ["1", "true", "True"]
 
     # remove unprintable characters
     nid = ItemFactory.clean_id(nid)
     tiid = ItemFactory.get_tiid_by_alias(namespace, nid, myredis, mydao)
-    return get_item_from_tiid(tiid, format, include_history)
+    if not tiid:
+        if create:
+            tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
+        else:
+            abort(404, "Item not in database")
+
+
+    return get_item_from_tiid(tiid, format, include_history, create)
 
 
 '''GET /item/:tiid
 404 if tiid not found in db
 '''
 @app.route('/item/<tiid>', methods=['GET'])
-def get_item_from_tiid(tiid, format=None, include_history=False):
-
-    # TODO check request headers for format as well.
+def get_item_from_tiid(tiid, format=None, include_history=False, create=False):
 
     try:
         item = ItemFactory.get_item(tiid, myrefsets, mydao, include_history)
