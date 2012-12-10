@@ -254,6 +254,7 @@ class TestItemFactory():
         self.d.save(self.ITEM_DATA)
         item = models.ItemFactory.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
+        item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = models.ItemFactory.clean_for_export(item)
         print response["metrics"].keys()
         expected = ['bar:views', 'wikipedia:mentions']
@@ -263,15 +264,17 @@ class TestItemFactory():
         self.d.save(self.ITEM_DATA)
         item = models.ItemFactory.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
+        item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = models.ItemFactory.clean_for_export(item, "SECRET", "SECRET")
         print response["metrics"].keys()
-        expected = ['bar:views', 'wikipedia:mentions', 'scopus:citations']
-        assert_equals(response["metrics"].keys(), expected)
+        expected = ['bar:views', 'wikipedia:mentions', 'scopus:citations', 'citeulike:bookmarks']
+        assert_equals(sorted(response["metrics"].keys()), sorted(expected))
 
     def test_clean_for_export_given_wrong_secret_key(self):
         self.d.save(self.ITEM_DATA)
         item = models.ItemFactory.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
+        item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = models.ItemFactory.clean_for_export(item, "WRONG", "SECRET")
         print response["metrics"].keys()
         expected = ['bar:views', 'wikipedia:mentions']

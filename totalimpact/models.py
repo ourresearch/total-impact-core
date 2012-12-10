@@ -139,6 +139,8 @@ class ItemFactory():
         for metric_name in metric_names:
             if "scopus:" in metric_name:
                 del cleaned_item["metrics"][metric_name]
+            if "citeulike:" in metric_name:
+                del cleaned_item["metrics"][metric_name]
         return cleaned_item
 
 
