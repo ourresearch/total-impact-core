@@ -81,6 +81,13 @@ class Dao(object):
                 "views": {
                     "by_alias_provider_batch_data": {}
                 }
+            },
+            {
+                "_id": "_design/update",
+                "language": "javascript",
+                "views": {
+                    "items_by_last_modified": {}
+                }
             }
         ]
 
