@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse
-import logging, couchdb, os, sys, random
+import logging, couchdb, os, sys, random, datetime
 from totalimpact import dao, tiredis
 from totalimpact.models import ItemFactory
 
@@ -142,21 +142,32 @@ def update_active_publisher_items(myredis, mydao):
 def get_least_recently_updated_tiids_in_db(number_to_update, mydao):
     db = mydao.db
     tiids = []
-    view_name = "update/items_by_last_modified"
+    view_name = "update/items_by_last_update_run"
     view_rows = db.view(view_name, 
-            include_docs=False, 
+            include_docs=True, 
             descending=False, 
             limit=number_to_update)
     tiids = [row.id for row in view_rows]
-    return tiids
+    docs = [row.doc for row in view_rows]
+    return (tiids, docs)
 
-def update_least_recently_modified(number_to_update, myredis, mydao):
-    tiids_to_update = get_least_recently_updated_tiids_in_db(number_to_update, mydao)
+def update_docs_with_updater_timestamp(docs, mydao):
+    db = mydao.db
+    now = datetime.datetime.now().isoformat()
+    for doc in docs:
+        doc["last_update_run"] = now
+    update_response = update_response = db.update(docs)
+    print update_response
+    return update_response
+    
+def update_least_recently_updated(number_to_update, myredis, mydao):
+    (tiids_to_update, docs) = get_least_recently_updated_tiids_in_db(number_to_update, mydao)
+    update_docs_with_updater_timestamp(docs, mydao)
     QUEUE_DELAY_IN_SECONDS = 1.0
     ItemFactory.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
     return tiids_to_update
 
-def main(run_publisher=False, run_least_recently_modified=True):
+def main(run_publisher=False, run_least_recently_updated=True):
     cloudant_db = os.getenv("CLOUDANT_DB")
     cloudant_url = os.getenv("CLOUDANT_URL")
     redis_url = os.getenv("REDISTOGO_URL")
@@ -169,8 +180,8 @@ def main(run_publisher=False, run_least_recently_modified=True):
     try:
         if run_publisher:
             tiids = update_active_publisher_items(myredis, mydao)
-        if run_least_recently_modified:
-            tiids = update_least_recently_modified(number_to_update, myredis, mydao)
+        if run_least_recently_updated:
+            tiids = update_least_recently_updated(number_to_update, myredis, mydao)
     except (KeyboardInterrupt, SystemExit): 
         # this approach is per http://stackoverflow.com/questions/2564137/python-how-to-terminate-a-thread-when-main-program-ends
         sys.exit()
@@ -183,6 +194,6 @@ if __name__ == "__main__":
     print args
     print "updater.py starting."
     run_publisher = False
-    run_least_recently_modified = True
+    run_least_recently_updated = True
 
-    main(run_publisher, run_least_recently_modified)
+    main(run_publisher, run_least_recently_updated)
