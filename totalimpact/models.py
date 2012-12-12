@@ -332,7 +332,7 @@ class ItemFactory():
             )
             myredis.add_to_alias_queue(item["_id"], item["aliases"])
 
-        return tiids
+        return (tiids, new_items)
 
     @classmethod
     def create_item(cls, namespace, nid, myredis, mydao):
