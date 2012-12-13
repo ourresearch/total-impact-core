@@ -59,19 +59,5 @@
         }
     },
 },
-    "providersRunCounter": 10,
-    "providersWithMetricsCount": 10,
-    "providers_run": [
-    "Slideshare",
-    "Github",
-    "Plosalm",
-    "Facebook",
-    "Topsy",
-    "Citeulike",
-    "Wikipedia",
-    "Delicious",
-    "Mendeley",
-    "Dryad"
-],
     "type": "item"
 }

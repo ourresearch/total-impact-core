@@ -14,11 +14,6 @@ logging.basicConfig(
 
 logger = logging.getLogger("couch_maint")
  
-# hardcode it to production db 
-#cloudant_url = "https://app5109761.heroku:TuLL8oXFh4k0iAcAPnDMlSjC@app5109761.heroku.cloudant.com"
-#cloudant_db = "backup_ti_20121205"
-#cloudant_db = "ti"
-
 cloudant_db = os.getenv("CLOUDANT_DB")
 cloudant_url = os.getenv("CLOUDANT_URL")
 
@@ -118,11 +113,11 @@ def bad_doi_cleanup():
             snap = snap_row.doc
             pprint(snap)            
             logger.info("deleting SNAP {id}".format(id=snap_row.id))            
-            db.delete(snap)
+            #db.delete(snap)
 
         # delete the item
         logger.info("deleting item {id}".format(id=tiid))            
-        db.delete(doc)
+        #db.delete(doc)
 
         changed_rows += 1
 
@@ -234,7 +229,7 @@ def put_snaps_in_items():
                             (row_count, updated_item["_id"], snap["_id"]))
 
                         db.save(updated_item)
-                        db.delete(snap)
+                        #db.delete(snap)
                         saving = False
                     except couchdb.http.ResourceConflict:
                         logger.warning("couch conflict.  trying again")
@@ -331,7 +326,7 @@ def delete_test_collections():
                     cid=collection["_id"], title=collection["title"]))
                 number_deleted += 1
                 number_items += len(collection["alias_tiids"])
-                db.delete(collection)
+                #db.delete(collection)
             logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
             if page.has_next:
                 page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
@@ -384,7 +379,7 @@ def delete_orphan_items():
             else:
                 logger.info("\nitem {tiid} is not in a collection, deleting.".format(tiid=tiid))
                 try:
-                    db.delete(item)
+                    #db.delete(item)
                     number_deleted += 1
                     date_deleted[item["created"][0:10]] += 1
                 except (TypeError, couchdb.http.ResourceNotFound):  #happens sometimes if already deleted
@@ -398,6 +393,77 @@ def delete_orphan_items():
         print "number of items deleted", number_deleted
         print date_deleted
 
+
+def remove_unused_item_doc_keys():
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+    page_size = 500
+    start_key = ["item", "000000000"]
+    end_key = ["item", "zzzzzzzzzz"]
+
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
+    number_edited = 0
+
+    while page:
+        for row in page:
+            item = row.doc
+            edited = False
+            row_count += 1
+            try:
+                if "providers_run" in item:
+                    del item["providers_run"]
+                    edited = True
+                if "providersRunCounter" in item:
+                    del item["providersRunCounter"]
+                    edited = True
+                if "providersWithMetricsCount" in item:
+                    del item["providersWithMetricsCount"]
+                    edited = True
+                if "created" in item["aliases"]:
+                    del item["aliases"]["created"]
+                    edited = True
+                if "last_modified" in item["aliases"]:
+                    del item["aliases"]["last_modified"]
+                    edited = True
+                if "h1" in item["biblio"]:
+                    h1_orig = item["biblio"]["h1"]
+                    h1_updated = item["biblio"]["h1"].strip()
+                    if h1_updated:
+                        if h1_updated != h1_orig:
+                            item["biblio"]["h1"] = h1_updated    
+                            edited = True
+                    else:                        
+                        del item["biblio"]["h1"]
+                        edited = True
+            except TypeError:  #item sometimes NoneType
+                pass
+
+            if edited:
+                print row.id
+                print row.doc.keys(), row.doc["aliases"].keys(), row.doc["biblio"].keys()
+                print item.keys(), item["aliases"].keys(), item["biblio"].keys()
+                logger.info("saving modified item {tiid}\n".format(
+                    tiid=item["_id"]))
+                number_edited += 1
+                db.save(item)
+            else:
+                logger.info(".")
+
+        print "number edited = ", number_edited
+        print "number items = ", row_count
+        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
+
+    print "number edited = ", number_edited
+    print "number items = ", row_count
+
+
+
 if (cloudant_db == "ti"):
     print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
 else:
@@ -406,7 +472,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    delete_orphan_items()
+    remove_unused_item_doc_keys()
 else:
     print "nevermind, then."
 

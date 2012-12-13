@@ -4,6 +4,7 @@ import os, datetime, re, couchdb, copy
 from werkzeug.security import check_password_hash
 from collections import defaultdict
 import redis
+from libsaas.services import mixpanel
 
 from totalimpact import dao, app, tiredis, collection
 from totalimpact.models import ItemFactory, MemberItems, UserFactory, NotAuthenticatedError
@@ -27,7 +28,7 @@ try:
 except (couchdb.ResourceNotFound, LookupError, AttributeError), e:
     logger.error("Exception %s: Unable to load reference sets" % (e.__repr__()))
 
-
+mymixpanel = mixpanel.Mixpanel(token=os.getenv("MIXPANEL_TOKEN"))
 
 def set_db(url, db):
     """useful for unit testing, where you want to use a local database
@@ -119,7 +120,7 @@ original api returned tiid
 """
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post_with_tiid(namespace, nid):
-
+    mymixpanel.track("Create:Item", properties={"Namespace":namespace, "Source":"/item post"}, ip=False)
     tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     response_code = 201 # Created
     resp = make_response(json.dumps(tiid), response_code)
@@ -128,6 +129,7 @@ def item_namespace_post_with_tiid(namespace, nid):
 
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
+    mymixpanel.track("Create:Item", properties={"Namespace":namespace, "Source":"/item post"}, ip=False)
     tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     response_code = 201 # Created
     resp = make_response(json.dumps("ok"), response_code)
@@ -145,6 +147,7 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
     tiid = ItemFactory.get_tiid_by_alias(namespace, nid, myredis, mydao)
     if not tiid:
         if create:
+            mymixpanel.track("Create:Item", properties={"Namespace":namespace, "Source":"/item get"}, ip=False)
             tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
         else:
             abort(404, "Item not in database")
@@ -213,6 +216,8 @@ def provider_memberitems(provider_name):
     #    headers=request.headers
     #))
 
+    mymixpanel.track("Trigger:Import", properties={"Provider":provider_name}, ip=False)
+
     file = request.files['file']
     logger.debug("In provider_memberitems got file")
     logger.debug("filename = " + file.filename)
@@ -240,6 +245,8 @@ method=async will look up the query in total-impact's db and return the current
 @app.route("/provider/<provider_name>/memberitems/<query>", methods=['GET'])
 @app.route("/v1/provider/<provider_name>/memberitems/<query>", methods=['GET'])
 def provider_memberitems_get(provider_name, query):
+
+    mymixpanel.track("Trigger:Import", properties={"Provider":provider_name}, ip=False)
 
     provider = ProviderFactory.get_provider(provider_name)
     memberitems = MemberItems(provider, myredis)
@@ -340,7 +347,6 @@ def put_collection(cid=""):
             pass
 
     coll["last_modified"] = datetime.datetime.now().isoformat()
-    print coll
     mydao.db.save(coll)
 
     resp = make_response(json.dumps(coll, sort_keys=True, indent=4), 200)
@@ -364,6 +370,7 @@ def collection_update(cid=""):
         ))
         abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")
 
+    mymixpanel.track("Trigger:Update", properties={"Number Items":len(tiids), "Report Id":cid, "Update Type":"webapp"}, ip=False)
     ItemFactory.start_item_update(tiids, myredis, mydao)
 
     resp = make_response("true", 200)
@@ -389,7 +396,11 @@ def collection_create():
     try:
         coll["title"] = request.json["title"]
         aliases = request.json["aliases"]
-        tiids = ItemFactory.create_or_update_items_from_aliases(aliases, myredis, mydao)
+        (tiids, new_items) = ItemFactory.create_or_update_items_from_aliases(aliases, myredis, mydao)
+        for item in new_items:
+            namespaces = item["aliases"].keys()
+            mymixpanel.track("Create:Item", properties={"Namespace":namespaces[0], "Source":"collection"}, ip=False)
+
         if not tiids:
             abort(404, "POST /collection requires a list of [namespace, id] pairs.")
     except (AttributeError, TypeError):
@@ -413,6 +424,8 @@ def collection_create():
             id=coll["_id"],
             num_items=len(coll["alias_tiids"])
         ))
+
+    mymixpanel.track("Create:Report", properties={"Report Id":coll["_id"]}, ip=False)
 
     resp = make_response(json.dumps({"collection":coll, "key":key},
             sort_keys=True, indent=4), response_code)
@@ -534,9 +547,11 @@ def get_user(userid=''):
 @app.route('/v1/user', methods=['PUT'])
 def update_user(userid=''):
     """
-    PUT /collection
-    creates new collection
+    PUT /user
+    creates new user
     """
+
+    mymixpanel.track("Create:User", properties={}, ip=False)
 
     new_stuff = request.json
     try:
