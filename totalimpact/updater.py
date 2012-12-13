@@ -113,6 +113,8 @@ def get_matching_dois_in_db(min_year, doi_prefix, mydao):
     view_name = "doi_prefixes_by_last_update_run/doi_prefixes_by_last_update_run"
     now = datetime.datetime.now()
     yesterday = now - datetime.timedelta(days=1)
+
+    # get items updated more than 24 hours ago
     view_rows = db.view(view_name, 
             include_docs=True, 
             startkey=[doi_prefix.lower(), "00000000"], 
@@ -120,7 +122,7 @@ def get_matching_dois_in_db(min_year, doi_prefix, mydao):
     for row in view_rows:
         doc = row.doc
         tiid = doc["_id"]
-        #only update recent things for now
+        #only update items published since the a given year
         try:
             year = doc["biblio"]["year"]
         except KeyError:
@@ -129,12 +131,9 @@ def get_matching_dois_in_db(min_year, doi_prefix, mydao):
             if tiid not in tiids_to_update:
                 docs_to_update += [doc]
                 tiids_to_update += [tiid]
-
-            #logger.info("\n%s" % (doi))
     return (tiids_to_update, docs_to_update)
 
-def get_least_recently_updated_items_from_doi_prefix(doi_prefix, myredis, mydao):
-    min_year = 2011  #only update 2012-2013 right now
+def get_least_recently_updated_items_from_doi_prefix(min_year, doi_prefix, myredis, mydao):
     (tiids_to_update, docs_to_update) = get_matching_dois_in_db(min_year, doi_prefix, mydao)
     return (tiids_to_update, docs_to_update)
 
@@ -143,18 +142,19 @@ def update_active_publisher_items(number_to_update, myredis, mydao):
     all_docs = []
     for publisher in active_publishers:
         for journal_dict in active_publishers[publisher]["journals"]:
-            (tiids_from_doi_prefix, docs_from_doi_prefix) = get_least_recently_updated_items_from_doi_prefix(journal_dict["doi_prefix"], myredis, mydao)
-            logger.info("got {num_tiids} items for doi prefix {prefix}".format(
-                num_tiids=len(tiids_from_doi_prefix), prefix=journal_dict["doi_prefix"]))
+            min_year = 2011  #only update 2012-2013 right now
+            (tiids_from_doi_prefix, docs_from_doi_prefix) = get_least_recently_updated_items_from_doi_prefix(min_year, journal_dict["doi_prefix"], myredis, mydao)
+            logger.info("doi prefix {prefix} has {num_tiids} items published since {min_year} last updated more than 24 hours ago".format(
+                num_tiids=len(tiids_from_doi_prefix), prefix=journal_dict["doi_prefix"], min_year=min_year))
             all_tiids += tiids_from_doi_prefix
             all_docs += docs_from_doi_prefix
 
-    print "all tiids, n=", len(all_tiids)
+    print "recent items for active publishers that were last updated more than a day ago, n=", len(all_tiids)
     tiids_to_update = all_tiids[0:min(number_to_update, len(all_tiids))]
     docs_to_update = all_docs[0:min(number_to_update, len(all_docs))]
     response = update_docs_with_updater_timestamp(docs_to_update, mydao)        
 
-    print tiids_to_update
+    print "updating {number_to_update} of them now".format(number_to_update=number_to_update)
     QUEUE_DELAY_IN_SECONDS = 1.0
     mymixpanel.track("Trigger:Update", properties={"Number Items":len(tiids_to_update), "Update Type":"Scheduled Registered"}, ip=False)    
     ItemFactory.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)

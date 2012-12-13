@@ -58,15 +58,20 @@ class TestUpdater():
     def test_get_matching_dois_in_db(self):
         (tiids, docs) = updater.get_matching_dois_in_db(2003, "10.7554/elife", self.d)
         print tiids
-        assert_equals(sorted(tiids), sorted(['tiid1']))
+        assert_equals(tiids, [])
+        (tiids, docs) = updater.get_matching_dois_in_db(2003, "10.3897/zookeys", self.d)
+        print tiids
+        assert_equals(sorted(tiids), sorted(['tiid3']))
 
     def test_update_active_publisher_items(self):
-        tiids = updater.update_active_publisher_items(10, self.r, self.d)
+        number_to_update = 10        
+        tiids = updater.update_active_publisher_items(number_to_update, self.r, self.d)
         print tiids
-        assert_equals(sorted(tiids), sorted(['tiid1']))
+        assert_equals(sorted(tiids), sorted(['tiid3']))
 
     def test_get_least_recently_updated_tiids_in_db(self):
-        (tiids_to_update, docs) = updater.get_least_recently_updated_tiids_in_db(2, self.d)
+        number_to_update = 2
+        (tiids_to_update, docs) = updater.get_least_recently_updated_tiids_in_db(number_to_update, self.d)
         print tiids_to_update
         assert_equals(sorted(tiids_to_update), sorted(['tiid2', 'tiid3']))
 
