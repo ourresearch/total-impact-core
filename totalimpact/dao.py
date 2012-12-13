@@ -86,7 +86,14 @@ class Dao(object):
                 "_id": "_design/update",
                 "language": "javascript",
                 "views": {
-                    "items_by_last_update_run": {}
+                    "items_by_last_update_run": {}                    
+                }
+            },
+            {
+                "_id": "_design/doi_prefixes_by_last_update_run",
+                "language": "javascript",
+                "views": {
+                    "doi_prefixes_by_last_update_run": {}                    
                 }
             }
         ]

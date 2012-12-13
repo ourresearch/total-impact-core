@@ -18,14 +18,17 @@ class TestUpdater():
         # do the same thing for the redis db, set up the test redis database.  We're using DB Number 8
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
+        now = datetime.datetime.now()
+        yesterday = now - datetime.timedelta(days=1)
+        last_week = now - datetime.timedelta(days=7)
 
         # save basic item beforehand, and some additional items
         self.fake_item = {
             "_id": "tiid1",
             "type": "item",
-            "last_modified": "2012-12-08T23:56:06.004925",
+            "last_modified": now.isoformat(),
             "aliases":{"doi":["10.7554/elife.1"]},
-            "biblio": {},
+            "biblio": {"year":2012},
             "metrics": {}
         }
         self.d.save(self.fake_item)
@@ -33,14 +36,14 @@ class TestUpdater():
         another_elife = copy.copy(self.fake_item)
         another_elife["_id"] = "tiid2"
         another_elife["aliases"] = {"doi":["10.7554/ELIFE.2"]}
-        another_elife["last_modified"] = "2010-01-01T23:56:06.004925"
+        another_elife["last_modified"] = yesterday.isoformat()
         self.d.save(another_elife)
 
         different_journal = copy.copy(self.fake_item)
         different_journal["_id"] = "tiid3"
         different_journal["aliases"] = {"doi":["10.3897/zookeys.3"]}
-        different_journal["last_modified"] = "2011-10-01T23:56:06.004925"
-        different_journal["last_update_run"] = "1999-10-01T23:56:06.004925"
+        different_journal["last_modified"] = now.isoformat()
+        different_journal["last_update_run"] = last_week.isoformat()
         self.d.save(different_journal)
 
     def teardown(self):
@@ -52,15 +55,15 @@ class TestUpdater():
         print dois
         assert_equals(dois, ['10.7554/elife.1', '10.7554/ELIFE.2'])
 
-    def test_update_dois_from_doi_prefix(self):
-        tiids = updater.update_dois_from_doi_prefix("10.7554/elife.", self.r, self.d)
+    def test_get_matching_dois_in_db(self):
+        (tiids, docs) = updater.get_matching_dois_in_db(2003, "10.7554/elife", self.d)
         print tiids
-        assert_equals(sorted(tiids), sorted(['tiid1', 'tiid2']))
+        assert_equals(sorted(tiids), sorted(['tiid1']))
 
     def test_update_active_publisher_items(self):
-        tiids = updater.update_active_publisher_items(self.r, self.d)
+        tiids = updater.update_active_publisher_items(10, self.r, self.d)
         print tiids
-        assert_equals(sorted(tiids), sorted(['tiid2', 'tiid1', 'tiid3']))
+        assert_equals(sorted(tiids), sorted(['tiid1']))
 
     def test_get_least_recently_updated_tiids_in_db(self):
         (tiids_to_update, docs) = updater.get_least_recently_updated_tiids_in_db(2, self.d)
