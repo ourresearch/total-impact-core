@@ -60,11 +60,9 @@ class ViewsTester(unittest.TestCase):
             "_id": "1aff9dfebea711e1bdf912313d1a5e63",
             "_rev": "968-c7891982fca2ea41346a20b80c2b888d",
             "aliases": {
-                "created": "2012-06-25T09:21:11.960306",
                 "doi": [
                     "10.5061/dryad.j1fd7"
                 ],
-                "last_modified": "2012-07-29T02:00:29.001625",
                 "title": [
                     "Data from: Data archiving is a good use of research funds",
                     "data from: data archiving is a good  investment"
@@ -117,20 +115,6 @@ class ViewsTester(unittest.TestCase):
                     }
                 }
             },
-            "providersRunCounter": 10,
-            "providersWithMetricsCount": 10,
-            "providers_run": [
-                "Slideshare",
-                "Github",
-                "Plosalm",
-                "Facebook",
-                "Topsy",
-                "Citeulike",
-                "Wikipedia",
-                "Delicious",
-                "Mendeley",
-                "Dryad"
-            ],
             "type": "item"
         }
         '''

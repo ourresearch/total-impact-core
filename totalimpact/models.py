@@ -139,6 +139,8 @@ class ItemFactory():
         for metric_name in metric_names:
             if "scopus:" in metric_name:
                 del cleaned_item["metrics"][metric_name]
+            if "citeulike:" in metric_name:
+                del cleaned_item["metrics"][metric_name]
         return cleaned_item
 
 
@@ -330,7 +332,7 @@ class ItemFactory():
             )
             myredis.add_to_alias_queue(item["_id"], item["aliases"])
 
-        return tiids
+        return (tiids, new_items)
 
     @classmethod
     def create_item(cls, namespace, nid, myredis, mydao):

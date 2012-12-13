@@ -198,9 +198,9 @@ class TestItemFactory():
         assert_equals(alias_dict, {'unknown_namespace': ['myname']})
 
     def test_build_item_for_client(self):
-        item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'providersWithMetricsCount': 11, 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
+        item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
         response = models.ItemFactory.build_item_for_client(item, self.myrefsets)
-        assert_equals(set(response.keys()), set(['created', '_rev', 'providersWithMetricsCount', 'metrics', 'last_modified', 'biblio', '_id', 'type', 'aliases']))
+        assert_equals(set(response.keys()), set(['created', '_rev', 'metrics', 'last_modified', 'biblio', '_id', 'type', 'aliases']))
 
     def test_build_item_for_client_excludes_history_by_default(self):
         response = models.ItemFactory.build_item_for_client(self.ITEM_DATA, self.myrefsets)
@@ -221,7 +221,7 @@ class TestItemFactory():
 
 
     def add_metrics_data(self):
-        item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'providersWithMetricsCount': 11, 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
+        item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
         metrics_method_response = (2, 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/')
         response = models.ItemFactory.add_metrics_data("mendeley:readers", metrics_method_response, item)
         print response
@@ -233,7 +233,7 @@ class TestItemFactory():
             'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}, 
             '_id': '4mlln04q1rxy6l9oeb3t7ftv', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 
             'biblio': {'authors': u'Norton, McBain, \xd6ng\xfcr, Chen', 'journal': 'Brain and Cognition', 'year': 2011, 'title': 'Perceptual training strongly improves visual motion perception in schizophrenia'}, 
-            'type': 'item', 'providersWithMetricsCount': 11}
+            'type': 'item'}
         assert_equals(response, expected)
 
     def test_is_currently_updating_unknown(self):
@@ -254,6 +254,7 @@ class TestItemFactory():
         self.d.save(self.ITEM_DATA)
         item = models.ItemFactory.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
+        item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = models.ItemFactory.clean_for_export(item)
         print response["metrics"].keys()
         expected = ['bar:views', 'wikipedia:mentions']
@@ -263,15 +264,17 @@ class TestItemFactory():
         self.d.save(self.ITEM_DATA)
         item = models.ItemFactory.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
+        item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = models.ItemFactory.clean_for_export(item, "SECRET", "SECRET")
         print response["metrics"].keys()
-        expected = ['bar:views', 'wikipedia:mentions', 'scopus:citations']
-        assert_equals(response["metrics"].keys(), expected)
+        expected = ['bar:views', 'wikipedia:mentions', 'scopus:citations', 'citeulike:bookmarks']
+        assert_equals(sorted(response["metrics"].keys()), sorted(expected))
 
     def test_clean_for_export_given_wrong_secret_key(self):
         self.d.save(self.ITEM_DATA)
         item = models.ItemFactory.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
+        item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = models.ItemFactory.clean_for_export(item, "WRONG", "SECRET")
         print response["metrics"].keys()
         expected = ['bar:views', 'wikipedia:mentions']
