@@ -46,7 +46,7 @@ def set_redis(url, db):
 @app.before_request
 def stop_user_who_is_swamping_us():
     ip = request.remote_addr
-    if ip in ["132.229.72.74", "91.121.68.140"]:
+    if ip in ["91.121.68.140"]:
         logger.debug("got a call from {ip}; aborting with 403.".format(ip=ip) )
         abort(403, """Sorry, we're blocking your IP address {ip} because \
             we can't handle requests as quickly as you're sending them, and so
