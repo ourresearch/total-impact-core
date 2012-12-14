@@ -29,12 +29,14 @@ class Cache(object):
             binary=True)
         return mc
  
-    def __init__(self, max_cache_age=60*60):
+    def __init__(self, max_cache_age=60*60):  #one hour
         self.max_cache_age = max_cache_age
 
-        # uncomment if you want to flush the cache
-        # mc = self._get_memcached_client()        
-        # mc.flush_all()
+
+    def flush_cache(self):
+        #empties the cache
+        mc = self._get_memcached_client()        
+        mc.flush_all()
 
     @Retry(3, pylibmc.Error, 0.1)
     def get_cache_entry(self, key):
