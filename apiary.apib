@@ -12,34 +12,25 @@ If you are collecting metrics to display on a webpage, we recommend you use our 
 
 ## api base url
 
-The base url of the REST api is [**http://api.impactstory.org/**](http://api.impactstory.org/).
+The base url of the REST API is [**http://api.impactstory.org/**](http://api.impactstory.org/).
 
-You may notice the example code below uses an api base of http://impactstory.apiary.io --  we strongly recommend you replace this with our primary api base in your own code.
+You may notice the example code below uses an API base of http://impactstory.apiary.io --  we strongly recommend you replace this with our primary API base in your own code.
 
 [CORS](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing) is enabled.
 
 
-## keys, fresh metrics, and active items
+## api keys and registered items
 
-ImpactStory gathers metrics on any type of scholarly object with a url (or doi, or pubmed id, or github id, ...).  Because we cover such a large span of scholarly resources (and do not yet have the resources of Google), we only gather metrics on items once they have been specifically requested.
+The most common workflow for the REST API is: 
 
-We gather fresh metrics at the following times:
+1. Register an item with your API key.  We only start gathering metrics for an item once it has been registered. You can register an item through [POST /item](#post_item).
+1. Read metrics on the item using [GET /item](#get_item).
 
-- the first time an item is added to ImpactStory (through the [web interface](http://impactstory.org), the javascript embed code, or the REST api)
-- while-you-wait when someone clicks the "update" button on the web interface
-- regularly, behind-the-scenes, for **active items**
+You can combine steps 1 and 2 by setting the register=true flag on the GET request, like this: `GET /v1/item/:namespace/:id?key=YOURKEY&register=true`.
 
-With an api key you can **activate** items to keep them up-to-date with fresh metrics.  
-These fresh metrics are made openly available to anyone who requests metrics for that item.
-Open dissemination for the win!
+To request an ImpactStory API key, send an email to [team@impactstory.org](mailto:team@impactstory.org).  Your free key will allow you to register up to 1000 items.  Check out the pricing page for more information.
 
-We only guarantee an item requested through the API will have fresh metrics if that item has been activated.
 
-Items are activated by adding them to the ImpactStory database through a [POST /item](#post_item) API call.
-
-Up to 1000 items can be activated for free by each API key.  Activating more than 1000 items will have an annual fee to provide sustainability for our nonprofit service (waivers available in some cases).
-
-To request an ImpactStory API key, send an email to [team@impactstory.org](mailto:team@impactstory.org).
 
 ## rate limits
 
@@ -48,7 +39,7 @@ We do not impose rate limits at the moment, but we recommend delaying for a few 
 ## data licenses
 
 - All data in the ImpactStory API is released under as open a data licence as the primary data providers permit it to be.  We plan to inventory these licenses but haven't got an updated list at the moment, so please check with the primary data providers.
-- Some providers allow us to show their metrics in our webapp but restrict its dissemination through our api.  Scopus citation data is available through our web application but not through the API.  CiteULike data is available through the API only in certain circumstances.
+- Some providers allow us to show their metrics in our webapp but restrict its dissemination through our API.  Scopus citation data is available through our web application but not through the API.  CiteULike data is available through the API only in certain circumstances.
 - Native ImpactStory data in the API (if there is any?) is released under a [CC0 waiver](http://creativecommons.org/publicdomain/zero/1.0/).  
 
 ## contact info
