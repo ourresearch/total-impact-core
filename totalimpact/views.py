@@ -148,7 +148,7 @@ def item_namespace_post(namespace, nid):
 def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
 
     include_history = request.args.get("include_history", 0) in ["1", "true", "True"]
-    create = request.args.get("create", 0) in ["1", "true", "True"]
+    create = request.args.get("register", 0) in ["1", "true", "True"]
 
     # remove unprintable characters
     nid = ItemFactory.clean_id(nid)
