@@ -222,7 +222,7 @@ class TestItem(ViewsTester):
         assert_equals(response.status_code, 404) # created but still updating
 
     def test_item_get_create_param_makes_new_item(self):
-        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE&create=true"
+        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE&register=true"
         response = self.client.get(url)
         assert_equals(response.status_code, 210) # created and still updating
         item_info = json.loads(response.data)
