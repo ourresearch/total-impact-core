@@ -56,13 +56,6 @@ def stop_user_who_is_swamping_us():
             team@impactstory.org for details and possible workarounds.
         """.format(ip=ip))
 
-    if key == "VANWIJIKc233acaa":
-        logger.debug("got a call from {key}; aborting with 403.".format(key=key) )
-        abort(403, """Sorry we're having to throttle your requests again; we're
-        concerned that we're failing to serve you some relevant Twitter data;
-        wrote you an email with more details.
-        """)
-
 @app.before_request
 def check_key():
     if "/v1/" in request.url:
