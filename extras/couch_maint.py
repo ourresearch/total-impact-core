@@ -462,6 +462,22 @@ def remove_unused_item_doc_keys():
     print "number edited = ", number_edited
     print "number items = ", row_count
 
+"""
+function(doc) {
+  if (doc.type == "item") {
+    if (typeof doc.biblio.h1 != "undefined") {
+      if (doc.biblio.h1.indexOf("\n") > -1) {
+      emit([doc.last_modified, doc._id, doc.biblio.h1], doc.aliases);
+      }
+      if (doc.biblio.title.indexOf("\n") > -1) {
+      emit([doc.last_modified, doc._id, doc.biblio.title], doc.aliases);
+      }
+    }
+  }
+}
+"""
+def clean_up_bad_h1():
+    pass
 
 
 if (cloudant_db == "ti"):
@@ -472,7 +488,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    remove_unused_item_doc_keys()
+    clean_up_bad_h1()
 else:
     print "nevermind, then."
 
