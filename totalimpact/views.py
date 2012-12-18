@@ -315,7 +315,8 @@ def collection_get(cid='', format="json", include_history=False):
             resp = make_response(csv, response_code)
             resp.mimetype = "text/csv;charset=UTF-8"
             resp.headers.add("Content-Disposition",
-                             "attachment; filename=ti.csv")
+                             "attachment; filename=impactstory-{cid}.csv".format(
+                                cid=cid))
             resp.headers.add("Content-Encoding",
                              "UTF-8")
         else:
