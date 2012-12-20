@@ -3,6 +3,7 @@ from totalimpact.providers.provider import Provider, ProviderContentMalformedErr
 from totalimpact import utils
 
 import lxml.html
+import re
 
 import logging
 logger = logging.getLogger('ti.providers.webpage')
@@ -72,23 +73,27 @@ class Webpage(Provider):
         unicode_page = utils.to_unicode_or_bust(page)
         try:
             parsed_html = lxml.html.document_fromstring(unicode_page)
+
+            try:
+                response = parsed_html.find(".//title").text
+                if response:
+                    biblio_dict["title"] = response.strip()
+            except AttributeError:
+                pass
+
+            try:
+                response = parsed_html.find(".//h1").text
+                if response:
+                    biblio_dict["h1"] = response.strip()
+            except AttributeError:
+                pass            
         except ValueError:
             logger.warning("%20s couldn't parse %s so giving up on webpage biblio" 
-                            % (self.provider_name, id))            
-            return {}
-
-        try:
-            response = parsed_html.find(".//title").text
+                            % (self.provider_name, id)) 
+            response = re.search("<title>(.+?)</title>", unicode_page).group(1)
+            response.replace("\n", "")
+            response.replace("\r", "")
             if response:
                 biblio_dict["title"] = response.strip()
-        except AttributeError:
-            pass
-
-        try:
-            response = parsed_html.find(".//h1").text
-            if response:
-                biblio_dict["h1"] = response.strip()
-        except AttributeError:
-            pass
 
         return biblio_dict    

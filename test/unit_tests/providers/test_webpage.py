@@ -59,3 +59,8 @@ class TestWebpage(ProviderTestCase):
         biblio = self.provider.biblio([self.testitem_biblio])
         assert_equals(biblio, {})
 
+    def test_biblio(self):
+        ret = self.provider.biblio([("url", "http://www.digitalhumanities.org/dhq/vol/2/1/000019/000019.html")])
+        expected = {'title': u'DHQ: Digital Humanities Quarterly: As You Can See: Applying Visual Collaborative Filtering to Works of Art'}
+        assert_equals(ret, expected)
+
