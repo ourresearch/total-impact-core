@@ -485,6 +485,7 @@ def lowercase_aliases():
                     print "\ndifference detected \n{orig}\n{lower}\n".format(
                         orig=orig_aliases, lower=lower_aliases)
                     item["aliases"] = lower_aliases
+                    number_edited += 1
                     db.save(item)
                 else:
                     logger.info(".")
