@@ -413,13 +413,16 @@ class ItemFactory():
         # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
         logger.debug("In get_tiid_by_alias with {ns}, {nid}".format(
             ns=ns, nid=nid))
-        nid_lower = nid.lower()
-        logger.debug("In get_tiid_by_alias with {nid_lower}".format(
-            nid_lower=nid_lower))
 
-        # not lower now
-        matches = res[[ns, 
-                        nid]] 
+        # lowercase namespace and dois
+        ns = ns.lower()
+        if ns in ["doi"]:
+            nid = nid.lower()
+
+        logger.debug("In get_tiid_by_alias with {nid}".format(
+            nid=nid))
+
+        matches = res[[ns, nid]] 
 
         if matches.rows:
             if len(matches.rows) > 1:
