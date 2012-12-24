@@ -72,13 +72,6 @@ function(doc) {
    }
 }
 
-admin/snaps_by_tiid
-function(doc) {
-    // lists tiids by individual alias namespaces and ids
-    if (doc.type == "metric_snap") {
-       emit(doc.tiid, doc._id)
-   }
-}
 """
 def bad_doi_cleanup():
     view_name = "admin/multiple_dois"
@@ -462,6 +455,51 @@ def remove_unused_item_doc_keys():
     print "number edited = ", number_edited
     print "number items = ", row_count
 
+
+def lowercase_aliases():
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+    page_size = 500
+    start_key = ["item", "000000000"]
+    end_key = ["item", "zzzzzzzzzz"]
+
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
+    number_edited = 0
+
+    while page:
+        for row in page:
+            item = row.doc
+            edited = False
+            row_count += 1
+            if "aliases" in item:
+                orig_aliases = item["aliases"]
+                lower_aliases = {}
+                for namespace in orig_aliases:
+                    if namespace.lower() in ["doi"]:
+                        lower_aliases[namespace.lower()] = [nid.lower().strip() for nid in orig_aliases[namespace]]
+                    else:
+                        lower_aliases[namespace.lower()] = orig_aliases[namespace]
+                if orig_aliases != lower_aliases:
+                    print "\ndifference detected \n{orig}\n{lower}\n".format(
+                        orig=orig_aliases, lower=lower_aliases)
+                    item["aliases"] = lower_aliases
+                    db.save(item)
+                else:
+                    logger.info(".")
+                        
+        print "number edited = ", number_edited
+        print "number items = ", row_count
+        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
+
+    print "number edited = ", number_edited
+    print "number items = ", row_count
+
 """
 function(doc) {
   if (doc.type == "item") {
@@ -488,7 +526,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    clean_up_bad_h1()
+    lowercase_aliases()
 else:
     print "nevermind, then."
 
