@@ -345,6 +345,11 @@ class ItemFactory():
             ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
         )
 
+        # only put lowercase namespaces in items, and lowercase dois
+        namespace = namespace.lower()
+        if namespace in ["doi"]:
+            nid = nid.lower()
+
         item["aliases"][namespace] = [nid]
         mydao.save(item)
 
