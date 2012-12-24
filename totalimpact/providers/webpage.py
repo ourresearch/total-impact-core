@@ -90,10 +90,12 @@ class Webpage(Provider):
         except ValueError:
             logger.warning("%20s couldn't parse %s so giving up on webpage biblio" 
                             % (self.provider_name, id)) 
-            response = re.search("<title>(.+?)</title>", unicode_page).group(1)
-            response.replace("\n", "")
-            response.replace("\r", "")
-            if response:
-                biblio_dict["title"] = response.strip()
-
+            try:
+                response = re.search("<title>(.+?)</title>", unicode_page).group(1)
+                response.replace("\n", "")
+                response.replace("\r", "")
+                if response:
+                    biblio_dict["title"] = response.strip()
+            except AttributeError:
+                pass
         return biblio_dict    
