@@ -74,7 +74,6 @@ def add_crossdomain_header(resp):
     resp.headers['Access-Control-Allow-Origin'] = "*"
     resp.headers['Access-Control-Allow-Methods'] = "POST, GET, OPTIONS, PUT, DELETE"
     resp.headers['Access-Control-Allow-Headers'] = "Content-Type"
-
     return resp
 
 # adding a simple route to confirm working API
@@ -520,6 +519,16 @@ def reference_sets_histograms():
     #resp.mimetype = "text/csv;charset=UTF-8"
     #resp.headers.add("Content-Disposition", "attachment; filename=refsets.csv")
     #resp.headers.add("Content-Encoding", "UTF-8")
+    return resp
+
+@app.route("/v1/key", methods=["POST"])
+def key():
+    password = request.json.get("password")
+    if password != os.getenv("API_KEY"):
+        abort(403)
+
+    resp = make_response(json.dumps({"api_key":"NEWKEY"}, indent=4), 200)
+    resp.mimetype = "application/json"
     return resp
 
 @app.route("/user/<userid>", methods=["GET"])
