@@ -128,7 +128,8 @@ class ProviderWorker(Worker):
             aliases_providers_run += [provider_name]
             if method_response:
                 new_aliases_dict = ItemFactory.alias_dict_from_tuples(method_response)
-                response = ItemFactory.merge_alias_dicts(new_aliases_dict, input_aliases_dict)
+                new_canonical_aliases_dict = ItemFactory.canonical_aliases(new_aliases_dict)
+                response = ItemFactory.merge_alias_dicts(new_canonical_aliases_dict, input_aliases_dict)
             else:
                 response = input_aliases_dict
         else:
