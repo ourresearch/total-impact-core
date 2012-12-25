@@ -185,6 +185,18 @@ class ItemFactory():
         return (genre, host)
 
     @classmethod
+    def canonical_aliases(self, orig_aliases_dict):
+        # only put lowercase namespaces in items, and lowercase dois
+        lowercase_aliases_dict = {}
+        for orig_namespace in orig_aliases_dict:
+            lowercase_namespace = orig_namespace.lower()
+            if lowercase_namespace == "doi":
+                lowercase_aliases_dict[lowercase_namespace] = [doi.lower() for doi in orig_aliases_dict[orig_namespace]]
+            else:
+                lowercase_aliases_dict[lowercase_namespace] = orig_aliases_dict[orig_namespace]
+        return lowercase_aliases_dict
+
+    @classmethod
     def alias_tuples_from_dict(self, aliases_dict):
         """
         Convert from aliases dict we use in items, to a list of alias tuples.
@@ -345,12 +357,9 @@ class ItemFactory():
             ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
         )
 
-        # only put lowercase namespaces in items, and lowercase dois
-        namespace = namespace.lower()
-        if namespace in ["doi"]:
-            nid = nid.lower()
-
         item["aliases"][namespace] = [nid]
+        item["aliases"] = cls.canonical_aliases(item["aliases"])
+
         mydao.save(item)
 
         myredis.add_to_alias_queue(item["_id"], item["aliases"])

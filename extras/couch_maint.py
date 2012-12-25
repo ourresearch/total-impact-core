@@ -474,17 +474,21 @@ def lowercase_aliases():
             edited = False
             row_count += 1
             if "aliases" in item:
-                orig_aliases = item["aliases"]
-                lower_aliases = {}
-                for namespace in orig_aliases:
-                    if namespace.lower() in ["doi"]:
-                        lower_aliases[namespace.lower()] = [nid.lower().strip() for nid in orig_aliases[namespace]]
+
+                orig_aliases_dict = item["aliases"]
+
+                lowercase_aliases_dict = {}
+                for orig_namespace in orig_aliases_dict:
+                    lowercase_namespace = orig_namespace.lower()
+                    if lowercase_namespace == "doi":
+                        lowercase_aliases_dict[lowercase_namespace] = [doi.lower() for doi in orig_aliases_dict[orig_namespace]]
                     else:
-                        lower_aliases[namespace.lower()] = orig_aliases[namespace]
-                if orig_aliases != lower_aliases:
+                        lowercase_aliases_dict[lowercase_namespace] = orig_aliases_dict[orig_namespace]
+
+                if orig_aliases_dict != lowercase_aliases_dict:
                     print "\ndifference detected \n{orig}\n{lower}\n".format(
-                        orig=orig_aliases, lower=lower_aliases)
-                    item["aliases"] = lower_aliases
+                        orig=orig_aliases_dict, lower=lowercase_aliases_dict)
+                    item["aliases"] = lowercase_aliases_dict
                     number_edited += 1
                     db.save(item)
                 else:
