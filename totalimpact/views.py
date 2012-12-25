@@ -4,6 +4,7 @@ import os, datetime, re, couchdb, copy
 from werkzeug.security import check_password_hash
 from collections import defaultdict
 import redis
+import uuid
 from libsaas.services import mixpanel
 
 from totalimpact import dao, app, tiredis, collection
@@ -527,7 +528,9 @@ def key():
     if password != os.getenv("API_KEY"):
         abort(403)
 
-    resp = make_response(json.dumps({"api_key":"NEWKEY"}, indent=4), 200)
+    new_api_key = request.json.get("prefix").upper() + str(uuid.uuid1())[0:6]
+
+    resp = make_response(json.dumps({"api_key":new_api_key}, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
