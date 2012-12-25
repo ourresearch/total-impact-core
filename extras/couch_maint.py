@@ -473,8 +473,9 @@ def lowercase_aliases():
             item = row.doc
             edited = False
             row_count += 1
+            if not item:
+                continue
             if "aliases" in item:
-
                 orig_aliases_dict = item["aliases"]
 
                 lowercase_aliases_dict = {}
