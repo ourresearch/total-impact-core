@@ -565,8 +565,6 @@ def update_user(userid=''):
     creates new user
     """
 
-    mymixpanel.track("Create:User", properties={}, ip=False)
-
     new_stuff = request.json
     try:
         key = new_stuff["key"]
@@ -574,6 +572,7 @@ def update_user(userid=''):
         abort(400, "the submitted user object is missing required properties.")
     try:
         res = UserFactory.put(new_stuff, key, mydao)
+        mymixpanel.track("Create:User", properties={}, ip=False)
     except NotAuthenticatedError:
         abort(403, "You've got the wrong password.")
     except AttributeError:
