@@ -33,9 +33,6 @@ class Dao(object):
         self.url = DbUrl(db_url)
         self.db_name = db_name
 
-        # setup redis. this should go elsewhere, eventually.
-        self.redis = redis.from_url(os.getenv('REDISTOGO_URL'))
-
         try:
             self.db = self.couch[ db_name ]
         except (ResourceNotFound):
@@ -94,6 +91,13 @@ class Dao(object):
                 "language": "javascript",
                 "views": {
                     "doi_prefixes_by_last_update_run": {}                    
+                }
+            },
+            {
+                "_id": "_design/api_users_by_api_key",
+                "language": "javascript",
+                "views": {
+                    "api_users_by_api_key": {}                    
                 }
             }
         ]
