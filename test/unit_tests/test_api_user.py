@@ -20,5 +20,10 @@ class TestApiUser():
         assert_equals(new_api_doc.keys(), ['key_history', 'created', 'current_key', 'registered_items', 'meta', 'type'])
         assert_equals(new_api_doc["current_key"], new_api_key)
 
+    def test_register_item(self):
+        pass
+
+    def test_number_of_remaining_registration_spots(self):
+        pass
 
 
