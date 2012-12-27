@@ -7,7 +7,7 @@ import redis
 import uuid
 from libsaas.services import mixpanel
 
-from totalimpact import dao, app, tiredis, collection
+from totalimpact import dao, app, tiredis, collection, api_user
 from totalimpact.models import ItemFactory, MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderContentMalformedError, ProviderTimeout
 from totalimpact import default_settings
@@ -524,11 +524,19 @@ def reference_sets_histograms():
 
 @app.route("/v1/key", methods=["POST"])
 def key():
-    password = request.json.get("password")
+    """ Generate a new api key and store api key info in a db doc """
+    meta = request.json
+
+    password = meta["password"]
+    del(meta["password"])
     if password != os.getenv("API_KEY"):
         abort(403)
 
-    new_api_key = request.json.get("prefix").upper() + str(uuid.uuid1())[0:6]
+    prefix = meta["prefix"]
+    del(meta["prefix"])
+
+    (api_user_doc, new_api_key) = api_user.make(prefix, **meta)
+    mydao.db.save(api_user_doc)
 
     resp = make_response(json.dumps({"api_key":new_api_key}, indent=4), 200)
     resp.mimetype = "application/json"
@@ -541,7 +549,7 @@ def get_user(userid=''):
     GET /user
     Gets a user.
 
-    The user's private properties are not returned unless you pass a correct key.
+    The user's private properties are not returned unless you pass a correct collection key.
     """
 
     key = request.args.get("key")
