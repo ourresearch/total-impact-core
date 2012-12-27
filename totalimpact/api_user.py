@@ -1,5 +1,5 @@
 import datetime
-import uuid
+import shortuuid
 
 import logging
 logger = logging.getLogger('ti.api_user')
@@ -7,7 +7,7 @@ logger = logging.getLogger('ti.api_user')
 def make(prefix, **meta):
     api_user_doc = {}
 
-    new_api_key = prefix.upper() + str(uuid.uuid1())[0:6]
+    new_api_key = prefix.upper() + shortuuid.uuid().lower()[0:6]
     now = datetime.datetime.now().isoformat()
 
     api_user_doc["created"] = now
@@ -17,14 +17,20 @@ def make(prefix, **meta):
     api_user_doc["key_history"] = {now: new_api_key}
     api_user_doc["max_registered_items"] = 1000
     api_user_doc["registered_items"] = {}
+    api_user_doc["_id"] = shortuuid.uuid()[0:24]
 
     return (api_user_doc, new_api_key)
 
 
-def register_item(alias, tiid, api_key):
-    if number_of_remaining_registration_spots(api_key) <= 0:
-        #throw error
-        pass
+def register_item(alias, tiid, api_key, mydao):
+    api_user_id = get_api_user_id_by_api_key(api_key, mydao)
+
+    api_user_doc = mydao.db.get(api_user_id)
+    used_registration_spots = len(api_user_doc["registered_items"])
+    remaining_registration_spots = api_user_doc["max_registered_items"] - used_registration_spots
+
+    if remaining_registration_spots <= 0:
+        return None
 
     # do the registering
     now = datetime.datetime.now().isoformat()
@@ -33,13 +39,31 @@ def register_item(alias, tiid, api_key):
         "registered_date": now,
         "tiid": tiid
     }
-    return(number_of_remaining_registration_spots)
+
+    mydao.db.save(api_user_doc)
+    used_registration_spots = len(api_user_doc["registered_items"])
+    remaining_registration_spots = api_user_doc["max_registered_items"] - used_registration_spots
+
+    return(remaining_registration_spots)
 
 
-def number_of_remaining_registration_spots(api_key):
-    number_of_items_registered = len(api_user_doc["registered_items"])    
-    number_of_items_remaining = api_user_doc["max_registered_items"] - number_of_items_registered
-    return(number_of_items_remaining)
+def get_api_user_id_by_api_key(api_key, mydao):
+    logger.debug("In get_api_user_by_api_key with {api_key}".format(
+        api_key=api_key))
 
+    # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
+    res = mydao.view('api_users_by_api_key/api_users_by_api_key')
+    print res
+
+    matches = res[[api_key]] 
+
+    if matches.rows:
+        api_user_id = matches.rows[0]["id"]
+        logger.debug("found a match for {api_key}!".format(api_key=api_key))
+        print matches.rows[0]
+    else:
+        api_user_id = None
+        logger.debug("no match for api_key {api_key}!".format(api_key=api_key))
+    return (api_user_id)
 
 
