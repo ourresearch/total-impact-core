@@ -130,8 +130,17 @@ def item_namespace_post_with_tiid(namespace, nid):
 
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
-    mymixpanel.track("Create:Item", properties={"Namespace":namespace, "Source":"/item post"}, ip=False)
+    api_key = request.values.get('key')
+    mymixpanel.track("Create:Item", properties={"Namespace":namespace, 
+                                                "Source":"/item post", 
+                                                "API Key": api_key}, ip=False)
     tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
+    if api_key != os.getenv("API_KEY"):
+        try:
+            remaining_registration_spots = api_user.register_item((namespace, nid), tiid, api_key, mydao)
+        except api_user.ApiLimitExceededException:
+            abort(403, "Registration limit exceeded.  Please contact team@impactstory.org to discuss options.")
+
     response_code = 201 # Created
     resp = make_response(json.dumps("ok"), response_code)
     return resp
@@ -141,27 +150,37 @@ def item_namespace_post(namespace, nid):
 def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
 
     include_history = request.args.get("include_history", 0) in ["1", "true", "True"]
-    create = request.args.get("register", 0) in ["1", "true", "True"]
+    register = request.args.get("register", 0) in ["1", "true", "True"]
 
     # remove unprintable characters
     nid = ItemFactory.clean_id(nid)
     tiid = ItemFactory.get_tiid_by_alias(namespace, nid, myredis, mydao)
     if not tiid:
-        if create:
-            mymixpanel.track("Create:Item", properties={"Namespace":namespace, "Source":"/item get"}, ip=False)
+        if register:
+            api_key = request.values.get('key')
+            mymixpanel.track("Create:Item", properties={"Namespace":namespace, 
+                                                        "Source":"/item get", 
+                                                        "API Key": api_key}, ip=False)
+
             tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
+            if api_key != os.getenv("API_KEY"):
+                try:
+                    remaining_registration_spots = api_user.register_item((namespace, nid), tiid, api_key, mydao)
+                except api_user.ApiLimitExceededException:
+                    abort(403, "Registration limit exceeded. Please contact team@impactstory.org to discuss options.")
+
         else:
             abort(404, "Item not in database")
 
 
-    return get_item_from_tiid(tiid, format, include_history, create)
+    return get_item_from_tiid(tiid, format, include_history)
 
 
 '''GET /item/:tiid
 404 if tiid not found in db
 '''
 @app.route('/item/<tiid>', methods=['GET'])
-def get_item_from_tiid(tiid, format=None, include_history=False, create=False):
+def get_item_from_tiid(tiid, format=None, include_history=False):
 
     try:
         item = ItemFactory.get_item(tiid, myrefsets, mydao, include_history)
@@ -359,6 +378,7 @@ def put_collection(cid=""):
 """ Updates all the items in a given collection.
 """
 @app.route("/collection/<cid>", methods=["POST"])
+@app.route("/v1/collection/<cid>", methods=["POST"])
 # not officially supported in api
 def collection_update(cid=""):
 
@@ -535,7 +555,7 @@ def key():
     prefix = meta["prefix"]
     del(meta["prefix"])
 
-    (api_user_doc, new_api_key) = api_user.make(prefix, **meta)
+    (api_user_doc, new_api_key) = api_user.build_api_user(prefix, **meta)
     mydao.db.save(api_user_doc)
 
     resp = make_response(json.dumps({"api_key":new_api_key}, indent=4), 200)
