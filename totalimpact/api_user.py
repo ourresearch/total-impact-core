@@ -32,6 +32,8 @@ def register_item(alias, tiid, api_key, mydao):
     remaining_registration_spots = api_user_doc["max_registered_items"] - used_registration_spots
 
     if remaining_registration_spots <= 0:
+        logger.info("Did not register item {tiid} to {api_key} because limit exceeded".format(
+            tiid=tiid, api_key=api_key))
         raise ApiLimitExceededException
 
     # do the registering
@@ -43,8 +45,12 @@ def register_item(alias, tiid, api_key, mydao):
     }
 
     mydao.db.save(api_user_doc)
+
     used_registration_spots = len(api_user_doc["registered_items"])
     remaining_registration_spots = api_user_doc["max_registered_items"] - used_registration_spots
+
+    logger.info("Registered item {tiid} to {api_key}, {remaining_registration_spots} registration spots remain".format(
+        tiid=tiid, api_key=api_key))
 
     return(remaining_registration_spots)
 
@@ -59,12 +65,12 @@ def get_api_user_id_by_api_key(api_key, mydao):
 
     matches = res[[api_key]] 
 
+    api_user_id = None
     if matches.rows:
         api_user_id = matches.rows[0]["id"]
         logger.debug("found a match for {api_key}!".format(api_key=api_key))
         print matches.rows[0]
     else:
-        api_user_id = None
         logger.debug("no match for api_key {api_key}!".format(api_key=api_key))
     return (api_user_id)
 
