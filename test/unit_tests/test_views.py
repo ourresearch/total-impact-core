@@ -315,8 +315,8 @@ class TestItems(ViewsTester):
         )
         new_coll = json.loads(resp2.data)["collection"]
 
-        # 3 new items + 1 new item + 5 design docs + 2 collections + one test_item
-        assert_equals(self.d.db.info()["doc_count"], 12)
+        # 3 new items + 1 new item + 6 design docs + 2 collections + one test_item
+        assert_equals(self.d.db.info()["doc_count"], 13)
 
 
 
