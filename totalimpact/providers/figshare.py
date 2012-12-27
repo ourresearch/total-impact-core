@@ -73,12 +73,12 @@ class Figshare(Provider):
         logger.info("calling crossref to handle aliases")
         return self.crossref.biblio(aliases, provider_url_template, cache_enabled) 
 
-    def _extract_item(self, page, id):
+    def _extract_figshare_record(self, page, id):
         data = provider._load_json(page)
         if not data:
             return {}
         item = data["items"][0]
-        if item["doi"] == self._get_templated_url(self.provenance_url_template, id, "provenance"):
+        if str(item["article_id"]) in id:
             return item
         else:
             return {}
@@ -95,6 +95,6 @@ class Figshare(Provider):
             'figshare:downloads' : ['downloads'],
             'figshare:views' : ['views']
         }
-        item = self._extract_item(page, id)
+        item = self._extract_figshare_record(page, id)
         metrics_dict = provider._extract_from_data_dict(item, dict_of_keylists)
         return metrics_dict
