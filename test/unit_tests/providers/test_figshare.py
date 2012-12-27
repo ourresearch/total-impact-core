@@ -5,7 +5,7 @@ from test.utils import http
 
 import os
 import collections
-from nose.tools import assert_equals, raises
+from nose.tools import assert_equals, raises, nottest
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/figshare")
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
@@ -41,6 +41,7 @@ class TestFigshare(ProviderTestCase):
         expected = 'http://dx.doi.org/10.6084/m9.figshare.92393'
         assert_equals(provenance_url, expected)
 
+    @nottest
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
