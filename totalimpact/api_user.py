@@ -4,7 +4,7 @@ import shortuuid
 import logging
 logger = logging.getLogger('ti.api_user')
 
-def make(prefix, **meta):
+def build_api_user(prefix, **meta):
     api_user_doc = {}
 
     new_api_key = prefix.upper() + shortuuid.uuid().lower()[0:6]
@@ -21,6 +21,8 @@ def make(prefix, **meta):
 
     return (api_user_doc, new_api_key)
 
+class ApiLimitExceededException(Exception):
+    pass
 
 def register_item(alias, tiid, api_key, mydao):
     api_user_id = get_api_user_id_by_api_key(api_key, mydao)
@@ -30,7 +32,7 @@ def register_item(alias, tiid, api_key, mydao):
     remaining_registration_spots = api_user_doc["max_registered_items"] - used_registration_spots
 
     if remaining_registration_spots <= 0:
-        return None
+        raise ApiLimitExceededException
 
     # do the registering
     now = datetime.datetime.now().isoformat()
