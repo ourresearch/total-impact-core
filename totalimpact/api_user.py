@@ -30,8 +30,8 @@ def register_item(alias, tiid, api_key):
     now = datetime.datetime.now().isoformat()
 
     api_user_doc["registered_items"][alias] = {
-        "registered_date" = now,
-        "tiid" = tiid
+        "registered_date": now,
+        "tiid": tiid
     }
     return(number_of_remaining_registration_spots)
 
