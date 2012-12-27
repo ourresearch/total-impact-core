@@ -423,13 +423,10 @@ class ItemFactory():
         logger.debug("In get_tiid_by_alias with {ns}, {nid}".format(
             ns=ns, nid=nid))
 
-        # lowercase namespace and dois
-        ns = ns.lower()
-        if ns in ["doi"]:
-            nid = nid.lower()
-
-        logger.debug("In get_tiid_by_alias with {nid}".format(
-            nid=nid))
+        # change input to lowercase etc
+        aliases_dict = cls.canonical_aliases({ns:[nid]})
+        ns = aliases_dict.keys()[0]
+        nid = aliases_dict[ns][0]
 
         matches = res[[ns, nid]] 
 
