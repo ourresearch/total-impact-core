@@ -5,7 +5,7 @@ from totalimpact import models
 from totalimpact import dao
 from totalimpact import api_user
 
-run_post_file = True
+run_post_file = False
 
 if run_post_file:
     # zgrep "key=" 2012-*.gz | grep method=POST | grep -v "key=VANWIJIKc233acaa" | grep -v "key=EXAMPLE" | grep -v "key=Heather" | grep -v embed | grep -v GREEK_YOGURT | grep -v "key=KEY" | grep -v YOURKEY > registers_by_post.txt
@@ -27,10 +27,9 @@ mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
 registration_dict = defaultdict(dict)
 for registration in all_registrations:
-    print registration
     (timestamp, namespace, nid, api_key) = registration
 
-    if api_key in ["test", "api-docs"]:
+    if api_key in ["test", "api-docs", "ekjpt55agtzy10441yv7nh302"]:
         continue
     if len(api_key) > 40:
         continue
@@ -38,14 +37,25 @@ for registration in all_registrations:
     alias = (namespace, nid)
     registration_dict[api_key][alias] = {"registered":timestamp}
 
+for api_key in registration_dict.keys():
+    for alias in registration_dict[api_key].keys():
+        (namespace, nid) = alias
+        tiid = models.ItemFactory.get_tiid_by_alias(namespace, nid, None, mydao)
+        if not tiid:
+            print "****************** no tiid, skipping*****************"
+            raw_input("hit enter to continue")
+            continue
 
-    tiid = models.ItemFactory.get_tiid_by_alias(namespace, nid, None, mydao)
-    if not tiid:
-        print "****************** no tiid, skipping*****************"
-        raw_input("hit enter to continue")
-        continue
-
-    api_user.register_item(alias, tiid, api_key, mydao)
+        api_user.register_item(alias, tiid, api_key, mydao)
 
 
+for reg in registration_dict.keys():
+    print reg
+    print len(registration_dict[reg])
 
+print "\n\n"
+
+for reg in registration_dict.keys():
+    print reg
+    for key in registration_dict[reg].keys():
+        print key
