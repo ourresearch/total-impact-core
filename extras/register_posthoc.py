@@ -1,5 +1,9 @@
-import re
+import re, os
 from collections import defaultdict
+
+from totalimpact import models
+from totalimpact import dao
+from totalimpact import api_user
 
 run_post_file = True
 
@@ -19,20 +23,16 @@ else:
     all_registrations = register_pattern.findall(contents)
 
 
-from totalimpact import models
-from totalimpact import dao
-from totalimpact import api_user
-
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
-
 
 registration_dict = defaultdict(dict)
 for registration in all_registrations:
+    print registration
     (timestamp, namespace, nid, api_key) = registration
 
     if api_key in ["test", "api-docs"]:
         continue
-    if len(api_key) > 20:
+    if len(api_key) > 40:
         continue
 
     alias = (namespace, nid)
@@ -41,8 +41,8 @@ for registration in all_registrations:
 
     tiid = models.ItemFactory.get_tiid_by_alias(namespace, nid, None, mydao)
     if not tiid:
-        print "****************** no tiid, skipping"
-        print 1/0
+        print "****************** no tiid, skipping*****************"
+        raw_input("hit enter to continue")
         continue
 
     api_user.register_item(alias, tiid, api_key, mydao)
