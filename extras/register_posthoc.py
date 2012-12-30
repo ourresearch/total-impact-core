@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
 
-run_post_file = False
+run_post_file = True
 
 if run_post_file:
     # zgrep "key=" 2012-*.gz | grep method=POST | grep -v "key=VANWIJIKc233acaa" | grep -v "key=EXAMPLE" | grep -v "key=Heather" | grep -v embed | grep -v GREEK_YOGURT | grep -v "key=KEY" | grep -v YOURKEY > registers_by_post.txt
@@ -11,7 +11,7 @@ if run_post_file:
     register_pattern = re.compile("2012.*\t(?P<timestamp>2012-.*)Z\t.*/v1/item/(?P<namespace>[a-z]*?)/(?P<id>.*?)\?key=(?P<apikey>.*?) host")
     all_registrations = register_pattern.findall(contents)
 else:
-    #zgrep "key=" 2012-*.gz | grep method=GET | grep -v "key=VANWIJIKc233acaa" | grep -v "key=EXAMPLE" | grep -v "key=Heather" | grep -v embed | grep -v GREEK_YOGURT | grep register > registers_by_get.txt
+    #zgrep "key=" 2012-*.gz | grep method=GET | grep register | grep -v "key=VANWIJIKc233acaa" | grep -v "key=EXAMPLE" | grep -v "key=Heather" | grep -v embed | grep -v GREEK_YOGURT | grep -v "key=KEY" | grep -v YOURKEY > registers_by_get.txt
     # 2012-12-16.gz:216792413250023424  2012-12-16T02:22:41Z    2012-12-16T02:22:41Z    1075101 ti-core 107.21.167.86   User    Notice  heroku/router   at=info method=GET path=/v1/item/doi/10.3897/zookeys.57.477?key=pensoft-127b7fd8&register=true&_=1355624578069 host=total-impact-core.herokuapp.com fwd=201.141.18.134 dyno=web.1 queue=0 wait=0ms connect=2ms service=170ms status=200 bytes=5953
     filename = "/Users/hpiwowar/Dropbox/ti/papertrail archives/registers_by_get.txt"
     contents = open(filename, "r").read()
@@ -42,6 +42,7 @@ for registration in all_registrations:
     tiid = models.ItemFactory.get_tiid_by_alias(namespace, nid, None, mydao)
     if not tiid:
         print "****************** no tiid, skipping"
+        print 1/0
         continue
 
     api_user.register_item(alias, tiid, api_key, mydao)
