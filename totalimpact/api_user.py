@@ -37,22 +37,24 @@ def register_item(alias, tiid, api_key, mydao):
         raise ApiLimitExceededException
 
     # do the registering
-    now = datetime.datetime.now().isoformat()
 
     alias_key = ":".join(alias)
+    if alias_key in api_user_doc["registered_items"]:
+        logger.info("Item {tiid} was already registered to {api_key}, {remaining_registration_spots} registration spots remain".format(
+            tiid=tiid, api_key=api_key, remaining_registration_spots=remaining_registration_spots))
+    else:        
+        now = datetime.datetime.now().isoformat()
+        api_user_doc["registered_items"][alias_key] = {
+            "registered_date": now,
+            "tiid": tiid
+        }
+        mydao.save(api_user_doc)
 
-    api_user_doc["registered_items"][alias_key] = {
-        "registered_date": now,
-        "tiid": tiid
-    }
+        used_registration_spots = len(api_user_doc["registered_items"])
+        remaining_registration_spots = api_user_doc["max_registered_items"] - used_registration_spots
 
-    mydao.save(api_user_doc)
-
-    used_registration_spots = len(api_user_doc["registered_items"])
-    remaining_registration_spots = api_user_doc["max_registered_items"] - used_registration_spots
-
-    logger.info("Registered item {tiid} to {api_key}, {remaining_registration_spots} registration spots remain".format(
-        tiid=tiid, api_key=api_key, remaining_registration_spots=remaining_registration_spots))
+        logger.info("Registered item {tiid} to {api_key}, {remaining_registration_spots} registration spots remain".format(
+            tiid=tiid, api_key=api_key, remaining_registration_spots=remaining_registration_spots))
 
     return(remaining_registration_spots)
 
@@ -63,7 +65,6 @@ def get_api_user_id_by_api_key(api_key, mydao):
 
     # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
     res = mydao.view('api_users_by_api_key/api_users_by_api_key')
-    print res
 
     matches = res[[api_key]] 
 
@@ -71,7 +72,6 @@ def get_api_user_id_by_api_key(api_key, mydao):
     if matches.rows:
         api_user_id = matches.rows[0]["id"]
         logger.debug("found a match for {api_key}!".format(api_key=api_key))
-        print matches.rows[0]
     else:
         logger.debug("no match for api_key {api_key}!".format(api_key=api_key))
     return (api_user_id)
