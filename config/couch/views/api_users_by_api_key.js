@@ -1,6 +1,6 @@
 function(doc) {
-    // lists docs by api keys
+    // lists docs by current api keys
     if (doc.type == "api_user") {
-        emit([doc.current_key], 1);
+        emit([doc.current_key], [doc.created]);
     }
 }
