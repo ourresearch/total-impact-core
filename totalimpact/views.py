@@ -555,7 +555,10 @@ def key():
     prefix = meta["prefix"]
     del(meta["prefix"])
 
-    (api_user_doc, new_api_key) = api_user.build_api_user(prefix, **meta)
+    max_registered_items = meta["max_registered_items"]
+    del(meta["max_registered_items"])
+
+    (api_user_doc, new_api_key) = api_user.build_api_user(prefix, max_registered_items, **meta)
     mydao.db.save(api_user_doc)
 
     resp = make_response(json.dumps({"api_key":new_api_key}, indent=4), 200)

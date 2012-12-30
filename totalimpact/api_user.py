@@ -4,18 +4,18 @@ import shortuuid
 import logging
 logger = logging.getLogger('ti.api_user')
 
-def build_api_user(prefix, **meta):
+def build_api_user(prefix, max_registered_items, **meta):
     api_user_doc = {}
 
     new_api_key = prefix.upper() + shortuuid.uuid().lower()[0:6]
     now = datetime.datetime.now().isoformat()
 
+    api_user_doc["max_registered_items"] = int(max_registered_items)
     api_user_doc["created"] = now
     api_user_doc["type"] = "api_user"
     api_user_doc["meta"] = meta
     api_user_doc["current_key"] = new_api_key
     api_user_doc["key_history"] = {now: new_api_key}
-    api_user_doc["max_registered_items"] = 1000
     api_user_doc["registered_items"] = {}
     api_user_doc["_id"] = shortuuid.uuid()[0:24]
 
@@ -27,7 +27,7 @@ class ApiLimitExceededException(Exception):
 def register_item(alias, tiid, api_key, mydao):
     api_user_id = get_api_user_id_by_api_key(api_key, mydao)
 
-    api_user_doc = mydao.db.get(api_user_id)
+    api_user_doc = mydao.get(api_user_id)
     used_registration_spots = len(api_user_doc["registered_items"])
     remaining_registration_spots = api_user_doc["max_registered_items"] - used_registration_spots
 
@@ -39,18 +39,20 @@ def register_item(alias, tiid, api_key, mydao):
     # do the registering
     now = datetime.datetime.now().isoformat()
 
-    api_user_doc["registered_items"][alias] = {
+    alias_key = ":".join(alias)
+
+    api_user_doc["registered_items"][alias_key] = {
         "registered_date": now,
         "tiid": tiid
     }
 
-    mydao.db.save(api_user_doc)
+    mydao.save(api_user_doc)
 
     used_registration_spots = len(api_user_doc["registered_items"])
     remaining_registration_spots = api_user_doc["max_registered_items"] - used_registration_spots
 
     logger.info("Registered item {tiid} to {api_key}, {remaining_registration_spots} registration spots remain".format(
-        tiid=tiid, api_key=api_key))
+        tiid=tiid, api_key=api_key, remaining_registration_spots=remaining_registration_spots))
 
     return(remaining_registration_spots)
 
