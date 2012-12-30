@@ -7,7 +7,7 @@ logger = logging.getLogger('ti.api_user')
 def build_api_user(prefix, max_registered_items, **meta):
     api_user_doc = {}
 
-    new_api_key = prefix.upper() + shortuuid.uuid().lower()[0:6]
+    new_api_key = prefix.lower() + "-" + shortuuid.uuid().lower()[0:6]
     now = datetime.datetime.now().isoformat()
 
     api_user_doc["max_registered_items"] = int(max_registered_items)
@@ -24,8 +24,14 @@ def build_api_user(prefix, max_registered_items, **meta):
 class ApiLimitExceededException(Exception):
     pass
 
+class InvalidApiKeyException(Exception):
+    pass
+
 def register_item(alias, tiid, api_key, mydao):
     api_user_id = get_api_user_id_by_api_key(api_key, mydao)
+
+    if not api_user_id:
+        raise InvalidApiKeyException
 
     api_user_doc = mydao.get(api_user_id)
     used_registration_spots = len(api_user_doc["registered_items"])
