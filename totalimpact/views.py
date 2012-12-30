@@ -138,8 +138,10 @@ def item_namespace_post(namespace, nid):
     if api_key != os.getenv("API_KEY"):
         try:
             remaining_registration_spots = api_user.register_item((namespace, nid), tiid, api_key, mydao)
+        except api_user.InvalidApiKeyException:
+            abort(403, "Unrecognized API key. Contact team@impactstory.org and we'll get you going again.")
         except api_user.ApiLimitExceededException:
-            abort(403, "Registration limit exceeded.  Please contact team@impactstory.org to discuss options.")
+            abort(403, "Registration limit exceeded. Contact team@impactstory.org to discuss options.")
 
     response_code = 201 # Created
     resp = make_response(json.dumps("ok"), response_code)
@@ -166,8 +168,10 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
             if api_key != os.getenv("API_KEY"):
                 try:
                     remaining_registration_spots = api_user.register_item((namespace, nid), tiid, api_key, mydao)
+                except api_user.InvalidApiKeyException:
+                    abort(403, "Unrecognized API key. Contact team@impactstory.org and we'll get you going again.")
                 except api_user.ApiLimitExceededException:
-                    abort(403, "Registration limit exceeded. Please contact team@impactstory.org to discuss options.")
+                    abort(403, "Registration limit exceeded. Contact team@impactstory.org to discuss options.")
 
         else:
             abort(404, "Item not in database")
