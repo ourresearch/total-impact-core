@@ -349,16 +349,16 @@ class ItemFactory():
     @classmethod
     def create_item(cls, namespace, nid, myredis, mydao):
         logger.debug("In create_item with alias" + str((namespace, nid)))
+
         item = ItemFactory.make()
+        item["aliases"][namespace] = [nid]
+        item["aliases"] = cls.canonical_aliases(item["aliases"])
 
         # set this so we know when it's still updating later on
         myredis.set_num_providers_left(
             item["_id"],
             ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
         )
-
-        item["aliases"][namespace] = [nid]
-        item["aliases"] = cls.canonical_aliases(item["aliases"])
 
         mydao.save(item)
 
@@ -393,7 +393,7 @@ class ItemFactory():
                     ))
                 item = ItemFactory.make()
                 item["aliases"][namespace] = [nid]
-
+                item["aliases"] = cls.canonical_aliases(item["aliases"])
                 new_items.append(item)
                 tiids.append(item["_id"]) 
 
@@ -423,13 +423,10 @@ class ItemFactory():
         logger.debug("In get_tiid_by_alias with {ns}, {nid}".format(
             ns=ns, nid=nid))
 
-        # lowercase namespace and dois
-        ns = ns.lower()
-        if ns in ["doi"]:
-            nid = nid.lower()
-
-        logger.debug("In get_tiid_by_alias with {nid}".format(
-            nid=nid))
+        # change input to lowercase etc
+        aliases_dict = cls.canonical_aliases({ns:[nid]})
+        ns = aliases_dict.keys()[0]
+        nid = aliases_dict[ns][0]
 
         matches = res[[ns, nid]] 
 
