@@ -244,7 +244,6 @@ class TestItem(ViewsTester):
         response = self.client.get(url)
         assert_equals(response.status_code, 404) # created but still updating
 
-    @nottest
     def test_item_get_create_param_makes_new_item(self):
         url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey&register=true"
         response = self.client.get(url)
@@ -252,7 +251,6 @@ class TestItem(ViewsTester):
         item_info = json.loads(response.data)
         assert_equals(item_info["aliases"]["doi"][0], TEST_DRYAD_DOI)
 
-    @nottest
     def test_v1_item_post_success(self):
         url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey"
         response = self.client.post(url)
@@ -266,10 +264,9 @@ class TestItem(ViewsTester):
         print response
         print tiid
 
-    @nottest
     def test_v1_item_get_success_realid(self):
         # First put something in
-        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=example"
+        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey"
         response_post = self.client.post(url)
         # now check response
         response_get = self.client.get(url)
