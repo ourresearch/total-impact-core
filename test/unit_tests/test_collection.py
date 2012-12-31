@@ -100,7 +100,7 @@ class TestCollection():
         expected = "heather"
         assert_equals(response[1], False)
         assert_equals(response[0].keys(), ['items', '_rev', '_id', 'type', 'title'])
-        assert_equals(response[0]["items"][0].keys(), ['_rev', 'currently_updating', 'metrics', 'biblio', '_id', 'type', 'aliases'])
+        assert_equals(sorted(response[0]["items"][0].keys()), sorted(['is_registered', '_rev', 'currently_updating', 'metrics', 'biblio', '_id', 'type', 'aliases']))
 
     def test_make_csv_rows(self):
         csv = collection.make_csv_rows(API_ITEMS_JSON)

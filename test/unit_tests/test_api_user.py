@@ -25,7 +25,7 @@ class TestApiUser():
         self.test_alias_registered_string = ":".join(self.test_alias_registered)
 
         self.sample_user_api_doc = {'key_history': {'2012-12-27T12:09:20.072080': 'SFUlqzam8'}, 'created': '2012-12-27T12:09:20.072080', 'current_key': 'SFUlqzam8', 
-            'registered_items': {self.test_alias_registered_string: {"tiid":"tiid1", "registered_date":"2012etc"}}, 
+            'registered_items': {self.test_alias_registered_string: {"tiid":"tiid2", "registered_date":"2012etc"}}, 
             'max_registered_items':3,
             'meta': {'usage': 'individual CV', 'api_limit': '', 'notes': '', 'api_key_owner': '', 'email': ''}, '_id': 'XeZhf8BWNgM5r9B9Xu3whT', 'type': 'api_user'}
         self.d.db.save(self.sample_user_api_doc)       

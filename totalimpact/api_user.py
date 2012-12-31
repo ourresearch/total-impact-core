@@ -16,17 +16,24 @@ class ItemAlreadyRegisteredToThisKey(Exception):
     pass
 
 def is_current_api_user_key(key, mydao):
+    if not key:
+        return False
+
     api_user_id = get_api_user_id_by_api_key(key, mydao)
     if api_user_id:
         return True
     return False
 
 def is_internal_key(key):
-    if key in [os.getenv("API_KEY")]:
+    if not key:
+        return False
+
+    if key in ["YOURKEY", "API-DOCS", os.getenv("API_KEY")]:
         return True
     return False
 
 def is_valid_key(key, mydao):
+    # do quick and common check first
     if is_internal_key(key):
         return True
     if is_current_api_user_key(key, mydao):
@@ -58,8 +65,10 @@ def is_registered(alias, api_key, mydao):
     alias = item.canonical_alias_tuple(alias)
     alias_string = ":".join(alias)
     api_key = api_key.lower()
+
     res = mydao.view('registered_items_by_alias/registered_items_by_alias')    
     matches = res[[alias_string, api_key]] 
+
     if matches.rows:
         #api_user_id = matches.rows[0]["id"]
         return True
