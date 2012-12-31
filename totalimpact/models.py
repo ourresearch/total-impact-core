@@ -21,7 +21,6 @@ control_char_re = re.compile('[%s]' % re.escape(control_chars))
 class NotAuthenticatedError(Exception):
     pass
 
-
 class MemberItems():
 
     def __init__(self, provider, redis):
