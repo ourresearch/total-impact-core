@@ -41,7 +41,6 @@ class TestFigshare(ProviderTestCase):
         expected = 'http://dx.doi.org/10.6084/m9.figshare.92393'
         assert_equals(provenance_url, expected)
 
-    @nottest
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
