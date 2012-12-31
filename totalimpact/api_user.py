@@ -72,6 +72,8 @@ def get_api_user_id_by_api_key(api_key, mydao):
     # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
     res = mydao.view('api_users_by_api_key/api_users_by_api_key')
 
+    api_key = api_key.lower()
+    
     matches = res[[api_key]] 
 
     api_user_id = None

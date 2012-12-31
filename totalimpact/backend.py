@@ -4,7 +4,7 @@ import os, time, json, logging, threading, Queue, copy, sys, datetime
 from collections import defaultdict
 
 from totalimpact import dao, tiredis, default_settings
-from totalimpact.models import ItemFactory
+from totalimpact import item as item_module
 from totalimpact.providers.provider import ProviderFactory, ProviderError
 
 logger = logging.getLogger('ti.backend')
@@ -113,7 +113,7 @@ class ProviderWorker(Worker):
         provider_name = provider.provider_name
         worker_name = provider_name+"_worker"
 
-        input_alias_tuples = ItemFactory.alias_tuples_from_dict(input_aliases_dict)
+        input_alias_tuples = item_module.alias_tuples_from_dict(input_aliases_dict)
         method = getattr(provider, method_name)
 
         try:
@@ -127,9 +127,9 @@ class ProviderWorker(Worker):
             # update aliases to include the old ones too
             aliases_providers_run += [provider_name]
             if method_response:
-                new_aliases_dict = ItemFactory.alias_dict_from_tuples(method_response)
-                new_canonical_aliases_dict = ItemFactory.canonical_aliases(new_aliases_dict)
-                response = ItemFactory.merge_alias_dicts(new_canonical_aliases_dict, input_aliases_dict)
+                new_aliases_dict = item_module.alias_dict_from_tuples(method_response)
+                new_canonical_aliases_dict = item_module.canonical_aliases(new_aliases_dict)
+                response = item_module.merge_alias_dicts(new_canonical_aliases_dict, input_aliases_dict)
             else:
                 response = input_aliases_dict
         else:
@@ -192,7 +192,7 @@ class CouchWorker(Worker):
         if alias_dict == item["aliases"]:
             item = None
         else:
-            merged_aliases = ItemFactory.merge_alias_dicts(alias_dict, item["aliases"])
+            merged_aliases = item_module.merge_alias_dicts(alias_dict, item["aliases"])
             item["aliases"] = merged_aliases
         return(item)
 
@@ -208,7 +208,7 @@ class CouchWorker(Worker):
 
     @classmethod
     def update_item_with_new_metrics(cls, metric_name, metrics_method_response, item):
-        item = ItemFactory.add_metrics_data(metric_name, metrics_method_response, item)
+        item = item_module.add_metrics_data(metric_name, metrics_method_response, item)
         return(item)        
 
     def decr_num_providers_left(self, metric_name, tiid):
@@ -275,7 +275,7 @@ class Backend(Worker):
 
         all_metrics_providers = [provider.provider_name for provider in 
                         ProviderFactory.get_providers(provider_config, "metrics")]
-        (genre, host) = ItemFactory.decide_genre(item_aliases)
+        (genre, host) = item_module.decide_genre(item_aliases)
         has_alias_urls = "url" in item_aliases
 
         if (genre == "article"):

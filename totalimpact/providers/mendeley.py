@@ -186,8 +186,8 @@ class Mendeley(Provider):
             cache_enabled=True):
 
         # Only lookup metrics for items with appropriate ids
-        from totalimpact.models import ItemFactory
-        aliases_dict = ItemFactory.alias_dict_from_tuples(aliases)
+        from totalimpact import item
+        aliases_dict = item.alias_dict_from_tuples(aliases)
 
         metrics_page = None    
         # try lookup by doi

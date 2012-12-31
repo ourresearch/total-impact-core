@@ -210,8 +210,8 @@ def put_snaps_in_items():
                 saving = True
                 while saving:
                     try:
-                        from totalimpact.models import ItemFactory
-                        updated_item = ItemFactory.add_snap_data(item, snap)
+                        from totalimpact import item
+                        updated_item = item.add_snap_data(item, snap)
 
                         # to decide the proper last modified date
                         snap_last_modified = snap["created"]

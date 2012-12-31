@@ -3,8 +3,7 @@ import argparse
 import logging, couchdb, os, sys, random, datetime
 from libsaas.services import mixpanel
 
-from totalimpact import dao, tiredis
-from totalimpact.models import ItemFactory
+from totalimpact import dao, tiredis, item
 
 logger = logging.getLogger('ti.updater')
 logger.setLevel(logging.DEBUG)
@@ -157,7 +156,7 @@ def update_active_publisher_items(number_to_update, myredis, mydao):
     print "updating {number_to_update} of them now".format(number_to_update=number_to_update)
     QUEUE_DELAY_IN_SECONDS = 1.0
     mymixpanel.track("Trigger:Update", properties={"Number Items":len(tiids_to_update), "Update Type":"Scheduled Registered"}, ip=False)    
-    ItemFactory.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
+    item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
 
     return tiids_to_update
 
@@ -187,7 +186,7 @@ def update_least_recently_updated(number_to_update, myredis, mydao):
     update_docs_with_updater_timestamp(docs, mydao)
     QUEUE_DELAY_IN_SECONDS = 1.0
     mymixpanel.track("Trigger:Update", properties={"Number Items":len(tiids_to_update), "Update Type":"Scheduled Least Recently"}, ip=False)
-    ItemFactory.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
+    item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
     return tiids_to_update
 
 def main(action_type, number_to_update=35):

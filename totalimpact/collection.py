@@ -3,7 +3,7 @@ import shortuuid, string, random, datetime
 import csv, StringIO, json
 from collections import OrderedDict, defaultdict
 
-from totalimpact.models import ItemFactory
+from totalimpact import item as item_module
 from totalimpact.providers.provider import ProviderFactory
 
 # Master lock to ensure that only a single thread can write
@@ -79,7 +79,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
         for row in view_response.rows[1:]:
             item_doc = row.doc 
             try:
-                item_for_client = ItemFactory.build_item_for_client(item_doc, myrefsets, include_history)
+                item_for_client = item_module.build_item_for_client(item_doc, myrefsets, include_history)
             except (KeyError, TypeError):
                 logging.info("Couldn't build item {item_doc}, excluding it from the returned collection {cid}".format(
                     item_doc=item_doc, cid=cid))
@@ -90,7 +90,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     
     something_currently_updating = False
     for item in collection["items"]:
-        item["currently_updating"] = ItemFactory.is_currently_updating(item["_id"], myredis)
+        item["currently_updating"] = item_module.is_currently_updating(item["_id"], myredis)
         something_currently_updating = something_currently_updating or item["currently_updating"]
 
     logging.info("Got items for collection %s" %cid)

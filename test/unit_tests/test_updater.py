@@ -2,7 +2,7 @@ import json, os, Queue, datetime, copy
 
 from totalimpact import dao, tiredis
 from totalimpact import updater
-from totalimpact.models import ItemFactory
+from totalimpact import item
 from nose.tools import raises, assert_equals, nottest
 from test.utils import slow
 

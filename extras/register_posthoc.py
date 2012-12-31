@@ -1,7 +1,7 @@
 import re, os
 from collections import defaultdict
 
-from totalimpact import models
+from totalimpact import item
 from totalimpact import dao
 from totalimpact import api_user
 
@@ -40,7 +40,7 @@ for registration in all_registrations:
 for api_key in registration_dict.keys():
     for alias in registration_dict[api_key].keys():
         (namespace, nid) = alias
-        tiid = models.ItemFactory.get_tiid_by_alias(namespace, nid, None, mydao)
+        tiid = item.get_tiid_by_alias(namespace, nid, None, mydao)
         if not tiid:
             print "****************** no tiid, skipping*****************"
             raw_input("hit enter to continue")
