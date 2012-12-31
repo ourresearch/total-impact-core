@@ -8,7 +8,8 @@ import uuid
 from libsaas.services import mixpanel
 
 from totalimpact import dao, app, tiredis, collection, api_user
-from totalimpact.models import ItemFactory, MemberItems, UserFactory, NotAuthenticatedError
+from totalimpact import item as item_module
+from totalimpact.models import MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderContentMalformedError, ProviderTimeout
 from totalimpact import default_settings
 import logging
@@ -102,7 +103,7 @@ GET /tiid/:namespace/:id
 # not supported in v1
 def tiid(ns, nid):
 
-    tiid = ItemFactory.get_tiid_by_alias(ns, nid, myredis, mydao)
+    tiid = item_module.get_tiid_by_alias(ns, nid, myredis, mydao)
 
     if not tiid:
         abort(404)
@@ -122,7 +123,7 @@ original api returned tiid
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post_with_tiid(namespace, nid):
     mymixpanel.track("Create:Item", properties={"Namespace":namespace, "Source":"/item post"}, ip=False)
-    tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
+    tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     response_code = 201 # Created
     resp = make_response(json.dumps(tiid), response_code)
     resp.mimetype = "application/json"
@@ -134,7 +135,7 @@ def item_namespace_post(namespace, nid):
     mymixpanel.track("Create:Item", properties={"Namespace":namespace, 
                                                 "Source":"/item post", 
                                                 "API Key": api_key}, ip=False)
-    tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
+    tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     if api_key != os.getenv("API_KEY"):
         try:
             remaining_registration_spots = api_user.register_item((namespace, nid), tiid, api_key, mydao)
@@ -155,8 +156,8 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
     register = request.args.get("register", 0) in ["1", "true", "True"]
 
     # remove unprintable characters
-    nid = ItemFactory.clean_id(nid)
-    tiid = ItemFactory.get_tiid_by_alias(namespace, nid, myredis, mydao)
+    nid = item_module.clean_id(nid)
+    tiid = item_module.get_tiid_by_alias(namespace, nid, myredis, mydao)
     if not tiid:
         if register:
             api_key = request.values.get('key')
@@ -164,7 +165,7 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
                                                         "Source":"/item get", 
                                                         "API Key": api_key}, ip=False)
 
-            tiid = ItemFactory.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
+            tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
             if api_key != os.getenv("API_KEY"):
                 try:
                     remaining_registration_spots = api_user.register_item((namespace, nid), tiid, api_key, mydao)
@@ -187,21 +188,21 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
 def get_item_from_tiid(tiid, format=None, include_history=False):
 
     try:
-        item = ItemFactory.get_item(tiid, myrefsets, mydao, include_history)
+        item = item_module.get_item(tiid, myrefsets, mydao, include_history)
     except (LookupError, AttributeError):
         abort(404)
 
     if not item:
         abort(404)
 
-    if ItemFactory.is_currently_updating(tiid, myredis):
+    if item_module.is_currently_updating(tiid, myredis):
         response_code = 210 # not complete yet
         item["currently_updating"] = True
     else:
         response_code = 200
         item["currently_updating"] = False
 
-    clean_item = ItemFactory.clean_for_export(item)
+    clean_item = item_module.clean_for_export(item)
     resp = make_response(json.dumps(clean_item, sort_keys=True, indent=4),
                          response_code)
     resp.mimetype = "application/json"
@@ -333,7 +334,7 @@ def collection_get(cid='', format="json", include_history=False):
 
         if format == "csv":
             # remove scopus before exporting to csv, so don't add magic keep-scopus keys to clean method
-            clean_items = [ItemFactory.clean_for_export(item) for item in coll_with_items["items"]]
+            clean_items = [item_module.clean_for_export(item) for item in coll_with_items["items"]]
             csv = collection.make_csv_stream(clean_items)
             resp = make_response(csv, response_code)
             resp.mimetype = "text/csv;charset=UTF-8"
@@ -344,7 +345,7 @@ def collection_get(cid='', format="json", include_history=False):
                              "UTF-8")
         else:
             api_key = request.args.get("api_key", None)
-            clean_if_necessary_items = [ItemFactory.clean_for_export(item, api_key, os.getenv("API_KEY")) 
+            clean_if_necessary_items = [item_module.clean_for_export(item, api_key, os.getenv("API_KEY")) 
                 for item in coll_with_items["items"]]
             coll_with_items["items"] = clean_if_necessary_items
             resp = make_response(json.dumps(coll_with_items, sort_keys=True, indent=4),
@@ -397,7 +398,7 @@ def collection_update(cid=""):
         abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")
 
     mymixpanel.track("Trigger:Update", properties={"Number Items":len(tiids), "Report Id":cid, "Update Type":"webapp"}, ip=False)
-    ItemFactory.start_item_update(tiids, myredis, mydao)
+    item_module.start_item_update(tiids, myredis, mydao)
 
     resp = make_response("true", 200)
     resp.mimetype = "application/json"
@@ -422,7 +423,7 @@ def collection_create():
     try:
         coll["title"] = request.json["title"]
         aliases = request.json["aliases"]
-        (tiids, new_items) = ItemFactory.create_or_update_items_from_aliases(aliases, myredis, mydao)
+        (tiids, new_items) = item_module.create_or_update_items_from_aliases(aliases, myredis, mydao)
         for item in new_items:
             namespaces = item["aliases"].keys()
             mymixpanel.track("Create:Item", properties={"Namespace":namespaces[0], "Source":"collection"}, ip=False)

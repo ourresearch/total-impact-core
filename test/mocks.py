@@ -2,7 +2,7 @@ import time, logging
 
 from totalimpact.providers.provider import Provider
 from totalimpact.providers.provider import ProviderClientError, ProviderServerError
-from totalimpact.models import ItemFactory
+from totalimpact import item
 
 
 
@@ -58,7 +58,7 @@ class QueueMock(object):
                 if self.current_item > self.max_items:
                     return None
             # Generate a mock item with initial alias ('mock', id)
-            item = ItemFactory.make()
+            item = item.make()
             item.id = self.current_item
             item.aliases['mock'] = str(item.id)
             self.items[self.current_item] = item

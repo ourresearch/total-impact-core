@@ -21,7 +21,7 @@ class TestApiUser():
 
     def test_build_api_user(self):
         meta = {'usage': 'individual CV', 'email': '', 'notes': '', 'api_limit': '', 'api_key_owner': ''}
-        (new_api_doc, new_api_key) = api_user.build_api_user("SFU", **meta)
+        (new_api_doc, new_api_key) = api_user.build_api_user("SFU", 1000, **meta)
         print new_api_doc
         expected = self.sample_user_api_doc
         assert_equals(new_api_doc["current_key"], new_api_key)
@@ -35,7 +35,7 @@ class TestApiUser():
 
     def test_register_item(self):
         meta = {'usage': 'individual CV', 'email': '', 'notes': '', 'api_limit': '', 'api_key_owner': ''}
-        (api_user_doc, api_key) = api_user.build_api_user("UBC", **meta)
+        (api_user_doc, api_key) = api_user.build_api_user("UBC", 1000, **meta)
         self.d.db.save(api_user_doc)       
 
         alias1 = "10.1371/journal.pcbi.1"
