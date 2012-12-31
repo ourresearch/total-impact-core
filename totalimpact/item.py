@@ -28,6 +28,7 @@ def largest_value_that_is_less_than_or_equal_to(target, collection):
 all_static_meta = ProviderFactory.get_all_static_meta()
 
 
+
 def clean_id(nid):
     nid = control_char_re.sub('', nid)
     nid = nid.replace(u'\u200b', "")
@@ -173,6 +174,13 @@ def decide_genre(alias_dict):
             host = "webpage"
 
     return (genre, host)
+
+def canonical_alias_tuple(alias):
+    (namespace, nid) = alias
+    namespace = namespace.lower()
+    if namespace=="doi":
+        nid = nid.lower()
+    return(namespace, nid)
 
 def canonical_aliases(orig_aliases_dict):
     # only put lowercase namespaces in items, and lowercase dois
@@ -327,7 +335,7 @@ def create_or_update_items_from_aliases(aliases, myredis, mydao):
 
     return (tiids, new_items)
 
-def create_item(namespace, nid, myredis, mydao):
+def create_item(namespace, nid, myredis, mydao, mymixpanel=None):
     logger.debug("In create_item with alias" + str((namespace, nid)))
     item = make()
 
@@ -337,6 +345,8 @@ def create_item(namespace, nid, myredis, mydao):
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
     )
 
+    namespace = clean_id(namespace)
+    nid = clean_id(nid)
     item["aliases"][namespace] = [nid]
     item["aliases"] = canonical_aliases(item["aliases"])
 
@@ -349,6 +359,9 @@ def create_item(namespace, nid, myredis, mydao):
         alias=str((namespace, nid))
     ))
 
+    if mymixpanel:
+        mymixpanel.track("Create:Item", properties={"Namespace":namespace}, ip=False)
+
     try:
         return item["_id"]
     except AttributeError:
@@ -359,7 +372,7 @@ def create_or_find_items_from_aliases(clean_aliases, myredis, mydao):
     new_items = []
     for alias in clean_aliases:
         (namespace, nid) = alias
-        existing_tiid = get_tiid_by_alias(namespace, nid, myredis, mydao)
+        existing_tiid = get_tiid_by_alias(namespace, nid, mydao)
         if existing_tiid:
             tiids.append(existing_tiid)
             logger.debug("found an existing tiid ({tiid}) for alias {alias}".format(
@@ -380,20 +393,20 @@ def create_or_find_items_from_aliases(clean_aliases, myredis, mydao):
     unique_tiids = list(set(tiids))
     return(unique_tiids, new_items)
 
-def create_item_from_namespace_nid(namespace, nid, myredis, mydao):
+def create_item_from_namespace_nid(namespace, nid, myredis, mydao, mymixpanel=None):
     # remove unprintable characters
     nid = clean_id(nid)
 
-    tiid = get_tiid_by_alias(namespace, nid, myredis, mydao)
+    tiid = get_tiid_by_alias(namespace, nid, mydao)
     if tiid:
         logger.debug("... found with tiid " + tiid)
     else:
-        tiid = create_item(namespace, nid, myredis, mydao)
+        tiid = create_item(namespace, nid, myredis, mydao, mymixpanel)
         logger.debug("new item created with tiid " + tiid)
 
     return tiid
 
-def get_tiid_by_alias(ns, nid, myredis, mydao):
+def get_tiid_by_alias(ns, nid, mydao):
     res = mydao.view('queues/by_alias')
 
     # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
@@ -401,10 +414,7 @@ def get_tiid_by_alias(ns, nid, myredis, mydao):
         ns=ns, nid=nid))
 
     # change input to lowercase etc
-    aliases_dict = canonical_aliases({ns:[nid]})
-    ns = aliases_dict.keys()[0]
-    nid = aliases_dict[ns][0]
-
+    (ns, nid) = canonical_alias_tuple((ns, nid))
     matches = res[[ns, nid]] 
 
     if matches.rows:

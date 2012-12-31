@@ -99,6 +99,13 @@ class Dao(object):
                 "views": {
                     "api_users_by_api_key": {}                    
                 }
+            },
+            {
+                "_id": "_design/registered_items_by_alias",
+                "language": "javascript",
+                "views": {
+                    "registered_items_by_alias": {}                    
+                }
             }
         ]
 
@@ -108,18 +115,19 @@ class Dao(object):
                 with open('./config/couch/views/{0}.js'.format(view_name)) as f:
                     design_doc["views"][view_name]["map"] = f.read()
 
-            logger.info("overwriting the design doc with the latest version in dao.")
+            #logger.info("overwriting the design doc with the latest version in dao.")
             
             try:
                 current_design_doc_rev = self.db[design_doc_name]["_rev"]
                 design_doc["_rev"] = current_design_doc_rev
             except ResourceNotFound:
-                logger.info("No existing design doc found for {design_doc_name}. That's fine, we'll make it.".format(
-                    design_doc_name=design_doc_name))
+                pass
+                #logger.info("No existing design doc found for {design_doc_name}. That's fine, we'll make it.".format(
+                #    design_doc_name=design_doc_name))
                 
             self.db.save(design_doc)
-            logger.info("saved the new design doc {design_doc_name}".format(
-                design_doc_name=design_doc_name))
+            #logger.info("saved the new design doc {design_doc_name}".format(
+            #    design_doc_name=design_doc_name))
 
 
     def create_db(self, db_name):

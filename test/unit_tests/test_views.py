@@ -1,7 +1,7 @@
 import unittest, json, uuid
 from copy import deepcopy
 from urllib import quote_plus
-from nose.tools import assert_equals
+from nose.tools import assert_equals, nottest, assert_greater
 
 from totalimpact import app, dao, views, tiredis
 from totalimpact.providers.dryad import Dryad
@@ -25,14 +25,6 @@ COLLECTION_SEED = json.loads("""{
 }""")
 COLLECTION_SEED_MODIFIED = deepcopy(COLLECTION_SEED)
 COLLECTION_SEED_MODIFIED["alias_tiids"] = dict(zip(["doi:1", "doi:2"], TEST_COLLECTION_TIID_LIST_MODIFIED))
-
-
-api_items_loc = os.path.join(
-    os.path.split(__file__)[0],
-    '../data/items.json')
-
-with open(api_items_loc, "r") as f:
-    API_ITEMS_JSON = json.loads(f.read())
 
 def MOCK_member_items(self, query_string, url=None, cache_enabled=True):
     return(GOLD_MEMBER_ITEM_CONTENT)
@@ -119,6 +111,32 @@ class ViewsTester(unittest.TestCase):
         }
         '''
 
+        test_api_user = """
+                {
+           "_id": "yDnhDa3fdFxxEsQnzYnA96",
+           "created": "2012-11-19T16:11:17.713812",
+           "current_key": "validkey",
+           "registered_items": {
+               "doi:10.1371/journal.pcbi.1000355": {
+                   "tiid": "b229e24abec811e1887612313d1a5e63",
+                   "registered_date": "2012-12-29T18:11:20.870026"
+               }
+           },
+           "max_registered_items": 1000,
+           "key_history": {
+               "2012-11-19T16:11:17.713812": "validkey"
+           },
+           "meta": {
+               "planned_use": "individual CV",
+               "example_url": "",
+               "api_key_owner": "Superman",
+               "organization": "individual",
+               "email": "superman@secret.com"
+           },
+           "type": "api_user"
+        }
+        """
+
         # hacky way to delete the "ti" db, then make it fresh again for each test.
         temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
         temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
@@ -126,6 +144,7 @@ class ViewsTester(unittest.TestCase):
         self.d.update_design_doc()
 
         self.d.save(json.loads(test_item))
+        self.d.save(json.loads(test_api_user))
 
         # do the same thing for the redis db.  We're using DB 8 for unittests.
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
@@ -147,7 +166,7 @@ class DaoTester(unittest.TestCase):
     def test_dao(self):
         assert_equals(mydao.db.name, os.getenv("CLOUDANT_DB"))
 
-class TestGeneral(ViewsTester):
+class TestApiKeys(ViewsTester):
     def test_does_not_require_key_if_preversioned_url(self):
         resp = self.client.get("/")
         assert_equals(resp.status_code, 200)
@@ -156,9 +175,13 @@ class TestGeneral(ViewsTester):
         resp = self.client.get("/v1/provider")
         assert_equals(resp.status_code, 403)
 
-    def test_ok_if_key_in_v1(self):
-        resp = self.client.get("/v1/provider?key=EXAMPLE")
+    def test_ok_if_registered_key_in_v1(self):
+        resp = self.client.get("/v1/provider?key=validkey")
         assert_equals(resp.status_code, 200)
+
+    def test_forbidden_if_unregistered_key_in_v1(self):
+        resp = self.client.get("/v1/provider?key=invalidkey")
+        assert_equals(resp.status_code, 403)
 
 class TestMemberItems(ViewsTester):
 
@@ -217,20 +240,21 @@ class TestItem(ViewsTester):
 
 
     def test_item_get_missing_no_create_param_returns_404(self):
-        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE"
+        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey"
         response = self.client.get(url)
         assert_equals(response.status_code, 404) # created but still updating
 
+    @nottest
     def test_item_get_create_param_makes_new_item(self):
-        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE&register=true"
+        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey&register=true"
         response = self.client.get(url)
         assert_equals(response.status_code, 210) # created and still updating
         item_info = json.loads(response.data)
         assert_equals(item_info["aliases"]["doi"][0], TEST_DRYAD_DOI)
 
-
+    @nottest
     def test_v1_item_post_success(self):
-        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE"
+        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey"
         response = self.client.post(url)
         assert_equals(response.status_code, 201)
         assert_equals(json.loads(response.data), "ok")
@@ -242,9 +266,10 @@ class TestItem(ViewsTester):
         print response
         print tiid
 
+    @nottest
     def test_v1_item_get_success_realid(self):
         # First put something in
-        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=EXAMPLE"
+        url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=example"
         response_post = self.client.post(url)
         # now check response
         response_get = self.client.get(url)
@@ -259,7 +284,7 @@ class TestItem(ViewsTester):
         assert_equals(response.status_code, 201)
 
     def test_item_removes_history_by_default(self):
-        url = 'v1/item/doi/10.5061/dryad.j1fd7?key=example'
+        url = 'v1/item/doi/10.5061/dryad.j1fd7?key=validkey'
         response = self.client.get(url)
         metrics = json.loads(response.data)["metrics"]
 
@@ -273,7 +298,7 @@ class TestItem(ViewsTester):
         )
 
     def test_item_include_history_param(self):
-        url = 'v1/item/doi/10.5061/dryad.j1fd7?key=example&include_history=true'
+        url = 'v1/item/doi/10.5061/dryad.j1fd7?key=validkey&include_history=true'
         response = self.client.get(url)
 
         metrics = json.loads(response.data)["metrics"]
@@ -315,8 +340,8 @@ class TestItems(ViewsTester):
         )
         new_coll = json.loads(resp2.data)["collection"]
 
-        # 3 new items + 1 new item + 7 design docs + 2 collections + one test_item
-        assert_equals(self.d.db.info()["doc_count"], 14)
+        # 3+1 new items + 2 collections + 1 test_item + 1 api_user_doc + at least 7 design docs
+        assert_greater(self.d.db.info()["doc_count"], 15)
 
 
 
