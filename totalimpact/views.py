@@ -129,7 +129,7 @@ def item_namespace_post_with_tiid(namespace, nid):
 def item_namespace_post(namespace, nid):
     api_key = request.values.get('key')
     try:
-        tiid = api_user.register_item(namespace, nid, api_key, mydao)
+        tiid = api_user.register_item((namespace, nid), api_key, myredis, mydao, mymixpanel)
         response_code = 201 # Created
     except api_user.ItemAlreadyRegisteredToThisKey:
         response_code = 200
@@ -149,10 +149,13 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
 
     if register:
         try:
-            api_user.register_item(namespace, nid, api_key, mydao, mymixpanel)
+            logger.debug("api_key is " + api_key)
+            api_user.register_item((namespace, nid), api_key, myredis, mydao, mymixpanel)
         except api_user.ItemAlreadyRegisteredToThisKey:
+            logger.debug("ItemAlreadyRegisteredToThisKey")
             pass
         except api_user.ApiLimitExceededException:
+            logger.debug("ApiLimitExceededException")
             pass
 
     tiid = item_module.get_tiid_by_alias(namespace, nid, mydao)
