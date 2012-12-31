@@ -29,7 +29,7 @@ def is_internal_key(key):
         return False
 
     # make sure these are all lowercase because that is how they come in from flask
-    if key.lower() in ["yourkey", "samplekey", "api-docs", os.getenv("API_KEY").lower()]:
+    if key.lower() in ["yourkey", "samplekey", "api-report-page", "api-docs", os.getenv("API_KEY").lower()]:
         return True
     return False
 
