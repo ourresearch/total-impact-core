@@ -40,20 +40,30 @@ def get_item(tiid, myrefsets, dao, include_history=False):
     if not item_doc:
         return None
     try:
-        item = build_item_for_client(item_doc, myrefsets, include_history)
+        item = build_item_for_client(item_doc, myrefsets, dao, include_history)
     except Exception, e:
         item = None
         logger.error("Exception %s: Skipping item, unable to build %s, %s" % (e.__repr__(), tiid, str(item)))
     return item
 
-def build_item_for_client(item, myrefsets, include_history=False):
 
+def is_tiid_registered_to_anyone(tiid, mydao):
+    res = mydao.view('registered_tiids/registered_tiids')    
+    matches = res[[tiid]] 
+    if matches.rows:
+        #api_user_id = matches.rows[0]["id"]
+        return True
+    return False
+
+def build_item_for_client(item, myrefsets, mydao, include_history=False):
     try:
         (genre, host) = decide_genre(item['aliases'])
         item["biblio"]['genre'] = genre
     except (KeyError, TypeError):
         logger.error("Skipping item, unable to lookup aliases or biblio in %s" % str(item))
         return None
+
+    item["is_registered"] = is_tiid_registered_to_anyone(item["_id"], mydao)
 
     # need year to calculate normalization below
     try:
@@ -64,9 +74,7 @@ def build_item_for_client(item, myrefsets, include_history=False):
         year = 99 # hack so that it won't match anything.  what else to do?
 
     metrics = item.setdefault("metrics", {})
-
     for metric_name in metrics:
-
         #delete the raw history from what we return to the client for now
         if not include_history:
             try:
@@ -75,7 +83,6 @@ def build_item_for_client(item, myrefsets, include_history=False):
                 pass
 
         if metric_name in all_static_meta.keys():  # make sure we still support this metrics type
-
             # add static data
             metrics[metric_name]["static_meta"] = all_static_meta[metric_name]            
 
@@ -84,7 +91,6 @@ def build_item_for_client(item, myrefsets, include_history=False):
             normalized_values = get_normalized_values(item["biblio"]['genre'], year, metric_name, raw, myrefsets)
 
             metrics[metric_name]["values"].update(normalized_values)
-
     return item
 
 def add_metrics_data(metric_name, metrics_method_response, item):

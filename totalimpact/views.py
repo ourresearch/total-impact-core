@@ -153,11 +153,11 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
         except api_user.ItemAlreadyRegisteredToThisKey:
             pass
         except api_user.ApiLimitExceededException:
-            abort(403, "Registration limit exceeded. Contact team@impactstory.org to get going again.")
+            pass
 
     tiid = item_module.get_tiid_by_alias(namespace, nid, mydao)
     if not tiid:
-        abort(404, "Item not in database. POST to add it.")
+        abort(404, "Item not in database. Call POST to register it.")
     return get_item_from_tiid(tiid, format, include_history)
 
 
@@ -303,7 +303,7 @@ def collection_get(cid='', format="json", include_history=False):
             include_history = (request.args.get("include_history", 0) in ["1", "true", "True"])
             (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history)
         except (LookupError, AttributeError):  
-            logger.error("couldn't get tiids for collection '{cid}'".format(cid=cid))
+            logger.error("couldn't get tiids for GET collection '{cid}'".format(cid=cid))
             abort(404)  # not found
 
         # return success if all reporting is complete for all items    
@@ -372,7 +372,7 @@ def collection_update(cid=""):
         collection = mydao.get(cid)
         tiids = collection["alias_tiids"].values()
     except Exception:
-        logger.exception("couldn't get tiids for collection '{cid}'".format(
+        logger.exception("couldn't get tiids in POST collection '{cid}'".format(
             cid=cid
         ))
         abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")

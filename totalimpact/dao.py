@@ -106,6 +106,13 @@ class Dao(object):
                 "views": {
                     "registered_items_by_alias": {}                    
                 }
+            },
+            {
+                "_id": "_design/registered_tiids",
+                "language": "javascript",
+                "views": {
+                    "registered_tiids": {}                    
+                }
             }
         ]
 

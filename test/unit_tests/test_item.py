@@ -200,11 +200,11 @@ class TestItem():
 
     def test_build_item_for_client(self):
         item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
-        response = item_module.build_item_for_client(item, self.myrefsets)
-        assert_equals(set(response.keys()), set(['created', '_rev', 'metrics', 'last_modified', 'biblio', '_id', 'type', 'aliases']))
+        response = item_module.build_item_for_client(item, self.myrefsets, self.d, False)
+        assert_equals(set(response.keys()), set(['is_registered', 'created', '_rev', 'metrics', 'last_modified', 'biblio', '_id', 'type', 'aliases']))
 
     def test_build_item_for_client_excludes_history_by_default(self):
-        response = item_module.build_item_for_client(self.ITEM_DATA, self.myrefsets)
+        response = item_module.build_item_for_client(self.ITEM_DATA, self.myrefsets, self.d)
         assert_equals(response["metrics"]["wikipedia:mentions"]["values"].keys(), ["raw"])
         assert_equals(response["metrics"]["bar:views"]["values"].keys(), ["raw"])
 
@@ -212,6 +212,7 @@ class TestItem():
         response = item_module.build_item_for_client(
             self.ITEM_DATA,
             self.myrefsets,
+            self.d,
             include_history=True
         )
         assert_equals(
