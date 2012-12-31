@@ -61,14 +61,10 @@ def stop_user_who_is_swamping_us():
 @app.before_request
 def check_key():
     if "/v1/" in request.url:
-        key = request.values.get('key', '')
-        logger.debug("In check_key with " + key)
-        if not key:
-            response = make_response(
-                "you must include key=YOURKEY in your query",
-                403)
-            return response
-    return # otherwise don't return any content
+        api_key = request.values.get('key', '')
+        if not api_user.is_valid_key(api_key, mydao):
+            abort(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a key.")
+    return # if success don't return any content
 
 
 @app.after_request
@@ -103,7 +99,7 @@ GET /tiid/:namespace/:id
 # not supported in v1
 def tiid(ns, nid):
 
-    tiid = item_module.get_tiid_by_alias(ns, nid, myredis, mydao)
+    tiid = item_module.get_tiid_by_alias(ns, nid, mydao)
 
     if not tiid:
         abort(404)
@@ -123,7 +119,7 @@ original api returned tiid
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post_with_tiid(namespace, nid):
     mymixpanel.track("Create:Item", properties={"Namespace":namespace, "Source":"/item post"}, ip=False)
-    tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
+    tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao, mymixpanel)
     response_code = 201 # Created
     resp = make_response(json.dumps(tiid), response_code)
     resp.mimetype = "application/json"
@@ -132,19 +128,14 @@ def item_namespace_post_with_tiid(namespace, nid):
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
     api_key = request.values.get('key')
-    mymixpanel.track("Create:Item", properties={"Namespace":namespace, 
-                                                "Source":"/item post", 
-                                                "API Key": api_key}, ip=False)
-    tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
-    if api_key != os.getenv("API_KEY"):
-        try:
-            remaining_registration_spots = api_user.register_item((namespace, nid), tiid, api_key, mydao)
-        except api_user.InvalidApiKeyException:
-            abort(403, "Unrecognized API key. Contact team@impactstory.org and we'll get you going again.")
-        except api_user.ApiLimitExceededException:
-            abort(403, "Registration limit exceeded. Contact team@impactstory.org to discuss options.")
+    try:
+        tiid = api_user.register_item(namespace, nid, api_key, mydao)
+        response_code = 201 # Created
+    except api_user.ItemAlreadyRegisteredToThisKey:
+        response_code = 200
+    except api_user.ApiLimitExceededException:
+        abort(403, "Registration limit exceeded. Contact team@impactstory.org to discuss options.")
 
-    response_code = 201 # Created
     resp = make_response(json.dumps("ok"), response_code)
     return resp
 
@@ -154,30 +145,19 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
 
     include_history = request.args.get("include_history", 0) in ["1", "true", "True"]
     register = request.args.get("register", 0) in ["1", "true", "True"]
+    api_key = request.values.get('key')
 
-    # remove unprintable characters
-    nid = item_module.clean_id(nid)
-    tiid = item_module.get_tiid_by_alias(namespace, nid, myredis, mydao)
+    if register:
+        try:
+            api_user.register_item(namespace, nid, api_key, mydao, mymixpanel)
+        except api_user.ItemAlreadyRegisteredToThisKey:
+            pass
+        except api_user.ApiLimitExceededException:
+            abort(403, "Registration limit exceeded. Contact team@impactstory.org to get going again.")
+
+    tiid = item_module.get_tiid_by_alias(namespace, nid, mydao)
     if not tiid:
-        if register:
-            api_key = request.values.get('key')
-            mymixpanel.track("Create:Item", properties={"Namespace":namespace, 
-                                                        "Source":"/item get", 
-                                                        "API Key": api_key}, ip=False)
-
-            tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
-            if api_key != os.getenv("API_KEY"):
-                try:
-                    remaining_registration_spots = api_user.register_item((namespace, nid), tiid, api_key, mydao)
-                except api_user.InvalidApiKeyException:
-                    abort(403, "Unrecognized API key. Contact team@impactstory.org and we'll get you going again.")
-                except api_user.ApiLimitExceededException:
-                    abort(403, "Registration limit exceeded. Contact team@impactstory.org to discuss options.")
-
-        else:
-            abort(404, "Item not in database")
-
-
+        abort(404, "Item not in database. POST to add it.")
     return get_item_from_tiid(tiid, format, include_history)
 
 

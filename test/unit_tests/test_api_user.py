@@ -1,4 +1,4 @@
-from totalimpact import api_user
+from totalimpact import api_user, tiredis
 import os, json
 
 from nose.tools import raises, assert_equals, nottest
@@ -16,8 +16,20 @@ class TestApiUser():
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
         self.d.update_design_doc()
 
-        self.sample_user_api_doc = {'key_history': {'2012-12-27T12:09:20.072080': 'SFUlqzam8'}, 'created': '2012-12-27T12:09:20.072080', 'current_key': 'SFUlqzam8', 'registered_items': {}, 'max_registered_items': 1000, 'meta': {'usage': 'individual CV', 'api_limit': '', 'notes': '', 'api_key_owner': '', 'email': ''}, '_id': 'XeZhf8BWNgM5r9B9Xu3whT', 'type': 'api_user'}
+        # setup a clean new redis test database.  We're putting unittest redis at DB Number 8.
+        self.r = tiredis.from_url("redis://localhost:6379", db=8)
+        self.r.flushdb()
+
+        self.test_alias = ("doi", "10.1371/journal.pcbi.1")
+        self.test_alias_registered = ("doi", "10.1371/journal.pcbi.2")
+        self.test_alias_registered_string = ":".join(self.test_alias_registered)
+
+        self.sample_user_api_doc = {'key_history': {'2012-12-27T12:09:20.072080': 'SFUlqzam8'}, 'created': '2012-12-27T12:09:20.072080', 'current_key': 'SFUlqzam8', 
+            'registered_items': {self.test_alias_registered_string: {"tiid":"tiid1", "registered_date":"2012etc"}}, 
+            'max_registered_items':3,
+            'meta': {'usage': 'individual CV', 'api_limit': '', 'notes': '', 'api_key_owner': '', 'email': ''}, '_id': 'XeZhf8BWNgM5r9B9Xu3whT', 'type': 'api_user'}
         self.d.db.save(self.sample_user_api_doc)       
+
 
     def test_build_api_user(self):
         meta = {'usage': 'individual CV', 'email': '', 'notes': '', 'api_limit': '', 'api_key_owner': ''}
@@ -33,20 +45,36 @@ class TestApiUser():
         response_api_user_id = api_user.get_api_user_id_by_api_key(api_key, self.d)
         assert_equals(response_api_user_id, expected_api_doc_id)
 
-    def test_register_item(self):
-        meta = {'usage': 'individual CV', 'email': '', 'notes': '', 'api_limit': '', 'api_key_owner': ''}
-        (api_user_doc, api_key) = api_user.build_api_user("UBC", 1000, **meta)
-        self.d.db.save(api_user_doc)       
+    def test_is_registered(self):
+        response = api_user.is_registered(self.test_alias, "SFUlqzam8", self.d)
+        assert_equals(response, False)
 
-        alias1 = "10.1371/journal.pcbi.1"
-        tiid1 = "tiid1"
-        remaining_registration_spots = api_user.register_item(alias1, tiid1, api_key, self.d)
-        assert_equals(remaining_registration_spots, 999)
+        response = api_user.is_registered(self.test_alias_registered, "SFUlqzam8", self.d)
+        assert_equals(response, True)
 
-        alias2 = "10.1371/journal.pcbi.2"
-        tiid2 = "tiid2"
-        remaining_registration_spots = api_user.register_item(alias2, tiid2, api_key, self.d)
-        assert_equals(remaining_registration_spots, 998)
+    @raises(api_user.InvalidApiKeyException)
+    def test_register_item_invalid_key(self):
+        api_user.register_item(self.test_alias, "INVALID_KEY", self.r, self.d)
+
+    def test_is_over_quota(self):
+        api_key = "SFUlqzam8"
+        response = api_user.is_over_quota(api_key, self.d)
+        assert_equals(response, False)
+
+        api_user.add_registration_data(("doi", "10.a"), "tiida", api_key, self.d)
+        api_user.add_registration_data(("doi", "10.b"), "tiidb", api_key, self.d)
+        api_user.add_registration_data(("doi", "10.c"), "tiidc", api_key, self.d)
+        response = api_user.is_over_quota(api_key, self.d)
+        assert_equals(response, True)
+
+    def test_register_item_success(self):
+        api_key = "SFUlqzam8"
+        response = api_user.is_registered(self.test_alias, api_key, self.d)
+        assert_equals(response, False)
+
+        tiid = api_user.register_item(self.test_alias, api_key, self.r, self.d)
+        response = api_user.is_registered(self.test_alias, api_key, self.d)
+        assert_equals(response, True)
 
 
 
