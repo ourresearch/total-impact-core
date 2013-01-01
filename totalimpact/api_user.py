@@ -1,6 +1,6 @@
 import datetime, shortuuid, os
 
-from totalimpact import item
+from totalimpact import item, mixpanel
 
 import logging
 logger = logging.getLogger('ti.api_user')
@@ -129,7 +129,7 @@ def get_api_user_id_by_api_key(api_key, mydao):
     return (api_user_id)
 
 
-def register_item(alias, api_key, myredis, mydao, mymixpanel=None):
+def register_item(alias, api_key, myredis, mydao):
     if not is_valid_key(api_key, mydao):
         raise InvalidApiKeyException
     if is_registered(alias, api_key, mydao):
@@ -141,10 +141,10 @@ def register_item(alias, api_key, myredis, mydao, mymixpanel=None):
         if is_over_quota(api_key, mydao):
             raise ApiLimitExceededException
         else:
-            tiid = item.create_item(namespace, nid, myredis, mydao, mymixpanel)
+            tiid = item.create_item(namespace, nid, myredis, mydao)
     registered = add_registration_data(alias, tiid, api_key, mydao)
-    if registered and mymixpanel:
-        mymixpanel.track("Create:Register", properties={"Namespace":namespace, 
-                                                        "API Key":api_key}, ip=False)
+    if registered:
+        mixpanel.track("Create:Register", {"Namespace":namespace, 
+                                            "API Key":api_key})
 
     return tiid
