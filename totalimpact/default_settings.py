@@ -32,6 +32,7 @@ PROVIDERS = [
     ("delicious", {}),   
     ("facebook", {}),   
     ("plosalm", {}),
+    ("plossearch", {}),
     ("pmc", {}),
     ("scienceseeker", {}),
     # ("researchblogging", {}), # takes too long
