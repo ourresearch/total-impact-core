@@ -4,7 +4,7 @@ import shortuuid, datetime, hashlib, threading, json, time, copy, re
 
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact.providers.provider import ProviderTimeout, ProviderServerError
-from totalimpact import default_settings
+from totalimpact import default_settings, mixpanel
 from totalimpact.utils import Retry
 
 # Master lock to ensure that only a single thread can write
@@ -341,7 +341,7 @@ def create_or_update_items_from_aliases(aliases, myredis, mydao):
 
     return (tiids, new_items)
 
-def create_item(namespace, nid, myredis, mydao, mymixpanel=None):
+def create_item(namespace, nid, myredis, mydao):
     logger.debug("In create_item with alias" + str((namespace, nid)))
     item = make()
     namespace = clean_id(namespace)
@@ -364,8 +364,7 @@ def create_item(namespace, nid, myredis, mydao, mymixpanel=None):
         alias=str((namespace, nid))
     ))
 
-    if mymixpanel:
-        mymixpanel.track("Create:Item", properties={"Namespace":namespace}, ip=False)
+    mixpanel.track("Create:Item", {"Namespace":namespace})
 
     try:
         return item["_id"]
@@ -401,7 +400,7 @@ def create_or_find_items_from_aliases(clean_aliases, myredis, mydao):
     unique_tiids = list(set(tiids))
     return(unique_tiids, new_items)
 
-def create_item_from_namespace_nid(namespace, nid, myredis, mydao, mymixpanel=None):
+def create_item_from_namespace_nid(namespace, nid, myredis, mydao):
     # remove unprintable characters
     nid = clean_id(nid)
 
@@ -409,7 +408,7 @@ def create_item_from_namespace_nid(namespace, nid, myredis, mydao, mymixpanel=No
     if tiid:
         logger.debug("... found with tiid " + tiid)
     else:
-        tiid = create_item(namespace, nid, myredis, mydao, mymixpanel)
+        tiid = create_item(namespace, nid, myredis, mydao)
         logger.debug("new item created with tiid " + tiid)
 
     return tiid

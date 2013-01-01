@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 import argparse
 import logging, couchdb, os, sys, random, datetime
-from libsaas.services import mixpanel
 
-from totalimpact import dao, tiredis, item
+from totalimpact import dao, tiredis, item, mixpanel
 
 logger = logging.getLogger('ti.updater')
 logger.setLevel(logging.DEBUG)
-
-mymixpanel = mixpanel.Mixpanel(token=os.getenv("MIXPANEL_TOKEN"))
 
 # run in heroku by a) commiting, b) pushing to heroku, and c) running
 # heroku run python totalimpact/updater.py
@@ -155,7 +152,7 @@ def update_active_publisher_items(number_to_update, myredis, mydao):
 
     print "updating {number_to_update} of them now".format(number_to_update=number_to_update)
     QUEUE_DELAY_IN_SECONDS = 1.0
-    mymixpanel.track("Trigger:Update", properties={"Number Items":len(tiids_to_update), "Update Type":"Scheduled Registered"}, ip=False)    
+    mixpanel.track("Trigger:Update", {"Number Items":len(tiids_to_update), "Update Type":"Scheduled Registered"})
     item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
 
     return tiids_to_update
@@ -185,7 +182,7 @@ def update_least_recently_updated(number_to_update, myredis, mydao):
     (tiids_to_update, docs) = get_least_recently_updated_tiids_in_db(number_to_update, mydao)
     update_docs_with_updater_timestamp(docs, mydao)
     QUEUE_DELAY_IN_SECONDS = 1.0
-    mymixpanel.track("Trigger:Update", properties={"Number Items":len(tiids_to_update), "Update Type":"Scheduled Least Recently"}, ip=False)
+    mixpanel.track("Trigger:Update", {"Number Items":len(tiids_to_update), "Update Type":"Scheduled Least Recently"})
     item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
     return tiids_to_update
 
