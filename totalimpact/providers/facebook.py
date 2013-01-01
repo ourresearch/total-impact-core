@@ -55,6 +55,8 @@ class Facebook(Provider):
         (namespace, nid) = alias
         return("url" == namespace)
 
+    def get_best_id(self, aliases):
+        return self.get_relevant_alias_with_most_metrics("facebook:likes", aliases)
 
     def _extract_metrics(self, page, status_code=200, id=None):
         if status_code != 200:

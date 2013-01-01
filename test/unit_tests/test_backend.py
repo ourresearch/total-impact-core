@@ -287,8 +287,18 @@ class TestBackendClass(TestBackend):
         prev_aliases = []
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
+        # still need the dx.doi.org url
+        expected = {'metrics': [], 'biblio': [], 'aliases': ['dryad']}
+        assert_equals(response, expected)
+
+    def test_decide_who_to_call_next_dryad_with_doi_url(self):
+        aliases_dict = {   "doi":["10.5061/dryad.3td2f"],
+                                    "url":["http://dx.doi.org/10.dryadsomewhere"]}
+        prev_aliases = []
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
+        print response
         # have url so now can go get all the metrics
-        expected = {'metrics': ['wikipedia'], 'biblio': ['dryad'], 'aliases': []}
+        expected = {'aliases': [], 'biblio': ['dryad'], 'metrics': ['wikipedia']}
         assert_equals(response, expected)
 
     def test_decide_who_to_call_next_pmid_not_run(self):

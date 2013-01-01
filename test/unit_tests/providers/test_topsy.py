@@ -48,4 +48,13 @@ class TestTopsy(ProviderTestCase):
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
+    @http
+    def test_metrics_multiple_urls(self):
+        metrics_dict = self.provider.metrics([("url","http://datadryad.org/handle/10255/dryad.234"), 
+                                                ("url", "http://dx.doi.org/10.5061/dryad.234")])
+        expected = {'topsy:tweets': (4, 'http://topsy.com/dx.doi.org/10.5061/dryad.234?utm_source=otter')}
+        print metrics_dict
+        for key in expected:
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 

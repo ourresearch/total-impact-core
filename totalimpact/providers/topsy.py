@@ -21,7 +21,7 @@ class Topsy(Provider):
             "provider": "Topsy",
             "provider_url": "http://www.topsy.com/",
             "description": "Number of times the item has been tweeted",
-            "icon": "http://twitter.com/phoenix/favicon.ico" ,
+            "icon": "http://twitter.com/phoenix/favicon.ico",
         },    
         "influential_tweets": {
             "display_name": "influencial tweets",
@@ -40,6 +40,8 @@ class Topsy(Provider):
         (namespace, nid) = alias
         return("url" == namespace)
 
+    def get_best_id(self, aliases):
+        return self.get_relevant_alias_with_most_metrics("topsy:tweets", aliases)
 
     def _extract_metrics(self, page, status_code=200, id=None):
         if status_code != 200:
