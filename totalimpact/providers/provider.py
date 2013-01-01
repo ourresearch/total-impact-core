@@ -425,7 +425,24 @@ class Provider(object):
 
         return metrics_dict
 
-
+    # ideally would aggregate all tweets from all urls.  
+    # the problem is this requires multiple drill-down links, which is troubling for UI at the moment
+    # for now, look up all the alias urls and use metrics for url that is most tweeted
+    def get_relevant_alias_with_most_metrics(self, metric_name, aliases):
+        url_with_biggest_so_far = None
+        biggest_so_far = 0
+        url_aliases = self.relevant_aliases(aliases)
+        for url_alias in url_aliases:
+            (namespace, url) = url_alias
+            metrics = self.get_metrics_for_id(url)
+            if metric_name in metrics:
+                if (metrics[metric_name] > biggest_so_far):
+                    logger.debug("{new_url} has higher metrics than {prev_highest}".format(
+                        new_url=url, prev_highest=url_with_biggest_so_far))
+                    url_with_biggest_so_far = url
+                    biggest_so_far = metrics[metric_name]
+        return(url_with_biggest_so_far)
+        
     # Core methods
     # These should be consistent for all providers
     

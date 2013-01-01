@@ -41,7 +41,7 @@ class TestCrossRef(ProviderTestCase):
     def test_get_aliases_for_id(self):
         new_aliases = self.provider._get_aliases_for_id(self.testitem_aliases[1])
         print new_aliases
-        expected = [('biblio', {'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': 2009, 'repository': u'Public Library of Science', 'authors': u'Shotton, Portwin, Klyne, Miles'}), ('url', u'http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1000361')]
+        expected = [('url', 'http://dx.doi.org/10.1371/journal.pcbi.1000361'), ('biblio', {'repository': u'Public Library of Science', 'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': 2009, 'authors': u'Shotton, Portwin, Klyne, Miles'}), ('url', u'http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1000361')]
         assert_equals(sorted(new_aliases), sorted(expected))
 
     @http
@@ -90,21 +90,20 @@ class TestCrossRef(ProviderTestCase):
     @http
     def test_aliases_elife(self):
         aliases = self.provider.aliases([("doi", "10.7554/eLife.00048")])
-        expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.', 'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': 2012, 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Arag\xf3n, Li, Walter'}), ('url', u'http://elife.elifesciences.org/content/1/e00048')]
-
+        expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.', 'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': 2012, 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Arag\xf3n, Li, Walter'}), ('url', 'http://dx.doi.org/10.7554/eLife.00048'), ('url', u'http://elife.elifesciences.org/content/1/e00048')]
         print aliases
         assert_equals(sorted(aliases), sorted(expected))
 
     @http
     def test_aliases_elife_table(self):
         aliases = self.provider.aliases([("doi", "10.7554/eLife.00048.020")])
-        expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.'}), ('url', u'http://elife.elifesciences.org/content/1/e00048/T1')]
+        expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.'}), ('url', 'http://dx.doi.org/10.7554/eLife.00048.020'), ('url', u'http://elife.elifesciences.org/content/1/e00048/T1')]
         print aliases
         assert_equals(sorted(aliases), sorted(expected))
 
     @http
     def test_aliases_bad_title(self):
         aliases = self.provider.aliases([("doi", "10.1021/np070361t")])
-        expected = [('biblio', {'repository': u'American Chemical Society', 'title': u' 13 C\u2212 15 N Correlation via Unsymmetrical Indirect Covariance NMR: Application to Vinblastine ', 'journal': u'Journal of Natural Products', 'year': 2007, 'authors': u'Martin, Hilton, Blinov, Williams'}), ('url', u'http://pubs.acs.org/doi/abs/10.1021/np070361t')]
+        expected = [('biblio', {'repository': u'American Chemical Society', 'title': u' 13 C\u2212 15 N Correlation via Unsymmetrical Indirect Covariance NMR: Application to Vinblastine ', 'journal': u'Journal of Natural Products', 'year': 2007, 'authors': u'Martin, Hilton, Blinov, Williams'}), ('url', 'http://dx.doi.org/10.1021/np070361t'), ('url', u'http://pubs.acs.org/doi/abs/10.1021/np070361t')]
         print aliases
         assert_equals(sorted(aliases), sorted(expected))        

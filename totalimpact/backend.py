@@ -276,7 +276,11 @@ class Backend(Worker):
         all_metrics_providers = [provider.provider_name for provider in 
                         ProviderFactory.get_providers(provider_config, "metrics")]
         (genre, host) = item_module.decide_genre(item_aliases)
-        has_alias_urls = "url" in item_aliases
+
+        has_enough_alias_urls = ("url" in item_aliases)
+        if has_enough_alias_urls:
+            if ("doi" in item_aliases):
+                has_enough_alias_urls = (len([url for url in item_aliases["url"] if url.startswith("http://dx.doi.org")]) > 0)
 
         if (genre == "article"):
             if not "pubmed" in aliases_providers_run:
@@ -293,7 +297,7 @@ class Backend(Worker):
                 relevant_providers = ["webpage"]
             # if all the relevant providers have already run, then all the aliases are done
             # or if it already has urls
-            if has_alias_urls or (set(relevant_providers) == set(aliases_providers_run)):
+            if has_enough_alias_urls or (set(relevant_providers) == set(aliases_providers_run)):
                 metrics_providers = all_metrics_providers
                 biblio_providers = relevant_providers
             else:

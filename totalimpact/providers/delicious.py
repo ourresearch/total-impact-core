@@ -30,6 +30,9 @@ class Delicious(Provider):
         (namespace, nid) = alias
         return("url" == namespace)
 
+    def get_best_id(self, aliases):
+        return self.get_relevant_alias_with_most_metrics("delicious:bookmarks", aliases)
+
     # overriding default because delicious needs md5 of url in template
     def _get_templated_url(self, template, id, method=None):
         md5_of_url = hashlib.md5(id).hexdigest()
