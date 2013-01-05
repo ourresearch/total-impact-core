@@ -1,0 +1,40 @@
+<response>
+<lst name="responseHeader">
+<int name="status">0</int>
+<int name="QTime">18</int>
+</lst>
+<result name="response" numFound="1" start="0" maxScore="0.41767138">
+<doc>
+<float name="score">0.41767138</float>
+<str name="article_type">Research Article</str>
+<arr name="author_display">
+<str>Nicolas Perony</str>
+<str>Claudio J. Tessone</str>
+<str>Barbara König</str>
+<str>Frank Schweitzer</str>
+</arr>
+<str name="eissn">1553-7358</str>
+<str name="id">10.1371/journal.pcbi.1002786</str>
+<str name="journal">PLoS Computational Biology</str>
+<date name="publication_date">2012-11-29T00:00:00Z</date>
+<str name="title_display">
+How Random Is Social Behaviour? Disentangling Social Complexity through the Study of a Wild House Mouse Population
+</str>
+</doc>
+</result>
+<lst name="facet_counts">
+<lst name="facet_queries"/>
+<lst name="facet_fields"/>
+<lst name="facet_dates"/>
+<lst name="facet_ranges"/>
+</lst>
+<lst name="highlighting">
+<lst name="10.1371/journal.pcbi.1002786">
+<arr name="everything">
+<str>
+/10255/dryad.43636 (doi:<span class="highlight">10</span>.<span class="highlight">5061</span>/<span class="highlight">dryad</span>.<span class="highlight">c2b53</span>). (PDF
+</str>
+</arr>
+</lst>
+</lst>
+</response>
