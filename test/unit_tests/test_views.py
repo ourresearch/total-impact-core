@@ -89,20 +89,27 @@ class ViewsTester(unittest.TestCase):
                         "raw": 1
                     }
                 },
-                "dryad:most_downloaded_file": {
+                "dryad:total_downloads": {
                     "provenance_url": "http://dx.doi.org/10.5061/dryad.j1fd7",
+                    "static_meta": {
+                        "description": "Dryad total downloads: combined number of downloads of the data package and data files",
+                        "display_name": "total downloads",
+                        "icon": "http:\\/\\/datadryad.org\\/favicon.ico",
+                        "provider": "Dryad",
+                        "provider_url": "http:\\/\\/www.datadryad.org\\/"
+                    },
                     "values": {
-                        "raw": 128,
                         "dryad": {
-                            "CI95_lower": 97,
-                            "CI95_upper": 100,
-                            "estimate_lower": 100,
-                            "estimate_upper": 100
+                            "CI95_lower": 91,
+                            "CI95_upper": 98,
+                            "estimate_lower": 96,
+                            "estimate_upper": 96
                         },
+                        "raw": 207,
                         "raw_history": {
-                            "2012-06-25T09:21:16.117375": 103,
-                            "2012-06-26T18:05:19.655009": 103,
-                            "2012-06-26T20:10:16.912462": 103
+                            "2012-06-25T09:21:16.027149": 132,
+                            "2012-06-26T18:05:19.598432": 132,
+                            "2012-06-26T20:10:16.858294": 132
                         }
                     }
                 }
@@ -285,12 +292,13 @@ class TestItem(ViewsTester):
         response = self.client.get(url)
         metrics = json.loads(response.data)["metrics"]
 
+
         assert_equals(
-                metrics["dryad:most_downloaded_file"]["values"]["raw"],
-                128
+                metrics["dryad:total_downloads"]["values"]["raw"],
+                207
             )
         assert_equals(
-            set(metrics["dryad:most_downloaded_file"]["values"].keys()),
+            set(metrics["dryad:total_downloads"]["values"].keys()),
             set(["dryad", "raw"]) # no raw_history
         )
 
@@ -299,13 +307,14 @@ class TestItem(ViewsTester):
         response = self.client.get(url)
 
         metrics = json.loads(response.data)["metrics"]
+        print (metrics["dryad:total_downloads"])
         assert_equals(
-            set(metrics["dryad:most_downloaded_file"]["values"].keys()),
+            set(metrics["dryad:total_downloads"]["values"].keys()),
             set(["dryad", "raw", "raw_history"])
         )
 
 #        assert_equals(
-#            metrics["dryad:most_downloaded_file"]["values"]["raw_history"].values(),
+#            metrics["dryad:total_downloads"]["values"]["raw_history"].values(),
 #            ["103", "103", "103"]
 #        )
 
