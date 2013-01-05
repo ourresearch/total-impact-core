@@ -94,7 +94,7 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
             metrics[metric_name]["values"].update(normalized_values)
 
     # ditch metrics we don't have static_meta for:
-#    item["metrics"] = {k:v for k, v in item["metrics"].iteritems() if "static_meta"  in v}
+    item["metrics"] = {k:v for k, v in item["metrics"].iteritems() if "static_meta"  in v}
 
     return item
 
