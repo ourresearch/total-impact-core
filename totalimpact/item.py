@@ -84,6 +84,7 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
 
         if metric_name in all_static_meta.keys():  # make sure we still support this metrics type
             # add static data
+
             metrics[metric_name]["static_meta"] = all_static_meta[metric_name]            
 
             # add normalization values
@@ -91,6 +92,10 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
             normalized_values = get_normalized_values(item["biblio"]['genre'], year, metric_name, raw, myrefsets)
 
             metrics[metric_name]["values"].update(normalized_values)
+
+    # ditch metrics we don't have static_meta for:
+    item["metrics"] = {k:v for k, v in item["metrics"].iteritems() if "static_meta"  in v}
+
     return item
 
 def add_metrics_data(metric_name, metrics_method_response, item):
