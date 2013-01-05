@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, re, os
+import simplejson, re, os, urllib
 
 import logging
 logger = logging.getLogger('ti.providers.plossearch')
@@ -57,4 +57,9 @@ class Plossearch(Provider):
 
         return metrics_dict
 
+    # need to override to url encode for metrics
+    def _get_templated_url(self, template, id, method=None):
+        id = urllib.quote(id, safe="")
+        url = template % id
+        return(url)
 
