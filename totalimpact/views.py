@@ -324,7 +324,7 @@ def collection_get(cid='', format="json", include_history=False):
             resp.headers.add("Content-Encoding",
                              "UTF-8")
         else:
-            api_key = request.args.get("api_key", None)
+            api_key = request.args.get("key", None)
             clean_if_necessary_items = [item_module.clean_for_export(item, api_key, os.getenv("API_KEY")) 
                 for item in coll_with_items["items"]]
             coll_with_items["items"] = clean_if_necessary_items
