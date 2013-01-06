@@ -120,7 +120,8 @@ class UserFactory():
             doc = cls.get(userdict["_id"], dao, password)
             userdict["_rev"] = doc["_rev"]
         except KeyError:
-            pass # no worries, we'll just make a new user.
+            # no worries, we'll just make a new user.
+            userdict["created"] = datetime.datetime.now().isoformat()
 
         userdict["type"] = "user"
         dao.db.save(userdict)
