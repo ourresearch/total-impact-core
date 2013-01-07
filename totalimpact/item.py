@@ -167,10 +167,6 @@ def decide_genre(alias_dict):
     elif "pmid" in alias_dict:
         genre = "article"
 
-    elif "github" in alias_dict:
-        genre = "software"
-        host = "github"
-
     elif "url" in alias_dict:
         joined_url_string = "".join(alias_dict["url"])
         joined_url_string = joined_url_string.lower()

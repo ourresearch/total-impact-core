@@ -458,66 +458,67 @@ GET /v1/item/doi/10.1186/1756-0500-4-487?key=YOURKEY
 }
 
 **GitHub software repositories** Get metrics and biblio information on the item
-GET /v1/item/github/egonw,cdk?key=YOURKEY
+GET /v1/item/url/https://github.com/egonw/cdk?key=YOURKEY
 < 200
 < Content-Type: application/json
 {
-    "_id": "k58vwwqzxxj0dq7ao4lchaxp",
-    "_rev": "7-ba3054fac4f85f22a37bd3b88b102b34",
-    "aliases": {
-        "github": [
-            "egonw,cdk"
-        ],
-        "title": [
-            "cdk"
-        ],
-        "url": [
-            "https://github.com/egonw/cdk"
-        ]
-    },
-    "biblio": {
-        "create_date": "2009-07-29T11:52:22Z",
-        "description": "The Chemistry Development Kit",
-        "genre": "software",
-        "h1": "\n            ",
-        "last_push_date": "2012-08-02T13:05:20Z",
-        "owner": "egonw",
-        "title": "cdk",
-        "url": "https://github.com/egonw/cdk"
-    },
-    "created": "2012-08-02T10:40:10.941687",
-    "currently_updating": false,
-    "last_modified": "2012-09-26T00:30:45.049499",
-    "metrics": {
-        "github:forks": {
-            "provenance_url": "https://github.com/egonw/cdk/network/members",
-            "static_meta": {
-                "description": "The number of people who have forked the GitHub repository",
-                "display_name": "forks",
-                "icon": "https://github.com/fluidicon.png",
-                "provider": "GitHub",
-                "provider_url": "http://github.com"
+            "_id": "k58vwwqzxxj0dq7ao4lchaxp",
+            "_rev": "11-06492545f85dc5d5eea415294f24dc71",
+            "aliases": {
+                "github": [
+                    "egonw,cdk"
+                ],
+                "title": [
+                    "cdk"
+                ],
+                "url": [
+                    "https://github.com/egonw/cdk"
+                ]
             },
-            "values": {
-                "raw": 28
-            }
-        },
-        "github:watchers": {
-            "provenance_url": "https://github.com/egonw/cdk/watchers",
-            "static_meta": {
-                "description": "The number of people who are watching the GitHub repository",
-                "display_name": "watchers",
-                "icon": "https://github.com/fluidicon.png",
-                "provider": "GitHub",
-                "provider_url": "http://github.com"
+            "biblio": {
+                "create_date": "2009-07-29T11:52:22Z",
+                "description": "The Chemistry Development Kit",
+                "genre": "software",
+                "last_push_date": "2012-08-02T13:05:20Z",
+                "owner": "egonw",
+                "title": "cdk",
+                "url": "https://github.com/egonw/cdk"
             },
-            "values": {
-                "raw": 31
-            }
+            "created": "2012-08-02T10:40:10.941687",
+            "currently_updating": false,
+            "is_registered": false,
+            "last_modified": "2013-01-06T17:32:36.558426",
+            "last_update_run": "2012-12-21T03:04:16.461039",
+            "metrics": {
+                "github:forks": {
+                    "provenance_url": "https://github.com/egonw/cdk/network/members",
+                    "static_meta": {
+                        "description": "The number of people who have forked the GitHub repository",
+                        "display_name": "forks",
+                        "icon": "https://github.com/fluidicon.png",
+                        "provider": "GitHub",
+                        "provider_url": "http://github.com"
+                    },
+                    "values": {
+                        "raw": 29
+                    }
+                },
+                "github:stars": {
+                    "provenance_url": "https://github.com/egonw/cdk/stargazers",
+                    "static_meta": {
+                        "description": "The number of people who have given the GitHub repository a star",
+                        "display_name": "stars",
+                        "icon": "https://github.com/fluidicon.png",
+                        "provider": "GitHub",
+                        "provider_url": "http://github.com"
+                    },
+                    "values": {
+                        "raw": 33
+                    }
+                }
+            },
+            "type": "item"
         }
-    },
-    "type": "item"
-}
 
 **SlideShare slides** Get metrics and biblio information on the item
 GET /v1/item/url/http://www.slideshare.net/cavlec/who-owns-our-work?key=YOURKEY
@@ -525,7 +526,7 @@ GET /v1/item/url/http://www.slideshare.net/cavlec/who-owns-our-work?key=YOURKEY
 < Content-Type: application/json
 {
     "_id": "8yxrcdddi6npbhd675r7mqf1",
-    "_rev": "7-9d98f382d10c8d5b63430dadfb69ec68",
+    "_rev": "11-0ca156302665ce89c1fbe990f08f626d",
     "aliases": {
         "title": [
             "Who owns our work?"
@@ -544,7 +545,9 @@ GET /v1/item/url/http://www.slideshare.net/cavlec/who-owns-our-work?key=YOURKEY
     },
     "created": "2012-08-14T19:59:21.805081",
     "currently_updating": false,
-    "last_modified": "2012-08-14T19:59:51.597151",
+    "is_registered": false,
+    "last_modified": "2012-12-14T11:44:33.412100",
+    "last_update_run": "2012-12-14T11:44:10.427756",
     "metrics": {
         "slideshare:downloads": {
             "provenance_url": "http://www.slideshare.net/cavlec/who-owns-our-work",
@@ -582,7 +585,7 @@ GET /v1/item/url/http://www.slideshare.net/cavlec/who-owns-our-work?key=YOURKEY
                 "provider_url": "http://www.slideshare.net/"
             },
             "values": {
-                "raw": 2409
+                "raw": 2512
             }
         },
         "topsy:tweets": {

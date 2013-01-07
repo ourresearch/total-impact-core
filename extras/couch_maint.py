@@ -506,6 +506,36 @@ def lowercase_aliases():
     print "number edited = ", number_edited
     print "number items = ", row_count
 
+
+def update_github():
+    from totalimpact import item, tiredis
+    myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)
+
+    view_name = "queues/by_alias"
+    view_rows = db.view(view_name, include_docs=False)
+    row_count = 0
+    page_size = 500
+    start_key = ["url", "https://github.0000000"]
+    end_key = ["url", "https://github.zzzzzzzz"]
+
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=False, start_key=start_key, end_key=end_key)
+
+    while page:
+        for row in page:
+            tiid = row.id
+            item.start_item_update([tiid], myredis, db, sleep_in_seconds=0.05)                        
+            row_count += 1
+            print "."
+        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
+
+    print "number items = ", row_count
+
+
 """
 function(doc) {
   if (doc.type == "item") {
@@ -532,7 +562,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    lowercase_aliases()
+    update_github()
 else:
     print "nevermind, then."
 

@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson
+import simplejson, os
 
 import logging
 logger = logging.getLogger('ti.providers.github')
@@ -12,22 +12,23 @@ class Github(Provider):
 
     url = "http://github.com"
     descr = "A social, online repository for open-source software."
-    member_items_url_template = "https://api.github.com/users/%s/repos"
-    biblio_url_template = "https://api.github.com/repos/%s"
-    aliases_url_template = "https://api.github.com/repos/%s"
-    metrics_url_template = "https://api.github.com/repos/%s"
+    member_items_url_template = "https://api.github.com/users/%s/repos?client_id=" + os.environ["GITHUB_CLIENT_ID"] + "&client_secret=" + os.environ["GITHUB_CLIENT_SECRET"]
+    biblio_url_template = "https://api.github.com/repos/%s/%s?client_id=" + os.environ["GITHUB_CLIENT_ID"] + "&client_secret=" + os.environ["GITHUB_CLIENT_SECRET"]
+    aliases_url_template = "https://api.github.com/repos/%s/%s?client_id=" + os.environ["GITHUB_CLIENT_ID"] + "&client_secret=" + os.environ["GITHUB_CLIENT_SECRET"]
+    metrics_url_template = "https://api.github.com/repos/%s/%s?client_id=" + os.environ["GITHUB_CLIENT_ID"] + "&client_secret=" + os.environ["GITHUB_CLIENT_SECRET"]
+    repo_url_template = "https://github.com/%s/%s"
 
     provenance_url_templates = {
-        "github:watchers" : "https://github.com/%s/%s/watchers",
+        "github:stars" : "https://github.com/%s/%s/stargazers",
         "github:forks" : "https://github.com/%s/%s/network/members"
         }
 
     static_meta_dict = {
-        "watchers": {
-            "display_name": "watchers",
+        "stars": {
+            "display_name": "stars",
             "provider": "GitHub",
             "provider_url": "http://github.com",
-            "description": "The number of people who are watching the GitHub repository",
+            "description": "The number of people who have given the GitHub repository a star",
             "icon": "https://github.com/fluidicon.png",
         },
         "forks": {
@@ -42,32 +43,32 @@ class Github(Provider):
     def __init__(self):
         super(Github, self).__init__()
 
-
-    def _get_github_id(self, aliases):
-        matching_id = None
-        for alias in aliases:
-            if alias:
-                (namespace, id) = alias
-                if namespace == "github":
-                    matching_id = id
-        return matching_id
-
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
-        return("github" == namespace)
-
-
+        if (("url" == namespace) and ("github.com/" in nid)):
+            return True
+        elif (namespace == "github"):  # deprecate github namespace after /v1
+            return True
+        else:
+            return False
 
     #override because need to break up id
-    def _get_templated_url(self, template, id, method=None):
-        id_with_slashes = id.replace(",", "/")
-        url = template % id_with_slashes
+    def _get_templated_url(self, template, nid, method=None):
+        if method=="members":
+            url = template % (nid)
+        else:
+            if "http" in nid:
+                (host, username, repo_name) = nid.rsplit("/", 2)
+            else:
+                (username, repo_name) = nid.split(",")  # deprecate github namespace after /v1
+            url = template % (username, repo_name)
+
         return(url)
 
     def _extract_members(self, page, query_string): 
         data = provider._load_json(page)
         hits = [hit["name"] for hit in data]
-        members = [("github", (query_string, hit)) for hit in list(set(hits))]
+        members = [("url", self.repo_url_template %(query_string, hit)) for hit in list(set(hits))]
         return(members)
 
     def _extract_biblio(self, page, id=None):
@@ -102,8 +103,11 @@ class Github(Provider):
             else:
                 raise(self._get_error(status_code))
 
+        if not "forks_count" in page:
+            raise ProviderContentMalformedError
+
         dict_of_keylists = {
-            'github:watchers' : ['watchers'],
+            'github:stars' : ['watchers'],
             'github:forks' : ['forks']
         }
 
@@ -114,14 +118,9 @@ class Github(Provider):
 
     # overriding default because different provenance url for each metric
     def provenance_url(self, metric_name, aliases):
-        id = self.get_best_id(aliases)
-        if not id:
+        print aliases
+        nid = self.get_best_id(aliases)
+        if not nid:
             return None
-        try:
-            (user, repo) = id.split(",")
-        except ValueError:
-            return None
-
-        # Returns a different provenance url for each metric
-        provenance_url = self.provenance_url_templates[metric_name] % (user, repo)
+        provenance_url = self._get_templated_url(self.provenance_url_templates[metric_name], nid, "provenance")
         return provenance_url
