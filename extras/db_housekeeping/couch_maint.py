@@ -536,6 +536,38 @@ def update_github():
     print "number items = ", row_count
 
 
+def fix_github_year():
+    from totalimpact import item, tiredis
+    myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)
+
+    view_name = "queues/by_alias"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+    page_size = 500
+    start_key = ["url", "https://github.0000000"]
+    end_key = ["url", "https://github.zzzzzzzz"]
+
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
+
+    while page:
+        for row in page:
+            doc = row.doc
+            print doc
+            doc["biblio"]["year"] = doc["biblio"]["create_date"][0:4]
+            db.save(doc)
+            row_count += 1
+            print "."
+        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
+
+    print "number items = ", row_count
+
+
+
 """
 function(doc) {
   if (doc.type == "item") {
@@ -562,7 +594,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    update_github()
+    fix_github_year()
 else:
     print "nevermind, then."
 

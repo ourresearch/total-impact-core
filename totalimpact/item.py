@@ -71,10 +71,7 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
         if year < 2002:
             year = 2002
     except KeyError:
-        try:
-            year = item["biblio"]["create_date"][0:4]  # right now github doesn't have a year field
-        except KeyError:
-            year = 99 # hack so that it won't match anything.  what else to do?
+        year = 99 # hack so that it won't match anything.  what else to do?
 
     metrics = item.setdefault("metrics", {})
     for metric_name in metrics:
