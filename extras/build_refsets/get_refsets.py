@@ -211,9 +211,50 @@ email = "team@total-impact.org"
 # api_url = "http://" + os.getenv("API_ROOT")
 api_url = "http://total-impact-core-staging.herokuapp.com"
 
-collection_ids = build_reference_sets(query_templates, title_template, years, sample_size, seed)
-for collection_id in collection_ids:
-    print collection_id
+#collection_ids = build_reference_sets(query_templates, title_template, years, sample_size, seed)
+#for collection_id in collection_ids:
+#    print collection_id
 
+
+from totalimpact.providers import github
+# downloaded from http://archive.org/details/archiveteam-github-repository-index-201212
+filename = "/Users/hpiwowar/Documents/Projects/tiv2/total-impact-core/extras/github-repositories.txt"
+
+import collections
+import subprocess
+command = "wc " + filename
+p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+out, error = p.communicate()
+num_repos = int(out.strip().split(" ")[0])
+print num_repos
+seed = 42
+random.seed(seed)
+
+provider = github.Github()
+
+random_repos = collections.defaultdict(list)
+
+i = 0
+while (len(random_repos["2009"]) < 100):
+    i += 1
+    line_number = random.randint(0, num_repos)
+    command = "tail -n +{line_number} {filename} | head -n 1".format(
+        line_number=line_number, filename=filename)
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    repo_id, error = p.communicate()
+    print repo_id
+    repo_url = "https://github.com/" + repo_id.strip()
+    biblio = provider.biblio([("url", repo_url)])
+    try:
+        year = biblio["create_date"][0:4]
+    except KeyError:
+        continue
+    random_repos[year] += [repo_url]
+    print "\nn={number_sampled}".format(number_sampled=i)
+    for year in sorted(random_repos.keys()):
+        print "{year}: {num}".format(year=year, num=len(random_repos[year]))
+    if i%100 == 0:
+        print random_repos
+print random_repos
 
 
