@@ -4,7 +4,7 @@ import time
 import requests
 
 # run in heroku by a) commiting, b) pushing to heroku, and c) running
-# heroku run python extras/couch_maint.py
+# heroku run python extras/db_housekeeping/couch_maint.py
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -553,9 +553,12 @@ def fix_github_year():
     while page:
         for row in page:
             doc = row.doc
-            print doc
-            doc["biblio"]["year"] = doc["biblio"]["create_date"][0:4]
-            db.save(doc)
+            print row.id
+            try:
+                doc["biblio"]["year"] = doc["biblio"]["create_date"][0:4]
+                db.save(doc)
+            except KeyError:
+                pass
             row_count += 1
             print "."
         logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
