@@ -85,9 +85,65 @@ def get_random_crossref_dois(year, sample_size):
     dois = json.loads(r.text)
     return dois
 
+def get_random_github_dict():
+    from totalimpact.providers import github
+    # downloaded from http://archive.org/details/archiveteam-github-repository-index-201212
+    filename = "/Users/hpiwowar/Documents/Projects/tiv2/total-impact-core/extras/build_refsets/github-repositories.txt"
+
+    import collections
+    import subprocess
+    command = "wc " + filename
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    out, error = p.communicate()
+    num_repos = int(out.strip().split(" ")[0])
+    print num_repos
+    seed = 42
+    random.seed(seed)
+
+    provider = github.Github()
+
+    random_repos = collections.defaultdict(list)
+
+    i = 0
+    while (len(random_repos["2009"]) < 100):
+        i += 1
+        line_number = random.randint(0, num_repos)
+        command = "tail -n +{line_number} {filename} | head -n 1".format(
+            line_number=line_number, filename=filename)
+        p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        repo_id, error = p.communicate()
+        print repo_id
+        repo_url = "https://github.com/" + repo_id.strip()
+        biblio = provider.biblio([("url", repo_url)])
+        try:
+            year = biblio["create_date"][0:4]
+        except KeyError:
+            continue
+        random_repos[year] += [repo_url]
+        print "\nn={number_sampled}".format(number_sampled=i)
+        for year in sorted(random_repos.keys()):
+            print "{year}: {num}".format(year=year, num=len(random_repos[year]))
+        if i%100 == 0:
+            print random_repos
+    print random_repos
+    return random_repos
+
+def get_random_github_ids(year, sample_size, email, query, seed):
+    if year < 2009:
+        return []
+
+    filename = "/Users/hpiwowar/Documents/Projects/tiv2/total-impact-core/extras/build_refsets/random_github_repos.py"
+    from random_github_repos import random_github_repos
+
+    if seed:
+        random.seed(seed)
+    random_ids = random.sample(random_github_repos[str(year)], sample_size)
+    return random_ids
+
+
 def make_collection(namespace, nids, title, refset_metadata):
     aliases = [(namespace, nid) for nid in nids]
-    url = api_url + "/collection"
+    url = api_url + "/v1/collection?key=" + os.getenv("API_KEY")
     resp = requests.post(
         url,
         data=json.dumps({
@@ -112,74 +168,41 @@ def collection_metadata(genre, refset_name, year, seed, sample_size):
     }  
     return refset_metadata
 
-def build_collections_from_eutils(query_template, title_template, year, sample_size, seed):
+
+def build_collections(refset_name, get_random_ids_func, genre, namespace, query_template, title_template, year, sample_size, seed):
     collection_ids = []
-    for refset_name in query_template:
-        print refset_name
-        query = query_template[refset_name].format(year=year)
-        pmids = random_pmids.get_random_pmids(sample_size, email, query, seed)
-        if pmids:
-            print pmids
-            refset_metadata = collection_metadata("article", refset_name, year, seed, sample_size)
-            title = title_template.format(**refset_metadata)
-            collection_id = make_collection("pmid", pmids, title, refset_metadata)
-            print collection_id
-            collection_ids.append(collection_id)
-    return collection_ids
-
-
-def build_collections_from_crossref(query_template, title_template, year, sample_size, seed):
-    refset_name = "crossref"
     print refset_name
-    dois = get_random_crossref_dois(year, sample_size)
-    collection_ids = []
-    if dois:
-        print dois
-        refset_metadata = collection_metadata("article", refset_name, year, "", sample_size)
+    if query_template:
+        query = query_template[refset_name].format(year=year)
+    else:
+        query = None
+    ids = get_random_ids_func(year, sample_size, email, query, seed)
+    if ids:
+        print ids
+        refset_metadata = collection_metadata(genre, refset_name, year, seed, sample_size)
         title = title_template.format(**refset_metadata)
-        collection_id = make_collection("doi", dois, title, refset_metadata)
+        collection_id = make_collection(namespace, ids, title, refset_metadata)
+        print collection_id
         collection_ids.append(collection_id)
     return collection_ids
 
-def build_collections_from_dryad(query_template, title_template, year, sample_size, seed):
-    refset_name = "dryad"
-    print refset_name
-    dois = get_random_dryad_dois(year, sample_size, seed)
-    collection_ids = []
-    if dois:
-        print dois
-        refset_metadata = collection_metadata("dataset", refset_name, year, seed, sample_size)
-        title = title_template.format(**refset_metadata)
-        collection_id = make_collection("doi", dois, title, refset_metadata)
-        collection_ids.append(collection_id)        
-    return collection_ids
 
-def build_collections_from_figshare(query_template, title_template, year, sample_size, seed):
-    refset_name = "figshare"
-    print refset_name
-    dois = get_random_figshare_dois(year, sample_size, seed)
-    collection_ids = []
-    if dois:
-        print dois
-        refset_metadata = collection_metadata("dataset", refset_name, year, seed, sample_size)
-        title = title_template.format(**refset_metadata)
-        collection_id = make_collection("doi", dois, title, refset_metadata)
-        collection_ids.append(collection_id)        
-    return collection_ids
 
-def build_reference_sets(query_templates, title_template, years, sample_size, seed):
+def build_reference_sets(refset_name, query_templates, title_template, years, sample_size, seed):
     collection_ids = []
     for year in years:
         print year
-        #collection_ids += build_collections_from_eutils(query_templates["eutils"], title_template, year, sample_size, seed)
-        #collection_ids += build_collections_from_crossref(query_templates["random_crossref_doi"], title_template, year, sample_size, seed)
-        #collection_ids += build_collections_from_dryad(query_templates["random_dryad_doi"], title_template, year, sample_size, seed)
-        collection_ids += build_collections_from_figshare(query_templates["random_figshare_doi"], title_template, year, sample_size, seed)
+        if refset_name == "eutils":
+            collection_ids += build_collections(refset_name, random_pmids.get_random_pmids, "article", "pmid", query_template, title_template, year, sample_size, seed)
+        elif refset_name == "crossref":
+            collection_ids += build_collections(refset_name, get_random_crossref_dois, "article", "doi", query_template, title_template, year, sample_size, "")
+        elif refset_name == "dryad":
+            collection_ids += build_collections(refset_name, get_random_dryad_dois, "dataset", "doi", query_template, title_template, year, sample_size, seed)
+        elif refset_name == "figshare":
+            collection_ids += build_collections(refset_name, get_random_figshare_dois, "dataset", "doi", query_template, title_template, year, sample_size, seed)
+        elif refset_name == "github":
+            collection_ids += build_collections(refset_name, get_random_github_ids, "software", "url", None, title_template, year, sample_size, seed)
     return(collection_ids)
-
-
-# export API_ROOT=total-impact-core.herokuapp.com
-# export API_ROOT=total-impact-core-staging.herokuapp.com
 
 #Useful references for queries:
 #http://www.nlm.nih.gov/bsd/funding_support.html
@@ -192,69 +215,21 @@ query_templates = {
         #'nature':       '"nature"[journal] AND Journal Article[pt] AND {year}[dp]',
         #'science':      '"science"[journal] AND Journal Article[pt] AND {year}[dp]',
     #    },
-    #"random_crossref_doi":{
-    #    'dois': None
-    #    },
-    #"random_dryad_doi":{
-    #    'dois': None
-    #    },
-    "random_figshare_doi":{
-        'dois': None
-        }
     }
 
 sample_size = 100
 seed = 42
-years = range(2001, 2012)
+years = range(2009, 2013)
+refset_name = "github"
+
 title_template = "REFSET {name}, {year} ({genre}) n={sample_size}"
-email = "team@total-impact.org"
+email = "team@impactstory.org"
+# export API_ROOT=total-impact-core.herokuapp.com
+# export API_ROOT=total-impact-core-staging.herokuapp.com
 # api_url = "http://" + os.getenv("API_ROOT")
 api_url = "http://total-impact-core-staging.herokuapp.com"
 
-#collection_ids = build_reference_sets(query_templates, title_template, years, sample_size, seed)
-#for collection_id in collection_ids:
-#    print collection_id
-
-
-from totalimpact.providers import github
-# downloaded from http://archive.org/details/archiveteam-github-repository-index-201212
-filename = "/Users/hpiwowar/Documents/Projects/tiv2/total-impact-core/extras/github-repositories.txt"
-
-import collections
-import subprocess
-command = "wc " + filename
-p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-out, error = p.communicate()
-num_repos = int(out.strip().split(" ")[0])
-print num_repos
-seed = 42
-random.seed(seed)
-
-provider = github.Github()
-
-random_repos = collections.defaultdict(list)
-
-i = 0
-while (len(random_repos["2009"]) < 100):
-    i += 1
-    line_number = random.randint(0, num_repos)
-    command = "tail -n +{line_number} {filename} | head -n 1".format(
-        line_number=line_number, filename=filename)
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    repo_id, error = p.communicate()
-    print repo_id
-    repo_url = "https://github.com/" + repo_id.strip()
-    biblio = provider.biblio([("url", repo_url)])
-    try:
-        year = biblio["create_date"][0:4]
-    except KeyError:
-        continue
-    random_repos[year] += [repo_url]
-    print "\nn={number_sampled}".format(number_sampled=i)
-    for year in sorted(random_repos.keys()):
-        print "{year}: {num}".format(year=year, num=len(random_repos[year]))
-    if i%100 == 0:
-        print random_repos
-print random_repos
-
+collection_ids = build_reference_sets(refset_name, query_templates, title_template, years, sample_size, seed)
+for collection_id in collection_ids:
+    print collection_id
 
