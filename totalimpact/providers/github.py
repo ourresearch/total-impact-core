@@ -81,6 +81,10 @@ class Github(Provider):
             'create_date' : ['created_at']
         }
         biblio_dict = provider._extract_from_json(page, dict_of_keylists)
+        try:
+            biblio_dict["year"] = biblio_dict["create_date"][0:4]
+        except KeyError:
+            pass
 
         return biblio_dict    
        
