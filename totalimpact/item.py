@@ -263,7 +263,6 @@ def get_normalized_values(genre, host, year, metric_name, value, myrefsets):
     response = {}
     for refsetname in myrefsets[genre]:
         # for nonarticles, use only the reference set type whose name matches the host (figshare, dryad, etc)
-        logger.info("%s %s %s %s for %s" %(genre, refsetname, host, year, metric_name))
         if (genre != "article"):
             if (host != refsetname):
                 continue  # skip this refset
