@@ -23,7 +23,12 @@ class NotAuthenticatedError(Exception):
 
 def largest_value_that_is_less_than_or_equal_to(target, collection):
     collection_as_numbers = [(int(i), i) for i in collection if int(i) <= target]
-    return max(collection_as_numbers)[1]
+    if collection_as_numbers:
+        response = max(collection_as_numbers)[1]
+    else:
+        # the value is lower than anything we've seen before, so return lowest value
+        response = min([(int(i), i) for i in collection])[1]
+    return response
 
 all_static_meta = ProviderFactory.get_all_static_meta()
 
@@ -275,7 +280,10 @@ def get_normalized_values(genre, host, year, metric_name, value, myrefsets):
             #logger.info("No good lookup in %s %s %s for %s" %(genre, refsetname, year, metric_name))
             pass
         except ValueError:
+            logger.error("Exception: no good lookup in %s %s %s for %s" %(genre, refsetname, year, metric_name))
             logger.debug("Value error calculating percentiles for %s %s %s for %s=%s" %(genre, refsetname, year, metric_name, str(value)))
+            logger.debug("fencepost = {fencepost_values}".format(
+                fencepost_values=fencepost_values))
             pass
             
     return response
