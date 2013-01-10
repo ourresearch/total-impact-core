@@ -274,6 +274,9 @@ def get_normalized_values(genre, host, year, metric_name, value, myrefsets):
         except KeyError:
             #logger.info("No good lookup in %s %s %s for %s" %(genre, refsetname, year, metric_name))
             pass
+        except ValueError:
+            logger.debug("Value error calculating percentiles for %s %s %s for %s=%s" %(genre, refsetname, year, metric_name, str(value)))
+            pass
             
     return response
 
