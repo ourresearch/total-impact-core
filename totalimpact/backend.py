@@ -152,7 +152,7 @@ class ProviderWorker(Worker):
         num_active_threads_for_this_provider = len(thread_count[self.provider.provider_name])
 
         if num_active_threads_for_this_provider >= self.provider.max_simultaneous_requests:
-            logger.info("not spawning another thread for {provider} yet because it already has {num_provider} active threads".format(
+            logger.info("{provider} has {num_provider} threads, so not spawning another yet".format(
                 num_provider=num_active_threads_for_this_provider, provider=self.provider.provider_name.upper()))
             time.sleep(self.polling_interval) # let the provider catch up
             return
@@ -173,7 +173,7 @@ class ProviderWorker(Worker):
 
             thread_count[self.provider.provider_name][tiid+method_name] = 1
 
-            logger.info("NUMBER of {provider} threads = {num_provider}, all threads = {num_total}".format(
+            logger.info("{num_total} total threads, {num_provider} threads for {provider}".format(
                 num_provider=num_active_threads_for_this_provider,
                 num_total=threading.active_count(),
                 provider=self.provider.provider_name.upper()))
