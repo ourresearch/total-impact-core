@@ -107,6 +107,7 @@ class Provider(object):
         self.max_retries = max_retries
         self.tool_email = tool_email
         self.provider_name = self.__class__.__name__.lower()
+        self.max_simultaneous_requests = 5  # max simultaneous requests, used by backend        
         self.logger = logging.getLogger("ti.providers." + self.provider_name)
 
     def __repr__(self):

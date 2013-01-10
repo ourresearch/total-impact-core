@@ -149,6 +149,14 @@ class ProviderWorker(Worker):
         return response
 
     def run(self):
+        num_active_threads_for_this_provider = len(thread_count[self.provider.provider_name])
+
+        if num_active_threads_for_this_provider >= self.provider.max_simultaneous_requests:
+            logger.info("not spawning another thread for {provider} yet because it already has {num_provider} active threads".format(
+                num_provider=num_active_threads_for_this_provider, provider=self.provider.provider_name.upper()))
+            time.sleep(self.polling_interval) # let the provider catch up
+            return
+
         provider_message = self.provider_queue.pop()
         if provider_message:
             #logger.info("POPPED from queue for {provider}".format(
@@ -166,7 +174,7 @@ class ProviderWorker(Worker):
             thread_count[self.provider.provider_name][tiid+method_name] = 1
 
             logger.info("NUMBER of {provider} threads = {num_provider}, all threads = {num_total}".format(
-                num_provider=len(thread_count[self.provider.provider_name]),
+                num_provider=num_active_threads_for_this_provider,
                 num_total=threading.active_count(),
                 provider=self.provider.provider_name.upper()))
 
@@ -174,10 +182,7 @@ class ProviderWorker(Worker):
                 args=(tiid, alias_dict, self.provider, method_name, aliases_providers_run, callback), 
                 name=self.provider_name+"-"+method_name.upper()+"-"+tiid[0:4])
             t.start()
-
-            # sleep to give the provider a rest :)
-            time.sleep(self.polling_interval)
-
+            return
 
 
 class CouchWorker(Worker):
