@@ -26,7 +26,7 @@ def get_nth_figshare_id(url_template, year, n):
     doi = doi.replace("http://dx.doi.org/", "")
     return(doi)
 
-def get_random_figshare_dois(year, sample_size, seed=None):
+def get_random_figshare_dois(year, sample_size, email, query, seed=None):
     if year < 2011:
         return []
 
@@ -34,8 +34,10 @@ def get_random_figshare_dois(year, sample_size, seed=None):
 
     # Do an initial query to get the total number of hits
     url = url_template.format(page=1, year=year)
+    print url
     r = requests.get(url)
     initial_response = r.json
+    print initial_response
     population_size = initial_response["items_found"]
     print "Number of figshare items returned by this query: %i" %population_size
     print "Off to randomly sample %i of them!" %sample_size
@@ -57,18 +59,21 @@ def get_random_figshare_dois(year, sample_size, seed=None):
     return figshare_ids
 
 
-def get_random_dryad_dois(year, sample_size, seed):
+def get_random_dryad_dois(year, sample_size, email, query, seed=None):
     if year < 2009:
         return []
 
     url = "http://datadryad.org/solr/search/select/?q=location:l2+dc.date.available_dt:[{year}-01-01T00:00:00Z%20TO%20{year}-12-31T23:59:59Z]&fl=dc.identifier&rows=1000000".format(year=year)
+    print url
     try:
         r = requests.get(url, timeout=10)
     except requests.Timeout:
         print "dryad isn't working right now (timed out); sending back an empty list."
         return []
     # sick of parsing xml to get simple things.  I'm using regex this time, darn it.
-    all_dois = re.findall("<str>doi:(10.5061/dryad.\d+)</str>", r.text)
+    all_dois = re.findall("<str>doi:(10.5061/dryad.[a-z0-9]+)</str>", r.text)
+    print all_dois[1]
+    print len(all_dois)
 
     if seed:
         random.seed(seed)
@@ -195,11 +200,11 @@ def build_reference_sets(refset_name, query_templates, title_template, years, sa
         if refset_name == "eutils":
             collection_ids += build_collections(refset_name, random_pmids.get_random_pmids, "article", "pmid", query_template, title_template, year, sample_size, seed)
         elif refset_name == "crossref":
-            collection_ids += build_collections(refset_name, get_random_crossref_dois, "article", "doi", query_template, title_template, year, sample_size, "")
+            collection_ids += build_collections(refset_name, get_random_crossref_dois, "article", "doi", None, title_template, year, sample_size, "")
         elif refset_name == "dryad":
-            collection_ids += build_collections(refset_name, get_random_dryad_dois, "dataset", "doi", query_template, title_template, year, sample_size, seed)
+            collection_ids += build_collections(refset_name, get_random_dryad_dois, "dataset", "doi", None, title_template, year, sample_size, seed)
         elif refset_name == "figshare":
-            collection_ids += build_collections(refset_name, get_random_figshare_dois, "dataset", "doi", query_template, title_template, year, sample_size, seed)
+            collection_ids += build_collections(refset_name, get_random_figshare_dois, "dataset", "doi", None, title_template, year, sample_size, seed)
         elif refset_name == "github":
             collection_ids += build_collections(refset_name, get_random_github_ids, "software", "url", None, title_template, year, sample_size, seed)
     return(collection_ids)
@@ -217,10 +222,6 @@ query_templates = {
     #    },
     }
 
-sample_size = 100
-seed = 42
-years = range(2009, 2013)
-refset_name = "github"
 
 title_template = "REFSET {name}, {year} ({genre}) n={sample_size}"
 email = "team@impactstory.org"
@@ -228,6 +229,11 @@ email = "team@impactstory.org"
 # export API_ROOT=total-impact-core-staging.herokuapp.com
 # api_url = "http://" + os.getenv("API_ROOT")
 api_url = "http://total-impact-core-staging.herokuapp.com"
+
+sample_size = 100
+seed = 42
+years = range(2007, 2013)
+refset_name = "dryad"
 
 collection_ids = build_reference_sets(refset_name, query_templates, title_template, years, sample_size, seed)
 for collection_id in collection_ids:
