@@ -89,7 +89,7 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
 
             # add normalization values
             raw = metrics[metric_name]["values"]["raw"]
-            normalized_values = get_normalized_values(item["biblio"]['genre'], year, metric_name, raw, myrefsets)
+            normalized_values = get_normalized_values(genre, host, year, metric_name, raw, myrefsets)
 
             metrics[metric_name]["values"].update(normalized_values)
 
@@ -246,7 +246,7 @@ def get_metric_names(providers_config):
             full_metric_names.append(provider.provider_name + ':' + metric_name)
     return full_metric_names
 
-def get_normalized_values(genre, year, metric_name, value, myrefsets):
+def get_normalized_values(genre, host, year, metric_name, value, myrefsets):
     # Will be passed None as myrefsets type when loading items in reference collections :)
     if not myrefsets:
         return {}
@@ -262,11 +262,16 @@ def get_normalized_values(genre, year, metric_name, value, myrefsets):
 
     response = {}
     for refsetname in myrefsets[genre]:
-        # year is a number
+        # for nonarticles, use only the reference set type whose name matches the host (figshare, dryad, etc)
+        logger.info("%s %s %s %s for %s" %(genre, refsetname, host, year, metric_name))
+        if (genre != "article"):
+            if (host != refsetname):
+                continue  # skip this refset
         try:
-            fencepost_values = myrefsets[genre][refsetname][int(year)][metric_name].keys()
+            int_year = int(year)  #year is a number in the refset keys
+            fencepost_values = myrefsets[genre][refsetname][int_year][metric_name].keys()
             myclosest = largest_value_that_is_less_than_or_equal_to(value, fencepost_values)
-            response[refsetname] = myrefsets[genre][refsetname][int(year)][metric_name][myclosest]
+            response[refsetname] = myrefsets[genre][refsetname][int_year][metric_name][myclosest]
         except KeyError:
             #logger.info("No good lookup in %s %s %s for %s" %(genre, refsetname, year, metric_name))
             pass
