@@ -7,8 +7,6 @@ import urlparse
 logger = logging.getLogger("ti.mixpanel")
 
 def track(event, event_properties, flask_request=None, mixpanel_token=None):
-    logger.debug("**** MIXPANEL LOG********")
-
     if not mixpanel_token:
         mixpanel_token = os.getenv("MIXPANEL_TOKEN")
 
@@ -37,5 +35,5 @@ def track(event, event_properties, flask_request=None, mixpanel_token=None):
     mixpanel_resp = urllib2.urlopen(url)
     logger.debug(mixpanel_resp)
 
-    logger.debug("Successful mixpanel report")
+    #logger.debug("Successful mixpanel report")
     return
