@@ -199,41 +199,24 @@ def provider():
 
     return resp
 
-
-'''
-GET /provider/:provider/memberitems?query=:querystring[&type=:type]
-returns member ids associated with the group in a json list of (key, value) pairs like [(namespace1, id1), (namespace2, id2)] 
-of type :type (when this needs disambiguating)
-if > 100 memberitems, return the first 100 with a response code that indicates the list has been truncated
-examples : /provider/github/memberitems?query=jasonpriem&type=github_user
-'''
 @app.route('/provider/<provider_name>/memberitems', methods=['POST'])
 @app.route('/v1/provider/<provider_name>/memberitems', methods=['POST'])
 def provider_memberitems(provider_name):
     """
-    Starts a memberitems update for a specified provider, using a supplied file.
-
-    Returns a hash of the file's contents, which is needed to get memberitems'
-    output. To get output, poll GET /provider/<provider_name>/memberitems/<hash>?method=async
+    Make a file into a dict strings describing items.
     """
-    #logger.debug("Query POSTed to {provider_name}/memberitems with request headers '{headers}'".format(
-    #    provider_name=provider_name,
-    #    headers=request.headers
-    #))
 
     mixpanel.track("Trigger:Import", {"Provider":provider_name}, request)
 
     file = request.files['file']
-    logger.debug("In provider_memberitems got file")
-    logger.debug("filename = " + file.filename)
-    query = file.read().decode("utf-8")
+    logger.debug("In"+provider_name+"/memberitems, got file: filename="+file.filename)
+    entries_str = file.read().decode("utf-8")
 
     provider = ProviderFactory.get_provider(provider_name)
     memberitems = MemberItems(provider, myredis)
-    query_hash = memberitems.start_update(query)
+    items_dict = memberitems.parse(entries_str)
 
-    response_dict = {"query_hash":query_hash}
-    resp = make_response(json.dumps(response_dict), 201) # created
+    resp = make_response(json.dumps(items_dict), 200) # created
     resp.mimetype = "application/json"
     resp.headers['Access-Control-Allow-Origin'] = "*"
     return resp
