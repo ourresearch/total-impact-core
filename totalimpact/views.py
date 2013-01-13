@@ -601,11 +601,14 @@ def update_user(userid=''):
     resp.mimetype = "application/json"
     return resp
 
-# see http://support.blitz.io/discussions/problems/363-authorization-error
-@app.route('/mu-' + os.environ["BLITZ_API_KEY"], methods=["GET"])
-def blitz_validation():
-    resp = make_response("42", 200)
-    return resp
+try:
+    # see http://support.blitz.io/discussions/problems/363-authorization-error
+    @app.route('/mu-' + os.environ["BLITZ_API_KEY"], methods=["GET"])
+    def blitz_validation():
+        resp = make_response("42", 200)
+        return resp
+except KeyError:
+    logger.error("BLITZ_API_KEY environment variable not defined, not setting up validation api endpoint")
 
 @app.route('/hirefire/test', methods=["GET"])
 def hirefire_test():
@@ -613,14 +616,17 @@ def hirefire_test():
     resp.mimetype = "text/html"
     return resp
 
-@app.route('/hirefire/' + os.environ["HIREFIRE_TOKEN"] + '/info', methods=["GET"])
-def hirefire_worker_count():
-    import time
-    time.sleep(3)
+try:
+    @app.route('/hirefire/' + os.environ["HIREFIRE_TOKEN"] + '/info', methods=["GET"])
+    def hirefire_worker_count():
+        import time
+        time.sleep(3)
 
-    resp = make_response(json.dumps([{"worker":1}]), 200)
-    resp.mimetype = "application:json"
-    return resp
+        resp = make_response(json.dumps([{"worker":1}]), 200)
+        resp.mimetype = "application:json"
+        return resp
+except KeyError:
+    logger.error("HIREFIRE_TOKEN environment variable not defined, not setting up validation api endpoint")
 
 
 @app.route('/hirefireapp/test', methods=["GET"])
@@ -629,10 +635,13 @@ def hirefireapp_test():
     resp.mimetype = "text/html"
     return resp
 
-@app.route('/hirefireapp/' + os.environ["HIREFIREAPP_TOKEN"] + '/info', methods=["GET"])
-def hirefireapp_worker_count():
-    resp = make_response(json.dumps({"worker":1}), 200)
-    resp.mimetype = "application:json"
-    return resp
+try:
+    @app.route('/hirefireapp/' + os.environ["HIREFIREAPP_TOKEN"] + '/info', methods=["GET"])
+    def hirefireapp_worker_count():
+        resp = make_response(json.dumps({"worker":1}), 200)
+        resp.mimetype = "application:json"
+        return resp
+except KeyError:
+    logger.error("HIREFIREAPP_TOKEN environment variable not defined, not setting up validation api endpoint")
 
 
