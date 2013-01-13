@@ -5,6 +5,7 @@ from pybtex.database.input import bibtex
 from pybtex.errors import enable_strict_mode, format_error
 from pybtex.scanner import PybtexSyntaxError, PybtexError
 from StringIO import StringIO
+import json
 from itertools import chain
 
 import logging
@@ -27,55 +28,31 @@ class Bibtex(Provider):
         if not biblio_list:
             return []
 
-        arg_dict = {}
-        for biblio in biblio_list:
-            #print "** parsing", biblio.entries[mykey]
-            try:
-                mykey = biblio.entries.keys()[0]
-            except AttributeError:
-                # doesn't seem to be a valid biblio object, so skip to the next one
-                logger.info("%20s NO DOI because no entries attribute in %s" % (self.provider_name, biblio))                
-                continue
+        entry_strings = []
+        for entry in biblio_list:
 
-            try:
-                journal = biblio.entries[mykey].fields["journal"]
-            except KeyError:
+            if (entry["journal"] == ""):
                 # need to have journal or can't look up with current api call
-                logger.info("%20s NO DOI because no journal in %s" % (self.provider_name, biblio.entries[mykey]))
+                logger.info("%20s NO DOI because no journal in %s" % (
+                    self.provider_name, entry))
                 continue
 
-            try:
-                first_author = biblio.entries[mykey].fields["author"].split(",")[0]
-            except (KeyError, AttributeError):
-                first_author = biblio.entries[mykey].fields["author"][0].split(",")[0]
+            entry_str =  ("|%s|%s|%s|%s|%s|%s||%s|" % (
+                entry["journal"],
+                entry["first_author"],
+                entry["volume"],
+                entry["number"],
+                entry["first_page"],
+                entry["year"],
+                entry["key"]
+                ))
+            entry_strings.append(entry_str)
 
-            try:
-                number = biblio.entries[mykey].fields["number"]
-            except KeyError:
-                number = ""
-
-            try:
-                volume = biblio.entries[mykey].fields["volume"]
-            except KeyError:
-                volume = ""
-
-            try:
-                pages = biblio.entries[mykey].fields["pages"]
-                first_page = pages.split("--")[0]
-            except KeyError:
-                first_page = ""
-
-            try:
-                year = biblio.entries[mykey].fields["year"]
-            except KeyError:
-                year = ""
-
-            arg_dict[mykey] = ("|%s|%s|%s|%s|%s|%s||%s|" % (journal, first_author, volume, number, first_page, year, mykey))
-
-        if not arg_dict:
+        if not entry_strings:
             return []
 
-        text_str = "%0A".join(arg_dict.values())
+        text_str = "%0A".join(entry_strings)
+
         # for more info on crossref spec, see
         # http://ftp.crossref.org/02publishers/25query_spec.html
         url = "http://doi.crossref.org/servlet/query?pid=totalimpactdev@gmail.com&qdata=%s" % text_str
@@ -131,27 +108,6 @@ class Bibtex(Provider):
                 #raise ProviderContentMalformedError(error.message)
         return biblio_list
 
-    def paginate(self, bibtex_contents):
-        logger.debug("%20s paginate in member_items" % (self.provider_name))
-
-        cleaned_string = bibtex_contents.replace("\&", "").replace("%", "").strip()
-        entries = ["@"+entry for entry in cleaned_string.split("@") if entry]
-
-        items_per_page = 5
-        layout = divmod(len(entries), items_per_page)
-        last_page = min(1+layout[0], 50)  # 5 items/page * 50 pages = 250 items max  
-
-        biblio_pages = []
-        for i in xrange(0, last_page):
-            last_item = min(i*items_per_page+items_per_page, len(entries))
-            logger.debug("%20s parsing bibtex entries %i-%i of %i" % (self.provider_name, 1+i*items_per_page, last_item, len(entries)))
-            biblio = self._parse_bibtex_entries(entries[0+i*items_per_page : last_item])
-            if biblio:
-                biblio_pages += [biblio]
-        response_dict = {"pages":biblio_pages, "number_entries":len(entries)}
-        return response_dict
-
-
     def parse(self, bibtex_contents):
 
         ret = []
@@ -171,9 +127,8 @@ class Bibtex(Provider):
             try:
                 parsed["journal"] = biblio.entries[mykey].fields["journal"]
             except KeyError:
-                # need to have journal or can't look up with current api call
-                logger.info("%20s NO DOI because no journal in %s" % (self.provider_name, biblio.entries[mykey]))
-                continue
+                parsed["journal"] = ""
+
 
             try:
                 parsed["first_author"] = biblio.entries[mykey].fields["author"].split(",")[0]
@@ -201,6 +156,8 @@ class Bibtex(Provider):
             except KeyError:
                 parsed["year"]  = ""
 
+            parsed["key"] = mykey
+
             ret.append(parsed)
 
         return ret
@@ -209,11 +166,9 @@ class Bibtex(Provider):
 
 
 
-    def member_items(self, parsed_bibtex, cache_enabled=True):
+    def member_items(self, parsed_bibtex_json, cache_enabled=True):
         logger.debug("%20s getting member_items for bibtex" % (self.provider_name))
-
-        if not parsed_bibtex:
-            return []
+        parsed_bibtex = json.loads(parsed_bibtex_json)
 
         dois = self._lookup_dois_from_biblio(parsed_bibtex, cache_enabled)
 

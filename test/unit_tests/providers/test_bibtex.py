@@ -54,66 +54,60 @@ class TestBibtex(ProviderTestCase):
     testitem_members = "egonw"
 
     def setUp(self):
-        ProviderTestCase.setUp(self) 
+        ProviderTestCase.setUp(self)
 
-    def test_extract_members_success(self):        
-        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
-        query_response = self.provider.paginate(file_contents)
-        members = self.provider.member_items(query_response["pages"][1])
-        print members
-        expected = [('doi', u'10.1093/bioinformatics/btm001'), ('doi', u'10.1104/pp.103.023085'), ('doi', u'10.1093/bioinformatics/btg1008'), ('doi', u'10.1186/1471-2148-8-95')]
-        assert_equals(set(members), set(expected))
-
-    def test_extract_members_none(self):        
-        members = self.provider.member_items([])
+    def test_extract_members_none(self):
+        members = self.provider.member_items("[]")
         assert_equals(members, [])
 
     @raises(ProviderServerError)
     def test_extract_members_500(self):        
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
         Provider.http_get = common.get_500
-        query_response = self.provider.paginate(file_contents)
-        members = self.provider.member_items(query_response["pages"][0])
+        parsed = self.provider.parse(file_contents)
+        members = self.provider.member_items(json.dumps(parsed))
 
-    def test_extract_members_empty(self):        
+    def test_extract_members_empty(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
         Provider.http_get = common.get_empty
-        query_response = self.provider.paginate(file_contents)
-        members = self.provider.member_items(query_response["pages"][0])
+        parsed = self.provider.parse(file_contents)
+        members = self.provider.member_items(json.dumps(parsed))
         assert_equals(members, [])
 
-    def test_paginate_none(self):
+    def test_parse_none(self):
         file_contents = ""
-        response = self.provider.paginate(file_contents)
-        assert_equals(len(response["pages"]), 0)
-        assert_equals(response["number_entries"], 0)
+        response = self.provider.parse(file_contents)
+        assert_equals(len(response), 0)
 
-    def test_paginate_short(self):
+    def test_parse_short(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_SHORT
-        response = self.provider.paginate(file_contents)
-        assert_equals(set(response.keys()), set(['number_entries', 'pages']))
-        assert_equals(len(response["pages"]), 1)
-        assert_equals(response["number_entries"], 3)
-
-    def test_paginate_long(self):
-        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
-        response = self.provider.paginate(file_contents)
-        assert_equals(set(response.keys()), set(['number_entries', 'pages']))
-        assert_equals(len(response["pages"]), 16)
-        assert_equals(response["number_entries"], 79)
+        response = self.provider.parse(file_contents)
+        print response
+        assert_equals(len(response), 3)
 
     def test_parse_long(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
         resp = self.provider.parse(file_contents)
 
+        # make sure it's json-serializable
         json_str = json.dumps(resp)
-        assert_equals(json_str[0:3], '[{"') # just make sure it's json-serializable
-        assert_equals(len(resp), 54) # 54 usable articles
+        assert_equals(json_str[0:3], '[{"')
 
+        assert_equals(len(resp), 79) # 79 total articles
+
+    def test_lookup_dois_from_biblio(self):
+        biblio_list = [
+            {"first_author": "Piwowar", "journal": "PLoS medicine", "number": "9", "volume": "5", "first_page": "e183", "key": "piwowar2008towards", "year": "2008"},
+            {"first_author": "Piwowar", "journal": "PLoS One", "number": "3", "volume": "2", "first_page": "e308", "key": "piwowar2007sharing", "year": "2007"}
+        ]
+        dois = self.provider._lookup_dois_from_biblio(biblio_list, True)
+        assert_equals(set(dois), set([u'10.1371/journal.pmed.0050183',
+                                      u'10.1371/journal.pone.0000308']))
 
     # check it doesn't throw an error
     def test_paginate_broken(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_BROKEN
-        response = self.provider.paginate(file_contents)
+        response = self.provider.parse(file_contents)
         #print 1/0
+
 

@@ -9,7 +9,7 @@ import uuid
 from totalimpact import dao, app, tiredis, collection, api_user, mixpanel
 from totalimpact import item as item_module
 from totalimpact.models import MemberItems, UserFactory, NotAuthenticatedError
-from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderContentMalformedError, ProviderTimeout
+from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderServerError, ProviderTimeout
 from totalimpact import default_settings
 import logging
 
@@ -220,37 +220,29 @@ def provider_memberitems(provider_name):
     resp.headers['Access-Control-Allow-Origin'] = "*"
     return resp
 
-
-"""
-Gets aliases associated with a query from a given provider.
-
-method=sync will call a provider's memberitems method with the supplied query,
-            and wait for the result.
-method=async will look up the query in total-impact's db and return the current
-             status of that query.
-"""
 @app.route("/provider/<provider_name>/memberitems/<query>", methods=['GET'])
 @app.route("/v1/provider/<provider_name>/memberitems/<query>", methods=['GET'])
 def provider_memberitems_get(provider_name, query):
+    """
+    Gets aliases associated with a query from a given provider.
+    """
 
     mixpanel.track("Trigger:Import", {"Provider":provider_name}, request)
 
-    provider = ProviderFactory.get_provider(provider_name)
-    memberitems = MemberItems(provider, myredis)
-    method = request.args.get('method', "sync")
-
     try:
-        ret = getattr(memberitems, "get_"+method)(query)
+        provider = ProviderFactory.get_provider(provider_name)
+        ret = provider.member_items(query)
     except ProviderItemNotFoundError:
         abort(404)
+    except (ProviderTimeout, ProviderServerError):
+        abort(503)  # crossref lookup error, might be transient
     except ProviderError:
         abort(500)
 
-    if ret:
-        if ret["error"]:
-            abort(503)  # crossref lookup error, might be transient
-
-    resp = make_response(json.dumps(ret, sort_keys=True, indent=4), 200)
+    resp = make_response(
+        json.dumps({"memberitems":ret}, sort_keys=True, indent=4),
+        200
+    )
     resp.mimetype = "application/json"
     resp.headers['Access-Control-Allow-Origin'] = "*"
     return resp
