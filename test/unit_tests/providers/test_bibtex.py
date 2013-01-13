@@ -2,8 +2,7 @@ from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderServerError
 
-import os
-import collections
+import os, json
 from nose.tools import assert_equals, raises, nottest
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/bibtex")
@@ -106,7 +105,10 @@ class TestBibtex(ProviderTestCase):
     def test_parse_long(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
         resp = self.provider.parse(file_contents)
-        assert_equals(len(resp), 79)
+
+        json_str = json.dumps(resp)
+        assert_equals(json_str[0:3], '[{"') # just make sure it's json-serializable
+        assert_equals(len(resp), 54) # 54 usable articles
 
 
     # check it doesn't throw an error
