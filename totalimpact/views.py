@@ -213,8 +213,7 @@ def provider_memberitems(provider_name):
     entries_str = file.read().decode("utf-8")
 
     provider = ProviderFactory.get_provider(provider_name)
-    memberitems = MemberItems(provider, myredis)
-    items_dict = memberitems.parse(entries_str)
+    items_dict = provider.parse(entries_str)
 
     resp = make_response(json.dumps(items_dict), 200) # created
     resp.mimetype = "application/json"

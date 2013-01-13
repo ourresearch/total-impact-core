@@ -209,6 +209,11 @@ class TestMemberItems(ViewsTester):
         assert_equals(json.loads(response.data)["memberitems"], GOLD_MEMBER_ITEM_CONTENT)
         assert_equals(response.mimetype, "application/json")
 
+    def test_file_parsing(self):
+        datadir = os.path.join(os.path.split(__file__)[0], "../../extras/sample_provider_pages/bibtex")
+        path = os.path.join(datadir, "Vision.bib")
+        bibtex_str = open(path, "r").read()
+
 
 class TestProvider(ViewsTester):
 

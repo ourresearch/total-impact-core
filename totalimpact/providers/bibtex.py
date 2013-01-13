@@ -151,10 +151,61 @@ class Bibtex(Provider):
         response_dict = {"pages":biblio_pages, "number_entries":len(entries)}
         return response_dict
 
+
     def parse(self, bibtex_contents):
-        pages = self.paginate(bibtex_contents)["pages"]
-        entries = list(chain.from_iterable(pages))
-        return entries
+
+        ret = []
+        cleaned_string = bibtex_contents.replace("\&", "").replace("%", "").strip()
+        entries = ["@"+entry for entry in cleaned_string.split("@") if entry]
+        biblio_list = self._parse_bibtex_entries(entries)
+
+        for biblio in biblio_list:
+            parsed = {}
+            try:
+                mykey = biblio.entries.keys()[0]
+            except AttributeError:
+                # doesn't seem to be a valid biblio object, so skip to the next one
+                logger.info("%20s NO DOI because no entries attribute in %s" % (self.provider_name, biblio))
+                continue
+
+            try:
+                parsed["journal"] = biblio.entries[mykey].fields["journal"]
+            except KeyError:
+                # need to have journal or can't look up with current api call
+                logger.info("%20s NO DOI because no journal in %s" % (self.provider_name, biblio.entries[mykey]))
+                continue
+
+            try:
+                parsed["first_author"] = biblio.entries[mykey].fields["author"].split(",")[0]
+            except (KeyError, AttributeError):
+                parsed["first_author"] = biblio.entries[mykey].fields["author"][0].split(",")[0]
+
+            try:
+                parsed["number"] = biblio.entries[mykey].fields["number"]
+            except KeyError:
+                parsed["number"] = ""
+
+            try:
+                parsed["volume"] = biblio.entries[mykey].fields["volume"]
+            except KeyError:
+                parsed["volume"] = ""
+
+            try:
+                pages = biblio.entries[mykey].fields["pages"]
+                parsed["first_page"] = pages.split("--")[0]
+            except KeyError:
+                parsed["first_page"] = ""
+
+            try:
+                parsed["year"] = biblio.entries[mykey].fields["year"]
+            except KeyError:
+                parsed["year"]  = ""
+
+            ret.append(parsed)
+
+        return ret
+
+
 
 
 
