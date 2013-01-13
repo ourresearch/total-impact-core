@@ -1,14 +1,11 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout, ProviderServerError
 
-import simplejson
-import pybtex
 from pybtex.database.input import bibtex
 from pybtex.errors import enable_strict_mode, format_error
 from pybtex.scanner import PybtexSyntaxError, PybtexError
-from pyparsing import ParseException 
 from StringIO import StringIO
-import re
+from itertools import chain
 
 import logging
 logger = logging.getLogger('ti.providers.bibtex')
@@ -153,6 +150,12 @@ class Bibtex(Provider):
                 biblio_pages += [biblio]
         response_dict = {"pages":biblio_pages, "number_entries":len(entries)}
         return response_dict
+
+    def parse(self, bibtex_contents):
+        pages = self.paginate(bibtex_contents)["pages"]
+        entries = list(chain.from_iterable(pages))
+        return entries
+
 
 
     def member_items(self, parsed_bibtex, cache_enabled=True):

@@ -37,6 +37,7 @@ class MemberItems():
         t.start()
         return hash
 
+
     def get_sync(self, query):
         ret = {}
         start = time.time()

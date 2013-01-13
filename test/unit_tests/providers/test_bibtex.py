@@ -103,6 +103,12 @@ class TestBibtex(ProviderTestCase):
         assert_equals(len(response["pages"]), 16)
         assert_equals(response["number_entries"], 79)
 
+    def test_parse_long(self):
+        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
+        resp = self.provider.parse(file_contents)
+        assert_equals(len(resp), 79)
+
+
     # check it doesn't throw an error
     def test_paginate_broken(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_BROKEN
