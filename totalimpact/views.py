@@ -1,6 +1,7 @@
 from flask import json, request, abort, make_response
 from flask import render_template
-import os, datetime, re, couchdb, copy
+import sys, os
+import datetime, re, couchdb, copy
 from werkzeug.security import check_password_hash
 from collections import defaultdict
 import redis
@@ -573,4 +574,48 @@ def update_user(userid=''):
     resp = make_response(json.dumps(res, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
+
+try:
+    # see http://support.blitz.io/discussions/problems/363-authorization-error
+    @app.route('/mu-' + os.environ["BLITZ_API_KEY"], methods=["GET"])
+    def blitz_validation():
+        resp = make_response("42", 200)
+        return resp
+except KeyError:
+    logger.error("BLITZ_API_KEY environment variable not defined, not setting up validation api endpoint")
+
+@app.route('/hirefire/test', methods=["GET"])
+def hirefire_test():
+    resp = make_response("HireFire", 200)
+    resp.mimetype = "text/html"
+    return resp
+
+try:
+    @app.route('/hirefire/' + os.environ["HIREFIRE_TOKEN"] + '/info', methods=["GET"])
+    def hirefire_worker_count():
+        import time
+        time.sleep(3)
+
+        resp = make_response(json.dumps([{"worker":1}]), 200)
+        resp.mimetype = "application:json"
+        return resp
+except KeyError:
+    logger.error("HIREFIRE_TOKEN environment variable not defined, not setting up validation api endpoint")
+
+
+@app.route('/hirefireapp/test', methods=["GET"])
+def hirefireapp_test():
+    resp = make_response("HireFire", 200)
+    resp.mimetype = "text/html"
+    return resp
+
+try:
+    @app.route('/hirefireapp/' + os.environ["HIREFIREAPP_TOKEN"] + '/info', methods=["GET"])
+    def hirefireapp_worker_count():
+        resp = make_response(json.dumps({"worker":1}), 200)
+        resp.mimetype = "application:json"
+        return resp
+except KeyError:
+    logger.error("HIREFIREAPP_TOKEN environment variable not defined, not setting up validation api endpoint")
+
 
