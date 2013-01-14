@@ -427,8 +427,9 @@ class TestCollection(ViewsTester):
              u'_rev',
              u'created',
              u'last_modified',
+             u'alias_tiids',
              u'_id',
-             u'key_hash',
+             u'key',
              u'owner',
              u'type'}
         )
@@ -513,6 +514,59 @@ class TestCollection(ViewsTester):
         changed_coll = self.d.get(coll["_id"])
         assert_equals(changed_coll["title"], "plato sux lol")
         assert_equals(changed_coll["owner"], "aristotle")
+
+    def test_delete_collection_item(self):
+        # make a new collection
+        response = self.client.post(
+            '/collection',
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection", "owner":"plato"}),
+            content_type="application/json"
+        )
+        resp = json.loads(response.data)
+        coll =  resp["collection"]
+        key =  resp["key"]
+
+        # delete an item.
+        del coll["alias_tiids"]["doi:10.123"]
+        r = self.client.put(
+            "/collection/{id}?key={key}".format(id=coll["_id"], key=key),
+            data=json.dumps(coll),
+            content_type="application/json"
+        )
+
+        changed_coll = self.d.get(coll["_id"])
+        assert_equals(set(changed_coll["alias_tiids"]),
+                      set(["doi:10.124", "doi:10.125"]))
+
+
+    def test_add_collection_item(self):
+        # make a new collection
+        response = self.client.post(
+            '/collection',
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection", "owner":"plato"}),
+            content_type="application/json"
+        )
+        resp = json.loads(response.data)
+        coll =  resp["collection"]
+        key =  resp["key"]
+
+        # add an item.
+        coll["alias_tiids"]["doi:10.new"] = None
+
+        r = self.client.put(
+            "/collection/{id}?key={key}".format(id=coll["_id"], key=key),
+            data=json.dumps(coll),
+            content_type="application/json"
+        )
+
+        changed_coll = self.d.get(coll["_id"])
+
+        # we added a new item
+        assert_equals(len(changed_coll["alias_tiids"]), 4)
+
+        # it's got a tiid
+        assert_equals(len(changed_coll["alias_tiids"]["doi:10.new"]), 24)
+
 
 
     def test_change_collection_requires_key(self):

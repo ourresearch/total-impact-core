@@ -328,26 +328,24 @@ def put_collection(cid=""):
 
 
     # for aliases we don't know about, we need to create the items and get tiids
-    try:
-        if request.json["alias_tiids"]:
-            tiidless_alias_strings = [alias for alias, tiid in
-                                      request.json["alias_tiids"].iteritems() if tiid]
-            tiidless_aliases = [str.split(":", 1) for str in tiidless_alias_strings]
+    if request.json["alias_tiids"]:
+        try:
+                aliases = [str.split(":", 1) for str in request.json["alias_tiids"] ]
 
-            (tiids, new_items) = item_module.create_or_update_items_from_aliases(
-                tiidless_aliases, myredis, mydao)
+                (tiids, new_items) = item_module.create_or_update_items_from_aliases(
+                    aliases, myredis, mydao)
+                all_alias_tiids = dict(zip(request.json["alias_tiids"], tiids)) # assumes tiids and aliases are in same order :/
 
-            new_alias_tiids = dict(zip(tiidless_alias_strings, tiids)) # assumes tiids and aliases are in same order...
-            all_alias_tiids = request.json["alias_tiids"].update(new_alias_tiids)
-            coll["alias_tiids"] = all_alias_tiids
+                coll["alias_tiids"] = all_alias_tiids
 
-    except (AttributeError, TypeError):
-        # we got missing or improperly formated data.
-        logger.error(
-            "PUT /collection/{id} got bad json input: {json}.".format(
-                id=coll["_id"],
-                json=str(request.json)))
-        abort(404, "Missing arguments.")
+        except (AttributeError, TypeError) as e:
+            # we got missing or improperly formated data.
+            logger.error(
+                "PUT /collection/{id} threw an error: '{error_str}'. input: {json}.".format(
+                    id=coll["_id"],
+                    error_str=e,
+                    json=request.json))
+            abort(404, "Missing arguments.")
 
     for k in ["title", "owner"]:
         try:
