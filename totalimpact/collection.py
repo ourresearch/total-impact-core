@@ -22,8 +22,8 @@ def make(owner=None):
     collection["created"] = now
     collection["last_modified"] = now
     collection["type"] = "collection"
-    collection["key_hash"] = key_hash
     collection["owner"] = owner
+    collection["key"] = key # using the hash was needless complexity...
 
     return collection, key
 

@@ -315,13 +315,41 @@ def put_collection(cid=""):
     if key is None:
         abort(404, "This method requires an update key.")
 
+    # authenticate:
     coll = dict(mydao.db[cid])
-    if "key_hash" not in coll.keys():
+    if "key" in coll.keys():
+        if coll["key"] != key:
+            abort(403, "Wrong update key")
+    elif "key_hash" in coll.keys():
+        if not check_password_hash(coll["key_hash"], key):
+            abort(403, "Wrong update key")
+    else:
         abort(501, "This collection has no update key; it cant' be changed.")
-    if not check_password_hash(coll["key_hash"], key):
-        abort(403, "Wrong update key")
 
-    for k in ["title", "owner", "alias_tiids"]:
+
+    # for aliases we don't know about, we need to create the items and get tiids
+    try:
+        if request.json["alias_tiids"]:
+            tiidless_alias_strings = [alias for alias, tiid in
+                                      request.json["alias_tiids"].iteritems() if tiid]
+            tiidless_aliases = [str.split(":", 1) for str in tiidless_alias_strings]
+
+            (tiids, new_items) = item_module.create_or_update_items_from_aliases(
+                tiidless_aliases, myredis, mydao)
+
+            new_alias_tiids = dict(zip(tiidless_alias_strings, tiids)) # assumes tiids and aliases are in same order...
+            all_alias_tiids = request.json["alias_tiids"].update(new_alias_tiids)
+            coll["alias_tiids"] = all_alias_tiids
+
+    except (AttributeError, TypeError):
+        # we got missing or improperly formated data.
+        logger.error(
+            "PUT /collection/{id} got bad json input: {json}.".format(
+                id=coll["_id"],
+                json=str(request.json)))
+        abort(404, "Missing arguments.")
+
+    for k in ["title", "owner"]:
         try:
             coll[k] = request.json[k]
         except KeyError:
