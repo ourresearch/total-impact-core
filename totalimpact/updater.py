@@ -151,7 +151,7 @@ def update_active_publisher_items(number_to_update, myredis, mydao):
     response = update_docs_with_updater_timestamp(docs_to_update, mydao)        
 
     print "updating {number_to_update} of them now".format(number_to_update=number_to_update)
-    QUEUE_DELAY_IN_SECONDS = 1.0
+    QUEUE_DELAY_IN_SECONDS = 0.25
     mixpanel.track("Trigger:Update", {"Number Items":len(tiids_to_update), "Update Type":"Scheduled Registered"})
     item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
 
@@ -181,7 +181,7 @@ def update_docs_with_updater_timestamp(docs, mydao):
 def update_least_recently_updated(number_to_update, myredis, mydao):
     (tiids_to_update, docs) = get_least_recently_updated_tiids_in_db(number_to_update, mydao)
     update_docs_with_updater_timestamp(docs, mydao)
-    QUEUE_DELAY_IN_SECONDS = 1.0
+    QUEUE_DELAY_IN_SECONDS = 0.25
     mixpanel.track("Trigger:Update", {"Number Items":len(tiids_to_update), "Update Type":"Scheduled Least Recently"})
     item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
     return tiids_to_update
@@ -191,7 +191,7 @@ def main(action_type, number_to_update=35):
 
     cloudant_db = os.getenv("CLOUDANT_DB")
     cloudant_url = os.getenv("CLOUDANT_URL")
-    redis_url = os.getenv("REDISTOGO_URL")
+    redis_url = os.getenv("REDIS_URL")
 
     mydao = dao.Dao(cloudant_url, cloudant_db)
     myredis = tiredis.from_url(redis_url)
