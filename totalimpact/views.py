@@ -311,7 +311,7 @@ def collection_get(cid='', format="json", include_history=False):
 @app.route("/collection/<cid>", methods=["PUT"])
 @app.route("/v1/collection/<cid>", methods=["PUT"])
 def put_collection(cid=""):
-    key = request.args.get("key", None)
+    key = request.args.get("edit_key", None)
     if key is None:
         abort(404, "This method requires an update key.")
 
@@ -330,13 +330,15 @@ def put_collection(cid=""):
     # for aliases we don't know about, we need to create the items and get tiids
     if request.json["alias_tiids"]:
         try:
-                aliases = [str.split(":", 1) for str in request.json["alias_tiids"] ]
+            alias_strings = ["unknown:"+str if not ":" in str else str for str
+                             in request.json["alias_tiids"]]
+            aliases = [str.split(":", 1) for str in alias_strings ]
 
-                (tiids, new_items) = item_module.create_or_update_items_from_aliases(
-                    aliases, myredis, mydao)
-                all_alias_tiids = dict(zip(request.json["alias_tiids"], tiids)) # assumes tiids and aliases are in same order :/
+            (tiids, new_items) = item_module.create_or_update_items_from_aliases(
+                aliases, myredis, mydao)
+            all_alias_tiids = dict(zip(request.json["alias_tiids"], tiids)) # assumes tiids and aliases are in same order :/
 
-                coll["alias_tiids"] = all_alias_tiids
+            coll["alias_tiids"] = all_alias_tiids
 
         except (AttributeError, TypeError) as e:
             # we got missing or improperly formated data.

@@ -505,7 +505,7 @@ class TestCollection(ViewsTester):
         coll["title"] = "plato sux lol"
 
         r = self.client.put(
-            "/collection/{id}?key={key}".format(id=coll["_id"], key=key),
+            "/collection/{id}?edit_key={key}".format(id=coll["_id"], key=key),
             data=json.dumps(coll),
             content_type="application/json"
         )
@@ -529,7 +529,7 @@ class TestCollection(ViewsTester):
         # delete an item.
         del coll["alias_tiids"]["doi:10.123"]
         r = self.client.put(
-            "/collection/{id}?key={key}".format(id=coll["_id"], key=key),
+            "/collection/{id}?edit_key={key}".format(id=coll["_id"], key=key),
             data=json.dumps(coll),
             content_type="application/json"
         )
@@ -554,7 +554,7 @@ class TestCollection(ViewsTester):
         coll["alias_tiids"]["doi:10.new"] = None
 
         r = self.client.put(
-            "/collection/{id}?key={key}".format(id=coll["_id"], key=key),
+            "/collection/{id}?edit_key={key}".format(id=coll["_id"], key=key),
             data=json.dumps(coll),
             content_type="application/json"
         )
@@ -587,7 +587,7 @@ class TestCollection(ViewsTester):
 
         # 403 Forbidden if wrong key
         r = self.client.put(
-            "/collection/{id}?key={key}".format(id=coll["_id"], key="bad key"),
+            "/collection/{id}?edit_key={key}".format(id=coll["_id"], key="bad key"),
             data=json.dumps(coll),
             content_type="application/json"
         )
