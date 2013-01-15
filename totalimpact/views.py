@@ -311,6 +311,18 @@ def collection_get(cid='', format="json", include_history=False):
 @app.route("/collection/<cid>", methods=["PUT"])
 @app.route("/v1/collection/<cid>", methods=["PUT"])
 def put_collection(cid=""):
+    """
+    Overwrites the contents of a collection object
+
+    Pass in a JSON object:
+        title: overwrites the title
+        owner: overwrites the owner
+        aliases OR
+        alias_tiids: will overwrite the alias_tiids, creating new tiids or retrieving
+                     them as need be.
+
+    """
+
     key = request.args.get("edit_key", None)
     if key is None:
         abort(404, "This method requires an update key.")
@@ -327,16 +339,23 @@ def put_collection(cid=""):
         abort(501, "This collection has no update key; it cant' be changed.")
 
 
+    try:
+        alias_strings = request.json["alias_tiids"].keys()
+    except AttributeError:
+        alias_strings = request.json["aliases"]
+    except KeyError:
+        alias_strings = []
+
     # for aliases we don't know about, we need to create the items and get tiids
-    if request.json["alias_tiids"]:
+    if alias_strings:
         try:
             alias_strings = ["unknown:"+str if not ":" in str else str for str
-                             in request.json["alias_tiids"]]
+                             in alias_strings]
             aliases = [str.split(":", 1) for str in alias_strings ]
 
             (tiids, new_items) = item_module.create_or_update_items_from_aliases(
                 aliases, myredis, mydao)
-            all_alias_tiids = dict(zip(request.json["alias_tiids"], tiids)) # assumes tiids and aliases are in same order :/
+            all_alias_tiids = dict(zip(alias_strings, tiids)) # assumes tiids and aliases are in same order :/
 
             coll["alias_tiids"] = all_alias_tiids
 
