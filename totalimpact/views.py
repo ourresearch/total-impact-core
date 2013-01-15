@@ -312,7 +312,8 @@ def collection_get(cid='', format="json", include_history=False):
 @app.route("/v1/collection/<cid>", methods=["PUT"])
 def put_collection(cid=""):
     """
-    Overwrites the contents of a collection object
+    Overwrites the contents of a collection object.
+    @TODO merge with create; it repeats a bunch of code.
 
     Pass in a JSON object:
         title: overwrites the title
@@ -339,11 +340,11 @@ def put_collection(cid=""):
         abort(501, "This collection has no update key; it cant' be changed.")
 
 
-    try:
+    if request.json["alias_tiids"]:
         alias_strings = request.json["alias_tiids"].keys()
-    except AttributeError:
+    elif request.json["aliases"]:
         alias_strings = request.json["aliases"]
-    except KeyError:
+    else:
         alias_strings = []
 
     # for aliases we don't know about, we need to create the items and get tiids
