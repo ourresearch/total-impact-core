@@ -19,7 +19,7 @@ class Delicious(Provider):
             "provider": "Delicious",
             "provider_url": "http://www.delicious.com/",
             "description": "The number of bookmarks to this artifact (maximum=100).",
-            "icon": "http://www.delicious.com/favicon.ico",
+            "icon": "https://delicious.com/img/favicon.ico",
         }
     }
 
