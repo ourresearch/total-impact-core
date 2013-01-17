@@ -366,7 +366,6 @@ class TestCollection(ViewsTester):
         ]
         super(TestCollection, self).setUp()
 
-    """
     def test_collection_post_new_collection(self):
 
         response = self.client.post(
@@ -487,7 +486,6 @@ class TestCollection(ViewsTester):
         )
         collection = json.loads(response.data)["collection"]
         assert_equals(collection["owner"], "plato")
-    """
 
     def test_delete_collection_item(self):
         # make a new collection
@@ -514,7 +512,6 @@ class TestCollection(ViewsTester):
                       set(["doi:10.124", "doi:10.125"]))
 
 
-    """
 
     def test_add_collection_item(self):
         # make a new collection
@@ -531,8 +528,8 @@ class TestCollection(ViewsTester):
         coll["alias_tiids"]["doi:10.new"] = None
 
         r = self.client.put(
-            "/collection/{id}?edit_key={key}".format(id=coll["_id"], key=key),
-            data=json.dumps(coll),
+            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key=key),
+            data=json.dumps({"aliases":["doi:10.new"]}),
             content_type="application/json"
         )
 
@@ -558,14 +555,10 @@ class TestCollection(ViewsTester):
         coll =  resp["collection"]
         key =  resp["key"]
 
-        # change some stuff
-        coll["owner"] = "aristotle"
-        coll["title"] = "plato sux lol"
-
         # 403 Forbidden if wrong key
         r = self.client.put(
-            "/collection/{id}?edit_key={key}".format(id=coll["_id"], key="bad key"),
-            data=json.dumps(coll),
+            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key="bad key"),
+            data=json.dumps({"aliases": ["10.new"]}),
             content_type="application/json"
         )
         assert_equals(r.status_code, 403)
@@ -583,7 +576,6 @@ class TestCollection(ViewsTester):
         assert_equals(changed_coll["title"], "mah collection")
         assert_equals(changed_coll["owner"], "plato")
 
-        """
 
 
 class TestApi(ViewsTester):

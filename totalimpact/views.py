@@ -333,6 +333,9 @@ def get_coll_with_authentication_check(request, cid):
 @app.route('/collection/<cid>/items', methods=['DELETE'])
 @app.route('/v1/collection/<cid>/items', methods=['DELETE'])
 def delete_items(cid=""):
+    """
+    Deletes items from a collection
+    """
     coll = get_coll_with_authentication_check(request, cid)
 
     try:
@@ -343,7 +346,7 @@ def delete_items(cid=""):
 
         coll["alias_tiids"] = new_alias_tiids
 
-    except (AttributeError, TypeError) as e:
+    except (AttributeError, TypeError, KeyError) as e:
         # we got missing or improperly formated data.
         logger.error(
             "DELETE /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(
@@ -363,6 +366,9 @@ def delete_items(cid=""):
 @app.route("/collection/<cid>/items", methods=["PUT"])
 @app.route("/v1/collection/<cid>/items", methods=["PUT"])
 def put_collection(cid=""):
+    """
+    Adds new items to a collection.
+    """
 
     coll = get_coll_with_authentication_check(request, cid)
 
@@ -378,7 +384,7 @@ def put_collection(cid=""):
         # pretty sure this is putting the wrong tiids with the aliases...
         new_alias_tiids = dict(zip(alias_strings, tiids))
 
-        coll["alias_tiids"] = coll["alias_tiids"].update(new_alias_tiids)
+        coll["alias_tiids"].update(new_alias_tiids)
 
     except (AttributeError, TypeError) as e:
         # we got missing or improperly formated data.
