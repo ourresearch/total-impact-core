@@ -123,7 +123,10 @@ def make_csv_rows(items):
         ordered_fieldnames["tiid"] = item["_id"]
         for alias_name in header_alias_names:
             try:
-                ordered_fieldnames[alias_name] = clean_value_for_csv(item['aliases'][alias_name][0])
+                if alias_name=="title":
+                    ordered_fieldnames[alias_name] = clean_value_for_csv(item['aliases']['biblio'][0]['title'])
+                else:
+                    ordered_fieldnames[alias_name] = clean_value_for_csv(item['aliases'][alias_name][0])
             except (AttributeError, KeyError):
                 ordered_fieldnames[alias_name] = ""
         for metric_name in header_metric_names:
