@@ -10,7 +10,13 @@
             "url": [
                 "http://www.pubmedcentral.nih.gov/articlerender.fcgi?artid=2667258&tool=pmcentrez&rendertype=abstract", 
                 "http://dx.plos.org/10.1371/journal.pcbi.1000362"
-            ]
+            ],
+            "biblio": [{
+                "authors": "Eikenberry, Thalhauser, Kuang", 
+                "genre": "article", 
+                "journal": "PLoS Computational Biology", 
+                "title": "Tumor-Immune Interaction, Surgical Treatment, and Cancer Recurrence in a Mathematical Model of Melanoma", 
+                "year": 2009 }]
         }, 
         "biblio": {
             "authors": "Eikenberry, Thalhauser, Kuang", 
@@ -209,7 +215,14 @@
             "url": [
                 "http://hdl.handle.net/10255/dryad.1299", 
                 "http://hdl.handle.net/10255/dryad.1295"
-            ]
+            ],
+            "biblio": [{
+                "authors": "Chun, Nason, Moloney, Chun, Nason, Moloney, Chun, Nason, Moloney, Chun, Nason, Moloney, Chun, Nason, Moloney", 
+                "genre": "dataset", 
+                "repository": "Dryad Digital Repository", 
+                "title": "Data from: Comparison of quantitative and molecular genetic variation of native vs. invasive populations of purple loosestrife (Lythrum salicaria L., Lythraceae)", 
+                "year": "2010"
+                }]
         }, 
         "biblio": {
             "authors": "Chun, Nason, Moloney, Chun, Nason, Moloney, Chun, Nason, Moloney, Chun, Nason, Moloney, Chun, Nason, Moloney", 
@@ -277,7 +290,14 @@
             "url": [
                 "http://dx.doi.org/10.1371/journal.pcbi.1000361", 
                 "http://dx.plos.org/10.1371/journal.pcbi.1000361"
-            ]
+            ],
+            "biblio": [{
+            "authors": "Shotton, Portwin, Klyne, Miles", 
+            "genre": "article", 
+            "journal": "PLoS Computational Biology", 
+            "title": "Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article", 
+            "year": 2009
+            }]
         }, 
         "biblio": {
             "authors": "Shotton, Portwin, Klyne, Miles", 
@@ -488,7 +508,14 @@
             "url": [
                 "http://www.ncbi.nlm.nih.gov/pubmed/19381267", 
                 "http://dx.plos.org/10.1371/journal.pcbi.1000363"
-            ]
+            ],
+            "biblio": [{
+                "authors": "Beisel, Smolke", 
+                "genre": "article", 
+                "journal": "PLoS Computational Biology", 
+                "title": "Design Principles for Riboswitch Function", 
+                "year": 2009
+            }] 
         }, 
         "biblio": {
             "authors": "Beisel, Smolke", 
