@@ -14,8 +14,8 @@ class Slideshare(Provider):
     url = "http://www.slideshare.net/"
     descr = "The best way to share presentations, documents and professional videos."
 
-    member_items_url_template = "http://www.slideshare.net/api/2/get_slideshows_by_user?api_key=" + os.environ["SLIDESHARE_KEY"] + "&detailed=1&ts=%s&hash=%s&username_for=%s"
-    everything_url_template = "http://www.slideshare.net/api/2/get_slideshow?api_key=" + os.environ["SLIDESHARE_KEY"] + "&detailed=1&ts=%s&hash=%s&slideshow_url=%s"
+    member_items_url_template = "https://www.slideshare.net/api/2/get_slideshows_by_user?api_key=" + os.environ["SLIDESHARE_KEY"] + "&detailed=1&ts=%s&hash=%s&username_for=%s"
+    everything_url_template = "https://www.slideshare.net/api/2/get_slideshow?api_key=" + os.environ["SLIDESHARE_KEY"] + "&detailed=1&ts=%s&hash=%s&slideshow_url=%s"
     biblio_url_template = everything_url_template
     aliases_url_template = everything_url_template
     metrics_url_template = everything_url_template
