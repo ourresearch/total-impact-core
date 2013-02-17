@@ -183,7 +183,8 @@ def get_item_from_tiid(tiid, format=None, include_history=False):
         response_code = 200
         item["currently_updating"] = False
 
-    clean_item = item_module.clean_for_export(item)
+    api_key = request.args.get("key", None)
+    clean_item = item_module.clean_for_export(item, api_key, os.getenv("API_KEY"))
     resp = make_response(json.dumps(clean_item, sort_keys=True, indent=4),
                          response_code)
     resp.mimetype = "application/json"
