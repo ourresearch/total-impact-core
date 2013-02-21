@@ -35,9 +35,8 @@ def track(event, event_properties, flask_request=None, mixpanel_token=None):
 
     mixpanel_data = base64.b64encode(json.dumps({"event": event, "properties": properties}))
     url = "http://api.mixpanel.com/track/?data=%s" % mixpanel_data
-    logger.debug(url)
+    #logger.debug(url)
     mixpanel_resp = urllib2.urlopen(url)
-    logger.debug(mixpanel_resp)
 
     #logger.debug("Successful mixpanel report")
     return
