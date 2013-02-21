@@ -10,6 +10,10 @@ def track(event, event_properties, flask_request=None, mixpanel_token=None):
     if not mixpanel_token:
         mixpanel_token = os.getenv("MIXPANEL_TOKEN")
 
+    # set to DISABLED for unit testing
+    if mixpanel_token == "DISABLED":
+        return
+
     properties = {
         'token': mixpanel_token, 
         'time': int(time.time())
