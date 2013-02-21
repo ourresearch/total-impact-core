@@ -5,7 +5,7 @@ import datetime, re, couchdb, copy
 from werkzeug.security import check_password_hash
 from collections import defaultdict
 import redis
-import uuid
+import shortuuid
 
 from totalimpact import dao, app, tiredis, collection, api_user, mixpanel
 from totalimpact import item as item_module
@@ -663,7 +663,14 @@ def update_user(userid=''):
 @app.route('/v1/inbox', methods=["POST"])
 def inbox():
     logger.info("You've got mail.")
-    resp = make_response(json.dumps({"received":"thanks"}, sort_keys=True, indent=4), 200)
+    doc_id = shortuuid.uuid()[0:24]
+    doc = {"_id":doc_id, 
+            "type":"email", 
+            "created":datetime.datetime.now().isoformat(),
+            "payload":request.json}
+    mydao.save(doc)
+    logger.info("Email saved")
+    resp = make_response(json.dumps({"_id":doc_id}, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
