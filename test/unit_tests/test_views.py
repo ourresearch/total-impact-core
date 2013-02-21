@@ -366,7 +366,6 @@ class TestCollection(ViewsTester):
         ]
         super(TestCollection, self).setUp()
 
-
     def test_collection_post_new_collection(self):
 
         response = self.client.post(
@@ -427,8 +426,9 @@ class TestCollection(ViewsTester):
              u'_rev',
              u'created',
              u'last_modified',
+             u'alias_tiids',
              u'_id',
-             u'key_hash',
+             u'key',
              u'owner',
              u'type'}
         )
@@ -487,8 +487,7 @@ class TestCollection(ViewsTester):
         collection = json.loads(response.data)["collection"]
         assert_equals(collection["owner"], "plato")
 
-    def test_change_collection(self):
-
+    def test_delete_collection_item(self):
         # make a new collection
         response = self.client.post(
             '/collection',
@@ -499,20 +498,49 @@ class TestCollection(ViewsTester):
         coll =  resp["collection"]
         key =  resp["key"]
 
-        # change some stuff
-        coll["owner"] = "aristotle"
-        coll["title"] = "plato sux lol"
 
-        r = self.client.put(
-            "/collection/{id}?key={key}".format(id=coll["_id"], key=key),
-            data=json.dumps(coll),
+        # delete an item.
+        tiid_to_delete = coll["alias_tiids"]["doi:10.123"]
+        r = self.client.delete(
+            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key=key),
+            data=json.dumps({"tiids": [tiid_to_delete]}),
             content_type="application/json"
         )
 
-        # get the collection out the db and see if it's the same one
         changed_coll = self.d.get(coll["_id"])
-        assert_equals(changed_coll["title"], "plato sux lol")
-        assert_equals(changed_coll["owner"], "aristotle")
+        assert_equals(set(changed_coll["alias_tiids"]),
+                      set(["doi:10.124", "doi:10.125"]))
+
+
+
+    def test_add_collection_item(self):
+        # make a new collection
+        response = self.client.post(
+            '/collection',
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection", "owner":"plato"}),
+            content_type="application/json"
+        )
+        resp = json.loads(response.data)
+        coll =  resp["collection"]
+        key =  resp["key"]
+
+        # add an item.
+        coll["alias_tiids"]["doi:10.new"] = None
+
+        r = self.client.put(
+            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key=key),
+            data=json.dumps({"aliases":["doi:10.new"]}),
+            content_type="application/json"
+        )
+
+        changed_coll = self.d.get(coll["_id"])
+
+        # we added a new item
+        assert_equals(len(changed_coll["alias_tiids"]), 4)
+
+        # it's got a tiid
+        assert_equals(len(changed_coll["alias_tiids"]["doi:10.new"]), 24)
+
 
 
     def test_change_collection_requires_key(self):
@@ -527,14 +555,10 @@ class TestCollection(ViewsTester):
         coll =  resp["collection"]
         key =  resp["key"]
 
-        # change some stuff
-        coll["owner"] = "aristotle"
-        coll["title"] = "plato sux lol"
-
         # 403 Forbidden if wrong key
         r = self.client.put(
-            "/collection/{id}?key={key}".format(id=coll["_id"], key="bad key"),
-            data=json.dumps(coll),
+            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key="bad key"),
+            data=json.dumps({"aliases": ["10.new"]}),
             content_type="application/json"
         )
         assert_equals(r.status_code, 403)
@@ -551,6 +575,7 @@ class TestCollection(ViewsTester):
         changed_coll = self.d.get(coll["_id"])
         assert_equals(changed_coll["title"], "mah collection")
         assert_equals(changed_coll["owner"], "plato")
+
 
 
 class TestApi(ViewsTester):

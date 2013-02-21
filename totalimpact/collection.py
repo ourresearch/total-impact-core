@@ -22,8 +22,8 @@ def make(owner=None):
     collection["created"] = now
     collection["last_modified"] = now
     collection["type"] = "collection"
-    collection["key_hash"] = key_hash
     collection["owner"] = owner
+    collection["key"] = key # using the hash was needless complexity...
 
     return collection, key
 
@@ -71,7 +71,6 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
         del collection["ip_address"]
     except KeyError:
         pass
-    del collection["alias_tiids"]
 
     # start with the 2nd row, since 1st row is the collection document
     collection["items"] = []
