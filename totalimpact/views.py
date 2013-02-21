@@ -658,6 +658,16 @@ def update_user(userid=''):
     resp.mimetype = "application/json"
     return resp
 
+
+# route to receive email
+@app.route('/v1/inbox', methods=["POST"])
+def inbox():
+    logger.info("You've got mail.")
+    resp = make_response(json.dumps({"received":"thanks"}, sort_keys=True, indent=4), 200)
+    resp.mimetype = "application/json"
+    return resp
+
+
 try:
     # see http://support.blitz.io/discussions/problems/363-authorization-error
     @app.route('/mu-' + os.environ["BLITZ_API_KEY"], methods=["GET"])

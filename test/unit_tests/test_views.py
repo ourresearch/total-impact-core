@@ -621,6 +621,13 @@ class TestApi(ViewsTester):
         # check that the tiid lists are the same
         assert_equals(first_plos_create_tiid, second_plos_create_tiid)
 
+    def test_inbox(self):
+        resp = self.client.post(
+            "/v1/inbox?key=validkey",
+            data=json.dumps({}),
+            content_type="application/json"
+        )
+        assert_equals(200, resp.status_code)
 
 
 class TestTiid(ViewsTester):
