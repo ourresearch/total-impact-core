@@ -269,5 +269,3 @@ run_on_documents(action_on_a_page, view_name=myview_name,
 #    cur.execute("SELECT * FROM phonebook ORDER BY lastname;")
 #    print cur.fetchone()    
 
-
-
