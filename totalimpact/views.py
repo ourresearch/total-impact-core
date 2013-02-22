@@ -685,15 +685,15 @@ def alert_if_google_scholar_notification_confirmation(payload):
     return(name, url)
 
 GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN = re.compile("""Scholar Alert - (?P<name>.*) - new articles""")
-def alert_if_google_scholar_new_articles(payload):
+def alert_if_google_scholar_new_articles(payload, doc_id):
     name = None
     try:
         subject = payload["headers"]["Subject"]
         match = GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN.search(subject)
         if match:
             name = match.group("name")
-            logger.info("Just received Google Scholar alert: new articles for {name}".format(
-                name=name))
+            logger.info("Just received Google Scholar alert: new articles for {name}, saved at {doc_id}".format(
+                name=name, doc_id=doc_id))
     except KeyError:
         pass
     return(name)
@@ -707,7 +707,7 @@ def inbox():
         doc_id=doc_id, subject=payload["headers"]["Subject"]))
 
     alert_if_google_scholar_notification_confirmation(payload)
-    alert_if_google_scholar_new_articles(payload)
+    alert_if_google_scholar_new_articles(payload, doc_id)
 
     resp = make_response(json.dumps({"_id":doc_id}, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
