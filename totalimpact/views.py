@@ -374,10 +374,8 @@ def put_collection(cid=""):
     coll = get_coll_with_authentication_check(request, cid)
 
     try:
-        alias_strings = request.json["aliases"]
-        alias_strings = ["unknown:"+str if not ":" in str else str for str
-                         in alias_strings]
-        aliases = [str.split(":", 1) for str in alias_strings ]
+        aliases = request.json["aliases"]
+        alias_strings = [namespace+":"+nid for (namespace, nid) in aliases]
 
         (tiids, new_items) = item_module.create_or_update_items_from_aliases(
             aliases, myredis, mydao)

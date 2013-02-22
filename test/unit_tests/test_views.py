@@ -511,8 +511,6 @@ class TestCollection(ViewsTester):
         assert_equals(set(changed_coll["alias_tiids"]),
                       set(["doi:10.124", "doi:10.125"]))
 
-
-
     def test_add_collection_item(self):
         # make a new collection
         response = self.client.post(
@@ -521,15 +519,16 @@ class TestCollection(ViewsTester):
             content_type="application/json"
         )
         resp = json.loads(response.data)
-        coll =  resp["collection"]
-        key =  resp["key"]
+        coll = resp["collection"]
+        key = resp["key"]
 
-        # add an item.
-        coll["alias_tiids"]["doi:10.new"] = None
+        alias_list = []
+        alias_list.append(["doi", "10.new"])
+
 
         r = self.client.put(
             "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key=key),
-            data=json.dumps({"aliases":["doi:10.new"]}),
+            data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
 
@@ -555,18 +554,21 @@ class TestCollection(ViewsTester):
         coll =  resp["collection"]
         key =  resp["key"]
 
-        # 403 Forbidden if wrong key
+        alias_list = []
+        alias_list.append(["doi", "10.new"])
+
+        # 403 Forbidden if wrong edit key
         r = self.client.put(
-            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key="bad key"),
-            data=json.dumps({"aliases": ["10.new"]}),
+            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key="wrong!"),
+            data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
         assert_equals(r.status_code, 403)
 
-        # 404 Bad Request if no key
+        # 404 Bad Request if no edit key
         r = self.client.put(
-            "/collection/{id}".format(id=coll["_id"]),
-            data=json.dumps(coll),
+            "/collection/{id}/items".format(id=coll["_id"]),
+            data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
         assert_equals(r.status_code, 404)
@@ -575,6 +577,7 @@ class TestCollection(ViewsTester):
         changed_coll = self.d.get(coll["_id"])
         assert_equals(changed_coll["title"], "mah collection")
         assert_equals(changed_coll["owner"], "plato")
+
 
 
 
