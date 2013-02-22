@@ -680,7 +680,7 @@ class TestInbox(ViewsTester):
 
     def test_alert_if_google_scholar_new_articles(self):
         self.example_payload["headers"]["Subject"] = "Scholar Alert - John P. A. Ioannidis - new articles"
-        response = views.alert_if_google_scholar_new_articles(self.example_payload)
+        response = views.alert_if_google_scholar_new_articles(self.example_payload, "1234")
         expected = 'John P. A. Ioannidis'
         assert_equals(response, expected)
 
