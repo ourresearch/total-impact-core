@@ -659,17 +659,42 @@ def update_user(userid=''):
     return resp
 
 
-# route to receive email
-@app.route('/v1/inbox', methods=["POST"])
-def inbox():
-    logger.info("You've got mail.")
+def save_email(payload):
     doc_id = shortuuid.uuid()[0:24]
     doc = {"_id":doc_id, 
             "type":"email", 
             "created":datetime.datetime.now().isoformat(),
-            "payload":request.json}
+            "payload":payload}
     mydao.save(doc)
-    logger.info("Email saved")
+    return doc_id
+
+GOOGLE_SCHOLAR_CONFIRM_PATTERN = re.compile("""for the query:\nNew articles in (?P<name>.*)'s profile\n\nClick to confirm this request:\n(?P<url>.*)\n\n""")
+
+def alert_if_google_scholar_notification_confirmation(payload):
+    name = None
+    url = None
+    try:
+        email_body = payload["plain"]
+        match = GOOGLE_SCHOLAR_CONFIRM_PATTERN.search(email_body)
+        if match:
+            url = match.group("url")
+            name = match.group("name")
+            logger.info("Google Scholar notification confirmation for {name} is at {url}".format(
+                name=name, url=url))
+    except KeyError:
+        pass
+    return(name, url)
+
+# route to receive email
+@app.route('/v1/inbox', methods=["POST"])
+def inbox():
+    payload = request.json
+    doc_id = save_email(payload)
+    logger.info("You've got mail.  Saved as {doc_id}".format(
+        doc_id=doc_id))
+
+    alert_if_google_scholar_notification_confirmation(payload)
+
     resp = make_response(json.dumps({"_id":doc_id}, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
