@@ -145,20 +145,26 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
     register = request.args.get("register", 0) in ["1", "true", "True"]
     api_key = request.values.get('key')
 
+    debug_message = ""
     if register:
         try:
             logger.debug("api_key is " + api_key)
             api_user.register_item((namespace, nid), api_key, myredis, mydao)
         except api_user.ItemAlreadyRegisteredToThisKey:
-            logger.debug("ItemAlreadyRegisteredToThisKey")
-            pass
+            debug_message = "ItemAlreadyRegisteredToThisKey for key {api_key}".format(
+                api_key=api_key)
+            logger.debug(debug_message)
         except api_user.ApiLimitExceededException:
-            logger.debug("ApiLimitExceededException")
-            pass
+            debug_message = "ApiLimitExceededException for key {api_key}".format(
+                api_key=api_key)
+            logger.debug(debug_message)
 
     tiid = item_module.get_tiid_by_alias(namespace, nid, mydao)
     if not tiid:
-        abort(404, "Item not in database. Call POST to register it.")
+        if not debug_message:
+            debug_message = "Item not in database. Call POST to register it"
+        # if registration failure, report that info. Else suggest they register.
+        abort(404, debug_message)
     return get_item_from_tiid(tiid, format, include_history)
 
 
