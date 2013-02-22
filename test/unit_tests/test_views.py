@@ -621,51 +621,63 @@ class TestApi(ViewsTester):
         # check that the tiid lists are the same
         assert_equals(first_plos_create_tiid, second_plos_create_tiid)
 
-    def test_inbox(self):
-        # example from http://docs.cloudmailin.com/http_post_formats/json/
-        example_payload = {
-              "headers": {
-                "Return-Path": "from@example.com",
-                "Received": [
-                  "by 10.52.90.229 with SMTP id bz5cs75582vdb; Mon, 16 Jan 2012 09:00:07 -0800",
-                  "by 10.216.131.153 with SMTP id m25mr5479776wei.9.1326733205283; Mon, 16 Jan 2012 09:00:05 -0800",
-                  "from mail-wi0-f170.google.com (mail-wi0-f170.google.com [209.85.212.170]) by mx.google.com with ESMTPS id u74si9614172weq.62.2012.01.16.09.00.04 (version=TLSv1/SSLv3 cipher=OTHER); Mon, 16 Jan 2012 09:00:04 -0800"
-                ],
-                "Date": "Mon, 16 Jan 2012 17:00:01 +0000",
-                "From": "Message Sender <sender@example.com>",
-                "To": "Message Recipient<to@example.co.uk>",
-                "Message-ID": "<4F145791.8040802@example.com>",
-                "Subject": "Test Subject",
-                "Mime-Version": "1.0",
-                "Content-Type": "multipart/alternative; boundary=------------090409040602000601080801",
-                "Delivered-To": "to@example.com",
-                "Received-SPF": "neutral (google.com: 10.0.10.1 is neither permitted nor denied by best guess record for domain of from@example.com) client-ip=10.0.10.1;",
-                "Authentication-Results": "mx.google.com; spf=neutral (google.com: 10.0.10.1 is neither permitted nor denied by best guess record for domain of from@example.com) smtp.mail=from@example.com",
-                "User-Agent": "Postbox 3.0.2 (Macintosh/20111203)"
-              },
-              "envelope": {
-                "to": "to@example.com",
-                "from": "from@example.com",
-                "helo_domain": "localhost",
-                "remote_ip": "127.0.0.1",
-              },
-              "plain": "Test with HTML.",
-              "html": "<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\"></head><body\n bgcolor=\"#FFFFFF\" text=\"#000000\">\nTest with <span style=\"font-weight: bold;\">HTML</span>.<br>\n</body>\n</html>",
-              "reply_plain": "Message reply if found.",
-              "attachments": []
-            }
+class TestInbox(ViewsTester):
 
+    def setUp(self):
+        # example from http://docs.cloudmailin.com/http_post_formats/json/        
+        self.example_payload = {
+               "headers": {
+                   "To": "7be5eb5001593217143f@cloudmailin.net",
+                   "Mime-Version": "1.0",
+                   "X-Received": "by 10.58.45.134 with SMTP id n6mr13476387vem.35.1361476813304; Thu, 21 Feb 2013 12:00:13 -0800 (PST)",
+                   "Received": "by mail-vc0-f202.google.com with SMTP id m8so955261vcd.3 for <7be5eb5001593217143f@cloudmailin.net>; Thu, 21 Feb 2013 12:00:13 -0800",
+                   "From": "Google Scholar Alerts <scholaralerts-noreply@google.com>",
+                   "DKIM-Signature": "v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113; h=mime-version:x-received:message-id:date:subject:from:to :content-type; bh=74dhtWOnoX2dYtmZibjD2+Tp65AZ7UnVwRTR7Qwho/o=; b=Fabq5urMfTyUX0s3XgFhVx1pyZ+tW/n38Sm/3T5EXTWeG2k7C6mxbrv1DdmpNpl/a8 Sr70eG6St7oytXii5tg9TrwrlwhftpFZKkJQS8GMWswiEaBkOfnNkoRrN174jRYfBUuZ oKWJr49dxw9hV3uKYoSis0zL6R8P+7GXt1rtqblBELrfIJ3pKC7d7WS65i6hdM2kA+sY va9geqt1fFFN7098U7WELlM2JoXhS4fbIQTev/Z6cF89Sfs4888GXb7PIq0d1kfd6t7c kXK8bV6TkqSP4AxDm646Cv1TR9cfo6+9yCrkK8oW6ihAMzM0Lwobq22NLrRY2QK8494s WAuA==",
+                   "Date": "Thu, 21 Feb 2013 20:00:13 +0000",
+                   "Message-ID": "<089e0115f968d3b38604d6418577@google.com>",
+                   "Content-Type": "text/plain; charset=ISO-8859-1; delsp=yes; format=flowed",
+                   "Subject": "Confirm your Google Scholar Alert"
+               },
+               "reply_plain": None,
+               "attachments": [
+               ],
+               "plain": "Google received a request to start sending Scholar Alerts to  \n7be5eb5001593217143f@cloudmailin.net for the query:\nNew articles in Jonathan A. Eisen's profile\n\nClick to confirm this request:\nhttp://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nClick to cancel this request:\nhttp://scholar.google.ca/scholar_alerts?view_op=cancel_alert_options&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nThanks,\nThe Google Scholar Team",
+               "envelope": {
+                   "to": "7be5eb5001593217143f@cloudmailin.net",
+                   "helo_domain": "mail-vc0-f202.google.com",
+                   "from": "3zXwmURUKAO4iSXebQhQbUhji-dehUfboWeeWbU.Sec@scholar-alerts.bounces.google.com",
+                   "remote_ip": "209.85.220.202",
+                   "spf": {
+                       "domain": "scholar-alerts.bounces.google.com",
+                       "result": "neutral"
+                   }
+               },
+               "html": None
+            }
+        super(TestInbox, self).setUp()
+
+    def tearDown(self):
+        pass
+
+    def test_inbox(self):
         response = self.client.post(
             "/v1/inbox?key=validkey",
-            data=json.dumps(example_payload),
+            data=json.dumps(self.example_payload),
             content_type="application/json"
         )
         assert_equals(200, response.status_code)
 
-        doc_id = json.loads(response.data)["_id"]
+    def test_save_email(self):
+        doc_id = views.save_email(self.example_payload)
         stored_doc = mydao.get(doc_id)
         assert_equals(stored_doc.keys(), ['_rev', '_id', 'type', 'payload', 'created'])
-        assert_equals(stored_doc["payload"], example_payload)
+        assert_equals(stored_doc["payload"], self.example_payload)
+
+    def test_alert_if_google_scholar_notification_confirmation(self):
+        response = views.alert_if_google_scholar_notification_confirmation(self.example_payload)
+        expected = ('Jonathan A. Eisen', 'http://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net')
+        assert_equals(response, expected)
+
 
 
 class TestTiid(ViewsTester):
