@@ -5,7 +5,7 @@ import datetime, re, couchdb, copy
 from werkzeug.security import check_password_hash
 from collections import defaultdict
 import redis
-import uuid
+import shortuuid
 
 from totalimpact import dao, app, tiredis, collection, api_user, mixpanel
 from totalimpact import item as item_module
@@ -145,20 +145,26 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
     register = request.args.get("register", 0) in ["1", "true", "True"]
     api_key = request.values.get('key')
 
+    debug_message = ""
     if register:
         try:
             logger.debug("api_key is " + api_key)
             api_user.register_item((namespace, nid), api_key, myredis, mydao)
         except api_user.ItemAlreadyRegisteredToThisKey:
-            logger.debug("ItemAlreadyRegisteredToThisKey")
-            pass
+            debug_message = "ItemAlreadyRegisteredToThisKey for key {api_key}".format(
+                api_key=api_key)
+            logger.debug(debug_message)
         except api_user.ApiLimitExceededException:
-            logger.debug("ApiLimitExceededException")
-            pass
+            debug_message = "ApiLimitExceededException for key {api_key}".format(
+                api_key=api_key)
+            logger.debug(debug_message)
 
     tiid = item_module.get_tiid_by_alias(namespace, nid, mydao)
     if not tiid:
-        abort(404, "Item not in database. Call POST to register it.")
+        if not debug_message:
+            debug_message = "Item not in database. Call POST to register it"
+        # if registration failure, report that info. Else suggest they register.
+        abort(404, debug_message)
     return get_item_from_tiid(tiid, format, include_history)
 
 
@@ -655,6 +661,62 @@ def update_user(userid=''):
     resp = make_response(json.dumps(res, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
+
+
+def save_email(payload):
+    doc_id = shortuuid.uuid()[0:24]
+    doc = {"_id":doc_id, 
+            "type":"email", 
+            "created":datetime.datetime.now().isoformat(),
+            "payload":payload}
+    mydao.save(doc)
+    return doc_id
+
+GOOGLE_SCHOLAR_CONFIRM_PATTERN = re.compile("""for the query:\nNew articles in (?P<name>.*)'s profile\n\nClick to confirm this request:\n(?P<url>.*)\n\n""")
+def alert_if_google_scholar_notification_confirmation(payload):
+    name = None
+    url = None
+    try:
+        email_body = payload["plain"]
+        match = GOOGLE_SCHOLAR_CONFIRM_PATTERN.search(email_body)
+        if match:
+            url = match.group("url")
+            name = match.group("name")
+            logger.info("Google Scholar notification confirmation for {name} is at {url}".format(
+                name=name, url=url))
+    except KeyError:
+        pass
+    return(name, url)
+
+GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN = re.compile("""Scholar Alert - (?P<name>.*) - new articles""")
+def alert_if_google_scholar_new_articles(payload, doc_id):
+    name = None
+    try:
+        subject = payload["headers"]["Subject"]
+        match = GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN.search(subject)
+        if match:
+            name = match.group("name")
+            logger.info("Just received Google Scholar alert: new articles for {name}, saved at {doc_id}".format(
+                name=name, doc_id=doc_id))
+    except KeyError:
+        pass
+    return(name)
+
+# route to receive email
+@app.route('/v1/inbox', methods=["POST"])
+def inbox():
+    payload = request.json
+    doc_id = save_email(payload)
+    logger.info("You've got mail. Saved as {doc_id}. Subject: {subject}".format(
+        doc_id=doc_id, subject=payload["headers"]["Subject"]))
+
+    alert_if_google_scholar_notification_confirmation(payload)
+    alert_if_google_scholar_new_articles(payload, doc_id)
+
+    resp = make_response(json.dumps({"_id":doc_id}, sort_keys=True, indent=4), 200)
+    resp.mimetype = "application/json"
+    return resp
+
 
 try:
     # see http://support.blitz.io/discussions/problems/363-authorization-error

@@ -47,7 +47,7 @@ class TestCrossRef(ProviderTestCase):
     @http
     def test_biblio_elife(self):
         biblio = self.provider.biblio([("doi", "10.7554/eLife.00048")])
-        expected = {'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': 2012, 'repository': u'eLife Sciences Publications, Ltd.', 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Arag\xf3n, Li, Walter'}
+        expected = {'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': 2012, 'repository': u'eLife Sciences Publications, Ltd.', 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Aragon, Li, Walter'}
 
         print biblio
         assert_equals(biblio, expected)        
@@ -90,7 +90,7 @@ class TestCrossRef(ProviderTestCase):
     @http
     def test_aliases_elife(self):
         aliases = self.provider.aliases([("doi", "10.7554/eLife.00048")])
-        expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.', 'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': 2012, 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Arag\xf3n, Li, Walter'}), ('url', 'http://dx.doi.org/10.7554/eLife.00048'), ('url', u'http://elife.elifesciences.org/content/1/e00048')]
+        expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.', 'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': 2012, 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Aragon, Li, Walter'}), ('url', 'http://dx.doi.org/10.7554/eLife.00048'), ('url', u'http://elife.elifesciences.org/content/1/e00048')]
         print aliases
         assert_equals(sorted(aliases), sorted(expected))
 
