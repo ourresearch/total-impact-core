@@ -19,7 +19,7 @@ logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
-myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0) #main app is on DB 0
+myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)  # main app is on DB 0
 
 logger.debug("Building reference sets")
 myrefsets = None
@@ -106,16 +106,16 @@ def tiid(ns, nid):
     return resp
 
 
-"""Creates a new item using the given namespace and id.
-POST /item/:namespace/:nid
-201
-500?  if fails to create
-example /item/PMID/234234232
-original api returned tiid
-/v1 returns nothing in body
-"""
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post_with_tiid(namespace, nid):
+    """Creates a new item using the given namespace and id.
+    POST /item/:namespace/:nid
+    201
+    500?  if fails to create
+    example /item/PMID/234234232
+    original api returned tiid
+    /v1 returns nothing in body
+    """
     mixpanel.track("Create:Item", {"Namespace":namespace, "Source":"/item post"}, request)
     tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     response_code = 201 # Created
@@ -329,6 +329,20 @@ def get_coll_with_authentication_check(request, cid):
 
     return coll
 
+@app.route('/collection/<cid>/items', methods=['POST'])
+@app.route('/v1/collection/<cid>/items', methods=['POST'])
+def delete_and_put_helper(cid=""):
+    """
+    Lets browsers who can't do PUT or DELETE fake it with a POST
+    """
+    http_method = request.args.get("http_method", "")
+    if http_method.lower() == "delete":
+        return delete_items(cid)
+    elif http_method.lower() == "put":
+        return put_collection(cid)
+    else:
+        abort(404, "You must specify a valid HTTP method (POST or PUT) with the"
+                   " http_method argument.")
 
 
 @app.route('/collection/<cid>/items', methods=['DELETE'])

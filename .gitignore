@@ -2,6 +2,7 @@
 *.egg-info/*
 .*.swp
 *.log
+*-ck.js
 .DS_Store
 .Python
 .idea
