@@ -678,6 +678,11 @@ class TestInbox(ViewsTester):
         expected = ('Jonathan A. Eisen', 'http://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net')
         assert_equals(response, expected)
 
+    def test_alert_if_google_scholar_new_articles(self):
+        self.example_payload["headers"]["Subject"] = "Scholar Alert - John P. A. Ioannidis - new articles"
+        response = views.alert_if_google_scholar_new_articles(self.example_payload)
+        expected = 'John P. A. Ioannidis'
+        assert_equals(response, expected)
 
 
 class TestTiid(ViewsTester):

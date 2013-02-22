@@ -669,7 +669,6 @@ def save_email(payload):
     return doc_id
 
 GOOGLE_SCHOLAR_CONFIRM_PATTERN = re.compile("""for the query:\nNew articles in (?P<name>.*)'s profile\n\nClick to confirm this request:\n(?P<url>.*)\n\n""")
-
 def alert_if_google_scholar_notification_confirmation(payload):
     name = None
     url = None
@@ -685,15 +684,30 @@ def alert_if_google_scholar_notification_confirmation(payload):
         pass
     return(name, url)
 
+GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN = re.compile("""Scholar Alert - (?P<name>.*) - new articles""")
+def alert_if_google_scholar_new_articles(payload):
+    name = None
+    try:
+        subject = payload["headers"]["Subject"]
+        match = GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN.search(subject)
+        if match:
+            name = match.group("name")
+            logger.info("Just received Google Scholar alert: new articles for {name}".format(
+                name=name))
+    except KeyError:
+        pass
+    return(name)
+
 # route to receive email
 @app.route('/v1/inbox', methods=["POST"])
 def inbox():
     payload = request.json
     doc_id = save_email(payload)
-    logger.info("You've got mail.  Saved as {doc_id}".format(
-        doc_id=doc_id))
+    logger.info("You've got mail. Saved as {doc_id}. Subject: {subject}".format(
+        doc_id=doc_id, subject=payload["headers"]["Subject"]))
 
     alert_if_google_scholar_notification_confirmation(payload)
+    alert_if_google_scholar_new_articles(payload)
 
     resp = make_response(json.dumps({"_id":doc_id}, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
