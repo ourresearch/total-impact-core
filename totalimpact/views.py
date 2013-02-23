@@ -684,7 +684,7 @@ def alert_if_google_scholar_notification_confirmation(payload):
             name = match.group("name")
             logger.info("Google Scholar notification confirmation for {name} is at {url}".format(
                 name=name, url=url))
-    except KeyError:
+    except (KeyError, TypeError):
         pass
     return(name, url)
 
@@ -698,7 +698,7 @@ def alert_if_google_scholar_new_articles(payload, doc_id):
             name = match.group("name")
             logger.info("Just received Google Scholar alert: new articles for {name}, saved at {doc_id}".format(
                 name=name, doc_id=doc_id))
-    except KeyError:
+    except (KeyError, TypeError):
         pass
     return(name)
 
@@ -707,6 +707,8 @@ def alert_if_google_scholar_new_articles(payload, doc_id):
 def inbox():
     payload = request.json
     doc_id = save_email(payload)
+    logger.debug("You've got mail. Payload: {payload}".format(
+        payload=payload))
     logger.info("You've got mail. Saved as {doc_id}. Subject: {subject}".format(
         doc_id=doc_id, subject=payload["headers"]["Subject"]))
 
