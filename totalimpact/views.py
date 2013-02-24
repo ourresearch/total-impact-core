@@ -96,6 +96,8 @@ GET /tiid/:namespace/:id
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
 # not supported in v1
 def tiid(ns, nid):
+    ns = item_module.clean_id(ns)
+    nid = item_module.clean_id(nid)
 
     tiid = item_module.get_tiid_by_alias(ns, nid, mydao)
 
@@ -116,6 +118,9 @@ def item_namespace_post_with_tiid(namespace, nid):
     original api returned tiid
     /v1 returns nothing in body
     """
+    namespace = item_module.clean_id(namespace)
+    nid = item_module.clean_id(nid)
+
     mixpanel.track("Create:Item", {"Namespace":namespace, "Source":"/item post"}, request)
     tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     response_code = 201 # Created
@@ -125,6 +130,9 @@ def item_namespace_post_with_tiid(namespace, nid):
 
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
+    namespace = item_module.clean_id(namespace)
+    nid = item_module.clean_id(nid)
+
     api_key = request.values.get('key')
     try:
         tiid = api_user.register_item((namespace, nid), api_key, myredis, mydao)
@@ -140,6 +148,8 @@ def item_namespace_post(namespace, nid):
 # For /v1 support interface as get from namespace:nid instead of get from tiid
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
 def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
+    namespace = item_module.clean_id(namespace)
+    nid = item_module.clean_id(nid)
 
     include_history = request.args.get("include_history", 0) in ["1", "true", "True"]
     register = request.args.get("register", 0) in ["1", "true", "True"]
