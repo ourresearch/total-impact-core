@@ -38,31 +38,9 @@ class TestCollection():
 
     def test_create_returns_collection_and_update_key(self):
         coll, key = collection.make()
-        assert collection.check_password_hash(coll["key_hash"], key)
+        assert_equals(coll["key"], key)
 
-    def test_claim_collection(self):
-        coll, key = collection.make("socrates")
-        assert_equals(coll["owner"], "socrates")
 
-        coll = collection.claim_collection(coll, "plato", key)
-        assert_equals(coll["owner"], "plato")
-
-    @raises(ValueError)
-    def test_claim_collection_fails_with_wrong_key(self):
-        coll, key = collection.make("socrates")
-        assert_equals(coll["owner"], "socrates")
-
-        coll = collection.claim_collection(coll, "plato", "wrong key")
-        assert_equals(coll["owner"], "plato")
-
-    @raises(ValueError)
-    def test_claim_collection_fails_if_key_hash_not_set(self):
-        coll, key = collection.make("socrates")
-        assert_equals(coll["owner"], "socrates")
-        del coll["key_hash"]
-
-        coll = collection.claim_collection(coll, "plato", key)
-        assert_equals(coll["owner"], "plato")
 
     def test_get_names(self):
         colls = [
@@ -98,7 +76,10 @@ class TestCollection():
         response = collection.get_collection_with_items_for_client("testcollectionid", None, self.r, self.d)
         expected = "heather"
         assert_equals(response[1], False)
-        assert_equals(response[0].keys(), ['items', '_rev', '_id', 'type', 'title'])
+        assert_equals(
+            set(response[0].keys()),
+            set(['items', '_rev', '_id', 'type', 'title', 'alias_tiids'])
+        )
         assert_equals(sorted(response[0]["items"][0].keys()), sorted(['is_registered', '_rev', 'currently_updating', 'metrics', 'biblio', '_id', 'type', 'aliases']))
 
     def test_make_csv_rows(self):
