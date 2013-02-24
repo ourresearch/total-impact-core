@@ -418,6 +418,7 @@ def create_or_find_items_from_aliases(clean_aliases, myredis, mydao):
 
 def create_item_from_namespace_nid(namespace, nid, myredis, mydao):
     # remove unprintable characters
+    namespace = clean_id(namespace)
     nid = clean_id(nid)
 
     tiid = get_tiid_by_alias(namespace, nid, mydao)
@@ -430,6 +431,10 @@ def create_item_from_namespace_nid(namespace, nid, myredis, mydao):
     return tiid
 
 def get_tiid_by_alias(ns, nid, mydao):
+    # clean before logging or anything
+    ns = clean_id(ns)
+    nid = clean_id(nid)
+
     res = mydao.view('queues/by_alias')
 
     # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults

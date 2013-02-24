@@ -292,6 +292,11 @@ class TestItem(ViewsTester):
         # cheerfully creates items whether we know their namespaces or not.
         assert_equals(response.status_code, 201)
 
+    def test_item_nid_with_bad_character(self):
+        url = 'v1/item/doi/10.5061/dryad.' + u'\u200b' + 'j1fd7?key=validkey'
+        response_get = self.client.get(url)
+        assert_equals(response_get.status_code, 200)
+
     def test_item_removes_history_by_default(self):
         url = 'v1/item/doi/10.5061/dryad.j1fd7?key=validkey'
         response = self.client.get(url)
