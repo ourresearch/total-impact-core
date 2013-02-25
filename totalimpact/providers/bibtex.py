@@ -122,8 +122,6 @@ class Bibtex(Provider):
                 logger.info("%20s NO DOI because no entries attribute in %s" % (self.provider_name, biblio))
                 continue
 
-            print biblio.entries[mykey]
-
             try:
                 parsed["journal"] = biblio.entries[mykey].fields["journal"]
             except KeyError:
