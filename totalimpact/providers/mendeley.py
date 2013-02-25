@@ -146,11 +146,9 @@ class Mendeley(Provider):
 
         for mendeley_record in data["documents"]:
             if doi and (mendeley_record["doi"] == doi):
-                print "easy match"
                 uuid = mendeley_record["uuid"]
                 return {"uuid": uuid}
             else:
-                print "in else"
                 # more complicated.  Try to match title and year.
                 try:
                     mendeley_title = self.remove_punctuation(mendeley_record["title"]).lower()
@@ -159,14 +157,12 @@ class Mendeley(Provider):
                     logger.warning("Mendeley: NO TITLES for aliases, skipping")
                     continue  # nothing to see here.  Skip to next record
 
-                print "before len"
                 if (len(str(biblio["year"])) != 4):
                     logger.warning("Mendeley: NO YEAR for aliases, skipping")
                     continue
 
                 if (mendeley_title == aliases_title):
                     if (str(mendeley_record["year"]) == str(biblio["year"])):
-                        print "doing check"
 
                         # check if author name in common. if not, yell, but continue anyway
                         first_mendeley_surname = mendeley_record["authors"][0]["surname"]
@@ -261,7 +257,6 @@ class Mendeley(Provider):
 
         new_aliases = []
         for alias in aliases_dict["biblio"]:
-            print "alias"
             new_aliases += self._get_aliases_for_id(alias, provider_url_template, cache_enabled)
         
         # get uniques for things that are unhashable
@@ -279,8 +274,6 @@ class Mendeley(Provider):
         if not provider_url_template:
             provider_url_template = self.aliases_url_template
         url = self._get_templated_url(provider_url_template, biblio["title"], "aliases")
-
-        print url
 
         # try to get a response from the data provider                
         response = self.http_get(url, cache_enabled=cache_enabled)
@@ -307,7 +300,6 @@ class Mendeley(Provider):
 
     def _extract_aliases(self, page, biblio):
         mendeley_ids = self._get_uuid_from_title({"doi":[None], "biblio":[biblio]}, page)
-        print mendeley_ids
         if mendeley_ids:
             aliases_list = [(namespace, nid) for (namespace, nid) in mendeley_ids.iteritems()]
         else:
