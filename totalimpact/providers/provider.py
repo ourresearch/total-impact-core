@@ -140,7 +140,10 @@ class Provider(object):
 
     def _get_templated_url(self, template, id, method=None):
         if template != "%s":
-            id = urllib.quote(id)
+            try:
+                id = urllib.quote(id, safe="")
+            except KeyError: # a unicode strange thing
+                pass
         url = template % id
         return(url)
 
@@ -710,4 +713,12 @@ def doi_from_url_string(url):
 
     return(doi)
 
-
+def alias_dict_from_tuples(aliases_tuples):
+    alias_dict = {}
+    for (ns, ids) in aliases_tuples:
+        if ns in alias_dict:
+            alias_dict[ns] += [ids]
+        else:
+            alias_dict[ns] = [ids]
+    return alias_dict
+    
