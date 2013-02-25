@@ -35,9 +35,13 @@ all_static_meta = ProviderFactory.get_all_static_meta()
 
 
 def clean_id(nid):
-    nid = control_char_re.sub('', nid)
-    nid = nid.replace(u'\u200b', "")
-    nid = nid.strip()
+    try:
+        nid = control_char_re.sub('', nid)
+        nid = nid.replace(u'\u200b', "")
+        nid = nid.strip()
+    except TypeError:
+        #isn't a string.  That's ok, might be biblio
+        pass
     return(nid)
 
 def get_item(tiid, myrefsets, dao, include_history=False):
@@ -170,6 +174,9 @@ def decide_genre(alias_dict):
             genre = "article"
 
     elif "pmid" in alias_dict:
+        genre = "article"
+
+    elif "biblio" in alias_dict:
         genre = "article"
 
     elif "url" in alias_dict:
