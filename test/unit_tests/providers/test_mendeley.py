@@ -20,6 +20,7 @@ class TestMendeley(ProviderTestCase):
     provider_name = "mendeley"
 
     testitem_aliases = ("doi", TEST_DOI)
+    testitem_aliases_biblio_no_doi =  ("biblio", {'title': 'Scientometrics 2.0: New metrics of scholarly impact on the social Web', 'first_author': 'Priem', 'journal': 'First Monday', 'number': '7', 'volume': '15', 'first_page': '', 'authors': 'Priem, Hemminger', 'year': '2010'})
     testitem_metrics_dict = {"biblio":[{"year":2011, "authors":"sdf", "title": "Mutations causing syndromic autism define an axis of synaptic pathophysiology"}],"doi":[TEST_DOI]}
     testitem_metrics = [(k, v[0]) for (k, v) in testitem_metrics_dict.items()]
     testitem_metrics_dict_wrong_year = {"biblio":[{"year":9999, "authors":"sdf", "title": "Mutations causing syndromic autism define an axis of synaptic pathophysiology"}],"doi":[TEST_DOI]}
@@ -44,23 +45,24 @@ class TestMendeley(ProviderTestCase):
         provenance_url = self.provider._extract_provenance_url(f.read())
         assert_equals(provenance_url, "http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/")
 
-    def test_get_uuid_from_title(self):
+    def test_get_ids_from_title(self):
         f = open(SAMPLE_EXTRACT_UUID_PAGE, "r")
-        uuid = self.provider._get_uuid_from_title(self.testitem_metrics_dict, f.read())
-        expected = "1f471f70-1e4f-11e1-b17d-0024e8453de6"
-        assert_equals(uuid, expected)
+        response = self.provider._get_uuid_from_title(self.testitem_metrics_dict, f.read())
+        expected = {'uuid': '1f471f70-1e4f-11e1-b17d-0024e8453de6'}
+        assert_equals(response, expected)
 
-    def test_get_uuid_from_title_no_doi(self):
+    def test_get_ids_from_title_no_doi(self):
         f = open(SAMPLE_EXTRACT_UUID_PAGE_NO_DOI, "r")
-        uuid = self.provider._get_uuid_from_title(self.testitem_metrics_dict, f.read())
-        expected = "1f471f70-1e4f-11e1-b17d-0024e8453de6"
-        assert_equals(uuid, expected)
+        response = self.provider._get_uuid_from_title(self.testitem_metrics_dict, f.read())
+        print response
+        expected = {'url': 'http://www.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/', 'uuid': '1f471f70-1e4f-11e1-b17d-0024e8453de6'}
+        assert_equals(response, expected)
 
-    def test_get_uuid_from_title_no_doi_wrong_year(self):
+    def test_get_ids_from_title_no_doi_wrong_year(self):
         f = open(SAMPLE_EXTRACT_UUID_PAGE_NO_DOI, "r")
-        uuid = self.provider._get_uuid_from_title(self.testitem_metrics_dict_wrong_year, f.read())
+        response = self.provider._get_uuid_from_title(self.testitem_metrics_dict_wrong_year, f.read())
         expected = None
-        assert_equals(uuid, expected)
+        assert_equals(response, expected)
 
     def test_get_metrics_and_drilldown_from_metrics_page(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
@@ -81,39 +83,56 @@ class TestMendeley(ProviderTestCase):
         assert_equals(set(metrics_dict.keys()), set(expected.keys())) 
         # can't tell more about dicsciplines etc because they are percentages and may go up or down
 
+    @http
+    def test_aliases_pmid(self):
+        # at the moment this item 
+        new_aliases = self.provider.aliases([self.testitem_aliases_biblio_no_doi])
+        print new_aliases
+        expected = [('url', u'http://www.mendeley.com/research/scientometrics-2-0-new-metrics-scholarly-impact-social-web-3/'), ('uuid', u'c81ce3f0-cea0-11df-922b-0024e8453de6')]
+        assert_equals(new_aliases, expected)
+
+    @http
+    def test_aliases_arxiv(self):
+        # at the moment this item 
+        alias = (u'biblio', {u'title': u'Altmetrics in the wild: Using social media to explore scholarly impact', u'first_author': u'Priem', u'journal': u'arXiv preprint arXiv:1203.4745', u'authors': u'Priem, Piwowar, Hemminger', u'number': u'', u'volume': u'', u'first_page': u'', u'year': u'2012'})
+        new_aliases = self.provider.aliases([alias])
+        print new_aliases
+        expected = [('url', u'http://www.mendeley.com/research/altmetrics-wild-using-social-media-explore-scholarly-impact/'), ('uuid', u'ea6244c0-7dca-11e1-ac31-0024e8453de6')]
+        assert_equals(new_aliases, expected)
+
     # override common tests
     @raises(ProviderClientError, ProviderServerError)
     def test_provider_metrics_400(self):
-        if not self.provider.provides_metrics:
-            raise SkipTest
         Provider.http_get = common.get_400
         metrics = self.provider.metrics(self.testitem_metrics)
 
     @raises(ProviderServerError)
     def test_provider_metrics_500(self):
-        if not self.provider.provides_metrics:
-            raise SkipTest
         Provider.http_get = common.get_500
         metrics = self.provider.metrics(self.testitem_metrics)
 
+    @raises(ProviderClientError, ProviderServerError)
+    def test_provider_aliases_400(self):
+        Provider.http_get = common.get_400
+        metrics = self.provider.aliases([self.testitem_aliases_biblio_no_doi])
+
+    @raises(ProviderServerError)
+    def test_provider_aliases_500(self):
+        Provider.http_get = common.get_500
+        metrics = self.provider.aliases([self.testitem_aliases_biblio_no_doi])
+
     @raises(ProviderContentMalformedError)
     def test_provider_metrics_empty(self):
-        if not self.provider.provides_metrics:
-            raise SkipTest
         Provider.http_get = common.get_empty
         metrics = self.provider.metrics(self.testitem_metrics)
 
     @raises(ProviderContentMalformedError)
     def test_provider_metrics_nonsense_txt(self):
-        if not self.provider.provides_metrics:
-            raise SkipTest
         Provider.http_get = common.get_nonsense_txt
         metrics = self.provider.metrics(self.testitem_metrics)
 
     @raises(ProviderContentMalformedError)
     def test_provider_metrics_nonsense_xml(self):
-        if not self.provider.provides_metrics:
-            raise SkipTest
         Provider.http_get = common.get_nonsense_xml
         metrics = self.provider.metrics(self.testitem_metrics)
 
