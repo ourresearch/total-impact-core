@@ -288,13 +288,15 @@ class Backend(Worker):
                 has_enough_alias_urls = (len([url for url in item_aliases["url"] if url.startswith("http://dx.doi.org")]) > 0)
 
         if (genre == "article"):
-            if not "pubmed" in aliases_providers_run:
+            if not "mendeley" in aliases_providers_run:
+                aliases_providers = ["mendeley"]
+            elif not "pubmed" in aliases_providers_run:
                 aliases_providers = ["pubmed"]
             elif not "crossref" in aliases_providers_run:
                 aliases_providers = ["crossref"]
             else:
                 metrics_providers = all_metrics_providers
-                biblio_providers = ["pubmed", "crossref"]
+                biblio_providers = ["pubmed", "crossref", "webpage"]
         else:
             # relevant alias and biblio providers are always the same
             relevant_providers = [host]

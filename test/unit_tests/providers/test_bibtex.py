@@ -6,9 +6,11 @@ import os, json
 from nose.tools import assert_equals, raises, nottest
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/bibtex")
-SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(datadir, "Vision.bib")
+SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE = os.path.join(datadir, "Priem.bib")
 with open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r") as f:
   SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS = f.read()
+
+SAMPLE_PARSED_MEMBER_ITEMS_CONTENTS = [{'title': 'Scientometrics 2.0: New metrics of scholarly impact on the social Web', 'first_author': 'Priem', 'journal': 'First Monday', 'number': '7', 'volume': '15', 'first_page': '', 'authors': 'Priem, Hemminger', 'year': '2010'}, {'title': 'Data for free: Using LMS activity logs to measure community in online courses', 'first_author': 'Black', 'journal': 'The Internet and Higher Education', 'number': '2', 'volume': '11', 'first_page': '65', 'authors': 'Black, Dawson, Priem', 'year': '2008'}, {'title': 'How and why scholars cite on Twitter', 'first_author': 'Priem', 'journal': 'Proceedings of the American Society for Information Science and Technology', 'number': '1', 'volume': '47', 'first_page': '1', 'authors': 'Priem, Costello', 'year': '2010'}, {'title': 'Archiving scholars\xe2\x80\x99 tweets', 'first_author': 'COSTELLO', 'journal': '', 'number': '', 'volume': '', 'first_page': '', 'authors': 'COSTELLO, PRIEM', 'year': ''}, {'title': 'Altmetrics in the wild: An exploratory study of impact metrics based on social media', 'first_author': 'Priem', 'journal': '', 'number': '', 'volume': '', 'first_page': '', 'authors': 'Priem, Piwowar, Hemminger', 'year': ''}, {'title': 'Frontiers: Decoupling the scholarly journal', 'first_author': 'Priem', 'journal': 'Frontiers in Computational Neuroscience', 'number': '', 'volume': '', 'first_page': '', 'authors': 'Priem, Hemminger', 'year': ''}, {'title': 'FAIL BETTER: TOWARD A TAXONOMY OF E-LEARNING ERROR', 'first_author': 'PRIEM', 'journal': '', 'number': '', 'volume': '', 'first_page': '', 'authors': 'PRIEM', 'year': ''}, {'title': 'Shaking it up: embracing new methods for publishing, finding, discussing, and measuring our research output', 'first_author': 'Garnett', 'journal': 'Proceedings of the American Society for Information Science and Technology', 'number': '1', 'volume': '48', 'first_page': '1', 'authors': 'Garnett, Holmberg, Pikas, Piwowar, Priem, Weber', 'year': '2011'}, {'title': 'Shaken and stirred: ASIST 2011 attendee reactions to Shaking it up: embracing new methods for publishing, finding, discussing, and measuring our research output', 'first_author': 'Garnett', 'journal': 'Proceedings of the American Society for Information Science and Technology', 'number': '1', 'volume': '48', 'first_page': '1', 'authors': 'Garnett, Piwowar, Holmberg, Priem, Pikas, Weber', 'year': '2011'}, {'title': 'Altmetrics: a manifesto', 'first_author': 'Priem', 'journal': '', 'number': '', 'volume': '', 'first_page': '', 'authors': 'Priem, Taraborelli, Groth, Neylon', 'year': '2010'}, {'title': 'Altmetrics in the wild: Using social media to explore scholarly impact', 'first_author': 'Priem', 'journal': 'arXiv preprint arXiv:1203.4745', 'number': '', 'volume': '', 'first_page': '', 'authors': 'Priem, Piwowar, Hemminger', 'year': '2012'}, {'title': 'Uncovering impacts: a case study in using altmetrics tools', 'first_author': 'Priem', 'journal': 'Workshop on the Semantic Publishing (SePublica 2012) 9 th Extended Semantic Web Conference Hersonissos, Crete, Greece, May 28, 2012', 'number': '', 'volume': '', 'first_page': '40', 'authors': 'Priem, Parra, Piwowar, Groth, Waagmeester', 'year': '2012'}, {'title': "Beyond citations: Scholars' visibility on the social Web", 'first_author': 'Bar-Ilan', 'journal': 'arXiv preprint arXiv:1205.5611', 'number': '', 'volume': '', 'first_page': '', 'authors': 'Bar-Ilan, Haustein, Peters, Priem, Shema, Terliesner', 'year': '2012'}, {'title': 'The Altmetrics Collection', 'first_author': 'Priem', 'journal': 'PloS one', 'number': '11', 'volume': '7', 'first_page': 'e48753', 'authors': 'Priem, Groth, Taraborelli', 'year': '2012'}, {'title': 'Information visualization state of the art and future directions', 'first_author': "Milojevi{\\'c}", 'journal': 'Proceedings of the American Society for Information Science and Technology', 'number': '1', 'volume': '49', 'first_page': '1', 'authors': "Milojevi{\\'c}, Hemminger, Priem, Chen, Leydesdorff, Weingart", 'year': '2012'}]
 
 SAMPLE_EXTRACT_MEMBER_ITEMS_BROKEN = """
 @999{test1,
@@ -56,24 +58,15 @@ class TestBibtex(ProviderTestCase):
     def setUp(self):
         ProviderTestCase.setUp(self)
 
-    def test_extract_members_none(self):
-        members = self.provider.member_items("[]")
-        assert_equals(members, [])
-
-    @raises(ProviderServerError)
-    def test_extract_members_500(self):        
+    def test_extract_members_success(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
-        Provider.http_get = common.get_500
         parsed = self.provider.parse(file_contents)
-        members = self.provider.member_items(json.dumps(parsed))
 
-    def test_extract_members_empty(self):
-        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
-        Provider.http_get = common.get_empty
-        parsed = self.provider.parse(file_contents)
         members = self.provider.member_items(json.dumps(parsed))
-        assert_equals(members, [])
-
+        print members
+        expected = [('biblio', {u'title': u'Scientometrics 2.0: New metrics of scholarly impact on the social Web', u'first_author': u'Priem', u'journal': u'First Monday', u'number': u'7', u'volume': u'15', u'first_page': u'', u'authors': u'Priem, Hemminger', u'year': u'2010'})]
+        assert_equals(members[0], expected[0])
+        
     def test_parse_none(self):
         file_contents = ""
         response = self.provider.parse(file_contents)
@@ -87,13 +80,15 @@ class TestBibtex(ProviderTestCase):
 
     def test_parse_long(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
-        resp = self.provider.parse(file_contents)
+        response = self.provider.parse(file_contents)
 
         # make sure it's json-serializable
-        json_str = json.dumps(resp)
+        json_str = json.dumps(response)
         assert_equals(json_str[0:3], '[{"')
 
-        assert_equals(len(resp), 79) # 79 total articles
+        assert_equals(len(response), 15) # 15 total articles
+        print response
+        assert_equals(response, SAMPLE_PARSED_MEMBER_ITEMS_CONTENTS)
 
     def test_lookup_dois_from_biblio(self):
         biblio_list = [
