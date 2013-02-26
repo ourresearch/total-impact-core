@@ -153,7 +153,6 @@ class Crossref(Provider):
         new_aliases_unique = [k for k,v in itertools.groupby(sorted(new_aliases))]
         return new_aliases_unique
 
-
     def _lookup_doi_from_biblio(self, biblio, cache_enabled):
         if not biblio:
             return []
@@ -164,15 +163,13 @@ class Crossref(Provider):
                 logger.info("%20s NO DOI because no journal in %s" % (
                     self.provider_name, biblio))
                 return []
-            if not "first_author" in biblio:
-                biblio["first_author"] = biblio["authors"].split(",")[0].strip()
             query_string =  ("|%s|%s|%s|%s|%s|%s||%s|" % (
-                biblio["journal"],
-                biblio["first_author"],
-                biblio["volume"],
-                biblio["number"],
-                biblio["first_page"],
-                biblio["year"],
+                biblio.get("journal", ""),
+                biblio.get("first_author", biblio.get("authors", "").split(",")[0].strip()),
+                biblio.get("volume", ""),
+                biblio.get("number", ""),
+                biblio.get("first_page", ""),
+                biblio.get("year", ""),
                 "ImpactStory"
                 ))
         except KeyError:
