@@ -157,21 +157,29 @@ class Crossref(Provider):
     def _lookup_doi_from_biblio(self, biblio, cache_enabled):
         if not biblio:
             return []
-        if (biblio["journal"] == ""):
-            # need to have journal or can't look up with current api call
-            logger.info("%20s NO DOI because no journal in %s" % (
+
+        try:
+            if (biblio["journal"] == ""):
+                # need to have journal or can't look up with current api call
+                logger.info("%20s NO DOI because no journal in %s" % (
+                    self.provider_name, biblio))
+                return []
+            if not "first_author" in biblio:
+                biblio["first_author"] = biblio["authors"].split(",")[0]
+            query_string =  ("|%s|%s|%s|%s|%s|%s||%s|" % (
+                biblio["journal"],
+                biblio["first_author"],
+                biblio["volume"],
+                biblio["number"],
+                biblio["first_page"],
+                biblio["year"],
+                "ImpactStory"
+                ))
+        except KeyError:
+            logger.info("%20s NO DOI because missing needed attribute in %s" % (
                 self.provider_name, biblio))
             return []
 
-        query_string =  ("|%s|%s|%s|%s|%s|%s||%s|" % (
-            biblio["journal"],
-            biblio["first_author"],
-            biblio["volume"],
-            biblio["number"],
-            biblio["first_page"],
-            biblio["year"],
-            "ImpactStory"
-            ))
 
         # for more info on crossref spec, see
         # http://ftp.crossref.org/02publishers/25query_spec.html
@@ -235,7 +243,10 @@ class Crossref(Provider):
         else:
             try:  
                 # url the doi resolved to     
-                new_aliases += [("url", response.url)]
+                redirected_url = response.url
+                # remove session stuff at the end
+                url_to_store = redirected_url.split(";jsessionid")[0]
+                new_aliases += [("url", url_to_store)]
             except (TypeError, AttributeError):
                 pass
 
