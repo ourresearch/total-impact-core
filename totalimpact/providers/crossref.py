@@ -165,7 +165,7 @@ class Crossref(Provider):
                     self.provider_name, biblio))
                 return []
             if not "first_author" in biblio:
-                biblio["first_author"] = biblio["authors"].split(",")[0]
+                biblio["first_author"] = biblio["authors"].split(",")[0].strip()
             query_string =  ("|%s|%s|%s|%s|%s|%s||%s|" % (
                 biblio["journal"],
                 biblio["first_author"],
