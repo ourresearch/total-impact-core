@@ -78,6 +78,14 @@ class TestPubmed(ProviderTestCase):
         assert_equals(aliases, expected)
 
     @http
+    def test_aliases_from_pmid_different_date_format(self):
+        aliases = self.provider.aliases([("pmid", "11457506")])
+        print aliases
+        expected = [('biblio', {'title': u'Radiation hybrid mapping of 11 alpha and beta nicotinic acetylcholine receptor genes in Rattus norvegicus.', 'journal': u'Brain research. Molecular brain research', 'year': 2001, 'month': u'Jul', 'authors': u'Tseng, Kwitek-Black, Erbe, Popper, Jacob, Wackym', 'day': 13}), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/11457506')]
+        assert_equals(aliases, expected)
+
+
+    @http
     def test_aliases_from_pmid_when_doi_fragment(self):
         #this pmid has a partial doi in its doi field.  Make sure we don't include it in our doi field.
         aliases = self.provider.aliases([("pmid", "11244366")])

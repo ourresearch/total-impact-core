@@ -79,12 +79,20 @@ class Pubmed(Provider):
         return True
 
     def _extract_biblio(self, page, id=None):
-        dict_of_keylists = {"year": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Year"], 
-                            "month": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Month"],
-                            "day": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Day"],
-                            "title": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleTitle"],
-                            "journal": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "Title"],
-                            }
+        if "ArticleDate" in page:
+            dict_of_keylists = {"year": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Year"], 
+                                "month": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Month"],
+                                "day": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Day"],
+                                "title": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleTitle"],
+                                "journal": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "Title"],
+                                }
+        else:
+            dict_of_keylists = {"year": ["PubmedArticleSet", "MedlineCitation", "Article", "PubDate", "Year"], 
+                                "month": ["PubmedArticleSet", "MedlineCitation", "Article", "PubDate", "Month"],
+                                "day": ["PubmedArticleSet", "MedlineCitation", "Article", "PubDate", "Day"],
+                                "title": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleTitle"],
+                                "journal": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "Title"],
+                                }            
         biblio_dict = provider._extract_from_xml(page, dict_of_keylists)
         dom_authors = provider._find_all_in_xml(page, "LastName")
         try:
@@ -158,6 +166,8 @@ class Pubmed(Provider):
             cache_enabled=True):            
 
         new_aliases = []
+        old_aliases_dict = provider.alias_dict_from_tuples(aliases)
+
         for alias in aliases:
             (namespace, nid) = alias
             if (namespace == "doi"):
@@ -173,7 +183,9 @@ class Pubmed(Provider):
                     new_aliases += self._extract_aliases_from_pmid(page, nid)
                     biblio = self._extract_biblio(page, nid)
                     if biblio:
-                        new_aliases += [("biblio", biblio)]
+                        biblio_already_in_aliases = old_aliases_dict.get("biblio", {})
+                        if not biblio in biblio_already_in_aliases.keys():
+                            new_aliases += [("biblio", biblio)]
                 # also, add link to paper on pubmed
                 new_aliases += [("url", self.aliases_pubmed_url_template %nid)] 
 
