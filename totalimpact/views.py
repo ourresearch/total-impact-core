@@ -405,7 +405,11 @@ def put_collection(cid=""):
 
     try:
         aliases = request.json["aliases"]
-        alias_strings = [namespace+":"+json.dumps(nid) for (namespace, nid) in aliases]
+        try:
+            alias_strings = [namespace+":"+nid for (namespace, nid) in aliases]
+        except TypeError:
+            # jsonify the biblio dicts
+            alias_strings = [namespace+":"+json.dumps(nid) for (namespace, nid) in aliases]
 
         (tiids, new_items) = item_module.create_or_update_items_from_aliases(
             aliases, myredis, mydao)
@@ -492,7 +496,12 @@ def collection_create():
                 json=str(request.json)))
         abort(404, "Missing arguments.")
 
-    aliases_strings = [namespace+":"+json.dumps(nid) for (namespace, nid) in aliases]
+    try:
+        alias_strings = aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
+    except TypeError:
+        # jsonify the biblio dicts
+        alias_strings = aliases_strings = [namespace+":"+json.dumps(nid) for (namespace, nid) in aliases]
+
     # save dict of alias:tiid
     coll["alias_tiids"] = dict(zip(aliases_strings, tiids))
 
