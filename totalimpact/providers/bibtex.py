@@ -7,7 +7,6 @@ from pybtex.errors import enable_strict_mode, format_error
 from pybtex.scanner import PybtexSyntaxError, PybtexError
 from StringIO import StringIO
 import json
-from itertools import chain
 
 import logging
 logger = logging.getLogger('ti.providers.bibtex')
@@ -24,73 +23,7 @@ class Bibtex(Provider):
         super(Bibtex, self).__init__()
         enable_strict_mode(True) #throw errors
 
-
-    def _lookup_dois_from_biblio(self, biblio_list, cache_enabled):
-        if not biblio_list:
-            return []
-
-        entry_strings = []
-        for entry in biblio_list:
-
-            if (entry["journal"] == ""):
-                # need to have journal or can't look up with current api call
-                logger.info("%20s NO DOI because no journal in %s" % (
-                    self.provider_name, entry))
-                continue
-
-            entry_str =  ("|%s|%s|%s|%s|%s|%s||%s|" % (
-                entry["journal"],
-                entry["first_author"],
-                entry["volume"],
-                entry["number"],
-                entry["first_page"],
-                entry["year"],
-                entry["key"]
-                ))
-            entry_strings.append(entry_str)
-
-        if not entry_strings:
-            return []
-
-        text_str = "%0A".join(entry_strings)
-
-        # for more info on crossref spec, see
-        # http://ftp.crossref.org/02publishers/25query_spec.html
-        url = "http://doi.crossref.org/servlet/query?pid=totalimpactdev@gmail.com&qdata=%s" % text_str
-
-        logger.debug("%20s calling crossref at %s" % (self.provider_name, url))
-        # doi-lookup call to crossref can take a while, give it a long timeout
-
-        try:
-            response = self.http_get(url, timeout=30, cache_enabled=cache_enabled)
-        except ProviderTimeout:
-            raise ProviderTimeout("CrossRef timeout")
-
-        if response.status_code != 200:
-            raise ProviderServerError("CrossRef status code was not 200")
-
-        response_lines = response.text.split("\n")
-        #import pprint
-        #pprint.pprint(biblio)
-
-        split_lines = [line.split("|") for line in response_lines if line]
-        line_keys = [line[-2].strip() for line in split_lines]
-        dois = [line[-1].strip() for line in split_lines]
-
-        for key, doi in zip(line_keys, dois):
-            if not doi:
-                try:
-                    logger.debug("%20s NO DOI from %s, %s" %(self.provider_name, entry, key))
-                except KeyError:
-                    logger.debug("%20s NO DOI from %s, %s" %(self.provider_name, "", key))                    
-
-        non_empty_dois = [doi for doi in dois if doi]
-        logger.debug("%20s found %i dois" % (self.provider_name, len(non_empty_dois)))
-
-        return non_empty_dois
-
     def _parse_bibtex_entries(self, entries):
-
         biblio_list = []
         for entry in entries:
             stream = StringIO(entry)
@@ -107,7 +40,6 @@ class Bibtex(Provider):
         return biblio_list
 
     def parse(self, bibtex_contents):
-
         ret = []
         cleaned_string = bibtex_contents.replace("\&", "").replace("%", "").strip()
         entries = ["@"+entry for entry in cleaned_string.split("@") if entry]
@@ -175,6 +107,7 @@ class Bibtex(Provider):
 
     def member_items(self, parsed_bibtex_json, cache_enabled=True):
         logger.debug("%20s getting member_items for bibtex" % (self.provider_name))
+
         parsed_bibtex = json.loads(parsed_bibtex_json)
 
         aliases = [("biblio", entry) for entry in parsed_bibtex]
