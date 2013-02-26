@@ -166,7 +166,6 @@ class Pubmed(Provider):
             cache_enabled=True):            
 
         new_aliases = []
-        old_aliases_dict = provider.alias_dict_from_tuples(aliases)
 
         for alias in aliases:
             (namespace, nid) = alias
@@ -183,9 +182,7 @@ class Pubmed(Provider):
                     new_aliases += self._extract_aliases_from_pmid(page, nid)
                     biblio = self._extract_biblio(page, nid)
                     if biblio:
-                        biblio_already_in_aliases = old_aliases_dict.get("biblio", {})
-                        if not biblio in biblio_already_in_aliases.keys():
-                            new_aliases += [("biblio", biblio)]
+                        new_aliases += [("biblio", biblio)]
                 # also, add link to paper on pubmed
                 new_aliases += [("url", self.aliases_pubmed_url_template %nid)] 
 
