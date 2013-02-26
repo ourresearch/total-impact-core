@@ -141,7 +141,7 @@ class Provider(object):
     def _get_templated_url(self, template, id, method=None):
         if template != "%s":
             try:
-                id = urllib.quote(id, safe="")
+                id = urllib.quote(id)
             except KeyError: # a unicode strange thing
                 pass
         url = template % id
