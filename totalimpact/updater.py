@@ -21,6 +21,26 @@ active_publishers = {
                 }
             ]
         },
+    "peerj": {
+        "api_key": "",
+        "journals": [
+                { 
+                    "title": "PeerJ",
+                    "issn": "2167-8359",
+                    "doi_prefix": "10.7717/peerj"
+                }
+            ]
+        },   
+    "citar": {
+        "api_key": "",
+        "journals": [
+                { 
+                    "title": "CITAR",
+                    "issn": "",
+                    "doi_prefix": "10.7559/citarj
+                }
+            ]
+        },                 
     "pensoft": {
         "api_key": "",
         "journals": [
