@@ -37,7 +37,7 @@ active_publishers = {
                 { 
                     "title": "CITAR",
                     "issn": "",
-                    "doi_prefix": "10.7559/citarj
+                    "doi_prefix": "10.7559/citarj"
                 }
             ]
         },                 
