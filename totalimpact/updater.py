@@ -67,7 +67,7 @@ active_publishers = {
                 {  
                     "title": "Journal of Hymenoptera Research",
                     "issn": "1314-2607",
-                    "doi_prefix": " 10.3897/JHR"
+                    "doi_prefix": " 10.3897/jhr"
                 }
             ]
         },
