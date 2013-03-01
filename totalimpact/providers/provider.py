@@ -8,6 +8,7 @@ from totalimpact import utils
 import requests, os, time, threading, sys, traceback, importlib, urllib, logging, itertools
 import simplejson
 import BeautifulSoup
+import socket
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
 import re
@@ -424,6 +425,9 @@ class Provider(object):
         # extract the metrics
         try:
             metrics_dict = self._extract_metrics(response.text, response.status_code, id=id)
+        except socket.timeout, e:  # can apparently be thrown here
+            self.logger.info("%s Provider timed out *after* GET in socket" %(self.provider_name))        
+            raise ProviderTimeout("Provider timed out *after* GET in socket", e)        
         except (AttributeError, TypeError):  # throws type error if response.text is none
             metrics_dict = {}
 
@@ -499,8 +503,8 @@ class Provider(object):
             self.logger.debug("LIVE %s" %(url))
             r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=allow_redirects, verify=False)
         except requests.exceptions.Timeout as e:
-            self.logger.info("%s Attempt to connect to provider timed out during GET on %s" %(self.provider_name, url))
-            raise ProviderTimeout("Attempt to connect to provider timed out during GET on " + url, e)
+            self.logger.info("%s Provider timed out during GET on %s" %(self.provider_name, url))
+            raise ProviderTimeout("Provider timed out during GET on " + url, e)
         except requests.exceptions.RequestException as e:
             raise ProviderHttpError("RequestException during GET on: " + url, e)
 
