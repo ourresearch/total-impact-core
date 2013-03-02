@@ -107,7 +107,7 @@ class Mendeley(Provider):
         return response.text
          
     def _get_uuid_lookup_page(self, title):
-        uuid_from_title_url = self.uuid_from_title_template % title     
+        uuid_from_title_url = self.uuid_from_title_template % urllib.quote(title)
         page = self._get_page(uuid_from_title_url)
         if not page:
             raise ProviderContentMalformedError()            
