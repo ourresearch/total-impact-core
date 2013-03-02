@@ -103,9 +103,9 @@ class Crossref(Provider):
         try:
             if "year" in biblio_dict:
                 if "raw" in biblio_dict["year"]:
-                    biblio_dict["year"] = biblio_dict["year"]["raw"]
+                    biblio_dict["year"] = str(biblio_dict["year"]["raw"])
                 elif "date-parts" in biblio_dict["year"]:
-                    biblio_dict["year"] = biblio_dict["year"]["date-parts"][0][0]
+                    biblio_dict["year"] = str(biblio_dict["year"]["date-parts"][0][0])
         except IndexError:
             logger.info("could not parse year {biblio_dict}".format(
                 biblio_dict=biblio_dict))
