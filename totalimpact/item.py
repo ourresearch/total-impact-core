@@ -74,13 +74,7 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
 
     item["is_registered"] = is_tiid_registered_to_anyone(item["_id"], mydao)
 
-    # need year to calculate normalization below
-    try:
-        year = item["biblio"]["year"]
-        if year < 2002:
-            year = 2002
-    except KeyError:
-        year = 99 # hack so that it won't match anything.  what else to do?
+
 
     metrics = item.setdefault("metrics", {})
     for metric_name in metrics:
@@ -97,10 +91,17 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
             metrics[metric_name]["static_meta"] = all_static_meta[metric_name]            
 
             # add normalization values
-            raw = metrics[metric_name]["values"]["raw"]
-            normalized_values = get_normalized_values(genre, host, year, metric_name, raw, myrefsets)
-
-            metrics[metric_name]["values"].update(normalized_values)
+            # need year to calculate normalization below
+            try:
+                year = int(item["biblio"]["year"])
+                if year < 2002:
+                    year = 2002
+                raw = metrics[metric_name]["values"]["raw"]
+                normalized_values = get_normalized_values(genre, host, year, metric_name, raw, myrefsets)
+                metrics[metric_name]["values"].update(normalized_values)
+            except (KeyError, ValueError):
+                logger.error("No good year in biblio for item {tiid}, no normalization".format(
+                    tiid=item["_id"]))
 
     # ditch metrics we don't have static_meta for:
     item["metrics"] = {k:v for k, v in item["metrics"].iteritems() if "static_meta"  in v}
