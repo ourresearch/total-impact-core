@@ -97,8 +97,8 @@ class Mendeley(Provider):
             provenance_url = ""
         return provenance_url        
 
-    def _get_page(self, url):
-        response = self.http_get(url)
+    def _get_page(self, url, cache_enabled=True):
+        response = self.http_get(url, cache_enabled=cache_enabled)
         if response.status_code != 200:
             if response.status_code == 404:
                 return None
@@ -106,19 +106,19 @@ class Mendeley(Provider):
                 raise(self._get_error(response.status_code))
         return response.text
          
-    def _get_uuid_lookup_page(self, title):
-        uuid_from_title_url = self.uuid_from_title_template % urllib.quote(title)
-        page = self._get_page(uuid_from_title_url)
+    def _get_uuid_lookup_page(self, title, cache_enabled=True):
+        uuid_from_title_url = self.uuid_from_title_template % urllib.quote(title.encode("utf-8"))
+        page = self._get_page(uuid_from_title_url, cache_enabled)
         if not page:
             raise ProviderContentMalformedError()            
         if not "documents" in page:
             raise ProviderContentMalformedError()
         return page
 
-    def _get_metrics_lookup_page(self, template, id):
+    def _get_metrics_lookup_page(self, template, id, cache_enabled=True):
         double_encoded_id = urllib.quote(urllib.quote(id, safe=""), safe="")
         metrics_url = template %double_encoded_id
-        page = self._get_page(metrics_url)
+        page = self._get_page(metrics_url, cache_enabled)
         if page:
             if not "identifiers" in page:
                 page = None
@@ -212,19 +212,19 @@ class Mendeley(Provider):
         metrics_page = None    
         # try lookup by doi
         try:
-            metrics_page = self._get_metrics_lookup_page(self.metrics_from_doi_template, aliases_dict["doi"][0])
+            metrics_page = self._get_metrics_lookup_page(self.metrics_from_doi_template, aliases_dict["doi"][0], cache_enabled)
         except KeyError:
             pass
         # try lookup by pmid
         if not metrics_page:
             try:
-                metrics_page = self._get_metrics_lookup_page(self.metrics_from_pmid_template, aliases_dict["pmid"][0])
+                metrics_page = self._get_metrics_lookup_page(self.metrics_from_pmid_template, aliases_dict["pmid"][0], cache_enabled)
             except KeyError:
                 pass
         # try lookup by title
         if not metrics_page:
             try:
-                page = self._get_uuid_lookup_page(aliases_dict["biblio"][0]["title"])
+                page = self._get_uuid_lookup_page(aliases_dict["biblio"][0]["title"], cache_enabled)
                 if page:
                     uuid = self._get_uuid_from_title(aliases_dict, page)["uuid"]
                     if uuid:
@@ -269,29 +269,15 @@ class Mendeley(Provider):
             provider_url_template=None, 
             cache_enabled=True):
 
-        self.logger.debug("%s getting aliases for %s" % (self.provider_name, id))
+        self.logger.debug("%s getting aliases for %s" % (self.provider_name, str(biblio)))
 
         if not provider_url_template:
             provider_url_template = self.aliases_url_template
-        url = self._get_templated_url(provider_url_template, biblio["title"], "aliases")
 
-        # try to get a response from the data provider                
-        response = self.http_get(url, cache_enabled=cache_enabled)
-        
-        if response.status_code != 200:
-            self.logger.info("%s status_code=%i" 
-                % (self.provider_name, response.status_code))            
-            if response.status_code == 404:
-                return []
-            elif response.status_code == 403:  #forbidden
-                return []
-            elif response.status_code == 303: #redirect
-                pass                
-            else:
-                self._get_error(response.status_code, response)
+        page = self._get_uuid_lookup_page(biblio["title"], cache_enabled)
 
         try:       
-            new_aliases = self._extract_aliases(response.text, biblio)
+            new_aliases = self._extract_aliases(page, biblio)
         except (TypeError, AttributeError):
             self.logger.debug("Error.  returning with no new aliases")
             new_aliases = []
