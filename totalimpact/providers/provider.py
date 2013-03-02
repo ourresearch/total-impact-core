@@ -144,7 +144,8 @@ class Provider(object):
             try:
                 id = urllib.quote(id)
             except KeyError: # a unicode strange thing
-                pass
+                self.logger.error("{provider} Failed url-encoding param {id}, maybe it was unicode".format(
+                    provider=self.provider_name, id=id))
         url = template % id
         return(url)
 
