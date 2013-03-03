@@ -33,7 +33,7 @@ class TestCrossRef(ProviderTestCase):
     def test_extract_biblio(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
         biblio = self.provider._extract_biblio(f.read())
-        expected = {'title': 'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': 'PLoS Computational Biology', 'year': 2009, 'repository': 'Public Library of Science', 'authors': 'Shotton, Portwin, Klyne, Miles'}
+        expected = {'title': 'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': 'PLoS Computational Biology', 'year': '2009', 'repository': 'Public Library of Science', 'authors': 'Shotton, Portwin, Klyne, Miles'}
         print biblio
         assert_equals(biblio, expected)
 
@@ -41,13 +41,13 @@ class TestCrossRef(ProviderTestCase):
     def test_get_aliases_for_id(self):
         new_aliases = self.provider.aliases([self.testitem_aliases])
         print new_aliases
-        expected = [('url', 'http://dx.doi.org/10.1371/journal.pcbi.1000361'), ('biblio', {'repository': u'Public Library of Science', 'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': 2009, 'authors': u'Shotton, Portwin, Klyne, Miles'}), ('url', u'http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1000361')]
+        expected = [('url', 'http://dx.doi.org/10.1371/journal.pcbi.1000361'), ('biblio', {'repository': u'Public Library of Science', 'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': '2009', 'authors': u'Shotton, Portwin, Klyne, Miles'}), ('url', u'http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1000361')]
         assert_equals(sorted(new_aliases), sorted(expected))
 
     @http
     def test_biblio_elife(self):
         biblio = self.provider.biblio([("doi", "10.7554/eLife.00048")])
-        expected = {'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': 2012, 'repository': u'eLife Sciences Publications, Ltd.', 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Aragon, Li, Walter'}
+        expected = {'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': '2012', 'repository': u'eLife Sciences Publications, Ltd.', 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Aragon, Li, Walter'}
 
         print biblio
         assert_equals(biblio, expected)        
@@ -76,21 +76,21 @@ class TestCrossRef(ProviderTestCase):
     @http
     def test_biblio_science(self):
         biblio = self.provider.biblio([("doi", "10.1126/science.169.3946.635")])
-        expected = {'title': u'The Structure of Ordinary Water: New data and interpretations are yielding new insights into this fascinating substance', 'journal': u'Science', 'year': 1970, 'repository': u'American Association for the Advancement of Science', 'authors': u'Frank'}
+        expected = {'title': u'The Structure of Ordinary Water: New data and interpretations are yielding new insights into this fascinating substance', 'journal': u'Science', 'year': '1970', 'repository': u'American Association for the Advancement of Science', 'authors': u'Frank'}
         print biblio
         assert_equals(biblio, expected) 
 
     @http
     def test_biblio(self):
         biblio = self.provider.biblio([self.testitem_biblio])
-        expected = {'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': 2009, 'repository': u'Public Library of Science', 'authors': u'Shotton, Portwin, Klyne, Miles'}
+        expected = {'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': '2009', 'repository': u'Public Library of Science', 'authors': u'Shotton, Portwin, Klyne, Miles'}
         print biblio
         assert_equals(biblio, expected)        
 
     @http
     def test_aliases_elife(self):
         aliases = self.provider.aliases([("doi", "10.7554/eLife.00048")])
-        expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.', 'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': 2012, 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Aragon, Li, Walter'}), ('url', 'http://dx.doi.org/10.7554/eLife.00048'), ('url', u'http://elife.elifesciences.org/content/1/e00048')]
+        expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.', 'title': u'The unfolded protein response in fission yeast modulates stability of select mRNAs to maintain protein homeostasis', 'journal': u'eLife', 'year': '2012', 'authors': u'Kimmig, Diaz, Zheng, Williams, Lang, Aragon, Li, Walter'}), ('url', 'http://dx.doi.org/10.7554/eLife.00048'), ('url', u'http://elife.elifesciences.org/content/1/e00048')]
         print aliases
         assert_equals(sorted(aliases), sorted(expected))
 
@@ -104,7 +104,7 @@ class TestCrossRef(ProviderTestCase):
     @http
     def test_aliases_bad_title(self):
         aliases = self.provider.aliases([("doi", "10.1021/np070361t")])
-        expected = [('biblio', {'repository': u'American Chemical Society', 'title': u' 13 C\u2212 15 N Correlation via Unsymmetrical Indirect Covariance NMR: Application to Vinblastine ', 'journal': u'Journal of Natural Products', 'year': 2007, 'authors': u'Martin, Hilton, Blinov, Williams'}), ('url', 'http://dx.doi.org/10.1021/np070361t'), ('url', u'http://pubs.acs.org/doi/abs/10.1021/np070361t')]
+        expected = [('biblio', {'repository': u'American Chemical Society', 'title': u' 13 C\u2212 15 N Correlation via Unsymmetrical Indirect Covariance NMR: Application to Vinblastine ', 'journal': u'Journal of Natural Products', 'year': '2007', 'authors': u'Martin, Hilton, Blinov, Williams'}), ('url', 'http://dx.doi.org/10.1021/np070361t'), ('url', u'http://pubs.acs.org/doi/abs/10.1021/np070361t')]
         print aliases
         assert_equals(sorted(aliases), sorted(expected))  
 
@@ -119,7 +119,7 @@ class TestCrossRef(ProviderTestCase):
         biblio = {"first_author": "Piwowar", "journal": "PLoS medicine", "number": "9", "volume": "5", "first_page": "e183", "key": "piwowar2008towards", "year": "2008"}
         response = self.provider.aliases([("biblio", biblio)])
         print response
-        expected = [('biblio', {'repository': u'Public Library of Science', 'title': u'Towards a Data Sharing Culture: Recommendations for Leadership from Academic Health Centers', 'journal': u'PLoS Medicine', 'year': 2008, 'authors': u'Piwowar, Becich, Bilofsky, Crowley'}), ('doi', u'10.1371/journal.pmed.0050183'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0050183'), ('url', u'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0050183')]
+        expected = [('biblio', {'repository': u'Public Library of Science', 'title': u'Towards a Data Sharing Culture: Recommendations for Leadership from Academic Health Centers', 'journal': u'PLoS Medicine', 'year': '2008', 'authors': u'Piwowar, Becich, Bilofsky, Crowley'}), ('doi', u'10.1371/journal.pmed.0050183'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0050183'), ('url', u'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0050183')]
         assert_equals(response, expected)
 
     @http
@@ -127,7 +127,7 @@ class TestCrossRef(ProviderTestCase):
         biblio = {'title': 'Evaluating data citation and sharing policies in the environmental sciences', 'first_author': 'Weber', 'journal': 'Proceedings of the American Society for Information Science and Technology', 'year': '2010', 'number': '1', 'volume': '47', 'first_page': '1', 'authors': 'Weber, Piwowar, Vision'}
         response = self.provider.aliases([("biblio", biblio)])
         print response
-        expected = [('biblio', {'repository': u'Wiley Blackwell (John Wiley & Sons)', 'title': u'Evaluating data citation and sharing policies in the environmental sciences', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': 2010, 'authors': u'Weber, Piwowar, Vision'}), ('doi', u'10.1002/meet.14504701445'), ('url', u'http://dx.doi.org/10.1002/meet.14504701445'), ('url', u'http://onlinelibrary.wiley.com/doi/10.1002/meet.14504701445/abstract')]
+        expected = [('biblio', {'repository': u'Wiley Blackwell (John Wiley & Sons)', 'title': u'Evaluating data citation and sharing policies in the environmental sciences', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': '2010', 'authors': u'Weber, Piwowar, Vision'}), ('doi', u'10.1002/meet.14504701445'), ('url', u'http://dx.doi.org/10.1002/meet.14504701445'), ('url', u'http://onlinelibrary.wiley.com/doi/10.1002/meet.14504701445/abstract')]
         assert_equals(response, expected)
 
     @http
@@ -140,7 +140,7 @@ class TestCrossRef(ProviderTestCase):
             print response
             responses += response
         print responses
-        expected = [('biblio', {'repository': u'Public Library of Science', 'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'journal': u'PLoS ONE', 'year': 2007, 'authors': u'Piwowar, Day, Fridsma'}), ('doi', u'10.1371/journal.pone.0000308'), ('url', u'http://dx.doi.org/10.1371/journal.pone.0000308'), ('url', u'http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0000308'), ('biblio', {'repository': u'Public Library of Science', 'title': u'Towards a Data Sharing Culture: Recommendations for Leadership from Academic Health Centers', 'journal': u'PLoS Medicine', 'year': 2008, 'authors': u'Piwowar, Becich, Bilofsky, Crowley'}), ('doi', u'10.1371/journal.pmed.0050183'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0050183'), ('url', u'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0050183'), ('biblio', {'repository': u'Elsevier', 'title': u'Public sharing of research datasets: A pilot study of associations', 'journal': u'Journal of Informetrics', 'year': 2010, 'authors': u'Piwowar, Chapman'}), ('doi', u'10.1016/j.joi.2009.11.010'), ('url', u'http://dx.doi.org/10.1016/j.joi.2009.11.010'), ('url', u'http://www.sciencedirect.com/science/article/pii/S1751157709000881'), ('biblio', {'repository': u'Nature Publishing Group', 'title': u'Data archiving is a good investment', 'journal': u'Nature', 'year': 2011, 'authors': u'Piwowar, Vision, Whitlock'}), ('doi', u'10.1038/473285a'), ('url', u'http://dx.doi.org/10.1038/473285a'), ('biblio', {'repository': u'Public Library of Science', 'title': u"Who Shares? Who Doesn't? Factors Associated with Openly Archiving Raw Research Data", 'journal': u'PLoS ONE', 'year': 2011, 'authors': u'Piwowar'}), ('doi', u'10.1371/journal.pone.0018657'), ('url', u'http://dx.doi.org/10.1371/journal.pone.0018657'), ('url', u'http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0018657'), ('biblio', {'repository': u'University of California Press', 'title': u'Biology Needs a Modern Assessment System for Professional Productivity', 'journal': u'BioScience', 'year': 2011, 'authors': u'McDade, Maddison, Guralnick, Piwowar, Jameson, Helgen, Herendeen, Hill, Vis'}), ('doi', u'10.1525/bio.2011.61.8.8'), ('url', u'http://dx.doi.org/10.1525/bio.2011.61.8.8'), ('url', u'http://www.jstor.org/discover/10.1525/bio.2011.61.8.8?uid=3739400&uid=2&uid=3737720&uid=4&sid=21101701097323'), ('biblio', {'repository': u'Wiley Blackwell (John Wiley & Sons)', 'title': u'Expediting medical literature coding with query-building', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': 2010, 'authors': u'Garnett, Piwowar, Rasmussen, Illes'}), ('doi', u'10.1002/meet.14504701421'), ('url', u'http://dx.doi.org/10.1002/meet.14504701421'), ('url', u'http://onlinelibrary.wiley.com/doi/10.1002/meet.14504701421/abstract'), ('biblio', {'repository': u'Public Library of Science', 'title': u'Neuroethics and fMRI: Mapping a Fledgling Relationship', 'journal': u'PLoS ONE', 'year': 2011, 'authors': u'Garnett, Whiteley, Piwowar, Rasmussen, Illes'}), ('doi', u'10.1371/journal.pone.0018537'), ('url', u'http://dx.doi.org/10.1371/journal.pone.0018537'), ('url', u'http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0018537'), ('biblio', {'repository': u'Wiley Blackwell (John Wiley & Sons)', 'title': u'Evaluating data citation and sharing policies in the environmental sciences', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': 2010, 'authors': u'Weber, Piwowar, Vision'}), ('doi', u'10.1002/meet.14504701445'), ('url', u'http://dx.doi.org/10.1002/meet.14504701445'), ('url', u'http://onlinelibrary.wiley.com/doi/10.1002/meet.14504701445/abstract')]
+        expected = [('biblio', {'repository': u'Public Library of Science', 'title': u'Sharing Detailed Research Data Is Associated with Increased Citation Rate', 'journal': u'PLoS ONE', 'year': '2007', 'authors': u'Piwowar, Day, Fridsma'}), ('doi', u'10.1371/journal.pone.0000308'), ('url', u'http://dx.doi.org/10.1371/journal.pone.0000308'), ('url', u'http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0000308'), ('biblio', {'repository': u'Public Library of Science', 'title': u'Towards a Data Sharing Culture: Recommendations for Leadership from Academic Health Centers', 'journal': u'PLoS Medicine', 'year': '2008', 'authors': u'Piwowar, Becich, Bilofsky, Crowley'}), ('doi', u'10.1371/journal.pmed.0050183'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0050183'), ('url', u'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0050183'), ('biblio', {'repository': u'Elsevier', 'title': u'Public sharing of research datasets: A pilot study of associations', 'journal': u'Journal of Informetrics', 'year': '2010', 'authors': u'Piwowar, Chapman'}), ('doi', u'10.1016/j.joi.2009.11.010'), ('url', u'http://dx.doi.org/10.1016/j.joi.2009.11.010'), ('url', u'http://www.sciencedirect.com/science/article/pii/S1751157709000881'), ('biblio', {'repository': u'Nature Publishing Group', 'title': u'Data archiving is a good investment', 'journal': u'Nature', 'year': '2011', 'authors': u'Piwowar, Vision, Whitlock'}), ('doi', u'10.1038/473285a'), ('url', u'http://dx.doi.org/10.1038/473285a'), ('biblio', {'repository': u'Public Library of Science', 'title': u"Who Shares? Who Doesn't? Factors Associated with Openly Archiving Raw Research Data", 'journal': u'PLoS ONE', 'year': '2011', 'authors': u'Piwowar'}), ('doi', u'10.1371/journal.pone.0018657'), ('url', u'http://dx.doi.org/10.1371/journal.pone.0018657'), ('url', u'http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0018657'), ('biblio', {'repository': u'University of California Press', 'title': u'Biology Needs a Modern Assessment System for Professional Productivity', 'journal': u'BioScience', 'year': '2011', 'authors': u'McDade, Maddison, Guralnick, Piwowar, Jameson, Helgen, Herendeen, Hill, Vis'}), ('doi', u'10.1525/bio.2011.61.8.8'), ('url', u'http://dx.doi.org/10.1525/bio.2011.61.8.8'), ('url', u'http://www.jstor.org/discover/10.1525/bio.2011.61.8.8?uid=3739400&uid=2&uid=3737720&uid=4&sid=21101701097323'), ('biblio', {'repository': u'Wiley Blackwell (John Wiley & Sons)', 'title': u'Expediting medical literature coding with query-building', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': '2010', 'authors': u'Garnett, Piwowar, Rasmussen, Illes'}), ('doi', u'10.1002/meet.14504701421'), ('url', u'http://dx.doi.org/10.1002/meet.14504701421'), ('url', u'http://onlinelibrary.wiley.com/doi/10.1002/meet.14504701421/abstract'), ('biblio', {'repository': u'Public Library of Science', 'title': u'Neuroethics and fMRI: Mapping a Fledgling Relationship', 'journal': u'PLoS ONE', 'year': '2011', 'authors': u'Garnett, Whiteley, Piwowar, Rasmussen, Illes'}), ('doi', u'10.1371/journal.pone.0018537'), ('url', u'http://dx.doi.org/10.1371/journal.pone.0018537'), ('url', u'http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0018537'), ('biblio', {'repository': u'Wiley Blackwell (John Wiley & Sons)', 'title': u'Evaluating data citation and sharing policies in the environmental sciences', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': '2010', 'authors': u'Weber, Piwowar, Vision'}), ('doi', u'10.1002/meet.14504701445'), ('url', u'http://dx.doi.org/10.1002/meet.14504701445'), ('url', u'http://onlinelibrary.wiley.com/doi/10.1002/meet.14504701445/abstract')]
         assert_equals(responses, expected)
 
 
