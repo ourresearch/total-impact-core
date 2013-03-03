@@ -166,15 +166,7 @@ def update_active_publisher_items(number_to_update, myredis, mydao):
             all_docs += docs_from_doi_prefix
 
     print "recent items for active publishers that were last updated more than a day ago, n=", len(all_tiids)
-    tiids_to_update = all_tiids[0:min(number_to_update, len(all_tiids))]
-    docs_to_update = all_docs[0:min(number_to_update, len(all_docs))]
-    response = update_docs_with_updater_timestamp(docs_to_update, mydao)        
-
-    print "updating {number_to_update} of them now".format(number_to_update=number_to_update)
-    QUEUE_DELAY_IN_SECONDS = 0.25
-    mixpanel.track("Trigger:Update", {"Number Items":len(tiids_to_update), "Update Type":"Scheduled Registered"})
-    item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
-
+    tiids_to_update = update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis)
     return tiids_to_update
 
 def get_least_recently_updated_tiids_in_db(number_to_update, mydao):
@@ -199,11 +191,26 @@ def update_docs_with_updater_timestamp(docs, mydao):
     return update_response
     
 def update_least_recently_updated(number_to_update, myredis, mydao):
-    (tiids_to_update, docs) = get_least_recently_updated_tiids_in_db(number_to_update, mydao)
-    update_docs_with_updater_timestamp(docs, mydao)
+    (all_tiids, all_docs) = get_least_recently_updated_tiids_in_db(number_to_update, mydao)
+    tiids_to_update = update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis)
+    return tiids_to_update
+
+def update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis):
+    tiids_to_update = all_tiids[0:min(number_to_update, len(all_tiids))]
+    docs_to_update = all_docs[0:min(number_to_update, len(all_docs))]
+    response = update_docs_with_updater_timestamp(docs_to_update, mydao)        
+
+    print "updating {number_to_update} of them now".format(number_to_update=number_to_update)
     QUEUE_DELAY_IN_SECONDS = 0.25
-    mixpanel.track("Trigger:Update", {"Number Items":len(tiids_to_update), "Update Type":"Scheduled Least Recently"})
+    mixpanel.track("Trigger:Update", {"Number Items":len(tiids_to_update), "Update Type":"Scheduled Registered"})
     item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
+    return tiids_to_update
+
+def gold_update(number_to_update, myredis, mydao):
+    all_tiids = []
+    all_docs = []
+    # do magic
+    tiids_to_update = update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis)
     return tiids_to_update
 
 def main(action_type, number_to_update=35):
