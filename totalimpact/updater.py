@@ -140,8 +140,8 @@ def get_matching_dois_in_db(min_year, doi_prefix, mydao):
         tiid = doc["_id"]
         #only update items published since the a given year
         try:
-            year = doc["biblio"]["year"]
-        except KeyError:
+            year = int(doc["biblio"]["year"])
+        except (KeyError, ValueError):
             continue
         if year > min_year:
             if tiid not in tiids_to_update:
@@ -206,11 +206,39 @@ def update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis):
     item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
     return tiids_to_update
 
-def gold_update(number_to_update, myredis, mydao):
+def get_tiids_not_updated_since(days_since_publication, days_since_last_updated, number_to_update, mydao, today=datetime.datetime.now()):
+    db = mydao.db
+    tiids = []
+    view_name = "gold_update/gold_update"
+    view_rows = db.view(view_name, 
+            include_docs=False, 
+            descending=False, 
+            limit=number_to_update)
+    tiids = [row.id for row in view_rows]
+    docs = [row.doc for row in view_rows]
+    return (tiids, docs)
+
+gold_update_schedule = [
+    (1, 1/24),      #articles less than 1 day old should be updated every hour
+    (7, 1),         #articles less than 1 week old should be updated every day
+    (30, 7),        #articles less than 1 month old should be updated every week
+    (365, 30),      #articles less than 1 year old should be updated every month
+    (365*1000, 356)  #everything else update at least once per year
+    ]
+
+def gold_update(number_to_update, myredis, mydao, today=datetime.datetime.now()):
     all_tiids = []
     all_docs = []
     # do magic
-    tiids_to_update = update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis)
+    for (days_since_pub, days_since_update) in gold_update_schedule:
+        if (len(all_tiids) < number_to_update):
+            (tiids, docs) = get_tiids_not_updated_since(days_since_pub, days_since_update, number_to_update, mydao, today)
+            print "got", len(tiids), "for published in last", days_since_pub, "days"
+            all_tiids += tiids
+            all_docs += docs
+    if all_tiids:
+        print all_tiids
+        tiids_to_update = update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis)
     return tiids_to_update
 
 def main(action_type, number_to_update=35):
