@@ -28,7 +28,7 @@ class TestUpdater():
             "type": "item",
             "last_modified": now.isoformat(),
             "aliases":{"doi":["10.7554/elife.1"]},
-            "biblio": {"year":2012},
+            "biblio": {"year":"2012"},
             "metrics": {}
         }
         self.d.save(self.fake_item)
