@@ -177,6 +177,7 @@ def get_least_recently_updated_tiids_in_db(number_to_update, mydao):
             include_docs=True, 
             descending=False, 
             limit=number_to_update)
+    print view_rows
     tiids = [row.id for row in view_rows]
     docs = [row.doc for row in view_rows]
     return (tiids, docs)
@@ -206,34 +207,40 @@ def update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis):
     item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
     return tiids_to_update
 
-def get_tiids_not_updated_since(days_since_publication, days_since_last_updated, number_to_update, mydao, today=datetime.datetime.now()):
+def get_tiids_not_updated_since(schedule, number_to_update, mydao, today=datetime.datetime.now()):
     db = mydao.db
     tiids = []
     view_name = "gold_update/gold_update"
+    print schedule
+    max_last_updated = today - datetime.timedelta(days=schedule["max_update_lag"])
     view_rows = db.view(view_name, 
-            include_docs=False, 
-            descending=False, 
+            include_docs=True, 
+            startkey=[schedule["year_group"], schedule["month_group"], "0"], 
+            endkey=[schedule["year_group"], schedule["month_group"], max_last_updated.isoformat()],            
             limit=number_to_update)
     tiids = [row.id for row in view_rows]
     docs = [row.doc for row in view_rows]
     return (tiids, docs)
 
+last_month = (datetime.datetime.now() - datetime.timedelta(days=30)).isoformat().split("-")[1]
+month_of_last_week = (datetime.datetime.now() - datetime.timedelta(days=7)).isoformat().split("-")[1]
 gold_update_schedule = [
-    (1, 1/24),      #articles less than 1 day old should be updated every hour
-    (7, 1),         #articles less than 1 week old should be updated every day
-    (30, 7),        #articles less than 1 month old should be updated every week
-    (365, 30),      #articles less than 1 year old should be updated every month
-    (365*1000, 356)  #everything else update at least once per year
+    {"year_group":"0", "month_group":"00", "max_update_lag":365}, #everything else update at least once per year
+    {"year_group":"1", "month_group":"00", "max_update_lag":30},
+    {"year_group":"2", "month_group":last_month, "max_update_lag":7},
+    {"year_group":"2", "month_group":month_of_last_week, "max_update_lag":1}
     ]
 
 def gold_update(number_to_update, myredis, mydao, today=datetime.datetime.now()):
     all_tiids = []
     all_docs = []
+    tiids_to_update = []
     # do magic
-    for (days_since_pub, days_since_update) in gold_update_schedule:
+    #for schedule in gold_update_schedule:
+    for schedule in [gold_update_schedule[0]]:
         if (len(all_tiids) < number_to_update):
-            (tiids, docs) = get_tiids_not_updated_since(days_since_pub, days_since_update, number_to_update, mydao, today)
-            print "got", len(tiids), "for published in last", days_since_pub, "days"
+            (tiids, docs) = get_tiids_not_updated_since(schedule, number_to_update, mydao, today)
+            print "got", len(tiids), "for update schedule", schedule
             all_tiids += tiids
             all_docs += docs
     if all_tiids:
@@ -245,6 +252,7 @@ def main(action_type, number_to_update=35):
     #35 every 10 minutes is 35*6perhour*24hours=5040 per day
 
     cloudant_db = os.getenv("CLOUDANT_DB")
+    #cloudant_db = "full"
     cloudant_url = os.getenv("CLOUDANT_URL")
     redis_url = os.getenv("REDIS_URL")
 
@@ -258,6 +266,9 @@ def main(action_type, number_to_update=35):
         elif action_type == "least_recently_updated":
             print "running " + action_type
             tiids = update_least_recently_updated(number_to_update, myredis, mydao)
+        elif action_type == "gold_update":
+            print "running " + action_type
+            tiids = gold_update(number_to_update, myredis, mydao)
     except (KeyboardInterrupt, SystemExit): 
         # this approach is per http://stackoverflow.com/questions/2564137/python-how-to-terminate-a-thread-when-main-program-ends
         sys.exit()
