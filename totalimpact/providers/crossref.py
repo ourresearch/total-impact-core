@@ -1,5 +1,5 @@
 from totalimpact.providers import provider
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout, ProviderServerError
 import BeautifulSoup, itertools
 
 import logging
@@ -191,6 +191,9 @@ class Crossref(Provider):
 
         if response.status_code != 200:
             raise ProviderServerError("CrossRef status code was not 200")
+
+        if not biblio["journal"] in response.text:
+            raise ProviderServerError("CrossRef returned invalid text response")
 
         response_lines = response.text.split("\n")
 
