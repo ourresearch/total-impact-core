@@ -232,7 +232,7 @@ def get_tiids_not_updated_since(schedule, number_to_update, mydao, today=datetim
     docs = [row.doc for row in view_rows]
 
     for row in view_rows:
-        print row.key, row.id
+        print "row to update:", row.key, row.id
 
     return (tiids, docs)
 
