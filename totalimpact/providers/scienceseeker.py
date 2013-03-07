@@ -37,7 +37,7 @@ class Scienceseeker(Provider):
             else:
                 raise(self._get_error(status_code))
 
-        if "Recent Posts" not in page:
+        if ("subjectseeker" not in page) and ("Recent Posts" not in page):
             raise ProviderContentMalformedError
 
         (doc, lookup_function) = provider._get_doc_from_xml(page)  
