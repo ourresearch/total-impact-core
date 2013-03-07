@@ -1,10 +1,11 @@
 function(doc) {
     if (doc.type == "item") {
 
-        // use the full published date if available
-        // otherwise use the end of the year it was published (unless that is after we first saw it)
-        // or else just use the date we first saw it
-
+        // determine the published date using biblio if it contains a full published date
+        // if full date is unavailable, use Dec 31st of the year it was published, 
+        //    unless that is later than the first time we saw it
+        // if that fails, just use the date we first saw it as the published date
+        // if everything fails, use a date before computers were invented.
         var date_published;
         date_published = new Date("1900-01-01T00:01:01.000Z");
 
@@ -32,13 +33,12 @@ function(doc) {
         if (date_published == "Invalid Date")  {
             date_published = new Date("1900-01-01T00:01:01.000Z");
         }
-
         if (isNaN(date_published)) {
             date_published = new Date("1900-01-01T00:01:01.000Z");
         }
 
 
-        // use the date the last update ran
+        // to determine the last updated date, use the last update run date if it has one
         // otherwise use the date it was last modified, perhaps by a manual update button
         var date_last_updated;
         if (typeof doc.last_update_run != "undefined") {
@@ -47,28 +47,31 @@ function(doc) {
             date_last_updated = new Date(doc.last_modified);
         }
 
-        var one_day = 1000*60*60*24;
-        var diff_date = date_last_updated - date_published;
 
-        var date_published_parts = date_published.toISOString().split("-")
-        var year_published = date_published_parts[0]
-        var month_published = date_published_parts[1]
-        var year_group;
+        //  group "A" is for papers older than 2012.  update yearly.
+        //  group "B" is for papers published in 2012.  update monthly.
+        //  group "C" is for papers published after 2013.  
+        //    update these weekly or daily, depending on days since published
+        //    so we need to export details on month and date published
+        var year_published = date_published.getFullYear()
+        var group;        
         var month_group;
-        if (year_published < "2012") {
-            year_group = "0";
-            month_group = "00";
-        } else if (year_published < "2013") {
-            year_group = "1";
-            month_group = "00";
+        var day_group;
+        if (year_published < 2012) {
+            group = "A";
+            month_group = 0;
+            day_group = 0;            
+        } else if (year_published < 2013) {
+            group = "B";
+            month_group = 0;
+            day_group = 0;            
         } else {
-            year_group = "2";
-            month_group = month_published;
+            group = "C";
+            month_group = date_published.getMonth() + 1;  // so that starts at 1
+            day_group = date_published.getDate();
         }
 
-        emit([year_group, month_group, date_last_updated.toISOString(), date_published.toISOString()], doc._id); 
-
-        //emit([date_last_updated.toISOString(), Math.floor(diff_date/one_day), date_published.toISOString()], doc._id); 
+        emit([group, month_group, day_group, date_last_updated.toISOString(), date_published.toISOString()], doc._id); 
     }
 }
 
