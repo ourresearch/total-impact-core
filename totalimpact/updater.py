@@ -220,15 +220,19 @@ def get_tiids_not_updated_since(schedule, number_to_update, mydao, today=datetim
             limit=number_to_update)
     tiids = [row.id for row in view_rows]
     docs = [row.doc for row in view_rows]
+
+    for row in view_rows:
+        print row.key, row.id
+
     return (tiids, docs)
 
 last_month = (datetime.datetime.now() - datetime.timedelta(days=30)).isoformat().split("-")[1]
 month_of_last_week = (datetime.datetime.now() - datetime.timedelta(days=7)).isoformat().split("-")[1]
 gold_update_schedule = [
-    {"year_group":"0", "month_group":"00", "max_update_lag":365}, #everything else update at least once per year
-    {"year_group":"1", "month_group":"00", "max_update_lag":30},
-    {"year_group":"2", "month_group":last_month, "max_update_lag":7},
-    {"year_group":"2", "month_group":month_of_last_week, "max_update_lag":1}
+    {"year_group":"2", "month_group":month_of_last_week, "max_age":7, "max_update_lag":1},
+    {"year_group":"2", "month_group":last_month, "max_age":30, "max_update_lag":7},
+    {"year_group":"1", "month_group":"00", "max_age":365, "max_update_lag":30},
+    {"year_group":"0", "month_group":"00", "max_age":1000*365, "max_update_lag":365} #everything else update at least once per year
     ]
 
 def gold_update(number_to_update, myredis, mydao, today=datetime.datetime.now()):
@@ -237,22 +241,22 @@ def gold_update(number_to_update, myredis, mydao, today=datetime.datetime.now())
     tiids_to_update = []
     # do magic
     #for schedule in gold_update_schedule:
-    for schedule in [gold_update_schedule[0]]:
+    for schedule in gold_update_schedule:
         if (len(all_tiids) < number_to_update):
-            (tiids, docs) = get_tiids_not_updated_since(schedule, number_to_update, mydao, today)
+            number_still_avail = number_to_update-len(all_tiids)
+            (tiids, docs) = get_tiids_not_updated_since(schedule, number_still_avail, mydao, today)
             print "got", len(tiids), "for update schedule", schedule
             all_tiids += tiids
             all_docs += docs
-    if all_tiids:
-        print all_tiids
-        tiids_to_update = update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis)
-    return tiids_to_update
+            if tiids:
+                print tiids
+                tiids_to_update = update_tiids(tiids, docs, number_still_avail, mydao, myredis)
+    return all_tiids
 
 def main(action_type, number_to_update=35):
     #35 every 10 minutes is 35*6perhour*24hours=5040 per day
 
     cloudant_db = os.getenv("CLOUDANT_DB")
-    #cloudant_db = "full"
     cloudant_url = os.getenv("CLOUDANT_URL")
     redis_url = os.getenv("REDIS_URL")
 
