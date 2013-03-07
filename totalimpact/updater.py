@@ -212,11 +212,21 @@ def get_tiids_not_updated_since(schedule, number_to_update, mydao, today=datetim
     tiids = []
     view_name = "gold_update/gold_update"
     print schedule
+
+    if schedule["max_days_since_published"]:
+        max_days_since_published = (datetime.datetime.now() - datetime.timedelta(days=schedule["max_days_since_published"]))
+        month_group = max_days_since_published.month
+        day_group = max_days_since_published.day
+    else:
+        month_group = 0
+        day_group = 0
+
     max_last_updated = today - datetime.timedelta(days=schedule["max_update_lag"])
+
     view_rows = db.view(view_name, 
             include_docs=True, 
-            startkey=[schedule["year_group"], schedule["month_group"], "0"], 
-            endkey=[schedule["year_group"], schedule["month_group"], max_last_updated.isoformat()],            
+            startkey=[schedule["group"], month_group, day_group, "0"], 
+            endkey=[schedule["group"], month_group, day_group, max_last_updated.isoformat()],            
             limit=number_to_update)
     tiids = [row.id for row in view_rows]
     docs = [row.doc for row in view_rows]
@@ -226,13 +236,14 @@ def get_tiids_not_updated_since(schedule, number_to_update, mydao, today=datetim
 
     return (tiids, docs)
 
-last_month = (datetime.datetime.now() - datetime.timedelta(days=30)).isoformat().split("-")[1]
-month_of_last_week = (datetime.datetime.now() - datetime.timedelta(days=7)).isoformat().split("-")[1]
+last_month = (datetime.datetime.now() - datetime.timedelta(days=30))
+last_week = (datetime.datetime.now() - datetime.timedelta(days=7))
+
 gold_update_schedule = [
-    {"year_group":"2", "month_group":month_of_last_week, "max_age":7, "max_update_lag":1},
-    {"year_group":"2", "month_group":last_month, "max_age":30, "max_update_lag":7},
-    {"year_group":"1", "month_group":"00", "max_age":365, "max_update_lag":30},
-    {"year_group":"0", "month_group":"00", "max_age":1000*365, "max_update_lag":365} #everything else update at least once per year
+    {"group":"C", "max_days_since_published":7, "max_update_lag":1},
+    {"group":"C", "max_days_since_published":30, "max_update_lag":7},
+    {"group":"B", "max_days_since_published":None, "max_update_lag":30},
+    {"group":"A", "max_days_since_published":None, "max_update_lag":365} #everything else update at least once per year
     ]
 
 def gold_update(number_to_update, myredis, mydao, today=datetime.datetime.now()):
