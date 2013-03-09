@@ -35,7 +35,7 @@ class Scopus(Provider):
         return("doi" == namespace)
 
 
-    def _get_json(self, fullpage, id):
+    def _get_json(self, fullpage):
         try:
             # extract json from inside the first and last parens
             # from http://codereview.stackexchange.com/questions/2561/converting-jsonp-to-json-is-this-regex-correct
@@ -46,18 +46,7 @@ class Scopus(Provider):
         data = provider._load_json(page)
         return(data)
 
-    def _get_relevant_record(self, fullpage, id):
-        data = self._get_json(fullpage, id)
-        response = None
-        try:
-            citation_rows = data["OK"]["results"]
-            for citation_row in citation_rows:
-                if citation_row["doi"]==id:
-                    response = citation_row
-        except (KeyError, ValueError):
-            # not in Scopus database
-            return None
-        return response
+
 
     def _extract_metrics(self, record, status_code=200, id=None):
         try:
@@ -90,6 +79,19 @@ class Scopus(Provider):
             raise ProviderContentMalformedError()
         return page
 
+    def _extract_relevant_record_with_doi(self, fullpage, id):
+        data = self._get_json(fullpage)
+        response = None
+        try:
+            citation_rows = data["OK"]["results"]
+            for citation_row in citation_rows:
+                if citation_row["doi"]==id:
+                    response = citation_row
+        except (KeyError, ValueError):
+            # not in Scopus database
+            return None
+        return response
+
     def _get_relevant_record_with_doi(self, provider_url_template, id):
         # pick a new random string so don't time out.  Unfort, url now can't cache.
         random_string = "".join(random.sample(string.letters, 10))
@@ -111,9 +113,9 @@ class Scopus(Provider):
         if "Result set was empty" in page:
             #logging.warning("empty result set with doi {id}".format(id=id))
             return None
-        relevant_record = self._get_relevant_record(page, id)
+        relevant_record = self._extract_relevant_record_with_doi(page, id)
         if not relevant_record:
-            data = self._get_json(page, id)
+            data = self._get_json(page)
             try:
                 number_results = data["OK"]["totalResults"]
             except (KeyError, ValueError):
@@ -121,18 +123,61 @@ class Scopus(Provider):
             url = "{previous_url}&offset={last_record}".format(
                 previous_url=url, last_record=(int(number_results)-1))
             page = self._get_page(url)
-            relevant_record = self._get_relevant_record(page, id)
+            relevant_record = self._extract_relevant_record_with_doi(page, id)
             if not relevant_record:
                 logging.warning("not empty result set, yet couldn't find a page with doi {id}".format(id=id))
                 return None
         return relevant_record
 
+    def _get_relevant_record_with_biblio(self, provider_url_template, id):
+        # pick a new random string so don't time out.  Unfort, url now can't cache.
+        random_string = "".join(random.sample(string.letters, 10))
+        self.metrics_url_template = 'http://searchapi.scopus.com/documentSearch.url?&search=%s&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
+        self.provenance_url_template = self.metrics_url_template
+
+        if not provider_url_template:
+            provider_url_template = self.metrics_url_template
+
+        logger.debug("id = {id}".format(id=id))
+        logger.debug("provider_url_template = {provider_url_template}".format(
+            provider_url_template=provider_url_template))
+
+        url = self._get_templated_url(provider_url_template, id, "metrics")
+        page = self._get_page(url)
+        if not page:
+            logging.info("empty page with id {id}".format(id=id))
+            return None
+        if "Result set was empty" in page:
+            #logging.warning("empty result set with doi {id}".format(id=id))
+            return None
+
+        relevant_record = None
+        data = self._get_json(page)
+        response = None
+        try:
+            citation_rows = data["OK"]["results"]
+            print citation_rows
+            if len(citation_rows)==1:
+                relevant_record = citation_row
+            else:
+                #logging.warning("ambiguous result set with biblio, not selecting any {id}".format(id=id))
+                return None
+        except (KeyError, ValueError):
+            # not in Scopus database
+            return None
+
+        return relevant_record
+
     def _get_metrics_and_drilldown_from_metrics_page(self, provider_url_template, namespace, id):
+        relevant_record = None
         if namespace=="doi":
             relevant_record = self._get_relevant_record_with_doi(provider_url_template, id)
-            if not relevant_record:
-                logging.info("no scopus page with doi {id}".format(id=id))
-                return {}
+        elif namespace=="biblio":
+            relevant_record = self._get_relevant_record_with_biblio(provider_url_template, id)
+
+        if not relevant_record:
+            logging.info("no scopus page with id {id}".format(id=id))
+            return {}
 
         metrics_dict = self._extract_metrics(relevant_record)
         
