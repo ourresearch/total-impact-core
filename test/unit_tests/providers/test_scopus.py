@@ -29,14 +29,16 @@ class TestScopus(ProviderTestCase):
     def test_extract_metrics_success(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         good_page = f.read()
-        metrics_dict = self.provider._extract_metrics(good_page, id=TEST_ID)
+        relevant_record = self.provider._get_relevant_record(good_page, id=TEST_ID)
+        metrics_dict = self.provider._extract_metrics(relevant_record, id=TEST_ID)
         expected = {'scopus:citations': 65}
         assert_equals(metrics_dict, expected)
 
     def test_provenance_url(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         good_page = f.read()
-        provenance_url = self.provider._extract_provenance_url(good_page, id=TEST_ID)
+        relevant_record = self.provider._get_relevant_record(good_page, id=TEST_ID)
+        provenance_url = self.provider._extract_provenance_url(relevant_record, id=TEST_ID)
         expected = "http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=36248970413"
         assert_equals(provenance_url, expected)
 

@@ -59,8 +59,7 @@ class Scopus(Provider):
             return None
         return response
 
-    def _extract_metrics(self, fullpage, status_code=200, id=None):
-        record = self._get_relevant_record(fullpage, id)
+    def _extract_metrics(self, record, status_code=200, id=None):
         try:
             citations = int(record["citedbycount"])    
         except (KeyError, TypeError):
@@ -72,8 +71,7 @@ class Scopus(Provider):
             metrics_dict = {}                    
         return metrics_dict
 
-    def _extract_provenance_url(self, fullpage, status_code=200, id=None):
-        record = self._get_relevant_record(fullpage, id)
+    def _extract_provenance_url(self, record, status_code=200, id=None):
         try:
             provenance_url = record["inwardurl"] 
         except (KeyError, TypeError):
@@ -92,7 +90,7 @@ class Scopus(Provider):
             raise ProviderContentMalformedError()
         return page
 
-    def _get_page_with_doi(self, provider_url_template, id):
+    def _get_relevant_record_with_doi(self, provider_url_template, id):
         # pick a new random string so don't time out.  Unfort, url now can't cache.
         random_string = "".join(random.sample(string.letters, 10))
         self.metrics_url_template = 'http://searchapi.scopus.com/documentSearch.url?&search=%s&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
@@ -127,32 +125,44 @@ class Scopus(Provider):
             if not relevant_record:
                 logging.warning("not empty result set, yet couldn't find a page with doi {id}".format(id=id))
                 return None
-        return page
+        return relevant_record
 
-    def _get_metrics_and_drilldown_from_metrics_page(self, provider_url_template, id):
-        page = self._get_page_with_doi(provider_url_template, id)
-        if not page:
-            logging.info("no scopus page with doi {id}".format(id=id))
-            return {}
-        metrics_dict = self._extract_metrics(page, id=id)
+    def _get_metrics_and_drilldown_from_metrics_page(self, provider_url_template, namespace, id):
+        if namespace=="doi":
+            relevant_record = self._get_relevant_record_with_doi(provider_url_template, id)
+            if not relevant_record:
+                logging.info("no scopus page with doi {id}".format(id=id))
+                return {}
+
+        metrics_dict = self._extract_metrics(relevant_record)
+        
         metrics_and_drilldown = {}
         for metric_name in metrics_dict:
-            drilldown_url = self._extract_provenance_url(page, id=id)
+            drilldown_url = self._extract_provenance_url(relevant_record)
             metrics_and_drilldown[metric_name] = (metrics_dict[metric_name], drilldown_url)
         return metrics_and_drilldown  
 
-    # default method; providers can override
+
+    def get_best_alias(self, aliases_dict):
+        for namespace in ["doi", "biblio"]:
+            if namespace in aliases_dict:
+                return (namespace, aliases_dict[namespace][0])
+        return (None, None)
+
+    # custom, because uses doi if available, else biblio
     def metrics(self, 
             aliases,
             provider_url_template=None,
             cache_enabled=True):
 
-        id = self.get_best_id(aliases)
-        # Only lookup metrics for items with appropriate ids
-        if not id:
+        aliases_dict = provider.alias_dict_from_tuples(aliases)
+        (namespace, nid) = self.get_best_alias(aliases_dict)
+        if not nid:
             #self.logger.debug("%s not checking metrics, no relevant alias" % (self.provider_name))
             return {}
 
-        metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(provider_url_template, id=id)
+        metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(provider_url_template, 
+                namespace=namespace, 
+                id=nid)
 
         return metrics_and_drilldown
