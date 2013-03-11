@@ -113,7 +113,14 @@ class Dao(object):
                 "views": {
                     "registered_tiids": {}                    
                 }
-            }
+            },
+            {
+                "_id": "_design/gold_update",
+                "language": "javascript",
+                "views": {
+                    "gold_update": {}                    
+                }
+            }            
         ]
 
         for design_doc in design_docs:
