@@ -92,27 +92,24 @@ class Scopus(Provider):
             return None
         return response
 
-    def _get_relevant_record_with_doi(self, provider_url_template, id):
-        # pick a new random string so don't time out.  Unfort, url now can't cache.
-        random_string = "".join(random.sample(string.letters, 10))
-        self.metrics_url_template = 'http://searchapi.scopus.com/documentSearch.url?&search=%s&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
-        self.provenance_url_template = self.metrics_url_template
-
-        if not provider_url_template:
-            provider_url_template = self.metrics_url_template
-
-        logger.debug("id = {id}".format(id=id))
-        logger.debug("provider_url_template = {provider_url_template}".format(
-            provider_url_template=provider_url_template))
-
-        url = self._get_templated_url(provider_url_template, id, "metrics")
+    def _get_scopus_page(self, url):
         page = self._get_page(url)
         if not page:
-            logging.info("empty page with doi {id}".format(id=id))
+            logging.info("empty page with id {id}".format(id=id))
             return None
         if "Result set was empty" in page:
             #logging.warning("empty result set with doi {id}".format(id=id))
             return None
+        return page
+
+
+    def _get_relevant_record_with_doi(self, id):
+        # pick a new random string so don't time out.  Unfort, url now can't cache.
+        random_string = "".join(random.sample(string.letters, 10))
+        url_template = 'http://searchapi.scopus.com/documentSearch.url?&search=%s&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
+        url = self._get_templated_url(url_template, id)
+
+        page = self._get_scopus_page(url)
         relevant_record = self._extract_relevant_record_with_doi(page, id)
         if not relevant_record:
             data = self._get_json(page)
@@ -129,33 +126,18 @@ class Scopus(Provider):
                 return None
         return relevant_record
 
-    def _get_relevant_record_with_biblio(self, provider_url_template, id):
-        # pick a new random string so don't time out.  Unfort, url now can't cache.
+
+    def _get_relevant_record_with_biblio(self, id):
         random_string = "".join(random.sample(string.letters, 10))
-        self.metrics_url_template = 'http://searchapi.scopus.com/documentSearch.url?&search=%s&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
-        self.provenance_url_template = self.metrics_url_template
+        url_template = 'http://searchapi.scopus.com/documentSearch.url?&search=%s&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
+        url = self._get_templated_url(url_template, id)
 
-        if not provider_url_template:
-            provider_url_template = self.metrics_url_template
-
-        logger.debug("id = {id}".format(id=id))
-        logger.debug("provider_url_template = {provider_url_template}".format(
-            provider_url_template=provider_url_template))
-
-        url = self._get_templated_url(provider_url_template, id, "metrics")
-        page = self._get_page(url)
-        if not page:
-            logging.info("empty page with id {id}".format(id=id))
-            return None
-        if "Result set was empty" in page:
-            #logging.warning("empty result set with doi {id}".format(id=id))
-            return None
+        page = self._get_scopus_page(url)
+        scopus_data = self._get_json(page)
 
         relevant_record = None
-        data = self._get_json(page)
-        response = None
         try:
-            citation_rows = data["OK"]["results"]
+            citation_rows = scopus_data["OK"]["results"]
             print citation_rows
             if len(citation_rows)==1:
                 relevant_record = citation_row
@@ -171,9 +153,9 @@ class Scopus(Provider):
     def _get_metrics_and_drilldown_from_metrics_page(self, provider_url_template, namespace, id):
         relevant_record = None
         if namespace=="doi":
-            relevant_record = self._get_relevant_record_with_doi(provider_url_template, id)
+            relevant_record = self._get_relevant_record_with_doi(id)
         elif namespace=="biblio":
-            relevant_record = self._get_relevant_record_with_biblio(provider_url_template, id)
+            relevant_record = self._get_relevant_record_with_biblio(id)
 
         if not relevant_record:
             logging.info("no scopus page with id {id}".format(id=id))
