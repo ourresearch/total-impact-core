@@ -207,26 +207,26 @@ def update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis):
     item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
     return tiids_to_update
 
-def get_tiids_not_updated_since(schedule, number_to_update, mydao, today=datetime.datetime.now()):
+def get_tiids_not_updated_since(schedule, number_to_update, mydao, now=datetime.datetime.now()):
     db = mydao.db
     tiids = []
     view_name = "gold_update/gold_update"
     print schedule
 
     if schedule["max_days_since_published"]:
-        max_days_since_published = (datetime.datetime.now() - datetime.timedelta(days=schedule["max_days_since_published"]))
-        month_group = max_days_since_published.month
-        day_group = max_days_since_published.day
+        max_days_since_published = (now - datetime.timedelta(days=schedule["max_days_since_published"]))
+        start_month_group = max_days_since_published.month
+        end_month_group = now.month
     else:
-        month_group = 0
-        day_group = 0
+        start_month_group = 0
+        end_month_group = 0
 
-    max_last_updated = today - datetime.timedelta(days=schedule["max_update_lag"])
+    max_last_updated = now - datetime.timedelta(days=schedule["max_update_lag"])
 
     view_rows = db.view(view_name, 
             include_docs=True, 
-            startkey=[schedule["group"], month_group, day_group, "0"], 
-            endkey=[schedule["group"], month_group, day_group, max_last_updated.isoformat()],            
+            startkey=[schedule["group"], start_month_group, "0"], 
+            endkey=[schedule["group"], end_month_group, max_last_updated.isoformat()],            
             limit=number_to_update)
     tiids = [row.id for row in view_rows]
     docs = [row.doc for row in view_rows]
@@ -236,9 +236,6 @@ def get_tiids_not_updated_since(schedule, number_to_update, mydao, today=datetim
 
     return (tiids, docs)
 
-last_month = (datetime.datetime.now() - datetime.timedelta(days=30))
-last_week = (datetime.datetime.now() - datetime.timedelta(days=7))
-
 gold_update_schedule = [
     {"group":"C", "max_days_since_published":7, "max_update_lag":1},
     {"group":"C", "max_days_since_published":30, "max_update_lag":7},
@@ -246,7 +243,7 @@ gold_update_schedule = [
     {"group":"A", "max_days_since_published":None, "max_update_lag":365} #everything else update at least once per year
     ]
 
-def gold_update(number_to_update, myredis, mydao, today=datetime.datetime.now()):
+def gold_update(number_to_update, myredis, mydao, now=datetime.datetime.now()):
     all_tiids = []
     all_docs = []
     tiids_to_update = []
@@ -255,7 +252,7 @@ def gold_update(number_to_update, myredis, mydao, today=datetime.datetime.now())
     for schedule in gold_update_schedule:
         if (len(all_tiids) < number_to_update):
             number_still_avail = number_to_update-len(all_tiids)
-            (tiids, docs) = get_tiids_not_updated_since(schedule, number_still_avail, mydao, today)
+            (tiids, docs) = get_tiids_not_updated_since(schedule, number_still_avail, mydao, now)
             print "got", len(tiids), "for update schedule", schedule
             all_tiids += tiids
             all_docs += docs
