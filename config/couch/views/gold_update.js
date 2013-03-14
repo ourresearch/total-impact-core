@@ -56,22 +56,18 @@ function(doc) {
         var year_published = date_published.getFullYear()
         var group;        
         var month_group;
-        var day_group;
         if (year_published < 2012) {
             group = "A";
             month_group = 0;
-            day_group = 0;            
         } else if (year_published < 2013) {
             group = "B";
             month_group = 0;
-            day_group = 0;            
         } else {
             group = "C";
             month_group = date_published.getMonth() + 1;  // so that starts at 1
-            day_group = date_published.getDate();
         }
 
-        emit([group, month_group, day_group, date_last_updated.toISOString(), date_published.toISOString()], doc._id); 
+        emit([group, month_group, date_last_updated.toISOString(), date_published.toISOString()], doc._id); 
     }
 }
 
