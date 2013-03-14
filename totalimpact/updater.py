@@ -216,17 +216,15 @@ def get_tiids_not_updated_since(schedule, number_to_update, mydao, today=datetim
     if schedule["max_days_since_published"]:
         max_days_since_published = (datetime.datetime.now() - datetime.timedelta(days=schedule["max_days_since_published"]))
         month_group = max_days_since_published.month
-        day_group = max_days_since_published.day
     else:
         month_group = 0
-        day_group = 0
 
     max_last_updated = today - datetime.timedelta(days=schedule["max_update_lag"])
 
     view_rows = db.view(view_name, 
             include_docs=True, 
-            startkey=[schedule["group"], month_group, day_group, "0"], 
-            endkey=[schedule["group"], month_group, day_group, max_last_updated.isoformat()],            
+            startkey=[schedule["group"], month_group, "0"], 
+            endkey=[schedule["group"], month_group, max_last_updated.isoformat()],            
             limit=number_to_update)
     tiids = [row.id for row in view_rows]
     docs = [row.doc for row in view_rows]
@@ -235,9 +233,6 @@ def get_tiids_not_updated_since(schedule, number_to_update, mydao, today=datetim
         print "row to update:", row.key, row.id
 
     return (tiids, docs)
-
-last_month = (datetime.datetime.now() - datetime.timedelta(days=30))
-last_week = (datetime.datetime.now() - datetime.timedelta(days=7))
 
 gold_update_schedule = [
     {"group":"C", "max_days_since_published":7, "max_update_lag":1},
