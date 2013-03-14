@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, re, os, random, string
+import simplejson, re, os, random, string, urllib
 
 import logging
 logger = logging.getLogger('ti.providers.scopus')
@@ -126,29 +126,37 @@ class Scopus(Provider):
                 return None
         return relevant_record
 
-
-    def _get_relevant_record_with_biblio(self, id):
-        random_string = "".join(random.sample(string.letters, 10))
-        url_template = 'http://searchapi.scopus.com/documentSearch.url?&search=%s&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
-        url = self._get_templated_url(url_template, id)
-
-        page = self._get_scopus_page(url)
-        scopus_data = self._get_json(page)
-
+    def _extract_relevant_record_with_biblio(self, fullpage, id):
+        scopus_data = self._get_json(fullpage)
         relevant_record = None
         try:
             citation_rows = scopus_data["OK"]["results"]
             print citation_rows
             if len(citation_rows)==1:
-                relevant_record = citation_row
+                relevant_record = citation_rows[0]
             else:
                 #logging.warning("ambiguous result set with biblio, not selecting any {id}".format(id=id))
                 return None
         except (KeyError, ValueError):
             # not in Scopus database
             return None
-
         return relevant_record
+
+    def _get_relevant_record_with_biblio(self, biblio_dict):
+        random_string = "".join(random.sample(string.letters, 10))
+        url_template = "http://searchapi.scopus.com/documentSearch.url?&search=First%20Author:{first_author};Journal:%22{journal}%22;Title:{title}&callback=sciverse.Backend._requests.search1.callback&preventCache="+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
+        try:        
+            url = url_template.format(
+                    first_author=urllib.quote(biblio_dict["first_author"]), 
+                    title=urllib.quote(biblio_dict["title"]), 
+                    journal=urllib.quote(biblio_dict["journal"]))
+        except KeyError:
+            return None
+        print url
+        page = self._get_scopus_page(url)
+        relevant_record = self._extract_relevant_record_with_biblio(page, biblio_dict)
+        return relevant_record
+
 
     def _get_metrics_and_drilldown_from_metrics_page(self, provider_url_template, namespace, id):
         relevant_record = None
