@@ -216,14 +216,10 @@ def get_tiids_not_updated_since(schedule, number_to_update, mydao, now=datetime.
     if schedule["max_days_since_published"]:
         max_days_since_published = (now - datetime.timedelta(days=schedule["max_days_since_published"]))
         start_month_group = max_days_since_published.month
-        start_day_group = max_days_since_published.day
         end_month_group = now.month
-        end_day_group = now.day
     else:
         start_month_group = 0
-        start_day_group = 0
         end_month_group = 0
-        end_day_group = 0
 
     max_last_updated = now - datetime.timedelta(days=schedule["max_update_lag"])
 
