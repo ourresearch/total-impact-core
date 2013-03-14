@@ -61,6 +61,13 @@ class TestScopus(ProviderTestCase):
         assert_equals(provenance_url, expected)
 
     @http
+    def test_metrics_with_bad_doi(self):
+        metrics_dict = self.provider.metrics([("doi", "NOTAVALIDDOI")])
+        expected = {}
+        print metrics_dict
+        assert_equals(metrics_dict, expected)
+
+    @http
     def test_metrics_with_doi(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
         expected = {'scopus:citations': (65, u'http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=36248970413')}

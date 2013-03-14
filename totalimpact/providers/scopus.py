@@ -110,6 +110,9 @@ class Scopus(Provider):
         url = self._get_templated_url(url_template, id)
 
         page = self._get_scopus_page(url)
+        if not page:
+            return None  # empty result set
+
         relevant_record = self._extract_relevant_record_with_doi(page, id)
         if not relevant_record:
             data = self._get_json(page)
@@ -131,7 +134,6 @@ class Scopus(Provider):
         relevant_record = None
         try:
             citation_rows = scopus_data["OK"]["results"]
-            print citation_rows
             if len(citation_rows)==1:
                 relevant_record = citation_rows[0]
             else:
@@ -152,8 +154,10 @@ class Scopus(Provider):
                     journal=urllib.quote(biblio_dict["journal"]))
         except KeyError:
             return None
-        print url
         page = self._get_scopus_page(url)
+        if not page:
+            return None  # empty result set
+
         relevant_record = self._extract_relevant_record_with_biblio(page, biblio_dict)
         return relevant_record
 
