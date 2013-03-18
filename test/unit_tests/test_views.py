@@ -292,6 +292,11 @@ class TestItem(ViewsTester):
         # cheerfully creates items whether we know their namespaces or not.
         assert_equals(response.status_code, 201)
 
+    def test_item_nid_with_bad_character(self):
+        url = 'v1/item/doi/10.5061/dryad.' + u'\u200b' + 'j1fd7?key=validkey'
+        response_get = self.client.get(url)
+        assert_equals(response_get.status_code, 200)
+
     def test_item_removes_history_by_default(self):
         url = 'v1/item/doi/10.5061/dryad.j1fd7?key=validkey'
         response = self.client.get(url)
@@ -511,8 +516,6 @@ class TestCollection(ViewsTester):
         assert_equals(set(changed_coll["alias_tiids"]),
                       set(["doi:10.124", "doi:10.125"]))
 
-
-
     def test_add_collection_item(self):
         # make a new collection
         response = self.client.post(
@@ -521,15 +524,16 @@ class TestCollection(ViewsTester):
             content_type="application/json"
         )
         resp = json.loads(response.data)
-        coll =  resp["collection"]
-        key =  resp["key"]
+        coll = resp["collection"]
+        key = resp["key"]
 
-        # add an item.
-        coll["alias_tiids"]["doi:10.new"] = None
+        alias_list = []
+        alias_list.append(["doi", "10.new"])
+
 
         r = self.client.put(
             "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key=key),
-            data=json.dumps({"aliases":["doi:10.new"]}),
+            data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
 
@@ -555,18 +559,21 @@ class TestCollection(ViewsTester):
         coll =  resp["collection"]
         key =  resp["key"]
 
-        # 403 Forbidden if wrong key
+        alias_list = []
+        alias_list.append(["doi", "10.new"])
+
+        # 403 Forbidden if wrong edit key
         r = self.client.put(
-            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key="bad key"),
-            data=json.dumps({"aliases": ["10.new"]}),
+            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key="wrong!"),
+            data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
         assert_equals(r.status_code, 403)
 
-        # 404 Bad Request if no key
+        # 404 Bad Request if no edit key
         r = self.client.put(
-            "/collection/{id}".format(id=coll["_id"]),
-            data=json.dumps(coll),
+            "/collection/{id}/items".format(id=coll["_id"]),
+            data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
         assert_equals(r.status_code, 404)
@@ -575,6 +582,7 @@ class TestCollection(ViewsTester):
         changed_coll = self.d.get(coll["_id"])
         assert_equals(changed_coll["title"], "mah collection")
         assert_equals(changed_coll["owner"], "plato")
+
 
 
 
@@ -621,6 +629,68 @@ class TestApi(ViewsTester):
         # check that the tiid lists are the same
         assert_equals(first_plos_create_tiid, second_plos_create_tiid)
 
+class TestInbox(ViewsTester):
+
+    def setUp(self):
+        # example from http://docs.cloudmailin.com/http_post_formats/json/        
+        self.example_payload = {
+               "headers": {
+                   "To": "7be5eb5001593217143f@cloudmailin.net",
+                   "Mime-Version": "1.0",
+                   "X-Received": "by 10.58.45.134 with SMTP id n6mr13476387vem.35.1361476813304; Thu, 21 Feb 2013 12:00:13 -0800 (PST)",
+                   "Received": "by mail-vc0-f202.google.com with SMTP id m8so955261vcd.3 for <7be5eb5001593217143f@cloudmailin.net>; Thu, 21 Feb 2013 12:00:13 -0800",
+                   "From": "Google Scholar Alerts <scholaralerts-noreply@google.com>",
+                   "DKIM-Signature": "v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113; h=mime-version:x-received:message-id:date:subject:from:to :content-type; bh=74dhtWOnoX2dYtmZibjD2+Tp65AZ7UnVwRTR7Qwho/o=; b=Fabq5urMfTyUX0s3XgFhVx1pyZ+tW/n38Sm/3T5EXTWeG2k7C6mxbrv1DdmpNpl/a8 Sr70eG6St7oytXii5tg9TrwrlwhftpFZKkJQS8GMWswiEaBkOfnNkoRrN174jRYfBUuZ oKWJr49dxw9hV3uKYoSis0zL6R8P+7GXt1rtqblBELrfIJ3pKC7d7WS65i6hdM2kA+sY va9geqt1fFFN7098U7WELlM2JoXhS4fbIQTev/Z6cF89Sfs4888GXb7PIq0d1kfd6t7c kXK8bV6TkqSP4AxDm646Cv1TR9cfo6+9yCrkK8oW6ihAMzM0Lwobq22NLrRY2QK8494s WAuA==",
+                   "Date": "Thu, 21 Feb 2013 20:00:13 +0000",
+                   "Message-ID": "<089e0115f968d3b38604d6418577@google.com>",
+                   "Content-Type": "text/plain; charset=ISO-8859-1; delsp=yes; format=flowed",
+                   "Subject": "Confirm your Google Scholar Alert"
+               },
+               "reply_plain": None,
+               "attachments": [
+               ],
+               "plain": "Google received a request to start sending Scholar Alerts to  \n7be5eb5001593217143f@cloudmailin.net for the query:\nNew articles in Jonathan A. Eisen's profile\n\nClick to confirm this request:\nhttp://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nClick to cancel this request:\nhttp://scholar.google.ca/scholar_alerts?view_op=cancel_alert_options&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nThanks,\nThe Google Scholar Team",
+               "envelope": {
+                   "to": "7be5eb5001593217143f@cloudmailin.net",
+                   "helo_domain": "mail-vc0-f202.google.com",
+                   "from": "3zXwmURUKAO4iSXebQhQbUhji-dehUfboWeeWbU.Sec@scholar-alerts.bounces.google.com",
+                   "remote_ip": "209.85.220.202",
+                   "spf": {
+                       "domain": "scholar-alerts.bounces.google.com",
+                       "result": "neutral"
+                   }
+               },
+               "html": None
+            }
+        super(TestInbox, self).setUp()
+
+    def tearDown(self):
+        pass
+
+    def test_inbox(self):
+        response = self.client.post(
+            "/v1/inbox?key=validkey",
+            data=json.dumps(self.example_payload),
+            content_type="application/json"
+        )
+        assert_equals(200, response.status_code)
+
+    def test_save_email(self):
+        doc_id = views.save_email(self.example_payload)
+        stored_doc = mydao.get(doc_id)
+        assert_equals(stored_doc.keys(), ['_rev', '_id', 'type', 'payload', 'created'])
+        assert_equals(stored_doc["payload"], self.example_payload)
+
+    def test_alert_if_google_scholar_notification_confirmation(self):
+        response = views.alert_if_google_scholar_notification_confirmation(self.example_payload)
+        expected = ('Jonathan A. Eisen', 'http://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net')
+        assert_equals(response, expected)
+
+    def test_alert_if_google_scholar_new_articles(self):
+        self.example_payload["headers"]["Subject"] = "Scholar Alert - John P. A. Ioannidis - new articles"
+        response = views.alert_if_google_scholar_new_articles(self.example_payload, "1234")
+        expected = 'John P. A. Ioannidis'
+        assert_equals(response, expected)
 
 
 class TestTiid(ViewsTester):

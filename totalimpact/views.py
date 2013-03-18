@@ -5,7 +5,7 @@ import datetime, re, couchdb, copy
 from werkzeug.security import check_password_hash
 from collections import defaultdict
 import redis
-import uuid
+import shortuuid
 
 from totalimpact import dao, app, tiredis, collection, api_user, mixpanel
 from totalimpact import item as item_module
@@ -19,7 +19,7 @@ logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
-myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0) #main app is on DB 0
+myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)  # main app is on DB 0
 
 logger.debug("Building reference sets")
 myrefsets = None
@@ -96,6 +96,8 @@ GET /tiid/:namespace/:id
 @app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
 # not supported in v1
 def tiid(ns, nid):
+    ns = item_module.clean_id(ns)
+    nid = item_module.clean_id(nid)
 
     tiid = item_module.get_tiid_by_alias(ns, nid, mydao)
 
@@ -106,16 +108,19 @@ def tiid(ns, nid):
     return resp
 
 
-"""Creates a new item using the given namespace and id.
-POST /item/:namespace/:nid
-201
-500?  if fails to create
-example /item/PMID/234234232
-original api returned tiid
-/v1 returns nothing in body
-"""
 @app.route('/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post_with_tiid(namespace, nid):
+    """Creates a new item using the given namespace and id.
+    POST /item/:namespace/:nid
+    201
+    500?  if fails to create
+    example /item/PMID/234234232
+    original api returned tiid
+    /v1 returns nothing in body
+    """
+    namespace = item_module.clean_id(namespace)
+    nid = item_module.clean_id(nid)
+
     mixpanel.track("Create:Item", {"Namespace":namespace, "Source":"/item post"}, request)
     tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     response_code = 201 # Created
@@ -125,6 +130,9 @@ def item_namespace_post_with_tiid(namespace, nid):
 
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
+    namespace = item_module.clean_id(namespace)
+    nid = item_module.clean_id(nid)
+
     api_key = request.values.get('key')
     try:
         tiid = api_user.register_item((namespace, nid), api_key, myredis, mydao)
@@ -140,25 +148,33 @@ def item_namespace_post(namespace, nid):
 # For /v1 support interface as get from namespace:nid instead of get from tiid
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
 def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
+    namespace = item_module.clean_id(namespace)
+    nid = item_module.clean_id(nid)
 
     include_history = request.args.get("include_history", 0) in ["1", "true", "True"]
     register = request.args.get("register", 0) in ["1", "true", "True"]
     api_key = request.values.get('key')
 
+    debug_message = ""
     if register:
         try:
             logger.debug("api_key is " + api_key)
             api_user.register_item((namespace, nid), api_key, myredis, mydao)
         except api_user.ItemAlreadyRegisteredToThisKey:
-            logger.debug("ItemAlreadyRegisteredToThisKey")
-            pass
+            debug_message = "ItemAlreadyRegisteredToThisKey for key {api_key}".format(
+                api_key=api_key)
+            logger.debug(debug_message)
         except api_user.ApiLimitExceededException:
-            logger.debug("ApiLimitExceededException")
-            pass
+            debug_message = "ApiLimitExceededException for key {api_key}".format(
+                api_key=api_key)
+            logger.debug(debug_message)
 
     tiid = item_module.get_tiid_by_alias(namespace, nid, mydao)
     if not tiid:
-        abort(404, "Item not in database. Call POST to register it.")
+        if not debug_message:
+            debug_message = "Item not in database. Call POST to register it"
+        # if registration failure, report that info. Else suggest they register.
+        abort(404, debug_message)
     return get_item_from_tiid(tiid, format, include_history)
 
 
@@ -329,6 +345,20 @@ def get_coll_with_authentication_check(request, cid):
 
     return coll
 
+@app.route('/collection/<cid>/items', methods=['POST'])
+@app.route('/v1/collection/<cid>/items', methods=['POST'])
+def delete_and_put_helper(cid=""):
+    """
+    Lets browsers who can't do PUT or DELETE fake it with a POST
+    """
+    http_method = request.args.get("http_method", "")
+    if http_method.lower() == "delete":
+        return delete_items(cid)
+    elif http_method.lower() == "put":
+        return put_collection(cid)
+    else:
+        abort(404, "You must specify a valid HTTP method (POST or PUT) with the"
+                   " http_method argument.")
 
 
 @app.route('/collection/<cid>/items', methods=['DELETE'])
@@ -374,10 +404,12 @@ def put_collection(cid=""):
     coll = get_coll_with_authentication_check(request, cid)
 
     try:
-        alias_strings = request.json["aliases"]
-        alias_strings = ["unknown:"+str if not ":" in str else str for str
-                         in alias_strings]
-        aliases = [str.split(":", 1) for str in alias_strings ]
+        aliases = request.json["aliases"]
+        try:
+            alias_strings = [namespace+":"+nid for (namespace, nid) in aliases]
+        except TypeError:
+            # jsonify the biblio dicts
+            alias_strings = [namespace+":"+json.dumps(nid) for (namespace, nid) in aliases]
 
         (tiids, new_items) = item_module.create_or_update_items_from_aliases(
             aliases, myredis, mydao)
@@ -464,7 +496,12 @@ def collection_create():
                 json=str(request.json)))
         abort(404, "Missing arguments.")
 
-    aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
+    try:
+        alias_strings = aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
+    except TypeError:
+        # jsonify the biblio dicts
+        alias_strings = aliases_strings = [namespace+":"+json.dumps(nid) for (namespace, nid) in aliases]
+
     # save dict of alias:tiid
     coll["alias_tiids"] = dict(zip(aliases_strings, tiids))
 
@@ -643,6 +680,64 @@ def update_user(userid=''):
     resp = make_response(json.dumps(res, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
+
+
+def save_email(payload):
+    doc_id = shortuuid.uuid()[0:24]
+    doc = {"_id":doc_id, 
+            "type":"email", 
+            "created":datetime.datetime.now().isoformat(),
+            "payload":payload}
+    mydao.save(doc)
+    return doc_id
+
+GOOGLE_SCHOLAR_CONFIRM_PATTERN = re.compile("""for the query:\nNew articles in (?P<name>.*)'s profile\n\nClick to confirm this request:\n(?P<url>.*)\n\n""")
+def alert_if_google_scholar_notification_confirmation(payload):
+    name = None
+    url = None
+    try:
+        email_body = payload["plain"]
+        match = GOOGLE_SCHOLAR_CONFIRM_PATTERN.search(email_body)
+        if match:
+            url = match.group("url")
+            name = match.group("name")
+            logger.info("Google Scholar notification confirmation for {name} is at {url}".format(
+                name=name, url=url))
+    except (KeyError, TypeError):
+        pass
+    return(name, url)
+
+GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN = re.compile("""Scholar Alert - (?P<name>.*) - new articles""")
+def alert_if_google_scholar_new_articles(payload, doc_id):
+    name = None
+    try:
+        subject = payload["headers"]["Subject"]
+        match = GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN.search(subject)
+        if match:
+            name = match.group("name")
+            logger.info("Just received Google Scholar alert: new articles for {name}, saved at {doc_id}".format(
+                name=name, doc_id=doc_id))
+    except (KeyError, TypeError):
+        pass
+    return(name)
+
+# route to receive email
+@app.route('/v1/inbox', methods=["POST"])
+def inbox():
+    payload = request.json
+    doc_id = save_email(payload)
+    logger.debug("You've got mail. Payload: {payload}".format(
+        payload=payload))
+    logger.info("You've got mail. Saved as {doc_id}. Subject: {subject}".format(
+        doc_id=doc_id, subject=payload["headers"]["Subject"]))
+
+    alert_if_google_scholar_notification_confirmation(payload)
+    alert_if_google_scholar_new_articles(payload, doc_id)
+
+    resp = make_response(json.dumps({"_id":doc_id}, sort_keys=True, indent=4), 200)
+    resp.mimetype = "application/json"
+    return resp
+
 
 try:
     # see http://support.blitz.io/discussions/problems/363-authorization-error

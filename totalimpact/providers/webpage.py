@@ -23,7 +23,26 @@ class Webpage(Provider):
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
-        return("url" == namespace)
+        is_relevant = (namespace in ["url", "biblio"])
+        return(is_relevant)
+
+    # copy biblio from aliases into item["biblio"] if no better source
+    def biblio(self, 
+            aliases,
+            provider_url_template=None,
+            cache_enabled=True):
+
+        biblio = {}
+        aliases_dict = provider.alias_dict_from_tuples(aliases)
+        if "biblio" in aliases_dict:
+            biblio = aliases_dict["biblio"][0]
+        elif "url" in aliases_dict:
+            url = aliases_dict["url"][0]
+            if not provider_url_template:
+                provider_url_template = self.biblio_url_template
+            biblio = self.get_biblio_for_id(url, provider_url_template, cache_enabled)
+
+        return biblio
 
 
     # override because webpage doesn't throw timeouts, just get biblio if easy

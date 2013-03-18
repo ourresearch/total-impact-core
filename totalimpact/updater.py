@@ -21,6 +21,26 @@ active_publishers = {
                 }
             ]
         },
+    "peerj": {
+        "api_key": "",
+        "journals": [
+                { 
+                    "title": "PeerJ",
+                    "issn": "2167-8359",
+                    "doi_prefix": "10.7717/peerj"
+                }
+            ]
+        },   
+    "citar": {
+        "api_key": "",
+        "journals": [
+                { 
+                    "title": "CITAR",
+                    "issn": "",
+                    "doi_prefix": "10.7559/citarj"
+                }
+            ]
+        },                 
     "pensoft": {
         "api_key": "",
         "journals": [
@@ -47,7 +67,7 @@ active_publishers = {
                 {  
                     "title": "Journal of Hymenoptera Research",
                     "issn": "1314-2607",
-                    "doi_prefix": " 10.3897/JHR"
+                    "doi_prefix": " 10.3897/jhr"
                 }
             ]
         },
@@ -120,8 +140,8 @@ def get_matching_dois_in_db(min_year, doi_prefix, mydao):
         tiid = doc["_id"]
         #only update items published since the a given year
         try:
-            year = doc["biblio"]["year"]
-        except KeyError:
+            year = int(doc["biblio"]["year"])
+        except (KeyError, ValueError):
             continue
         if year > min_year:
             if tiid not in tiids_to_update:
@@ -146,15 +166,7 @@ def update_active_publisher_items(number_to_update, myredis, mydao):
             all_docs += docs_from_doi_prefix
 
     print "recent items for active publishers that were last updated more than a day ago, n=", len(all_tiids)
-    tiids_to_update = all_tiids[0:min(number_to_update, len(all_tiids))]
-    docs_to_update = all_docs[0:min(number_to_update, len(all_docs))]
-    response = update_docs_with_updater_timestamp(docs_to_update, mydao)        
-
-    print "updating {number_to_update} of them now".format(number_to_update=number_to_update)
-    QUEUE_DELAY_IN_SECONDS = 0.25
-    mixpanel.track("Trigger:Update", {"Number Items":len(tiids_to_update), "Update Type":"Scheduled Registered"})
-    item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
-
+    tiids_to_update = update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis)
     return tiids_to_update
 
 def get_least_recently_updated_tiids_in_db(number_to_update, mydao):
@@ -165,6 +177,7 @@ def get_least_recently_updated_tiids_in_db(number_to_update, mydao):
             include_docs=True, 
             descending=False, 
             limit=number_to_update)
+    print view_rows
     tiids = [row.id for row in view_rows]
     docs = [row.doc for row in view_rows]
     return (tiids, docs)
@@ -179,12 +192,74 @@ def update_docs_with_updater_timestamp(docs, mydao):
     return update_response
     
 def update_least_recently_updated(number_to_update, myredis, mydao):
-    (tiids_to_update, docs) = get_least_recently_updated_tiids_in_db(number_to_update, mydao)
-    update_docs_with_updater_timestamp(docs, mydao)
+    (all_tiids, all_docs) = get_least_recently_updated_tiids_in_db(number_to_update, mydao)
+    tiids_to_update = update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis)
+    return tiids_to_update
+
+def update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis):
+    tiids_to_update = all_tiids[0:min(number_to_update, len(all_tiids))]
+    docs_to_update = all_docs[0:min(number_to_update, len(all_docs))]
+    response = update_docs_with_updater_timestamp(docs_to_update, mydao)        
+
+    print "updating {number_to_update} of them now".format(number_to_update=number_to_update)
     QUEUE_DELAY_IN_SECONDS = 0.25
-    mixpanel.track("Trigger:Update", {"Number Items":len(tiids_to_update), "Update Type":"Scheduled Least Recently"})
+    mixpanel.track("Trigger:Update", {"Number Items":len(tiids_to_update), "Update Type":"Scheduled Registered"})
     item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
     return tiids_to_update
+
+def get_tiids_not_updated_since(schedule, number_to_update, mydao, now=datetime.datetime.now()):
+    db = mydao.db
+    tiids = []
+    view_name = "gold_update/gold_update"
+    print schedule
+
+    if schedule["max_days_since_published"]:
+        max_days_since_published = (now - datetime.timedelta(days=schedule["max_days_since_published"]))
+        start_month_group = max_days_since_published.month
+        end_month_group = now.month
+    else:
+        start_month_group = 0
+        end_month_group = 0
+
+    max_last_updated = now - datetime.timedelta(days=schedule["max_update_lag"])
+
+    view_rows = db.view(view_name, 
+            include_docs=True, 
+            startkey=[schedule["group"], start_month_group, "0"], 
+            endkey=[schedule["group"], end_month_group, max_last_updated.isoformat()],            
+            limit=number_to_update)
+    tiids = [row.id for row in view_rows]
+    docs = [row.doc for row in view_rows]
+
+    for row in view_rows:
+        print "row to update:", row.key, row.id
+
+    return (tiids, docs)
+
+gold_update_schedule = [
+    {"group":"C", "max_days_since_published":7, "max_update_lag":1},
+    {"group":"C", "max_days_since_published":30, "max_update_lag":7},
+    {"group":"B", "max_days_since_published":None, "max_update_lag":30},
+    {"group":"A", "max_days_since_published":None, "max_update_lag":365} #everything else update at least once per year
+    ]
+
+def gold_update(number_to_update, myredis, mydao, now=datetime.datetime.now()):
+    all_tiids = []
+    all_docs = []
+    tiids_to_update = []
+    # do magic
+    #for schedule in gold_update_schedule:
+    for schedule in gold_update_schedule:
+        if (len(all_tiids) < number_to_update):
+            number_still_avail = number_to_update-len(all_tiids)
+            (tiids, docs) = get_tiids_not_updated_since(schedule, number_still_avail, mydao, now)
+            print "got", len(tiids), "for update schedule", schedule
+            all_tiids += tiids
+            all_docs += docs
+            if tiids:
+                print tiids
+                tiids_to_update = update_tiids(tiids, docs, number_still_avail, mydao, myredis)
+    return all_tiids
 
 def main(action_type, number_to_update=35):
     #35 every 10 minutes is 35*6perhour*24hours=5040 per day
@@ -203,6 +278,9 @@ def main(action_type, number_to_update=35):
         elif action_type == "least_recently_updated":
             print "running " + action_type
             tiids = update_least_recently_updated(number_to_update, myredis, mydao)
+        elif action_type == "gold_update":
+            print "running " + action_type
+            tiids = gold_update(number_to_update, myredis, mydao)
     except (KeyboardInterrupt, SystemExit): 
         # this approach is per http://stackoverflow.com/questions/2564137/python-how-to-terminate-a-thread-when-main-program-ends
         sys.exit()
