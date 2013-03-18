@@ -43,7 +43,7 @@ class TestFacebook(ProviderTestCase):
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'facebook:likes': (24, ''), 'facebook:shares': (6, '')}
+        expected = {'facebook:likes': (15, ''), 'facebook:shares': (8, ''), 'facebook:comments': (4, '')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]

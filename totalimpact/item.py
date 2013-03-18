@@ -35,9 +35,13 @@ all_static_meta = ProviderFactory.get_all_static_meta()
 
 
 def clean_id(nid):
-    nid = control_char_re.sub('', nid)
-    nid = nid.replace(u'\u200b', "")
-    nid = nid.strip()
+    try:
+        nid = control_char_re.sub('', nid)
+        nid = nid.replace(u'\u200b', "")
+        nid = nid.strip()
+    except TypeError:
+        #isn't a string.  That's ok, might be biblio
+        pass
     return(nid)
 
 def get_item(tiid, myrefsets, dao, include_history=False):
@@ -70,16 +74,15 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
 
     item["is_registered"] = is_tiid_registered_to_anyone(item["_id"], mydao)
 
-    # need year to calculate normalization below
-    try:
-        year = item["biblio"]["year"]
-        if year < 2002:
-            year = 2002
-    except KeyError:
-        year = 99 # hack so that it won't match anything.  what else to do?
+
 
     metrics = item.setdefault("metrics", {})
     for metric_name in metrics:
+
+        # Patch to hide Facebook data while we investigate potentially broken API.
+        if "facebook" in metric_name.lower():
+            continue
+
         #delete the raw history from what we return to the client for now
         if not include_history:
             try:
@@ -93,10 +96,17 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
             metrics[metric_name]["static_meta"] = all_static_meta[metric_name]            
 
             # add normalization values
-            raw = metrics[metric_name]["values"]["raw"]
-            normalized_values = get_normalized_values(genre, host, year, metric_name, raw, myrefsets)
-
-            metrics[metric_name]["values"].update(normalized_values)
+            # need year to calculate normalization below
+            try:
+                year = int(item["biblio"]["year"])
+                if year < 2002:
+                    year = 2002
+                raw = metrics[metric_name]["values"]["raw"]
+                normalized_values = get_normalized_values(genre, host, year, metric_name, raw, myrefsets)
+                metrics[metric_name]["values"].update(normalized_values)
+            except (KeyError, ValueError):
+                logger.error("No good year in biblio for item {tiid}, no normalization".format(
+                    tiid=item["_id"]))
 
     # ditch metrics we don't have static_meta for:
     item["metrics"] = {k:v for k, v in item["metrics"].iteritems() if "static_meta"  in v}
@@ -170,6 +180,9 @@ def decide_genre(alias_dict):
             genre = "article"
 
     elif "pmid" in alias_dict:
+        genre = "article"
+
+    elif "biblio" in alias_dict:
         genre = "article"
 
     elif "url" in alias_dict:
@@ -418,6 +431,7 @@ def create_or_find_items_from_aliases(clean_aliases, myredis, mydao):
 
 def create_item_from_namespace_nid(namespace, nid, myredis, mydao):
     # remove unprintable characters
+    namespace = clean_id(namespace)
     nid = clean_id(nid)
 
     tiid = get_tiid_by_alias(namespace, nid, mydao)
@@ -430,6 +444,10 @@ def create_item_from_namespace_nid(namespace, nid, myredis, mydao):
     return tiid
 
 def get_tiid_by_alias(ns, nid, mydao):
+    # clean before logging or anything
+    ns = clean_id(ns)
+    nid = clean_id(nid)
+
     res = mydao.view('queues/by_alias')
 
     # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults

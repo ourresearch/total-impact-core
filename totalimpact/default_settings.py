@@ -35,7 +35,6 @@ PROVIDERS = [
     ("plossearch", {}),
     ("pmc", {}),
     ("scienceseeker", {}),
-    # ("researchblogging", {}), # takes too long
     ("scopus", {}),
     ("topsy", {}),
     ("wikipedia", {}),

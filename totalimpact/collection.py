@@ -13,7 +13,7 @@ import logging
 logger = logging.getLogger('ti.collection')
 
 def make(owner=None):
-    key, key_hash = _make_update_keypair()
+    key = shortuuid.uuid()[0:10]
 
     now = datetime.datetime.now().isoformat()
     collection = {}
@@ -22,19 +22,13 @@ def make(owner=None):
     collection["created"] = now
     collection["last_modified"] = now
     collection["type"] = "collection"
-    collection["owner"] = owner
-    collection["key"] = key # using the hash was needless complexity...
+    collection["owner"] = owner  # I dont' think we use this anymore?
+    collection["key"] = key  # using the hash was needless complexity...
 
     return collection, key
 
-def claim_collection(coll, new_owner, key):
-    if "key_hash" not in coll.keys():
-        raise ValueError("This is an old collection that doesnt' support ownership.")
-    elif check_password_hash(coll["key_hash"], key):
-        coll["owner"] = new_owner
-        return coll
-    else:
-        raise ValueError("The given key doesn't match this collection's key")
+
+
 
 def _make_id(len=6):
     '''Make an id string.
@@ -45,10 +39,6 @@ def _make_id(len=6):
     choices = string.ascii_lowercase + string.digits
     return ''.join(random.choice(choices) for x in range(len))
 
-def _make_update_keypair():
-    key = shortuuid.uuid()
-    key_hash = generate_password_hash(key)
-    return key, key_hash
 
 def get_titles(cids, mydao):
     ret = {}

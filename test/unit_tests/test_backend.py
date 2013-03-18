@@ -303,17 +303,26 @@ class TestBackendClass(TestBackend):
 
     def test_decide_who_to_call_next_pmid_not_run(self):
         aliases_dict = {"pmid":["111"]}
-        prev_aliases = []
+        prev_aliases = ["mendeley"]
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get more aliases
         expected = {'metrics': [], 'biblio': [], 'aliases': ['pubmed']}
         assert_equals(response, expected)
 
+    def test_decide_who_to_call_next_pmid_mendeley_not_run(self):
+        aliases_dict = {"pmid":["111"]}
+        prev_aliases = [""]
+        response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
+        print response
+        # expect need to get more aliases
+        expected = {'metrics': [], 'biblio': [], 'aliases': ['mendeley']}
+        assert_equals(response, expected)
+
     def test_decide_who_to_call_next_pmid_prev_run(self):
         aliases_dict = {  "pmid":["1111"],
                          "url":["http://pubmedsomewhere"]}
-        prev_aliases = ["pubmed"]
+        prev_aliases = ["pubmed", "mendeley"]
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics and biblio
@@ -323,7 +332,7 @@ class TestBackendClass(TestBackend):
     def test_decide_who_to_call_next_doi_with_urls(self):
         aliases_dict = {  "doi":["10.234/345345"],
                                 "url":["http://journalsomewhere"]}
-        prev_aliases = ["pubmed"]
+        prev_aliases = ["pubmed", "mendeley"]
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics, biblio from crossref
@@ -337,27 +346,27 @@ class TestBackendClass(TestBackend):
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics, no biblio
-        expected = {'metrics': [], 'biblio': [], 'aliases': ['pubmed']}
+        expected = {'metrics': [], 'biblio': [], 'aliases': ['mendeley']}
         assert_equals(response, expected)   
 
-    def test_decide_who_to_call_next_doi_crossref_pubmed_prev_called(self):
+    def test_decide_who_to_call_next_doi_crossref_pubmed_mendeley_prev_called(self):
         aliases_dict = { "doi":["10.234/345345"],
                         "url":["http://journalsomewhere"]}
-        prev_aliases = ["crossref", "pubmed"]                        
+        prev_aliases = ["crossref", "pubmed", "mendeley"]                        
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics, no biblio
-        expected = {'metrics': ["wikipedia"], 'biblio': ['pubmed', 'crossref'], 'aliases': []}
+        expected = {'metrics': ["wikipedia"], 'biblio': ['pubmed', 'crossref', 'webpage'], 'aliases': []}
         assert_equals(response, expected)   
 
     def test_decide_who_to_call_next_pmid_crossref_pubmed_prev_called(self):
         aliases_dict = { "pmid":["1111"],
                         "url":["http://journalsomewhere"]}
-        prev_aliases = ["crossref", "pubmed"]                        
+        prev_aliases = ["crossref", "pubmed", "mendeley"]                        
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics, no biblio
-        expected = {'metrics': ["wikipedia"], 'biblio': ['pubmed', 'crossref'], 'aliases': []}
+        expected = {'metrics': ["wikipedia"], 'biblio': ['pubmed', 'crossref', 'webpage'], 'aliases': []}
         assert_equals(response, expected)   
 
 

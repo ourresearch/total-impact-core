@@ -28,7 +28,7 @@ class TestUpdater():
             "type": "item",
             "last_modified": now.isoformat(),
             "aliases":{"doi":["10.7554/elife.1"]},
-            "biblio": {"year":2012},
+            "biblio": {"year":"2012"},
             "metrics": {}
         }
         self.d.save(self.fake_item)
@@ -81,4 +81,11 @@ class TestUpdater():
         assert_equals(response[0][0], True)
         assert_equals(response[0][1], 'tiid3')
         assert_equals(self.d.get(tiids_to_update[0]).keys(), ['_rev', 'metrics', 'last_modified', 'biblio', '_id', 'type', 'last_update_run', 'aliases'])
+
+    def test_gold_update(self):
+        number_to_update = 10        
+        tiids = updater.gold_update(number_to_update, self.r, self.d)
+        print tiids
+        assert_equals(sorted(tiids), sorted([]))
+
 
