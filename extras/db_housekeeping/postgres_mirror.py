@@ -1,6 +1,6 @@
 import couchdb, os, logging, sys, collections
 from pprint import pprint
-import time, datetime
+import time, datetime, json
 import requests
 
 from couch_paginator import CouchPaginator
@@ -174,7 +174,7 @@ def insert_unless_error(select_statement, save_list):
     except psycopg2.IntegrityError:
         print "insert already exists"
 
-def action_on_a_page(page):
+def item_action_on_a_page(page):
     items = [row.doc for row in page]
 
     print "ITEMS"
@@ -210,6 +210,33 @@ def action_on_a_page(page):
                         metrics_save_list)
 
 
+    print "done"
+
+def build_email_save_list(emails):
+    email_save_list = []
+    for email in emails:
+        print email["_id"]
+        email_save = {}
+        email_save["id"] = email["_id"]
+        email_save["created"] = email["created"]
+        email_save["payload"] = json.dumps(email["payload"])
+        email_save_list += [email_save]
+    return email_save_list  
+
+def email_action_on_a_page(page):
+    emails = [row.doc for row in page]
+    print "EMAILS"
+    print datetime.datetime.now().isoformat()
+    emails_save_list = build_email_save_list(emails)
+    print datetime.datetime.now().isoformat()
+    #cur.execute("""INSERT INTO email 
+    #                (id, created, payload) 
+    #                VALUES (%(id)s, %(created)s, %(payload)s)""",
+    #    (email_dict["_id"], email_dict["created"], json.dumps(email_dict["payload"])))
+
+    insert_unless_error("""INSERT INTO email(id, created, payload) 
+                    VALUES (%(id)s, %(created)s, %(payload)s)""", 
+                    emails_save_list)
     print "done"
 
 
@@ -269,14 +296,17 @@ if not confirm=="YES":
     exit()
 
 # set up the action code
-myview_name = "queues/by_alias"
-mystart_key = ["url", "https://github.0000000"]
-myend_key = ["url", "https://github.zzzzzzzz"]
+#myview_name = "queues/by_alias"
+#mystart_key = ["url", "https://github.0000000"]
+#myend_key = ["url", "https://github.zzzzzzzz"]
 
+myview_name = "by_type/by_type"
+mystart_key = ["email"]
+myend_key = ["email"]
 
 now = datetime.datetime.now().isoformat()
 
-run_on_documents(action_on_a_page, 
+run_on_documents(email_action_on_a_page, 
     view_name=myview_name, 
     start_key=mystart_key, 
     end_key=myend_key, 
