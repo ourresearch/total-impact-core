@@ -153,6 +153,13 @@ class ViewsTester(unittest.TestCase):
         self.d.save(json.loads(test_item))
         self.d.save(json.loads(test_api_user))
 
+        #postgres
+        temp_postgres_d = dao.PostgresDao("localhost", os.getenv("POSTGRESQL_DB"))
+        temp_postgres_d.delete_db(os.getenv("POSTGRESQL_DB"))
+        temp_postgres_d.close()
+        self.postgres_d = dao.PostgresDao("localhost", os.getenv("POSTGRESQL_DB"))
+        self.postgres_d.create_tables()
+
         # do the same thing for the redis db.  We're using DB 8 for unittests.
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
@@ -163,6 +170,8 @@ class ViewsTester(unittest.TestCase):
         self.client = self.app.test_client()
 
     def tearDown(self):
+        self.postgres_d.close()
+
         pass
 
     @classmethod
@@ -677,9 +686,11 @@ class TestInbox(ViewsTester):
 
     def test_save_email(self):
         doc_id = views.save_email(self.example_payload)
-        stored_doc = mydao.get(doc_id)
-        assert_equals(stored_doc.keys(), ['_rev', '_id', 'type', 'payload', 'created'])
-        assert_equals(stored_doc["payload"], self.example_payload)
+
+        stored_email = self.postgres_d.get_email(doc_id)
+
+        assert_equals(stored_email[0].keys(), ['payload', 'id', 'created'])
+        assert_equals(json.loads(stored_email[0]["payload"]), self.example_payload)
 
     def test_alert_if_google_scholar_notification_confirmation(self):
         response = views.alert_if_google_scholar_notification_confirmation(self.example_payload)
