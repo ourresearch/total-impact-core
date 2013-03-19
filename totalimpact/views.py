@@ -19,6 +19,7 @@ logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
+mypgdao = dao.PostgresDao(os.environ["POSTGRESQL_URL"], os.getenv("POSTGRESQL_DB"))
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)  # main app is on DB 0
 
 logger.debug("Building reference sets")
@@ -681,7 +682,7 @@ def update_user(userid=''):
     resp.mimetype = "application/json"
     return resp
 
-
+# can remove this wrapper and just use mypgdao version once finished with couchdb
 def save_email(payload):
     doc_id = shortuuid.uuid()[0:24]
     doc = {"_id":doc_id, 
@@ -689,6 +690,7 @@ def save_email(payload):
             "created":datetime.datetime.now().isoformat(),
             "payload":payload}
     mydao.save(doc)
+    mypgdao.save_email(doc)
     return doc_id
 
 GOOGLE_SCHOLAR_CONFIRM_PATTERN = re.compile("""for the query:\nNew articles in (?P<name>.*)'s profile\n\nClick to confirm this request:\n(?P<url>.*)\n\n""")
