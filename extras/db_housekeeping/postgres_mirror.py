@@ -18,53 +18,6 @@ logging.basicConfig(
 logger = logging.getLogger("couch_migrate")
  
 
-def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page_size=500):
-    couch_page = CouchPaginator(db, view_name, page_size, start_key=start_key, end_key=end_key, include_docs=True)
-
-    while couch_page:
-        func_page(couch_page)
-        row_count += page_size
-
-        logger.info("%i. getting new page" %(row_count))
-        if couch_page.has_next:
-            couch_page = CouchPaginator(db, view_name, page_size, start_key=couch_page.next, end_key=end_key, include_docs=True)
-        else:
-            couch_page = None
-
-    print "number items = ", row_count
-
-
-# set up postgres
-postgresql_url = os.getenv("POSTGRESQL_URL")
-conn = psycopg2.connect(os.getenv("POSTGRESQL_URL"))
-conn.autocommit = True
-cur = conn.cursor()
-logger.info("connected to postgres at " + postgresql_url)
-
-# set up couchdb
-cloudant_db = os.getenv("CLOUDANT_DB")
-cloudant_url = os.getenv("CLOUDANT_URL")
-couch = couchdb.Server(url=cloudant_url)
-db = couch[cloudant_db]
-logger.info("connected to couch at " + cloudant_url + " / " + cloudant_db)
-
-# do a few preventative checks
-if (cloudant_db == "ti"):
-    print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
-else:
-    print "\n\nThis doesn't appear to be the production database\n\n"
-confirm = None
-#confirm = raw_input("\nType YES if you are sure you want to run this test:")
-confirm = "YES"
-if not confirm=="YES":
-    print "nevermind, then."
-    exit()
-
-# set up the action code
-myview_name = "queues/by_alias"
-mystart_key = ["url", "https://github.0000000"]
-myend_key = ["url", "https://github.zzzzzzzz"]
-
 
 def action_on_a_page_single_doc(page):
     docs = [row.doc for row in page]
@@ -167,7 +120,7 @@ def build_biblio_save_list(items):
     return biblio_save_list    
 
 """
-CREATE TABLE d11fj5d3ml1uue."public".items (
+CREATE TABLE items (
     tiid text NOT NULL,
     created timestamptz,
     last_modified timestamptz,
@@ -175,7 +128,7 @@ CREATE TABLE d11fj5d3ml1uue."public".items (
     PRIMARY KEY (tiid)
 );
 
-CREATE TABLE d11fj5d3ml1uue."public".metrics (
+CREATE TABLE metrics (
     tiid text NOT NULL,
     provider text NOT NULL,
     metric_name text NOT NULL,
@@ -185,14 +138,14 @@ CREATE TABLE d11fj5d3ml1uue."public".metrics (
     PRIMARY KEY (tiid,provider,metric_name,collected_date)
 );
 
-CREATE TABLE d11fj5d3ml1uue."public".aliases (
+CREATE TABLE aliases (
     tiid text NOT NULL,
     "namespace" text NOT NULL,
     nid text NOT NULL,
     last_modified timestamptz,
     PRIMARY KEY (tiid, "namespace", nid))
 
-CREATE TABLE "public".biblio (
+CREATE TABLE biblio (
     tiid text NOT NULL,
     provider text NOT NULL,
     last_modified timestamptz,
@@ -205,6 +158,12 @@ CREATE TABLE "public".biblio (
     url text,
     description text,
     PRIMARY KEY (tiid, provider))
+
+CREATE TABLE email (
+    id text NOT NULL,
+    created timestamptz,
+    payload text NOT NULL,
+    PRIMARY KEY (id))
 
 """
 
@@ -253,11 +212,74 @@ def action_on_a_page(page):
 
     print "done"
 
+
+def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page_size=500):
+    couch_page = CouchPaginator(db, view_name, page_size, start_key=start_key, end_key=end_key, include_docs=True)
+
+    while couch_page:
+        func_page(couch_page)
+        row_count += page_size
+
+        logger.info("%i. getting new page" %(row_count))
+        if couch_page.has_next:
+            couch_page = CouchPaginator(db, view_name, page_size, start_key=couch_page.next, end_key=end_key, include_docs=True)
+        else:
+            couch_page = None
+
+    print "number items = ", row_count
+
+
 #run
+
+
+# set up postgres
+postgresql_url = os.getenv("POSTGRESQL_URL")
+postgresql_connect = postgresql_url
+if "localhost" in postgresql_url:
+    postgresql_connect = "host={postgresql_url}".format(
+        postgresql_url=postgresql_url)
+
+postgresql_db = os.getenv("POSTGRESQL_DB", "")
+if postgresql_db:
+    postgresql_connect += " dbname='{postgresql_db}'".format(
+        postgresql_db=postgresql_db)
+
+conn = psycopg2.connect(postgresql_connect)
+conn.autocommit = True
+cur = conn.cursor()
+logger.info("connected to postgres at " + postgresql_url)
+
+# set up couchdb
+cloudant_db = os.getenv("CLOUDANT_DB")
+cloudant_url = os.getenv("CLOUDANT_URL")
+couch = couchdb.Server(url=cloudant_url)
+db = couch[cloudant_db]
+logger.info("connected to couch at " + cloudant_url + " / " + cloudant_db)
+
+# do a few preventative checks
+if (cloudant_db == "ti"):
+    print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
+else:
+    print "\n\nThis doesn't appear to be the production database\n\n"
+confirm = None
+#confirm = raw_input("\nType YES if you are sure you want to run this test:")
+confirm = "YES"
+if not confirm=="YES":
+    print "nevermind, then."
+    exit()
+
+# set up the action code
+myview_name = "queues/by_alias"
+mystart_key = ["url", "https://github.0000000"]
+myend_key = ["url", "https://github.zzzzzzzz"]
+
+
 now = datetime.datetime.now().isoformat()
 
-run_on_documents(action_on_a_page, view_name=myview_name, 
-    start_key=mystart_key, end_key=myend_key, 
+run_on_documents(action_on_a_page, 
+    view_name=myview_name, 
+    start_key=mystart_key, 
+    end_key=myend_key, 
     page_size=500)
 
 
