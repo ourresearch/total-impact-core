@@ -1,5 +1,7 @@
 import json, uuid, couchdb, time, logging, os, re, redis
 from couchdb import ResourceNotFound, PreconditionFailed
+import psycopg2
+import psycopg2.extras
 
 from totalimpact.utils import Retry
 
@@ -145,8 +147,7 @@ class Dao(object):
 
 
     def create_db(self, db_name):
-        '''makes a new database with the given name.
-        uploads couch views stored in the config directory'''
+        '''makes a new database with the given name.'''
 
         try:
             self.db = self.couch.create(db_name)
@@ -202,4 +203,82 @@ class Dao(object):
     def __getstate__(self):
         return None
 
+
+class PostgresDao(object):
+
+    def __init__(self, db_url, db_name=None):
+        '''sets up the data properties and makes a db connection'''
+
+        self.db_url = db_url
+        self.db_name = db_name
+
+        connection_string = db_url
+        if "localhost" in db_url:
+            connection_string = "host={db_url}".format(
+                db_url=db_url)
+
+        if db_name:
+            connection_string_with_db = connection_string + " dbname='{db_name}'".format(
+               db_name=db_name)
+            print connection_string_with_db
+            try:
+                self.make_connection(connection_string_with_db)
+            except psycopg2.OperationalError:
+                logger.info("OperationalError so trying to create database first")
+                self.make_connection(connection_string)
+                cur = self.get_cursor()
+                cur.execute("CREATE DATABASE " + db_name);
+                cur.close()
+                self.make_connection(connection_string_with_db)
+        else:
+            self.make_connection(connection_string)
+
+        logger.info("connected to postgres at " + connection_string)
+
+    def make_connection(self, connection_string):
+        self.conn = psycopg2.connect(connection_string)
+        self.conn.autocommit = True
+        return self.conn
+
+
+    def create_tables(self):
+        tables_string = """CREATE TABLE email (
+        id text NOT NULL,
+        created timestamptz,
+        payload text NOT NULL,
+        PRIMARY KEY (id))"""
+
+        cur = self.get_cursor()
+        try:
+            cur.execute(tables_string);
+        except psycopg2.ProgrammingError:
+            # probably table already exists
+            pass
+        cur.close()
+
+    def get_connection(self):
+        return self.conn
+
+    def get_cursor(self):
+        # Dict Cursor (returns a Dict which can be referenced via named bracket access, or offset)
+        return self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    def close(self):
+        return self.conn.close()
+       
+    def save_email(self, email_dict):
+        cur = self.get_cursor()
+        cur.execute("""INSERT INTO email 
+                        (id, created, payload) 
+                        VALUES (%s, %s, %s)""",
+            (email_dict["_id"], email_dict["created"], json.dumps(email_dict["payload"])))
+        cur.close()
+        return email_dict["_id"]
+
+    def get_email(self, id):
+        cur = self.get_cursor()
+        cur.execute("SELECT * FROM email where id=%s", (id, ))
+        rows = cur.fetchall()
+        cur.close()
+        return rows
 
