@@ -1,4 +1,4 @@
-import json, uuid, couchdb, time, logging, os, re, redis
+import json, uuid, couchdb, time, logging, os, re, redis, urlparse
 from couchdb import ResourceNotFound, PreconditionFailed
 import psycopg2
 import psycopg2.extras
@@ -206,40 +206,51 @@ class Dao(object):
 
 class PostgresDao(object):
 
-    def __init__(self, db_url, db_name=None):
+    def __init__(self, connection_url):
         '''sets up the data properties and makes a db connection'''
 
-        self.db_url = db_url
-        self.db_name = db_name
+        # just needs to be done once
+        urlparse.uses_netloc.append("postgres")
 
-        connection_string = db_url
-        if "localhost" in db_url:
-            connection_string = "host={db_url}".format(
-                db_url=db_url)
+        url = urlparse.urlparse(connection_url)
+        dbname = url.path[1:]
+        try:
+            self.make_connection(url.hostname, dbname, url.username, url.password)
+        except psycopg2.OperationalError:
+            logger.info("OperationalError so trying to create database first")
+            self.create_database(url.hostname, dbname, url.username, url.password)
+            self.make_connection(url.hostname, dbname, url.username, url.password)
 
-        if db_name:
-            connection_string_with_db = connection_string + " dbname='{db_name}'".format(
-               db_name=db_name)
-            print connection_string_with_db
-            try:
-                self.make_connection(connection_string_with_db)
-            except psycopg2.OperationalError:
-                logger.info("OperationalError so trying to create database first")
-                self.make_connection(connection_string)
-                cur = self.get_cursor()
-                cur.execute("CREATE DATABASE " + db_name);
-                cur.close()
-                self.make_connection(connection_string_with_db)
-        else:
-            self.make_connection(connection_string)
 
-        logger.info("connected to postgres at " + connection_string)
+    def build_connection_string(self, hostname, dbname, username, password):
+        connection_string = ""
+        # don't add parts that are None
+        if hostname:
+            connection_string += " host=%s" %hostname
+        if dbname:
+            connection_string += " dbname=%s" %dbname
+        if username:
+            connection_string += " user=%s" %username
+        if password:
+            connection_string += " password=%s" %password
+        return connection_string
 
-    def make_connection(self, connection_string):
+    def create_database(self, hostname, new_dbname, username, password):
+        blank_dbname = ""
+        connection_string = self.build_connection_string(hostname, blank_dbname, username, password)
+        conn = psycopg2.connect(connection_string)
+        conn.autocommit = True
+        cur = conn.cursor()
+        cur.execute("CREATE DATABASE " + new_dbname);
+        cur.close()
+        conn.close()
+
+    def make_connection(self, hostname, dbname, username, password):
+        connection_string = self.build_connection_string(hostname, dbname, username, password)
         self.conn = psycopg2.connect(connection_string)
         self.conn.autocommit = True
+        logger.info("connected to postgres at " + connection_string)        
         return self.conn
-
 
     def create_tables(self):
         tables_string = """CREATE TABLE email (

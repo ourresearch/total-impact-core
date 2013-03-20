@@ -74,11 +74,7 @@ class TestDAO(unittest.TestCase):
 class TestPostgresDao(unittest.TestCase):
 
     def setUp(self):
-        # hacky way to delete the unittest db, then make it fresh again for each test.
-        #temp_dao = dao.PostgresDao("localhost")
-        #temp_dao.delete_db(os.getenv("POSTGRESQL_DB"))
-        #temp_dao.close()
-        self.postgres_d = dao.PostgresDao("localhost", os.getenv("POSTGRESQL_DB"))
+        self.postgres_d = dao.PostgresDao("postgres://localhost/unittests")
         self.postgres_d.create_tables()
 
         self.example_payload = {
