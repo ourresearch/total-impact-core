@@ -13,7 +13,7 @@ import psycopg2
 logging.basicConfig(
     stream=sys.stdout,
     level=logging.DEBUG,
-    format='%(levelname)8s %(name)s - %(message)s'
+    format='[%(process)d] %(levelname)8s %(threadName)30s %(name)s - %(message)s'
 )
 
 logger = logging.getLogger("couch_migrate")
@@ -37,9 +37,9 @@ def action_on_a_page_single_doc(page):
             #conn.commit()
         except psycopg2.IntegrityError:
             print "row already exists"
-            conn.rollback()
+            mypostgresdao.conn.rollback()
         except:
-            conn.rollback()
+            mypostgresdao.conn.rollback()
         finally:
             pass
 
