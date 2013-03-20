@@ -249,7 +249,8 @@ class PostgresDao(object):
         connection_string = self.build_connection_string(hostname, dbname, username, password)
         self.conn = psycopg2.connect(connection_string)
         self.conn.autocommit = True
-        logger.info("connected to postgres at " + connection_string)        
+        logger.info("connected to postgres at {hostname} {dbname}".format(
+            hostname=hostname, dbname=dbname))        
         return self.conn
 
     def create_tables(self):
