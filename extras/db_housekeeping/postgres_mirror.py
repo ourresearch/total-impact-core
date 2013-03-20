@@ -4,10 +4,11 @@ import time, datetime, json
 import requests
 
 from couch_paginator import CouchPaginator
+from totalimpact import dao
 import psycopg2
 
 # run in heroku by a) commiting, b) pushing to heroku, and c) running
-# heroku run python extras/db_housekeeping/couch_migrate.py
+# heroku run python extras/db_housekeeping/postgres_mirror.py
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -260,21 +261,9 @@ def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page
 
 
 # set up postgres
-postgresql_url = os.getenv("POSTGRESQL_URL")
-postgresql_connect = postgresql_url
-if "localhost" in postgresql_url:
-    postgresql_connect = "host={postgresql_url}".format(
-        postgresql_url=postgresql_url)
-
-postgresql_db = os.getenv("POSTGRESQL_DB", "")
-if postgresql_db:
-    postgresql_connect += " dbname='{postgresql_db}'".format(
-        postgresql_db=postgresql_db)
-
-conn = psycopg2.connect(postgresql_connect)
-conn.autocommit = True
-cur = conn.cursor()
-logger.info("connected to postgres at " + postgresql_url)
+mypostgresdao = dao.PostgresDao(os.environ["POSTGRESQL_URL"])
+cur = mypostgresdao.get_cursor()
+logger.info("connected to postgres")
 
 # set up couchdb
 cloudant_db = os.getenv("CLOUDANT_DB")
@@ -312,6 +301,8 @@ run_on_documents(email_action_on_a_page,
     end_key=myend_key, 
     page_size=500)
 
+cur.close()
+mypostgresdao.close()
 
 #    try:
 #        cur.execute("CREATE TABLE phonebook(phone VARCHAR(32), firstname VARCHAR(32), lastname VARCHAR(32), address VARCHAR(64));")
