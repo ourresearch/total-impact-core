@@ -9,7 +9,7 @@ import requests
 logging.basicConfig(
     stream=sys.stdout,
     level=logging.DEBUG,
-    format='%(levelname)8s %(name)s - %(message)s'
+    format='[%(process)d] %(levelname)8s %(threadName)30s %(name)s - %(message)s'
 )
 
 logger = logging.getLogger("couch_maint")
