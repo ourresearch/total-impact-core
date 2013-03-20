@@ -154,10 +154,7 @@ class ViewsTester(unittest.TestCase):
         self.d.save(json.loads(test_api_user))
 
         #postgres
-        temp_postgres_d = dao.PostgresDao("localhost", os.getenv("POSTGRESQL_DB"))
-        temp_postgres_d.delete_db(os.getenv("POSTGRESQL_DB"))
-        temp_postgres_d.close()
-        self.postgres_d = dao.PostgresDao("localhost", os.getenv("POSTGRESQL_DB"))
+        self.postgres_d = dao.PostgresDao("postgres://localhost/unittests")
         self.postgres_d.create_tables()
 
         # do the same thing for the redis db.  We're using DB 8 for unittests.
