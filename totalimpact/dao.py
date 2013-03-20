@@ -122,6 +122,13 @@ class Dao(object):
                 "views": {
                     "gold_update": {}                    
                 }
+            },            
+            {
+                "_id": "_design/by_type",
+                "language": "javascript",
+                "views": {
+                    "by_type": {}                    
+                }
             }            
         ]
 
@@ -215,18 +222,20 @@ class PostgresDao(object):
         url = urlparse.urlparse(connection_url)
         dbname = url.path[1:]
         try:
-            self.make_connection(url.hostname, dbname, url.username, url.password)
+            self.make_connection(url.hostname, url.port, dbname, url.username, url.password)
         except psycopg2.OperationalError:
             logger.info("OperationalError so trying to create database first")
-            self.create_database(url.hostname, dbname, url.username, url.password)
-            self.make_connection(url.hostname, dbname, url.username, url.password)
+            self.create_database(url.hostname, url.port, dbname, url.username, url.password)
+            self.make_connection(url.hostname, url.port, dbname, url.username, url.password)
 
 
-    def build_connection_string(self, hostname, dbname, username, password):
+    def build_connection_string(self, hostname, port, dbname, username, password):
         connection_string = ""
         # don't add parts that are None
         if hostname:
             connection_string += " host=%s" %hostname
+        if port:
+            connection_string += " port=%s" %port
         if dbname:
             connection_string += " dbname=%s" %dbname
         if username:
@@ -235,9 +244,9 @@ class PostgresDao(object):
             connection_string += " password=%s" %password
         return connection_string
 
-    def create_database(self, hostname, new_dbname, username, password):
+    def create_database(self, hostname, port, new_dbname, username, password):
         blank_dbname = ""
-        connection_string = self.build_connection_string(hostname, blank_dbname, username, password)
+        connection_string = self.build_connection_string(hostname, port, blank_dbname, username, password)
         conn = psycopg2.connect(connection_string)
         conn.autocommit = True
         cur = conn.cursor()
@@ -245,8 +254,8 @@ class PostgresDao(object):
         cur.close()
         conn.close()
 
-    def make_connection(self, hostname, dbname, username, password):
-        connection_string = self.build_connection_string(hostname, dbname, username, password)
+    def make_connection(self, hostname, port, dbname, username, password):
+        connection_string = self.build_connection_string(hostname, port, dbname, username, password)
         self.conn = psycopg2.connect(connection_string)
         self.conn.autocommit = True
         logger.info("connected to postgres at {hostname} {dbname}".format(
