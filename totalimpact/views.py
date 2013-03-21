@@ -136,7 +136,7 @@ def item_namespace_post(namespace, nid):
 
     api_key = request.values.get('key')
     try:
-        tiid = api_user.register_item((namespace, nid), api_key, myredis, mydao)
+        api_user.register_item((namespace, nid), api_key, myredis, mydao, mypostgresdao)
         response_code = 201 # Created
     except api_user.ItemAlreadyRegisteredToThisKey:
         response_code = 200
@@ -160,7 +160,7 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
     if register:
         try:
             logger.debug("api_key is " + api_key)
-            api_user.register_item((namespace, nid), api_key, myredis, mydao)
+            api_user.register_item((namespace, nid), api_key, myredis, mydao, mypostgresdao)
         except api_user.ItemAlreadyRegisteredToThisKey:
             debug_message = "ItemAlreadyRegisteredToThisKey for key {api_key}".format(
                 api_key=api_key)
