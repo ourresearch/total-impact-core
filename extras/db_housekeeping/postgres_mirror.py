@@ -170,10 +170,14 @@ CREATE TABLE email (
 
 def insert_unless_error(select_statement, save_list):
     print "try to insert"
-    try:
-        cur.executemany(select_statement, save_list)
-    except psycopg2.IntegrityError:
-        print "insert already exists"
+    #cur.executemany(select_statement, save_list)
+    for l in save_list:
+        print cur.mogrify(select_statement, l)
+        try:
+            #cur.execute(select_statement, l)
+            pass
+        except psycopg2.IntegrityError:
+            print "insert already exists"
 
 def item_action_on_a_page(page):
     items = [row.doc for row in page]
@@ -183,7 +187,7 @@ def item_action_on_a_page(page):
     items_save_list = build_items_save_list(items)
     print datetime.datetime.now().isoformat()
     insert_unless_error("""INSERT INTO items(tiid, created, last_modified, last_update_run) 
-                        VALUES (%(tiid)s, %(created)s, %(last_modified)s, %(last_update_run)s)""", 
+                        VALUES (%(tiid)s, %(created)s, %(last_modified)s, %(last_update_run)s);""", 
                         items_save_list)
 
     print "BIBLIO"
@@ -230,14 +234,55 @@ def email_action_on_a_page(page):
     print datetime.datetime.now().isoformat()
     emails_save_list = build_email_save_list(emails)
     print datetime.datetime.now().isoformat()
-    #cur.execute("""INSERT INTO email 
-    #                (id, created, payload) 
-    #                VALUES (%(id)s, %(created)s, %(payload)s)""",
-    #    (email_dict["_id"], email_dict["created"], json.dumps(email_dict["payload"])))
-
     insert_unless_error("""INSERT INTO email(id, created, payload) 
-                    VALUES (%(id)s, %(created)s, %(payload)s)""", 
+                    VALUES (%(id)s, %(created)s, %(payload)s);""", 
                     emails_save_list)
+    print datetime.datetime.now().isoformat()
+    print "done"
+
+
+def build_api_users_save_list(docs):
+    api_users_save_list = []
+    registered_items_save_list = []
+    for doc in docs:
+        print doc["_id"]
+        api_users_save = {}
+        api_users_save["api_key"] = doc["current_key"]
+        api_users_save["max_registered_items"] = doc["max_registered_items"]
+        api_users_save["created"] = doc["created"]
+        for key in doc["meta"]:
+            api_users_save[key] = doc["meta"][key]
+        api_users_save_list += [api_users_save]
+        for alias in doc["registered_items"]:
+            registered_items_save_list += [{
+                "api_key":api_users_save["api_key"], 
+                "registered_date":doc["registered_items"][alias]["registered_date"],
+                "alias":alias}]    
+    return (api_users_save_list, registered_items_save_list)  
+
+def insert_string(tablename, colnames):
+    colnames_string = ", ".join(colnames)
+    percent_colnames_string = ", ".join(["%("+col+")s" for col in colnames])
+    insert = "INSERT INTO {tablename} ({colnames_string}) VALUES ({percent_colnames_string});\t".format(
+        tablename=tablename, 
+        colnames_string=colnames_string, 
+        percent_colnames_string=percent_colnames_string)
+    return insert
+
+def api_users_action_on_a_page(page):
+    docs = [row.doc for row in page]
+    print "API USERS"
+    print datetime.datetime.now().isoformat()
+    (api_users_save_list, registerted_items_save_list) = build_api_users_save_list(docs)
+    print datetime.datetime.now().isoformat()
+
+    colnames = "api_key, max_registered_items, created, planned_use, example_url, api_key_owner, notes, email, organization".split(", ")
+    insert_unless_error(insert_string("api_users", colnames), api_users_save_list)
+
+    colnames = "api_key, alias, registered_date".split(", ")
+    insert_unless_error(insert_string("registered_items", colnames), registerted_items_save_list)
+
+    print datetime.datetime.now().isoformat()
     print "done"
 
 
@@ -290,12 +335,12 @@ if not confirm=="YES":
 #myend_key = ["url", "https://github.zzzzzzzz"]
 
 myview_name = "by_type/by_type"
-mystart_key = ["email"]
-myend_key = ["email"]
+mystart_key = ["api_user"]
+myend_key = ["api_user"]
 
 now = datetime.datetime.now().isoformat()
 
-run_on_documents(email_action_on_a_page, 
+run_on_documents(api_users_action_on_a_page, 
     view_name=myview_name, 
     start_key=mystart_key, 
     end_key=myend_key, 
