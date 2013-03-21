@@ -263,18 +263,18 @@ class PostgresDao(object):
         return self.conn
 
     def create_tables(self):
-        tables_string = """CREATE TABLE email (
-        id text NOT NULL,
-        created timestamptz,
-        payload text NOT NULL,
-        PRIMARY KEY (id))"""
+        path_to_this_file = os.path.dirname(__file__)
+        sql_file = open(os.path.join(path_to_this_file, "db_init.sql"), "r")
+        statements = sql_file.read()
+        sql_file.close()
 
         cur = self.get_cursor()
-        try:
-            cur.execute(tables_string);
-        except psycopg2.ProgrammingError:
-            # probably table already exists
-            pass
+        for statement in statements.split(";"):
+            try:
+                cur.execute(statement);
+            except psycopg2.ProgrammingError:
+                # probably table already exists
+                logger.info("ProgrammingError creating table, it probably already exists")
         cur.close()
 
     def get_connection(self):
