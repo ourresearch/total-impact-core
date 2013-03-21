@@ -61,7 +61,7 @@ def stop_user_who_is_swamping_us():
 def check_key():
     if "/v1/" in request.url:
         api_key = request.values.get('key', '')
-        if not api_user.is_valid_key(api_key, mydao):
+        if not api_user.is_valid_key(api_key, mypostgresdao):
             abort(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a valid api key.")
     return # if success don't return any content
 
