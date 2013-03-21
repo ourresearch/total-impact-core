@@ -35,11 +35,22 @@ class TestApiUser():
         cur.execute("insert into registered_items (api_key, alias) values ('SFUlqzam8', 'doi:10.1371/journal.pcbi.2')")
         cur.close()
 
-    def test_build_api_user(self):
-        meta = {'usage': 'individual CV', 'email': '', 'notes': '', 'api_limit': '', 'api_key_owner': ''}
-        (new_api_doc, new_api_key) = api_user.build_api_user("SFU", 1000, **meta)
-        print new_api_doc
-        assert_equals(new_api_doc["current_key"], new_api_key)
+    def test_save_api_user(self):
+        api_key_prefix = "SFU"
+        meta = {'usage': 'individual CV', 'email': '', 'notes': '', 'api_limit': '', 'api_key_owner': '', 'planned_use':'', "example_url":"", "organization":""}
+        new_api_key = api_user.save_api_user(api_key_prefix, 1000, self.postgres_d, **meta)
+        print new_api_key
+
+        cur = self.postgres_d.get_cursor()
+        cur.execute("""SELECT * FROM api_users 
+                WHERE api_key=%s""", 
+                (new_api_key,))
+        response = cur.fetchall()
+        cur.close()
+        assert_equals(len(response), 1)
+
+        response = api_user.get_api_user_id_by_api_key(new_api_key, self.postgres_d)
+        assert_equals(response, new_api_key.lower())
 
     def test_get_api_user_id_by_api_key(self):
         api_key = "SFUlqzam8"

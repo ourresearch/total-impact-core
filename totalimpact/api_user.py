@@ -42,22 +42,18 @@ def is_valid_key(key, mydao):
     return False
 
 
-def build_api_user(prefix, max_registered_items, **meta):
-    api_user_doc = {}
-
+def save_api_user(prefix, max_registered_items, mydao, **meta):
     new_api_key = prefix.lower() + "-" + shortuuid.uuid().lower()[0:6]
     now = datetime.datetime.now().isoformat()
 
-    api_user_doc["max_registered_items"] = int(max_registered_items)
-    api_user_doc["created"] = now
-    api_user_doc["type"] = "api_user"
-    api_user_doc["meta"] = meta
-    api_user_doc["current_key"] = new_api_key
-    api_user_doc["key_history"] = {now: new_api_key}
-    api_user_doc["registered_items"] = {}
-    api_user_doc["_id"] = shortuuid.uuid()[0:24]
+    cur = mydao.get_cursor()
+    cur.execute("""INSERT INTO api_users 
+                    (api_key, max_registered_items, created, planned_use, example_url, api_key_owner, notes, email, organization) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (new_api_key, max_registered_items, now, meta["planned_use"], meta["example_url"], meta["api_key_owner"], meta["notes"], meta["email"], meta["organization"]))
+    cur.close()
 
-    return (api_user_doc, new_api_key)
+    return (new_api_key)
 
 def is_registered(alias, api_key, mydao):
     if is_internal_key(api_key):
