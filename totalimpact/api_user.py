@@ -109,6 +109,7 @@ def add_registration_data(alias, api_key, mydao):
     if is_internal_key(api_key):
         return False
 
+    alias = item.canonical_alias_tuple(alias)
     alias_string = ":".join(alias)
     now = datetime.datetime.now().isoformat()
 
