@@ -51,7 +51,7 @@ class Scopus(Provider):
     def _extract_metrics(self, record, status_code=200, id=None):
         try:
             citations = int(record["citedbycount"])    
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, ValueError):
             return {}
 
         if citations:
