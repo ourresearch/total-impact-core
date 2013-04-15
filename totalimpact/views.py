@@ -57,13 +57,25 @@ def stop_user_who_is_swamping_us():
             team@impactstory.org for details and possible workarounds.
         """.format(ip=ip))
 
+    if key  in ["VANWIJIKc233acaa"]:
+        logger.debug("got a call from {key}; aborting with 403.".format(key=key) )
+        abort(403, """Sorry, we're blocking your api key '{key}' because \
+                we can't handle requests as quickly as you're sending them, and so
+                they're swamping our system. Please email us at \
+                team@impactstory.org for details and possible workarounds.
+            """.format(key=key))
+
 @app.before_request
 def check_key():
+    if request.args.get("api_admin_key"):
+        return
+
     if "/v1/" in request.url:
         api_key = request.values.get('key', '')
         if not api_user.is_valid_key(api_key, mypostgresdao):
             abort(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a valid api key.")
     return # if success don't return any content
+
 
 
 @app.after_request
@@ -319,8 +331,20 @@ def collection_get(cid='', format="json", include_history=False):
                              "UTF-8")
         else:
             api_key = request.args.get("key", None)
-            clean_if_necessary_items = [item_module.clean_for_export(item, api_key, os.getenv("API_KEY")) 
+            admin_api_key = request.args.get("admin_api_key", None)
+
+            if request.args.get("api_admin_key"):
+                secret_key = os.getenv("API_ADMIN_KEY")
+                supplied_key = request.args.get("api_admin_key")
+
+            elif request.args.get("key"):
+                secret_key = os.getenv("API_KEY")
+                supplied_key = request.args.get("api_key")
+
+
+            clean_if_necessary_items = [item_module.clean_for_export(item, submitted_key, correct_key)
                 for item in coll_with_items["items"]]
+
             coll_with_items["items"] = clean_if_necessary_items
             resp = make_response(json.dumps(coll_with_items, sort_keys=True, indent=4),
                                  response_code)
