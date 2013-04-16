@@ -342,7 +342,7 @@ def collection_get(cid='', format="json", include_history=False):
                 supplied_key = request.args.get("api_key")
 
 
-            clean_if_necessary_items = [item_module.clean_for_export(item, submitted_key, correct_key)
+            clean_if_necessary_items = [item_module.clean_for_export(item, supplied_key, secret_key)
                 for item in coll_with_items["items"]]
 
             coll_with_items["items"] = clean_if_necessary_items
