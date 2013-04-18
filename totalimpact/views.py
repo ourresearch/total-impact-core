@@ -330,8 +330,6 @@ def collection_get(cid='', format="json", include_history=False):
             resp.headers.add("Content-Encoding",
                              "UTF-8")
         else:
-            api_key = request.args.get("key", None)
-            admin_api_key = request.args.get("admin_api_key", None)
 
             if request.args.get("api_admin_key"):
                 secret_key = os.getenv("API_ADMIN_KEY")
@@ -339,7 +337,7 @@ def collection_get(cid='', format="json", include_history=False):
 
             elif request.args.get("key"):
                 secret_key = os.getenv("API_KEY")
-                supplied_key = request.args.get("api_key")
+                supplied_key = request.args.get("key")
 
 
             clean_if_necessary_items = [item_module.clean_for_export(item, supplied_key, secret_key)
