@@ -57,13 +57,13 @@ def stop_user_who_is_swamping_us():
             team@impactstory.org for details and possible workarounds.
         """.format(ip=ip))
 
-    if key  in ["VANWIJIKc233acaa"]:
-        logger.debug("got a call from {key}; aborting with 403.".format(key=key) )
-        abort(403, """Sorry, we're blocking your api key '{key}' because \
-                we can't handle requests as quickly as you're sending them, and so
-                they're swamping our system. Please email us at \
-                team@impactstory.org for details and possible workarounds.
-            """.format(key=key))
+    # if key  in ["VANWIJIKc233acaa"]:
+    #     logger.debug("got a call from {key}; aborting with 403.".format(key=key) )
+    #     abort(403, """Sorry, we're blocking your api key '{key}' because \
+    #             we can't handle requests as quickly as you're sending them, and so
+    #             they're swamping our system. Please email us at \
+    #             team@impactstory.org for details and possible workarounds.
+    #         """.format(key=key))
 
 @app.before_request
 def check_key():
