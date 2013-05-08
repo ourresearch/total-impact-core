@@ -37,8 +37,8 @@ class Dryad(Provider):
     }
         
     DRYAD_DOI_PATTERN = re.compile(r"(10\.5061/.*)")
-    DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("(?P<views>\d+)\W*views</span", re.DOTALL)
-    DRYAD_DOWNLOADS_PATTERN = re.compile("(?P<downloads>\d+)\W*downloads</span", re.DOTALL)
+    DRYAD_VIEWS_PACKAGE_PATTERN = re.compile("<th>Pageviews</th>\W*<td>(?P<views>\d+)</td>\W*</tr>", re.DOTALL)
+    DRYAD_DOWNLOADS_PATTERN = re.compile("<tr>\W*<th>Downloaded</th>\W*<td>(?P<downloads>\d+) times</td>\W*</tr>", re.DOTALL)
 
     def __init__(self):
         super(Dryad, self).__init__()
