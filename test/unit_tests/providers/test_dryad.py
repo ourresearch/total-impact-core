@@ -42,8 +42,8 @@ class TestDryad(ProviderTestCase):
         metrics_dict = self.provider._extract_metrics(f.read())
         print metrics_dict
         assert_equals(len(metrics_dict), 2)
-        assert_equals(metrics_dict['dryad:package_views'], 542)
-        assert_equals(metrics_dict['dryad:total_downloads'], 183)
+        assert_equals(metrics_dict['dryad:package_views'], 889)
+        assert_equals(metrics_dict['dryad:total_downloads'], 237)
 
     def test_extract_stats_invalid_id(self):
         # If the item has a DOI alias but it's not recognised by dryad, 
@@ -54,8 +54,8 @@ class TestDryad(ProviderTestCase):
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'dryad:package_views': (361, 'http://dx.doi.org/10.5061/dryad.7898'), 
-            'dryad:total_downloads': (176, 'http://dx.doi.org/10.5061/dryad.7898')}
+        expected = {'dryad:package_views': (889, 'http://dx.doi.org/10.5061/dryad.7898'), 
+            'dryad:total_downloads': (237, 'http://dx.doi.org/10.5061/dryad.7898')}
         print metrics_dict            
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
