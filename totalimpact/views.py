@@ -80,9 +80,10 @@ def check_key():
 
 @app.after_request
 def add_crossdomain_header(resp):
+    #support CORS    
     resp.headers['Access-Control-Allow-Origin'] = "*"
     resp.headers['Access-Control-Allow-Methods'] = "POST, GET, OPTIONS, PUT, DELETE"
-    resp.headers['Access-Control-Allow-Headers'] = "Content-Type"
+    resp.headers['Access-Control-Allow-Headers'] = "origin, content-type, accept, x-requested-with"
     return resp
 
 # adding a simple route to confirm working API
