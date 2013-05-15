@@ -74,7 +74,11 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
 
     item["is_registered"] = is_tiid_registered_to_anyone(item["_id"], mydao)
 
-
+    try:
+        if "authors" in item["biblio"]:
+            del item["biblio"]["authors_literal"]
+    except (KeyError, TypeError):
+        pass    
 
     metrics = item.setdefault("metrics", {})
     for metric_name in metrics:

@@ -84,7 +84,16 @@ class Dryad(Provider):
             provider_url_template=None,
             cache_enabled=True):  
         logger.info("calling crossref to handle aliases")
-        return self.crossref.biblio(aliases, provider_url_template, cache_enabled)          
+        biblio = self.crossref.biblio(aliases, provider_url_template, cache_enabled)          
+
+        # try to parse out last names, for now using most basic approach
+        if not biblio:
+            return {}
+        if "authors_literal" in biblio:
+            lnames = [author.split(",")[0] for author in biblio["authors_literal"].split(";")]
+            biblio["authors"] = ",".join(lnames)
+            del biblio["authors_literal"]
+        return biblio
 
     def _extract_metrics(self, page, status_code=200, id=None):
         if status_code != 200:
