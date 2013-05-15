@@ -65,7 +65,7 @@ class TestDryad(ProviderTestCase):
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides', 'authors': u'Ally, Ritland, Otto', 'authors_literal': u'Ally, Dilara; Ritland, Kermit; Otto, Sarah P.', 'repository': u'Dryad Digital Repository', 'year': '2010'}
+        expected = {'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides', 'authors': u'Ally, Ritland, Otto', 'repository': u'Dryad Digital Repository', 'year': '2010'}
         assert_equals(biblio_dict, expected)
 
     @http
