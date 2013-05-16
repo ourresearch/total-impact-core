@@ -74,6 +74,8 @@ class Pmc(Provider):
             from totalimpact import dao
             mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
+        logger.info("Building batch data for PMC")
+
         results = mydao.db.view('provider_batch_data/by_alias_provider_batch_data', include_docs=True)
 
         batch_data = collections.defaultdict(list)
@@ -88,6 +90,8 @@ class Pmc(Provider):
             if provider == "pmc":
                 pmid_alias = (namespace, nid)
                 batch_data[pmid_alias] += [{"raw": row.doc["raw"], "max_event_date":row.value}]
+
+        logger.info("Finished building batch data for PMC: {n} rows".format(n=len(batch_data)))
 
         return batch_data
 
@@ -125,6 +129,7 @@ class Pmc(Provider):
                 pmid = meta_data.getAttribute("pubmed-id")
                 if id == pmid:
                     metrics = article.getElementsByTagName("usage")[0]
+                    
                     pdf_downloads = int(metrics.getAttribute("pdf"))
                     if pdf_downloads:
                         metrics_dict.update({'pmc:pdf_downloads': pdf_downloads})
