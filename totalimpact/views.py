@@ -332,11 +332,10 @@ def collection_get(cid='', format="json", include_history=False):
                              "UTF-8")
         else:
 
+            secret_key = os.getenv("API_KEY")  #ideally rename this to API_ADMIN_KEY
             if request.args.get("api_admin_key"):
-                secret_key = os.getenv("API_ADMIN_KEY")
                 supplied_key = request.args.get("api_admin_key", "")
             else:
-                secret_key = os.getenv("API_KEY")
                 supplied_key = request.args.get("key", "")
 
             clean_if_necessary_items = [item_module.clean_for_export(item, supplied_key, secret_key)
@@ -350,12 +349,20 @@ def collection_get(cid='', format="json", include_history=False):
 
 
 def get_coll_with_authentication_check(request, cid):
+    coll = dict(mydao.db[cid])
+
+    # if admin override key, then everything is fine
+    if request.args.get("api_admin_key"):
+        supplied_key = request.args.get("api_admin_key", "")
+        secret_key = os.getenv("API_KEY")  #ideally rename this to API_ADMIN_KEY
+        if secret_key == supplied_key:
+            return coll
+
+    # otherwise require authentication
     key = request.args.get("edit_key", None)
     if key is None:
         abort(404, "This method requires an update key.")
 
-    # authenticate:
-    coll = dict(mydao.db[cid])
     if "key" in coll.keys():
         if coll["key"] != key:
             abort(403, "Wrong update key")
@@ -455,6 +462,7 @@ def put_collection(cid=""):
 
     resp = make_response(json.dumps(coll, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
+
     return resp
 
 
