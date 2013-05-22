@@ -262,6 +262,16 @@ class PostgresDao(object):
             hostname=hostname, dbname=dbname))        
         return self.conn
 
+    def delete_schema(self):
+        # for unittests.  See http://stackoverflow.com/a/13104214/596939
+        cur = self.get_cursor()
+        try:
+            cur.execute("drop schema public cascade;");
+        except psycopg2.ProgrammingError:
+            logger.info("ProgrammingError dropping everything")
+        cur.execute("create schema public;");
+        cur.close()
+
     def create_tables(self):
         path_to_this_file = os.path.dirname(__file__)
         sql_file = open(os.path.join(path_to_this_file, "db_init.sql"), "r")
