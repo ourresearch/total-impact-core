@@ -41,11 +41,8 @@ def is_valid_key(key, mydao):
         return True
     return False
 
-
-def save_api_user(prefix, max_registered_items, mydao, **meta):
-    new_api_key = prefix.lower() + "-" + shortuuid.uuid().lower()[0:6]
+def save_api_user_to_database(new_api_key, max_registered_items, mydao, **meta):
     now = datetime.datetime.now().isoformat()
-
     cur = mydao.get_cursor()
     cur.execute("""INSERT INTO api_users 
                     (api_key, max_registered_items, created, planned_use, example_url, api_key_owner, notes, email, organization) 
@@ -53,6 +50,9 @@ def save_api_user(prefix, max_registered_items, mydao, **meta):
                 (new_api_key, max_registered_items, now, meta["planned_use"], meta["example_url"], meta["api_key_owner"], meta["notes"], meta["email"], meta["organization"]))
     cur.close()
 
+def save_api_user(prefix, max_registered_items, mydao, **meta):
+    new_api_key = prefix.lower() + "-" + shortuuid.uuid().lower()[0:6]
+    save_api_user_details(new_api_key, max_registered_items, mydao, **meta)
     return (new_api_key)
 
 def is_registered(alias, api_key, mydao):

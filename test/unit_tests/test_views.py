@@ -3,7 +3,7 @@ from copy import deepcopy
 from urllib import quote_plus
 from nose.tools import assert_equals, nottest, assert_greater
 
-from totalimpact import app, dao, views, tiredis
+from totalimpact import app, dao, views, tiredis, api_user
 from totalimpact.providers.dryad import Dryad
 import os
 
@@ -137,6 +137,7 @@ class ViewsTester(unittest.TestCase):
                "planned_use": "individual CV",
                "example_url": "",
                "api_key_owner": "Superman",
+               "notes": "",
                "organization": "individual",
                "email": "superman@secret.com"
            },
@@ -155,7 +156,10 @@ class ViewsTester(unittest.TestCase):
 
         #postgres
         self.postgres_d = dao.PostgresDao("postgres://localhost/unittests")
+        self.postgres_d.delete_schema()
         self.postgres_d.create_tables()
+        meta = json.loads(test_api_user)["meta"]
+        api_user.save_api_user_to_database("validkey", 1000, self.postgres_d, **meta)
 
         # do the same thing for the redis db.  We're using DB 8 for unittests.
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
@@ -291,7 +295,7 @@ class TestItem(ViewsTester):
         assert_equals(response_get.status_code, 210)
         expected = {u'created': u'2012-11-06T19:57:15.937961', u'_rev': u'1-05e5d8a964a0fe9af4284a2a7804815f', u'currently_updating': True, u'metrics': {}, u'last_modified': u'2012-11-06T19:57:15.937961', u'biblio': {u'genre': u'dataset'}, u'_id': u'jku42e6ogs8ghxbr7p390nz8', u'type': u'item', u'aliases': {u'doi': [u'10.5061/dryad.7898']}}
         response_data = json.loads(response_get.data)        
-        assert_equals(response_data["aliases"], {u'doi': [u'10.5061/dryad.7898']})
+        assert_equals(response_data["aliases"], {u'doi': [TEST_DRYAD_DOI]})
 
     def test_item_post_unknown_namespace(self):
         response = self.client.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
