@@ -334,12 +334,10 @@ def collection_get(cid='', format="json", include_history=False):
 
             if request.args.get("api_admin_key"):
                 secret_key = os.getenv("API_ADMIN_KEY")
-                supplied_key = request.args.get("api_admin_key")
-
-            elif request.args.get("key"):
+                supplied_key = request.args.get("api_admin_key", "")
+            else:
                 secret_key = os.getenv("API_KEY")
-                supplied_key = request.args.get("key")
-
+                supplied_key = request.args.get("key", "")
 
             clean_if_necessary_items = [item_module.clean_for_export(item, supplied_key, secret_key)
                 for item in coll_with_items["items"]]
