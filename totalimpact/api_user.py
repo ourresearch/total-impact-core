@@ -52,7 +52,7 @@ def save_api_user_to_database(new_api_key, max_registered_items, mydao, **meta):
 
 def save_api_user(prefix, max_registered_items, mydao, **meta):
     new_api_key = prefix.lower() + "-" + shortuuid.uuid().lower()[0:6]
-    save_api_user_details(new_api_key, max_registered_items, mydao, **meta)
+    save_api_user_to_database(new_api_key, max_registered_items, mydao, **meta)
     return (new_api_key)
 
 def is_registered(alias, api_key, mydao):
