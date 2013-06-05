@@ -31,9 +31,12 @@ def dedup_collections(collection_id):
     except requests.Timeout:
         print "timeout"
         return []
-    if not r:
+    try:
+        collection = r.json
+    except TypeError:
+        print "TypeError" #unicode() argument 2 must be string, not None
         return
-    collection = r.json
+
     if not collection:
         return
     items = collection["items"]
