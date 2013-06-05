@@ -72,8 +72,11 @@ def merge_collections_for_profile():
     from couch_paginator import CouchPaginator
     page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
 
+    email_data_strings = []
+
     while page:
         for row in page:
+
             row_count += 1
             user_doc = row.doc
 
@@ -95,6 +98,18 @@ def merge_collections_for_profile():
             insert_unless_error(insert_string('"user"', rowdata.keys()), [rowdata])
             sql_statement_count += 1
 
+            # pull information together to send out surveymonkey email
+            profile_id = user_doc["profile_collection"]
+            email = user_doc["_id"]
+            profile_doc = db.get(profile_id)
+            my_collections = user_doc["colls"]
+            email_data_strings += ["{url_slug},{profile_id},{len_profile},{email},{collections_string}".format(
+                url_slug=rowdata["url_slug"],
+                profile_id=profile_id,
+                email=email,
+                len_profile=len(profile_doc["alias_tiids"]),
+                collections_string=";".join(my_collections.keys()))]
+
         logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
         if page.has_next:
             page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
@@ -104,6 +119,9 @@ def merge_collections_for_profile():
     print "Number of rows: ", row_count
     print "Number of sql statements: ", sql_statement_count
 
+    print "\n\n\n"
+    for line in email_data_strings:
+        print line
 
 if (cloudant_db == "ti"):
     print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
