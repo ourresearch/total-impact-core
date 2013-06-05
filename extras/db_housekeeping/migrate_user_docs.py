@@ -89,6 +89,8 @@ def merge_collections_for_profile():
                 rowdata["created"] = datetime.datetime(2013, 1, 1).isoformat()                
             rowdata["password_hash"] = default_password_hash
             rowdata["url_slug"] = "user" + str(random.randint(5000,10000))
+            rowdata["given_name"] = "Firstname"
+            rowdata["surname"] = "Lastname"
 
             insert_unless_error(insert_string('"user"', rowdata.keys()), [rowdata])
             sql_statement_count += 1
