@@ -59,7 +59,7 @@ def merge_collections_for_profile():
                 #already updated
                 if not user_doc["colls"]:
                     user_doc["profile_collection"] = None
-                    print "updating profile_collection with because no collections", row.id
+                    print "updating profile_collection with None because no collections", row.id
                     db.save(user_doc)
                 continue 
 

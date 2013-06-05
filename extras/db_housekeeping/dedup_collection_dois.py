@@ -31,6 +31,8 @@ def dedup_collections(collection_id):
     except requests.Timeout:
         print "timeout"
         return []
+    if not r:
+        return
     collection = r.json
     if not collection:
         return
