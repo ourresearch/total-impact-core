@@ -91,7 +91,7 @@ def merge_collections_for_profile():
             except KeyError:
                 rowdata["created"] = datetime.datetime(2013, 1, 1).isoformat()                
             rowdata["password_hash"] = default_password_hash
-            rowdata["url_slug"] = "user" + str(random.randint(100000,999999))
+            rowdata["url_slug"] = "user" + str(50000 + row_count)
             rowdata["given_name"] = "Firstname"
             rowdata["surname"] = "Lastname"
 
