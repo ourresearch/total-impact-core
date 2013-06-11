@@ -34,7 +34,7 @@ cur = mypostgresdao.get_cursor()
 logger.info("connected to postgres")
 
 
-default_password = "password"
+default_password = "welcome"
 default_password_hash = generate_password_hash(default_password)
 
 def insert_unless_error(select_statement, save_list):
@@ -103,12 +103,19 @@ def merge_collections_for_profile():
             email = user_doc["_id"]
             profile_doc = db.get(profile_id)
             my_collections = user_doc["colls"]
-            email_data_strings += ["{url_slug},{profile_id},{len_profile},{email},{collections_string}".format(
+            try:
+                collections_string = str(";".join(my_collections.keys()))
+            except UnicodeEncodeError:
+                print "UnicodeEncodeError on ", email, "so setting collections to blank"
+                collections_string = ""
+
+            email_data_strings += [u"{url_slug}|{profile_id}|{len_profile}|{email}|{profile_title}|{collections_string}".format(
                 url_slug=rowdata["url_slug"],
                 profile_id=profile_id,
                 email=email,
                 len_profile=len(profile_doc["alias_tiids"]),
-                collections_string=";".join(my_collections.keys()))]
+                profile_title=profile_doc["title"],
+                collections_string=collections_string)]
 
         logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
         if page.has_next:
