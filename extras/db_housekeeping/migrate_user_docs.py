@@ -109,11 +109,12 @@ def merge_collections_for_profile():
                 print "UnicodeEncodeError on ", email, "so setting collections to blank"
                 collections_string = ""
 
-            email_data_strings += [u"{url_slug}|{profile_id}|{len_profile}|{email}|{profile_title}|{collections_string}".format(
+            email_data_strings += [u"{url_slug}|{profile_id}|{len_profile}|{email}|{created}|{profile_title}|{collections_string}".format(
                 url_slug=rowdata["url_slug"],
                 profile_id=profile_id,
                 email=email,
                 len_profile=len(profile_doc["alias_tiids"]),
+                created=rowdata["created"],
                 profile_title=profile_doc["title"],
                 collections_string=collections_string)]
 
@@ -134,11 +135,13 @@ if (cloudant_db == "ti"):
     print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
 else:
     print "\n\nThis doesn't appear to be the production database"
-confirm = None
-confirm = raw_input("\nType YES if you are sure you want to run this test:")
-if confirm=="YES":
+
+# remove check so can pipe output to a file: this script does not change the db so it is safe!
+# confirm = None
+# confirm = raw_input("\nType YES if you are sure you want to run this test:")
+##if confirm=="YES":
     ### call the function here
-    merge_collections_for_profile()
-else:
-    print "nevermind, then."
+merge_collections_for_profile()
+#else:
+#    print "nevermind, then."
 
