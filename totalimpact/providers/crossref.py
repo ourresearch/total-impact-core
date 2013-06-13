@@ -141,11 +141,14 @@ class Crossref(Provider):
             if "biblio" in aliases_dict:
                 doi = self._lookup_doi_from_biblio(aliases_dict["biblio"][0], cache_enabled)
                 if doi:
-                    new_aliases += [("doi", doi)]    
+                    new_aliases += [("doi", doi)]   
+                else:
+                    if "url" in aliases_dict["biblio"][0]:
+                        new_aliases += [("url", aliases_dict["biblio"][0]["url"])] 
 
         if not doi:
             # nothing else we can do 
-            return []
+            return new_aliases  #urls if we have them, otherwise empty list
 
         new_aliases += self._lookup_urls_from_doi(doi, provider_url_template, cache_enabled)
         
