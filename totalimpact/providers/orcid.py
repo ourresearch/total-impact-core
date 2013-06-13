@@ -1,3 +1,4 @@
+from totalimpact.providers import bibtex
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderItemNotFoundError
 
@@ -12,32 +13,69 @@ class Orcid(Provider):
     def __init__(self):
         super(Orcid, self).__init__()
         
+    def _parse_orcid_work(self, work):
+        if not work:
+            return {}
+
+        biblio = {}
+        try:
+            biblio["year"] = work["publication-date"]["year"]["value"]
+        except (KeyError, TypeError):
+            biblio["year"]  = ""
+
+        try:
+            biblio["title"] = work["work-title"]["title"]["value"]
+        except (KeyError, TypeError):
+            biblio["title"]  = ""
+
+        try:
+            biblio["journal"] = work["work-title"]["subtitle"]["value"]
+        except (KeyError, TypeError):
+            biblio["journal"]  = ""
+
+        try:
+            biblio["url"] = work["url"]["value"]
+        except (KeyError, TypeError):
+            biblio["url"]  = ""
+
+        biblio["authors"]  = ""
+
+        return biblio
+
     def _extract_members(self, page, query_string=None):
         if 'orcid-profile' not in page:
             raise ProviderContentMalformedError("Content does not contain expected text")
 
         data = provider._load_json(page)
-        dois = []
+        members = []
         try:
             orcid_works = data["orcid-profile"]["orcid-activities"]["orcid-works"]["orcid-work"]
         except KeyError:
             return []
 
         for work in orcid_works:
+            new_member = None
             try:
                 ids = work["work-external-identifiers"]["work-external-identifier"]
+
                 for myid in ids:
                     if myid['work-external-identifier-type'] == "DOI":
-                        doi = myid['work-external-identifier-id']['value']
-                        dois += [doi]
+                        new_member = ("doi", myid['work-external-identifier-id']['value'])
+                    if myid['work-external-identifier-type'] == "PMID":
+                        new_member = ("pmid", myid['work-external-identifier-id']['value'])
+
             except KeyError:
-                logger.info("no external identifiers for %s, so skipping" %(str(work)))
-                pass
+                logger.info("no external identifiers, try saving whole citation")
+                biblio = self._parse_orcid_work(work)
+                new_member = ("biblio", biblio)
 
-        if not dois:
-            raise ProviderItemNotFoundError
+            if new_member:
+                members += [new_member]    
 
-        members = [("doi", doi) for doi in list(set(dois))]
+        if not members:
+            #raise ProviderItemNotFoundError
+            print "NONE"
+
         return(members)
 
     def member_items(self, 
