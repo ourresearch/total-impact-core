@@ -55,7 +55,7 @@ class Pubmed(Provider):
             "provider": "F1000",
             "provider_url": "http://f1000.com",
             "description": "The article has been reviewed by F1000",
-            "icon": "http://f1000.com/1344012469601/images/favicon.ico"
+            "icon": "http://f1000.com/1371136042516/images/favicons/favicon-F1000.ico"
         }            
     }
 
