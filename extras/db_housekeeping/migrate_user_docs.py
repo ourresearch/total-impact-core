@@ -103,19 +103,29 @@ def merge_collections_for_profile():
             email = user_doc["_id"]
             profile_doc = db.get(profile_id)
             my_collections = user_doc["colls"]
+
+            title = profile_doc["title"]
+            if (len(my_collections) > 1):
+                title = ""
+                for cid in my_collections:
+                    coll_doc = db.get(cid)
+                    collection_title = coll_doc["title"]
+                    if collection_title != "My Collection":
+                        title += "*" + collection_title
+
             try:
                 collections_string = str(";".join(my_collections.keys()))
             except UnicodeEncodeError:
                 print "UnicodeEncodeError on ", email, "so setting collections to blank"
                 collections_string = ""
 
-            email_data_strings += [u"{url_slug}|{profile_id}|{len_profile}|{email}|{created}|{profile_title}|{collections_string}".format(
+            email_data_strings += [u"{url_slug}|{profile_id}|{len_profile}|{email}|{created}|{title}|{collections_string}".format(
                 url_slug=rowdata["url_slug"],
                 profile_id=profile_id,
                 email=email,
                 len_profile=len(profile_doc["alias_tiids"]),
                 created=rowdata["created"],
-                profile_title=profile_doc["title"],
+                title=title,
                 collections_string=collections_string)]
 
         logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
