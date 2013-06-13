@@ -13,11 +13,10 @@ logger = logging.getLogger('ti.providers.bibtex')
 
 class Bibtex(Provider):  
 
-    example_id = ("bibtex", "egonw,cdk")
+    example_id = None
 
     url = ""
     descr = ""
-    member_items_url_template = "https://api.github.com/users/%s/repos"
 
     def __init__(self):
         super(Bibtex, self).__init__()
