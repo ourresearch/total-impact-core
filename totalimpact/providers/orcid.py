@@ -73,8 +73,7 @@ class Orcid(Provider):
                 members += [new_member]    
 
         if not members:
-            #raise ProviderItemNotFoundError
-            print "NONE"
+            raise ProviderItemNotFoundError
 
         return(members)
 
