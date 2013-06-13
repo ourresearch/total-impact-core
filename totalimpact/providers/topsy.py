@@ -24,7 +24,7 @@ class Topsy(Provider):
             "icon": "http://twitter.com/phoenix/favicon.ico",
         },    
         "influential_tweets": {
-            "display_name": "influencial tweets",
+            "display_name": "influential tweets",
             "provider": "Topsy",
             "provider_url": "http://www.topsy.com/",
             "description": "Number of times the item has been tweeted by influential tweeters",
