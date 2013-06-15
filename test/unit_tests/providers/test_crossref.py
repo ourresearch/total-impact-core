@@ -11,6 +11,7 @@ from nose.tools import assert_equals, raises, nottest
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/crossref")
 SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, "aliases")
 SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
+SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
 
 TEST_DOI = "10.1371/journal.pcbi.1000361"
 
@@ -20,6 +21,7 @@ class TestCrossRef(ProviderTestCase):
 
     testitem_aliases = ("doi", TEST_DOI)
     testitem_biblio = ("doi", TEST_DOI)
+    testitem_metrics = ("doi", TEST_DOI)
 
     def setUp(self):
         ProviderTestCase.setUp(self)
@@ -30,6 +32,20 @@ class TestCrossRef(ProviderTestCase):
 
         assert_equals(self.provider.is_relevant_alias(("github", "NOT A CROSSREF ID")), False)
   
+    def test_extract_metrics(self):
+        f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
+        metrics = self.provider._extract_metrics(f.read())
+        expected = {'crossref:citations': '18'}
+        print metrics
+        assert_equals(metrics, expected)
+
+    @http
+    def test_metrics(self):
+        metrics = self.provider.metrics([("doi", TEST_DOI)])
+        expected = {'crossref:citations': (u'18', 'http://doi.crossref.org/servlet/query?pid=team@impactstory.org&format=xml&id=10.1371/journal.pcbi.1000361')}
+        print metrics
+        assert_equals(metrics, expected) 
+
     def test_extract_biblio(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
         biblio = self.provider._extract_biblio(f.read())

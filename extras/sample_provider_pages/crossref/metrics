@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<crossref_result xmlns="http://www.crossref.org/qrschema/3.0" version="3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.crossref.org/qrschema/3.0 http://www.crossref.org/schema/queryResultSchema/crossref_query_output3.0.xsd">
+  <query_result>
+    <head>
+      <doi_batch_id>none</doi_batch_id>
+    </head>
+    <body>
+      <query status="resolved">
+        <crm-item name="citedby-count" type="number">18</crm-item>
+        <crm-item name="owner-prefix" type="string">10.1371</crm-item>
+        <crm-item name="citation-id" type="number">37326515</crm-item>
+        <crm-item name="journal-id" type="number">48940</crm-item>
+        <crm-item name="last-update" type="date">2011-08-02 16:23:59.0</crm-item>
+        <crossref xmlns="http://www.crossref.org/xschema/1.0">
+          <journal>
+            <journal_metadata language="en">
+              <full_title>PLoS Computational Biology</full_title>
+              <abbrev_title>PLoS Comput Biol</abbrev_title>
+              <issn media_type="electronic">1553-7358</issn>
+            </journal_metadata>
+            <journal_issue>
+              <publication_date media_type="online">
+                <month>4</month>
+                <day>17</day>
+                <year>2009</year>
+              </publication_date>
+              <journal_volume>
+                <volume>5</volume>
+              </journal_volume>
+              <issue>4</issue>
+            </journal_issue>
+            <journal_article publication_type="full_text">
+              <titles>
+                <title>Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article</title>
+              </titles>
+              <contributors>
+                <person_name contributor_role="author" sequence="first">
+                  <given_name>David</given_name>
+                  <surname>Shotton</surname>
+                </person_name>
+                <person_name contributor_role="author" sequence="additional">
+                  <given_name>Katie</given_name>
+                  <surname>Portwin</surname>
+                </person_name>
+                <person_name contributor_role="author" sequence="additional">
+                  <given_name>Graham</given_name>
+                  <surname>Klyne</surname>
+                </person_name>
+                <person_name contributor_role="author" sequence="additional">
+                  <given_name>Alistair</given_name>
+                  <surname>Miles</surname>
+                </person_name>
+                <person_name contributor_role="editor" sequence="first">
+                  <given_name>Philip E.</given_name>
+                  <surname>Bourne</surname>
+                </person_name>
+              </contributors>
+              <publication_date media_type="online">
+                <month>4</month>
+                <day>17</day>
+                <year>2009</year>
+              </publication_date>
+              <pages>
+                <first_page>e1000361</first_page>
+              </pages>
+              <publisher_item>
+                <item_number>10.1371/journal.pcbi.1000361</item_number>
+              </publisher_item>
+              <doi_data>
+                <doi>10.1371/journal.pcbi.1000361</doi>
+                <timestamp>20090416095619</timestamp>
+                <resource>http://dx.plos.org/10.1371/journal.pcbi.1000361</resource>
+              </doi_data>
+              <component_list>
+                <component parent_relation="isPartOf">
+                  <doi_data>
+                    <doi>10.1371/journal.pcbi.1000361.s001</doi>
+                    <resource>http://dx.plos.org/10.1371/journal.pcbi.1000361.s001</resource>
+                  </doi_data>
+                </component>
+                <component parent_relation="isPartOf">
+                  <doi_data>
+                    <doi>10.1371/journal.pcbi.1000361.s002</doi>
+                    <resource>http://dx.plos.org/10.1371/journal.pcbi.1000361.s002</resource>
+                  </doi_data>
+                </component>
+              </component_list>
+            </journal_article>
+          </journal>
+        </crossref>
+      </query>
+    </body>
+  </query_result>
+</crossref_result>

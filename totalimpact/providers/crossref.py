@@ -19,6 +19,19 @@ class Crossref(Provider):
     # example code to test 
     # curl -D - -L -H   "Accept: application/vnd.citationstyles.csl+json" "http://dx.doi.org/10.1021/np070361t" 
 
+    metrics_url_template = "http://doi.crossref.org/servlet/query?pid=team@impactstory.org&format=xml&id=%s"
+    provenance_url_template = "http://doi.crossref.org/servlet/query?pid=team@impactstory.org&format=xml&id=%s"
+    
+    static_meta_dict = {
+        "citations": {
+            "display_name": "citations",
+            "provider": "CrossRef",
+            "provider_url": "http://www.crossref.org/",
+            "description": "The number of citations by papers in CrossRef",
+            "icon": "http://www.crossref.org/favicon.ico",
+        }
+    }
+
     def __init__(self):
         super(Crossref, self).__init__()
 
@@ -29,6 +42,25 @@ class Crossref(Provider):
     @property
     def provides_aliases(self):
          return True
+
+    def _extract_metrics(self, page, status_code=200, id=None):
+        if status_code != 200:
+            if status_code == 404:
+                return {}
+            else:
+                raise(self._get_error(status_code))
+
+        if not "crossref_result" in page:
+            raise ProviderContentMalformedError
+
+        metrics_dict = {}
+
+        match = re.search('<crm-item name="citedby-count" type="number">(\d+)</crm-item>', page)
+        if match:
+            citations = match.group(1)
+            metrics_dict = {'crossref:citations': citations}
+
+        return metrics_dict
 
     # default method; providers can override
     def get_biblio_for_id(self, 
@@ -183,7 +215,7 @@ class Crossref(Provider):
 
         # for more info on crossref spec, see
         # http://ftp.crossref.org/02publishers/25query_spec.html
-        url = "http://doi.crossref.org/servlet/query?pid=totalimpactdev@gmail.com&qdata=%s" % query_string
+        url = "http://doi.crossref.org/servlet/query?pid=team@impactstory.org&qdata=%s" % query_string
 
         try:
             logger.debug("%20s calling crossref at %s" % (self.provider_name, url))
