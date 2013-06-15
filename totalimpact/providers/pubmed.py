@@ -282,15 +282,13 @@ class Pubmed(Provider):
             citing_pmcids = self._get_citing_pmcids(id)
             filtered_pmids = self._filter(id, citing_pmcids, "review")
             pmids_string = "+OR+".join([pmid for pmid in filtered_pmids])
-            url = self._get_templated_url(self.provenance_url_pmc_citations_filtered_template, 
-                    pmids_string, "provenance")
+            url = self.provenance_url_pmc_citations_filtered_template %pmids_string
 
         elif (metric_name == "pubmed:pmc_citations_editorials"):
             citing_pmcids = self._get_citing_pmcids(id)
             filtered_pmids = self._filter(id,citing_pmcids, "editorial")
             pmids_string = "+OR+".join([pmid for pmid in filtered_pmids])
-            url = self._get_templated_url(self.provenance_url_pmc_citations_filtered_template, 
-                    pmids_string, "provenance")
+            url = self.provenance_url_pmc_citations_filtered_template %pmids_string
 
         return url
 
