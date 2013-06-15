@@ -58,7 +58,8 @@ class Crossref(Provider):
         match = re.search('<crm-item name="citedby-count" type="number">(\d+)</crm-item>', page)
         if match:
             citations = match.group(1)
-            metrics_dict = {'crossref:citations': citations}
+            if citations > 0:
+                metrics_dict = {'crossref:citations': citations}
 
         return metrics_dict
 
