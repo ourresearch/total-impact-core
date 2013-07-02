@@ -65,9 +65,19 @@ class TestUpdater():
 
     def test_update_active_publisher_items(self):
         number_to_update = 10        
-        tiids = updater.update_active_publisher_items(number_to_update, self.r, self.d)
+        tiids = updater.update_active_publisher_items(number_to_update, None, self.r, self.d)
         print tiids
         assert_equals(sorted(tiids), sorted(['tiid3']))
+
+    def test_update_active_publisher_items_single_publisher(self):
+        number_to_update = 10        
+        tiids = updater.update_active_publisher_items(number_to_update, "elife", self.r, self.d)
+        print tiids
+        assert_equals(sorted(tiids), [])
+
+        tiids = updater.update_active_publisher_items(number_to_update, "pensoft", self.r, self.d)
+        print tiids
+        assert_equals(sorted(tiids), ['tiid3'])
 
     def test_get_least_recently_updated_tiids_in_db(self):
         number_to_update = 2
