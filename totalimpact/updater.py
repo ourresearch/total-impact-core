@@ -153,10 +153,14 @@ def get_least_recently_updated_items_from_doi_prefix(min_year, doi_prefix, myred
     (tiids_to_update, docs_to_update) = get_matching_dois_in_db(min_year, doi_prefix, mydao)
     return (tiids_to_update, docs_to_update)
 
-def update_active_publisher_items(number_to_update, myredis, mydao):
+def update_active_publisher_items(number_to_update, specific_publisher, myredis, mydao):
     all_tiids = []
     all_docs = []
-    for publisher in active_publishers:
+    if specific_publisher:
+        publishers_to_update = [specific_publisher]
+    else:
+        publishers_to_update = active_publishers.keys()
+    for publisher in publishers_to_update:
         for journal_dict in active_publishers[publisher]["journals"]:
             min_year = 2011  #only update 2012-2013 right now
             (tiids_from_doi_prefix, docs_from_doi_prefix) = get_least_recently_updated_items_from_doi_prefix(min_year, journal_dict["doi_prefix"], myredis, mydao)
@@ -261,7 +265,7 @@ def gold_update(number_to_update, myredis, mydao, now=datetime.datetime.now()):
                 tiids_to_update = update_tiids(tiids, docs, number_still_avail, mydao, myredis)
     return all_tiids
 
-def main(action_type, number_to_update=35):
+def main(action_type, number_to_update=35, specific_publisher=None):
     #35 every 10 minutes is 35*6perhour*24hours=5040 per day
 
     cloudant_db = os.getenv("CLOUDANT_DB")
@@ -274,7 +278,7 @@ def main(action_type, number_to_update=35):
     try:
         if action_type == "active_publishers":
             print "running " + action_type
-            tiids = update_active_publisher_items(number_to_update, myredis, mydao)
+            tiids = update_active_publisher_items(number_to_update, specific_publisher, myredis, mydao)
         elif action_type == "least_recently_updated":
             print "running " + action_type
             tiids = update_least_recently_updated(number_to_update, myredis, mydao)
@@ -290,7 +294,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run periodic metrics updating from the command line")
     parser.add_argument("action_type", type=str, help="The action to test; available actions are 'active_publishers' and 'least_recently_updated'")
     parser.add_argument('--number_to_update', default='35', type=int, help="Number to update.")
+    parser.add_argument('--specific_publisher', default='35', type=str, help="if given, just update this one publisher")
     args = vars(parser.parse_args())
     print args
     print "updater.py starting."
-    main(args["action_type"], args["number_to_update"])
+    main(args["action_type"], args["number_to_update"], args["specific_publisher"])
