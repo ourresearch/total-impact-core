@@ -16,7 +16,7 @@ app = Flask(__name__)
 app.config.from_object(default_settings)
 
 # segment.io logging
-analytics.init(os.getenv("SEGMENTIO_KEY"))
+analytics.init(os.getenv("SEGMENTIO_PYTHON_KEY"))
 analytics.identify("CORE", {
 				       'internal': True,
 				       'name': 'IMPACTSTORY CORE'})
