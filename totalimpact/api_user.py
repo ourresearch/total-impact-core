@@ -1,6 +1,6 @@
 import datetime, shortuuid, os
 
-from totalimpact import item, mixpanel
+from totalimpact import item
 
 import logging
 logger = logging.getLogger('ti.api_user')
@@ -158,8 +158,5 @@ def register_item(alias, api_key, myredis, mydao, mypostgresdao):
         else:
             tiid = item.create_item(namespace, nid, myredis, mydao)
     registered = add_registration_data(alias, api_key, mypostgresdao)
-    if registered:
-        mixpanel.track("Create:Register", {"Namespace":namespace, 
-                                            "API Key":api_key})
 
     return tiid

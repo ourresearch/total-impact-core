@@ -2,7 +2,7 @@
 import argparse
 import logging, couchdb, os, sys, random, datetime
 
-from totalimpact import dao, tiredis, item, mixpanel
+from totalimpact import dao, tiredis, item
 
 logger = logging.getLogger('ti.updater')
 logger.setLevel(logging.DEBUG)
@@ -207,7 +207,6 @@ def update_tiids(all_tiids, all_docs, number_to_update, mydao, myredis):
 
     print "updating {number_to_update} of them now".format(number_to_update=number_to_update)
     QUEUE_DELAY_IN_SECONDS = 0.25
-    mixpanel.track("Trigger:Update", {"Number Items":len(tiids_to_update), "Update Type":"Scheduled Registered"})
     item.start_item_update(tiids_to_update, myredis, mydao, sleep_in_seconds=QUEUE_DELAY_IN_SECONDS)
     return tiids_to_update
 

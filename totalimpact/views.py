@@ -6,8 +6,9 @@ from werkzeug.security import check_password_hash
 from collections import defaultdict
 import redis
 import shortuuid
+import analytics
 
-from totalimpact import dao, app, tiredis, collection, api_user, mixpanel
+from totalimpact import dao, app, tiredis, collection, api_user
 from totalimpact import item as item_module
 from totalimpact.models import MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderServerError, ProviderTimeout
@@ -65,7 +66,7 @@ def stop_user_who_is_swamping_us():
     #             team@impactstory.org for details and possible workarounds.
     #         """.format(key=key))
 
-@app.before_request
+
 def check_key():
     if request.args.get("api_admin_key"):
         return
@@ -76,6 +77,28 @@ def check_key():
             abort(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a valid api key.")
     return # if success don't return any content
 
+def track_api_event():
+    api_key = request.values.get('key')
+    if not api_key:
+        api_key = request.args.get("api_admin_key", "")
+
+    if api_key == os.getenv("API_KEY"):
+        analytics.track("CORE", "api request from webapp", {
+            "path": request.path, 
+            "method": request.method 
+            })
+    else:
+        analytics.track("CORE", "api request from external", {
+            "path": request.path, 
+            "method": request.method, 
+            "api_key": api_key
+            })
+
+
+@app.before_request
+def before_request():
+    track_api_event()
+    check_key()
 
 
 @app.after_request
@@ -135,7 +158,6 @@ def item_namespace_post_with_tiid(namespace, nid):
     namespace = item_module.clean_id(namespace)
     nid = item_module.clean_id(nid)
 
-    mixpanel.track("Create:Item", {"Namespace":namespace, "Source":"/item post"}, request)
     tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
     response_code = 201 # Created
     resp = make_response(json.dumps(tiid), response_code)
@@ -238,8 +260,6 @@ def provider_memberitems(provider_name):
     Make a file into a dict strings describing items.
     """
 
-    mixpanel.track("Trigger:Import", {"Provider":provider_name}, request)
-
     file = request.files['file']
     logger.debug("In"+provider_name+"/memberitems, got file: filename="+file.filename)
     entries_str = file.read().decode("utf-8")
@@ -258,8 +278,6 @@ def provider_memberitems_get(provider_name, query):
     """
     Gets aliases associated with a query from a given provider.
     """
-
-    mixpanel.track("Trigger:Import", {"Provider":provider_name}, request)
 
     try:
         provider = ProviderFactory.get_provider(provider_name)
@@ -483,9 +501,6 @@ def collection_update(cid=""):
         ))
         abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")
 
-    mixpanel.track("Trigger:Update", 
-            {"Number Items":len(tiids), "Report Id":cid, "Update Type":"webapp"}, 
-            request)
     item_module.start_item_update(tiids, myredis, mydao)
 
     resp = make_response("true", 200)
@@ -514,7 +529,6 @@ def collection_create():
         (tiids, new_items) = item_module.create_or_update_items_from_aliases(aliases, myredis, mydao)
         for item in new_items:
             namespaces = item["aliases"].keys()
-            mixpanel.track("Create:Item", {"Namespace":namespaces[0], "Source":"collection"}, request)
 
         if not tiids:
             abort(404, "POST /collection requires a list of [namespace, id] pairs.")
@@ -544,8 +558,6 @@ def collection_create():
             id=coll["_id"],
             num_items=len(coll["alias_tiids"])
         ))
-
-    mixpanel.track("Create:Report", {"Report Id":coll["_id"]}, request)
 
     resp = make_response(json.dumps({"collection":coll, "key":key},
             sort_keys=True, indent=4), response_code)
@@ -700,7 +712,6 @@ def update_user(userid=''):
         abort(400, "the submitted user object is missing required properties.")
     try:
         res = UserFactory.put(new_stuff, key, mydao)
-        mixpanel.track("Create:User", {}, request)
     except NotAuthenticatedError:
         abort(403, "You've got the wrong password.")
     except AttributeError:

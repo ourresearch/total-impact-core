@@ -8,6 +8,7 @@ Jinja2==2.6
 Logbook==0.3
 WTForms==1.0.1
 Werkzeug==0.8.3
+analytics-python==0.4.2
 certifi==0.0.8
 chardet==1.0.1
 distribute==0.6.10

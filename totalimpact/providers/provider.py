@@ -126,7 +126,20 @@ class Provider(object):
         try:
             text = response.text
         except (AttributeError, TypeError):
-            text = ""           
+            text = ""       
+
+        if response:
+            url = response.url
+        else:
+            url = None
+
+        analytics.track("CORE", "Provider response error", {
+            "provider": self.provider_name, 
+            "url": url,
+            "text": text,
+            "status_code": status_code
+            })
+
         if status_code >= 500:
             error = ProviderServerError(response)
             self.logger.info("%s ProviderServerError status code=%i, %s, %s" 
@@ -494,6 +507,11 @@ class Provider(object):
         if headers is None:
             headers = {}
         headers["User-Agent"] = app.config["USER_AGENT"]
+
+        analytics.track("CORE", "Provider GET", {
+            "provider": self.provider_name, 
+            "url": url
+            })
         
         # make the request        
         try:
@@ -503,10 +521,22 @@ class Provider(object):
                 proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}
             self.logger.debug("LIVE %s" %(url))
             r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=allow_redirects, verify=False)
+
         except requests.exceptions.Timeout as e:
+            analytics.track("CORE", "Provider timeout", {
+                "provider": self.provider_name, 
+                "url": url
+                })
+
             self.logger.info("%s Provider timed out during GET on %s" %(self.provider_name, url))
             raise ProviderTimeout("Provider timed out during GET on " + url, e)
+
         except requests.exceptions.RequestException as e:
+            analytics.track("CORE", "Provider exception", {
+                "provider": self.provider_name, 
+                "url": url
+                })
+
             raise ProviderHttpError("RequestException during GET on: " + url, e)
 
         if not r.encoding:
