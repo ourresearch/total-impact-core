@@ -9,6 +9,7 @@ import requests, os, time, threading, sys, traceback, importlib, urllib, logging
 import simplejson
 import BeautifulSoup
 import socket
+import analytics
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
 import re
@@ -133,7 +134,7 @@ class Provider(object):
         else:
             url = None
 
-        analytics.track("CORE", "Provider response error", {
+        analytics.track("CORE", "Received error response from Provider", {
             "provider": self.provider_name, 
             "url": url,
             "text": text,
@@ -508,7 +509,7 @@ class Provider(object):
             headers = {}
         headers["User-Agent"] = app.config["USER_AGENT"]
 
-        analytics.track("CORE", "Provider GET", {
+        analytics.track("CORE", "Sent GET to Provider", {
             "provider": self.provider_name, 
             "url": url
             })
@@ -523,7 +524,7 @@ class Provider(object):
             r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=allow_redirects, verify=False)
 
         except requests.exceptions.Timeout as e:
-            analytics.track("CORE", "Provider timeout", {
+            analytics.track("CORE", "Received no response from Provider (timeout)", {
                 "provider": self.provider_name, 
                 "url": url
                 })
@@ -532,7 +533,7 @@ class Provider(object):
             raise ProviderTimeout("Provider timed out during GET on " + url, e)
 
         except requests.exceptions.RequestException as e:
-            analytics.track("CORE", "Provider exception", {
+            analytics.track("CORE", "Received RequestException from Provider", {
                 "provider": self.provider_name, 
                 "url": url
                 })

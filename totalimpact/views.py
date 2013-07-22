@@ -77,20 +77,22 @@ def check_key():
             abort(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a valid api key.")
     return # if success don't return any content
 
+
 def track_api_event():
     api_key = request.values.get('key')
     if not api_key:
         api_key = request.args.get("api_admin_key", "")
 
-    if api_key == os.getenv("API_KEY"):
-        analytics.track("CORE", "api request from webapp", {
+    if api_user.is_internal_key(api_key):
+        analytics.track("CORE", "Received API request from webapp", {
             "path": request.path, 
             "method": request.method 
             })
     else:
-        analytics.track("CORE", "api request from external", {
+        analytics.track("CORE", "Received API request from external", {
             "path": request.path, 
             "method": request.method, 
+            "user_agent": request.user_agent.string,
             "api_key": api_key
             })
 
