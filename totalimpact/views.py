@@ -547,7 +547,7 @@ def collection_create():
 
     mixpanel.track("Create:Report", {"Report Id":coll["_id"]}, request)
 
-    resp = make_response(json.dumps({"collection":coll, "key":key},
+    resp = make_response(json.dumps({"collection":coll, "key": key},
             sort_keys=True, indent=4), response_code)
     resp.mimetype = "application/json"
     return resp

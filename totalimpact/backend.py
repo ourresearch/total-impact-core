@@ -341,6 +341,9 @@ class Backend(Worker):
 
 
 def main():
+
+
+
     mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
     myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))

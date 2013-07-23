@@ -1,3 +1,6 @@
+.env-local
+.env-staging
+.env-production
 *.pyc
 *.egg-info/*
 .*.swp
