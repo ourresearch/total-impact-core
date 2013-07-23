@@ -83,15 +83,15 @@ def track_api_event():
     if not api_key:
         api_key = request.args.get("api_admin_key", "")
 
-
     if not api_user.is_internal_key(api_key):
-        analytics.track("CORE", "Received API request from external", {
-            "path": request.path, 
-            "url": request.url, 
-            "method": request.method, 
-            "user_agent": request.user_agent.string,
-            "api_key": api_key
-            })
+        if request.path not in ["/favicon.ico"]:
+            analytics.track("CORE", "Received API request from external", {
+                "path": request.path, 
+                "url": request.url, 
+                "method": request.method, 
+                "user_agent": request.user_agent.string,
+                "api_key": api_key
+                })
 
 
 @app.before_request
