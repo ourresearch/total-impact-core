@@ -56,13 +56,6 @@ def get_item(tiid, myrefsets, dao, include_history=False):
     return item
 
 
-def is_tiid_registered_to_anyone(tiid, mydao):
-    res = mydao.view('registered_tiids/registered_tiids')    
-    matches = res[[tiid]] 
-    if matches.rows:
-        #api_user_id = matches.rows[0]["id"]
-        return True
-    return False
 
 def build_item_for_client(item, myrefsets, mydao, include_history=False):
     try:
@@ -71,8 +64,6 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
     except (KeyError, TypeError):
         logger.error("Skipping item, unable to lookup aliases or biblio in %s" % str(item))
         return None
-
-    item["is_registered"] = is_tiid_registered_to_anyone(item["_id"], mydao)
 
     try:
         if "authors" in item["biblio"]:
