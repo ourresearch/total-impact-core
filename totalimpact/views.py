@@ -83,14 +83,11 @@ def track_api_event():
     if not api_key:
         api_key = request.args.get("api_admin_key", "")
 
-    if api_user.is_internal_key(api_key):
-        analytics.track("CORE", "Received API request from webapp", {
-            "path": request.path, 
-            "method": request.method 
-            })
-    else:
+
+    if not api_user.is_internal_key(api_key):
         analytics.track("CORE", "Received API request from external", {
             "path": request.path, 
+            "url": request.url, 
             "method": request.method, 
             "user_agent": request.user_agent.string,
             "api_key": api_key
