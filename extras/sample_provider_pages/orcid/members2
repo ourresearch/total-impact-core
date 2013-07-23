@@ -1,0 +1,1076 @@
+{
+    "message-version": "1.0.14",
+    "orcid-profile": {
+        "orcid": {
+            "value": "0000-0001-9107-0714"
+        },
+        "orcid-id": "http://orcid.org/0000-0001-9107-0714",
+        "orcid-history": {
+            "creation-method": "WEBSITE",
+            "completion-date": {
+                "value": 1350397993566
+            },
+            "submission-date": {
+                "value": 1350393540261
+            },
+            "last-modified-date": {
+                "value": 1362702217053
+            },
+            "claimed": {
+                "value": true
+            },
+            "source": null,
+            "visibility": null
+        },
+        "orcid-activities": {
+            "orcid-works": {
+                "orcid-work": [
+                    {
+                        "put-code": "5177475",
+                        "work-title": {
+                            "title": {
+                                "value": "The PLOS Computational Biology Software Section"
+                            },
+                            "subtitle": null
+                        },
+                        "work-citation": {
+                            "work-citation-type": "FORMATTED_UNSPECIFIED",
+                            "citation": "Prlić, A & Lapp, H, 2012, 'The PLOS Computational Biology Software Section', <i>PLoS Computational Biology</i>, vol. 8, no. 11, p. e1002799."
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2012"
+                            },
+                            "month": {
+                                "value": "11"
+                            },
+                            "day": {
+                                "value": "29"
+                            },
+                            "media-type": null
+                        },
+                        "url": null,
+                        "work-contributors": {
+                            "contributor": [
+                                {
+                                    "contributor-attributes": {
+                                        "contributor-sequence": "FIRST",
+                                        "contributor-role": "AUTHOR"
+                                    }
+                                }
+                            ]
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177447",
+                        "work-title": {
+                            "title": {
+                                "value": "500,000 fish phenotypes: The new informatics landscape for evolutionary and developmental biology of the vertebrate skeleton"
+                            },
+                            "subtitle": {
+                                "value": "Journal of Applied Ichthyology"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2012,\n\tvolume  = {28},\n\tnumber  = {3},\n\tpages   = {300-305},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2012"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861306656&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177460",
+                        "work-title": {
+                            "title": {
+                                "value": "NeXML: Rich, extensible, and verifiable representation of comparative data and metadata"
+                            },
+                            "subtitle": {
+                                "value": "Systematic Biology"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2012,\n\tvolume  = {61},\n\tnumber  = {4},\n\tpages   = {675-689},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2012"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84862498268&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177462",
+                        "work-title": {
+                            "title": {
+                                "value": "Organizing our knowledge of biodiversity"
+                            },
+                            "subtitle": null
+                        },
+                        "work-citation": {
+                            "work-citation-type": "FORMATTED_UNSPECIFIED",
+                            "citation": "Lapp, H, Morris, R, Catapano, T, Hobern, D & Morrison, N, 2011, 'Organizing our knowledge of biodiversity', <i>Bulletin of the American Society for Information Science and Technology</i>, vol. 1, no. 11, pp. 6-42."
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2011"
+                            },
+                            "month": {
+                                "value": "04"
+                            },
+                            "day": {
+                                "value": "28"
+                            },
+                            "media-type": null
+                        },
+                        "url": null,
+                        "work-contributors": {
+                            "contributor": [
+                                {
+                                    "contributor-attributes": {
+                                        "contributor-sequence": "FIRST",
+                                        "contributor-role": "AUTHOR"
+                                    }
+                                }
+                            ]
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177463",
+                        "work-title": {
+                            "title": {
+                                "value": "Overview of FEED, the feeding experiments end-user database"
+                            },
+                            "subtitle": {
+                                "value": "Integrative and Comparative Biology"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2011,\n\tvolume  = {51},\n\tnumber  = {2},\n\tpages   = {215-223},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2011"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-79960529406&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177474",
+                        "work-title": {
+                            "title": {
+                                "value": "The Chado Natural Diversity module: A new generic database schema for large-scale phenotyping and genotyping data"
+                            },
+                            "subtitle": {
+                                "value": "Database"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2011,\n\tvolume  = {2011},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2011"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84862168904&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177476",
+                        "work-title": {
+                            "title": {
+                                "value": "The Teleost Taxonomy Ontology"
+                            },
+                            "subtitle": null
+                        },
+                        "work-citation": {
+                            "work-citation-type": "FORMATTED_UNSPECIFIED",
+                            "citation": "Midford, P, Mabee, P, Vision, T, Westerfield, M, Midford, P, Balhoff, J, Dahdul, W, Kothari, C, Lapp, H & Lundberg, J, 2010, 'The Teleost Taxonomy Ontology', <i>Nature Precedings</i>."
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2010"
+                            },
+                            "month": {
+                                "value": "07"
+                            },
+                            "day": {
+                                "value": "06"
+                            },
+                            "media-type": null
+                        },
+                        "url": null,
+                        "work-contributors": {
+                            "contributor": [
+                                {
+                                    "contributor-attributes": {
+                                        "contributor-sequence": "FIRST",
+                                        "contributor-role": "AUTHOR"
+                                    }
+                                }
+                            ]
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177478",
+                        "work-title": {
+                            "title": {
+                                "value": "TreeBASE2: Rise of the Machines"
+                            },
+                            "subtitle": null
+                        },
+                        "work-citation": {
+                            "work-citation-type": "FORMATTED_UNSPECIFIED",
+                            "citation": "Vos, R, Vos, R, Lapp, H, Piel, W & Tannen, V, 2010, 'TreeBASE2: Rise of the Machines', <i>Nature Precedings</i>."
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2010"
+                            },
+                            "month": {
+                                "value": "06"
+                            },
+                            "day": {
+                                "value": "30"
+                            },
+                            "media-type": null
+                        },
+                        "url": null,
+                        "work-contributors": {
+                            "contributor": [
+                                {
+                                    "contributor-attributes": {
+                                        "contributor-sequence": "FIRST",
+                                        "contributor-role": "AUTHOR"
+                                    }
+                                }
+                            ]
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177455",
+                        "work-title": {
+                            "title": {
+                                "value": "Evolutionary characters, phenotypes and ontologies: Curating data from the systematic biology literature"
+                            },
+                            "subtitle": {
+                                "value": "PLoS ONE"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2010,\n\tvolume  = {5},\n\tnumber  = {5},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2010"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-77956229224&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177466",
+                        "work-title": {
+                            "title": {
+                                "value": "Phenex: Ontological annotation of phenotypic diversity"
+                            },
+                            "subtitle": {
+                                "value": "PLoS ONE"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2010,\n\tvolume  = {5},\n\tnumber  = {5},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2010"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-77956398373&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177477",
+                        "work-title": {
+                            "title": {
+                                "value": "The teleost anatomy ontology: Anatomical representation for the genomics age"
+                            },
+                            "subtitle": {
+                                "value": "Systematic Biology"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2010,\n\tvolume  = {59},\n\tnumber  = {4},\n\tpages   = {369-383},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2010"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-77953795230&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177479",
+                        "work-title": {
+                            "title": {
+                                "value": "linking big: The continuing promise of evolutionary synthesis"
+                            },
+                            "subtitle": {
+                                "value": "Evolution"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2010,\n\tvolume  = {64},\n\tnumber  = {4},\n\tpages   = {871-880},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2010"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-77955007716&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177457",
+                        "work-title": {
+                            "title": {
+                                "value": "LINKING BIG: THE CONTINUING PROMISE OF EVOLUTIONARY SYNTHESIS"
+                            },
+                            "subtitle": null
+                        },
+                        "work-citation": {
+                            "work-citation-type": "FORMATTED_UNSPECIFIED",
+                            "citation": "Sidlauskas, B, Ganapathy, G, Hazkani-Covo, E, Jenkins, K, Lapp, H, McCall, L, Price, S, Scherle, R, Spaeth, P & Kidd, D, 2009, 'LINKING BIG: THE CONTINUING PROMISE OF EVOLUTIONARY SYNTHESIS', <i>Evolution</i>, vol. 1, no. 4, pp. 356-880."
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2009"
+                            },
+                            "month": {
+                                "value": "10"
+                            },
+                            "day": {
+                                "value": "23"
+                            },
+                            "media-type": null
+                        },
+                        "url": null,
+                        "work-contributors": {
+                            "contributor": [
+                                {
+                                    "contributor-attributes": {
+                                        "contributor-sequence": "FIRST",
+                                        "contributor-role": "AUTHOR"
+                                    }
+                                }
+                            ]
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177467",
+                        "work-title": {
+                            "title": {
+                                "value": "Phenoscape: Ontologies for Large Multi-species Phenotype Datasets"
+                            },
+                            "subtitle": null
+                        },
+                        "work-citation": {
+                            "work-citation-type": "FORMATTED_UNSPECIFIED",
+                            "citation": "Midford, P, Midford, P, Mabee, P, Vision, T, Lapp, H, Balhoff, J, Dahdul, W, Kothari, C, Lundberg, J & Westerfield, M, 2009, 'Phenoscape: Ontologies for Large Multi-species Phenotype Datasets', <i>Nature Precedings</i>."
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2009"
+                            },
+                            "month": {
+                                "value": "08"
+                            },
+                            "day": {
+                                "value": "14"
+                            },
+                            "media-type": null
+                        },
+                        "url": null,
+                        "work-contributors": {
+                            "contributor": [
+                                {
+                                    "contributor-attributes": {
+                                        "contributor-sequence": "FIRST",
+                                        "contributor-role": "AUTHOR"
+                                    }
+                                }
+                            ]
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177452",
+                        "work-title": {
+                            "title": {
+                                "value": "Comparative methods in R hackathon"
+                            },
+                            "subtitle": null
+                        },
+                        "work-citation": {
+                            "work-citation-type": "FORMATTED_UNSPECIFIED",
+                            "citation": "O'Meara, B, Rabosky, D, Hipp, A, de Vienne, D, Sidlauskas, B, Hunt, G, Desper, R, Smith, S, Jombart, T, Felsenstein, J, Swofford, D, Kembel, S, Harmon, L, Vision, T, Lapp, H, Waddell, P, Loarie, S, Zanne, A, Maddison, W, Alfaro, M, Zwickl, D, Midford, P, Bell, C, Paradis, E, Orme, D, Bolker, B, Price, S, Heibl, C, Butler, M & Cowan, P, 2008, 'Comparative methods in R hackathon', <i>Nature Precedings</i>."
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2008"
+                            },
+                            "month": {
+                                "value": "07"
+                            },
+                            "day": {
+                                "value": "29"
+                            },
+                            "media-type": null
+                        },
+                        "url": null,
+                        "work-contributors": {
+                            "contributor": [
+                                {
+                                    "contributor-attributes": {
+                                        "contributor-sequence": "FIRST",
+                                        "contributor-role": "AUTHOR"
+                                    }
+                                }
+                            ]
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177472",
+                        "work-title": {
+                            "title": {
+                                "value": "The 2006 NESCent Phyloinformatics Hackathon: A Field Report"
+                            },
+                            "subtitle": null
+                        },
+                        "work-citation": {
+                            "work-citation-type": "FORMATTED_UNSPECIFIED",
+                            "citation": "Lapp, Hilmar, Sendu Bala, James P. Balhoff, Amy Bouck, Naohisa Goto, Mark Holder, Richard Holland, et al. 2007. The 2006 NESCent Phyloinformatics Hackathon: A Field Report. Evolutionary Bioinformatics Online 3: 287–296."
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2007"
+                            },
+                            "month": {
+                                "value": "12"
+                            },
+                            "day": {
+                                "value": "14"
+                            },
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.la-press.com/the-2006-nescent-phyloinformatics-hackathon-a-field-report-article-a480"
+                        },
+                        "work-contributors": {
+                            "contributor": [
+                                {
+                                    "contributor-attributes": {
+                                        "contributor-sequence": "FIRST",
+                                        "contributor-role": "AUTHOR"
+                                    }
+                                }
+                            ]
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177464",
+                        "work-title": {
+                            "title": {
+                                "value": "Persistent BioPerl"
+                            },
+                            "subtitle": null
+                        },
+                        "work-citation": {
+                            "work-citation-type": "FORMATTED_UNSPECIFIED",
+                            "citation": "Lapp, H, 2007, 'Persistent BioPerl', <i>Nature Precedings</i>."
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2007"
+                            },
+                            "month": {
+                                "value": "10"
+                            },
+                            "day": {
+                                "value": "18"
+                            },
+                            "media-type": null
+                        },
+                        "url": null,
+                        "work-contributors": {
+                            "contributor": [
+                                {
+                                    "contributor-attributes": {
+                                        "contributor-sequence": "FIRST",
+                                        "contributor-role": "AUTHOR"
+                                    }
+                                }
+                            ]
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177453",
+                        "work-title": {
+                            "title": {
+                                "value": "Data and animal management software for large-scale phenotype screening"
+                            },
+                            "subtitle": {
+                                "value": "Mammalian Genome"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2006,\n\tvolume  = {17},\n\tnumber  = {4},\n\tpages   = {288-297},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2006"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-33645513194&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177461",
+                        "work-title": {
+                            "title": {
+                                "value": "Open source tools and toolkits for bioinformatics: Significance, and where are we?"
+                            },
+                            "subtitle": {
+                                "value": "Briefings in Bioinformatics"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2006,\n\tvolume  = {7},\n\tnumber  = {3},\n\tpages   = {287-296},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2006"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-33748796893&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177456",
+                        "work-title": {
+                            "title": {
+                                "value": "Exploring trafficking GTPase function by mRNA expression profiling: Use of the SymAtlas web-application and the membrome datasets"
+                            },
+                            "subtitle": {
+                                "value": "Methods in Enzymology"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2005,\n\tvolume  = {403},\n\tpages   = {1-10},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2005"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-30544447301&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177458",
+                        "work-title": {
+                            "title": {
+                                "value": "Large-scale profiling of Rab GTPase trafficking networks: The membrome"
+                            },
+                            "subtitle": {
+                                "value": "Molecular Biology of the Cell"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2005,\n\tvolume  = {16},\n\tnumber  = {8},\n\tpages   = {3847-3864},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2005"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-23044472125&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177448",
+                        "work-title": {
+                            "title": {
+                                "value": "A gene atlas of the mouse and human protein-encoding transcriptomes"
+                            },
+                            "subtitle": {
+                                "value": "Proceedings of the National Academy of Sciences of the United States of America"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2004,\n\tvolume  = {101},\n\tnumber  = {16},\n\tpages   = {6062-6067},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2004"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-11144358198&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177450",
+                        "work-title": {
+                            "title": {
+                                "value": "Applications of a rat multiple tissue gene expression data set"
+                            },
+                            "subtitle": {
+                                "value": "Genome Research"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2004,\n\tvolume  = {14},\n\tnumber  = {4},\n\tpages   = {742-749},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2004"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-12444303031&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177469",
+                        "work-title": {
+                            "title": {
+                                "value": "Robust DNA microarray image analysis"
+                            },
+                            "subtitle": null
+                        },
+                        "work-citation": {
+                            "work-citation-type": "FORMATTED_UNSPECIFIED",
+                            "citation": "Br�ndle, N, Bischof, H & Lapp, H, 2003, 'Robust DNA microarray image analysis', <i>Machine Vision and Applications</i>, vol. 15, no. 1, pp. 11-28."
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2003"
+                            },
+                            "month": {
+                                "value": "10"
+                            },
+                            "day": {
+                                "value": "01"
+                            },
+                            "media-type": null
+                        },
+                        "url": null,
+                        "work-contributors": {
+                            "contributor": [
+                                {
+                                    "contributor-attributes": {
+                                        "contributor-sequence": "FIRST",
+                                        "contributor-role": "AUTHOR"
+                                    }
+                                }
+                            ]
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177451",
+                        "work-title": {
+                            "title": {
+                                "value": "Automatic Grid Fitting for Genetic Spot Array Images Containing Guide Spots"
+                            },
+                            "subtitle": null
+                        },
+                        "work-citation": {
+                            "work-citation-type": "FORMATTED_UNSPECIFIED",
+                            "citation": "Brändle, N, Solina, F, Leonardis, A, Lapp, H & Bischof, H, 2003, , Springer Berlin Heidelberg, Berlin, Heidelberg."
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2003"
+                            },
+                            "month": {
+                                "value": "06"
+                            },
+                            "day": {
+                                "value": "03"
+                            },
+                            "media-type": null
+                        },
+                        "url": null,
+                        "work-contributors": {
+                            "contributor": [
+                                {
+                                    "contributor-attributes": {
+                                        "contributor-sequence": "FIRST",
+                                        "contributor-role": "AUTHOR"
+                                    }
+                                }
+                            ]
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177468",
+                        "work-title": {
+                            "title": {
+                                "value": "Robust DNA microarray image analysis"
+                            },
+                            "subtitle": {
+                                "value": "Machine Vision and Applications"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2003,\n\tvolume  = {15},\n\tnumber  = {1},\n\tpages   = {11-28},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2003"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-11144277252&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177473",
+                        "work-title": {
+                            "title": {
+                                "value": "The Bioperl toolkit: Perl modules for the life sciences"
+                            },
+                            "subtitle": {
+                                "value": "Genome Research"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2002,\n\tvolume  = {12},\n\tnumber  = {10},\n\tpages   = {1611-1618},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2002"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-18644368714&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177449",
+                        "work-title": {
+                            "title": {
+                                "value": "A generic and robust approach for the analysis of spot array images"
+                            },
+                            "subtitle": {
+                                "value": "Proceedings of SPIE - The International Society for Optical Engineering"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2001,\n\tvolume  = {4266},\n\tpages   = {1-12},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2001"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-0034878733&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177459",
+                        "work-title": {
+                            "title": {
+                                "value": "Molecular classification of human carcinomas by use of gene expression signatures"
+                            },
+                            "subtitle": {
+                                "value": "Cancer Research"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2001,\n\tvolume  = {61},\n\tnumber  = {20},\n\tpages   = {7388-7393},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2001"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-0035887459&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177470",
+                        "work-title": {
+                            "title": {
+                                "value": "Robust parametric and semi-parametric spot fitting for spot array images."
+                            },
+                            "subtitle": {
+                                "value": "Proceedings / . International Conference on Intelligent Systems for Molecular Biology ; ISMB. International Conference on Intelligent Systems for Molecular Biology"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2000,\n\tvolume  = {8},\n\tpages   = {46-56},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2000"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-0034564270&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    },
+                    {
+                        "put-code": "5177471",
+                        "work-title": {
+                            "title": {
+                                "value": "Robust spot fitting for genetic spot array images"
+                            },
+                            "subtitle": {
+                                "value": "IEEE International Conference on Image Processing"
+                            }
+                        },
+                        "work-citation": {
+                            "work-citation-type": "BIBTEX",
+                            "citation": "@article{lapp2000,\n\tvolume  = {3},\n}\n"
+                        },
+                        "publication-date": {
+                            "year": {
+                                "value": "2000"
+                            },
+                            "month": null,
+                            "day": null,
+                            "media-type": null
+                        },
+                        "url": {
+                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-0034444429&partnerID=MN8TOARS"
+                        },
+                        "work-source": {
+                            "value": "NOT_DEFINED"
+                        },
+                        "visibility": null
+                    }
+                ],
+                "scope": null
+            }
+        },
+        "type": "USER"
+    }
+}

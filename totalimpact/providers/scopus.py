@@ -73,7 +73,7 @@ class Scopus(Provider):
             if response.status_code == 404:
                 return None
             else:
-                raise(self._get_error(response.status_code))
+                raise(self._get_error(response.status_code, response))
         page = response.text
         if not page:
             raise ProviderContentMalformedError()

@@ -131,30 +131,15 @@ def pull_dot_env_from_heroku(environment):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='push or pull heroku env variables from local .env files')
+    parser = argparse.ArgumentParser(description='pull heroku env vars to local .env files')
 
-    parser.add_argument('action', help="'pull' to go Heroku -> .env file; 'push' to go .env -> Heroku")
-    parser.add_argument('--production', help="push or pull to the production app", action="store_true")
+    parser.add_argument('--production', help="pull from the production app instead of staging", action="store_true")
     args = parser.parse_args()
-
-    if args.action == "push":
-        if args.production:
-            print "sorry, you can't push to production; it's too dangerous."
-            sys.exit()
-
-        user_input = raw_input("Are you sure you want overwrite Heroku's env vars? (y/n)")
-        if user_input == "y":
-            print "pushing to server"
-            push_dot_env_to_heroku("staging")
-
-    elif args.action == "pull":
-        if args.production:
-            pull_dot_env_from_heroku("production")
-        else:
-            pull_dot_env_from_heroku("staging")
-
+    if args.production:
+        pull_dot_env_from_heroku("production")
     else:
-        print "you have to specify whether you want to 'push' or 'pull'."
+        pull_dot_env_from_heroku("staging")
+
 
 
 

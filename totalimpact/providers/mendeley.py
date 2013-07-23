@@ -103,7 +103,7 @@ class Mendeley(Provider):
             if response.status_code == 404:
                 return None
             else:
-                raise(self._get_error(response.status_code))
+                raise(self._get_error(response.status_code, response))
         return response.text
          
     def _get_uuid_lookup_page(self, title, cache_enabled=True):

@@ -52,10 +52,22 @@ def merge_collections_for_profile():
 
     while page:
         for row in page:
+            row_count += 1
             user_doc = row.doc
+
+            if "profile_collection" in user_doc:
+                #already updated
+                if not user_doc["colls"]:
+                    user_doc["profile_collection"] = None
+                    print "updating profile_collection with None because no collections", row.id
+                    db.save(user_doc)
+                continue 
+
             alias_tiid_tuples = []
 
-            print "\n", row.id, 
+            print "\nstill needs a profile_collection:", row.id, 
+            print user_doc
+
             try:
                 my_collections = user_doc["colls"]
                 for coll in my_collections:
@@ -63,6 +75,7 @@ def merge_collections_for_profile():
                     alias_tiids = collection_doc["alias_tiids"]
                     alias_tiid_tuples += alias_tiids.items()
 
+                profile_collection = None    
                 if (len(my_collections) == 1):
                     profile_collection = collection_doc["_id"]
                     print "only one collection so merged collection not needed"
@@ -85,7 +98,6 @@ def merge_collections_for_profile():
                 print "saved user_doc with updated profile collection"
             except KeyError:
                 raise
-            row_count += 1
         logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
         if page.has_next:
             page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)

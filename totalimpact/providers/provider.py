@@ -9,6 +9,7 @@ import requests, os, time, threading, sys, traceback, importlib, urllib, logging
 import simplejson
 import BeautifulSoup
 import socket
+import analytics
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
 import re
@@ -126,7 +127,20 @@ class Provider(object):
         try:
             text = response.text
         except (AttributeError, TypeError):
-            text = ""           
+            text = ""       
+
+        if response:
+            url = response.url
+        else:
+            url = None
+
+        analytics.track("CORE", "Received error response from Provider", {
+            "provider": self.provider_name, 
+            "url": url,
+            "text": text,
+            "status_code": status_code
+            })
+
         if status_code >= 500:
             error = ProviderServerError(response)
             self.logger.info("%s ProviderServerError status code=%i, %s, %s" 
@@ -494,6 +508,11 @@ class Provider(object):
         if headers is None:
             headers = {}
         headers["User-Agent"] = app.config["USER_AGENT"]
+
+        analytics.track("CORE", "Sent GET to Provider", {
+            "provider": self.provider_name, 
+            "url": url
+            })
         
         # make the request        
         try:
@@ -503,10 +522,22 @@ class Provider(object):
                 proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}
             self.logger.debug("LIVE %s" %(url))
             r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=allow_redirects, verify=False)
+
         except requests.exceptions.Timeout as e:
+            analytics.track("CORE", "Received no response from Provider (timeout)", {
+                "provider": self.provider_name, 
+                "url": url
+                })
+
             self.logger.info("%s Provider timed out during GET on %s" %(self.provider_name, url))
             raise ProviderTimeout("Provider timed out during GET on " + url, e)
+
         except requests.exceptions.RequestException as e:
+            analytics.track("CORE", "Received RequestException from Provider", {
+                "provider": self.provider_name, 
+                "url": url
+                })
+
             raise ProviderHttpError("RequestException during GET on: " + url, e)
 
         if not r.encoding:

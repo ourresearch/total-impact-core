@@ -4,7 +4,7 @@ import shortuuid, datetime, hashlib, threading, json, time, copy, re
 
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact.providers.provider import ProviderTimeout, ProviderServerError
-from totalimpact import default_settings, mixpanel
+from totalimpact import default_settings
 from totalimpact.utils import Retry
 
 # Master lock to ensure that only a single thread can write
@@ -396,8 +396,6 @@ def create_item(namespace, nid, myredis, mydao):
         id=item["_id"],
         alias=str((namespace, nid))
     ))
-
-    mixpanel.track("Create:Item", {"Namespace":namespace})
 
     try:
         return item["_id"]
