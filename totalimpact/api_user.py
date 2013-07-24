@@ -1,4 +1,5 @@
 import datetime, shortuuid, os
+import analytics
 
 from totalimpact import item
 
@@ -131,9 +132,7 @@ def get_api_user_id_by_api_key(api_key, mydao):
     api_key = api_key.lower()
 
     cur = mydao.get_cursor()
-    cur.execute("""SELECT 1 FROM api_users 
-            WHERE lower(api_key)=%s""", 
-            (api_key,))
+    cur.execute("SELECT 1 FROM api_users WHERE lower(api_key)=%s", (api_key,))
     results = cur.fetchall()
     cur.close()
 
@@ -154,6 +153,10 @@ def register_item(alias, api_key, myredis, mydao, mypostgresdao):
     tiid = item.get_tiid_by_alias(namespace, nid, mydao)
     if not tiid:
         if is_over_quota(api_key, mypostgresdao):
+            analytics.track("CORE", "Raised Exception", {
+                "exception class": "ApiLimitExceededException",
+                "api_key": api_key
+                })
             raise ApiLimitExceededException
         else:
             tiid = item.create_item(namespace, nid, myredis, mydao)
