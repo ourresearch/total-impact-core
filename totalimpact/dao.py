@@ -129,6 +129,20 @@ class Dao(object):
                 "views": {
                     "by_type": {}                    
                 }
+            },            
+            {
+                "_id": "_design/collections_per_genre",
+                "language": "javascript",
+                "views": {
+                    "collections_per_genre": {}                    
+                }
+            },            
+            {
+                "_id": "_design/products_per_collection",
+                "language": "javascript",
+                "views": {
+                    "products_per_collection": {}                    
+                }
             }            
         ]
 
