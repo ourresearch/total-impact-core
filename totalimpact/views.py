@@ -85,10 +85,22 @@ def track_api_event():
 
     if not api_user.is_internal_key(api_key):
         if request.path not in ["/favicon.ico"]:
+            requested_to_create_item = False
+            requested_to_view_item = False
+            if ("/v1/item" in request.url):
+                if (request.method == "POST"):
+                    requested_to_create_item = True
+                elif (request.method == "GET"):
+                    requested_to_view_item = True
+                    if (request.args.get("register", 0) in ["1", "true", "True"]):
+                        requested_to_create_item = True
+
             analytics.track("CORE", "Received API request from external", {
                 "path": request.path, 
                 "url": request.url, 
                 "method": request.method, 
+                "requested_to_create_item": requested_to_create_item, 
+                "requested_to_view_item": requested_to_view_item, 
                 "user_agent": request.user_agent.string,
                 "api_key": api_key
                 })
