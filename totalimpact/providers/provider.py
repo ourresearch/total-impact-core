@@ -512,7 +512,8 @@ class Provider(object):
         analytics.track("CORE", "Sent GET to Provider", {
             "provider": self.provider_name, 
             "url": url
-            })
+            }, 
+            context={ "providers": { 'Mixpanel': False } })
         
         # make the request        
         try:

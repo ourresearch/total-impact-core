@@ -103,7 +103,8 @@ def track_api_event():
                 "requested_to_view_item": requested_to_view_item, 
                 "user_agent": request.user_agent.string,
                 "api_key": api_key
-                })
+                }, 
+                context={ "providers": { 'Mixpanel': False } })
 
 
 @app.before_request
