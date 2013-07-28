@@ -160,6 +160,16 @@ def register_item(alias, api_key, myredis, mydao, mypostgresdao):
             raise ApiLimitExceededException
         else:
             tiid = item.create_item(namespace, nid, myredis, mydao)
+            analytics.identify(api_key, {"name": api_key, 
+                                        "api_user": True})
+            analytics.track(api_key, "Created item because of registration", {
+                "tiid": tiid,
+                "namespace": namespace,
+                "nid": nid,
+                "api_key": api_key
+                })
+
     registered = add_registration_data(alias, api_key, mypostgresdao)
+
 
     return tiid
