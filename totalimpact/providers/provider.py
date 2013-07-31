@@ -539,6 +539,7 @@ class Provider(object):
                 "url": url
                 })
 
+            self.logger.info("%s RequestException during GET on %s" %(self.provider_name, url))
             raise ProviderHttpError("RequestException during GET on: " + url, e)
 
         if not r.encoding:
