@@ -242,18 +242,17 @@ class TestProvider(ViewsTester):
 class TestItem(ViewsTester):
 
     def test_item_post_unknown_tiid(self):
-        response = self.client.post('/item/doi/AnIdOfSomeKind/')
+        response = self.client.post('/v1/item/doi/AnIdOfSomeKind/' + "?key=validkey")
         print response
         print response.data
         assert_equals(response.status_code, 201)  #Created
-        assert_equals(len(json.loads(response.data)), 24)
-        assert_equals(response.mimetype, "application/json")
+        assert_equals(json.loads(response.data), u'ok')
 
     def test_item_post_success(self):
-        resp = self.client.post('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
+        resp = self.client.post('/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey")
         tiid = json.loads(resp.data)
 
-        response = self.client.get('/item/' + tiid)
+        response = self.client.get('/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey")
         assert_equals(response.status_code, 210) # 210 created, but not done updating...
         assert_equals(response.mimetype, "application/json")
         saved_item = json.loads(response.data)
@@ -281,7 +280,7 @@ class TestItem(ViewsTester):
 
     def test_item_get_success_realid(self):
         # First put something in
-        response = self.client.get('/item/doi/' + quote_plus(TEST_DRYAD_DOI))
+        response = self.client.get('/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey")
         tiid = response.data
         print response
         print tiid
@@ -298,7 +297,7 @@ class TestItem(ViewsTester):
         assert_equals(response_data["aliases"], {u'doi': [TEST_DRYAD_DOI]})
 
     def test_item_post_unknown_namespace(self):
-        response = self.client.post('/item/AnUnknownNamespace/AnIdOfSomeKind/')
+        response = self.client.post('/v1/item/AnUnknownNamespace/AnIdOfSomeKind/' + "?key=validkey")
         # cheerfully creates items whether we know their namespaces or not.
         assert_equals(response.status_code, 201)
 
@@ -604,36 +603,14 @@ class TestApi(ViewsTester):
     def tearDown(self):
         pass
 
-    def test_tiid_get_with_unknown_alias(self):
-        # try to retrieve tiid id for something that doesn't exist yet
-        plos_no_tiid_resp = self.client.get('/tiid/doi/' +
-                quote_plus(PLOS_TEST_DOI))
-        assert_equals(plos_no_tiid_resp.status_code, 404)  # Not Found
-
-
-    def test_tiid_get_with_known_alias(self):
-        # create new plos item from a doi
-        plos_create_tiid_resp = self.client.post('/item/doi/' +
-                quote_plus(PLOS_TEST_DOI))
-        plos_create_tiid = json.loads(plos_create_tiid_resp.data)
-
-        # retrieve the plos tiid using tiid api
-        plos_lookup_tiid_resp = self.client.get('/tiid/doi/' +
-                quote_plus(PLOS_TEST_DOI))
-        assert_equals(plos_lookup_tiid_resp.status_code, 303)
-        plos_lookup_tiids = json.loads(plos_lookup_tiid_resp.data)
-
-        # check that the tiids are the same
-        assert_equals(plos_create_tiid, plos_lookup_tiids)
-
     def test_tiid_get_tiids_for_multiple_known_aliases(self):
         # create two new items with the same plos alias
-        first_plos_create_tiid_resp = self.client.post('/item/doi/' +
-                quote_plus(PLOS_TEST_DOI))
+        first_plos_create_tiid_resp = self.client.post('/v1/item/doi/' +
+                quote_plus(PLOS_TEST_DOI) + "?key=validkey")
         first_plos_create_tiid = json.loads(first_plos_create_tiid_resp.data)
 
-        second_plos_create_tiid_resp = self.client.post('/item/doi/' +
-                quote_plus(PLOS_TEST_DOI))
+        second_plos_create_tiid_resp = self.client.post('/v1/item/doi/' +
+                quote_plus(PLOS_TEST_DOI) + "?key=validkey")
         second_plos_create_tiid = json.loads(second_plos_create_tiid_resp.data)
 
         # check that the tiid lists are the same
@@ -707,26 +684,15 @@ class TestInbox(ViewsTester):
 
 class TestTiid(ViewsTester):
 
-    def test_tiid_post(self):
-        # POST isn't supported
-        response = self.client.post('/tiid/Dryad/NotARealId')
-        assert_equals(response.status_code, 405)  # Method Not Allowed
-
-    def test_item_get_unknown_tiid(self):
-        # pick a random ID, very unlikely to already be something with this ID
-        response = self.client.get('/item/' + str(uuid.uuid1()))
-        assert_equals(response.status_code, 404)  # Not Found
-
     def test_item_post_known_tiid(self):
-        response = self.client.post('/item/doi/IdThatAlreadyExists/')
+        response = self.client.post('/v1/item/doi/IdThatAlreadyExists/' + "?key=validkey")
         print response
         print "here is the response data: " + response.data
 
         # FIXME should check and if already exists return 200
         # right now this makes a new item every time, creating many dups
         assert_equals(response.status_code, 201)
-        assert_equals(len(json.loads(response.data)), 24)
-        assert_equals(response.mimetype, "application/json")
+        assert_equals(json.loads(response.data), u'ok')
 
 class TestUser(ViewsTester):
 
