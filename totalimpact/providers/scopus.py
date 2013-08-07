@@ -95,10 +95,10 @@ class Scopus(Provider):
     def _get_scopus_page(self, url):
         page = self._get_page(url)
         if not page:
-            logging.info("empty page with id {id}".format(id=id))
+            logger.info(u"empty page with id {id}".format(id=id))
             return None
         if "Result set was empty" in page:
-            #logging.warning("empty result set with doi {id}".format(id=id))
+            #logger.warning(u"empty result set with doi {id}".format(id=id))
             return None
         return page
 
@@ -125,7 +125,7 @@ class Scopus(Provider):
             page = self._get_page(url)
             relevant_record = self._extract_relevant_record_with_doi(page, id)
             if not relevant_record:
-                logging.warning("not empty result set, yet couldn't find a page with doi {id}".format(id=id))
+                logger.warning(u"not empty result set, yet couldn't find a page with doi {id}".format(id=id))
                 return None
         return relevant_record
 
@@ -137,7 +137,7 @@ class Scopus(Provider):
             if len(citation_rows)==1:
                 relevant_record = citation_rows[0]
             else:
-                #logging.warning("ambiguous result set with biblio, not selecting any {id}".format(id=id))
+                #logger.warning(u"ambiguous result set with biblio, not selecting any {id}".format(id=id))
                 return None
         except (KeyError, ValueError):
             # not in Scopus database
@@ -170,7 +170,7 @@ class Scopus(Provider):
             relevant_record = self._get_relevant_record_with_biblio(id)
 
         if not relevant_record:
-            logging.info("no scopus page with id {id}".format(id=id))
+            logger.info(u"no scopus page with id {id}".format(id=id))
             return {}
 
         metrics_dict = self._extract_metrics(relevant_record)

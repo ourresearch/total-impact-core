@@ -70,7 +70,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
             try:
                 item_for_client = item_module.build_item_for_client(item_doc, myrefsets, mydao, include_history)
             except (KeyError, TypeError):
-                logging.info("Couldn't build item {item_doc}, excluding it from the returned collection {cid}".format(
+                logger.info(u"Couldn't build item {item_doc}, excluding it from the returned collection {cid}".format(
                     item_doc=item_doc, cid=cid))
                 item_for_client = None
                 raise
@@ -82,7 +82,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
         item["currently_updating"] = item_module.is_currently_updating(item["_id"], myredis)
         something_currently_updating = something_currently_updating or item["currently_updating"]
 
-    logging.info("Got items for collection %s" %cid)
+    logger.info(u"Got items for collection %s" %cid)
     # print json.dumps(collection, sort_keys=True, indent=4)
     return (collection, something_currently_updating)
 
@@ -173,7 +173,7 @@ def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_
     for metric_name in metric_value_lists:
         metric_values = sorted(metric_value_lists[metric_name], reverse=False)
         if (len(confidence_interval_table) != len(metric_values)):
-            logging.error("Was expecting normalization set to be {expected_len} but it is {actual_len}. Not loading.".format(
+            logger.error(u"Was expecting normalization set to be {expected_len} but it is {actual_len}. Not loading.".format(
                 expected_len=len(confidence_interval_table), actual_len=len(metric_values) ))
         matches[metric_name] = defaultdict(list)
         num_normalization_points = len(metric_values)
@@ -243,7 +243,7 @@ def build_all_reference_lookups(myredis, mydao):
         #print(json.dumps(confidence_interval_table, indent=4))
 
     res = mydao.db.view("reference-sets/reference-sets", descending=True, include_docs=False, limits=100)
-    logging.info("Number rows = " + str(len(res.rows)))
+    logger.info(u"Number rows = " + str(len(res.rows)))
     reference_lookup_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict), "software": defaultdict(dict)}
     reference_histogram_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict), "software": defaultdict(dict)}
 
@@ -260,21 +260,21 @@ def build_all_reference_lookups(myredis, mydao):
                 refset_name = refset_metadata["name"]
                 refset_version = refset_metadata["version"]
                 if refset_version < 0.1:
-                    logging.error("Refset version too low for '%s', not loading its normalizations" %str(row.key))
+                    logger.error(u"Refset version too low for '%s', not loading its normalizations" %str(row.key))
                     continue
             except ValueError:
-                logging.error("Normalization '%s' not formatted as expected, not loading its normalizations" %str(row.key))
+                logger.error(u"Normalization '%s' not formatted as expected, not loading its normalizations" %str(row.key))
                 continue
 
             histogram = myredis.get_reference_histogram_dict(genre, refset_name, year)
             lookup = myredis.get_reference_lookup_dict(genre, refset_name, year)
             
             if histogram and lookup:
-                logging.info("Loaded successfully from cache")
+                logger.info(u"Loaded successfully from cache")
                 reference_histogram_dict[genre][refset_name][year] = histogram
                 reference_lookup_dict[genre][refset_name][year] = lookup
             else:
-                logging.info("Not found in cache, so now building from items")
+                logger.info(u"Not found in cache, so now building from items")
                 if refset_name:
                     cid = row.id
                     try:
@@ -283,7 +283,7 @@ def build_all_reference_lookups(myredis, mydao):
                     except (LookupError, AttributeError):       
                         raise #not found
 
-                    logging.info("Loading normalizations for %s" %coll_with_items["title"])
+                    logger.info(u"Loading normalizations for %s" %coll_with_items["title"])
 
                     # hack for now to get big collections
                     normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])

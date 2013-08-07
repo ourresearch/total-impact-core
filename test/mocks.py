@@ -74,7 +74,7 @@ class QueueMock(object):
         return item
 
     def save(self, item):
-        logging.debug("Saving item %s" % item.id)
+        logger.debug(u"Saving item %s" % item.id)
 
     def add_to_metrics_queues(self, item):
         pass
