@@ -15,7 +15,7 @@ SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
 TEST_DRYAD_AUTHOR = "Piwowar, Heather A."
-TEST_ALIASES_SEED = {"doi" : [TEST_DRYAD_DOI], "url" : ["http://datadryad.org/handle/10255/dryad.7898"]}
+TEST_ALIASES_SEED = {"doi" : [TEST_DRYAD_DOI], "url" : ["http://datadryad.org/resource/doi:10.5061/dryad.7898"]}
 
 class TestDryad(ProviderTestCase):
 
@@ -72,6 +72,6 @@ class TestDryad(ProviderTestCase):
     def test_alias(self):
         aliases = self.provider.aliases([self.testitem_aliases])
         print aliases
-        expected = [('biblio', {'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides', 'authors_literal': u'Ally, Dilara; Ritland, Kermit; Otto, Sarah P.', 'repository': u'Dryad Digital Repository', 'year': u'2010'}), ('url', u'http://datadryad.org/handle/10255/dryad.7898'), ('url', 'http://dx.doi.org/10.5061/dryad.7898')]
+        expected = [('biblio', {'title': u'Data from: Can clone size serve as a proxy for clone age? An exploration using microsatellite divergence in Populus tremuloides', 'authors_literal': u'Ally, Dilara; Ritland, Kermit; Otto, Sarah P.', 'repository': u'Dryad Digital Repository', 'year': u'2010'}), ('url', u'http://datadryad.org/resource/doi:10.5061/dryad.7898'), ('url', 'http://dx.doi.org/10.5061/dryad.7898')]
         assert_equals(sorted(aliases), sorted(expected))
 

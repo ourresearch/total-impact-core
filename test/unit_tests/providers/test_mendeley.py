@@ -78,7 +78,10 @@ class TestMendeley(ProviderTestCase):
     def test_metrics_pmid(self):
         # at the moment this item 
         metrics_dict = self.provider.metrics([("pmid", "12578738")])
-        expected = {'mendeley:discipline': ([{u'id': 6, u'value': 33, u'name': u'Computer and Information Science'}, {u'id': 3, u'value': 33, u'name': u'Biological Sciences'}, {u'id': 19, u'value': 12, u'name': u'Medicine'}], u'http://api.mendeley.com/research/value-data/'), 'mendeley:country': ([{u'name': u'United States', u'value': 22}, {u'name': u'United Kingdom', u'value': 16}, {u'name': u'Netherlands', u'value': 12}], u'http://api.mendeley.com/research/value-data/'), 'mendeley:career_stage': ([{u'name': u'Ph.D. Student', u'value': 19}, {u'name': u'Other Professional', u'value': 15}, {u'name': u'Researcher (at an Academic Institution)', u'value': 14}], u'http://api.mendeley.com/research/value-data/'), 'mendeley:groups': (14, u'http://api.mendeley.com/research/value-data/'), 'mendeley:readers': (129, u'http://api.mendeley.com/research/value-data/')}
+        expected = {'mendeley:discipline': ([{u'id': 6, u'value': 33, u'name': u'Computer and Information Science'}, {u'id': 3, u'value': 33, u'name': u'Biological Sciences'}, {u'id': 19, u'value': 12, u'name': u'Medicine'}], u'http://api.mendeley.com/research/value-data/'), 
+                'mendeley:country': ([{u'name': u'United States', u'value': 22}, {u'name': u'United Kingdom', u'value': 16}, {u'name': u'Netherlands', u'value': 12}], u'http://api.mendeley.com/research/value-data/'), 
+                'mendeley:career_stage': ([{u'name': u'Ph.D. Student', u'value': 19}, {u'name': u'Other Professional', u'value': 15}, {u'name': u'Researcher (at an Academic Institution)', u'value': 14}], u'http://api.mendeley.com/research/value-data/'), 
+                'mendeley:readers': (129, u'http://api.mendeley.com/research/value-data/')}
         print metrics_dict
         assert_equals(set(metrics_dict.keys()), set(expected.keys())) 
         # can't tell more about dicsciplines etc because they are percentages and may go up or down

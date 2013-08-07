@@ -69,8 +69,8 @@ class Facebook(Provider):
             raise ProviderContentMalformedError
 
         dict_of_keylists = {
-            'facebook:likes' : ['share_count'],
-            'facebook:shares' : ['like_count'],
+            'facebook:likes' : ['like_count'],
+            'facebook:shares' : ['share_count'],
             'facebook:comments' : ['comment_count'],
             'facebook:clicks' : ['click_count']
         }

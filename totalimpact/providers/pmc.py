@@ -63,6 +63,7 @@ class Pmc(Provider):
         global batch_data
         if not batch_data:
             batch_data = self.build_batch_data_dict(mydao)
+            pass
         super(Pmc, self).__init__()
 
     def is_relevant_alias(self, alias):
@@ -182,6 +183,11 @@ class Pmc(Provider):
             provider_url_template=None, # ignore this because multiple url steps
             cache_enabled=True):
 
+        # if haven't loaded batch_data, return no metrics
+        global batch_data
+        if not batch_data:
+            return {}
+
         metrics_and_drilldown = {}
 
         # Only lookup metrics for items with appropriate ids
@@ -195,7 +201,6 @@ class Pmc(Provider):
         pmid_alias = ("pmid", pmid)
         page = ""
 
-        global batch_data
         if pmid_alias in batch_data:
             pages = [page["raw"] for page in batch_data[pmid_alias]]
         if page:

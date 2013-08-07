@@ -195,7 +195,7 @@ class Crossref(Provider):
         if response.status_code != 200:
             raise ProviderServerError("CrossRef status code was not 200")
 
-        if not biblio["journal"] in response.text:
+        if not biblio["journal"].lower() in response.text.lower():
             raise ProviderServerError("CrossRef returned invalid text response")
 
         response_lines = response.text.split("\n")
