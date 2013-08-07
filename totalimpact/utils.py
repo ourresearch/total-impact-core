@@ -27,13 +27,13 @@ class Retry(object):
                 try:
                     return f(*args, **kwargs)
                 except self.exceptions, e:
-                    logger.debug("Retry: "+e.__repr__())
+                    logger.debug(u"Retry: "+e.__repr__())
                     time.sleep(self.delay)
                     exception = e
 
             #if no success after tries, could raise last exception here...
 
-            logger.debug("Tried mightily, but giving up after {tries} '{exception_type}' exceptions.".format(
+            logger.debug(u"Tried mightily, but giving up after {tries} '{exception_type}' exceptions.".format(
                 tries=self.tries,
                 exception_type=e.__repr__()
             ))

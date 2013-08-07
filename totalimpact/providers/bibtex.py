@@ -50,7 +50,7 @@ class Bibtex(Provider):
                 mykey = biblio.entries.keys()[0]
             except AttributeError:
                 # doesn't seem to be a valid biblio object, so skip to the next one
-                logger.info("%20s NO DOI because no entries attribute in %s" % (self.provider_name, biblio))
+                logger.info(u"%20s NO DOI because no entries attribute in %s" % (self.provider_name, biblio))
                 continue
 
             try:
@@ -105,7 +105,7 @@ class Bibtex(Provider):
 
 
     def member_items(self, parsed_bibtex_json, cache_enabled=True):
-        logger.debug("%20s getting member_items for bibtex" % (self.provider_name))
+        logger.debug(u"%20s getting member_items for bibtex" % (self.provider_name))
 
         parsed_bibtex = json.loads(parsed_bibtex_json)
 

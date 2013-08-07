@@ -75,7 +75,7 @@ class Pmc(Provider):
             from totalimpact import dao
             mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
 
-        logger.info("Building batch data for PMC")
+        logger.info(u"Building batch data for PMC")
 
         results = mydao.db.view('provider_batch_data/by_alias_provider_batch_data', include_docs=True)
 
@@ -92,7 +92,7 @@ class Pmc(Provider):
                 pmid_alias = (namespace, nid)
                 batch_data[pmid_alias] += [{"raw": row.doc["raw"], "max_event_date":row.value}]
 
-        logger.info("Finished building batch data for PMC: {n} rows".format(n=len(batch_data)))
+        logger.info(u"Finished building batch data for PMC: {n} rows".format(n=len(batch_data)))
 
         return batch_data
 

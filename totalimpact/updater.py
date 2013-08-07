@@ -164,7 +164,7 @@ def update_active_publisher_items(number_to_update, specific_publisher, myredis,
         for journal_dict in active_publishers[publisher]["journals"]:
             min_year = 2011  #only update 2012-2013 right now
             (tiids_from_doi_prefix, docs_from_doi_prefix) = get_least_recently_updated_items_from_doi_prefix(min_year, journal_dict["doi_prefix"], myredis, mydao)
-            logger.info("doi prefix {prefix} has {num_tiids} items published since {min_year} last updated more than 24 hours ago".format(
+            logger.info(u"doi prefix {prefix} has {num_tiids} items published since {min_year} last updated more than 24 hours ago".format(
                 num_tiids=len(tiids_from_doi_prefix), prefix=journal_dict["doi_prefix"], min_year=min_year))
             all_tiids += tiids_from_doi_prefix
             all_docs += docs_from_doi_prefix

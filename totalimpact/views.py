@@ -23,14 +23,14 @@ mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
 mypostgresdao = dao.PostgresDao(os.environ["POSTGRESQL_URL"])
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)  # main app is on DB 0
 
-logger.debug("Building reference sets")
+logger.debug(u"Building reference sets")
 myrefsets = None
 myrefsets_histograms = None
 try:
     (myrefsets, myrefsets_histograms) = collection.build_all_reference_lookups(myredis, mydao)
-    logger.debug("Reference sets dict has %i keys" %len(myrefsets.keys()))
+    logger.debug(u"Reference sets dict has %i keys" %len(myrefsets.keys()))
 except (couchdb.ResourceNotFound, LookupError, AttributeError), e:
-    logger.error("Exception %s: Unable to load reference sets" % (e.__repr__()))
+    logger.error(u"Exception %s: Unable to load reference sets" % (e.__repr__()))
 
 def set_db(url, db):
     """useful for unit testing, where you want to use a local database
@@ -51,7 +51,7 @@ def stop_user_who_is_swamping_us():
     ip = request.remote_addr
     key = request.values.get('key', '')
     if ip in ["91.121.68.140"]:
-        logger.debug("got a call from {ip}; aborting with 403.".format(ip=ip) )
+        logger.debug(u"got a call from {ip}; aborting with 403.".format(ip=ip) )
         abort(403, """Sorry, we're blocking your IP address {ip} because \
             we can't handle requests as quickly as you're sending them, and so
             they're swamping our system. Please email us at \
@@ -59,7 +59,7 @@ def stop_user_who_is_swamping_us():
         """.format(ip=ip))
 
     # if key  in ["VANWIJIKc233acaa"]:
-    #     logger.debug("got a call from {key}; aborting with 403.".format(key=key) )
+    #     logger.debug(u"got a call from {key}; aborting with 403.".format(key=key) )
     #     abort(403, """Sorry, we're blocking your api key '{key}' because \
     #             we can't handle requests as quickly as you're sending them, and so
     #             they're swamping our system. Please email us at \
@@ -206,14 +206,14 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
     debug_message = ""
     if register:
         try:
-            logger.debug("api_key is " + api_key)
+            logger.debug(u"api_key is " + api_key)
             api_user.register_item((namespace, nid), api_key, myredis, mydao, mypostgresdao)
         except api_user.ItemAlreadyRegisteredToThisKey:
-            debug_message = "ItemAlreadyRegisteredToThisKey for key {api_key}".format(
+            debug_message = u"ItemAlreadyRegisteredToThisKey for key {api_key}".format(
                 api_key=api_key)
             logger.debug(debug_message)
         except api_user.ApiLimitExceededException:
-            debug_message = "ApiLimitExceededException for key {api_key}".format(
+            debug_message = u"ApiLimitExceededException for key {api_key}".format(
                 api_key=api_key)
             logger.debug(debug_message)
 
@@ -273,7 +273,7 @@ def provider_memberitems(provider_name):
     """
 
     file = request.files['file']
-    logger.debug("In"+provider_name+"/memberitems, got file: filename="+file.filename)
+    logger.debug(u"In"+provider_name+"/memberitems, got file: filename="+file.filename)
     entries_str = file.read().decode("utf-8")
 
     provider = ProviderFactory.get_provider(provider_name)
@@ -340,7 +340,7 @@ def collection_get(cid='', format="json", include_history=False):
             include_history = (request.args.get("include_history", 0) in ["1", "true", "True"])
             (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history)
         except (LookupError, AttributeError):  
-            logger.error("couldn't get tiids for GET collection '{cid}'".format(cid=cid))
+            logger.error(u"couldn't get tiids for GET collection '{cid}'".format(cid=cid))
             abort(404)  # not found
 
         # return success if all reporting is complete for all items    
@@ -439,7 +439,7 @@ def delete_items(cid=""):
     except (AttributeError, TypeError, KeyError) as e:
         # we got missing or improperly formated data.
         logger.error(
-            "DELETE /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(
+            u"DELETE /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(
                 id=coll["_id"],
                 error_str=e,
                 json=request.json))
@@ -481,7 +481,7 @@ def put_collection(cid=""):
     except (AttributeError, TypeError) as e:
         # we got missing or improperly formated data.
         logger.error(
-            "PUT /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(
+            u"PUT /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(
                 id=coll["_id"],
                 error_str=e,
                 json=request.json))
@@ -508,7 +508,7 @@ def collection_update(cid=""):
         collection = mydao.get(cid)
         tiids = collection["alias_tiids"].values()
     except Exception:
-        logger.exception("couldn't get tiids in POST collection '{cid}'".format(
+        logger.exception(u"couldn't get tiids in POST collection '{cid}'".format(
             cid=cid
         ))
         abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")
@@ -547,7 +547,7 @@ def collection_create():
     except (AttributeError, TypeError):
         # we got missing or improperly formated data.
         logger.error(
-            "we got missing or improperly formated data: '{id}' with {json}.".format(
+            u"we got missing or improperly formated data: '{id}' with {json}.".format(
                 id=coll["_id"],
                 json=str(request.json)))
         abort(404, "Missing arguments.")
@@ -566,7 +566,7 @@ def collection_create():
     mydao.save(coll)
     response_code = 201 # Created
     logger.info(
-        "saved new collection '{id}' with {num_items} items.".format(
+        u"saved new collection '{id}' with {num_items} items.".format(
             id=coll["_id"],
             num_items=len(coll["alias_tiids"])
         ))
@@ -580,7 +580,7 @@ def collection_create():
 # for internal use only
 @app.route('/test/collection/<action_type>', methods=['GET'])
 def tests_interactions(action_type=''):
-    logger.info("getting test/collection/" + action_type)
+    logger.info(u"getting test/collection/" + action_type)
 
     report = myredis.hgetall("test.collection." + action_type)
     report["url"] = "http://{root}/collection/{collection_id}".format(
@@ -754,7 +754,7 @@ def alert_if_google_scholar_notification_confirmation(payload):
         if match:
             url = match.group("url")
             name = match.group("name")
-            logger.info("Google Scholar notification confirmation for {name} is at {url}".format(
+            logger.info(u"Google Scholar notification confirmation for {name} is at {url}".format(
                 name=name, url=url))
     except (KeyError, TypeError):
         pass
@@ -768,7 +768,7 @@ def alert_if_google_scholar_new_articles(payload, doc_id):
         match = GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN.search(subject)
         if match:
             name = match.group("name")
-            logger.info("Just received Google Scholar alert: new articles for {name}, saved at {doc_id}".format(
+            logger.info(u"Just received Google Scholar alert: new articles for {name}, saved at {doc_id}".format(
                 name=name, doc_id=doc_id))
     except (KeyError, TypeError):
         pass
@@ -779,9 +779,9 @@ def alert_if_google_scholar_new_articles(payload, doc_id):
 def inbox():
     payload = request.json
     doc_id = save_email(payload)
-    logger.debug("You've got mail. Payload: {payload}".format(
+    logger.debug(u"You've got mail. Payload: {payload}".format(
         payload=payload))
-    logger.info("You've got mail. Saved as {doc_id}. Subject: {subject}".format(
+    logger.info(u"You've got mail. Saved as {doc_id}. Subject: {subject}".format(
         doc_id=doc_id, subject=payload["headers"]["Subject"]))
 
     alert_if_google_scholar_notification_confirmation(payload)
@@ -799,7 +799,7 @@ try:
         resp = make_response("42", 200)
         return resp
 except KeyError:
-    logger.error("BLITZ_API_KEY environment variable not defined, not setting up validation api endpoint")
+    logger.error(u"BLITZ_API_KEY environment variable not defined, not setting up validation api endpoint")
 
 @app.route('/hirefire/test', methods=["GET"])
 def hirefire_test():
@@ -817,7 +817,7 @@ try:
         resp.mimetype = "application:json"
         return resp
 except KeyError:
-    logger.error("HIREFIRE_TOKEN environment variable not defined, not setting up validation api endpoint")
+    logger.error(u"HIREFIRE_TOKEN environment variable not defined, not setting up validation api endpoint")
 
 
 @app.route('/hirefireapp/test', methods=["GET"])
@@ -833,6 +833,6 @@ try:
         resp.mimetype = "application:json"
         return resp
 except KeyError:
-    logger.error("HIREFIREAPP_TOKEN environment variable not defined, not setting up validation api endpoint")
+    logger.error(u"HIREFIREAPP_TOKEN environment variable not defined, not setting up validation api endpoint")
 
 

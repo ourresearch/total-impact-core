@@ -197,7 +197,7 @@ class Scopus(Provider):
         aliases_dict = provider.alias_dict_from_tuples(aliases)
         (namespace, nid) = self.get_best_alias(aliases_dict)
         if not nid:
-            #self.logger.debug("%s not checking metrics, no relevant alias" % (self.provider_name))
+            #self.logger.debug(u"%s not checking metrics, no relevant alias" % (self.provider_name))
             return {}
 
         metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(provider_url_template, 

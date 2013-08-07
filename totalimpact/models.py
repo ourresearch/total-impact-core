@@ -49,7 +49,7 @@ class MemberItems():
         }
         ret["number_entries"] = len(ret["memberitems"])
 
-        logger.debug("got {number_finished_memberitems} synchronous memberitems for query '{query}' in {elapsed} seconds.".format(
+        logger.debug(u"got {number_finished_memberitems} synchronous memberitems for query '{query}' in {elapsed} seconds.".format(
             number_finished_memberitems=len(ret["memberitems"]),
             query=query,
             elapsed=round(time.time() - start, 2)
@@ -63,7 +63,7 @@ class MemberItems():
         if not query_status:
             query_status = {"memberitems": [], "pages": 1, "complete": 0, "error": False} # don't know number_entries yet
 
-        logger.debug("have finished {number_finished_memberitems} of asynchronous memberitems for query hash '{query_hash}' in {elapsed} seconds.".format(
+        logger.debug(u"have finished {number_finished_memberitems} of asynchronous memberitems for query hash '{query_hash}' in {elapsed} seconds.".format(
                 number_finished_memberitems=len(query_status["memberitems"]),
                 query_hash=query_hash,
                 elapsed=round(time.time() - start, 2)

@@ -40,7 +40,7 @@ class Wikipedia(Provider):
         return is_relevant
 
     def _extract_metrics(self, page, status_code=200, id=None):
-        #logger.info("_extract_metrics with %s, %i,\n%s\n" % (id, status_code, page))
+        #logger.info(u"_extract_metrics with %s, %i,\n%s\n" % (id, status_code, page))
 
         if status_code != 200:
             if (status_code == 404):
@@ -60,7 +60,7 @@ class Wikipedia(Provider):
             metrics_dict = {"wikipedia:mentions": totalhits}
         else:
             metrics_dict = {}
-        #logger.info("_extract_metrics returns metrics_dict %s" % (str(metrics_dict)))
+        #logger.info(u"_extract_metrics returns metrics_dict %s" % (str(metrics_dict)))
 
         return metrics_dict
             

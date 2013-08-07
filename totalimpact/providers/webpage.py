@@ -51,7 +51,7 @@ class Webpage(Provider):
             provider_url_template=None, 
             cache_enabled=True):
 
-        logger.debug("%20s getting biblio for %s" % (self.provider_name, id))
+        logger.debug(u"%20s getting biblio for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.biblio_url_template
@@ -61,16 +61,16 @@ class Webpage(Provider):
         try:      
             response = self.http_get(url, cache_enabled=cache_enabled)
         except provider.ProviderTimeout:
-            logger.info("%20s ProviderTimeout getting %s so giving up on webpage biblio" 
+            logger.info(u"%20s ProviderTimeout getting %s so giving up on webpage biblio" 
                 % (self.provider_name, id))
             return {}
         except provider.ProviderHttpError:
-            logger.info("%20s ProviderHttpError getting %s so giving up on webpage biblio" 
+            logger.info(u"%20s ProviderHttpError getting %s so giving up on webpage biblio" 
                 % (self.provider_name, id))
             return {}
 
         if response.status_code != 200:
-            logger.info("%20s status_code=%i getting %s so giving up on webpage biblio" 
+            logger.info(u"%20s status_code=%i getting %s so giving up on webpage biblio" 
                 % (self.provider_name, response.status_code, url))            
             return {}
         
@@ -107,7 +107,7 @@ class Webpage(Provider):
             except AttributeError:
                 pass            
         except ValueError:
-            logger.warning("%20s couldn't parse %s so giving up on webpage biblio" 
+            logger.warning(u"%20s couldn't parse %s so giving up on webpage biblio" 
                             % (self.provider_name, id)) 
             try:
                 response = re.search("<title>(.+?)</title>", unicode_page).group(1)

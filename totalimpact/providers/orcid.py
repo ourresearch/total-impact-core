@@ -65,7 +65,7 @@ class Orcid(Provider):
                         new_member = ("pmid", myid['work-external-identifier-id']['value'])
 
             except KeyError:
-                logger.info("no external identifiers, try saving whole citation")
+                logger.info(u"no external identifiers, try saving whole citation")
                 biblio = self._parse_orcid_work(work)
                 new_member = ("biblio", biblio)
 
@@ -82,7 +82,7 @@ class Orcid(Provider):
             provider_url_template=None, 
             cache_enabled=True):
 
-        logger.debug("%20s getting member_items for %s" % (self.provider_name, query_string))
+        logger.debug(u"%20s getting member_items for %s" % (self.provider_name, query_string))
 
         if not provider_url_template:
             provider_url_template = self.member_items_url_template
@@ -96,7 +96,7 @@ class Orcid(Provider):
         response = self.http_get(url, headers=headers, cache_enabled=False) 
 
         if response.status_code != 200:
-            self.logger.info("%s status_code=%i" 
+            self.logger.info(u"%s status_code=%i" 
                 % (self.provider_name, response.status_code))            
             if response.status_code == 404:
                 raise ProviderItemNotFoundError

@@ -57,7 +57,7 @@ class Cache(object):
                 raise CacheException("Unable to store into Memcached. Make sure memcached server is running.")
         except PicklingError:
             # This happens when trying to cache a thread.lock object, for example.  Just don't cache.
-            logger.debug("In set_cache_entry but got PicklingError")
+            logger.debug(u"In set_cache_entry but got PicklingError")
             set_response = None
         return (set_response)
   

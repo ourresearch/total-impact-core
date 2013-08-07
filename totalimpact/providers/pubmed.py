@@ -108,7 +108,7 @@ class Pubmed(Provider):
             del biblio_dict["month"]
             del biblio_dict["day"]
         except (AttributeError, TypeError, KeyError):
-            logger.debug("%20s don't have full date information %s" % (self.provider_name, id))
+            logger.debug(u"%20s don't have full date information %s" % (self.provider_name, id))
             pass
         return biblio_dict  
 
@@ -145,11 +145,11 @@ class Pubmed(Provider):
         return aliases_list
 
     def _get_eutils_page(self, id, url, cache_enabled=True):
-        logger.debug("%20s getting eutils page for %s" % (self.provider_name, id))
+        logger.debug(u"%20s getting eutils page for %s" % (self.provider_name, id))
 
         response = self.http_get(url, cache_enabled=cache_enabled)
         if response.status_code != 200:
-            logger.warning("%20s WARNING, status_code=%i getting %s" 
+            logger.warning(u"%20s WARNING, status_code=%i getting %s" 
                 % (self.provider_name, response.status_code, url))            
             if response.status_code == 404:
                 return ""
@@ -201,7 +201,7 @@ class Pubmed(Provider):
             id_docs = doc.getElementsByTagName("Id")
             pmids = [id_doc.firstChild.data for id_doc in id_docs]
         except TypeError:
-            logger.warning("%20s no Id xml tags for %s" % (self.provider_name, id))
+            logger.warning(u"%20s no Id xml tags for %s" % (self.provider_name, id))
             pmids = []
         return pmids
 
@@ -221,7 +221,7 @@ class Pubmed(Provider):
             provider_url_template=None, 
             cache_enabled=True):
 
-        logger.debug("%20s getting metrics for %s" % (self.provider_name, id))
+        logger.debug(u"%20s getting metrics for %s" % (self.provider_name, id))
         metrics_dict = {}
 
         reviewed_by_f1000 = self._check_reviewed_by_f1000(id, cache_enabled)
@@ -252,7 +252,7 @@ class Pubmed(Provider):
             pmcid_doms = doc.getElementsByTagName("PMCID")
             pmcids = [pmcid_dom.firstChild.data for pmcid_dom in pmcid_doms]
         except TypeError:
-            logger.warning("%20s no PMCID xml tags for %s" % (self.provider_name, id))            
+            logger.warning(u"%20s no PMCID xml tags for %s" % (self.provider_name, id))            
             pmcids = []
         return pmcids
 

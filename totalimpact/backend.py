@@ -20,7 +20,7 @@ class RedisQueue(object):
 
     def push(self, message):
         message_json = json.dumps(message)
-        #logger.info("{:20}: >>>PUSHING to redis {message_json}".format(
+        #logger.info(u"{:20}: >>>PUSHING to redis {message_json}".format(
         #    self.name, message_json=message_json))        
         self.myredis.lpush(self.queue_name, message_json)
 
@@ -32,10 +32,10 @@ class RedisQueue(object):
             queue, message_json = received
             try:
                 message = json.loads(message_json) 
-                logger.info("{:20}: <<<POPPED from redis, {message}".format(
+                logger.info(u"{:20}: <<<POPPED from redis, {message}".format(
                     self.name, message=message))        
             except TypeError, KeyError:
-                logger.info("{:20}: error processing redis message {message_json}".format(
+                logger.info(u"{:20}: error processing redis message {message_json}".format(
                     self.name, message_json=message_json))
         return message
 
@@ -47,7 +47,7 @@ class PythonQueue(object):
 
     def push(self, message):
         self.queue.put(copy.deepcopy(message))
-        #logger.info("{:20}: >>>PUSHED".format(
+        #logger.info(u"{:20}: >>>PUSHED".format(
         #        self.queue_name))
 
     def pop(self):
@@ -55,7 +55,7 @@ class PythonQueue(object):
             # blocking pop
             message = copy.deepcopy(self.queue.get(block=True, timeout=5)) #maybe timeout isn't necessary
             self.queue.task_done()
-            #logger.info("{:20}: <<<POPPED".format(
+            #logger.info(u"{:20}: <<<POPPED".format(
             #    self.queue_name))
         except Queue.Empty:
             message = None
@@ -87,13 +87,13 @@ class ProviderWorker(Worker):
     # last variable is an artifact so it has same call signature as other callbacks
     def add_to_couch_queue_if_nonzero(self, tiid, new_content, method_name, dummy=None):
         if not new_content:
-            #logger.info("{:20}: Not writing to couch: empty {method_name} from {tiid} for {provider_name}".format(
+            #logger.info(u"{:20}: Not writing to couch: empty {method_name} from {tiid} for {provider_name}".format(
             #    "provider_worker", method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
             if method_name=="metrics":
                 self.myredis.decr_num_providers_left(tiid, "(unknown)")
             return
         else:
-            logger.info("Adding to couch queue {method_name} from {tiid} for {provider_name}".format(
+            logger.info(u"Adding to couch queue {method_name} from {tiid} for {provider_name}".format(
                 method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
             couch_message = (tiid, new_content, method_name)
             couch_queue_index = tiid[0] #index them by the first letter in the tiid
@@ -107,7 +107,7 @@ class ProviderWorker(Worker):
 
     @classmethod
     def wrapper(cls, tiid, input_aliases_dict, provider, method_name, aliases_providers_run, callback):
-        #logger.info("{:20}: **Starting {tiid} {provider_name} {method_name} with {aliases}".format(
+        #logger.info(u"{:20}: **Starting {tiid} {provider_name} {method_name} with {aliases}".format(
         #    "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=aliases))
 
         provider_name = provider.provider_name
@@ -120,7 +120,7 @@ class ProviderWorker(Worker):
             method_response = method(input_alias_tuples)
         except ProviderError:
             method_response = None
-            logger.info("{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
+            logger.info(u"{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
                 worker_name, tiid=tiid, provider_name=provider_name.upper(), method_name=method_name.upper()))
 
         if method_name == "aliases":
@@ -135,7 +135,7 @@ class ProviderWorker(Worker):
         else:
             response = method_response
 
-        logger.info("{:20}: RETURNED {tiid} {method_name} {provider_name} : {response}".format(
+        logger.info(u"{:20}: RETURNED {tiid} {method_name} {provider_name} : {response}".format(
             worker_name, tiid=tiid, method_name=method_name.upper(), 
             provider_name=provider_name.upper(), response=response))
 
@@ -152,14 +152,14 @@ class ProviderWorker(Worker):
         num_active_threads_for_this_provider = len(thread_count[self.provider.provider_name])
 
         if num_active_threads_for_this_provider >= self.provider.max_simultaneous_requests:
-            logger.info("{provider} has {num_provider} threads, so not spawning another yet".format(
+            logger.info(u"{provider} has {num_provider} threads, so not spawning another yet".format(
                 num_provider=num_active_threads_for_this_provider, provider=self.provider.provider_name.upper()))
             time.sleep(self.polling_interval) # let the provider catch up
             return
 
         provider_message = self.provider_queue.pop()
         if provider_message:
-            #logger.info("POPPED from queue for {provider}".format(
+            #logger.info(u"POPPED from queue for {provider}".format(
             #    provider=self.provider_name))
             (tiid, alias_dict, method_name, aliases_providers_run) = provider_message
             if method_name == "aliases":
@@ -167,13 +167,13 @@ class ProviderWorker(Worker):
             else:
                 callback = self.add_to_couch_queue_if_nonzero
 
-            #logger.info("BEFORE STARTING thread for {tiid} {method_name} {provider}".format(
+            #logger.info(u"BEFORE STARTING thread for {tiid} {method_name} {provider}".format(
             #    method_name=method_name.upper(), tiid=tiid, num=len(thread_count[self.provider.provider_name].keys()),
             #    provider=self.provider.provider_name.upper()))
 
             thread_count[self.provider.provider_name][tiid+method_name] = 1
 
-            logger.info("{num_total} total threads, {num_provider} threads for {provider}".format(
+            logger.info(u"{num_total} total threads, {num_provider} threads for {provider}".format(
                 num_provider=num_active_threads_for_this_provider,
                 num_total=threading.active_count(),
                 provider=self.provider.provider_name.upper()))
@@ -227,14 +227,14 @@ class CouchWorker(Worker):
         if couch_message:
             (tiid, new_content, method_name) = couch_message
             if not new_content:
-                logger.info("{:20}: blank doc, nothing to save".format(
+                logger.info(u"{:20}: blank doc, nothing to save".format(
                     self.name))
             else:
                 item = self.mydao.get(tiid)
                 if not item:
                     if method_name=="metrics":
                         self.myredis.decr_num_providers_left(tiid, "(unknown)")
-                    logger.error("Empty item from couch for tiid {tiid}, can't save {method_name}".format(
+                    logger.error(u"Empty item from couch for tiid {tiid}, can't save {method_name}".format(
                         tiid=tiid, method_name=method_name))
                     return
                 if method_name=="aliases":
@@ -246,13 +246,13 @@ class CouchWorker(Worker):
                     for metric_name in new_content:
                         updated_item = self.update_item_with_new_metrics(metric_name, new_content[metric_name], updated_item)
                 else:
-                    logger.warning("ack, supposed to save something i don't know about: " + str(new_content))
+                    logger.warning(u"ack, supposed to save something i don't know about: " + str(new_content))
                     updated_item = None
 
                 # now that is has been updated it, change last_modified and save
                 if updated_item:
                     updated_item["last_modified"] = datetime.datetime.now().isoformat()
-                    logger.info("{:20}: added {method_name}, saving item {tiid}".format(
+                    logger.info(u"{:20}: added {method_name}, saving item {tiid}".format(
                         self.name, method_name=method_name, tiid=tiid))
                     self.mydao.save(updated_item)
 
@@ -318,14 +318,14 @@ class Backend(Worker):
     def run(self):
         alias_message = self.alias_queue.pop()
         if alias_message:
-            logger.info("alias_message said {alias_message}".format(
+            logger.info(u"alias_message said {alias_message}".format(
                 alias_message=alias_message))            
             (tiid, alias_dict, aliases_providers_run) = alias_message
 
             relevant_provider_names = self.sniffer(alias_dict, aliases_providers_run)
-            logger.info("backend for {tiid} sniffer got input {alias_dict}".format(
+            logger.info(u"backend for {tiid} sniffer got input {alias_dict}".format(
                 tiid=tiid, alias_dict=alias_dict))
-            logger.info("backend for {tiid} sniffer returned {providers}".format(
+            logger.info(u"backend for {tiid} sniffer returned {providers}".format(
                 tiid=tiid, providers=relevant_provider_names))
 
             # list out the method names so they are run in that priority, biblio before metrics
@@ -360,7 +360,7 @@ def main():
         couch_queues[i] = PythonQueue(i+"_couch_queue")
         couch_worker = CouchWorker(couch_queues[i], myredis, mydao)
         couch_worker.spawn_and_loop() 
-        logger.info("launched backend couch worker with {i}_couch_queue".format(
+        logger.info(u"launched backend couch worker with {i}_couch_queue".format(
             i=i))
 
 

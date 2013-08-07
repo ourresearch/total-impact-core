@@ -76,14 +76,14 @@ class Dryad(Provider):
             aliases, 
             provider_url_template=None,
             cache_enabled=True):  
-        logger.info("calling crossref to handle aliases")
+        logger.info(u"calling crossref to handle aliases")
         return self.crossref.aliases(aliases, provider_url_template, cache_enabled)          
 
     def biblio(self, 
             aliases, 
             provider_url_template=None,
             cache_enabled=True):  
-        logger.info("calling crossref to handle aliases")
+        logger.info(u"calling crossref to handle aliases")
         biblio = self.crossref.biblio(aliases, provider_url_template, cache_enabled)          
 
         # try to parse out last names, for now using most basic approach

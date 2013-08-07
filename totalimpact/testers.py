@@ -23,7 +23,7 @@ class CollectionTester(object):
         f.test_name = interaction_name
         logger.addFilter(f)
 
-        logger.info("{classname}.{action_type}('{interaction_name}') starting now".format(
+        logger.info(u"{classname}.{action_type}('{interaction_name}') starting now".format(
             classname=self.__class__.__name__,
             action_type=method,
             interaction_name=interaction_name
@@ -34,7 +34,7 @@ class CollectionTester(object):
             result = getattr(self, method)(interaction_name)
         except Exception, e:
             error_str = e.__repr__()
-            logger.exception("{classname}.{method}('{interaction_name}') threw an error: '{error_str}'".format(
+            logger.exception(u"{classname}.{method}('{interaction_name}') threw an error: '{error_str}'".format(
                 classname=self.__class__.__name__,
                 method=method,
                 interaction_name=interaction_name,
@@ -44,7 +44,7 @@ class CollectionTester(object):
 
         end = time.time()
         elapsed = end - start
-        logger.info("{classname}.{method}('{interaction_name}') finished in {elapsed} seconds.".format(
+        logger.info(u"{classname}.{method}('{interaction_name}') finished in {elapsed} seconds.".format(
             classname=self.__class__.__name__,
             method=method,
             interaction_name=interaction_name,
@@ -61,7 +61,7 @@ class CollectionTester(object):
             "result":result,
             "error_str": error_str
         }
-        logger.info("{classname}.{method}('{interaction_name}') finished. Here's the report: {report}".format(
+        logger.info(u"{classname}.{method}('{interaction_name}') finished. Here's the report: {report}".format(
             classname=self.__class__.__name__,
             method=method,
             interaction_name=interaction_name,
@@ -79,7 +79,7 @@ class CollectionTester(object):
         the fake pages to imitate the AJAX calls the js pages make.
         '''
 
-        logger.debug("in the 'create' method now.")
+        logger.debug(u"in the 'create' method now.")
         ccp = fakes.CreateCollectionPage()
 
         sampler = fakes.IdSampler()
@@ -87,7 +87,7 @@ class CollectionTester(object):
         ccp.get_aliases_with_importers("github", sampler.get_github_username())
         # include a paper known to be in the DB: it is in the official sample collection        
         ccp.enter_aliases_directly([["doi", "10.1186/1471-2148-9-37"]])
-        logger.info("all aliases in collection {aliases}".format(aliases=str(ccp.aliases)))
+        logger.info(u"all aliases in collection {aliases}".format(aliases=str(ccp.aliases)))
 
         ccp.set_collection_name(interaction_name)
 
@@ -101,7 +101,7 @@ class CollectionTester(object):
         report page using a headless browswer, which is better than this
         simulation.
         '''
-        logger.debug("in the 'read' method now.")
+        logger.debug(u"in the 'read' method now.")
         report_page = fakes.ReportPage(collection_name)
         result = report_page.poll()
         return result

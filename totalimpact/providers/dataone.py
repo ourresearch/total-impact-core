@@ -36,14 +36,14 @@ class Dataone(Provider):
 
         redirect_dict = provider._extract_from_xml(redirect_page, redirect_dict_of_keylists)
 
-        logger.info("%20s WARNING, url= %s" 
+        logger.info(u"%20s WARNING, url= %s" 
                 % (self.provider_name, redirect_dict["url"]))            
 
         # try to get a response from the data provider        
         response = self.http_get(redirect_dict["url"])
 
         if response.status_code != 200:
-            logger.warning("%20s WARNING, status_code=%i getting %s" 
+            logger.warning(u"%20s WARNING, status_code=%i getting %s" 
                 % (self.provider_name, response.status_code, url))            
             self._get_error(response.status_code, response)
             return {}

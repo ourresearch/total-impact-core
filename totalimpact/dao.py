@@ -152,18 +152,18 @@ class Dao(object):
                 with open('./config/couch/views/{0}.js'.format(view_name)) as f:
                     design_doc["views"][view_name]["map"] = f.read()
 
-            #logger.info("overwriting the design doc with the latest version in dao.")
+            #logger.info(u"overwriting the design doc with the latest version in dao.")
             
             try:
                 current_design_doc_rev = self.db[design_doc_name]["_rev"]
                 design_doc["_rev"] = current_design_doc_rev
             except ResourceNotFound:
                 pass
-                #logger.info("No existing design doc found for {design_doc_name}. That's fine, we'll make it.".format(
+                #logger.info(u"No existing design doc found for {design_doc_name}. That's fine, we'll make it.".format(
                 #    design_doc_name=design_doc_name))
                 
             self.db.save(design_doc)
-            #logger.info("saved the new design doc {design_doc_name}".format(
+            #logger.info(u"saved the new design doc {design_doc_name}".format(
             #    design_doc_name=design_doc_name))
 
 
@@ -197,7 +197,7 @@ class Dao(object):
         if "_id" not in doc:
             raise KeyError("tried to save doc with '_id' key unset.")
         response = self.db.save(doc)
-        logger.info("dao saved %s" %(doc["_id"]))
+        logger.info(u"dao saved %s" %(doc["_id"]))
         return response
 
        
@@ -238,7 +238,7 @@ class PostgresDao(object):
         try:
             self.make_connection(url.hostname, url.port, dbname, url.username, url.password)
         except psycopg2.OperationalError:
-            logger.info("OperationalError so trying to create database first")
+            logger.info(u"OperationalError so trying to create database first")
             self.create_database(url.hostname, url.port, dbname, url.username, url.password)
             self.make_connection(url.hostname, url.port, dbname, url.username, url.password)
 
@@ -272,7 +272,7 @@ class PostgresDao(object):
         connection_string = self.build_connection_string(hostname, port, dbname, username, password)
         self.conn = psycopg2.connect(connection_string)
         self.conn.autocommit = True
-        logger.info("connected to postgres at {hostname} {dbname}".format(
+        logger.info(u"connected to postgres at {hostname} {dbname}".format(
             hostname=hostname, dbname=dbname))        
         return self.conn
 
@@ -282,7 +282,7 @@ class PostgresDao(object):
         try:
             cur.execute("drop schema public cascade;");
         except psycopg2.ProgrammingError:
-            logger.info("ProgrammingError dropping everything")
+            logger.info(u"ProgrammingError dropping everything")
         cur.execute("create schema public;");
         cur.close()
 
@@ -298,7 +298,7 @@ class PostgresDao(object):
                 cur.execute(statement);
             except psycopg2.ProgrammingError:
                 # probably table already exists
-                logger.info("ProgrammingError creating table, it probably already exists")
+                logger.info(u"ProgrammingError creating table, it probably already exists")
         cur.close()
 
     def get_connection(self):

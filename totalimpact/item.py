@@ -52,7 +52,7 @@ def get_item(tiid, myrefsets, dao, include_history=False):
         item = build_item_for_client(item_doc, myrefsets, dao, include_history)
     except Exception, e:
         item = None
-        logger.error("Exception %s: Skipping item, unable to build %s, %s" % (e.__repr__(), tiid, str(item)))
+        logger.error(u"Exception %s: Skipping item, unable to build %s, %s" % (e.__repr__(), tiid, str(item)))
     return item
 
 
@@ -62,7 +62,7 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
         (genre, host) = decide_genre(item['aliases'])
         item["biblio"]['genre'] = genre
     except (KeyError, TypeError):
-        logger.error("Skipping item, unable to lookup aliases or biblio in %s" % str(item))
+        logger.error(u"Skipping item, unable to lookup aliases or biblio in %s" % str(item))
         return None
 
     try:
@@ -100,7 +100,7 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
                 normalized_values = get_normalized_values(genre, host, year, metric_name, raw, myrefsets)
                 metrics[metric_name]["values"].update(normalized_values)
             except (KeyError, ValueError):
-                #logger.error("No good year in biblio for item {tiid}, no normalization".format(
+                #logger.error(u"No good year in biblio for item {tiid}, no normalization".format(
                 #    tiid=item["_id"]))
                 pass
 
@@ -240,7 +240,7 @@ def alias_dict_from_tuples(aliases_tuples):
     return alias_dict
 
 def merge_alias_dicts(aliases1, aliases2):
-    #logger.debug("in MERGE ALIAS DICTS with %s and %s" %(aliases1, aliases2))
+    #logger.debug(u"in MERGE ALIAS DICTS with %s and %s" %(aliases1, aliases2))
     merged_aliases = copy.deepcopy(aliases1)
     for ns, nid_list in aliases2.iteritems():
         for nid in nid_list:
@@ -266,7 +266,7 @@ def get_normalized_values(genre, host, year, metric_name, value, myrefsets):
         return {}
 
     if genre not in myrefsets.keys():
-        #logger.info("Genre {genre} not in refsets so give up".format(
+        #logger.info(u"Genre {genre} not in refsets so give up".format(
         #    genre=genre))
         return {}
 
@@ -286,12 +286,12 @@ def get_normalized_values(genre, host, year, metric_name, value, myrefsets):
             myclosest = largest_value_that_is_less_than_or_equal_to(value, fencepost_values)
             response[refsetname] = myrefsets[genre][refsetname][int_year][metric_name][myclosest]
         except KeyError:
-            #logger.info("No good lookup in %s %s %s for %s" %(genre, refsetname, year, metric_name))
+            #logger.info(u"No good lookup in %s %s %s for %s" %(genre, refsetname, year, metric_name))
             pass
         except ValueError:
-            logger.error("Exception: no good lookup in %s %s %s for %s" %(genre, refsetname, year, metric_name))
-            logger.debug("Value error calculating percentiles for %s %s %s for %s=%s" %(genre, refsetname, year, metric_name, str(value)))
-            logger.debug("fencepost = {fencepost_values}".format(
+            logger.error(u"Exception: no good lookup in %s %s %s for %s" %(genre, refsetname, year, metric_name))
+            logger.debug(u"Value error calculating percentiles for %s %s %s for %s=%s" %(genre, refsetname, year, metric_name, str(value)))
+            logger.debug(u"fencepost = {fencepost_values}".format(
                 fencepost_values=fencepost_values))
             pass
             
@@ -304,12 +304,12 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
         try:
             item = get_item(tiid, myrefsets, mydao)
         except (LookupError, AttributeError), e:
-            logger.warning("Got an error looking up tiid '{tiid}'; error: {error}".format(
+            logger.warning(u"Got an error looking up tiid '{tiid}'; error: {error}".format(
                     tiid=tiid, error=e.__repr__()))
             raise
 
         if not item:
-            logger.warning("Looks like there's no item with tiid '{tiid}': ".format(
+            logger.warning(u"Looks like there's no item with tiid '{tiid}': ".format(
                     tiid=tiid))
             raise LookupError
             
@@ -328,23 +328,23 @@ def is_currently_updating(tiid, myredis):
     return currently_updating
 
 def create_or_update_items_from_aliases(aliases, myredis, mydao):
-    logger.info("got a list of aliases; creating new items for them.")
+    logger.info(u"got a list of aliases; creating new items for them.")
     try:
         # remove unprintable characters and change list to tuples
         clean_aliases = [(clean_id(namespace), clean_id(nid)) for [namespace, nid] in aliases]
     except ValueError:
-        logger.error("bad input to POST /collection (requires [namespace, id] pairs):{input}".format(
+        logger.error(u"bad input to POST /collection (requires [namespace, id] pairs):{input}".format(
                 input=str(aliases)
             ))
         return None
 
-    logger.debug("POST /collection got list of aliases; create or find items for {aliases}".format(
+    logger.debug(u"POST /collection got list of aliases; create or find items for {aliases}".format(
             aliases=str(clean_aliases)
         ))
 
     (tiids, new_items) = create_or_find_items_from_aliases(clean_aliases, myredis, mydao)
 
-    logger.debug("POST /collection included {num} new items: {new_items}".format(
+    logger.debug(u"POST /collection included {num} new items: {new_items}".format(
             num=len(new_items),
             new_items=str(new_items)
         ))
@@ -367,7 +367,7 @@ def create_or_update_items_from_aliases(aliases, myredis, mydao):
     return (tiids, new_items)
 
 def create_item(namespace, nid, myredis, mydao):
-    logger.debug("In create_item with alias" + str((namespace, nid)))
+    logger.debug(u"In create_item with alias" + str((namespace, nid)))
     item = make()
     namespace = clean_id(namespace)
     nid = clean_id(nid)
@@ -384,7 +384,7 @@ def create_item(namespace, nid, myredis, mydao):
 
     myredis.add_to_alias_queue(item["_id"], item["aliases"])
 
-    logger.info("Created new item '{id}' with alias '{alias}'".format(
+    logger.info(u"Created new item '{id}' with alias '{alias}'".format(
         id=item["_id"],
         alias=str((namespace, nid))
     ))
@@ -402,12 +402,12 @@ def create_or_find_items_from_aliases(clean_aliases, myredis, mydao):
         existing_tiid = get_tiid_by_alias(namespace, nid, mydao)
         if existing_tiid:
             tiids.append(existing_tiid)
-            logger.debug("found an existing tiid ({tiid}) for alias {alias}".format(
+            logger.debug(u"found an existing tiid ({tiid}) for alias {alias}".format(
                     tiid=existing_tiid,
                     alias=str(alias)
                 ))
         else:
-            logger.debug("alias {alias} isn't in the db; making a new item for it.".format(
+            logger.debug(u"alias {alias} isn't in the db; making a new item for it.".format(
                     alias=alias
                 ))
             item = make()
@@ -430,10 +430,10 @@ def create_item_from_namespace_nid(namespace, nid, myredis, mydao):
 
     tiid = get_tiid_by_alias(namespace, nid, mydao)
     if tiid:
-        logger.debug("... found with tiid " + tiid)
+        logger.debug(u"... found with tiid " + tiid)
     else:
         tiid = create_item(namespace, nid, myredis, mydao)
-        logger.debug("new item created with tiid " + tiid)
+        logger.debug(u"new item created with tiid " + tiid)
 
     return tiid
 
@@ -445,7 +445,7 @@ def get_tiid_by_alias(ns, nid, mydao):
     res = mydao.view('queues/by_alias')
 
     # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
-    logger.debug("In get_tiid_by_alias with {ns}, {nid}".format(
+    logger.debug(u"In get_tiid_by_alias with {ns}, {nid}".format(
         ns=ns, nid=nid))
 
     # change input to lowercase etc
@@ -454,18 +454,18 @@ def get_tiid_by_alias(ns, nid, mydao):
 
     if matches.rows:
         if len(matches.rows) > 1:
-            logger.warning("More than one tiid for alias (%s, %s)" % (ns, nid))
+            logger.warning(u"More than one tiid for alias (%s, %s)" % (ns, nid))
         tiid = matches.rows[0]["id"]
-        logger.debug("found a match for {nid}!".format(nid=nid))
+        logger.debug(u"found a match for {nid}!".format(nid=nid))
     else:
-        logger.debug("no match for {nid}!".format(nid=nid))
+        logger.debug(u"no match for {nid}!".format(nid=nid))
         tiid = None
     return tiid
 
 def start_item_update(tiids, myredis, mydao, sleep_in_seconds=0):
     # put each of them on the update queue
     for tiid in tiids:
-        logger.debug("In start_item_update with tiid " + tiid)
+        logger.debug(u"In start_item_update with tiid " + tiid)
 
         # set this so we know when it's still updating later on
         myredis.set_num_providers_left(
@@ -477,7 +477,7 @@ def start_item_update(tiids, myredis, mydao, sleep_in_seconds=0):
         try:
             myredis.add_to_alias_queue(item_doc["_id"], item_doc["aliases"])
         except (KeyError, TypeError):
-            logger.debug("couldn't get item_doc for {tiid}. Skipping its update".format(
+            logger.debug(u"couldn't get item_doc for {tiid}. Skipping its update".format(
                 tiid=tiid))
             pass
 

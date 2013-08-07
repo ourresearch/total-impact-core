@@ -36,7 +36,7 @@ class Crossref(Provider):
             provider_url_template=None, 
             cache_enabled=True):
 
-        self.logger.debug("%s getting biblio for %s" % (self.provider_name, id))
+        self.logger.debug(u"%s getting biblio for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.biblio_url_template
@@ -55,7 +55,7 @@ class Crossref(Provider):
             headers={"Accept": "application/vnd.citationstyles.csl+json"})
 
         if response.status_code != 200:
-            self.logger.info("%s status_code=%i" 
+            self.logger.info(u"%s status_code=%i" 
                 % (self.provider_name, response.status_code))            
             if response.status_code == 404: #not found
                 return {}
@@ -107,7 +107,7 @@ class Crossref(Provider):
                 elif "date-parts" in biblio_dict["year"]:
                     biblio_dict["year"] = str(biblio_dict["year"]["date-parts"][0][0])
         except IndexError:
-            logger.info("could not parse year {biblio_dict}".format(
+            logger.info(u"could not parse year {biblio_dict}".format(
                 biblio_dict=biblio_dict))
             del biblio_dict["year"]
             pass
@@ -163,7 +163,7 @@ class Crossref(Provider):
         try:
             if (biblio["journal"] == ""):
                 # need to have journal or can't look up with current api call
-                logger.info("%20s NO DOI because no journal in %s" % (
+                logger.info(u"%20s NO DOI because no journal in %s" % (
                     self.provider_name, biblio))
                 return []
             query_string =  ("|%s|%s|%s|%s|%s|%s||%s|" % (
@@ -176,7 +176,7 @@ class Crossref(Provider):
                 "ImpactStory"
                 ))
         except KeyError:
-            logger.info("%20s NO DOI because missing needed attribute in %s" % (
+            logger.info(u"%20s NO DOI because missing needed attribute in %s" % (
                 self.provider_name, biblio))
             return []
 
@@ -186,7 +186,7 @@ class Crossref(Provider):
         url = "http://doi.crossref.org/servlet/query?pid=totalimpactdev@gmail.com&qdata=%s" % query_string
 
         try:
-            logger.debug("%20s calling crossref at %s" % (self.provider_name, url))
+            logger.debug(u"%20s calling crossref at %s" % (self.provider_name, url))
             # doi-lookup call to crossref can take a while, give it a long timeout
             response = self.http_get(url, timeout=30, cache_enabled=cache_enabled)
         except ProviderTimeout:
@@ -207,9 +207,9 @@ class Crossref(Provider):
         for key, doi in zip(line_keys, dois):
             if not doi:
                 try:
-                    logger.debug("%20s NO DOI from %s, %s" %(self.provider_name, biblio, key))
+                    logger.debug(u"%20s NO DOI from %s, %s" %(self.provider_name, biblio, key))
                 except KeyError:
-                    logger.debug("%20s NO DOI from %s, %s" %(self.provider_name, "", key))                    
+                    logger.debug(u"%20s NO DOI from %s, %s" %(self.provider_name, "", key))                    
 
         return doi
 
@@ -221,7 +221,7 @@ class Crossref(Provider):
             provider_url_template=None, 
             cache_enabled=True):
 
-        self.logger.debug("%s getting aliases for %s" % (self.provider_name, doi))
+        self.logger.debug(u"%s getting aliases for %s" % (self.provider_name, doi))
 
         if not provider_url_template:
             provider_url_template = self.aliases_url_template
@@ -240,7 +240,7 @@ class Crossref(Provider):
         response = self.http_get(doi_url, cache_enabled=cache_enabled, allow_redirects=True)
 
         if response.status_code >= 400:
-            self.logger.info("%s http_get status code=%i" 
+            self.logger.info(u"%s http_get status code=%i" 
                 % (self.provider_name, response.status_code))
             #raise provider.ProviderServerError("doi resolve")
         else:

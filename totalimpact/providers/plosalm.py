@@ -141,7 +141,7 @@ class Plosalm(Provider):
                 try:
                     first_month_stats = section["events"][0]
                 except KeyError:
-                    logger.debug("%20s no first_month_stats for %s" % (self.provider_name, id))
+                    logger.debug(u"%20s no first_month_stats for %s" % (self.provider_name, id))
                     first_month_stats = []
                 for metric_name in first_month_stats:
                     normalized_metric_name = "pmc_" + self._normalize_source(metric_name)

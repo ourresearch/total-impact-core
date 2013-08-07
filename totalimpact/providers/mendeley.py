@@ -154,11 +154,11 @@ class Mendeley(Provider):
                     mendeley_title = self.remove_punctuation(mendeley_record["title"]).lower()
                     aliases_title = self.remove_punctuation(biblio["title"]).lower()
                 except (TypeError, KeyError, AttributeError):
-                    logger.warning("Mendeley: NO TITLES for aliases, skipping")
+                    logger.warning(u"Mendeley: NO TITLES for aliases, skipping")
                     continue  # nothing to see here.  Skip to next record
 
                 if (len(str(biblio["year"])) != 4):
-                    logger.warning("Mendeley: NO YEAR for aliases, skipping")
+                    logger.warning(u"Mendeley: NO YEAR for aliases, skipping")
                     continue
 
                 if (mendeley_title == aliases_title):
@@ -168,7 +168,7 @@ class Mendeley(Provider):
                         first_mendeley_surname = mendeley_record["authors"][0]["surname"]
                         has_matching_authors = first_mendeley_surname.lower() in biblio["authors"].lower()
                         if not has_matching_authors:
-                            logger.warning("Mendeley: NO MATCHING AUTHORS between %s and %s" %(
+                            logger.warning(u"Mendeley: NO MATCHING AUTHORS between %s and %s" %(
                                 first_mendeley_surname, biblio["authors"]))
                         # but return it anyway
                         response = {}
@@ -183,10 +183,10 @@ class Mendeley(Provider):
                                 pass
                         return response
                     else:
-                        logger.debug("Mendeley: years don't match %s and %s" %(
+                        logger.debug(u"Mendeley: years don't match %s and %s" %(
                             str(mendeley_record["year"]), str(biblio["year"])))
                 else:
-                    logger.debug("Mendeley: titles don't match %s and %s" %(
+                    logger.debug(u"Mendeley: titles don't match %s and %s" %(
                         self.remove_punctuation(mendeley_record["title"]), self.remove_punctuation(biblio["title"])))
         # no joy
         return None
@@ -228,10 +228,10 @@ class Mendeley(Provider):
                 if page:
                     uuid = self._get_uuid_from_title(aliases_dict, page)["uuid"]
                     if uuid:
-                        logger.debug("Mendeley: uuid is %s for %s" %(uuid, aliases_dict["biblio"][0]["title"]))
+                        logger.debug(u"Mendeley: uuid is %s for %s" %(uuid, aliases_dict["biblio"][0]["title"]))
                         metrics_page = self._get_metrics_lookup_page(self.metrics_from_uuid_template, uuid)
                     else:
-                        logger.debug("Mendeley: couldn't find uuid for %s" %(aliases_dict["biblio"][0]["title"]))
+                        logger.debug(u"Mendeley: couldn't find uuid for %s" %(aliases_dict["biblio"][0]["title"]))
             except (KeyError, TypeError):
                 pass
         # give up!
@@ -269,7 +269,7 @@ class Mendeley(Provider):
             provider_url_template=None, 
             cache_enabled=True):
 
-        self.logger.debug("%s getting aliases for %s" % (self.provider_name, str(biblio)))
+        self.logger.debug(u"%s getting aliases for %s" % (self.provider_name, str(biblio)))
 
         if not provider_url_template:
             provider_url_template = self.aliases_url_template
@@ -279,7 +279,7 @@ class Mendeley(Provider):
         try:       
             new_aliases = self._extract_aliases(page, biblio)
         except (TypeError, AttributeError):
-            self.logger.debug("Error.  returning with no new aliases")
+            self.logger.debug(u"Error.  returning with no new aliases")
             new_aliases = []
 
         return new_aliases

@@ -10,13 +10,13 @@ def from_url(url, db=0):
 
 def decr_num_providers_left(self, item_id, provider_name):
     num_providers_left = self.decr("num_providers_left:"+item_id)
-    logger.info("bumped providers_run for %s. %s left to run." % (
+    logger.info(u"bumped providers_run for %s. %s left to run." % (
         item_id, num_providers_left))
     return int(num_providers_left)
 
 def add_to_alias_queue(self, tiid, aliases_dict, aliases_already_run=[]):
     queue_string = json.dumps([tiid, aliases_dict, aliases_already_run])
-    logger.debug("adding item to queue ******* " + queue_string)
+    logger.debug(u"adding item to queue ******* " + queue_string)
     self.lpush("aliasqueue", queue_string)
 
 def set_value(self, key, value, time_to_expire):
@@ -33,7 +33,7 @@ def get_value(self, key):
     return value
 
 def set_num_providers_left(self, item_id, num_providers_left):
-    logger.debug("setting {num} providers left to update for item '{tiid}'.".format(
+    logger.debug(u"setting {num} providers left to update for item '{tiid}'.".format(
         num=num_providers_left,
         tiid=item_id
     ))
