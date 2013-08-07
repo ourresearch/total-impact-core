@@ -100,8 +100,9 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
                 normalized_values = get_normalized_values(genre, host, year, metric_name, raw, myrefsets)
                 metrics[metric_name]["values"].update(normalized_values)
             except (KeyError, ValueError):
-                logger.error("No good year in biblio for item {tiid}, no normalization".format(
-                    tiid=item["_id"]))
+                #logger.error("No good year in biblio for item {tiid}, no normalization".format(
+                #    tiid=item["_id"]))
+                pass
 
     # ditch metrics we don't have static_meta for:
     item["metrics"] = {k:v for k, v in item["metrics"].iteritems() if "static_meta"  in v}
