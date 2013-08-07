@@ -35,6 +35,9 @@ class TestApiUser():
         cur.execute("insert into registered_items (api_key, alias) values ('SFUlqzam8', 'doi:10.1371/journal.pcbi.2')")
         cur.close()
 
+    def tearDown(self):
+        self.postgres_d.close()
+
     def test_save_api_user(self):
         api_key_prefix = "SFU"
         meta = {'usage': 'individual CV', 'email': '', 'notes': '', 'api_limit': '', 'api_key_owner': '', 'planned_use':'', "example_url":"", "organization":""}

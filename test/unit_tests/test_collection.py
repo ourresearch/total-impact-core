@@ -24,7 +24,9 @@ class TestCollection():
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
 
-
+    def tearDown(self):
+        pass
+        
     def test_make_creates_identifier(self):
         coll, key = collection.make()
         assert_equals(len(coll["_id"]), 6)
@@ -80,7 +82,7 @@ class TestCollection():
             set(response[0].keys()),
             set(['items', '_rev', '_id', 'type', 'title', 'alias_tiids'])
         )
-        assert_equals(sorted(response[0]["items"][0].keys()), sorted(['is_registered', '_rev', 'currently_updating', 'metrics', 'biblio', '_id', 'type', 'aliases']))
+        assert_equals(sorted(response[0]["items"][0].keys()), sorted(['_rev', 'currently_updating', 'metrics', 'biblio', '_id', 'type', 'aliases']))
 
     def test_make_csv_rows(self):
         csv = collection.make_csv_rows(API_ITEMS_JSON)
