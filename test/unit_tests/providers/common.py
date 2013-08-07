@@ -14,6 +14,7 @@ class DummyResponse(object):
         self.status_code = status
         self.text = content  
         self.headers = {"header1":"header_value_1"}  
+        self.url = "http://example.com"
 
 def get_member_items_html_success(self, url, headers=None, timeout=None, error_conf=None, cache_enabled=True, allow_redirects=False):
     f = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r")

@@ -36,13 +36,14 @@ class TestTopsy(ProviderTestCase):
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("tweets", 
             [self.testitem_aliases])
-        expected = 'http://topsy.com/total-impact.org?utm_source=otter'
+        expected = 'http://topsy.com/trackback?url=http%3A//total-impact.org'
         assert_equals(provenance_url, expected)
 
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'topsy:influential_tweets': (36, 'http://topsy.com/total-impact.org?utm_source=otter'), 'topsy:tweets': (358, 'http://topsy.com/total-impact.org?utm_source=otter')}
+        #expected = {'topsy:influential_tweets': (36, 'http://topsy.com/total-impact.org?utm_source=otter'), 'topsy:tweets': (358, 'http://topsy.com/total-impact.org?utm_source=otter')}
+        expected = {'topsy:influential_tweets': (19, 'http://topsy.com/trackback?url=http%3A//total-impact.org'), 'topsy:tweets': (121, 'http://topsy.com/trackback?url=http%3A//total-impact.org')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
@@ -52,7 +53,7 @@ class TestTopsy(ProviderTestCase):
     def test_metrics_multiple_urls(self):
         metrics_dict = self.provider.metrics([("url","http://datadryad.org/handle/10255/dryad.234"), 
                                                 ("url", "http://dx.doi.org/10.5061/dryad.234")])
-        expected = {'topsy:tweets': (4, 'http://topsy.com/dx.doi.org/10.5061/dryad.234?utm_source=otter')}
+        expected = {'topsy:tweets': (4, 'http://topsy.com/trackback?url=http%3A//dx.doi.org/10.5061/dryad.234')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
