@@ -35,7 +35,12 @@ class Delicious(Provider):
 
     # overriding default because delicious needs md5 of url in template
     def _get_templated_url(self, template, id, method=None):
-        md5_of_url = hashlib.md5(id).hexdigest()
+        try:
+            id_unicode = unicode(id, "UTF-8")
+        except TypeError:
+            id_unicode = id
+        id_utf8 = id_unicode.encode("UTF-8")
+        md5_of_url = hashlib.md5(id_utf8).hexdigest()
         url = template % md5_of_url
         return(url)
 

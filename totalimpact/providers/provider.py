@@ -154,13 +154,17 @@ class Provider(object):
         return error
 
     def _get_templated_url(self, template, id, method=None):
+        try:
+            id_unicode = unicode(id, "UTF-8")
+        except TypeError:
+            id_unicode = id
+        id_utf8 = id_unicode.encode("UTF-8")
+
+        substitute_id = id_utf8
         if template != "%s":
-            try:
-                id = urllib.quote(id)
-            except KeyError: # a unicode strange thing
-                self.logger.error("{provider} Failed url-encoding param {id}, maybe it was unicode".format(
-                    provider=self.provider_name, id=id))
-        url = template % id
+           substitute_id = urllib.quote(id_utf8)
+
+        url = template % substitute_id
         return(url)
 
     def relevant_aliases(self, aliases):
