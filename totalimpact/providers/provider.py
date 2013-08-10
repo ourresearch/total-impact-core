@@ -525,7 +525,8 @@ class Provider(object):
             proxies = None
             if app.config["PROXY"]:
                 proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}
-            self.logger.debug(u"LIVE %s /biblio_print" %(url))
+            self.logger.debug(u"LIVE {url} /biblio_print".format(
+                url=url))
             r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=allow_redirects, verify=False)
 
         except requests.exceptions.Timeout as e:
