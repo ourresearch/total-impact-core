@@ -20,7 +20,7 @@ class RedisQueue(object):
 
     def push(self, message):
         message_json = json.dumps(message)
-        #logger.info(u"{:20}: >>>PUSHING to redis {message_json} /biblio_print".format(
+        #logger.info(u"{:20}: /biblio_print >>>PUSHING to redis {message_json}".format(
         #    self.name, message_json=message_json))        
         self.myredis.lpush(self.queue_name, message_json)
 
@@ -32,7 +32,7 @@ class RedisQueue(object):
             queue, message_json = received
             try:
                 message = json.loads(message_json) 
-                logger.debug(u"{:20}: <<<POPPED from redis, {message} /biblio_print".format(
+                logger.debug(u"{:20}: /biblio_print <<<POPPED from redis, {message}".format(
                     self.name, message=message))        
             except TypeError, KeyError:
                 logger.info(u"{:20}: error processing redis message {message_json}".format(
@@ -135,7 +135,7 @@ class ProviderWorker(Worker):
         else:
             response = method_response
 
-        logger.info(u"{:20}: RETURNED {tiid} {method_name} {provider_name} : {response} /biblio_print".format(
+        logger.info(u"{:20}: /biblio_print, RETURNED {tiid} {method_name} {provider_name} : {response}".format(
             worker_name, tiid=tiid, method_name=method_name.upper(), 
             provider_name=provider_name.upper(), response=response))
 
@@ -318,12 +318,12 @@ class Backend(Worker):
     def run(self):
         alias_message = self.alias_queue.pop()
         if alias_message:
-            logger.info(u"alias_message said {alias_message} /biblio_print".format(
+            logger.info(u"/biblio_print, alias_message said {alias_message}".format(
                 alias_message=alias_message))            
             (tiid, alias_dict, aliases_providers_run) = alias_message
 
             relevant_provider_names = self.sniffer(alias_dict, aliases_providers_run)
-            logger.info(u"backend for {tiid} sniffer got input {alias_dict} /biblio_print".format(
+            logger.info(u"/biblio_print, backend for {tiid} sniffer got input {alias_dict}".format(
                 tiid=tiid, alias_dict=alias_dict))
             logger.info(u"backend for {tiid} sniffer returned {providers}".format(
                 tiid=tiid, providers=relevant_provider_names))
