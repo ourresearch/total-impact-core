@@ -1,4 +1,5 @@
 import os
+import sys
 import pylibmc
 import hashlib
 import logging
@@ -49,6 +50,13 @@ class Cache(object):
     @Retry(3, pylibmc.Error, 0.1)
     def set_cache_entry(self, key, data):
         """ Store a cache entry """
+
+        #memcached will only store things up to 1MB as per http://sendapatch.se/projects/pylibmc/misc.html
+        MAX_MEMCACHED_VALUE_SIZE = 1000*1000
+        if sys.getsizeof(data["text"]) > MAX_MEMCACHED_VALUE_SIZE:
+            logger.debug(u"Not caching because payload is too large")
+            return None
+
         mc = self._get_memcached_client()
         hash_key = self._build_hash_key(key)
         try:
@@ -58,8 +66,6 @@ class Cache(object):
         except PicklingError:
             # This happens when trying to cache a thread.lock object, for example.  Just don't cache.
             logger.debug(u"In set_cache_entry but got PicklingError")
-            set_response = None
-        return (set_response)
+            return None
+        return set_response
   
-        
-        
