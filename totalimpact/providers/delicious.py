@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 import hashlib
-import simplejson
+import urllib
 
 import logging
 logger = logging.getLogger('ti.providers.delicious')
@@ -10,7 +10,7 @@ class Delicious(Provider):
 
     example_id = ("url", "http://total-impact.org")
     metrics_url_template = "http://feeds.delicious.com/v2/json/url/%s?count=100"
-    provenance_url_template = "http://www.delicious.com/url/%s"
+    provenance_url_ultimate_template = "http://delicious.com/{user}/search?p={url}"
     url = "http://www.delicious.com"
     descr = "Online social bookmarking service"
     static_meta_dict = {
@@ -60,6 +60,39 @@ class Delicious(Provider):
             }
 
         return metrics_dict
+
+    def provenance_url(self, metric_name, aliases):
+        # Returns the same provenance url for all metrics
+        id = self.get_best_id(aliases)
+
+        if not id:
+            return None
+
+        # first we need to get a user, by looking up metrics again
+        url = self._get_templated_url(self.metrics_url_template, id, "metrics")
+
+        # try to get a response from the data provider                
+        response = self.http_get(url, cache_enabled=True, allow_redirects=True)
+        
+        status_code = response.status_code
+        if status_code != 200:
+            if status_code == 404:
+                return {}
+            else:
+                raise(self._get_error(status_code))
+
+        page = response.text
+        data = provider._load_json(page)
+        first_user = data[0]["a"]
+        url = id
+        if url.endswith("/"):
+            url = url[:-1]  #remote trailing slash or delicious can't find the url
+
+        provenance_url = self.provenance_url_ultimate_template.format(
+            user=first_user.encode("UTF-8"), 
+            url=url.encode("UTF-8"))
+
+        return provenance_url
 
 
 
