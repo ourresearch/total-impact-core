@@ -52,7 +52,7 @@ def stop_user_who_is_swamping_us():
     key = request.values.get('key', '')
     if ip in ["91.121.68.140"]:
         logger.debug(u"got a call from {ip}; aborting with 403.".format(ip=ip) )
-        abort(403, """Sorry, we're blocking your IP address {ip} because \
+        abort_custom(403, """Sorry, we're blocking your IP address {ip} because \
             we can't handle requests as quickly as you're sending them, and so
             they're swamping our system. Please email us at \
             team@impactstory.org for details and possible workarounds.
@@ -74,8 +74,23 @@ def check_key():
     if "/v1/" in request.url:
         api_key = request.values.get('key', '')
         if not api_user.is_valid_key(api_key, mypostgresdao):
-            abort(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a valid api key.")
+            abort_custom(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a valid api key.")
     return # if success don't return any content
+
+
+def abort_custom(status_code, msg):
+    body_dict = {
+        "status_code": status_code,
+        "message": msg,
+        "error": True
+    }
+    if request.args.get("callback"):
+        status_code = 200  # JSONP can't deal with actual errors, it needs something back
+
+    resp = make_response(json.dumps(body_dict, sort_keys=True, indent=4), status_code)
+    resp.mimetype = "application/json"
+
+    abort(resp)
 
 
 def track_api_event():
@@ -151,7 +166,7 @@ def tiid(ns, nid):
     tiid = item_module.get_tiid_by_alias(ns, nid, mydao)
 
     if not tiid:
-        abort(404)
+        abort_custom(404, "this tiid doesn't exist")
     resp = make_response(json.dumps(tiid, sort_keys=True, indent=4), 303)
     resp.mimetype = "application/json"
     return resp
@@ -188,7 +203,7 @@ def item_namespace_post(namespace, nid):
     except api_user.ItemAlreadyRegisteredToThisKey:
         response_code = 200
     except api_user.ApiLimitExceededException:
-        abort(403, "Registration limit exceeded. Contact team@impactstory.org to discuss options.")
+        abort_custom(403, "Registration limit exceeded. Contact team@impactstory.org to discuss options.")
 
     resp = make_response(json.dumps("ok"), response_code)
     return resp
@@ -201,6 +216,7 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
 
     include_history = request.args.get("include_history", 0) in ["1", "true", "True"]
     register = request.args.get("register", 0) in ["1", "true", "True"]
+    callback_name = request.args.get("callback", None)
     api_key = request.values.get('key')
 
     debug_message = ""
@@ -222,23 +238,29 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
         if not debug_message:
             debug_message = "Item not in database. Call POST to register it"
         # if registration failure, report that info. Else suggest they register.
-        abort(404, debug_message)
-    return get_item_from_tiid(tiid, format, include_history)
+        abort_custom(404, debug_message)
+    return get_item_from_tiid(tiid, format, include_history, callback_name)
 
 
 '''GET /item/:tiid
 404 if tiid not found in db
 '''
 @app.route('/item/<tiid>', methods=['GET'])
-def get_item_from_tiid(tiid, format=None, include_history=False):
+def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=None):
+
+    # If we want to continue to support this endpoint, we should probably
+    # take the params out of the method signature and get them from the request
+    # obj, so folks using the endpoint can have access to them.
+
+
 
     try:
         item = item_module.get_item(tiid, myrefsets, mydao, include_history)
     except (LookupError, AttributeError):
-        abort(404)
+        abort_custom(404, "item does not exist")
 
     if not item:
-        abort(404)
+        abort_custom(404, "item does not exist")
 
     if item_module.is_currently_updating(tiid, myredis):
         response_code = 210 # not complete yet
@@ -249,8 +271,12 @@ def get_item_from_tiid(tiid, format=None, include_history=False):
 
     api_key = request.args.get("key", None)
     clean_item = item_module.clean_for_export(item, api_key, os.getenv("API_KEY"))
-    resp = make_response(json.dumps(clean_item, sort_keys=True, indent=4),
-                         response_code)
+    resp_string = json.dumps(clean_item, sort_keys=True, indent=4)
+    if callback_name is not None:
+        resp_string = callback_name + '(' + resp_string + ')'
+
+
+    resp = make_response(resp_string, response_code)
     resp.mimetype = "application/json"
 
     return resp
@@ -295,11 +321,11 @@ def provider_memberitems_get(provider_name, query):
         provider = ProviderFactory.get_provider(provider_name)
         ret = provider.member_items(query)
     except ProviderItemNotFoundError:
-        abort(404)
+        abort_custom(404, "item not found")
     except (ProviderTimeout, ProviderServerError):
-        abort(503)  # crossref lookup error, might be transient
+        abort_custom(503, "crossref lookup error, might be transient")
     except ProviderError:
-        abort(500)
+        abort(500, "internal error from provider")
 
     resp = make_response(
         json.dumps({"memberitems":ret}, sort_keys=True, indent=4),
@@ -323,13 +349,13 @@ returns a collection object and the items
 def collection_get(cid='', format="json", include_history=False):
     coll = mydao.get(cid)
     if not coll:
-        abort(404)
+        abort_custom(404, "collection not found")
 
     # if not include items, then just return the collection straight from couch
     if (request.args.get("include_items") in ["0", "false", "False"]):
         # except if format is csv.  can't do that.
         if format == "csv":
-            abort(405)  # method not supported
+            abort_custom(405, "csv method not supported for include_items")
         else:
             response_code = 200
             resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
@@ -341,7 +367,7 @@ def collection_get(cid='', format="json", include_history=False):
             (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history)
         except (LookupError, AttributeError):  
             logger.error(u"couldn't get tiids for GET collection '{cid}'".format(cid=cid))
-            abort(404)  # not found
+            abort_custom(404, "couldn't find items for collection")
 
         # return success if all reporting is complete for all items    
         if something_currently_updating:
@@ -391,16 +417,16 @@ def get_coll_with_authentication_check(request, cid):
     # otherwise require authentication
     key = request.args.get("edit_key", None)
     if key is None:
-        abort(404, "This method requires an update key.")
+        abort_custom(404, "This method requires an update key.")
 
     if "key" in coll.keys():
         if coll["key"] != key:
-            abort(403, "Wrong update key")
+            abort_custom(403, "Wrong update key")
     elif "key_hash" in coll.keys():
         if not check_password_hash(coll["key_hash"], key):
-            abort(403, "Wrong update key")
+            abort_custom(403, "Wrong update key")
     else:
-        abort(501, "This collection has no update key; it cant' be changed.")
+        abort_custom(501, "This collection has no update key; it cant' be changed.")
 
     return coll
 
@@ -416,7 +442,7 @@ def delete_and_put_helper(cid=""):
     elif http_method.lower() == "put":
         return put_collection(cid)
     else:
-        abort(404, "You must specify a valid HTTP method (POST or PUT) with the"
+        abort_custom(404, "You must specify a valid HTTP method (POST or PUT) with the"
                    " http_method argument.")
 
 
@@ -443,7 +469,7 @@ def delete_items(cid=""):
                 id=coll["_id"],
                 error_str=e,
                 json=request.json))
-        abort(404, "Missing arguments.")
+        abort_custom(404, "Missing arguments.")
 
     coll["last_modified"] = datetime.datetime.now().isoformat()
     mydao.db.save(coll)
@@ -485,7 +511,7 @@ def put_collection(cid=""):
                 id=coll["_id"],
                 error_str=e,
                 json=request.json))
-        abort(404, "Missing arguments.")
+        abort_custom(404, "Missing arguments.")
 
     coll["last_modified"] = datetime.datetime.now().isoformat()
     mydao.db.save(coll)
@@ -511,7 +537,7 @@ def collection_update(cid=""):
         logger.exception(u"couldn't get tiids in POST collection '{cid}'".format(
             cid=cid
         ))
-        abort(404, "couldn't get tiids for this collection...maybe doesn't exist?")
+        abort_custrom(404, "couldn't get items for this collection...maybe doesn't exist?")
 
     item_module.start_item_update(tiids, myredis, mydao)
 
@@ -543,14 +569,14 @@ def collection_create():
             namespaces = item["aliases"].keys()
 
         if not tiids:
-            abort(404, "POST /collection requires a list of [namespace, id] pairs.")
+            abort_custom(404, "POST /collection requires a list of [namespace, id] pairs.")
     except (AttributeError, TypeError):
         # we got missing or improperly formated data.
         logger.error(
             u"we got missing or improperly formated data: '{id}' with {json}.".format(
                 id=coll["_id"],
                 json=str(request.json)))
-        abort(404, "Missing arguments.")
+        abort_custom(404, "Missing arguments.")
 
     try:
         alias_strings = aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
@@ -672,7 +698,7 @@ def key():
     password = meta["password"]
     del(meta["password"])
     if password != os.getenv("API_KEY"):
-        abort(403)
+        abort_custom(403, "password not correct")
 
     prefix = meta["prefix"]
     del(meta["prefix"])
@@ -700,9 +726,9 @@ def get_user(userid=''):
     try:
         user = UserFactory.get(userid, mydao, key)
     except KeyError:
-        abort(404, "User doesn't exist.")
+        abort_custom(404, "User doesn't exist.")
     except NotAuthenticatedError:
-        abort(403, "You've got the wrong password.")
+        abort_custom(403, "You've got the wrong password.")
 
     resp = make_response(json.dumps(user, indent=4), 200)
     resp.mimetype = "application/json"
@@ -721,13 +747,13 @@ def update_user(userid=''):
     try:
         key = new_stuff["key"]
     except KeyError:
-        abort(400, "the submitted user object is missing required properties.")
+        abort_custom(400, "the submitted user object is missing required properties.")
     try:
         res = UserFactory.put(new_stuff, key, mydao)
     except NotAuthenticatedError:
-        abort(403, "You've got the wrong password.")
+        abort_custom(403, "You've got the wrong password.")
     except AttributeError:
-        abort(400, "the submitted user object is missing required properties.")
+        abort_custom(400, "the submitted user object is missing required properties.")
 
     resp = make_response(json.dumps(res, indent=4), 200)
     resp.mimetype = "application/json"
