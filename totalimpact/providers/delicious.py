@@ -90,7 +90,7 @@ class Delicious(Provider):
 
         provenance_url = self.provenance_url_ultimate_template.format(
             user=first_user.encode("UTF-8"), 
-            url=url.encode("UTF-8"))
+            url=urllib.quote(url.encode("UTF-8"), safe=""))
 
         return provenance_url
 

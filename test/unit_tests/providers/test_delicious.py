@@ -11,7 +11,7 @@ datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provi
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
 
 TEST_ID = "http://total-impact.org/"
-TEST_ID2 = "http://blogs.lse.ac.uk/impactofsocialsciences/2012/12/17/scott-altmetrics-central-digital-whats-missing/"
+TEST_ID2 = "http://cas-csid.cas.unt.edu/?p=3575"
 
 class TestDelicious(ProviderTestCase):
 
@@ -37,13 +37,13 @@ class TestDelicious(ProviderTestCase):
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("bookmarks", 
             [self.testitem_aliases])
-        expected = "http://delicious.com/wbq/search?p=http://total-impact.org"
+        expected = "http://delicious.com/wbq/search?p=http%3A%2F%2Ftotal-impact.org"
         assert_equals(provenance_url, expected)
 
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'delicious:bookmarks': (75, 'http://delicious.com/wbq/search?p=http://total-impact.org')}
+        expected = {'delicious:bookmarks': (75, 'http://delicious.com/wbq/search?p=http%3A%2F%2Ftotal-impact.org')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
@@ -52,7 +52,7 @@ class TestDelicious(ProviderTestCase):
     @http
     def test_metrics2(self):
         metrics_dict = self.provider.metrics([("url", TEST_ID2)])
-        expected = {'delicious:bookmarks': (11, 'http://delicious.com/dmetje/search?p=http://blogs.lse.ac.uk/impactofsocialsciences/2012/12/17/scott-altmetrics-central-digital-whats-missing')}
+        expected = {'delicious:bookmarks': (3, 'http://delicious.com/jbrittholbrook/search?p=http%3A%2F%2Fcas-csid.cas.unt.edu%2F%3Fp%3D3575')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
