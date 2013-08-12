@@ -614,20 +614,21 @@ def delete_all_delicious_and_facebook():
             row_count += 1
             item = row.doc
             try:
-                metric_names = item["metrics"].keys()
-                save_me = False
-                for metric_name in metric_names:
-                    if metric_name.startswith("facebook") or metric_name.startswith("delicious"):
-                        logger.info(u"deleting {metric_name} for tiid: {tiid}".format(
-                            metric_name=metric_name,
-                            tiid=row.id))
-                        del item["metrics"][metric_name]
-                        save_me=True
-                if save_me:                    
-                    db.save(item)
-                    number_saved += 1
+                if item["metrics"]:
+                    metric_names = item["metrics"].keys()
+                    save_me = False
+                    for metric_name in metric_names:
+                        if metric_name.startswith("facebook") or metric_name.startswith("delicious"):
+                            logger.info(u"{tiid} deleting {metric_name}".format(
+                                metric_name=metric_name,
+                                tiid=row.id))
+                            del item["metrics"][metric_name]
+                            save_me=True
+                    if save_me:                    
+                        db.save(item)
+                        number_saved += 1
             except (KeyError, TypeError):
-                logger.info(u"couldn't get metrics dict or keys, skipping")
+                pass
         logger.info(u"number saved {num}".format(
             num=number_saved))
         logger.info(u"%i. getting new page, last id was %s" %(row_count, row.id))
