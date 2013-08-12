@@ -80,14 +80,21 @@ def check_key():
 
 def abort_custom(status_code, msg):
     body_dict = {
-        "status_code": status_code,
+        "HTTP_status_code": status_code,
         "message": msg,
         "error": True
     }
     if request.args.get("callback"):
         status_code = 200  # JSONP can't deal with actual errors, it needs something back
+        resp_string = "{callback_name}( {resp} )".format(
+            callback_name=request.args.get("callback"),
+            resp=json.dumps(body_dict)
+        )
+    else:
+        resp_string = json.dumps(body_dict, sort_keys=True, indent=4)
 
-    resp = make_response(json.dumps(body_dict, sort_keys=True, indent=4), status_code)
+
+    resp = make_response(resp_string, status_code)
     resp.mimetype = "application/json"
 
     abort(resp)
@@ -271,6 +278,8 @@ def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=N
 
     api_key = request.args.get("key", None)
     clean_item = item_module.clean_for_export(item, api_key, os.getenv("API_KEY"))
+    clean_item["HTTP_status_code"] = response_code  # hack for clients who can't read real response codes
+
     resp_string = json.dumps(clean_item, sort_keys=True, indent=4)
     if callback_name is not None:
         resp_string = callback_name + '(' + resp_string + ')'
