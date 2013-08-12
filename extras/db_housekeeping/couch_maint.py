@@ -589,6 +589,50 @@ def clean_up_bad_h1():
     pass
 
 
+
+"""
+function(doc) {
+    emit([doc.type, doc._id], doc);
+}
+"""
+def delete_all_delicious():
+    #except F1000 Yes's
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+    page_size = 500
+
+    start_key = ["item", "000000000"]
+    end_key = ["item", "zzzzzzzzzzzzzzzzzzzzzzzz"]
+
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
+
+    number_delicious = 0
+    while page:
+        for row in page:
+            row_count += 1
+            item = row.doc
+            try:
+                metric_names = item["metrics"].keys()
+                if "delicious:bookmarks" in metric_names:
+                    logger.info("deleting delicious bookmarks for tiid: {tiid}".format(
+                        tiid=row.id))
+                    del item["metrics"]["delicious:bookmarks"]
+                    db.save(item)
+                    number_delicious += 1
+
+            except KeyError:
+                pass
+        logger.info("number delicious {num}".format(
+            num=number_delicious))
+        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
+
+
 if (cloudant_db == "ti"):
     print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
 else:
@@ -597,7 +641,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    fix_github_year()
+    delete_all_delicious()
 else:
     print "nevermind, then."
 
