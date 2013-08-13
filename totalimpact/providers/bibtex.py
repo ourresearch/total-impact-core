@@ -1,15 +1,33 @@
-from totalimpact.providers import provider
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout, ProviderServerError
-from totalimpact import utils 
+from StringIO import StringIO
+import json
 
 from pybtex.database.input import bibtex
 from pybtex.errors import enable_strict_mode, format_error
 from pybtex.scanner import PybtexSyntaxError, PybtexError
-from StringIO import StringIO
-import json
+
+from totalimpact.providers import provider
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout, ProviderServerError
+from totalimpact import utils 
+from totalimpact.providers import bibtex_lookup
 
 import logging
 logger = logging.getLogger('ti.providers.bibtex')
+
+
+
+def build_bibtex_to_unicode(unicode_to_bibtex):
+    bibtex_to_unicode = {}
+    for unicode_value in unicode_to_bibtex:
+        bibtex = unicode_to_bibtex[unicode_value]
+        bibtex = unicode(bibtex, "utf-8")
+        bibtex = bibtex.strip()
+        bibtex = bibtex.replace("\\", "")
+        bibtex = bibtex.replace("{", "")
+        bibtex = bibtex.replace("}", "")
+        bibtex = "{"+bibtex+"}"
+        bibtex_to_unicode[bibtex] = unicode_value
+    return bibtex_to_unicode
+
 
 class Bibtex(Provider):  
 
@@ -21,6 +39,15 @@ class Bibtex(Provider):
     def __init__(self):
         super(Bibtex, self).__init__()
         enable_strict_mode(True) #throw errors
+        self.bibtex_to_unicode = build_bibtex_to_unicode(bibtex_lookup.unicode_to_latex)
+
+    def _to_unicode(self, text):
+        text = utils.to_unicode_or_bust(text)
+        if "{" in text:
+            text = text.replace("\\", "")
+            for i, j in self.bibtex_to_unicode.iteritems():
+                text = text.replace(i, j)
+        return text
 
     def _parse_bibtex_entries(self, entries):
         biblio_list = []
@@ -54,19 +81,19 @@ class Bibtex(Provider):
                 continue
 
             try:
-                parsed["journal"] = biblio.entries[mykey].fields["journal"]
+                parsed["journal"] = self._to_unicode(biblio.entries[mykey].fields["journal"])
             except KeyError:
                 parsed["journal"] = ""
 
 
             lnames = [person.get_part_as_text("last") for person in biblio.entries[mykey].persons["author"]]
             try:
-                parsed["first_author"] = lnames[0]
+                parsed["first_author"] = self._to_unicode(lnames[0])
             except (KeyError, AttributeError):
-                parsed["first_author"] = biblio.entries[mykey].fields["author"][0].split(",")[0]
+                parsed["first_author"] = self._to_unicode(biblio.entries[mykey].fields["author"][0].split(",")[0])
 
             try:
-                parsed["authors"] = ", ".join(lnames)
+                parsed["authors"] = self._to_unicode(", ".join(lnames))
             except (KeyError, AttributeError):
                 parsed["authors"] = ""
 
@@ -92,7 +119,7 @@ class Bibtex(Provider):
                 parsed["year"]  = ""
 
             try:
-                parsed["title"] = biblio.entries[mykey].fields["title"]
+                parsed["title"] = self._to_unicode(biblio.entries[mykey].fields["title"])
             except KeyError:
                 parsed["title"]  = ""
 
