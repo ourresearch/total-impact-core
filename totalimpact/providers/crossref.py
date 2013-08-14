@@ -131,12 +131,18 @@ class Crossref(Provider):
 
         aliases_dict = provider.alias_dict_from_tuples(aliases)
 
+        doi = None
+        new_aliases = []
+
         if "doi" in aliases_dict:
             doi = aliases_dict["doi"][0]
         else:
-            doi = None
+            if "url" in aliases_dict:
+                for url in aliases_dict["url"]:
+                    if url.startswith("http://dx.doi.org/"):
+                        doi = url.replace("http://dx.doi.org/", "")
+                        new_aliases += [("doi", doi)]
 
-        new_aliases = []
         if not doi:
             if "biblio" in aliases_dict:
                 doi = self._lookup_doi_from_biblio(aliases_dict["biblio"][0], cache_enabled)

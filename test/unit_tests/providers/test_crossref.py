@@ -102,6 +102,13 @@ class TestCrossRef(ProviderTestCase):
         assert_equals(sorted(aliases), sorted(expected))
 
     @http
+    def test_aliases_from_url(self):
+        aliases = self.provider.aliases([("url", "http://dx.doi.org/10.6084/m9.figshare.710636")])
+        expected = [('biblio', {'title': u'An Analysis of Issues Against the Adoption of Dynamic Carpooling', 'authors_literal': u'Daniel Graziotin', 'repository': u'Figshare', 'year': '2013'}), ('doi', '10.6084/m9.figshare.710636'), ('url', 'http://dx.doi.org/10.6084/m9.figshare.710636'), ('url', u'http://figshare.com/articles/An_Analysis_of_Issues_Against_the_Adoption_of_Dynamic_Carpooling/710636')]
+        print aliases
+        assert_equals(sorted(aliases), sorted(expected))
+
+    @http
     def test_aliases_bad_title(self):
         aliases = self.provider.aliases([("doi", "10.1021/np070361t")])
         expected = [('biblio', {'repository': u'American Chemical Society', 'title': u' 13 C\u2212 15 N Correlation via Unsymmetrical Indirect Covariance NMR: Application to Vinblastine ', 'journal': u'Journal of Natural Products', 'year': '2007', 'authors': u'Martin, Hilton, Blinov, Williams'}), ('url', 'http://dx.doi.org/10.1021/np070361t'), ('url', u'http://pubs.acs.org/doi/abs/10.1021/np070361t')]
