@@ -219,6 +219,14 @@ class TestMemberItems(ViewsTester):
         assert_equals(json.loads(response.data)["memberitems"], GOLD_MEMBER_ITEM_CONTENT)
         assert_equals(response.mimetype, "application/json")
 
+    def test_memberitems_get_with_nonprinting_character(self):        
+        response = self.client.get(u'/provider/dryad/memberitems/Otto\u200e%2C%20Sarah%20P.?method=sync')
+        print response
+        print response.data
+        assert_equals(response.status_code, 200)
+        assert_equals(json.loads(response.data)["memberitems"], GOLD_MEMBER_ITEM_CONTENT)
+        assert_equals(response.mimetype, "application/json")
+
     def test_file_parsing(self):
         datadir = os.path.join(os.path.split(__file__)[0], "../../extras/sample_provider_pages/bibtex")
         path = os.path.join(datadir, "Vision.bib")

@@ -7,7 +7,7 @@ from pybtex.scanner import PybtexSyntaxError, PybtexError
 
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout, ProviderServerError
-from totalimpact import utils 
+from totalimpact import unicode_helpers 
 from totalimpact.providers import bibtex_lookup
 
 import logging
@@ -42,7 +42,7 @@ class Bibtex(Provider):
         self.bibtex_to_unicode = build_bibtex_to_unicode(bibtex_lookup.unicode_to_latex)
 
     def _to_unicode(self, text):
-        text = utils.to_unicode_or_bust(text)
+        text = unicode_helpers.to_unicode_or_bust(text)
         if "{" in text:
             text = text.replace("\\", "")
             for i, j in self.bibtex_to_unicode.iteritems():

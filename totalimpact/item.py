@@ -4,6 +4,8 @@ import shortuuid, datetime, hashlib, threading, json, time, copy, re
 
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact.providers.provider import ProviderTimeout, ProviderServerError
+from totalimpact import unicode_helpers
+
 from totalimpact import default_settings
 from totalimpact.utils import Retry
 
@@ -12,11 +14,6 @@ from totalimpact.utils import Retry
 
 import logging
 logger = logging.getLogger('ti.item')
-
-# setup to remove control characters from received IDs
-# from http://stackoverflow.com/questions/92438/stripping-non-printable-characters-from-a-string-in-python
-control_chars = ''.join(map(unichr, range(0,32) + range(127,160)))
-control_char_re = re.compile('[%s]' % re.escape(control_chars))
 
 class NotAuthenticatedError(Exception):
     pass
@@ -36,9 +33,8 @@ all_static_meta = ProviderFactory.get_all_static_meta()
 
 def clean_id(nid):
     try:
-        nid = control_char_re.sub('', nid)
-        nid = nid.replace(u'\u200b', "")
         nid = nid.strip()
+        nid = unicode_helpers.remove_nonprinting_characters(nid)
     except TypeError:
         #isn't a string.  That's ok, might be biblio
         pass
@@ -399,6 +395,8 @@ def create_or_find_items_from_aliases(clean_aliases, myredis, mydao):
     new_items = []
     for alias in clean_aliases:
         (namespace, nid) = alias
+        namespace = clean_id(namespace)
+        nid = clean_id(nid)
         existing_tiid = get_tiid_by_alias(namespace, nid, mydao)
         if existing_tiid:
             tiids.append(existing_tiid)
@@ -411,8 +409,6 @@ def create_or_find_items_from_aliases(clean_aliases, myredis, mydao):
                     alias=alias
                 ))
             item = make()
-            namespace = clean_id(namespace)
-            nid = clean_id(nid)
             item["aliases"][namespace] = [nid]
             item["aliases"] = canonical_aliases(item["aliases"])
 
