@@ -290,13 +290,13 @@ class Backend(Worker):
         if (genre == "article"):
             if not "mendeley" in aliases_providers_run:
                 aliases_providers = ["mendeley"]
+            elif not "crossref" in aliases_providers_run:
+                aliases_providers = ["crossref"]  # do this before pubmed because might tease doi from url
             elif not "pubmed" in aliases_providers_run:
                 aliases_providers = ["pubmed"]
-            elif not "crossref" in aliases_providers_run:
-                aliases_providers = ["crossref"]
             else:
                 metrics_providers = all_metrics_providers
-                biblio_providers = ["pubmed", "crossref", "webpage"]
+                biblio_providers = ["crossref", "pubmed", "webpage"]
         else:
             # relevant alias and biblio providers are always the same
             relevant_providers = [host]
