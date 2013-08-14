@@ -515,6 +515,8 @@ def put_collection(cid=""):
     try:
         aliases = request.json["aliases"]
         alias_strings = get_alias_strings(aliases)
+        logger.info(u"new alias strings {strings}".format(
+            strings=alias_strings))
         (tiids, new_items) = item_module.create_or_update_items_from_aliases(
             aliases, myredis, mydao)
 

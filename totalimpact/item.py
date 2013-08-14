@@ -35,7 +35,7 @@ def clean_id(nid):
     try:
         nid = nid.strip()
         nid = unicode_helpers.remove_nonprinting_characters(nid)
-    except TypeError:
+    except (TypeError, AttributeError):
         #isn't a string.  That's ok, might be biblio
         pass
     return(nid)
