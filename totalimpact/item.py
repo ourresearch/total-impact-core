@@ -70,10 +70,6 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
     metrics = item.setdefault("metrics", {})
     for metric_name in metrics:
 
-        # Patch to hide Facebook data while we investigate potentially broken API.
-        if "facebook" in metric_name.lower():
-            continue
-
         #delete the raw history from what we return to the client for now
         if not include_history:
             try:

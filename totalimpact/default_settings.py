@@ -30,7 +30,6 @@ PROVIDERS = [
     # don't-have-biblio providers go here, alphabetical order
     ("citeulike", {}),   
     ("delicious", {}),   
-    ("facebook", {}),   
     ("plosalm", {}),
     ("plossearch", {}),
     ("pmc", {}),
