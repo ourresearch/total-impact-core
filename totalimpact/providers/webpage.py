@@ -3,6 +3,7 @@ from totalimpact.providers.provider import Provider, ProviderContentMalformedErr
 from totalimpact import unicode_helpers
 
 import lxml.html
+import lxml.etree
 import re
 
 import logging
@@ -106,7 +107,9 @@ class Webpage(Provider):
                     biblio_dict["h1"] = response.strip()
             except AttributeError:
                 pass            
-        except ValueError:
+
+        # throws ParserError when document is empty        
+        except (ValueError, lxml.etree.ParserError):
             logger.warning(u"%20s couldn't parse %s so giving up on webpage biblio" 
                             % (self.provider_name, id)) 
             try:
