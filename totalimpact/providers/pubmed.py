@@ -125,8 +125,6 @@ class Pubmed(Provider):
 
 
     def _extract_aliases_from_pmid(self, page, pmid):
-        dict_of_keylists = {"doi": ["PubmedData", "ArticleIdList"]}
-
         (doc, lookup_function) = provider._get_doc_from_xml(page)
         doi = None
         try:
@@ -134,6 +132,16 @@ class Pubmed(Provider):
             for articleid in articleidlist.getElementsByTagName("ArticleId"):
                 if (articleid.getAttribute("IdType") == u"doi"):
                     doi = articleid.firstChild.data
+
+            if not doi:
+                #give it another try, in another part of the xml 
+                # see http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=23682040&retmode=xml&email=team@total-impact.org&tool=total-impact
+                article = doc.getElementsByTagName("Article")[0]
+                for elocationid in article.getElementsByTagName("ELocationID"):
+                    if (elocationid.getAttribute("EIdType") == u"doi"):
+                        if (elocationid.getAttribute("ValidYN") == u"Y"):
+                            doi = elocationid.firstChild.data
+
         except (IndexError, TypeError):
             pass
 
@@ -141,7 +149,7 @@ class Pubmed(Provider):
         aliases_list = []
         if doi:
             if "10." in doi:  
-                aliases_list = [("doi", doi)]
+                aliases_list = [("doi", doi), ("url", "http://dx.doi.org/"+doi)]
         return aliases_list
 
     def _get_eutils_page(self, id, url, cache_enabled=True):
