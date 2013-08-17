@@ -180,6 +180,30 @@ class TestItem():
         (genre, host) = item_module.decide_genre(aliases)
         assert_equals(genre, "unknown")
 
+    def test_get_biblio_to_update(self):
+        first_biblio = {
+           "journal": "Space",
+           "title": "A real title"
+        }        
+        other_biblio = {
+           "journal": "Earth",
+           "title": "A different title"
+        }        
+        aop_biblio = {
+           "journal": "Nature",
+           "title": "AOP"
+        }
+        response = item_module.get_biblio_to_update({}, first_biblio)
+        assert_equals(response, first_biblio)
+
+        response = item_module.get_biblio_to_update(first_biblio, other_biblio)
+        assert_equals(response, None)
+
+        response = item_module.get_biblio_to_update(aop_biblio, other_biblio)
+        assert_equals(response, other_biblio)
+
+
+
     def test_merge_alias_dicts(self):
         aliases1 = {"ns1":["idA", "idB", "id1"]}
         aliases2 = {"ns1":["idA", "id3", "id4"], "ns2":["id1", "id2"]}

@@ -202,13 +202,10 @@ class CouchWorker(Worker):
         return(item)
 
     @classmethod
-    def update_item_with_new_biblio(cls, biblio_dict, item):
+    def update_item_with_new_biblio(cls, new_biblio_dict, item):
         # return None if no changes
         # don't change if biblio already there
-        if item["biblio"]:
-            item = None
-        else:
-            item["biblio"] = biblio_dict
+        item["biblio"] = item_module.get_biblio_to_update(item["biblio"], new_biblio_dict)
         return(item)
 
     @classmethod

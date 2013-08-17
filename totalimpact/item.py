@@ -118,6 +118,19 @@ def add_metrics_data(metric_name, metrics_method_response, item):
     return item
 
 
+def get_biblio_to_update(old_biblio, new_biblio):
+    response = None
+    if old_biblio:
+        try:
+            if old_biblio["title"] == "AOP":
+                response = new_biblio
+        except KeyError:
+            response = new_biblio
+    else:
+        response = new_biblio
+    return response
+
+
 def make():
     now = datetime.datetime.now().isoformat()
     # if the alphabet below changes, need to update couch queue lookups
