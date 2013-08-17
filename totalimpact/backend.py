@@ -205,7 +205,11 @@ class CouchWorker(Worker):
     def update_item_with_new_biblio(cls, new_biblio_dict, item):
         # return None if no changes
         # don't change if biblio already there
-        item["biblio"] = item_module.get_biblio_to_update(item["biblio"], new_biblio_dict)
+        response = item_module.get_biblio_to_update(item["biblio"], new_biblio_dict)
+        if response:
+            item["biblio"] = response
+        else:
+            item = None
         return(item)
 
     @classmethod
