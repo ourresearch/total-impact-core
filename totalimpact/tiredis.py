@@ -34,7 +34,7 @@ def get_value(self, key):
     return value
 
 def set_num_providers_left(self, item_id, num_providers_left):
-    logger.debug(u"setting {num} providers left to update for item '{tiid}'.".format(
+    logger.debug(u"Setting num_providers_left to {num} for '{tiid}'.".format(
         num=num_providers_left,
         tiid=item_id
     ))

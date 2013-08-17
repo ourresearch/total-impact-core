@@ -459,7 +459,7 @@ def get_tiid_by_alias(ns, nid, mydao):
 def start_item_update(tiids, myredis, mydao, sleep_in_seconds=0):
     # put each of them on the update queue
     for tiid in tiids:
-        logger.debug(u"In start_item_update with tiid " + tiid)
+        logger.debug(u"In start_item_update: " + tiid)
 
         # set this so we know when it's still updating later on
         myredis.set_num_providers_left(
