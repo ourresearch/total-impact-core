@@ -448,7 +448,9 @@ def get_tiid_by_alias(ns, nid, mydao):
         if len(matches.rows) > 1:
             logger.warning(u"More than one tiid for alias (%s, %s)" % (ns, nid))
         tiid = matches.rows[0]["id"]
-        logger.debug(u"found a match for {nid}!".format(nid=nid))
+        logger.debug(u"Found a tiid for {nid} in get_tiid_by_alias: {tiid}".format(
+            nid=nid, 
+            tiid=tiid))
     else:
         logger.debug(u"no match for {nid}!".format(nid=nid))
         tiid = None

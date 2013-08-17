@@ -127,8 +127,8 @@ def get_api_user_id_by_api_key(api_key, mydao):
     if is_internal_key(api_key):
         return None
 
-    logger.debug(u"In get_api_user_by_api_key with {api_key}".format(
-        api_key=api_key))
+    #logger.debug(u"In get_api_user_by_api_key with {api_key}".format(
+    #    api_key=api_key))
     api_key = api_key.lower()
 
     cur = mydao.get_cursor()
@@ -137,7 +137,7 @@ def get_api_user_id_by_api_key(api_key, mydao):
     cur.close()
 
     if results:
-        logger.debug(u"found a match for {api_key}!".format(api_key=api_key))
+        #logger.debug(u"found a match for {api_key}!".format(api_key=api_key))
         return api_key
     logger.debug(u"no match for api_key {api_key}!".format(api_key=api_key))
     return None

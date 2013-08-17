@@ -31,9 +31,9 @@ class RedisQueue(object):
         if received:
             queue, message_json = received
             try:
+                logger.debug(u"{:20}: Popped from redis: starts {message}".format(
+                    self.name, message=message[0:30]))        
                 message = json.loads(message_json) 
-                logger.debug(u"{:20}: /biblio_print <<<POPPED from redis, {message}".format(
-                    self.name, message=message))        
             except TypeError, KeyError:
                 logger.info(u"{:20}: error processing redis message {message_json}".format(
                     self.name, message_json=message_json))
@@ -318,13 +318,13 @@ class Backend(Worker):
     def run(self):
         alias_message = self.alias_queue.pop()
         if alias_message:
-            logger.info(u"/biblio_print, alias_message said {alias_message}".format(
-                alias_message=alias_message))            
+            #logger.info(u"/biblio_print, alias_message said {alias_message}".format(
+            #    alias_message=alias_message))            
             (tiid, alias_dict, aliases_providers_run) = alias_message
 
             relevant_provider_names = self.sniffer(alias_dict, aliases_providers_run)
-            logger.info(u"/biblio_print, backend for {tiid} sniffer got input {alias_dict}".format(
-                tiid=tiid, alias_dict=alias_dict))
+            #logger.info(u"/biblio_print, backend for {tiid} sniffer got input {alias_dict}".format(
+            #    tiid=tiid, alias_dict=alias_dict))
             logger.info(u"backend for {tiid} sniffer returned {providers}".format(
                 tiid=tiid, providers=relevant_provider_names))
 

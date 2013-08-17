@@ -230,7 +230,6 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
     debug_message = ""
     if register:
         try:
-            logger.debug(u"api_key is " + api_key)
             api_user.register_item((namespace, nid), api_key, myredis, mydao, mypostgresdao)
         except api_user.ItemAlreadyRegisteredToThisKey:
             debug_message = u"ItemAlreadyRegisteredToThisKey for key {api_key}".format(
