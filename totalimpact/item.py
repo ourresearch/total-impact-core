@@ -119,8 +119,6 @@ def add_metrics_data(metric_name, metrics_method_response, item):
 
 
 def get_biblio_to_update(old_biblio, new_biblio):
-    print "old_biblio", old_biblio
-    print "new_biblio", new_biblio
     response = None
     if old_biblio:
         try:
@@ -131,7 +129,6 @@ def get_biblio_to_update(old_biblio, new_biblio):
     else:
         response = new_biblio
 
-    print "response", response
     return response
 
 
