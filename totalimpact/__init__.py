@@ -3,6 +3,7 @@ import os, logging, sys
 import analytics
 from flask import Flask
 
+
 # see http://wiki.pylonshq.com/display/pylonscookbook/Alternative+logging+configuration
 logging.basicConfig(
     stream=sys.stdout,

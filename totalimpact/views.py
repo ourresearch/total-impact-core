@@ -564,16 +564,24 @@ def collection_create():
     POST /collection
     creates new collection
     """
-    response_code = None
-    coll, key = collection.make(request.json.get("owner", None))
-    refset_metadata = request.json.get("refset_metadata", None)
-    if refset_metadata:
-        coll["refset_metadata"] = refset_metadata
+
+    coll, key = collection.make(
+        request.args.get("collection_id", None)
+    )
+
+    try:
+        coll["refset_metadata"] = request.json["refset_metadata"]
+    except KeyError:
+        pass
+
     coll["ip_address"] = request.remote_addr
+
     try:
         coll["title"] = request.json["title"]
         aliases = request.json["aliases"]
+
         (tiids, new_items) = item_module.create_or_update_items_from_aliases(aliases, myredis, mydao)
+
         for item in new_items:
             namespaces = item["aliases"].keys()
 

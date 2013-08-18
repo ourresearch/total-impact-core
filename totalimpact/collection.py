@@ -12,17 +12,20 @@ from totalimpact.providers.provider import ProviderFactory
 import logging
 logger = logging.getLogger('ti.collection')
 
-def make(owner=None):
+def make(collection_id=None):
     key = shortuuid.uuid()[0:10]
+
+    if collection_id is None:
+        collection_id = _make_id()
 
     now = datetime.datetime.now().isoformat()
     collection = {}
 
-    collection["_id"] = _make_id()
+    collection["_id"] = collection_id
     collection["created"] = now
     collection["last_modified"] = now
     collection["type"] = "collection"
-    collection["owner"] = owner  # I dont' think we use this anymore?
+    collection["owner"] = None
     collection["key"] = key  # using the hash was needless complexity...
 
     return collection, key
