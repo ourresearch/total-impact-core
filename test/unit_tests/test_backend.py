@@ -301,13 +301,13 @@ class TestBackendClass(TestBackend):
         expected = {'aliases': [], 'biblio': ['dryad'], 'metrics': ['wikipedia']}
         assert_equals(response, expected)
 
-    def test_decide_who_to_call_next_pmid_not_run(self):
+    def test_decide_who_to_call_next_crossref_not_run(self):
         aliases_dict = {"pmid":["111"]}
         prev_aliases = ["mendeley"]
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get more aliases
-        expected = {'metrics': [], 'biblio': [], 'aliases': ['pubmed']}
+        expected = {'metrics': [], 'biblio': [], 'aliases': ['crossref']}
         assert_equals(response, expected)
 
     def test_decide_who_to_call_next_pmid_mendeley_not_run(self):
@@ -356,7 +356,7 @@ class TestBackendClass(TestBackend):
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics, no biblio
-        expected = {'metrics': ["wikipedia"], 'biblio': ['pubmed', 'crossref', 'webpage'], 'aliases': []}
+        expected = {'metrics': ['wikipedia'], 'biblio': ['crossref', 'pubmed', 'webpage'], 'aliases': []}
         assert_equals(response, expected)   
 
     def test_decide_who_to_call_next_pmid_crossref_pubmed_prev_called(self):
@@ -366,7 +366,7 @@ class TestBackendClass(TestBackend):
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics, no biblio
-        expected = {'metrics': ["wikipedia"], 'biblio': ['pubmed', 'crossref', 'webpage'], 'aliases': []}
+        expected = {'metrics': ['wikipedia'], 'biblio': ['crossref', 'pubmed', 'webpage'], 'aliases': []}
         assert_equals(response, expected)   
 
 

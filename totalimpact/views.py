@@ -12,6 +12,7 @@ from totalimpact import dao, app, tiredis, collection, api_user
 from totalimpact import item as item_module
 from totalimpact.models import MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderServerError, ProviderTimeout
+from totalimpact import unicode_helpers
 from totalimpact import default_settings
 import logging
 
@@ -229,7 +230,6 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
     debug_message = ""
     if register:
         try:
-            logger.debug(u"api_key is " + api_key)
             api_user.register_item((namespace, nid), api_key, myredis, mydao, mypostgresdao)
         except api_user.ItemAlreadyRegisteredToThisKey:
             debug_message = u"ItemAlreadyRegisteredToThisKey for key {api_key}".format(
@@ -325,6 +325,7 @@ def provider_memberitems_get(provider_name, query):
     """
     Gets aliases associated with a query from a given provider.
     """
+    query = unicode_helpers.remove_nonprinting_characters(query)
 
     try:
         provider = ProviderFactory.get_provider(provider_name)
@@ -488,6 +489,19 @@ def delete_items(cid=""):
     return resp
 
 
+def get_alias_strings(aliases):
+    alias_strings = []
+    for (namespace, nid) in aliases:
+        namespace = item_module.clean_id(namespace)
+        nid = item_module.clean_id(nid)
+        try:
+            alias_strings += [namespace+":"+nid]
+        except TypeError:
+            # jsonify the biblio dicts
+            alias_strings += [namespace+":"+json.dumps(nid)]
+    return alias_strings   
+
+
 @app.route("/collection/<cid>/items", methods=["PUT"])
 @app.route("/v1/collection/<cid>/items", methods=["PUT"])
 def put_collection(cid=""):
@@ -499,12 +513,9 @@ def put_collection(cid=""):
 
     try:
         aliases = request.json["aliases"]
-        try:
-            alias_strings = [namespace+":"+nid for (namespace, nid) in aliases]
-        except TypeError:
-            # jsonify the biblio dicts
-            alias_strings = [namespace+":"+json.dumps(nid) for (namespace, nid) in aliases]
-
+        alias_strings = get_alias_strings(aliases)
+        logger.info(u"new alias strings {strings}".format(
+            strings=alias_strings))
         (tiids, new_items) = item_module.create_or_update_items_from_aliases(
             aliases, myredis, mydao)
 
@@ -531,6 +542,7 @@ def put_collection(cid=""):
     return resp
 
 
+
 """ Updates all the items in a given collection.
 """
 @app.route("/collection/<cid>", methods=["POST"])
@@ -555,7 +567,6 @@ def collection_update(cid=""):
     return resp
 
 
-
 # creates a collection with aliases
 @app.route('/collection', methods=['POST'])
 @app.route('/v1/collection', methods=['POST'])
@@ -564,16 +575,11 @@ def collection_create():
     POST /collection
     creates new collection
     """
-
-    coll, key = collection.make(
-        request.args.get("collection_id", None)
-    )
-
-    try:
-        coll["refset_metadata"] = request.json["refset_metadata"]
-    except KeyError:
-        pass
-
+    response_code = None
+    coll, key = collection.make(request.args.get("collection_id", None))
+    refset_metadata = request.json.get("refset_metadata", None)
+    if refset_metadata:
+        coll["refset_metadata"] = refset_metadata
     coll["ip_address"] = request.remote_addr
 
     try:
@@ -581,10 +587,6 @@ def collection_create():
         aliases = request.json["aliases"]
 
         (tiids, new_items) = item_module.create_or_update_items_from_aliases(aliases, myredis, mydao)
-
-        for item in new_items:
-            namespaces = item["aliases"].keys()
-
         if not tiids:
             abort_custom(404, "POST /collection requires a list of [namespace, id] pairs.")
     except (AttributeError, TypeError):
@@ -595,14 +597,10 @@ def collection_create():
                 json=str(request.json)))
         abort_custom(404, "Missing arguments.")
 
-    try:
-        alias_strings = aliases_strings = [namespace+":"+nid for (namespace, nid) in aliases]
-    except TypeError:
-        # jsonify the biblio dicts
-        alias_strings = aliases_strings = [namespace+":"+json.dumps(nid) for (namespace, nid) in aliases]
+    alias_strings = get_alias_strings(aliases)
 
     # save dict of alias:tiid
-    coll["alias_tiids"] = dict(zip(aliases_strings, tiids))
+    coll["alias_tiids"] = dict(zip(alias_strings, tiids))
 
     logger.info(json.dumps(coll, sort_keys=True, indent=4))
 

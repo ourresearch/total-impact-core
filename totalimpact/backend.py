@@ -31,10 +31,10 @@ class RedisQueue(object):
         if received:
             queue, message_json = received
             try:
+                logger.debug(u"{:20}: Popped from redis: starts {message_json}".format(
+                    self.name, message_json=message_json[0:30]))        
                 message = json.loads(message_json) 
-                logger.debug(u"{:20}: /biblio_print <<<POPPED from redis, {message}".format(
-                    self.name, message=message))        
-            except TypeError, KeyError:
+            except (TypeError, KeyError):
                 logger.info(u"{:20}: error processing redis message {message_json}".format(
                     self.name, message_json=message_json))
         return message
@@ -202,13 +202,14 @@ class CouchWorker(Worker):
         return(item)
 
     @classmethod
-    def update_item_with_new_biblio(cls, biblio_dict, item):
+    def update_item_with_new_biblio(cls, new_biblio_dict, item):
         # return None if no changes
         # don't change if biblio already there
-        if item["biblio"]:
-            item = None
+        response = item_module.get_biblio_to_update(item["biblio"], new_biblio_dict)
+        if response:
+            item["biblio"] = response
         else:
-            item["biblio"] = biblio_dict
+            item = None
         return(item)
 
     @classmethod
@@ -290,13 +291,13 @@ class Backend(Worker):
         if (genre == "article"):
             if not "mendeley" in aliases_providers_run:
                 aliases_providers = ["mendeley"]
+            elif not "crossref" in aliases_providers_run:
+                aliases_providers = ["crossref"]  # do this before pubmed because might tease doi from url
             elif not "pubmed" in aliases_providers_run:
                 aliases_providers = ["pubmed"]
-            elif not "crossref" in aliases_providers_run:
-                aliases_providers = ["crossref"]
             else:
                 metrics_providers = all_metrics_providers
-                biblio_providers = ["pubmed", "crossref", "webpage"]
+                biblio_providers = ["crossref", "pubmed", "webpage"]
         else:
             # relevant alias and biblio providers are always the same
             relevant_providers = [host]
@@ -318,13 +319,13 @@ class Backend(Worker):
     def run(self):
         alias_message = self.alias_queue.pop()
         if alias_message:
-            logger.info(u"/biblio_print, alias_message said {alias_message}".format(
-                alias_message=alias_message))            
+            #logger.info(u"/biblio_print, alias_message said {alias_message}".format(
+            #    alias_message=alias_message))            
             (tiid, alias_dict, aliases_providers_run) = alias_message
 
             relevant_provider_names = self.sniffer(alias_dict, aliases_providers_run)
-            logger.info(u"/biblio_print, backend for {tiid} sniffer got input {alias_dict}".format(
-                tiid=tiid, alias_dict=alias_dict))
+            #logger.info(u"/biblio_print, backend for {tiid} sniffer got input {alias_dict}".format(
+            #    tiid=tiid, alias_dict=alias_dict))
             logger.info(u"backend for {tiid} sniffer returned {providers}".format(
                 tiid=tiid, providers=relevant_provider_names))
 

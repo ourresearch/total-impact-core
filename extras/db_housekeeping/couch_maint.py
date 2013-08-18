@@ -19,7 +19,7 @@ cloudant_url = os.getenv("CLOUDANT_URL")
 
 couch = couchdb.Server(url=cloudant_url)
 db = couch[cloudant_db]
-logger.info("connected to couch at " + cloudant_url + " / " + cloudant_db)
+logger.info(u"connected to couch at " + cloudant_url + " / " + cloudant_db)
 
 """
 admin/items_with_pmids
@@ -38,10 +38,10 @@ def del_pmids():
         tiid = row.id
         tiids += [tiid]
         del(row.doc["aliases"]["pmid"])
-        logger.info("saving doc '{id}'".format(id=row.id))
+        logger.info(u"saving doc '{id}'".format(id=row.id))
         db.save(row.doc)
 
-    logger.info("finished looking, found {num_tiids} tiids with pmids".format(
+    logger.info(u"finished looking, found {num_tiids} tiids with pmids".format(
         num_tiids=len(tiids)))
 
 
@@ -79,7 +79,7 @@ def bad_doi_cleanup():
     changed_rows = 0
     for row in db.view(view_name, include_docs=True):
 
-        logger.info("got doc '{id}' back from {view_name}".format(
+        logger.info(u"got doc '{id}' back from {view_name}".format(
             id=row.id,
             view_name=view_name
         ))
@@ -87,14 +87,14 @@ def bad_doi_cleanup():
         doc = row.doc
         tiid = row.id
 
-        logger.info("\n\nPROCESSING ITEM {id}".format(id=tiid))            
+        logger.info(u"\n\nPROCESSING ITEM {id}".format(id=tiid))            
         pprint(doc["aliases"])
 
         # delete tiid from collections
         collections_with_tiid = db.view("admin/collections_by_tiid", include_docs=True, key=tiid)
         for collection_row in collections_with_tiid:
             collection = collection_row.doc
-            logger.info("deleting from collection {id}".format(id=collection_row.id))
+            logger.info(u"deleting from collection {id}".format(id=collection_row.id))
             #pprint(collection)            
             good_tiids = [x for x in collection["item_tiids"] if tiid not in x]
             collection["item_tiids"] = good_tiids
@@ -105,17 +105,17 @@ def bad_doi_cleanup():
         for snap_row in snaps_with_tiid:
             snap = snap_row.doc
             pprint(snap)            
-            logger.info("deleting SNAP {id}".format(id=snap_row.id))            
+            logger.info(u"deleting SNAP {id}".format(id=snap_row.id))            
             #db.delete(snap)
 
         # delete the item
-        logger.info("deleting item {id}".format(id=tiid))            
+        logger.info(u"deleting item {id}".format(id=tiid))            
         #db.delete(doc)
 
         changed_rows += 1
 
-    logger.info("finished the update.")
-    logger.info("changed %i rows" %changed_rows)
+    logger.info(u"finished the update.")
+    logger.info(u"changed %i rows" %changed_rows)
 
 
 """
@@ -130,22 +130,22 @@ def build_alias_items_in_collections():
             start_key=["collection", "0000000000"], 
             endkey=["collection", "zzzzzzzzzz"])
     total_rows = len(view_rows)
-    logger.info("total rows = %i" % total_rows)
+    logger.info(u"total rows = %i" % total_rows)
     row_count = 0
 
     for row in view_rows:
         row_count += 1
-        logger.info("now on rows = %i of %i, id %s" % (row_count, total_rows, row.id))
+        logger.info(u"now on rows = %i of %i, id %s" % (row_count, total_rows, row.id))
         collection = row.doc
         #pprint(collection)
         if collection.has_key("alias_tiids"):
-            logger.info("skipping")
+            logger.info(u"skipping")
         else:
             item_tiids = collection["item_tiids"]
             alias_tiids = dict(zip(["unknown-"+tiid for tiid in item_tiids], item_tiids))
             collection["alias_tiids"] = alias_tiids
             db.save(collection)
-            logger.info("saving")
+            logger.info(u"saving")
 
 
 
@@ -161,18 +161,18 @@ def delete_item_tiids_from_collection():
             start_key=["collection", "0000000000"], 
             endkey=["collection", "zzzzzzzzzz"])
     total_rows = len(view_rows)
-    logger.info("total rows = %i" % total_rows)
+    logger.info(u"total rows = %i" % total_rows)
     row_count = 0
 
     for row in view_rows:
         row_count += 1
-        logger.info("now on rows = %i of %i, id %s" % (row_count, total_rows, row.id))
+        logger.info(u"now on rows = %i of %i, id %s" % (row_count, total_rows, row.id))
         collection = row.doc
         #pprint(collection)
         if collection.has_key("item_tiids"):
             del collection["item_tiids"]
             db.save(collection)
-            logger.info("saving")
+            logger.info(u"saving")
 
 
 
@@ -182,7 +182,7 @@ function(doc) {
 }
 """
 def put_snaps_in_items():
-    logger.debug("running put_snaps_in_items() now.")
+    logger.debug(u"running put_snaps_in_items() now.")
     starttime = time.time()
     view_name = "queues/by_type_and_id"
     view_rows = db.view(view_name, include_docs=True)
@@ -218,17 +218,17 @@ def put_snaps_in_items():
                         item_last_modified = item["last_modified"]
                         updated_item["last_modified"] = max(snap_last_modified, item_last_modified)
                         
-                        logger.info("now on snap row %i, saving item %s back to db, deleting snap %s" % 
+                        logger.info(u"now on snap row %i, saving item %s back to db, deleting snap %s" % 
                             (row_count, updated_item["_id"], snap["_id"]))
 
                         db.save(updated_item)
                         #db.delete(snap)
                         saving = False
                     except couchdb.http.ResourceConflict:
-                        logger.warning("couch conflict.  trying again")
+                        logger.warning(u"couch conflict.  trying again")
                         pass
             else:
-                logger.warning("now on snap row %i, couldn't get item %s for snap %s" % 
+                logger.warning(u"now on snap row %i, couldn't get item %s for snap %s" % 
                     (row_count, snap["tiid"], snap["_id"]))
 
         if page.has_next:
@@ -236,7 +236,7 @@ def put_snaps_in_items():
         else:
             page = None
 
-    logger.info("updated {rows} rows in {elapsed} seconds".format(
+    logger.info(u"updated {rows} rows in {elapsed} seconds".format(
         rows=row_count, elapsed=round(time.time() - starttime)
     ))
 
@@ -272,25 +272,25 @@ def ensure_all_metric_values_are_ints():
                         logger.info(item["metrics"][metric_name])
                     if isinstance(raw, basestring):
                         if raw != "Yes":
-                            logger.info("casting to int")
+                            logger.info(u"casting to int")
                             #logger.info(item)
                             item["metrics"][metric_name]["values"]["raw"] = int(raw)
                             raw = int(raw)
                             save_me=True
                     if not raw:
-                        logger.info("removing a zero")
+                        logger.info(u"removing a zero")
                         #logger.info(item)
                         del item["metrics"][metric_name]
                         save_me=True
                 if save_me:
-                    logger.info("saving")
+                    logger.info(u"saving")
                     db.save(item)
                 else:
-                    #logger.info("%i." %row_count)
+                    #logger.info(u"%i." %row_count)
                     pass
             except KeyError:
                 pass
-        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        logger.info(u"%i. getting new page, last id was %s" %(row_count, row.id))
         if page.has_next:
             page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
         else:
@@ -315,12 +315,12 @@ def delete_test_collections():
             for row in page:
                 row_count += 1
                 collection = row.doc
-                logger.info("deleting test collection {cid}:{title}".format(
+                logger.info(u"deleting test collection {cid}:{title}".format(
                     cid=collection["_id"], title=collection["title"]))
                 number_deleted += 1
                 number_items += len(collection["alias_tiids"])
                 #db.delete(collection)
-            logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+            logger.info(u"%i. getting new page, last id was %s" %(row_count, row.id))
             if page.has_next:
                 page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
             else:
@@ -368,9 +368,9 @@ def delete_orphan_items():
             tiid_in_collection = tiid_in_collection_response.rows
             print tiid_in_collection
             if len(tiid_in_collection) > 0:
-                logger.info("\nitem {tiid} is in a collection, not deleting".format(tiid=tiid))
+                logger.info(u"\nitem {tiid} is in a collection, not deleting".format(tiid=tiid))
             else:
-                logger.info("\nitem {tiid} is not in a collection, deleting.".format(tiid=tiid))
+                logger.info(u"\nitem {tiid} is not in a collection, deleting.".format(tiid=tiid))
                 try:
                     #db.delete(item)
                     number_deleted += 1
@@ -378,7 +378,7 @@ def delete_orphan_items():
                 except (TypeError, couchdb.http.ResourceNotFound):  #happens sometimes if already deleted
                     pass
 
-        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        logger.info(u"%i. getting new page, last id was %s" %(row_count, row.id))
         if page.has_next:
             page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
         else:
@@ -437,16 +437,16 @@ def remove_unused_item_doc_keys():
                 print row.id
                 print row.doc.keys(), row.doc["aliases"].keys(), row.doc["biblio"].keys()
                 print item.keys(), item["aliases"].keys(), item["biblio"].keys()
-                logger.info("saving modified item {tiid}\n".format(
+                logger.info(u"saving modified item {tiid}\n".format(
                     tiid=item["_id"]))
                 number_edited += 1
                 db.save(item)
             else:
-                logger.info(".")
+                logger.info(u".")
 
         print "number edited = ", number_edited
         print "number items = ", row_count
-        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        logger.info(u"%i. getting new page, last id was %s" %(row_count, row.id))
         if page.has_next:
             page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
         else:
@@ -493,11 +493,11 @@ def lowercase_aliases():
                     number_edited += 1
                     db.save(item)
                 else:
-                    logger.info(".")
+                    logger.info(u".")
                         
         print "number edited = ", number_edited
         print "number items = ", row_count
-        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        logger.info(u"%i. getting new page, last id was %s" %(row_count, row.id))
         if page.has_next:
             page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
         else:
@@ -527,7 +527,7 @@ def update_github():
             item.start_item_update([tiid], myredis, db, sleep_in_seconds=0.05)                        
             row_count += 1
             print "."
-        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        logger.info(u"%i. getting new page, last id was %s" %(row_count, row.id))
         if page.has_next:
             page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
         else:
@@ -561,7 +561,7 @@ def fix_github_year():
                 pass
             row_count += 1
             print "."
-        logger.info("%i. getting new page, last id was %s" %(row_count, row.id))
+        logger.info(u"%i. getting new page, last id was %s" %(row_count, row.id))
         if page.has_next:
             page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
         else:
@@ -589,6 +589,55 @@ def clean_up_bad_h1():
     pass
 
 
+
+"""
+function(doc) {
+    emit([doc.type, doc._id], doc);
+}
+"""
+def delete_all_delicious_and_facebook():
+    #except F1000 Yes's
+    view_name = "queues/by_type_and_id"
+    view_rows = db.view(view_name, include_docs=True)
+    row_count = 0
+    page_size = 500
+
+    start_key = ["item", "000000000"]
+    end_key = ["item", "zzzzzzzzzzzzzzzzzzzzzzzz"]
+
+    from couch_paginator import CouchPaginator
+    page = CouchPaginator(db, view_name, page_size, include_docs=True, start_key=start_key, end_key=end_key)
+
+    number_saved = 0
+    while page:
+        for row in page:
+            row_count += 1
+            item = row.doc
+            try:
+                if item["metrics"]:
+                    metric_names = item["metrics"].keys()
+                    save_me = False
+                    for metric_name in metric_names:
+                        if metric_name.startswith("facebook") or metric_name.startswith("delicious"):
+                            logger.info(u"{tiid} deleting {metric_name}".format(
+                                metric_name=metric_name,
+                                tiid=row.id))
+                            del item["metrics"][metric_name]
+                            save_me=True
+                    if save_me:                    
+                        db.save(item)
+                        number_saved += 1
+            except (KeyError, TypeError):
+                pass
+        logger.info(u"number saved {num}".format(
+            num=number_saved))
+        logger.info(u"%i. getting new page, last id was %s" %(row_count, row.id))
+        if page.has_next:
+            page = CouchPaginator(db, view_name, page_size, start_key=page.next, end_key=end_key, include_docs=True)
+        else:
+            page = None
+
+
 if (cloudant_db == "ti"):
     print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
 else:
@@ -597,7 +646,7 @@ confirm = None
 confirm = raw_input("\nType YES if you are sure you want to run this test:")
 if confirm=="YES":
     ### call the function here
-    fix_github_year()
+    delete_all_delicious_and_facebook()
 else:
     print "nevermind, then."
 

@@ -39,18 +39,22 @@ class TestPubmed(ProviderTestCase):
         # ensure that the dryad reader can interpret an xml doc appropriately
         f = open(SAMPLE_EXTRACT_ALIASES_FROM_DOI_PAGE, "r")
         aliases = self.provider._extract_aliases_from_doi(f.read(), "10.1371/journal.pcbi.1000361")
+        print aliases
         assert_equals(aliases, [('pmid', '19381256')])
 
     def test_extract_aliases_from_pmid(self):
         # ensure that the dryad reader can interpret an xml doc appropriately
         f = open(SAMPLE_EXTRACT_ALIASES_FROM_PMID_PAGE, "r")
         aliases = self.provider._extract_aliases_from_pmid(f.read(), "17593900")
-        assert_equals(aliases, [('doi', u'10.1371/journal.pmed.0040215')])
+        print aliases
+        expected = [('doi', u'10.1371/journal.pmed.0040215'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0040215')]
+        assert_equals(aliases, expected)
 
     # override default because returns url even if pmid api page is empty
     def test_provider_aliases_empty(self):
         Provider.http_get = common.get_empty
         aliases = self.provider.aliases([self.testitem_aliases])
+        print aliases
         assert_equals(aliases, [("url", 'http://www.ncbi.nlm.nih.gov/pubmed/16060722')])
 
     def test_extract_citing_pmcids(self):
@@ -74,7 +78,7 @@ class TestPubmed(ProviderTestCase):
     def test_aliases_from_pmid(self):
         aliases = self.provider.aliases([self.testitem_aliases])
         print aliases
-        expected = [('biblio', {'title': u'Why most published research findings are false.', 'journal': u'PLoS medicine', 'year': 2005, 'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00'}), ('doi', u'10.1371/journal.pmed.0020124'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/16060722')]
+        expected = [('biblio', {'title': u'Why most published research findings are false.', 'journal': u'PLoS medicine', 'year': 2005, 'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00'}), ('doi', u'10.1371/journal.pmed.0020124'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0020124'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/16060722')]
         assert_equals(aliases, expected)
 
     @http
@@ -93,6 +97,12 @@ class TestPubmed(ProviderTestCase):
         expected = [('biblio', {'journal': u'ORL; journal for oto-rhino-laryngology and its related specialties', 'authors': u'Oshima, Ikeda, Furukawa, Suzuki, Takasaka', 'title': u'Expression of the voltage-dependent chloride channel ClC-3 in human nasal tissue.'}), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/11244366')]
         assert_equals(aliases, expected)
 
+    @http
+    def test_aliases_from_pmid_when_doi_in_different_part_of_xml(self):
+        aliases = self.provider.aliases([("pmid", "23682040")])
+        print aliases
+        expected = [('biblio', {'title': u'Influenza: marketing vaccine by marketing disease.', 'journal': u'BMJ (Clinical research ed.)', 'year': 2013, 'authors': u'Doshi', 'date': '2013-05-16T00:00:00'}), ('doi', u'10.1136/bmj.f3037'), ('url', u'http://dx.doi.org/10.1136/bmj.f3037'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/23682040')]
+        assert_equals(aliases, expected)
 
     @http
     def test_aliases_from_doi(self):

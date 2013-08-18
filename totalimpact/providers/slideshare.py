@@ -1,5 +1,5 @@
 from totalimpact.providers import provider
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderItemNotFoundError
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderItemNotFoundError, ProviderRateLimitError
 
 import simplejson, urllib, time, hashlib, re, os
 from xml.dom import minidom 
@@ -77,6 +77,11 @@ class Slideshare(Provider):
         if not self.sanity_check_re.search(page):
             if ("User Not Found" in page):
                 raise ProviderItemNotFoundError
+            elif ("Account Exceeded Daily Limit" in page):
+                logger.info(u"Exceeded api limit for provider {provider}".format(
+                    provider=self.provider_name))
+                raise ProviderRateLimitError("Exceeded api limit for provider {provider}".format(
+                    provider=self.provider_name))
             else:
                 raise ProviderContentMalformedError
         return True

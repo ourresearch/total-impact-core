@@ -94,3 +94,12 @@ class TestScopus(ProviderTestCase):
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
+    @http
+    def test_metrics_case_insensitivity(self):
+        metrics_dict = self.provider.metrics([("doi", "10.1017/s0022112005007494")])
+        expected = {'scopus:citations': (179, u'http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=32044436746')}
+        print metrics_dict
+        for key in expected:
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+

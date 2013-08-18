@@ -85,7 +85,7 @@ class Scopus(Provider):
         try:
             citation_rows = data["OK"]["results"]
             for citation_row in citation_rows:
-                if citation_row["doi"]==id:
+                if citation_row["doi"].lower()==id.lower():
                     response = citation_row
         except (KeyError, ValueError):
             # not in Scopus database
@@ -110,6 +110,7 @@ class Scopus(Provider):
         url = self._get_templated_url(url_template, id)
 
         page = self._get_scopus_page(url)
+
         if not page:
             return None  # empty result set
 
