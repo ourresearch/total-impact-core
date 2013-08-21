@@ -415,7 +415,7 @@ def create_or_find_items_from_aliases(clean_aliases, myredis, mydao):
                     alias=str(alias)
                 ))
         else:
-            logger.debug(u"alias {alias} isn't in the db; making a new item for it.".format(
+            logger.debug(u"/biblio_print alias {alias} isn't in the db; making a new item for it.".format(
                     alias=alias
                 ))
             item = make()
