@@ -86,13 +86,17 @@ class Bibtex(Provider):
                 parsed["journal"] = ""
 
 
-            lnames = [person.get_part_as_text("last") for person in biblio.entries[mykey].persons["author"]]
             try:
+                lnames = [person.get_part_as_text("last") for person in biblio.entries[mykey].persons["author"]]
                 parsed["first_author"] = self._to_unicode(lnames[0])
             except (KeyError, AttributeError):
-                parsed["first_author"] = self._to_unicode(biblio.entries[mykey].fields["author"][0].split(",")[0])
+                try:
+                    parsed["first_author"] = self._to_unicode(biblio.entries[mykey].fields["author"][0].split(",")[0])
+                except (KeyError, AttributeError):
+                    parsed["first_author"] = ""
 
             try:
+                lnames = [person.get_part_as_text("last") for person in biblio.entries[mykey].persons["author"]]
                 parsed["authors"] = self._to_unicode(", ".join(lnames))
             except (KeyError, AttributeError):
                 parsed["authors"] = ""
