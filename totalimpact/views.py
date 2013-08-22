@@ -7,6 +7,7 @@ from collections import defaultdict
 import redis
 import shortuuid
 import analytics
+import requests
 
 from totalimpact import dao, app, tiredis, collection, api_user
 from totalimpact import item as item_module
@@ -194,7 +195,7 @@ def item_namespace_post_with_tiid(namespace, nid):
     nid = item_module.clean_id(nid)
 
     tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
-    response_code = 201 # Created
+    response_code = 201  # Created
     resp = make_response(json.dumps(tiid), response_code)
     resp.mimetype = "application/json"
     return resp
@@ -560,13 +561,33 @@ def collection_update(cid=""):
         logger.exception(u"couldn't get tiids in POST collection '{cid}'".format(
             cid=cid
         ))
-        abort_custrom(404, "couldn't get items for this collection...maybe doesn't exist?")
+        abort_custom(404, "couldn't get items for this collection...maybe doesn't exist?")
 
     item_module.start_item_update(tiids, myredis, mydao)
 
     resp = make_response("true", 200)
     resp.mimetype = "application/json"
     return resp
+
+
+def list_of_items_only_owned_by_test_users():
+    r = requests.get(
+        os.getenv("WEBAPP_ROOT") + "/users/test/collection_ids")
+
+    test_collection_ids = r.json()["collection_ids"]
+
+    items_only_in_test_collections = []
+    for cid in test_collection_ids:
+        coll = dao.db[cid]
+        for alias, tiid in coll["alias_tiids"].iteritems():
+            r = mydao.db.view("tiids_in_collections/tiids_in_collections")
+            num_collections_this_is_in = len(r.rows)
+            if num_collections_this_is_in <= 1:
+                # it's just in one coll, the test one.
+                items_only_in_test_collections.append(tiid)
+
+    return items_only_in_test_collections
+
 
 
 
@@ -578,19 +599,17 @@ def delete_collection(cid=None):
     if admin_key != os.getenv("API_ADMIN_KEY"):
         abort_custom(401, "You need admin privilages to delete collections.")
 
+    coll = mydao.get(cid)
+    if coll is None:
+        return make_response("Nothing to delete; collection didn't exist.")
+
     # delete items if we're told to
     if request.args.get("include_items") in [1, True, "true"]:
-        coll = mydao.get(cid)
-        if coll is None:
-            return make_response("Nothing to delete; collection didn't exist.")
+        test_only_items = list_of_items_only_owned_by_test_users()
 
-        else:
-            for alias, tiid in coll["alias_tiids"].iteritems():
-                try:
-                    del mydao.db[tiid]
-                except couchdb.ResourceNotFound:
-                    # hey if it's already gone, great.
-                    pass
+        for alias, tiid in coll["alias_tiids"].iteritems():
+            if tiid in test_only_items:
+                del mydao.db[tiid]
 
     # delete the collection
     del mydao.db[cid]

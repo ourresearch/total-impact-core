@@ -225,6 +225,7 @@ class Dao(object):
         return None
 
 
+
 class PostgresDao(object):
 
     def __init__(self, connection_url):
@@ -326,4 +327,5 @@ class PostgresDao(object):
         rows = cur.fetchall()
         cur.close()
         return rows
+
 
