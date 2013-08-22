@@ -36,7 +36,7 @@ class Crossref(Provider):
             provider_url_template=None, 
             cache_enabled=True):
 
-        self.logger.debug(u"%s getting biblio for %s" % (self.provider_name, id))
+        self.logger.debug(u"%s /biblio_print getting biblio for %s" % (self.provider_name, id))
 
         if not provider_url_template:
             provider_url_template = self.biblio_url_template
@@ -107,7 +107,7 @@ class Crossref(Provider):
                 elif "date-parts" in biblio_dict["year"]:
                     biblio_dict["year"] = str(biblio_dict["year"]["date-parts"][0][0])
         except IndexError:
-            logger.info(u"could not parse year {biblio_dict}".format(
+            logger.info(u"/biblio_print could not parse year {biblio_dict}".format(
                 biblio_dict=biblio_dict))
             del biblio_dict["year"]
             pass
@@ -169,7 +169,7 @@ class Crossref(Provider):
         try:
             if (biblio["journal"] == ""):
                 # need to have journal or can't look up with current api call
-                logger.info(u"%20s NO DOI because no journal in %s" % (
+                logger.info(u"%20s /biblio_print NO DOI because no journal in %s" % (
                     self.provider_name, biblio))
                 return []
             query_string =  ("|%s|%s|%s|%s|%s|%s||%s|" % (
@@ -182,7 +182,7 @@ class Crossref(Provider):
                 "ImpactStory"
                 ))
         except KeyError:
-            logger.info(u"%20s NO DOI because missing needed attribute in %s" % (
+            logger.info(u"%20s /biblio_print NO DOI because missing needed attribute in %s" % (
                 self.provider_name, biblio))
             return []
 
@@ -192,7 +192,7 @@ class Crossref(Provider):
         url = "http://doi.crossref.org/servlet/query?pid=totalimpactdev@gmail.com&qdata=%s" % query_string
 
         try:
-            logger.debug(u"%20s calling crossref at %s" % (self.provider_name, url))
+            logger.debug(u"%20s /biblio_print calling crossref at %s" % (self.provider_name, url))
             # doi-lookup call to crossref can take a while, give it a long timeout
             response = self.http_get(url, timeout=30, cache_enabled=cache_enabled)
         except ProviderTimeout:
@@ -213,9 +213,9 @@ class Crossref(Provider):
         for key, doi in zip(line_keys, dois):
             if not doi:
                 try:
-                    logger.debug(u"%20s NO DOI from %s, %s" %(self.provider_name, biblio, key))
+                    logger.debug(u"%20s /biblio_print NO DOI from %s, %s" %(self.provider_name, biblio, key))
                 except KeyError:
-                    logger.debug(u"%20s NO DOI from %s, %s" %(self.provider_name, "", key))                    
+                    logger.debug(u"%20s /biblio_print NO DOI from %s, %s" %(self.provider_name, "", key))                    
 
         return doi
 
