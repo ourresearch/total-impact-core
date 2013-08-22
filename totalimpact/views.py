@@ -361,6 +361,7 @@ def collection_get(cid='', format="json", include_history=False):
     if not coll:
         abort_custom(404, "collection not found")
 
+
     # if not include items, then just return the collection straight from couch
     if (request.args.get("include_items") in ["0", "false", "False"]):
         # except if format is csv.  can't do that.
@@ -439,6 +440,7 @@ def get_coll_with_authentication_check(request, cid):
         abort_custom(501, "This collection has no update key; it cant' be changed.")
 
     return coll
+
 
 @app.route('/collection/<cid>/items', methods=['POST'])
 @app.route('/v1/collection/<cid>/items', methods=['POST'])
@@ -565,6 +567,30 @@ def collection_update(cid=""):
     resp = make_response("true", 200)
     resp.mimetype = "application/json"
     return resp
+
+
+
+@app.route("/v1/collection/<cid>", methods=["DELETE"])
+def delete_collection(cid=None):
+
+    # authenticate
+    admin_key = request.args.get("api_admin_key")
+    if admin_key != os.getenv("API_KEY"):  #ideally rename this to API_ADMIN_KEY
+        abort_custom(401, "You need admin privilages to delete collections.")
+
+    # delete items if we're told to
+    if request.args.get("delete_items") in [1, "true"]:
+        coll = mydao.get(cid)
+        for alias, tiid in coll["alias_tiids"].iteritems():
+            del mydao.db[tiid]
+
+
+    # delete the collection
+    del mydao.db[cid]
+
+    return make_response("Deleted.")
+
+
 
 
 # creates a collection with aliases
