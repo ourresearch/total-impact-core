@@ -575,15 +575,22 @@ def delete_collection(cid=None):
 
     # authenticate
     admin_key = request.args.get("api_admin_key")
-    if admin_key != os.getenv("API_KEY"):  #ideally rename this to API_ADMIN_KEY
+    if admin_key != os.getenv("API_ADMIN_KEY"):
         abort_custom(401, "You need admin privilages to delete collections.")
 
     # delete items if we're told to
-    if request.args.get("delete_items") in [1, "true"]:
+    if request.args.get("include_items") in [1, True, "true"]:
         coll = mydao.get(cid)
-        for alias, tiid in coll["alias_tiids"].iteritems():
-            del mydao.db[tiid]
+        if coll is None:
+            return make_response("Nothing to delete; collection didn't exist.")
 
+        else:
+            for alias, tiid in coll["alias_tiids"].iteritems():
+                try:
+                    del mydao.db[tiid]
+                except couchdb.ResourceNotFound:
+                    # hey if it's already gone, great.
+                    pass
 
     # delete the collection
     del mydao.db[cid]
