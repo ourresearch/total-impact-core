@@ -75,7 +75,7 @@ def check_key():
 
     if "/v1/" in request.url:
         api_key = request.values.get('key', '')
-        if not api_user.is_valid_key(api_key, mypostgresdao):
+        if not api_user.is_valid_key(api_key):
             abort_custom(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a valid api key.")
     return # if success don't return any content
 
@@ -207,7 +207,7 @@ def item_namespace_post(namespace, nid):
 
     api_key = request.values.get('key')
     try:
-        api_user.register_item((namespace, nid), api_key, myredis, mydao, mypostgresdao)
+        api_user.register_item((namespace, nid), api_key, myredis, mydao)
         response_code = 201 # Created
     except api_user.ItemAlreadyRegisteredToThisKey:
         response_code = 200
@@ -231,7 +231,7 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
     debug_message = ""
     if register:
         try:
-            api_user.register_item((namespace, nid), api_key, myredis, mydao, mypostgresdao)
+            api_user.register_item((namespace, nid), api_key, myredis, mydao)
         except api_user.ItemAlreadyRegisteredToThisKey:
             debug_message = u"ItemAlreadyRegisteredToThisKey for key {api_key}".format(
                 api_key=api_key)
@@ -770,10 +770,10 @@ def key():
     prefix = meta["prefix"]
     del(meta["prefix"])
 
-    max_registered_items = meta["max_registered_items"]
-    del(meta["max_registered_items"])
-
-    new_api_key = api_user.save_api_user(prefix, max_registered_items, mypostgresdao, **meta)
+    new_api_key = api_user.ApiUser(prefix, **meta)
+    db.session.add(self.existing_api_user)
+    db.session.commit()
+    db.session.flush()                
 
     resp = make_response(json.dumps({"api_key":new_api_key}, indent=4), 200)
     resp.mimetype = "application/json"

@@ -74,7 +74,7 @@ class TestDAO(unittest.TestCase):
 class TestPostgresDao(unittest.TestCase):
 
     def setUp(self):
-        self.postgres_d = dao.PostgresDao("postgres://localhost/unittests")
+        self.postgres_d = dao.PostgresDao("postgres://localhost/core_unittests")
         self.postgres_d.create_tables()
 
         self.example_payload = {

@@ -145,7 +145,7 @@ class TestApiUser():
         assert_equals(response, False)
 
         response = api_user.register_item(self.test_alias, existing_api_key, self.r, self.d)
-        assert_equals(response["registered_item"].alias, 'doi:10.1371/journal.pcbi.1')
+        assert_equals(response["registered_item"].alias, ('doi', '10.1371/journal.pcbi.1'))
 
         self.db.session.add(self.existing_registered_item)
         self.db.session.commit()

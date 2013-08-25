@@ -1,6 +1,7 @@
 import datetime, shortuuid, os
 import analytics
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import and_
 
 from totalimpact import item
 from totalimpact import db
@@ -23,16 +24,22 @@ class RegisteredItem(db.Model):
     api_key = db.Column(db.Text, db.ForeignKey('api_user.api_key'), primary_key=True)
     api_user = db.relationship('ApiUser',
         backref=db.backref('registered_items', lazy='dynamic'))
-    alias = db.Column(db.Text, primary_key=True)
+    namespace = db.Column(db.Text, primary_key=True)
+    nid = db.Column(db.Text, primary_key=True)
     registered_date = db.Column(db.DateTime())
 
     def __init__(self, alias, api_user):
-        super(RegisteredItem, self).__init__()
         alias = item.canonical_alias_tuple(alias)
-        alias_string = ":".join(alias)
-        self.alias = alias_string
+        (namespace, nid) = alias
+        self.namespace = namespace
+        self.nid = nid
         self.api_user = api_user
         self.registered_date = datetime.datetime.utcnow()
+        super(RegisteredItem, self).__init__()
+
+    @property
+    def alias(self):
+        return (self.namespace, self.nid)
 
     def __repr__(self):
         return '<RegisteredItem {api_key}, {alias}>'.format(
@@ -104,12 +111,11 @@ def get_registered_item(alias, api_key):
     api_user = get_api_user(api_key)
     if not api_user:
         return False
-    print api_user
     print api_user.registered_items.first()
 
     alias = item.canonical_alias_tuple(alias)
-    alias_string = ":".join(alias)
-    matching_registered_item = api_user.registered_items.filter_by(alias=alias_string).first()
+    (namespace, nid) = alias
+    matching_registered_item = api_user.registered_items.filter(and_(RegisteredItem.namespace==namespace, RegisteredItem.nid==nid)).first()
     return matching_registered_item
 
 

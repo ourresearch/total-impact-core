@@ -3,7 +3,7 @@ from copy import deepcopy
 from urllib import quote_plus
 from nose.tools import assert_equals, nottest, assert_greater
 
-from totalimpact import app, dao, views, tiredis, api_user
+from totalimpact import app, db, dao, views, tiredis, api_user
 from totalimpact.providers.dryad import Dryad
 import os
 
@@ -37,10 +37,6 @@ mydao = views.set_db("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 myredis = views.set_redis("redis://localhost:6379", db=8)
 
 class ViewsTester(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        pass
 
     def setUp(self):
         """
@@ -118,32 +114,27 @@ class ViewsTester(unittest.TestCase):
         }
         '''
 
-        test_api_user = """
-                {
-           "_id": "yDnhDa3fdFxxEsQnzYnA96",
-           "created": "2012-11-19T16:11:17.713812",
-           "current_key": "validkey",
-           "registered_items": {
-               "doi:10.1371/journal.pcbi.1000355": {
-                   "tiid": "b229e24abec811e1887612313d1a5e63",
-                   "registered_date": "2012-12-29T18:11:20.870026"
-               }
-           },
-           "max_registered_items": 1000,
-           "key_history": {
-               "2012-11-19T16:11:17.713812": "validkey"
-           },
-           "meta": {
-               "planned_use": "individual CV",
-               "example_url": "",
-               "api_key_owner": "Superman",
-               "notes": "",
-               "organization": "individual",
-               "email": "superman@secret.com"
-           },
-           "type": "api_user"
-        }
-        """
+        self.test_api_user_meta = {    
+                    'max_registered_items': 3, 
+                    'planned_use': 'individual CV', 
+                    'email': "test@example.com", 
+                    'notes': '', 
+                    'api_key_owner': 'Julia Smith', 
+                    "example_url":"", 
+                    "organization":"NASA"
+                }
+
+        if not "localhost" in app.config["SQLALCHEMY_DATABASE_URI"]:
+            assert(False), "Not running this unittest because SQLALCHEMY_DATABASE_URI is not on localhost"
+
+        self.db = db
+        try:
+            self.db.drop_all()
+        except OperationalError, e:  #database "database" does not exist
+            print e
+            pass
+        self.db.create_all()
+
 
         # hacky way to delete the "ti" db, then make it fresh again for each test.
         temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
@@ -152,14 +143,12 @@ class ViewsTester(unittest.TestCase):
         self.d.update_design_doc()
 
         self.d.save(json.loads(test_item))
-        self.d.save(json.loads(test_api_user))
 
-        #postgres
-        self.postgres_d = dao.PostgresDao("postgres://localhost/unittests")
-        self.postgres_d.delete_schema()
-        self.postgres_d.create_tables()
-        meta = json.loads(test_api_user)["meta"]
-        api_user.save_api_user_to_database("validkey", 1000, self.postgres_d, **meta)
+        self.existing_api_user = api_user.ApiUser("dummy", **self.test_api_user_meta)
+        self.existing_api_user.api_key = "validkey"  #override randomly assigned key
+        self.db.session.add(self.existing_api_user)
+        self.db.session.commit()
+        self.db.session.flush()                
 
         # do the same thing for the redis db.  We're using DB 8 for unittests.
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
@@ -170,20 +159,57 @@ class ViewsTester(unittest.TestCase):
         self.app.testing = True
         self.client = self.app.test_client()
 
+        # Mock out relevant methods of the Dryad provider
+        self.orig_Dryad_member_items = Dryad.member_items
+        Dryad.member_items = MOCK_member_items
+
+        self.aliases = [
+            ["doi", "10.123"],
+            ["doi", "10.124"],
+            ["doi", "10.125"]
+        ]
+
+        # example from http://docs.cloudmailin.com/http_post_formats/json/        
+        self.example_payload = {
+               "headers": {
+                   "To": "7be5eb5001593217143f@cloudmailin.net",
+                   "Mime-Version": "1.0",
+                   "X-Received": "by 10.58.45.134 with SMTP id n6mr13476387vem.35.1361476813304; Thu, 21 Feb 2013 12:00:13 -0800 (PST)",
+                   "Received": "by mail-vc0-f202.google.com with SMTP id m8so955261vcd.3 for <7be5eb5001593217143f@cloudmailin.net>; Thu, 21 Feb 2013 12:00:13 -0800",
+                   "From": "Google Scholar Alerts <scholaralerts-noreply@google.com>",
+                   "DKIM-Signature": "v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113; h=mime-version:x-received:message-id:date:subject:from:to :content-type; bh=74dhtWOnoX2dYtmZibjD2+Tp65AZ7UnVwRTR7Qwho/o=; b=Fabq5urMfTyUX0s3XgFhVx1pyZ+tW/n38Sm/3T5EXTWeG2k7C6mxbrv1DdmpNpl/a8 Sr70eG6St7oytXii5tg9TrwrlwhftpFZKkJQS8GMWswiEaBkOfnNkoRrN174jRYfBUuZ oKWJr49dxw9hV3uKYoSis0zL6R8P+7GXt1rtqblBELrfIJ3pKC7d7WS65i6hdM2kA+sY va9geqt1fFFN7098U7WELlM2JoXhS4fbIQTev/Z6cF89Sfs4888GXb7PIq0d1kfd6t7c kXK8bV6TkqSP4AxDm646Cv1TR9cfo6+9yCrkK8oW6ihAMzM0Lwobq22NLrRY2QK8494s WAuA==",
+                   "Date": "Thu, 21 Feb 2013 20:00:13 +0000",
+                   "Message-ID": "<089e0115f968d3b38604d6418577@google.com>",
+                   "Content-Type": "text/plain; charset=ISO-8859-1; delsp=yes; format=flowed",
+                   "Subject": "Confirm your Google Scholar Alert"
+               },
+               "reply_plain": None,
+               "attachments": [
+               ],
+               "plain": "Google received a request to start sending Scholar Alerts to  \n7be5eb5001593217143f@cloudmailin.net for the query:\nNew articles in Jonathan A. Eisen's profile\n\nClick to confirm this request:\nhttp://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nClick to cancel this request:\nhttp://scholar.google.ca/scholar_alerts?view_op=cancel_alert_options&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nThanks,\nThe Google Scholar Team",
+               "envelope": {
+                   "to": "7be5eb5001593217143f@cloudmailin.net",
+                   "helo_domain": "mail-vc0-f202.google.com",
+                   "from": "3zXwmURUKAO4iSXebQhQbUhji-dehUfboWeeWbU.Sec@scholar-alerts.bounces.google.com",
+                   "remote_ip": "209.85.220.202",
+                   "spf": {
+                       "domain": "scholar-alerts.bounces.google.com",
+                       "result": "neutral"
+                   }
+               },
+               "html": None
+            }
+
+
+
     def tearDown(self):
-        self.postgres_d.close()
+        self.db.session.close_all()
+        Dryad.member_items = self.orig_Dryad_member_items
 
-        pass
 
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
-class DaoTester(unittest.TestCase):
     def test_dao(self):
         assert_equals(mydao.db.name, os.getenv("CLOUDANT_DB"))
 
-class TestApiKeys(ViewsTester):
     def test_does_not_require_key_if_preversioned_url(self):
         resp = self.client.get("/")
         assert_equals(resp.status_code, 200)
@@ -199,17 +225,6 @@ class TestApiKeys(ViewsTester):
     def test_forbidden_if_unregistered_key_in_v1(self):
         resp = self.client.get("/v1/provider?key=invalidkey")
         assert_equals(resp.status_code, 403)
-
-class TestMemberItems(ViewsTester):
-
-    def setUp(self):                 
-        super(TestMemberItems, self).setUp()
-        # Mock out relevant methods of the Dryad provider
-        self.orig_Dryad_member_items = Dryad.member_items
-        Dryad.member_items = MOCK_member_items
-
-    def tearDown(self):
-        Dryad.member_items = self.orig_Dryad_member_items
 
     def test_memberitems_get(self):        
         response = self.client.get('/provider/dryad/memberitems/Otto%2C%20Sarah%20P.?method=sync')
@@ -232,9 +247,6 @@ class TestMemberItems(ViewsTester):
         path = os.path.join(datadir, "Vision.bib")
         bibtex_str = open(path, "r").read()
 
-
-class TestProvider(ViewsTester):
-
         def test_exists(self):
             resp = self.client.get("/provider")
             assert resp
@@ -244,10 +256,6 @@ class TestProvider(ViewsTester):
             md = json.loads(resp.data)
             print md["delicious"]
             assert md["delicious"]['metrics']["bookmarks"]["description"]
-
-
-
-class TestItem(ViewsTester):
 
     def test_item_post_unknown_tiid(self):
         response = self.client.post('/v1/item/doi/AnIdOfSomeKind/' + "?key=validkey")
@@ -346,10 +354,6 @@ class TestItem(ViewsTester):
 #        )
 
 
-
-
-
-class TestItems(ViewsTester):
     def test_post_with_aliases_already_in_db(self):
         items = [
             ["doi", "10.123"],
@@ -379,17 +383,6 @@ class TestItems(ViewsTester):
         # 3+1 new items + 2 collections + 1 test_item + 1 api_user_doc + at least 7 design docs
         assert_greater(self.d.db.info()["doc_count"], 15)
 
-
-
-class TestCollection(ViewsTester):
-
-    def setUp(self):
-        self.aliases = [
-            ["doi", "10.123"],
-            ["doi", "10.124"],
-            ["doi", "10.125"]
-        ]
-        super(TestCollection, self).setUp()
 
     def test_collection_post_new_collection(self):
 
@@ -594,17 +587,6 @@ class TestCollection(ViewsTester):
         changed_coll = self.d.get(coll["_id"])
         assert_equals(changed_coll["title"], "mah collection")
 
-
-
-
-class TestApi(ViewsTester):
-
-    def setUp(self):
-        super(TestApi, self).setUp()
-
-    def tearDown(self):
-        pass
-
     def test_tiid_get_tiids_for_multiple_known_aliases(self):
         # create two new items with the same plos alias
         first_plos_create_tiid_resp = self.client.post('/v1/item/doi/' +
@@ -618,43 +600,6 @@ class TestApi(ViewsTester):
         # check that the tiid lists are the same
         assert_equals(first_plos_create_tiid, second_plos_create_tiid)
 
-class TestInbox(ViewsTester):
-
-    def setUp(self):
-        # example from http://docs.cloudmailin.com/http_post_formats/json/        
-        self.example_payload = {
-               "headers": {
-                   "To": "7be5eb5001593217143f@cloudmailin.net",
-                   "Mime-Version": "1.0",
-                   "X-Received": "by 10.58.45.134 with SMTP id n6mr13476387vem.35.1361476813304; Thu, 21 Feb 2013 12:00:13 -0800 (PST)",
-                   "Received": "by mail-vc0-f202.google.com with SMTP id m8so955261vcd.3 for <7be5eb5001593217143f@cloudmailin.net>; Thu, 21 Feb 2013 12:00:13 -0800",
-                   "From": "Google Scholar Alerts <scholaralerts-noreply@google.com>",
-                   "DKIM-Signature": "v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113; h=mime-version:x-received:message-id:date:subject:from:to :content-type; bh=74dhtWOnoX2dYtmZibjD2+Tp65AZ7UnVwRTR7Qwho/o=; b=Fabq5urMfTyUX0s3XgFhVx1pyZ+tW/n38Sm/3T5EXTWeG2k7C6mxbrv1DdmpNpl/a8 Sr70eG6St7oytXii5tg9TrwrlwhftpFZKkJQS8GMWswiEaBkOfnNkoRrN174jRYfBUuZ oKWJr49dxw9hV3uKYoSis0zL6R8P+7GXt1rtqblBELrfIJ3pKC7d7WS65i6hdM2kA+sY va9geqt1fFFN7098U7WELlM2JoXhS4fbIQTev/Z6cF89Sfs4888GXb7PIq0d1kfd6t7c kXK8bV6TkqSP4AxDm646Cv1TR9cfo6+9yCrkK8oW6ihAMzM0Lwobq22NLrRY2QK8494s WAuA==",
-                   "Date": "Thu, 21 Feb 2013 20:00:13 +0000",
-                   "Message-ID": "<089e0115f968d3b38604d6418577@google.com>",
-                   "Content-Type": "text/plain; charset=ISO-8859-1; delsp=yes; format=flowed",
-                   "Subject": "Confirm your Google Scholar Alert"
-               },
-               "reply_plain": None,
-               "attachments": [
-               ],
-               "plain": "Google received a request to start sending Scholar Alerts to  \n7be5eb5001593217143f@cloudmailin.net for the query:\nNew articles in Jonathan A. Eisen's profile\n\nClick to confirm this request:\nhttp://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nClick to cancel this request:\nhttp://scholar.google.ca/scholar_alerts?view_op=cancel_alert_options&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nThanks,\nThe Google Scholar Team",
-               "envelope": {
-                   "to": "7be5eb5001593217143f@cloudmailin.net",
-                   "helo_domain": "mail-vc0-f202.google.com",
-                   "from": "3zXwmURUKAO4iSXebQhQbUhji-dehUfboWeeWbU.Sec@scholar-alerts.bounces.google.com",
-                   "remote_ip": "209.85.220.202",
-                   "spf": {
-                       "domain": "scholar-alerts.bounces.google.com",
-                       "result": "neutral"
-                   }
-               },
-               "html": None
-            }
-        super(TestInbox, self).setUp()
-
-    def tearDown(self):
-        pass
 
     def test_inbox(self):
         response = self.client.post(
@@ -664,6 +609,7 @@ class TestInbox(ViewsTester):
         )
         assert_equals(200, response.status_code)
 
+    @nottest
     def test_save_email(self):
         doc_id = views.save_email(self.example_payload)
 
@@ -683,9 +629,6 @@ class TestInbox(ViewsTester):
         expected = 'John P. A. Ioannidis'
         assert_equals(response, expected)
 
-
-class TestTiid(ViewsTester):
-
     def test_item_post_known_tiid(self):
         response = self.client.post('/v1/item/doi/IdThatAlreadyExists/' + "?key=validkey")
         print response
@@ -696,7 +639,6 @@ class TestTiid(ViewsTester):
         assert_equals(response.status_code, 201)
         assert_equals(json.loads(response.data), u'ok')
 
-class TestUser(ViewsTester):
 
     def test_create(self):
 
