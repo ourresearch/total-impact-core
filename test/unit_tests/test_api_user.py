@@ -1,13 +1,31 @@
-from totalimpact import api_user, tiredis
-import os, json
+from totalimpact import tiredis
+from totalimpact import db, app
+from totalimpact import api_user
+from totalimpact.api_user import ApiUser, RegisteredItem
+
+from flask import Flask
+from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import OperationalError
+
+import os, json, copy
 
 from nose.tools import raises, assert_equals, nottest
 import unittest
 
-
 class TestApiUser():
 
     def setUp(self):
+        if not "localhost" in app.config["SQLALCHEMY_DATABASE_URI"]:
+            assert(False), "Not running this unittest because SQLALCHEMY_DATABASE_URI is not on localhost"
+
+        self.db = db
+        try:
+            self.db.drop_all()
+        except OperationalError, e:  #database "database" does not exist
+            print e
+            pass
+        self.db.create_all()
+
         from totalimpact import dao
 
         # hacky way to delete the "ti" db, then make it fresh again for each test.
@@ -15,10 +33,6 @@ class TestApiUser():
         temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
         self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
         self.d.update_design_doc()
-
-        #postgres
-        self.postgres_d = dao.PostgresDao("postgres://localhost/unittests")
-        self.postgres_d.create_tables()
 
         # setup a clean new redis test database.  We're putting unittest redis at DB Number 8.
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
@@ -28,70 +42,116 @@ class TestApiUser():
         self.test_alias_registered = ("doi", "10.1371/journal.pcbi.2")
         self.test_alias_registered_string = ":".join(self.test_alias_registered)
 
-        cur = self.postgres_d.get_cursor()
-        cur.execute("truncate table api_users;")
-        cur.execute("truncate table registered_items;")
-        cur.execute("insert into api_users (api_key, max_registered_items) values ('SFUlqzam8', 3);")
-        cur.execute("insert into registered_items (api_key, alias) values ('SFUlqzam8', 'doi:10.1371/journal.pcbi.2')")
-        cur.close()
+        self.test_email = 'new_api_user@example.com'
+        self.test_meta = {    
+                    'max_registered_items': 3, 
+                    'planned_use': 'individual CV', 
+                    'email': self.test_email, 
+                    'notes': '', 
+                    'api_key_owner': 'Julia Smith', 
+                    "example_url":"", 
+                    "organization":"NASA"
+                }
+
+        api_key_prefix = "SFU"
+        test_meta2 = copy.deepcopy(self.test_meta)
+        test_meta2["email"] = 'existing_api_user@example.com'
+        self.existing_api_user = ApiUser(api_key_prefix, **test_meta2)
+
+        self.existing_registered_item = RegisteredItem(self.test_alias_registered, self.existing_api_user)
+
+        self.db.session.add(self.existing_api_user)
+        self.db.session.add(self.existing_registered_item)
+        self.db.session.commit()
+        self.db.session.flush()                
+
 
     def tearDown(self):
-        self.postgres_d.close()
+        self.db.session.close_all()
 
-    def test_save_api_user(self):
+    def test_make_api_user(self):
+        #make sure nothing there beforehand
+        matching_api_users = ApiUser.query.filter_by(email=self.test_email).first()
+        assert_equals(matching_api_users, None)
+
         api_key_prefix = "SFU"
-        meta = {'usage': 'individual CV', 'email': '', 'notes': '', 'api_limit': '', 'api_key_owner': '', 'planned_use':'', "example_url":"", "organization":""}
-        new_api_key = api_user.save_api_user(api_key_prefix, 1000, self.postgres_d, **meta)
-        print new_api_key
+        new_api_user = ApiUser(api_key_prefix, **self.test_meta)
+        new_api_key = new_api_user.api_key        
+        print new_api_user
 
-        cur = self.postgres_d.get_cursor()
-        cur.execute("""SELECT * FROM api_users 
-                WHERE api_key=%s""", 
-                (new_api_key,))
-        response = cur.fetchall()
-        cur.close()
-        assert_equals(len(response), 1)
+        # still not there
+        matching_api_users = ApiUser.query.filter_by(email=self.test_email).first()
+        assert_equals(matching_api_users, None)
 
-        response = api_user.get_api_user_id_by_api_key(new_api_key, self.postgres_d)
-        assert_equals(response, new_api_key.lower())
+        self.db.session.add(new_api_user)
+        self.db.session.commit()
+        self.db.session.flush()
 
-    def test_get_api_user_id_by_api_key(self):
-        api_key = "SFUlqzam8"
-        response = api_user.get_api_user_id_by_api_key(api_key, self.postgres_d)
-        assert_equals(response, api_key.lower())
+        # and now poof there it is
+        matching_api_users = ApiUser.query.filter_by(email=self.test_email).first()
+        assert_equals(matching_api_users.email, self.test_email)
 
-        response = api_user.get_api_user_id_by_api_key("NOTVALIDKEY", self.postgres_d)
-        assert_equals(response, None)
+        matching_api_users = ApiUser.query.filter_by(api_key=new_api_key).first()
+        assert_equals(matching_api_users.api_key, new_api_key)
 
-    def test_is_registered(self):
-        response = api_user.is_registered(self.test_alias, "SFUlqzam8", self.postgres_d)
+
+    def test_is_valid_key(self):
+        response = api_user.is_valid_key("NOTVALID")
         assert_equals(response, False)
 
-        response = api_user.is_registered(self.test_alias_registered, "SFUlqzam8", self.postgres_d)
+        response = api_user.is_valid_key("samplekey")
         assert_equals(response, True)
+
+        response = api_user.is_valid_key(self.existing_api_user.api_key)
+        assert_equals(response, True)
+
+
+
+    def test_is_registered(self):
+        response = api_user.is_registered(self.test_alias, "NOT_VALID_KEY")
+        assert_equals(response, False)
+
+        response = api_user.is_registered(self.test_alias_registered, self.existing_api_user.api_key)
+        assert_equals(response, True)
+
 
     @raises(api_user.InvalidApiKeyException)
     def test_register_item_invalid_key(self):
-        api_user.register_item(self.test_alias, "INVALID_KEY", self.r, self.d, self.postgres_d)
+        api_user.register_item(self.test_alias, "INVALID_KEY", self.r, self.d)
+
 
     def test_is_over_quota(self):
-        api_key = "SFUlqzam8"
-        response = api_user.is_over_quota(api_key, self.postgres_d)
+        api_key = self.existing_api_user.api_key
+        response = api_user.is_over_quota(api_key)
         assert_equals(response, False)
 
-        api_user.add_registration_data(("doi", "10.a"), api_key, self.postgres_d)
-        api_user.add_registration_data(("doi", "10.b"), api_key, self.postgres_d)
-        api_user.add_registration_data(("doi", "10.c"), api_key, self.postgres_d)
-        response = api_user.is_over_quota(api_key, self.postgres_d)
+        for x in ["a", "b", "c"]:  # max_registered_items was set to 3 for this test api_user
+            response = api_user.register_item(("doi", "10."+x), api_key, self.r, self.d)
+            if response["registered_item"]:
+                print response["registered_item"]
+                self.db.session.add(response["registered_item"])
+
+        self.db.session.commit()
+        self.db.session.flush()                
+
+        response = api_user.is_over_quota(api_key)
         assert_equals(response, True)
 
+
     def test_register_item_success(self):
-        api_key = "SFUlqzam8"
-        response = api_user.is_registered(self.test_alias, api_key, self.postgres_d)
+        existing_api_key = self.existing_api_user.api_key
+
+        response = api_user.is_registered(self.test_alias, existing_api_key)
         assert_equals(response, False)
 
-        api_user.register_item(self.test_alias, api_key, self.r, self.d, self.postgres_d)
-        response = api_user.is_registered(self.test_alias, api_key, self.postgres_d)
+        response = api_user.register_item(self.test_alias, existing_api_key, self.r, self.d)
+        assert_equals(response["registered_item"].alias, 'doi:10.1371/journal.pcbi.1')
+
+        self.db.session.add(self.existing_registered_item)
+        self.db.session.commit()
+        self.db.session.flush()                
+
+        response = api_user.is_registered(self.test_alias, existing_api_key)
         assert_equals(response, True)
 
 

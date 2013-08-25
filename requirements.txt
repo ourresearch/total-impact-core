@@ -2,6 +2,7 @@ BeautifulSoup==3.2.1
 CouchDB==0.8
 Flask==0.7.2
 Flask-Login==0.1.2
+Flask-SQLAlchemy==1.0
 Flask-WTF==0.6
 gunicorn==0.14.3
 Jinja2==2.6
