@@ -31,12 +31,9 @@ class TestCollection():
         coll, key = collection.make()
         assert_equals(len(coll["_id"]), 6)
 
-    def test_make_sets_owner(self):
-        coll, key = collection.make()
-        assert_equals(coll["owner"], None)
-
         coll, key = collection.make("socrates")
-        assert_equals(coll["owner"], "socrates")
+        assert_equals(coll["_id"], "socrates")
+
 
     def test_create_returns_collection_and_update_key(self):
         coll, key = collection.make()

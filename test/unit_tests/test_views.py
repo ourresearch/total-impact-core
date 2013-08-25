@@ -502,21 +502,12 @@ class TestCollection(ViewsTester):
         response = self.r.rpop("aliasqueue")
         assert_equals(response, '["moe", {}, []]')
         
-    def test_collection_owner_set_at_creation(self):
-
-        response = self.client.post(
-            '/collection',
-            data=json.dumps({"aliases": self.aliases, "title":"mah collection", "owner":"plato"}),
-            content_type="application/json"
-        )
-        collection = json.loads(response.data)["collection"]
-        assert_equals(collection["owner"], "plato")
 
     def test_delete_collection_item(self):
         # make a new collection
         response = self.client.post(
             '/collection',
-            data=json.dumps({"aliases": self.aliases, "title":"mah collection", "owner":"plato"}),
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
         resp = json.loads(response.data)
@@ -536,11 +527,12 @@ class TestCollection(ViewsTester):
         assert_equals(set(changed_coll["alias_tiids"]),
                       set(["doi:10.124", "doi:10.125"]))
 
+
     def test_add_collection_item(self):
         # make a new collection
         response = self.client.post(
             '/collection',
-            data=json.dumps({"aliases": self.aliases, "title":"mah collection", "owner":"plato"}),
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
         resp = json.loads(response.data)
@@ -572,7 +564,7 @@ class TestCollection(ViewsTester):
         # make a new collection
         response = self.client.post(
             '/collection',
-            data=json.dumps({"aliases": self.aliases, "title":"mah collection", "owner":"plato"}),
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
         resp = json.loads(response.data)
@@ -601,7 +593,6 @@ class TestCollection(ViewsTester):
         # get the collection out the db and make sure nothing's changed
         changed_coll = self.d.get(coll["_id"])
         assert_equals(changed_coll["title"], "mah collection")
-        assert_equals(changed_coll["owner"], "plato")
 
 
 
