@@ -11,20 +11,12 @@ import os, json, copy
 
 from nose.tools import raises, assert_equals, nottest
 import unittest
+from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
 
 class TestApiUser():
 
     def setUp(self):
-        if not "localhost" in app.config["SQLALCHEMY_DATABASE_URI"]:
-            assert(False), "Not running this unittest because SQLALCHEMY_DATABASE_URI is not on localhost"
-
-        self.db = db
-        try:
-            self.db.drop_all()
-        except OperationalError, e:  #database "database" does not exist
-            print e
-            pass
-        self.db.create_all()
+        self.db = setup_postgres_for_unittests(db, app)
 
         from totalimpact import dao
 
@@ -67,7 +59,7 @@ class TestApiUser():
 
 
     def tearDown(self):
-        self.db.session.close_all()
+        teardown_postgres_for_unittests(self.db)
 
     def test_make_api_user(self):
         #make sure nothing there beforehand
