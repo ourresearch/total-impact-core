@@ -312,20 +312,5 @@ class PostgresDao(object):
     def close(self):
         return self.conn.close()
        
-    def save_email(self, email_dict):
-        cur = self.get_cursor()
-        cur.execute("""INSERT INTO email 
-                        (id, created, payload) 
-                        VALUES (%s, %s, %s)""",
-            (email_dict["_id"], email_dict["created"], json.dumps(email_dict["payload"])))
-        cur.close()
-        return email_dict["_id"]
-
-    def get_email(self, id):
-        cur = self.get_cursor()
-        cur.execute("SELECT * FROM email where id=%s", (id, ))
-        rows = cur.fetchall()
-        cur.close()
-        return rows
 
 

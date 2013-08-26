@@ -169,38 +169,6 @@ class ViewsTester(unittest.TestCase):
             ["doi", "10.125"]
         ]
 
-        # example from http://docs.cloudmailin.com/http_post_formats/json/        
-        self.example_payload = {
-               "headers": {
-                   "To": "7be5eb5001593217143f@cloudmailin.net",
-                   "Mime-Version": "1.0",
-                   "X-Received": "by 10.58.45.134 with SMTP id n6mr13476387vem.35.1361476813304; Thu, 21 Feb 2013 12:00:13 -0800 (PST)",
-                   "Received": "by mail-vc0-f202.google.com with SMTP id m8so955261vcd.3 for <7be5eb5001593217143f@cloudmailin.net>; Thu, 21 Feb 2013 12:00:13 -0800",
-                   "From": "Google Scholar Alerts <scholaralerts-noreply@google.com>",
-                   "DKIM-Signature": "v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113; h=mime-version:x-received:message-id:date:subject:from:to :content-type; bh=74dhtWOnoX2dYtmZibjD2+Tp65AZ7UnVwRTR7Qwho/o=; b=Fabq5urMfTyUX0s3XgFhVx1pyZ+tW/n38Sm/3T5EXTWeG2k7C6mxbrv1DdmpNpl/a8 Sr70eG6St7oytXii5tg9TrwrlwhftpFZKkJQS8GMWswiEaBkOfnNkoRrN174jRYfBUuZ oKWJr49dxw9hV3uKYoSis0zL6R8P+7GXt1rtqblBELrfIJ3pKC7d7WS65i6hdM2kA+sY va9geqt1fFFN7098U7WELlM2JoXhS4fbIQTev/Z6cF89Sfs4888GXb7PIq0d1kfd6t7c kXK8bV6TkqSP4AxDm646Cv1TR9cfo6+9yCrkK8oW6ihAMzM0Lwobq22NLrRY2QK8494s WAuA==",
-                   "Date": "Thu, 21 Feb 2013 20:00:13 +0000",
-                   "Message-ID": "<089e0115f968d3b38604d6418577@google.com>",
-                   "Content-Type": "text/plain; charset=ISO-8859-1; delsp=yes; format=flowed",
-                   "Subject": "Confirm your Google Scholar Alert"
-               },
-               "reply_plain": None,
-               "attachments": [
-               ],
-               "plain": "Google received a request to start sending Scholar Alerts to  \n7be5eb5001593217143f@cloudmailin.net for the query:\nNew articles in Jonathan A. Eisen's profile\n\nClick to confirm this request:\nhttp://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nClick to cancel this request:\nhttp://scholar.google.ca/scholar_alerts?view_op=cancel_alert_options&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nThanks,\nThe Google Scholar Team",
-               "envelope": {
-                   "to": "7be5eb5001593217143f@cloudmailin.net",
-                   "helo_domain": "mail-vc0-f202.google.com",
-                   "from": "3zXwmURUKAO4iSXebQhQbUhji-dehUfboWeeWbU.Sec@scholar-alerts.bounces.google.com",
-                   "remote_ip": "209.85.220.202",
-                   "spf": {
-                       "domain": "scholar-alerts.bounces.google.com",
-                       "result": "neutral"
-                   }
-               },
-               "html": None
-            }
-
-
 
     def tearDown(self):
         self.db.session.close_all()
@@ -602,32 +570,24 @@ class ViewsTester(unittest.TestCase):
 
 
     def test_inbox(self):
+        example_payload = {
+               "headers": {
+                   "To": "7be5eb5001593217143f@cloudmailin.net",
+                   "From": "Google Scholar Alerts <scholaralerts-noreply@google.com>",
+                   "Date": "Thu, 21 Feb 2013 20:00:13 +0000",
+                   "Subject": "Confirm your Google Scholar Alert"
+               },
+               "plain": "Google received a request to start sending Scholar Alerts to  \n7be5eb5001593217143f@cloudmailin.net for the query:\nNew articles in Jonathan A. Eisen's profile\n\nClick to confirm this request:\nhttp://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nClick to cancel this request:\nhttp://scholar.google.ca/scholar_alerts?view_op=cancel_alert_options&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nThanks,\nThe Google Scholar Team",
+            }
+
         response = self.client.post(
             "/v1/inbox?key=validkey",
-            data=json.dumps(self.example_payload),
+            data=json.dumps(example_payload),
             content_type="application/json"
         )
-        assert_equals(200, response.status_code)
+        assert_equals(response.status_code, 200)
+        assert_equals(json.loads(response.data), {u'subject': u'Confirm your Google Scholar Alert'})
 
-    @nottest
-    def test_save_email(self):
-        doc_id = views.save_email(self.example_payload)
-
-        stored_email = self.postgres_d.get_email(doc_id)
-
-        assert_equals(stored_email[0].keys(), ['payload', 'id', 'created'])
-        assert_equals(json.loads(stored_email[0]["payload"]), self.example_payload)
-
-    def test_alert_if_google_scholar_notification_confirmation(self):
-        response = views.alert_if_google_scholar_notification_confirmation(self.example_payload)
-        expected = ('Jonathan A. Eisen', 'http://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net')
-        assert_equals(response, expected)
-
-    def test_alert_if_google_scholar_new_articles(self):
-        self.example_payload["headers"]["Subject"] = "Scholar Alert - John P. A. Ioannidis - new articles"
-        response = views.alert_if_google_scholar_new_articles(self.example_payload, "1234")
-        expected = 'John P. A. Ioannidis'
-        assert_equals(response, expected)
 
     def test_item_post_known_tiid(self):
         response = self.client.post('/v1/item/doi/IdThatAlreadyExists/' + "?key=validkey")
@@ -641,7 +601,6 @@ class ViewsTester(unittest.TestCase):
 
 
     def test_create(self):
-
         user = {
             "_id": "horace@rome.it",
             "key": "hash",

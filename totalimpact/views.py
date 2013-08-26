@@ -9,7 +9,7 @@ import shortuuid
 import analytics
 import requests
 
-from totalimpact import dao, app, tiredis, collection, api_user
+from totalimpact import dao, app, tiredis, collection, api_user, incoming_email
 from totalimpact import item as item_module
 from totalimpact.models import MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderServerError, ProviderTimeout
@@ -826,61 +826,20 @@ def update_user(userid=''):
     resp.mimetype = "application/json"
     return resp
 
-# can remove this wrapper and just use mypostgresdao version once finished with couchdb
-def save_email(payload):
-    doc_id = shortuuid.uuid()[0:24]
-    doc = {"_id":doc_id, 
-            "type":"email", 
-            "created":datetime.datetime.now().isoformat(),
-            "payload":payload}
-    mydao.save(doc)
-    mypostgresdao.save_email(doc)
-    return doc_id
 
-GOOGLE_SCHOLAR_CONFIRM_PATTERN = re.compile("""for the query:\nNew articles in (?P<name>.*)'s profile\n\nClick to confirm this request:\n(?P<url>.*)\n\n""")
-def alert_if_google_scholar_notification_confirmation(payload):
-    name = None
-    url = None
-    try:
-        email_body = payload["plain"]
-        match = GOOGLE_SCHOLAR_CONFIRM_PATTERN.search(email_body)
-        if match:
-            url = match.group("url")
-            name = match.group("name")
-            logger.info(u"Google Scholar notification confirmation for {name} is at {url}".format(
-                name=name, url=url))
-    except (KeyError, TypeError):
-        pass
-    return(name, url)
-
-GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN = re.compile("""Scholar Alert - (?P<name>.*) - new articles""")
-def alert_if_google_scholar_new_articles(payload, doc_id):
-    name = None
-    try:
-        subject = payload["headers"]["Subject"]
-        match = GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN.search(subject)
-        if match:
-            name = match.group("name")
-            logger.info(u"Just received Google Scholar alert: new articles for {name}, saved at {doc_id}".format(
-                name=name, doc_id=doc_id))
-    except (KeyError, TypeError):
-        pass
-    return(name)
 
 # route to receive email
 @app.route('/v1/inbox', methods=["POST"])
 def inbox():
     payload = request.json
-    doc_id = save_email(payload)
-    logger.debug(u"You've got mail. Payload: {payload}".format(
-        payload=payload))
-    logger.info(u"You've got mail. Saved as {doc_id}. Subject: {subject}".format(
-        doc_id=doc_id, subject=payload["headers"]["Subject"]))
+    email = incoming_email.IncomingEmail(payload)
 
-    alert_if_google_scholar_notification_confirmation(payload)
-    alert_if_google_scholar_new_articles(payload, doc_id)
+    logger.info(u"You've got mail. Subject: {subject}".format(
+        subject=email.subject))
+    email.log_if_google_scholar_notification_confirmation()
+    email.log_if_google_scholar_new_articles()
 
-    resp = make_response(json.dumps({"_id":doc_id}, sort_keys=True, indent=4), 200)
+    resp = make_response(json.dumps({"subject":email.subject}, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
