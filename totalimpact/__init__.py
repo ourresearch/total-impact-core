@@ -21,6 +21,7 @@ app.config.from_object(default_settings)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("POSTGRESQL_URL")
 
 db = SQLAlchemy(app)
+db.create_all()
 
 # segment.io logging
 analytics.init(os.getenv("SEGMENTIO_PYTHON_KEY"))
