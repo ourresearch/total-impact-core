@@ -2,12 +2,12 @@ BeautifulSoup==3.2.1
 CouchDB==0.8
 Flask==0.7.2
 Flask-Login==0.1.2
-Flask-SQLAlchemy==1.0
+Flask-SQLAlchemy==0.16
 Flask-WTF==0.6
 gunicorn==0.14.3
 Jinja2==2.6
 Logbook==0.3
-SQLAlchemy==0.8.2
+SQLAlchemy==0.8.0
 WTForms==1.0.1
 Werkzeug==0.8.3
 analytics-python==0.4.2
