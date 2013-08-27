@@ -3,7 +3,7 @@ from totalimpact import provider_batch_data
 from totalimpact.provider_batch_data import ProviderBatchData
 
 from flask import Flask
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import OperationalError
 
 import os, json, copy

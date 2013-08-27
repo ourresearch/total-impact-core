@@ -4,7 +4,7 @@ from totalimpact import api_user
 from totalimpact.api_user import ApiUser, RegisteredItem, ApiLimitExceededException
 
 from flask import Flask
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import OperationalError
 
 import os, json, copy

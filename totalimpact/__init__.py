@@ -2,7 +2,7 @@ from totalimpact import default_settings
 import os, logging, sys
 import analytics
 from flask import Flask
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 
 
 # see http://wiki.pylonshq.com/display/pylonscookbook/Alternative+logging+configuration

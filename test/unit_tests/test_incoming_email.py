@@ -3,7 +3,7 @@ from totalimpact import incoming_email
 from totalimpact.incoming_email import IncomingEmail
 
 from flask import Flask
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import OperationalError
 
 import os, json, copy
