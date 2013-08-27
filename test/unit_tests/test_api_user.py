@@ -1,7 +1,7 @@
 from totalimpact import tiredis
 from totalimpact import db, app
 from totalimpact import api_user
-from totalimpact.api_user import ApiUser, RegisteredItem
+from totalimpact.api_user import ApiUser, RegisteredItem, ApiLimitExceededException
 
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -45,10 +45,10 @@ class TestApiUser():
                     "organization":"NASA"
                 }
 
-        api_key_prefix = "SFU"
         test_meta2 = copy.deepcopy(self.test_meta)
         test_meta2["email"] = 'existing_api_user@example.com'
-        self.existing_api_user = ApiUser(api_key_prefix, **test_meta2)
+        test_meta2["prefix"] = "SFU"
+        self.existing_api_user = ApiUser(**test_meta2)
 
         self.existing_registered_item = RegisteredItem(self.test_alias_registered, self.existing_api_user)
 
@@ -61,13 +61,13 @@ class TestApiUser():
     def tearDown(self):
         teardown_postgres_for_unittests(self.db)
 
-    def test_make_api_user(self):
+    def test_init_api_user(self):
         #make sure nothing there beforehand
         matching_api_users = ApiUser.query.filter_by(email=self.test_email).first()
         assert_equals(matching_api_users, None)
 
-        api_key_prefix = "SFU"
-        new_api_user = ApiUser(api_key_prefix, **self.test_meta)
+        self.test_meta["prefix"] = "SFU"
+        new_api_user = ApiUser(**self.test_meta)
         new_api_key = new_api_user.api_key        
         print new_api_user
 
@@ -118,10 +118,12 @@ class TestApiUser():
         assert_equals(response, False)
 
         for x in ["a", "b", "c"]:  # max_registered_items was set to 3 for this test api_user
-            response = api_user.register_item(("doi", "10."+x), api_key, self.r, self.d)
-            if response["registered_item"]:
+            try:
+                response = api_user.register_item(("doi", "10."+x), api_key, self.r, self.d)
                 print response["registered_item"]
                 self.db.session.add(response["registered_item"])
+            except ApiLimitExceededException:
+                pass
 
         self.db.session.commit()
         self.db.session.flush()                
@@ -138,10 +140,6 @@ class TestApiUser():
 
         response = api_user.register_item(self.test_alias, existing_api_key, self.r, self.d)
         assert_equals(response["registered_item"].alias, ('doi', '10.1371/journal.pcbi.1'))
-
-        self.db.session.add(self.existing_registered_item)
-        self.db.session.commit()
-        self.db.session.flush()                
 
         response = api_user.is_registered(self.test_alias, existing_api_key)
         assert_equals(response, True)

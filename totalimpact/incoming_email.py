@@ -5,6 +5,17 @@ from totalimpact import db
 import logging
 logger = logging.getLogger('ti.incoming_email')
 
+def save_incoming_email(payload):
+    email = IncomingEmail(payload)
+    email.log_if_google_scholar_notification_confirmation()
+    email.log_if_google_scholar_new_articles()
+
+    db.session.add(email)
+    db.session.commit()
+    db.session.flush()
+
+    return email
+
 
 class IncomingEmail(db.Model):
     id = db.Column(db.Integer, primary_key=True)

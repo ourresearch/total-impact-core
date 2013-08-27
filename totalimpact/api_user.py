@@ -20,6 +20,21 @@ class InvalidApiKeyException(Exception):
 class ItemAlreadyRegisteredToThisKey(Exception):
     pass
 
+def save_api_user(**meta):
+    api_user = ApiUser(**meta)
+    db.session.add(api_user)
+    db.session.commit()
+    db.session.flush()
+    return api_user
+
+def save_registered_item(alias, api_user):
+    registered_item = RegisteredItem(alias, api_user)
+    db.session.add(registered_item)
+    db.session.commit()
+    db.session.flush()
+    return registered_item
+
+
 class RegisteredItem(db.Model):
     api_key = db.Column(db.Text, db.ForeignKey('api_user.api_key'), primary_key=True)
     api_user = db.relationship('ApiUser',
@@ -59,10 +74,12 @@ class ApiUser(db.Model):
     organization = db.Column(db.Text)
     max_registered_items = db.Column(db.Numeric)  # should be Integer, is Numeric to keep consistent with previous table
 
-    def __init__(self, prefix, **kwargs):
-        super(ApiUser, self).__init__(**kwargs)
+    def __init__(self, **kwargs):
+        prefix = kwargs["prefix"]
+        del kwargs["prefix"]
         self.api_key = self.make_api_key(prefix)
         self.created = datetime.datetime.utcnow()
+        super(ApiUser, self).__init__(**kwargs)
 
     def __repr__(self):
         return '<ApiUser {api_key}, {email}, {api_key_owner}>'.format(
@@ -176,7 +193,7 @@ def register_item(alias, api_key, myredis, mydao):
 
     api_user = get_api_user(api_key)
     if api_user:
-        registered_item = RegisteredItem(alias, api_user)
+        registered_item = save_registered_item(alias, api_user)
     return {"tiid":tiid, "registered_item":registered_item}
 
 

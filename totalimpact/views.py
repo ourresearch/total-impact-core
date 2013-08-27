@@ -760,23 +760,17 @@ def reference_sets_histograms():
 def key():
     """ Generate a new api key and store api key info in a db doc """
     meta = request.json
-
-    password = meta["password"]
-    del(meta["password"])
-    if password != os.getenv("API_KEY"):
+    if meta["password"] != os.getenv("API_KEY"):
         abort_custom(403, "password not correct")
+    del meta["password"]
 
-    prefix = meta["prefix"]
-    del(meta["prefix"])
-
-    new_api_key = api_user.ApiUser(prefix, **meta)
-    db.session.add(self.existing_api_user)
-    db.session.commit()
-    db.session.flush()                
+    new_api_user = api_user.save_api_user(**meta)
+    new_api_key = new_api_user.api_key
 
     resp = make_response(json.dumps({"api_key":new_api_key}, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
+
 
 @app.route("/user/<userid>", methods=["GET"])
 @app.route("/v1/user/<userid>", methods=["GET"])
@@ -831,13 +825,9 @@ def update_user(userid=''):
 @app.route('/v1/inbox', methods=["POST"])
 def inbox():
     payload = request.json
-    email = incoming_email.IncomingEmail(payload)
-
+    email = incoming_email.save_incoming_email(payload)
     logger.info(u"You've got mail. Subject: {subject}".format(
         subject=email.subject))
-    email.log_if_google_scholar_notification_confirmation()
-    email.log_if_google_scholar_new_articles()
-
     resp = make_response(json.dumps({"subject":email.subject}, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
     return resp

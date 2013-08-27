@@ -1,11 +1,13 @@
 import unittest, json, uuid
 from copy import deepcopy
 from urllib import quote_plus
+import os
 from nose.tools import assert_equals, nottest, assert_greater
 
 from totalimpact import app, db, dao, views, tiredis, api_user
 from totalimpact.providers.dryad import Dryad
-import os
+
+from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
 
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
@@ -120,20 +122,12 @@ class ViewsTester(unittest.TestCase):
                     'email': "test@example.com", 
                     'notes': '', 
                     'api_key_owner': 'Julia Smith', 
-                    "example_url":"", 
-                    "organization":"NASA"
+                    "example_url": "", 
+                    "organization": "NASA",
+                    "prefix": "NASA",
                 }
 
-        if not "localhost" in app.config["SQLALCHEMY_DATABASE_URI"]:
-            assert(False), "Not running this unittest because SQLALCHEMY_DATABASE_URI is not on localhost"
-
-        self.db = db
-        try:
-            self.db.drop_all()
-        except OperationalError, e:  #database "database" does not exist
-            print e
-            pass
-        self.db.create_all()
+        self.db = setup_postgres_for_unittests(db, app)
 
 
         # hacky way to delete the "ti" db, then make it fresh again for each test.
@@ -144,7 +138,7 @@ class ViewsTester(unittest.TestCase):
 
         self.d.save(json.loads(test_item))
 
-        self.existing_api_user = api_user.ApiUser("dummy", **self.test_api_user_meta)
+        self.existing_api_user = api_user.ApiUser(**self.test_api_user_meta)
         self.existing_api_user.api_key = "validkey"  #override randomly assigned key
         self.db.session.add(self.existing_api_user)
         self.db.session.commit()
@@ -171,7 +165,7 @@ class ViewsTester(unittest.TestCase):
 
 
     def tearDown(self):
-        self.db.session.close_all()
+        teardown_postgres_for_unittests(self.db)
         Dryad.member_items = self.orig_Dryad_member_items
 
 
@@ -376,7 +370,6 @@ class ViewsTester(unittest.TestCase):
         )
 
     def test_new_collection_includes_key(self):
-
         response = self.client.post(
             '/collection',
             data=json.dumps({"aliases": self.aliases, "title":"My Title"}),
@@ -589,6 +582,20 @@ class ViewsTester(unittest.TestCase):
         assert_equals(json.loads(response.data), {u'subject': u'Confirm your Google Scholar Alert'})
 
 
+    def test_new_api_user(self):
+        # the api call needs the admin password
+        self.test_api_user_meta["password"] = os.getenv("API_KEY")
+
+        response = self.client.post(
+            '/v1/key?key=validkey',
+            data=json.dumps(self.test_api_user_meta),
+            content_type="application/json"
+        )
+        print response.data
+        resp_loaded = json.loads(response.data)
+        assert_equals(resp_loaded["api_key"].split("-")[0], self.test_api_user_meta["prefix"].lower())
+
+
     def test_item_post_known_tiid(self):
         response = self.client.post('/v1/item/doi/IdThatAlreadyExists/' + "?key=validkey")
         print response
@@ -600,7 +607,7 @@ class ViewsTester(unittest.TestCase):
         assert_equals(json.loads(response.data), u'ok')
 
 
-    def test_create(self):
+    def test_create_user(self):
         user = {
             "_id": "horace@rome.it",
             "key": "hash",
@@ -614,7 +621,7 @@ class ViewsTester(unittest.TestCase):
         assert_equals("horace@rome.it", json.loads(resp.data)["_id"])
 
 
-    def test_create_without_key_in_body(self):
+    def test_create_user_without_key_in_body(self):
         user = {
             "_id": "horace@rome.it",
             "colls": {}
@@ -626,7 +633,7 @@ class ViewsTester(unittest.TestCase):
         )
         assert_equals(400, resp.status_code)
 
-    def test_create_without_colls_in_body(self):
+    def test_create_user_without_colls_in_body(self):
         user = {
             "_id": "horace@rome.it",
             "key":"hash"

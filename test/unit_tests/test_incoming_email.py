@@ -54,7 +54,7 @@ class TestIncomingEmail():
 
 
 
-    def test_save_incoming_mail(self):
+    def test_init_incoming_mail(self):
         all_email = IncomingEmail.query.all()
         assert_equals(all_email, [])
 
@@ -63,6 +63,17 @@ class TestIncomingEmail():
         self.db.session.add(self.existing_email)
         self.db.session.commit()
         self.db.session.flush()                
+
+        all_email = IncomingEmail.query.all()
+        assert_equals(len(all_email), 1)
+        assert_equals(json.loads(all_email[0].payload), self.example_payload)
+
+    def test_save_email(self):
+        all_email = IncomingEmail.query.all()
+        assert_equals(all_email, [])
+
+        #does the commits etc
+        self.existing_email = incoming_email.save_incoming_email(self.example_payload)
 
         all_email = IncomingEmail.query.all()
         assert_equals(len(all_email), 1)
