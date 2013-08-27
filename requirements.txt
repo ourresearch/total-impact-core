@@ -7,6 +7,7 @@ Flask-WTF==0.6
 gunicorn==0.14.3
 Jinja2==2.6
 Logbook==0.3
+SQLAlchemy==0.8.2
 WTForms==1.0.1
 Werkzeug==0.8.3
 analytics-python==0.4.2
