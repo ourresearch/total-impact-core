@@ -230,8 +230,8 @@ def setup(drop_all=False):
     #export POSTGRESQL_URL=postgres://localhost/core_migration
     #export POSTGRESQL_URL=postgres://localhost/corecopy
 
-    if not "localhost" in app.config["SQLALCHEMY_DATABASE_URI"]:
-        assert(False), "Not running this unittest because SQLALCHEMY_DATABASE_URI is not on localhost"
+    #if not "localhost" in app.config["SQLALCHEMY_DATABASE_URI"]:
+    #    assert(False), "Not running this unittest because SQLALCHEMY_DATABASE_URI is not on localhost"
 
     if drop_all:
         try:
