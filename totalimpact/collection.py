@@ -27,15 +27,45 @@ def save_collection(**kwargs):
     db.session.flush()
     return collection
 
-collection_alias = db.Table('collection_alias',
-    db.Column('cid', db.Text, db.ForeignKey('collection.cid')),
-    db.Column('namespace', db.Text),
-    db.Column('nid', db.Text),
-    #db.Column('nid', json_sqlalchemy.JSONAlchemy(db.Text)),
-    db.ForeignKeyConstraint( 
-        ('namespace', 'nid'),
-        ('alias.namespace', 'alias.nid')  )
-)
+class AddedItems(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cid = db.Column(db.Text, db.ForeignKey('collection.cid'))
+    namespace = db.Column(db.Text)
+    nid = db.Column(db.Text)
+    tiid = db.Column(db.Text)
+    created = db.Column(db.DateTime())
+
+    def __init__(self, **kwargs):
+        now = datetime.datetime.now()
+        if "created" in kwargs:
+            self.created = kwargs["created"]
+        else:   
+            self.created = datetime.datetime.now()
+        super(AddedItems, self).__init__(**kwargs)
+
+    @hybrid_property
+    def alias_tuple(self):
+        return ((self.namespace, self.nid))
+
+    def __repr__(self):
+        return '<AddedItems {cid}, {alias_tuple} {tiid}>'.format(
+            cid=self.cid, 
+            alias_tuple=self.alias_tuple,
+            tiid=self.tiid)
+
+class CollectionTiid(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cid = db.Column(db.Text, db.ForeignKey('collection.cid'))
+    tiid = db.Column(db.Text)
+
+    def __init__(self, **kwargs):
+        super(CollectionTiid, self).__init__(**kwargs)
+
+    def __repr__(self):
+        return '<CollectionTiid {cid} {tiid}>'.format(
+            cid=self.cid, 
+            tiid=self.tiid)
+
 
 class Collection(db.Model):
     cid = db.Column(db.Text, primary_key=True)
@@ -43,8 +73,8 @@ class Collection(db.Model):
     last_modified = db.Column(db.DateTime())
     ip_address = db.Column(db.Text)
     title = db.Column(db.Text)
-    aliases = db.relationship('Alias', secondary=collection_alias,
-        backref=db.backref('collections', lazy='dynamic'))
+    tiids = db.relationship('CollectionTiid', lazy='join', 
+        backref=db.backref("collections", lazy="join"))
 
     def __init__(self, collection_id=None, **kwargs):
         if collection_id is None:

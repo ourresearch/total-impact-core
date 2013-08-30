@@ -146,6 +146,36 @@ class TestItem():
         assert_equals(found_item.aliases, [])
 
 
+    def test_init_alias(self):
+        test_alias = ("doi", "10.123/abc")
+        (test_namespace, test_nid) = test_alias
+
+        #make sure nothing there beforehand
+        response = collection.Alias.filter_by_alias(test_alias).first()
+        assert_equals(response, None)
+
+        new_alias = collection.Alias(test_alias)
+        print new_alias
+
+        # still not there
+        response = collection.Alias.filter_by_alias(test_alias).first()
+        assert_equals(response, None)
+
+        self.db.session.add(new_alias)
+        self.db.session.commit()
+        self.db.session.flush()
+
+        # and now poof there it is
+        response = collection.Alias.query.all()
+        assert_equals(response[0].alias_tuple, test_alias)
+
+        response = collection.Alias.query.filter_by(nid=test_alias[1]).first()
+        assert_equals(response.nid, test_alias[1])
+
+        response = collection.Alias.filter_by_alias(test_alias).first()
+        assert_equals(response.alias_tuple, test_alias)
+
+
     def test_add_aliases(self):
         test_alias = ("doi", "10.123/abc")
         new_alias = Alias(test_alias)

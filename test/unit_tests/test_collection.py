@@ -56,50 +56,19 @@ class TestCollection():
         assert_equals(response.cid, "socrates")
 
 
-    def test_init_alias(self):
-        test_alias = ("doi", "10.123/abc")
-        (test_namespace, test_nid) = test_alias
-
-        #make sure nothing there beforehand
-        response = collection.Alias.filter_by_alias(test_alias).first()
-        assert_equals(response, None)
-
-        new_alias = collection.Alias(test_alias)
-        print new_alias
-
-        # still not there
-        response = collection.Alias.filter_by_alias(test_alias).first()
-        assert_equals(response, None)
-
-        self.db.session.add(new_alias)
-        self.db.session.commit()
-        self.db.session.flush()
-
-        # and now poof there it is
-        response = collection.Alias.query.all()
-        assert_equals(response[0].alias_tuple, test_alias)
-
-        response = collection.Alias.query.filter_by(nid=test_alias[1]).first()
-        assert_equals(response.nid, test_alias[1])
-
-        response = collection.Alias.filter_by_alias(test_alias).first()
-        assert_equals(response.alias_tuple, test_alias)
-
-
-    def test_collection_with_aliases(self):
-        test_alias = ("doi", "10.123/abc")
-        (test_namespace, test_nid) = test_alias
-        new_alias = collection.Alias(test_alias)
+    def test_collection_with_tiids(self):
+        test_tiid = "123213213"
+        new_collection_tiid = collection.CollectionTiid(tiid=test_tiid)
 
         new_collection = collection.Collection("socrates")
         new_cid = new_collection.cid        
         print new_collection
 
-        new_collection.aliases = [new_alias]
-        print new_collection.aliases
-        assert_equals(new_collection.aliases, [new_alias])
+        new_collection.tiids = [new_collection_tiid]
+        print new_collection.tiids
+        assert_equals(new_collection.tiids, [new_collection_tiid])
 
-        self.db.session.add(new_alias)
+        self.db.session.add(new_collection_tiid)
         self.db.session.add(new_collection)
         self.db.session.commit()
         self.db.session.flush()
@@ -107,9 +76,8 @@ class TestCollection():
         # and now poof there it is
         response = collection.Collection.query.filter_by(cid="socrates").first()
         assert_equals(response.cid, "socrates")
-        assert_equals(response.aliases, [new_alias])
-        assert_equals(new_alias.collections.all(), [new_collection])
-
+        assert_equals(response.tiids, [new_collection_tiid])
+        assert_equals(new_collection_tiid.collections.query.all(), [new_collection])
 
 
     def test_make_creates_identifier(self):
