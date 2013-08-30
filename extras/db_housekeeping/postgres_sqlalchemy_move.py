@@ -10,8 +10,9 @@ from sqlalchemy.exc import OperationalError
 
 from totalimpact import db, app
 from totalimpact import collection
-from totalimpact.collection import Collection, Item, Alias, Metric, Biblio
+from totalimpact.collection import Collection
 from totalimpact import item as item_module
+from totalimpact.item import Item, Alias, Metric, Biblio
 
 # run in heroku by a) commiting, b) pushing to heroku, and c) running
 # heroku run python extras/db_housekeeping/postgres_mirror.py
