@@ -9,6 +9,12 @@ from totalimpact import unicode_helpers
 from totalimpact import default_settings
 from totalimpact.utils import Retry
 
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.hybrid import hybrid_property
+from totalimpact import json_sqlalchemy
+from totalimpact import db
+
+
 # Master lock to ensure that only a single thread can write
 # to the DB at one time to avoid document conflicts
 
@@ -17,6 +23,229 @@ logger = logging.getLogger('ti.item')
 
 class NotAuthenticatedError(Exception):
     pass
+
+
+
+
+# save an alias to an item, making the alias if necessary
+def save_alias_to_item(item_object, alias_tuple):
+    alias_object = Alias.filter_by_alias(alias_tuple)
+    if not alias_object:
+        alias_object = Alias(alias_tuple)
+        db.session.add(alias_object)
+
+    item_object.aliases += [alias_object]
+
+    db.session.add(item_object)
+    db.session.commit()
+    db.session.flush()
+    return item_object
+
+# save an alias to an item, making the alias if necessary
+def save_biblio_to_item(item_object, biblio_dict, provider="unknown"):
+    for biblio_name in biblio_dict:
+        biblio_object = Biblio(item_object, biblio_name, biblio_dict[biblio_name], provider)
+        print biblio_object
+        db.session.add(biblio_object)
+
+    db.session.add(item_object)
+    db.session.commit()
+    db.session.flush()
+    return item_object
+
+# save an alias to an item, making the metric if necessary
+def save_metric_to_item(item_object, old_style_metric_dict, provider=None):
+    full_metric_name = old_style_metric_dict.keys()[0]
+    (provider, metric_name) = full_metric_name.split(":")
+    metric_details = old_style_metric_dict[full_metric_name]
+    new_style_metric_dict = {
+        "metric_name": metric_name, 
+        "provider": provider, 
+        "drilldown_url": metric_details["provenance_url"]
+    }
+    for collected_date in metric_details["values"]["raw_history"]:
+        new_style_metric_dict["collected_date"] = collected_date
+        new_style_metric_dict["raw_value"] = metric_details["values"]["raw_history"][collected_date]
+        metric_object = Metric(item_object, **new_style_metric_dict)
+        db.session.add(metric_object)
+
+    db.session.add(item_object)
+    db.session.commit()
+    db.session.flush()
+    return item_object
+
+
+
+item_alias = db.Table('item_alias',
+    db.Column('tiid', db.Text, db.ForeignKey('item.tiid')),
+    db.Column('namespace', db.Text),
+    db.Column('nid', db.Text),
+    #db.Column('nid', json_sqlalchemy.JSONAlchemy(db.Text)),
+    db.ForeignKeyConstraint( 
+        ('namespace', 'nid'),
+        ('alias.namespace', 'alias.nid')  )
+)
+
+class Metric(db.Model):
+    item = db.relationship('Item', backref='metrics', lazy='join')
+
+    tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True)
+    provider = db.Column(db.Text, primary_key=True)
+    metric_name = db.Column(db.Text, primary_key=True)
+    collected_date = db.Column(db.DateTime(), primary_key=True)
+    raw_value = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
+    drilldown_url = db.Column(db.Text)
+
+    def __init__(self, item, provider, metric_name, raw_value, drilldown_url, collected_date=None):
+        self.item = item
+        self.provider = provider
+        self.metric_name = metric_name
+        self.raw_value = raw_value        
+        self.drilldown_url = drilldown_url   
+        if collected_date:
+            self.collected_date = collected_date
+        else:
+            self.collected_date = datetime.datetime.utcnow()
+        super(Metric, self).__init__()
+
+    def __repr__(self):
+        return '<Metric {tiid} {provider}:{metric_name}>'.format(
+            provider=self.provider, 
+            metric_name=self.metric_name, 
+            tiid=self.tiid)
+
+
+class Biblio(db.Model):
+    item = db.relationship('Item', backref='biblios', lazy='join')
+
+    tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True)
+    provider = db.Column(db.Text, primary_key=True)
+    biblio_name = db.Column(db.Text, primary_key=True)
+    biblio_value = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
+    collected_date = db.Column(db.DateTime())
+
+    def __init__(self, item, biblio_name, biblio_value, provider="unknown", collected_date=None):
+        self.item = item
+        self.biblio_name = biblio_name
+        self.biblio_value = biblio_value
+        self.provider = provider
+        if collected_date:
+            self.collected_date = collected_date
+        else:
+            self.collected_date = datetime.datetime.utcnow()            
+        super(Biblio, self).__init__()
+
+    def __repr__(self):
+        return '<Biblio {biblio_name}, {tiid}>'.format(
+            biblio_name=self.biblio_name, 
+            tiid=self.tiid)
+
+    @classmethod
+    def filter_by_tiid(cls, tiid):
+        response = cls.query.filter_by(tiid=tiid).all()
+        return response
+
+    @classmethod
+    def as_dict_by_tiid(cls, tiid):
+        response = {}
+        biblio_elements = cls.query.filter_by(tiid=tiid).all()
+        for biblio in biblio_elements:
+            response[biblio.biblio_name] = biblio.biblio_value
+        return response
+
+
+class Alias(db.Model):
+    items = db.relationship('Item', secondary=item_alias,
+        backref=db.backref('aliases', lazy='join'), lazy='join')
+
+    namespace = db.Column(db.Text, primary_key=True)
+    nid = db.Column(db.Text, primary_key=True)
+    #nid = db.Column(json_sqlalchemy.JSONAlchemy(db.Text), primary_key=True)
+    collected_date = db.Column(db.DateTime())
+
+    def __init__(self, alias_tuple, collected_date=None):
+        alias_tuple = canonical_alias_tuple(alias_tuple)
+        (namespace, nid) = alias_tuple
+        self.namespace = namespace
+        self.nid = nid
+        if collected_date:
+            self.collected_date = collected_date
+        else:   
+            self.collected_date = datetime.datetime.utcnow()
+        super(Alias, self).__init__()
+        
+    @hybrid_property
+    def alias_tuple(self):
+        return ((self.namespace, self.nid))
+
+    def __repr__(self):
+        return '<Alias {alias_tuple}>'.format(
+            alias_tuple=self.alias_tuple)
+
+    @classmethod
+    def filter_by_alias(cls, alias_tuple):
+        alias_tuple = canonical_alias_tuple(alias_tuple)
+        (namespace, nid) = alias_tuple
+        response = cls.query.filter_by(namespace=namespace, nid=nid)
+        return response
+
+    @classmethod
+    def get_by_alias(cls, alias_tuple):
+        alias_tuple = canonical_alias_tuple(alias_tuple)
+        (namespace, nid) = alias_tuple
+        response = cls.query.get((namespace, nid))
+        return response
+
+
+class Item(db.Model):
+    tiid = db.Column(db.Text, primary_key=True)
+    created = db.Column(db.DateTime())
+    last_modified = db.Column(db.DateTime())
+    last_update_run = db.Column(db.DateTime())
+
+    def __init__(self, **kwargs):
+        if "tiid" in kwargs:
+            self.tiid = kwargs["tiid"]
+        else:
+            self.tiid = shortuuid.uuid()[0:24]
+       
+        now = datetime.datetime.now()
+        if "created" in kwargs:
+            self.created = kwargs["created"]
+        else:   
+            self.created = now
+        if "last_modified" in kwargs:
+            self.last_modified = kwargs["last_modified"]
+        else:   
+            self.last_modified = now
+        if "last_update_run" in kwargs:
+            self.last_update_run = kwargs["last_update_run"]
+        else:   
+            self.last_update_run = now
+
+        super(Item, self).__init__()
+
+    def __repr__(self):
+        return '<Item {tiid}>'.format(
+            tiid=self.tiid)
+
+    @classmethod
+    def create_from_old_doc(cls, doc):
+        doc_copy = copy.deepcopy(doc)
+        doc_copy["tiid"] = doc_copy["_id"]
+        for key in doc_copy.keys():
+            if key not in ["tiid", "created", "last_modified", "last_update_run"]:
+                del doc_copy[key]
+        new_item_object = Item(**doc_copy)
+        return new_item_object
+
+
+
+
+
+
+
+
 
 def largest_value_that_is_less_than_or_equal_to(target, collection):
     collection_as_numbers = [(int(i), i) for i in collection if int(i) <= target]
@@ -33,7 +262,7 @@ all_static_meta = ProviderFactory.get_all_static_meta()
 
 def clean_id(nid):
     try:
-        nid = nid.strip()
+        nid = nid.strip(' "')
         nid = unicode_helpers.remove_nonprinting_characters(nid)
     except (TypeError, AttributeError):
         #isn't a string.  That's ok, might be biblio
@@ -204,6 +433,8 @@ def decide_genre(alias_dict):
 
 def canonical_alias_tuple(alias):
     (namespace, nid) = alias
+    namespace = clean_id(namespace)
+    nid = clean_id(nid)
     namespace = namespace.lower()
     if namespace=="doi":
         nid = nid.lower()

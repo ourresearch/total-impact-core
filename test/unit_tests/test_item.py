@@ -1,10 +1,13 @@
-from nose.tools import raises, assert_equals, nottest
+from nose.tools import raises, assert_equals, assert_true, nottest
 import os, unittest, hashlib, json, pprint, datetime
 from time import sleep
 from werkzeug.security import generate_password_hash
 from totalimpact import models, dao, tiredis
+from totalimpact import db, app
 from totalimpact import item as item_module
+from totalimpact.item import Item, Metric, Biblio, Alias
 from totalimpact.providers import bibtex, github
+from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
 
 
 class TestItem():
@@ -121,6 +124,169 @@ class TestItem():
         # setup a clean new redis test database.  We're putting unittest redis at DB Number 8.
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
+
+        self.db = setup_postgres_for_unittests(db, app)
+
+    def tearDown(self):
+        teardown_postgres_for_unittests(self.db)
+
+
+
+    def test_init_item_and_add_aliases(self):
+        new_item = Item()
+        print new_item
+
+        self.db.session.add(new_item)
+        self.db.session.commit()
+        self.db.session.flush()
+
+        # we have an item but it has no aliases
+        found_item = Item.query.first()
+        assert_true(len(found_item.tiid) > 20)
+        assert_equals(found_item.aliases, [])
+
+
+    def test_add_aliases(self):
+        test_alias = ("doi", "10.123/abc")
+        new_alias = Alias(test_alias)
+        print new_alias
+
+        new_item = Item()
+        tiid = new_item.tiid
+        print new_item
+
+        #add an alias
+        new_item.aliases += [new_alias]
+
+        self.db.session.add(new_item)
+        self.db.session.commit()
+        self.db.session.flush()
+
+        # now poof there are aliases
+        found_item = Item.query.filter_by(tiid=tiid).first()
+        assert_equals(found_item.aliases, [new_alias])
+
+    def test_add_biblio(self):
+        test_biblio = {
+            "title": "An extension of de Finetti's theorem",
+            "journal": "Advances in Applied Probability",
+            "author": [
+                "Pitman, J"
+            ],
+            "collection": "pitnoid",
+            "volume": "10",
+            "id": "p78",
+            "year": "1978",
+            "pages": "268 to 270"
+        }
+        new_item = Item()
+        tiid = new_item.tiid
+        print new_item
+
+        #add biblio
+        item_module.save_biblio_to_item(new_item, test_biblio)
+
+        # now poof there is biblio
+        found_item = Item.query.filter_by(tiid=tiid).first()
+        expected = [u'10', u"An extension of de Finetti's theorem", u'Advances in Applied Probability', [u"Pitman, J"], u'1978', u'p78', u'pitnoid', u'268 to 270']
+        assert_equals([bib.biblio_value for bib in found_item.biblios], expected)
+        
+        assert_equals(Biblio.as_dict_by_tiid(tiid), test_biblio)
+
+
+    def test_add_metrics(self):
+        test_metrics = {
+            "topsy:tweets": {
+                "provenance_url": "http://topsy.com/trackback?url=http%3A//elife.elifesciences.org/content/2/e00646",
+                "values": {
+                    "raw_history": {
+                        "2013-03-29T17:57:41.455719": 1,
+                        "2013-04-11T12:57:37.260362": 2,
+                        "2013-04-19T07:27:23.117982": 3
+                        },
+                    "raw": 3
+                    }
+                } 
+            }
+        new_item = Item()
+        tiid = new_item.tiid
+        print new_item
+
+        #add biblio
+        item_module.save_metric_to_item(new_item, test_metrics)
+
+        # now poof there is metrics
+        found_item = Item.query.filter_by(tiid=tiid).first()
+        expected = "hi"
+        assert_equals(len(found_item.metrics), 3)
+        assert_equals(found_item.metrics[0].tiid, tiid)
+        assert_equals(found_item.metrics[0].provider, "topsy")
+        assert_equals(found_item.metrics[0].raw_value, 1)
+        
+        test_metrics2 =  {
+            "mendeley:country": {
+               "values": {
+                   "raw_history": {
+                       "2013-08-26T09:25:32.750867": [
+                           {
+                               "value": 38,
+                               "name": "United States"
+                           },
+                           {
+                               "value": 23,
+                               "name": "Germany"
+                           },
+                           {
+                               "value": 15,
+                               "name": "Brazil"
+                           }
+                       ],
+                       "2013-08-27T14:57:29.173887": [
+                           {
+                               "value": 38,
+                               "name": "United States"
+                           },
+                           {
+                               "value": 25,
+                               "name": "Germany"
+                           },
+                           {
+                               "value": 13,
+                               "name": "Brazil"
+                           }
+                       ]
+                   },
+                   "raw": [
+                       {
+                           "value": 38,
+                           "name": "United States"
+                       },
+                       {
+                           "value": 25,
+                           "name": "Germany"
+                       },
+                       {
+                           "value": 13,
+                           "name": "Brazil"
+                       }
+                   ]
+               },
+               "provenance_url": "http://www.mendeley.com/research/phylogeny-informative-measuring-power-comparative-methods-2/"
+           }
+        }
+
+        item_module.save_metric_to_item(new_item, test_metrics2)
+
+        # now poof there is metrics
+        found_item = Item.query.filter_by(tiid=tiid).first()
+        expected = "hi"
+        assert_equals(len(found_item.metrics), 5)
+        assert_equals(found_item.metrics[4].tiid, tiid)
+        assert_equals(found_item.metrics[4].provider, "mendeley")
+        expected = [{u'name': u'United States', u'value': 38}, {u'name': u'Germany', u'value': 25}, {u'name': u'Brazil', u'value': 13}]
+        assert_equals(found_item.metrics[4].raw_value, expected)
+
+
 
     def test_make_new(self):
         '''create an item from scratch.'''

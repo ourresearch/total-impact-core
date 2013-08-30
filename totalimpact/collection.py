@@ -1,9 +1,14 @@
 from werkzeug import generate_password_hash, check_password_hash
 import shortuuid, string, random, datetime
-import csv, StringIO, json
+import csv, StringIO, json, copy
 from collections import OrderedDict, defaultdict
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.hybrid import hybrid_property
 
+from totalimpact import db
 from totalimpact import item as item_module
+from totalimpact.item import Alias
+from totalimpact import json_sqlalchemy
 from totalimpact.providers.provider import ProviderFactory
 
 # Master lock to ensure that only a single thread can write
@@ -12,6 +17,71 @@ from totalimpact.providers.provider import ProviderFactory
 import logging
 logger = logging.getLogger('ti.collection')
 
+
+
+
+def save_collection(**kwargs):
+    collection = Collection(**kwargs)
+    db.session.add(collection)
+    db.session.commit()
+    db.session.flush()
+    return collection
+
+collection_alias = db.Table('collection_alias',
+    db.Column('cid', db.Text, db.ForeignKey('collection.cid')),
+    db.Column('namespace', db.Text),
+    db.Column('nid', db.Text),
+    #db.Column('nid', json_sqlalchemy.JSONAlchemy(db.Text)),
+    db.ForeignKeyConstraint( 
+        ('namespace', 'nid'),
+        ('alias.namespace', 'alias.nid')  )
+)
+
+class Collection(db.Model):
+    cid = db.Column(db.Text, primary_key=True)
+    created = db.Column(db.DateTime())
+    last_modified = db.Column(db.DateTime())
+    ip_address = db.Column(db.Text)
+    title = db.Column(db.Text)
+    aliases = db.relationship('Alias', secondary=collection_alias,
+        backref=db.backref('collections', lazy='dynamic'))
+
+    def __init__(self, collection_id=None, **kwargs):
+        if collection_id is None:
+            collection_id = _make_id()
+        self.cid = collection_id
+
+        now = datetime.datetime.now()
+        if "created" in kwargs:
+            self.created = kwargs["created"]
+        else:   
+            self.created = now
+
+        if "last_modified" in kwargs:
+            self.last_modified = kwargs["last_modified"]
+        else:   
+            self.last_modified = now
+
+        super(Collection, self).__init__(**kwargs)
+
+    def __repr__(self):
+        return '<Collection {cid}, {title}>'.format(
+            cid=self.cid, 
+            title=self.title)
+
+    @classmethod
+    def create_from_old_doc(cls, doc):
+        doc_copy = copy.deepcopy(doc)
+        doc_copy["cid"] = doc_copy["_id"]
+        for key in doc_copy.keys():
+            if key not in ["cid", "created", "last_modified", "ip_address", "title"]:
+                del doc_copy[key]
+        new_collection_object = Collection(**doc_copy)
+        return new_collection_object
+
+
+
+#delete when we move to postgres
 def make(collection_id=None):
     key = shortuuid.uuid()[0:10]
 
@@ -31,8 +101,6 @@ def make(collection_id=None):
     return collection, key
 
 
-
-
 def _make_id(len=6):
     '''Make an id string.
 
@@ -42,13 +110,20 @@ def _make_id(len=6):
     choices = string.ascii_lowercase + string.digits
     return ''.join(random.choice(choices) for x in range(len))
 
-
 def get_titles(cids, mydao):
     ret = {}
     for cid in cids:
         coll = mydao.db[cid]
         ret[cid] = coll["title"]
     return ret
+
+def get_titles_new(cids):
+    ret = {}
+    for cid in cids:
+        coll = Collection.query.filter_by(cid=cid).first()
+        ret[cid] = coll.title
+    return ret
+
 
 def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
     startkey = [cid, 0]

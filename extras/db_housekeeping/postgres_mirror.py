@@ -16,7 +16,7 @@ logging.basicConfig(
     format='[%(process)d] %(levelname)8s %(threadName)30s %(name)s - %(message)s'
 )
 
-logger = logging.getLogger("couch_migrate")
+logger = logging.getLogger("postgres_mirror")
  
 
 

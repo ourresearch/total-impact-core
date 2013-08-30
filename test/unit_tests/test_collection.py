@@ -1,9 +1,12 @@
 from totalimpact import collection, dao, tiredis
+from totalimpact import db, app
 from collections import OrderedDict
 import os, json
 
-from nose.tools import raises, assert_equals, nottest
+from nose.tools import raises, assert_equals, assert_true, nottest
 import unittest
+from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
+
 
 api_items_loc = os.path.join(
     os.path.split(__file__)[0],
@@ -24,37 +27,114 @@ class TestCollection():
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
 
+        self.db = setup_postgres_for_unittests(db, app)
+
+
     def tearDown(self):
-        pass
-        
+        teardown_postgres_for_unittests(self.db)
+
+
+    def test_init_collection(self):
+        #make sure nothing there beforehand
+        response = collection.Collection.query.filter_by(cid="socrates").first()
+        assert_equals(response, None)
+
+        new_collection = collection.Collection("socrates")
+        new_cid = new_collection.cid        
+        print new_collection
+
+        # still not there
+        response = collection.Collection.query.filter_by(cid="socrates").first()
+        assert_equals(response, None)
+
+        self.db.session.add(new_collection)
+        self.db.session.commit()
+        self.db.session.flush()
+
+        # and now poof there it is
+        response = collection.Collection.query.filter_by(cid="socrates").first()
+        assert_equals(response.cid, "socrates")
+
+
+    def test_init_alias(self):
+        test_alias = ("doi", "10.123/abc")
+        (test_namespace, test_nid) = test_alias
+
+        #make sure nothing there beforehand
+        response = collection.Alias.filter_by_alias(test_alias).first()
+        assert_equals(response, None)
+
+        new_alias = collection.Alias(test_alias)
+        print new_alias
+
+        # still not there
+        response = collection.Alias.filter_by_alias(test_alias).first()
+        assert_equals(response, None)
+
+        self.db.session.add(new_alias)
+        self.db.session.commit()
+        self.db.session.flush()
+
+        # and now poof there it is
+        response = collection.Alias.query.all()
+        assert_equals(response[0].alias_tuple, test_alias)
+
+        response = collection.Alias.query.filter_by(nid=test_alias[1]).first()
+        assert_equals(response.nid, test_alias[1])
+
+        response = collection.Alias.filter_by_alias(test_alias).first()
+        assert_equals(response.alias_tuple, test_alias)
+
+
+    def test_collection_with_aliases(self):
+        test_alias = ("doi", "10.123/abc")
+        (test_namespace, test_nid) = test_alias
+        new_alias = collection.Alias(test_alias)
+
+        new_collection = collection.Collection("socrates")
+        new_cid = new_collection.cid        
+        print new_collection
+
+        new_collection.aliases = [new_alias]
+        print new_collection.aliases
+        assert_equals(new_collection.aliases, [new_alias])
+
+        self.db.session.add(new_alias)
+        self.db.session.add(new_collection)
+        self.db.session.commit()
+        self.db.session.flush()
+
+        # and now poof there it is
+        response = collection.Collection.query.filter_by(cid="socrates").first()
+        assert_equals(response.cid, "socrates")
+        assert_equals(response.aliases, [new_alias])
+        assert_equals(new_alias.collections.all(), [new_collection])
+
+
+
     def test_make_creates_identifier(self):
-        coll, key = collection.make()
-        assert_equals(len(coll["_id"]), 6)
+        coll = collection.save_collection()
+        assert_equals(len(coll.cid), 6)
 
-        coll, key = collection.make("socrates")
-        assert_equals(coll["_id"], "socrates")
-
-
-    def test_create_returns_collection_and_update_key(self):
-        coll, key = collection.make()
-        assert_equals(coll["key"], key)
+        coll = collection.save_collection(cid="socrates")
+        assert_equals(coll.cid, "socrates")
 
 
-
-    def test_get_names(self):
+    def test_get_titles_new(self):
         colls = [
-            {"_id": "1", "title": "title 1"},
-            {"_id": "2", "title": "title 2"},
-            {"_id": "3", "title": "title 3"}
+            {"collection_id": "1", "title": "title 1"},
+            {"collection_id": "2", "title": "title 2"},
+            {"collection_id": "3", "title": "title 3"}
         ]
 
         # put all these in the db
-        for doc in self.d.db.update(colls):
-            pass
+        for collection_params in colls:
+            collection.save_collection(**collection_params)
 
-        titlesDict = collection.get_titles(["1", "2", "3"], self.d)
+        titlesDict = collection.get_titles_new(["1", "2", "3"])
         assert_equals(titlesDict["1"], "title 1")
         assert_equals(titlesDict["3"], "title 3")
+
 
     def test_get_metric_value_lists(self):
         response = collection.get_metric_value_lists(API_ITEMS_JSON)
@@ -80,6 +160,8 @@ class TestCollection():
             set(['items', '_rev', '_id', 'type', 'title', 'alias_tiids'])
         )
         assert_equals(sorted(response[0]["items"][0].keys()), sorted(['_rev', 'currently_updating', 'metrics', 'biblio', '_id', 'type', 'aliases']))
+
+
 
     def test_make_csv_rows(self):
         csv = collection.make_csv_rows(API_ITEMS_JSON)
