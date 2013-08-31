@@ -2,6 +2,7 @@ import couchdb, os, logging, sys, collections
 from pprint import pprint
 import time, datetime, json
 import requests
+import argparse
 
 from couch_paginator import CouchPaginator
 from totalimpact import dao
@@ -326,12 +327,32 @@ def setup(drop_all=False):
 
 
 
-couch_db = setup(drop_all=False)
+if __name__ == "__main__":
+    # get args from the command line:
+    parser = argparse.ArgumentParser(description="copy data from couch into postgres")
+    parser.add_argument('--drop', 
+        default=False,
+        action='store_true', 
+        help="drop tables before creating them")
+    parser.add_argument('--collections', 
+        default=False,
+        action='store_true', 
+        help="iterate over collections, copying collections and their related info (collection tiids, added_items)")
+    parser.add_argument('--items', 
+        default=False,
+        action='store_true', 
+        help="iterate over items, copying items and their related info (biblio, metrics, aliases)")
+    args = vars(parser.parse_args())
+    print args
+    print "postgres_sqlalchemy_move.py starting."
 
-run_through_collections()
-#run_through_items()
+    couch_db = setup(drop_all=args["drop"])
+    if args["collections"]:
+        run_through_collections()
+    if args["items"]:
+        run_through_items()
 
-db.session.close_all()
+    db.session.close_all()
 
   
 
