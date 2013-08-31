@@ -27,6 +27,14 @@ def save_collection(**kwargs):
     db.session.flush()
     return collection
 
+def save_added_items(**kwargs):
+    added_items = AddedItems(**kwargs)
+    db.session.add(added_items)
+    db.session.commit()
+    db.session.flush()
+    return added_items
+
+
 class AddedItems(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cid = db.Column(db.Text, db.ForeignKey('collection.cid'))
