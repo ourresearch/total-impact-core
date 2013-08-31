@@ -326,7 +326,7 @@ def setup(drop_all=False):
 
 
 
-couch_db = setup(drop_all=True)
+couch_db = setup(drop_all=False)
 
 run_through_collections()
 #run_through_items()
