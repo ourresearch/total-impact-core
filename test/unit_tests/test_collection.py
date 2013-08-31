@@ -80,9 +80,9 @@ class TestCollection():
         assert_equals(new_collection_tiid.collections.query.all(), [new_collection])
 
 
-    def test_init_added_items(self):
+    def test_init_added_item(self):
         #make sure nothing there beforehand
-        response = collection.AddedItems.query.filter_by(cid="socrates").first()
+        response = collection.AddedItem.query.filter_by(cid="socrates").first()
         assert_equals(response, None)
 
         new_collection = collection.save_collection(cid="socrates")
@@ -91,12 +91,12 @@ class TestCollection():
         added_items2 = collection.save_added_items(cid="socrates", tiid="bbbbb", namespace="url", nid="http://starbucks.com")
         added_items3 = collection.save_added_items(cid="socrates", tiid="ccccc")
 
-        response = collection.AddedItems.query.filter_by(cid="socrates").all()
+        response = collection.AddedItem.query.filter_by(cid="socrates").all()
         assert_equals(len(response), 3)
         assert_equals(response[0].cid, "socrates")
         assert_equals(response[0].tiid, "aaaaa")
 
-        response = collection.AddedItems.query.filter_by(namespace="url").first()
+        response = collection.AddedItem.query.filter_by(namespace="url").first()
         assert_equals(response.nid, "http://starbucks.com")
 
 

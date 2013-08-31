@@ -27,15 +27,15 @@ def save_collection(**kwargs):
     db.session.flush()
     return collection
 
-def save_added_items(**kwargs):
-    added_items = AddedItems(**kwargs)
+def save_added_item(**kwargs):
+    added_items = AddedItem(**kwargs)
     db.session.add(added_items)
     db.session.commit()
     db.session.flush()
     return added_items
 
 
-class AddedItems(db.Model):
+class AddedItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cid = db.Column(db.Text, db.ForeignKey('collection.cid'))
     namespace = db.Column(db.Text)
@@ -49,14 +49,14 @@ class AddedItems(db.Model):
             self.created = kwargs["created"]
         else:   
             self.created = datetime.datetime.now()
-        super(AddedItems, self).__init__(**kwargs)
+        super(AddedItem, self).__init__(**kwargs)
 
     @hybrid_property
     def alias_tuple(self):
         return ((self.namespace, self.nid))
 
     def __repr__(self):
-        return '<AddedItems {cid}, {alias_tuple} {tiid}>'.format(
+        return '<AddedItem {cid}, {alias_tuple} {tiid}>'.format(
             cid=self.cid, 
             alias_tuple=self.alias_tuple,
             tiid=self.tiid)
@@ -82,6 +82,8 @@ class Collection(db.Model):
     ip_address = db.Column(db.Text)
     title = db.Column(db.Text)
     tiids = db.relationship('CollectionTiid', lazy='join', 
+        backref=db.backref("collections", lazy="join"))
+    added_items = db.relationship('AddedItem', lazy='join', 
         backref=db.backref("collections", lazy="join"))
 
     def __init__(self, collection_id=None, **kwargs):

@@ -10,7 +10,7 @@ from sqlalchemy.exc import OperationalError
 
 from totalimpact import db, app
 from totalimpact import collection
-from totalimpact.collection import Collection
+from totalimpact.collection import Collection, CollectionTiid, AddedItem
 from totalimpact import item as item_module
 from totalimpact.item import Item, Alias, Metric, Biblio
 
@@ -64,6 +64,60 @@ def create_alias_objects(alias_tuples, created, tuples_to_commit, skip_biblio=Tr
         new_alias_objects += [alias_object]    
 
     return (new_alias_objects, tuples_to_commit)
+
+
+def create_collection_tiid_objects(tiids, created, collection_tiids_to_commit):
+    new_tiid_objects = []
+
+    for tiid in tiids:
+        try:
+            tiid_object = CollectionTiid.query.filter_by(tiid=tiid).first()
+        except TypeError:
+            tiid_object = None
+
+        if tiid_object:
+            pass
+        elif tiid in collection_tiids_to_commit:
+            tiid_object = collection_tiids_to_commit[tiid]
+        else:
+            tiid_object = CollectionTiid(tiid=tiid)
+            collection_tiids_to_commit[tiid] = tiid_object
+            db.session.add(tiid_object)
+
+        new_tiid_objects += [tiid_object]    
+
+    return (new_tiid_objects, collection_tiids_to_commit)
+
+
+def create_added_item_objects(alias_tuples, cid, created, added_items_to_commit):
+    new_added_item_objects = []
+
+    for alias_tuple in alias_tuples:
+        try:
+            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
+            (namespace, nid) = alias_tuple
+        except ValueError:
+            print "FAIL to parse, skipping ", alias_tuple, created[0:10]
+            continue
+
+        try:
+            added_item_object = AddedItem.query.filter_by(namespace=namespace, nid=nid).first()
+        except TypeError:
+            added_item_object = None
+
+        alias_key = ":".join(alias_tuple)
+        if added_item_object:
+            pass
+        elif alias_key in added_items_to_commit:
+            added_item_object = added_items_to_commit[alias_key]
+        else:
+            added_item_object = AddedItem(cid=cid, namespace=namespace, nid=nid, created=created)
+            added_items_to_commit[alias_key] = added_item_object
+            db.session.add(added_item_object)
+
+        new_added_item_objects += [added_item_object]    
+
+    return (new_added_item_objects, added_items_to_commit)
 
 
 def create_metric_objects(item_object, old_style_metric_dict):
@@ -155,24 +209,29 @@ def collection_action_on_a_page(page):
     collections = [row.doc for row in page]
 
     from totalimpact import collection, item as item_module
-    alias_tuples_to_commit = {}
+    collection_tiids_to_commit = {}
+    added_items_to_commit = {}
     for coll_doc in collections:
         new_coll_object = Collection.query.filter_by(cid=coll_doc["_id"]).first()
         if not new_coll_object:
             new_coll_object = Collection.create_from_old_doc(coll_doc)
             db.session.add(new_coll_object)
 
-        new_alias_objs = []
-        alias_strings = coll_doc["alias_tiids"].keys()
-
-        alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]          
-        (new_alias_objects, alias_tuples_to_commit) = create_alias_objects(alias_tuples, 
+        tiids = coll_doc["alias_tiids"].values()
+        (new_tiid_objs, collection_tiids_to_commit) = create_collection_tiid_objects(tiids, 
             coll_doc["created"], 
-            alias_tuples_to_commit, 
-            skip_biblio=False)
-        new_coll_object.aliases = new_alias_objects
+            collection_tiids_to_commit)
+        new_coll_object.tiids = new_tiid_objs
 
-        print coll_doc["_id"], len(new_coll_object.aliases)
+        alias_strings = coll_doc["alias_tiids"].keys()
+        alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]          
+        (new_added_item_objects, added_items_to_commit) = create_added_item_objects(alias_tuples, 
+            new_coll_object.cid,
+            coll_doc["created"], 
+            added_items_to_commit)
+        new_coll_object.added_items = new_added_item_objects
+
+        print coll_doc["_id"], len(new_coll_object.tiids)
     db.session.commit()
     db.session.flush()
     return
@@ -206,7 +265,7 @@ def run_through_items():
         view_name=myview_name, 
         start_key=mystart_key, 
         end_key=myend_key, 
-        page_size=50)
+        page_size=100)
 
 
 def run_through_collections():
@@ -267,10 +326,10 @@ def setup(drop_all=False):
 
 
 
-couch_db = setup(drop_all=False)
+couch_db = setup(drop_all=True)
 
-#run_through_collections()
-run_through_items()
+run_through_collections()
+#run_through_items()
 
 db.session.close_all()
 
