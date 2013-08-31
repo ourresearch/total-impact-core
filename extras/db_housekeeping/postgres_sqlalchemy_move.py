@@ -69,9 +69,9 @@ def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page
 
 
 
-def run_through_items(page_size=100):
+def run_through_items(startkey="00000", page_size=100):
     myview_name = "temp/by_type_and_id"
-    mystart_key = ["item", "00000000"]
+    mystart_key = ["item", startkey]
     myend_key = ["item", "zzzzzzzz"]
 
     now = datetime.datetime.now().isoformat()
@@ -83,9 +83,9 @@ def run_through_items(page_size=100):
         page_size=page_size)
 
 
-def run_through_collections(page_size=100):
+def run_through_collections(startkey="00000", page_size=100):
     myview_name = "temp/by_type_and_id"
-    mystart_key = ["collection", "0000000"]
+    mystart_key = ["collection", startkey]
     myend_key = ["collection", "zzzzzzzz"]
 
     now = datetime.datetime.now().isoformat()
@@ -170,6 +170,14 @@ if __name__ == "__main__":
         default=100,
         type=int,
         help="number of documents to get from couch in each batch")
+    parser.add_argument('--items_startkey', 
+        default="000000",
+        type=str,
+        help="id to start the item view")
+    parser.add_argument('--collections_startkey', 
+        default="000000",
+        type=str,
+        help="id to start the collection view")
     args = vars(parser.parse_args())
     print args
     print "postgres_sqlalchemy_move.py starting."
@@ -177,9 +185,9 @@ if __name__ == "__main__":
     setup_postgres(drop_all=args["drop"])
     couch_db = setup_couch()
     if args["collections"]:
-        run_through_collections(args["pagesize"])
+        run_through_collections(args["collections_startkey"], args["pagesize"])
     if args["items"]:
-        run_through_items(args["pagesize"])
+        run_through_items(args["items_startkey"], args["pagesize"])
 
     db.session.close_all()
 
