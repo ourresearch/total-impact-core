@@ -283,7 +283,7 @@ def run_through_collections():
         page_size=100)
 
 
-def setup(drop_all=False):
+def setup_postgres(drop_all=False):
 
     # set up postgres
     logger.info("connecting to postgres")
@@ -291,19 +291,28 @@ def setup(drop_all=False):
     #export POSTGRESQL_URL=postgres://localhost/core_migration
     #export POSTGRESQL_URL=postgres://localhost/corecopy
 
-    #if not "localhost" in app.config["SQLALCHEMY_DATABASE_URI"]:
-    #    assert(False), "Not running this unittest because SQLALCHEMY_DATABASE_URI is not on localhost"
+    if "def95794hs4ou7" in app.config["SQLALCHEMY_DATABASE_URI"]:
+        print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
+        confirm = raw_input("\nType YES if you are sure you want to run this test:")
+        if not confirm=="YES":
+            print "nevermind, then."
+            exit()
 
     if drop_all:
+        print "the postgres database is ", app.config["SQLALCHEMY_DATABASE_URI"]
+        confirm = raw_input("\nType YES if you are sure you want to drop tables:")
+        if not confirm=="YES":
+            print "nevermind, then."
+            exit()
         try:
             db.drop_all()
-            pass
         except OperationalError, e:  #database "database" does not exist
             print e
-            pass
     db.create_all()
-    logger.info("connected to postgres")
+    logger.info("connected to postgres", app.config["SQLALCHEMY_DATABASE_URI"])
 
+
+def setup_couch():
     # set up couchdb
     cloudant_db = os.getenv("CLOUDANT_DB")
     cloudant_url = os.getenv("CLOUDANT_URL")
@@ -314,14 +323,12 @@ def setup(drop_all=False):
     # do a few preventative checks
     if (cloudant_db == "ti"):
         print "\n\nTHIS MAY BE THE PRODUCTION DATABASE!!!"
+        confirm = raw_input("\nType YES if you are sure you want to run this test:")
+        if not confirm=="YES":
+            print "nevermind, then."
+            exit()
     else:
         print "\n\nThis doesn't appear to be the production database\n\n"
-    confirm = None
-    #confirm = raw_input("\nType YES if you are sure you want to run this test:")
-    confirm = "YES"
-    if not confirm=="YES":
-        print "nevermind, then."
-        exit()
 
     return couch_db
 
@@ -346,7 +353,8 @@ if __name__ == "__main__":
     print args
     print "postgres_sqlalchemy_move.py starting."
 
-    couch_db = setup(drop_all=args["drop"])
+    setup_postgres(drop_all=args["drop"])
+    couch_db = setup_couch()
     if args["collections"]:
         run_through_collections()
     if args["items"]:
