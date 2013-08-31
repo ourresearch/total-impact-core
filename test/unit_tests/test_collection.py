@@ -87,9 +87,9 @@ class TestCollection():
 
         new_collection = collection.save_collection(cid="socrates")
 
-        added_items1 = collection.save_added_items(cid="socrates", tiid="aaaaa")
-        added_items2 = collection.save_added_items(cid="socrates", tiid="bbbbb", namespace="url", nid="http://starbucks.com")
-        added_items3 = collection.save_added_items(cid="socrates", tiid="ccccc")
+        added_items1 = collection.save_added_item(cid="socrates", tiid="aaaaa")
+        added_items2 = collection.save_added_item(cid="socrates", tiid="bbbbb", namespace="url", nid="http://starbucks.com")
+        added_items3 = collection.save_added_item(cid="socrates", tiid="ccccc")
 
         response = collection.AddedItem.query.filter_by(cid="socrates").all()
         assert_equals(len(response), 3)

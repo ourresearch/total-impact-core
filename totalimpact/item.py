@@ -26,6 +26,134 @@ class NotAuthenticatedError(Exception):
 
 
 
+def create_alias_objects(alias_tuples, created, tuples_to_commit, skip_biblio=True):
+    new_alias_objects = []
+
+    for alias_tuple in alias_tuples:
+        try:
+            alias_tuple = canonical_alias_tuple(alias_tuple)
+            (namespace, nid) = alias_tuple
+        except ValueError:
+            print "FAIL to parse, skipping ", alias_tuple, created[0:10]
+            continue
+
+        if skip_biblio and (namespace=="biblio"):
+            # don't bother saving it
+            continue
+
+        if not nid:
+            print "FAIL no nid, skipping ", alias_tuple, created[0:10]
+            continue
+
+        try:
+            alias_object = Alias.filter_by_alias(alias_tuple).first()
+        except TypeError:
+            alias_object = None
+
+        alias_key = ":".join(alias_tuple)
+        if alias_object:
+            pass
+        elif alias_key in tuples_to_commit:
+            alias_object = tuples_to_commit[alias_key]
+        else:
+            alias_object = Alias(alias_tuple, created)
+            tuples_to_commit[alias_key] = alias_object
+            db.session.add(alias_object)
+
+        new_alias_objects += [alias_object]    
+
+    return (new_alias_objects, tuples_to_commit)
+
+
+def create_metric_objects(item_object, old_style_metric_dict):
+    new_metric_objects = []
+
+    for full_metric_name in old_style_metric_dict:
+        (provider, metric_name) = full_metric_name.split(":")
+        metric_details = old_style_metric_dict[full_metric_name]
+        new_style_metric_dict = {
+            "metric_name": metric_name, 
+            "provider": provider, 
+            "drilldown_url": metric_details["provenance_url"]
+        }
+
+        for collected_date in metric_details["values"]["raw_history"]:
+            new_style_metric_dict["collected_date"] = collected_date
+            new_style_metric_dict["raw_value"] = metric_details["values"]["raw_history"][collected_date]
+
+            try:
+                metric_object = Metric.query.filter_by(**new_style_metric_dict).first()
+            except TypeError:
+                metric_object = None
+            if not metric_object:
+                metric_object = Metric(item_object, **new_style_metric_dict)
+                db.session.add(metric_object)
+
+            new_metric_objects += [metric_object]    
+
+    return new_metric_objects
+
+
+def create_biblio_objects(item_object, old_style_biblio_dict, provider="unknown"):
+    new_biblio_objects = []
+
+    for biblio_name in old_style_biblio_dict:
+        new_style_biblio_dict = {"item":item_object, 
+                    "biblio_name":biblio_name, 
+                    "biblio_value":old_style_biblio_dict[biblio_name], 
+                    "provider":provider, 
+                    "collected_date":item_object.created}
+        try:
+            biblio_object = Biblio.query.filter_by(**new_style_biblio_dict).first()
+        except TypeError:
+            biblio_object = None
+        if not biblio_object:
+            biblio_object = Biblio(**new_style_biblio_dict)
+            db.session.add(biblio_object)
+        new_biblio_objects += [biblio_object] 
+
+    return new_biblio_objects
+
+
+def create_objects_from_item_doc(item_doc, alias_tuples_to_commit={}):
+    new_item_object = Item.query.filter_by(tiid=item_doc["_id"]).first()
+    if not new_item_object:
+        new_item_object = Item.create_from_old_doc(item_doc)
+        db.session.add(new_item_object)
+
+    alias_dict = item_doc["aliases"]
+    alias_tuples = alias_tuples_from_dict(alias_dict)            
+    (new_alias_objects, alias_tuples_to_commit) = create_alias_objects(alias_tuples, 
+            item_doc["created"], 
+            alias_tuples_to_commit, 
+            skip_biblio=True)
+    new_item_object.aliases = new_alias_objects
+
+    # biblio within aliases
+    if "biblio" in alias_dict:
+        biblio_dicts = alias_dict["biblio"]
+        provider_number = 0
+        for biblio_dict in biblio_dicts:
+            provider_number += 1
+            new_biblio_objects = create_biblio_objects(new_item_object, 
+                    biblio_dict, 
+                    provider="unknown"+str(provider_number))
+            new_item_object.biblios += new_biblio_objects
+
+    # biblio within biblio
+    # if "biblio" in item_doc:
+    #     biblio_dict = item_doc["biblio"]
+    #     new_biblio_objects = create_biblio_objects(new_item_object, biblio_dict) 
+    #     new_item_object.biblios = new_biblio_objects
+
+    if "metrics" in item_doc:
+        metrics_dict = item_doc["metrics"]
+        new_metric_objects = create_metric_objects(new_item_object, metrics_dict) 
+        new_item_object.metrics = new_metric_objects
+
+    return new_item_object
+
+
 
 # save an alias to an item, making the alias if necessary
 def save_alias_to_item(item_object, alias_tuple):

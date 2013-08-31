@@ -27,191 +27,12 @@ logging.basicConfig(
 logger = logging.getLogger("postgres_sqlalchemy_move")
  
 
-
-def create_alias_objects(alias_tuples, created, tuples_to_commit, skip_biblio=True):
-    new_alias_objects = []
-
-    for alias_tuple in alias_tuples:
-        try:
-            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-            (namespace, nid) = alias_tuple
-        except ValueError:
-            print "FAIL to parse, skipping ", alias_tuple, created[0:10]
-            continue
-
-        if skip_biblio and (namespace=="biblio"):
-            # don't bother saving it
-            continue
-
-        if not nid:
-            print "FAIL no nid, skipping ", alias_tuple, created[0:10]
-            continue
-
-        try:
-            alias_object = Alias.filter_by_alias(alias_tuple).first()
-        except TypeError:
-            alias_object = None
-
-        alias_key = ":".join(alias_tuple)
-        if alias_object:
-            pass
-        elif alias_key in tuples_to_commit:
-            alias_object = tuples_to_commit[alias_key]
-        else:
-            alias_object = Alias(alias_tuple, created)
-            tuples_to_commit[alias_key] = alias_object
-            db.session.add(alias_object)
-
-        new_alias_objects += [alias_object]    
-
-    return (new_alias_objects, tuples_to_commit)
-
-
-def create_collection_tiid_objects(tiids, created, collection_tiids_to_commit):
-    new_tiid_objects = []
-
-    for tiid in tiids:
-        try:
-            tiid_object = CollectionTiid.query.filter_by(tiid=tiid).first()
-        except TypeError:
-            tiid_object = None
-
-        if tiid_object:
-            pass
-        elif tiid in collection_tiids_to_commit:
-            tiid_object = collection_tiids_to_commit[tiid]
-        else:
-            tiid_object = CollectionTiid(tiid=tiid)
-            collection_tiids_to_commit[tiid] = tiid_object
-            db.session.add(tiid_object)
-
-        new_tiid_objects += [tiid_object]    
-
-    return (new_tiid_objects, collection_tiids_to_commit)
-
-
-def create_added_item_objects(alias_tuples, cid, created, added_items_to_commit):
-    new_added_item_objects = []
-
-    for alias_tuple in alias_tuples:
-        try:
-            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-            (namespace, nid) = alias_tuple
-        except ValueError:
-            print "FAIL to parse, skipping ", alias_tuple, created[0:10]
-            continue
-
-        try:
-            added_item_object = AddedItem.query.filter_by(namespace=namespace, nid=nid).first()
-        except TypeError:
-            added_item_object = None
-
-        alias_key = ":".join(alias_tuple)
-        if added_item_object:
-            pass
-        elif alias_key in added_items_to_commit:
-            added_item_object = added_items_to_commit[alias_key]
-        else:
-            added_item_object = AddedItem(cid=cid, namespace=namespace, nid=nid, created=created)
-            added_items_to_commit[alias_key] = added_item_object
-            db.session.add(added_item_object)
-
-        new_added_item_objects += [added_item_object]    
-
-    return (new_added_item_objects, added_items_to_commit)
-
-
-def create_metric_objects(item_object, old_style_metric_dict):
-    new_metric_objects = []
-
-    for full_metric_name in old_style_metric_dict:
-        (provider, metric_name) = full_metric_name.split(":")
-        metric_details = old_style_metric_dict[full_metric_name]
-        new_style_metric_dict = {
-            "metric_name": metric_name, 
-            "provider": provider, 
-            "drilldown_url": metric_details["provenance_url"]
-        }
-
-        for collected_date in metric_details["values"]["raw_history"]:
-            new_style_metric_dict["collected_date"] = collected_date
-            new_style_metric_dict["raw_value"] = metric_details["values"]["raw_history"][collected_date]
-
-            try:
-                metric_object = Metric.query.filter_by(**new_style_metric_dict).first()
-            except TypeError:
-                metric_object = None
-            if not metric_object:
-                metric_object = Metric(item_object, **new_style_metric_dict)
-                db.session.add(metric_object)
-
-            new_metric_objects += [metric_object]    
-
-    return new_metric_objects
-
-
-def create_biblio_objects(item_object, old_style_biblio_dict, provider="unknown"):
-    new_biblio_objects = []
-
-    for biblio_name in old_style_biblio_dict:
-        new_style_biblio_dict = {"item":item_object, 
-                    "biblio_name":biblio_name, 
-                    "biblio_value":old_style_biblio_dict[biblio_name], 
-                    "provider":provider, 
-                    "collected_date":item_object.created}
-        try:
-            biblio_object = Biblio.query.filter_by(**new_style_biblio_dict).first()
-        except TypeError:
-            biblio_object = None
-        if not biblio_object:
-            biblio_object = Biblio(**new_style_biblio_dict)
-            db.session.add(biblio_object)
-        new_biblio_objects += [biblio_object] 
-
-    return new_biblio_objects
-
-
 def item_action_on_a_page(page):
     items = [row.doc for row in page]
 
     alias_tuples_to_commit = {}
     for item_doc in items:
-        new_item_object = Item.query.filter_by(tiid=item_doc["_id"]).first()
-        if not new_item_object:
-            new_item_object = Item.create_from_old_doc(item_doc)
-            db.session.add(new_item_object)
-
-        alias_dict = item_doc["aliases"]
-        alias_tuples = item_module.alias_tuples_from_dict(alias_dict)            
-        (new_alias_objects, alias_tuples_to_commit) = create_alias_objects(alias_tuples, 
-                item_doc["created"], 
-                alias_tuples_to_commit, 
-                skip_biblio=True)
-        new_item_object.aliases = new_alias_objects
-
-        # biblio within aliases
-        if "biblio" in alias_dict:
-            biblio_dicts = alias_dict["biblio"]
-            provider_number = 0
-            for biblio_dict in biblio_dicts:
-                provider_number += 1
-                new_biblio_objects = create_biblio_objects(new_item_object, 
-                        biblio_dict, 
-                        provider="unknown"+str(provider_number))
-                new_item_object.biblios += new_biblio_objects
-
-        # biblio within biblio
-        # if "biblio" in item_doc:
-        #     biblio_dict = item_doc["biblio"]
-        #     new_biblio_objects = create_biblio_objects(new_item_object, biblio_dict) 
-        #     new_item_object.biblios = new_biblio_objects
-
-        if "metrics" in item_doc:
-            metrics_dict = item_doc["metrics"]
-            new_metric_objects = create_metric_objects(new_item_object, metrics_dict) 
-            new_item_object.metrics = new_metric_objects
-
-
+        new_item_object = item_module.create_objects_from_item_doc(item_doc, alias_tuples_to_commit)
         print item_doc["_id"], len(new_item_object.aliases)
     db.session.commit()
     db.session.flush()
@@ -221,29 +42,10 @@ def item_action_on_a_page(page):
 def collection_action_on_a_page(page):
     collections = [row.doc for row in page]
 
-    from totalimpact import collection, item as item_module
     collection_tiids_to_commit = {}
     added_items_to_commit = {}
     for coll_doc in collections:
-        new_coll_object = Collection.query.filter_by(cid=coll_doc["_id"]).first()
-        if not new_coll_object:
-            new_coll_object = Collection.create_from_old_doc(coll_doc)
-            db.session.add(new_coll_object)
-
-        tiids = coll_doc["alias_tiids"].values()
-        (new_tiid_objs, collection_tiids_to_commit) = create_collection_tiid_objects(tiids, 
-            coll_doc["created"], 
-            collection_tiids_to_commit)
-        new_coll_object.tiids = new_tiid_objs
-
-        alias_strings = coll_doc["alias_tiids"].keys()
-        alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]          
-        (new_added_item_objects, added_items_to_commit) = create_added_item_objects(alias_tuples, 
-            new_coll_object.cid,
-            coll_doc["created"], 
-            added_items_to_commit)
-        new_coll_object.added_items = new_added_item_objects
-
+        new_coll_object = collection.create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit, added_items_to_commit)
         print coll_doc["_id"], len(new_coll_object.tiids)
     db.session.commit()
     db.session.flush()
