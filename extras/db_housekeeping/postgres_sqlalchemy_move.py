@@ -136,10 +136,16 @@ def create_metric_objects(item_object, old_style_metric_dict):
         for collected_date in metric_details["values"]["raw_history"]:
             new_style_metric_dict["collected_date"] = collected_date
             new_style_metric_dict["raw_value"] = metric_details["values"]["raw_history"][collected_date]
-            metric_object = Metric(item_object, **new_style_metric_dict)
+
+            try:
+                metric_object = Metric.query.filter_by(**new_style_metric_dict).first()
+            except TypeError:
+                metric_object = None
+            if not metric_object:
+                metric_object = Metric(item_object, **new_style_metric_dict)
+                db.session.add(metric_object)
 
             new_metric_objects += [metric_object]    
-            db.session.add(metric_object)
 
     return new_metric_objects
 
@@ -148,13 +154,19 @@ def create_biblio_objects(item_object, old_style_biblio_dict, provider="unknown"
     new_biblio_objects = []
 
     for biblio_name in old_style_biblio_dict:
-        biblio_object = Biblio(item_object, 
-                biblio_name, 
-                old_style_biblio_dict[biblio_name], 
-                provider, 
-                item_object.created)
+        new_style_biblio_dict = {"item":item_object, 
+                    "biblio_name":biblio_name, 
+                    "biblio_value":old_style_biblio_dict[biblio_name], 
+                    "provider":provider, 
+                    "collected_date":item_object.created}
+        try:
+            biblio_object = Biblio.query.filter_by(**new_style_biblio_dict).first()
+        except TypeError:
+            biblio_object = None
+        if not biblio_object:
+            biblio_object = Biblio(**new_style_biblio_dict)
+            db.session.add(biblio_object)
         new_biblio_objects += [biblio_object] 
-        db.session.add(biblio_object)
 
     return new_biblio_objects
 
@@ -255,7 +267,7 @@ def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page
 
 
 
-def run_through_items():
+def run_through_items(page_size=100):
     myview_name = "temp/by_type_and_id"
     mystart_key = ["item", "00000000"]
     myend_key = ["item", "zzzzzzzz"]
@@ -266,10 +278,10 @@ def run_through_items():
         view_name=myview_name, 
         start_key=mystart_key, 
         end_key=myend_key, 
-        page_size=100)
+        page_size=page_size)
 
 
-def run_through_collections():
+def run_through_collections(page_size=100):
     myview_name = "temp/by_type_and_id"
     mystart_key = ["collection", "0000000"]
     myend_key = ["collection", "zzzzzzzz"]
@@ -280,7 +292,7 @@ def run_through_collections():
         view_name=myview_name, 
         start_key=mystart_key, 
         end_key=myend_key, 
-        page_size=100)
+        page_size=page_size)
 
 
 def setup_postgres(drop_all=False):
@@ -309,16 +321,14 @@ def setup_postgres(drop_all=False):
         except OperationalError, e:  #database "database" does not exist
             print e
     db.create_all()
-    logger.info("connected to postgres", app.config["SQLALCHEMY_DATABASE_URI"])
+    logger.info("connected to postgres {uri}".format(
+        uri=app.config["SQLALCHEMY_DATABASE_URI"]))
 
 
 def setup_couch():
     # set up couchdb
     cloudant_db = os.getenv("CLOUDANT_DB")
     cloudant_url = os.getenv("CLOUDANT_URL")
-    couch = couchdb.Server(url=cloudant_url)
-    couch_db = couch[cloudant_db]
-    logger.info("connected to couch at " + cloudant_url + " / " + cloudant_db)
 
     # do a few preventative checks
     if (cloudant_db == "ti"):
@@ -329,6 +339,11 @@ def setup_couch():
             exit()
     else:
         print "\n\nThis doesn't appear to be the production database\n\n"
+
+    couch = couchdb.Server(url=cloudant_url)
+    couch_db = couch[cloudant_db]
+    print couch_db
+    logger.info("connected to couch at " + cloudant_url + " / " + cloudant_db)
 
     return couch_db
 
@@ -349,6 +364,10 @@ if __name__ == "__main__":
         default=False,
         action='store_true', 
         help="iterate over items, copying items and their related info (biblio, metrics, aliases)")
+    parser.add_argument('--pagesize', 
+        default=100,
+        type=int,
+        help="number of documents to get from couch in each batch")
     args = vars(parser.parse_args())
     print args
     print "postgres_sqlalchemy_move.py starting."
@@ -356,9 +375,9 @@ if __name__ == "__main__":
     setup_postgres(drop_all=args["drop"])
     couch_db = setup_couch()
     if args["collections"]:
-        run_through_collections()
+        run_through_collections(args["pagesize"])
     if args["items"]:
-        run_through_items()
+        run_through_items(args["pagesize"])
 
     db.session.close_all()
 
