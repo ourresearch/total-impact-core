@@ -417,29 +417,12 @@ def collection_get(cid='', format="json", include_history=False):
 
 def get_coll_with_authentication_check(request, cid):
     coll = dict(mydao.db[cid])
-
-    # if admin override key, then everything is fine
     if request.args.get("api_admin_key"):
         supplied_key = request.args.get("api_admin_key", "")
         secret_key = os.getenv("API_KEY")  #ideally rename this to API_ADMIN_KEY
         if secret_key == supplied_key:
             return coll
-
-    # otherwise require authentication
-    key = request.args.get("edit_key", None)
-    if key is None:
-        abort_custom(404, "This method requires an update key.")
-
-    if "key" in coll.keys():
-        if coll["key"] != key:
-            abort_custom(403, "Wrong update key")
-    elif "key_hash" in coll.keys():
-        if not check_password_hash(coll["key_hash"], key):
-            abort_custom(403, "Wrong update key")
-    else:
-        abort_custom(501, "This collection has no update key; it cant' be changed.")
-
-    return coll
+    abort_custom(501, "This collection has no update key; it cant' be changed.")
 
 
 @app.route('/collection/<cid>/items', methods=['POST'])
