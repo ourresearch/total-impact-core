@@ -289,7 +289,6 @@ class ViewsTester(unittest.TestCase):
         response = self.client.get(url)
         metrics = json.loads(response.data)["metrics"]
 
-
         assert_equals(
                 metrics["dryad:total_downloads"]["values"]["raw"],
                 207
@@ -480,6 +479,9 @@ class ViewsTester(unittest.TestCase):
         changed_coll = self.d.get(coll["_id"])
         assert_equals(set(changed_coll["alias_tiids"]),
                       set(["doi:10.124", "doi:10.125"]))
+
+        collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
+        assert_equals(collection_object.tiids, "hi")
 
 
     def test_add_collection_item(self):

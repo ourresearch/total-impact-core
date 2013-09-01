@@ -24,7 +24,12 @@ logger = logging.getLogger('ti.item')
 class NotAuthenticatedError(Exception):
     pass
 
-
+def delete_item(cid):
+    item_object = Item.query.filter_by(tiid=tiid).first()
+    db.session.delete(item_object)
+    db.session.commit()
+    db.session.flush()
+    return
 
 def create_alias_objects(alias_tuples, created, tuples_to_commit, skip_biblio=True):
     new_alias_objects = []
@@ -58,8 +63,8 @@ def create_alias_objects(alias_tuples, created, tuples_to_commit, skip_biblio=Tr
         else:
             alias_object = Alias(alias_tuple, created)
             tuples_to_commit[alias_key] = alias_object
-            db.session.add(alias_object)
 
+        db.session.add(alias_object)
         new_alias_objects += [alias_object]    
 
     return (new_alias_objects, tuples_to_commit)
@@ -87,8 +92,8 @@ def create_metric_objects(item_object, old_style_metric_dict):
                 metric_object = None
             if not metric_object:
                 metric_object = Metric(item_object, **new_style_metric_dict)
-                db.session.add(metric_object)
-
+                
+            db.session.add(metric_object)
             new_metric_objects += [metric_object]    
 
     return new_metric_objects
@@ -109,7 +114,7 @@ def create_biblio_objects(item_object, old_style_biblio_dict, provider="unknown"
             biblio_object = None
         if not biblio_object:
             biblio_object = Biblio(**new_style_biblio_dict)
-            db.session.add(biblio_object)
+        db.session.add(biblio_object)
         new_biblio_objects += [biblio_object] 
 
     return new_biblio_objects
@@ -119,7 +124,7 @@ def create_objects_from_item_doc(item_doc, alias_tuples_to_commit={}):
     new_item_object = Item.query.filter_by(tiid=item_doc["_id"]).first()
     if not new_item_object:
         new_item_object = Item.create_from_old_doc(item_doc)
-        db.session.add(new_item_object)
+    db.session.add(new_item_object)
 
     alias_dict = item_doc["aliases"]
     alias_tuples = alias_tuples_from_dict(alias_dict)            
@@ -160,7 +165,7 @@ def save_alias_to_item(item_object, alias_tuple):
     alias_object = Alias.filter_by_alias(alias_tuple)
     if not alias_object:
         alias_object = Alias(alias_tuple)
-        db.session.add(alias_object)
+    db.session.add(alias_object)
 
     item_object.aliases += [alias_object]
 
