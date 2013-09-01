@@ -189,7 +189,7 @@ class ViewsTester(unittest.TestCase):
         assert_equals(resp.status_code, 403)
 
     def test_memberitems_get(self):        
-        response = self.client.get('/provider/dryad/memberitems/Otto%2C%20Sarah%20P.?method=sync')
+        response = self.client.get('/v1/provider/dryad/memberitems/Otto%2C%20Sarah%20P.?method=sync&key=validkey')
         print response
         print response.data
         assert_equals(response.status_code, 200)
@@ -197,7 +197,7 @@ class ViewsTester(unittest.TestCase):
         assert_equals(response.mimetype, "application/json")
 
     def test_memberitems_get_with_nonprinting_character(self):        
-        response = self.client.get(u'/provider/dryad/memberitems/Otto\u200e%2C%20Sarah%20P.?method=sync')
+        response = self.client.get(u'/v1/provider/dryad/memberitems/Otto\u200e%2C%20Sarah%20P.?method=sync&key=validkey')
         print response
         print response.data
         assert_equals(response.status_code, 200)
@@ -209,15 +209,15 @@ class ViewsTester(unittest.TestCase):
         path = os.path.join(datadir, "Vision.bib")
         bibtex_str = open(path, "r").read()
 
-        def test_exists(self):
-            resp = self.client.get("/provider")
-            assert resp
+    def test_exists(self):
+        resp = self.client.get("/v1/provider?key=validkey")
+        assert resp
 
-        def test_gets_delicious_static_meta(self):
-            resp = self.client.get("/provider")
-            md = json.loads(resp.data)
-            print md["delicious"]
-            assert md["delicious"]['metrics']["bookmarks"]["description"]
+    def test_gets_delicious_static_meta(self):
+        resp = self.client.get("/v1/provider?key=validkey")
+        md = json.loads(resp.data)
+        print md["delicious"]
+        assert md["delicious"]['metrics']["bookmarks"]["description"]
 
     def test_item_post_unknown_tiid(self):
         response = self.client.post('/v1/item/doi/AnIdOfSomeKind/' + "?key=validkey")
@@ -280,15 +280,14 @@ class ViewsTester(unittest.TestCase):
         assert_equals(response.status_code, 201)
 
     def test_item_nid_with_bad_character(self):
-        url = 'v1/item/doi/10.5061/dryad.' + u'\u200b' + 'j1fd7?key=validkey'
+        url = '/v1/item/doi/10.5061/dryad.' + u'\u200b' + 'j1fd7?key=validkey'
         response_get = self.client.get(url)
         assert_equals(response_get.status_code, 200)
 
     def test_item_removes_history_by_default(self):
-        url = 'v1/item/doi/10.5061/dryad.j1fd7?key=validkey'
+        url = '/v1/item/doi/10.5061/dryad.j1fd7?key=validkey'
         response = self.client.get(url)
         metrics = json.loads(response.data)["metrics"]
-
         assert_equals(
                 metrics["dryad:total_downloads"]["values"]["raw"],
                 207
@@ -299,7 +298,7 @@ class ViewsTester(unittest.TestCase):
         )
 
     def test_item_include_history_param(self):
-        url = 'v1/item/doi/10.5061/dryad.j1fd7?key=validkey&include_history=true'
+        url = '/v1/item/doi/10.5061/dryad.j1fd7?key=validkey&include_history=true'
         response = self.client.get(url)
 
         metrics = json.loads(response.data)["metrics"]
@@ -322,7 +321,7 @@ class ViewsTester(unittest.TestCase):
             ["doi", "10.125"]
         ]
         resp = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": items, "title":"mah collection"}),
             content_type="application/json"
         )
@@ -335,7 +334,7 @@ class ViewsTester(unittest.TestCase):
         ]
 
         resp2 = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": new_items, "title": "mah_collection"}),
             content_type="application/json"
         )
@@ -348,7 +347,7 @@ class ViewsTester(unittest.TestCase):
     def test_collection_post_new_collection(self):
 
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"My Title"}),
             content_type="application/json")
 
@@ -370,7 +369,7 @@ class ViewsTester(unittest.TestCase):
 
     def test_new_collection_includes_key(self):
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"My Title"}),
             content_type="application/json"
         )
@@ -380,13 +379,13 @@ class ViewsTester(unittest.TestCase):
 
 
     def test_collection_get_with_no_id(self):
-        response = self.client.get('/collection/')
+        response = self.client.get('/v1/collection/' + "?key=validkey")
         assert_equals(response.status_code, 404)  #Not found
 
     def test_collection_get(self):
 
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
@@ -394,7 +393,7 @@ class ViewsTester(unittest.TestCase):
         collection_id = collection["_id"]
         print collection_id
 
-        resp = self.client.get('/collection/'+collection_id)
+        resp = self.client.get('/v1/collection/'+collection_id + "?key=validkey")
         assert_equals(resp.status_code, 210)
         collection_data = json.loads(resp.data)
         assert_equals(
@@ -415,7 +414,7 @@ class ViewsTester(unittest.TestCase):
 
     def test_get_csv(self):
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
@@ -444,7 +443,7 @@ class ViewsTester(unittest.TestCase):
             }
         mydao.save(collection)
         resp = self.client.post(
-            "/collection/123"
+            "/v1/collection/123" + "?key=validkey"
         )
         assert_equals(resp.data, "true")
 
@@ -459,7 +458,7 @@ class ViewsTester(unittest.TestCase):
     def test_delete_collection_item(self):
         # make a new collection
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
@@ -471,7 +470,9 @@ class ViewsTester(unittest.TestCase):
         # delete an item.
         tiid_to_delete = coll["alias_tiids"]["doi:10.123"]
         r = self.client.delete(
-            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key=key),
+            "/v1/collection/{id}/items?api_admin_key={key}".format(
+                id=coll["_id"], 
+                key=os.getenv("API_KEY")),
             data=json.dumps({"tiids": [tiid_to_delete]}),
             content_type="application/json"
         )
@@ -487,7 +488,7 @@ class ViewsTester(unittest.TestCase):
     def test_add_collection_item(self):
         # make a new collection
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
@@ -500,7 +501,9 @@ class ViewsTester(unittest.TestCase):
 
 
         r = self.client.put(
-            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key=key),
+            "/v1/collection/{id}/items?api_admin_key={key}".format(
+                id=coll["_id"], 
+                key=os.getenv("API_KEY")),
             data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
@@ -519,32 +522,33 @@ class ViewsTester(unittest.TestCase):
 
         # make a new collection
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
         resp = json.loads(response.data)
         coll =  resp["collection"]
-        key =  resp["key"]
 
         alias_list = []
         alias_list.append(["doi", "10.new"])
 
         # 403 Forbidden if wrong edit key
         r = self.client.put(
-            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key="wrong!"),
+            "/v1/collection/{id}/items?api_admin_key={key}".format(
+                id=coll["_id"], 
+                key="wrong!"),
             data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
         assert_equals(r.status_code, 403)
 
-        # 404 Bad Request if no edit key
+        # 403 Bad Request if no edit key
         r = self.client.put(
-            "/collection/{id}/items".format(id=coll["_id"]),
+            "/v1/collection/{id}/items".format(id=coll["_id"]),
             data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
-        assert_equals(r.status_code, 404)
+        assert_equals(r.status_code, 403)
 
         # get the collection out the db and make sure nothing's changed
         changed_coll = self.d.get(coll["_id"])
@@ -607,102 +611,6 @@ class ViewsTester(unittest.TestCase):
         # right now this makes a new item every time, creating many dups
         assert_equals(response.status_code, 201)
         assert_equals(json.loads(response.data), u'ok')
-
-
-    def test_create_user(self):
-        user = {
-            "_id": "horace@rome.it",
-            "key": "hash",
-            "colls": {}
-        }
-        resp = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-        assert_equals("horace@rome.it", json.loads(resp.data)["_id"])
-
-
-    def test_create_user_without_key_in_body(self):
-        user = {
-            "_id": "horace@rome.it",
-            "colls": {}
-        }
-        resp = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-        assert_equals(400, resp.status_code)
-
-    def test_create_user_without_colls_in_body(self):
-        user = {
-            "_id": "horace@rome.it",
-            "key":"hash"
-        }
-        resp = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-        assert_equals(400, resp.status_code)
-
-
-    def test_get_user_doesnt_exist(self):
-        resp = self.client.get("/user/test@foo.com")
-        assert_equals(resp.status_code, 404)
-
-    def test_get_user(self):
-        user = {
-            "_id": "horace@rome.it",
-            "key": "hash",
-            "colls": {}
-        }
-        r = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-        resp = self.client.get("/user/horace@rome.it?key=hash")
-        resp_dict = json.loads(resp.data)
-        print resp_dict
-
-        assert_equals(resp_dict["_id"], "horace@rome.it")
-
-    def test_update_user(self):
-
-        user = {
-            "_id": "horace@rome.it",
-            "key": "hash",
-            "colls": {}
-        }
-        r = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-
-        # get the new user and add a coll
-        resp = self.client.get("/user/horace@rome.it?key=hash")
-        assert_equals(resp.status_code, 200)
-
-        user = json.loads(resp.data)
-        user["colls"] = ["cid:123"]
-
-        # put the new, modified user in the db
-        res = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-
-#        returned_user = json.loads(res.data)
-#        assert_equals(returned_user["_id"], "catullus@rome.it")
-#
-#        # get the user out again, and check to see if it was modified
-#        resp = self.client.get("/user/catullus@rome.it?key=passwordhash")
-#        user = json.loads(resp.data)
-#        assert_equals(user["colls"], ["cid:123"])
 
 
 

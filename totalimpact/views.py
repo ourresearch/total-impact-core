@@ -160,45 +160,6 @@ def hello():
     return resp
 
 
-'''
-GET /tiid/:namespace/:id
-404 if not found because not created yet
-303 else list of tiids
-'''
-@app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
-# not supported in v1
-def tiid(ns, nid):
-    ns = item_module.clean_id(ns)
-    nid = item_module.clean_id(nid)
-
-    tiid = item_module.get_tiid_by_alias(ns, nid, mydao)
-
-    if not tiid:
-        abort_custom(404, "this tiid doesn't exist")
-    resp = make_response(json.dumps(tiid, sort_keys=True, indent=4), 303)
-    resp.mimetype = "application/json"
-    return resp
-
-
-@app.route('/item/<namespace>/<path:nid>', methods=['POST'])
-def item_namespace_post_with_tiid(namespace, nid):
-    """Creates a new item using the given namespace and id.
-    POST /item/:namespace/:nid
-    201
-    500?  if fails to create
-    example /item/PMID/234234232
-    original api returned tiid
-    /v1 returns nothing in body
-    """
-    namespace = item_module.clean_id(namespace)
-    nid = item_module.clean_id(nid)
-
-    tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
-    response_code = 201  # Created
-    resp = make_response(json.dumps(tiid), response_code)
-    resp.mimetype = "application/json"
-    return resp
-
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
     namespace = item_module.clean_id(namespace)
@@ -216,7 +177,37 @@ def item_namespace_post(namespace, nid):
     resp = make_response(json.dumps("ok"), response_code)
     return resp
 
-# For /v1 support interface as get from namespace:nid instead of get from tiid
+
+def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=None):
+    try:
+        item = item_module.get_item(tiid, myrefsets, mydao, include_history)
+    except (LookupError, AttributeError):
+        abort_custom(404, "item does not exist")
+
+    if not item:
+        abort_custom(404, "item does not exist")
+
+    if item_module.is_currently_updating(tiid, myredis):
+        response_code = 210 # not complete yet
+        item["currently_updating"] = True
+    else:
+        response_code = 200
+        item["currently_updating"] = False
+
+    api_key = request.args.get("key", None)
+    clean_item = item_module.clean_for_export(item, api_key, os.getenv("API_KEY"))
+    clean_item["HTTP_status_code"] = response_code  # hack for clients who can't read real response codes
+
+    resp_string = json.dumps(clean_item, sort_keys=True, indent=4)
+    if callback_name is not None:
+        resp_string = callback_name + '(' + resp_string + ')'
+
+    resp = make_response(resp_string, response_code)
+    resp.mimetype = "application/json"
+
+    return resp
+
+
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
 def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
     namespace = item_module.clean_id(namespace)
@@ -249,49 +240,7 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
     return get_item_from_tiid(tiid, format, include_history, callback_name)
 
 
-'''GET /item/:tiid
-404 if tiid not found in db
-'''
-@app.route('/item/<tiid>', methods=['GET'])
-def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=None):
 
-    # If we want to continue to support this endpoint, we should probably
-    # take the params out of the method signature and get them from the request
-    # obj, so folks using the endpoint can have access to them.
-
-
-
-    try:
-        item = item_module.get_item(tiid, myrefsets, mydao, include_history)
-    except (LookupError, AttributeError):
-        abort_custom(404, "item does not exist")
-
-    if not item:
-        abort_custom(404, "item does not exist")
-
-    if item_module.is_currently_updating(tiid, myredis):
-        response_code = 210 # not complete yet
-        item["currently_updating"] = True
-    else:
-        response_code = 200
-        item["currently_updating"] = False
-
-    api_key = request.args.get("key", None)
-    clean_item = item_module.clean_for_export(item, api_key, os.getenv("API_KEY"))
-    clean_item["HTTP_status_code"] = response_code  # hack for clients who can't read real response codes
-
-    resp_string = json.dumps(clean_item, sort_keys=True, indent=4)
-    if callback_name is not None:
-        resp_string = callback_name + '(' + resp_string + ')'
-
-
-    resp = make_response(resp_string, response_code)
-    resp.mimetype = "application/json"
-
-    return resp
-
-
-@app.route('/provider', methods=['GET'])
 @app.route('/v1/provider', methods=['GET'])
 def provider():
     ret = ProviderFactory.get_all_metadata()
@@ -300,7 +249,6 @@ def provider():
 
     return resp
 
-@app.route('/provider/<provider_name>/memberitems', methods=['POST'])
 @app.route('/v1/provider/<provider_name>/memberitems', methods=['POST'])
 def provider_memberitems(provider_name):
     """
@@ -319,7 +267,6 @@ def provider_memberitems(provider_name):
     resp.headers['Access-Control-Allow-Origin'] = "*"
     return resp
 
-@app.route("/provider/<provider_name>/memberitems/<query>", methods=['GET'])
 @app.route("/v1/provider/<provider_name>/memberitems/<query>", methods=['GET'])
 def provider_memberitems_get(provider_name, query):
     """
@@ -352,9 +299,7 @@ def provider_memberitems_get(provider_name, query):
 GET /collection/:collection_ID
 returns a collection object and the items
 '''
-@app.route('/collection/<cid>', methods=['GET'])
 @app.route('/v1/collection/<cid>', methods=['GET'])
-@app.route('/collection/<cid>.<format>', methods=['GET'])
 @app.route('/v1/collection/<cid>.<format>', methods=['GET'])
 def collection_get(cid='', format="json", include_history=False):
     coll = mydao.get(cid)
@@ -417,32 +362,14 @@ def collection_get(cid='', format="json", include_history=False):
 
 def get_coll_with_authentication_check(request, cid):
     coll = dict(mydao.db[cid])
-
-    # if admin override key, then everything is fine
     if request.args.get("api_admin_key"):
         supplied_key = request.args.get("api_admin_key", "")
         secret_key = os.getenv("API_KEY")  #ideally rename this to API_ADMIN_KEY
         if secret_key == supplied_key:
             return coll
-
-    # otherwise require authentication
-    key = request.args.get("edit_key", None)
-    if key is None:
-        abort_custom(404, "This method requires an update key.")
-
-    if "key" in coll.keys():
-        if coll["key"] != key:
-            abort_custom(403, "Wrong update key")
-    elif "key_hash" in coll.keys():
-        if not check_password_hash(coll["key_hash"], key):
-            abort_custom(403, "Wrong update key")
-    else:
-        abort_custom(501, "This collection has no update key; it cant' be changed.")
-
-    return coll
+    abort_custom(403, "This collection has no update key; it can't be changed.")
 
 
-@app.route('/collection/<cid>/items', methods=['POST'])
 @app.route('/v1/collection/<cid>/items', methods=['POST'])
 def delete_and_put_helper(cid=""):
     """
@@ -458,7 +385,6 @@ def delete_and_put_helper(cid=""):
                    " http_method argument.")
 
 
-@app.route('/collection/<cid>/items', methods=['DELETE'])
 @app.route('/v1/collection/<cid>/items', methods=['DELETE'])
 def delete_items(cid=""):
     """
@@ -504,7 +430,6 @@ def get_alias_strings(aliases):
     return alias_strings   
 
 
-@app.route("/collection/<cid>/items", methods=["PUT"])
 @app.route("/v1/collection/<cid>/items", methods=["PUT"])
 def put_collection(cid=""):
     """
@@ -547,7 +472,6 @@ def put_collection(cid=""):
 
 """ Updates all the items in a given collection.
 """
-@app.route("/collection/<cid>", methods=["POST"])
 @app.route("/v1/collection/<cid>", methods=["POST"])
 # not officially supported in api
 def collection_update(cid=""):
@@ -619,7 +543,6 @@ def delete_collection(cid=None):
 
 
 # creates a collection with aliases
-@app.route('/collection', methods=['POST'])
 @app.route('/v1/collection', methods=['POST'])
 def collection_create():
     """
@@ -712,7 +635,6 @@ def latest_collections(format=""):
     return resp            
 
 
-@app.route("/collections/<cids>")
 @app.route("/v1/collections/<cids>")
 def get_collection_titles(cids=''):
     from time import sleep
@@ -724,14 +646,12 @@ def get_collection_titles(cids=''):
     return resp
 
 
-@app.route("/collections/reference-sets")
 @app.route("/v1/collections/reference-sets")
 def reference_sets():
     resp = make_response(json.dumps(myrefsets, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
-@app.route("/collections/reference-sets-histograms")
 @app.route("/v1/collections/reference-sets-histograms")
 def reference_sets_histograms():
     rows = []
@@ -768,54 +688,6 @@ def key():
     new_api_key = new_api_user.api_key
 
     resp = make_response(json.dumps({"api_key":new_api_key}, indent=4), 200)
-    resp.mimetype = "application/json"
-    return resp
-
-
-@app.route("/user/<userid>", methods=["GET"])
-@app.route("/v1/user/<userid>", methods=["GET"])
-def get_user(userid=''):
-    """
-    GET /user
-    Gets a user.
-
-    The user's private properties are not returned unless you pass a correct collection key.
-    """
-
-    key = request.args.get("key")
-    try:
-        user = UserFactory.get(userid, mydao, key)
-    except KeyError:
-        abort_custom(404, "User doesn't exist.")
-    except NotAuthenticatedError:
-        abort_custom(403, "You've got the wrong password.")
-
-    resp = make_response(json.dumps(user, indent=4), 200)
-    resp.mimetype = "application/json"
-    return resp
-
-
-@app.route('/user', methods=['PUT'])
-@app.route('/v1/user', methods=['PUT'])
-def update_user(userid=''):
-    """
-    PUT /user
-    creates new user
-    """
-
-    new_stuff = request.json
-    try:
-        key = new_stuff["key"]
-    except KeyError:
-        abort_custom(400, "the submitted user object is missing required properties.")
-    try:
-        res = UserFactory.put(new_stuff, key, mydao)
-    except NotAuthenticatedError:
-        abort_custom(403, "You've got the wrong password.")
-    except AttributeError:
-        abort_custom(400, "the submitted user object is missing required properties.")
-
-    resp = make_response(json.dumps(res, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
