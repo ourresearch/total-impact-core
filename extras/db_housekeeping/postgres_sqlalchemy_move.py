@@ -93,8 +93,10 @@ def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page
         elapsed_time=elapsed_time.isoformat())
 
 
-def run_through_items(startkey="00000", page_size=100):
-    boundaries = (string.digits + string.ascii_lowercase)[0::10] + 'z'
+def run_through_items(startkey="00000", page_size=100, number_of_threads=1):
+    starts = string.digits + string.ascii_lowercase
+    step_size = int(len(starts) / number_of_threads)
+    boundaries = (string.digits + string.ascii_lowercase)[0::step_size] + 'z'
     key_pages = zip(boundaries[:-1], boundaries[1:])
     for (startkey, endkey) in key_pages:
         myview_name = "temp/by_type_and_id"
@@ -120,8 +122,10 @@ def run_through_items(startkey="00000", page_size=100):
 
 
 
-def run_through_collections(startkey="00000", page_size=100):
-    boundaries = (string.digits + string.ascii_lowercase)[0::5]
+def run_through_collections(startkey="00000", page_size=100, number_of_threads=1):
+    starts = string.digits + string.ascii_lowercase
+    step_size = int(len(starts) / number_of_threads)
+    boundaries = (string.digits + string.ascii_lowercase)[0::step_size] + 'z'
     key_pages = zip(boundaries[:-1], boundaries[1:])
     for (startkey, endkey) in key_pages:
         myview_name = "temp/by_type_and_id"
@@ -219,6 +223,10 @@ if __name__ == "__main__":
         default=100,
         type=int,
         help="number of documents to get from couch in each batch")
+    parser.add_argument('--threads', 
+        default=1,
+        type=int,
+        help="number of db threads")
     parser.add_argument('--items_startkey', 
         default="000000",
         type=str,
@@ -234,9 +242,9 @@ if __name__ == "__main__":
     setup_postgres(drop_all=args["drop"])
     couch_db = setup_couch()
     if args["collections"]:
-        run_through_collections(args["collections_startkey"], args["pagesize"])
+        run_through_collections(args["collections_startkey"], args["pagesize"], args["threads"])
     if args["items"]:
-        run_through_items(args["items_startkey"], args["pagesize"])
+        run_through_items(args["items_startkey"], args["pagesize"], args["threads"])
 
     db.session.close_all()
 
