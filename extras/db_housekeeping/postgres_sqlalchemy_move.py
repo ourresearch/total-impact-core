@@ -3,6 +3,8 @@ from pprint import pprint
 import time, datetime, json
 import requests
 import argparse
+import string
+import threading
 
 from couch_paginator import CouchPaginator
 from totalimpact import dao
@@ -33,7 +35,7 @@ def item_action_on_a_page(page):
     alias_tuples_to_commit = {}
     for item_doc in items:
         new_item_object = item_module.create_objects_from_item_doc(item_doc, alias_tuples_to_commit)
-        print item_doc["_id"], len(new_item_object.aliases)
+        #print item_doc["_id"], len(new_item_object.aliases)
     db.session.commit()
     db.session.flush()
     return
@@ -46,7 +48,7 @@ def collection_action_on_a_page(page):
     added_items_to_commit = {}
     for coll_doc in collections:
         new_coll_object = collection.create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit, added_items_to_commit)
-        print coll_doc["_id"], len(new_coll_object.tiids)
+        #print coll_doc["_id"], len(new_coll_object.tiids)
     db.session.commit()
     db.session.flush()
     return
@@ -54,47 +56,90 @@ def collection_action_on_a_page(page):
 
 def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page_size=500):
     couch_page = CouchPaginator(couch_db, view_name, page_size, start_key=start_key, end_key=end_key, include_docs=True)
+    start_time = datetime.datetime.now()
+
+    print "starting to loop through first {page_size} from {start_key} to {end_key}".format(
+        page_size=page_size, 
+        start_key=start_key, 
+        end_key=end_key)
 
     while couch_page:
         func_page(couch_page)
         row_count += page_size
 
         logger.info("%i. getting new page" %(row_count))
+        elapsed_time = datetime.datetime.now() - start_time
+        print "******took {elapsed_seconds} seconds to do {row_count} docs, so {minutes_per_10k} minutes per 10k docs per thread, {total} total *****".format(
+            row_count=row_count, 
+            elapsed_seconds=elapsed_time.seconds, 
+            minutes_per_10k=(elapsed_time.seconds)*10000/(row_count*60),
+            total=((elapsed_time.seconds)*10000/(row_count*60))/(threading.active_count() - 1)
+            )
+
         if couch_page.has_next:
             couch_page = CouchPaginator(couch_db, view_name, page_size, start_key=couch_page.next, end_key=end_key, include_docs=True)
         else:
             couch_page = None
 
     print "number items = ", row_count
+    elapsed_time = datetime.datetime.now() - start_time
 
+    print "took {elapsed_time} to do {row_count}".format(
+        row_count=row_count, 
+        elapsed_time=elapsed_time.isoformat())
 
 
 def run_through_items(startkey="00000", page_size=100):
-    myview_name = "temp/by_type_and_id"
-    mystart_key = ["item", startkey]
-    myend_key = ["item", "zzzzzzzz"]
+    boundaries = (string.digits + string.ascii_lowercase)[0::10] + 'z'
+    key_pages = zip(boundaries[:-1], boundaries[1:])
+    for (startkey, endkey) in key_pages:
+        myview_name = "temp/by_type_and_id"
+        mystart_key = ["item", startkey*5] # repeats it 5 times
+        myend_key = ["item", endkey*5]
 
-    now = datetime.datetime.now().isoformat()
+        print "launching thread loop through first {page_size} from {start_key} to {end_key}".format(
+            page_size=page_size, 
+            start_key=mystart_key, 
+            end_key=myend_key)
 
-    run_on_documents(item_action_on_a_page, 
-        view_name=myview_name, 
-        start_key=mystart_key, 
-        end_key=myend_key, 
-        page_size=page_size)
+        t = threading.Thread(target=run_on_documents, 
+            args=(item_action_on_a_page, 
+                myview_name, 
+                mystart_key, 
+                myend_key, 
+                0,
+                page_size),
+            name="run_through_items:{mystart_key} to {myend_key}".format(
+                mystart_key=mystart_key, 
+                myend_key=myend_key))
+        t.start()
+
 
 
 def run_through_collections(startkey="00000", page_size=100):
-    myview_name = "temp/by_type_and_id"
-    mystart_key = ["collection", startkey]
-    myend_key = ["collection", "zzzzzzzz"]
+    boundaries = (string.digits + string.ascii_lowercase)[0::5]
+    key_pages = zip(boundaries[:-1], boundaries[1:])
+    for (startkey, endkey) in key_pages:
+        myview_name = "temp/by_type_and_id"
+        mystart_key = ["collection", startkey*5] # repeats it 5 times
+        myend_key = ["collection", endkey*5]
 
-    now = datetime.datetime.now().isoformat()
+        print "launching thread loop through first {page_size} from {start_key} to {end_key}".format(
+            page_size=page_size, 
+            start_key=mystart_key, 
+            end_key=myend_key)
 
-    run_on_documents(collection_action_on_a_page, 
-        view_name=myview_name, 
-        start_key=mystart_key, 
-        end_key=myend_key, 
-        page_size=page_size)
+        t = threading.Thread(target=run_on_documents, 
+            args=(collection_action_on_a_page, 
+                myview_name, 
+                mystart_key, 
+                myend_key, 
+                0,
+                page_size),
+            name="run_through_collections:{mystart_key} to {myend_key}".format(
+                mystart_key=mystart_key, 
+                myend_key=myend_key))
+        t.start()
 
 
 def setup_postgres(drop_all=False):

@@ -203,7 +203,7 @@ class Collection(db.Model):
     last_modified = db.Column(db.DateTime())
     ip_address = db.Column(db.Text)
     title = db.Column(db.Text)
-    refset_metadata = db.Column(db.Text)
+    refset_metadata = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
     tiids = db.relationship('CollectionTiid', lazy='join', 
         backref=db.backref("collections", lazy="join"))
     added_items = db.relationship('AddedItem', lazy='join', 

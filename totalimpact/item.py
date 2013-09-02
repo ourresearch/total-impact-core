@@ -209,15 +209,15 @@ def save_metric_to_item(item_object, old_style_metric_dict, provider=None):
 
 
 
-item_alias = db.Table('item_alias',
-    db.Column('tiid', db.Text, db.ForeignKey('item.tiid')),
-    db.Column('namespace', db.Text),
-    db.Column('nid', db.Text),
-    #db.Column('nid', json_sqlalchemy.JSONAlchemy(db.Text)),
-    db.ForeignKeyConstraint( 
-        ('namespace', 'nid'),
-        ('alias.namespace', 'alias.nid')  )
-)
+# item_alias = db.Table('item_alias',
+#     db.Column('tiid', db.Text, db.ForeignKey('item.tiid')),
+#     db.Column('namespace', db.Text),
+#     db.Column('nid', db.Text),
+#     #db.Column('nid', json_sqlalchemy.JSONAlchemy(db.Text)),
+#     db.ForeignKeyConstraint( 
+#         ('namespace', 'nid'),
+#         ('alias.namespace', 'alias.nid')  )
+# )
 
 class Metric(db.Model):
     item = db.relationship('Item', backref='metrics', lazy='join')
@@ -288,12 +288,14 @@ class Biblio(db.Model):
 
 
 class Alias(db.Model):
-    items = db.relationship('Item', secondary=item_alias,
-        backref=db.backref('aliases', lazy='join'), lazy='join')
+    #items = db.relationship('Item', secondary=item_alias,
+    #    backref=db.backref('aliases', lazy='join'), lazy='join')
 
+    item = db.relationship('Item', backref='aliases', lazy='join')
+
+    tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True)
     namespace = db.Column(db.Text, primary_key=True)
     nid = db.Column(db.Text, primary_key=True)
-    #nid = db.Column(json_sqlalchemy.JSONAlchemy(db.Text), primary_key=True)
     collected_date = db.Column(db.DateTime())
 
     def __init__(self, alias_tuple, collected_date=None):
