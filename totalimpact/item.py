@@ -34,7 +34,7 @@ def delete_item(cid):
     db.session.flush()
     return
 
-def create_alias_objects(alias_tuples, created, tuples_to_commit, skip_biblio=True):
+def create_alias_objects(item_object, alias_tuples, created, tuples_to_commit, skip_biblio=True):
     new_alias_objects = []
 
     for alias_tuple in alias_tuples:
@@ -64,7 +64,7 @@ def create_alias_objects(alias_tuples, created, tuples_to_commit, skip_biblio=Tr
         elif alias_key in tuples_to_commit:
             alias_object = tuples_to_commit[alias_key]
         else:
-            alias_object = Alias(alias_tuple, created)
+            alias_object = Alias(item_object, alias_tuple, created)
             tuples_to_commit[alias_key] = alias_object
 
         db.session.add(alias_object)
@@ -167,7 +167,7 @@ def create_objects_from_item_doc(item_doc, alias_tuples_to_commit={}):
 def save_alias_to_item(item_object, alias_tuple):
     alias_object = Alias.filter_by_alias(alias_tuple)
     if not alias_object:
-        alias_object = Alias(alias_tuple)
+        alias_object = Alias(item_object, alias_tuple)
     db.session.add(alias_object)
 
     item_object.aliases += [alias_object]
@@ -301,7 +301,8 @@ class Alias(db.Model):
     nid = db.Column(db.Text, primary_key=True)
     collected_date = db.Column(db.DateTime())
 
-    def __init__(self, alias_tuple, collected_date=None):
+    def __init__(self, item, alias_tuple, collected_date=None):
+        self.item = item        
         alias_tuple = canonical_alias_tuple(alias_tuple)
         (namespace, nid) = alias_tuple
         self.namespace = namespace

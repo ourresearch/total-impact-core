@@ -4,7 +4,7 @@ from urllib import quote_plus
 import os
 from nose.tools import assert_equals, nottest, assert_greater
 
-from totalimpact import app, db, dao, views, tiredis, api_user
+from totalimpact import app, db, dao, views, tiredis, api_user, collection, item as item_module
 from totalimpact.providers.dryad import Dryad
 
 from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
@@ -481,8 +481,8 @@ class ViewsTester(unittest.TestCase):
         assert_equals(set(changed_coll["alias_tiids"]),
                       set(["doi:10.124", "doi:10.125"]))
 
-        collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
-        assert_equals(collection_object.tiids, "hi")
+        #collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
+        #assert_equals(collection_object.tiids, "hi")
 
 
     def test_add_collection_item(self):

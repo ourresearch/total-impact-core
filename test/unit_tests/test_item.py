@@ -133,10 +133,10 @@ class TestItem():
 
 
     def test_init_item_and_add_aliases(self):
-        new_item = Item()
-        print new_item
+        item_object = Item()
+        print item_object
 
-        self.db.session.add(new_item)
+        self.db.session.add(item_object)
         self.db.session.commit()
         self.db.session.flush()
 
@@ -145,8 +145,6 @@ class TestItem():
         assert_true(len(found_item.tiid) > 20)
         assert_equals(found_item.aliases, [])
 
-
-    def test_init_alias(self):
         test_alias = ("doi", "10.123/abc")
         (test_namespace, test_nid) = test_alias
 
@@ -154,7 +152,7 @@ class TestItem():
         response = Alias.filter_by_alias(test_alias).first()
         assert_equals(response, None)
 
-        new_alias = Alias(test_alias)
+        new_alias = Alias(item_object, test_alias)
         print new_alias
 
         # still not there
@@ -176,25 +174,6 @@ class TestItem():
         assert_equals(response.alias_tuple, test_alias)
 
 
-    def test_add_aliases(self):
-        test_alias = ("doi", "10.123/abc")
-        new_alias = Alias(test_alias)
-        print new_alias
-
-        new_item = Item()
-        tiid = new_item.tiid
-        print new_item
-
-        #add an alias
-        new_item.aliases += [new_alias]
-
-        self.db.session.add(new_item)
-        self.db.session.commit()
-        self.db.session.flush()
-
-        # now poof there are aliases
-        found_item = Item.query.filter_by(tiid=tiid).first()
-        assert_equals(found_item.aliases, [new_alias])
 
     def test_add_biblio(self):
         test_biblio = {
