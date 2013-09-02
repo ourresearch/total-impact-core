@@ -21,6 +21,9 @@ from totalimpact import db
 import logging
 logger = logging.getLogger('ti.item')
 
+# print out extra debugging
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 class NotAuthenticatedError(Exception):
     pass
 

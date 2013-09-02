@@ -17,6 +17,9 @@ from totalimpact.providers.provider import ProviderFactory
 import logging
 logger = logging.getLogger('ti.collection')
 
+# print out extra debugging
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 def get_alias_strings(aliases):
     alias_strings = []
     for (namespace, nid) in aliases:
@@ -71,7 +74,7 @@ def create_collection_tiid_objects(tiids, created, collection_tiids_to_commit):
 
     for tiid in tiids:
         try:
-            tiid_object = CollectionTiid.query.filter_by(tiid=tiid).first()
+            tiid_object = CollectionTiid.query.filter_by(tiid=tiid).limit(1).first()
         except TypeError:
             tiid_object = None
 
@@ -97,11 +100,11 @@ def create_added_item_objects(alias_tuples, cid, created, added_items_to_commit)
             alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
             (namespace, nid) = alias_tuple
         except ValueError:
-            print "FAIL to parse, skipping ", alias_tuple, created[0:10]
+            #print "FAIL to parse, skipping ", alias_tuple, created[0:10]
             continue
 
         try:
-            added_item_object = AddedItem.query.filter_by(namespace=namespace, nid=nid).first()
+            added_item_object = AddedItem.query.filter_by(namespace=namespace, nid=nid).limit(1).first()
         except TypeError:
             added_item_object = None
 
@@ -122,7 +125,7 @@ def create_added_item_objects(alias_tuples, cid, created, added_items_to_commit)
 
 
 def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, added_items_to_commit={}):
-    new_coll_object = Collection.query.filter_by(cid=coll_doc["_id"]).first()
+    new_coll_object = Collection.query.filter_by(cid=coll_doc["_id"]).limit(1).first()
     if not new_coll_object:
         new_coll_object = Collection.create_from_old_doc(coll_doc)
     db.session.add(new_coll_object)
@@ -133,13 +136,13 @@ def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, 
         collection_tiids_to_commit)
     new_coll_object.tiids = new_tiid_objects
 
-    # alias_strings = coll_doc["alias_tiids"].keys()
-    # alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]          
-    # (new_added_item_objects, added_items_to_commit) = create_added_item_objects(alias_tuples, 
-    #     new_coll_object.cid,
-    #     coll_doc["created"], 
-    #     added_items_to_commit)
-    # new_coll_object.added_items = new_added_item_objects
+    alias_strings = coll_doc["alias_tiids"].keys()
+    alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]          
+    (new_added_item_objects, added_items_to_commit) = create_added_item_objects(alias_tuples, 
+        new_coll_object.cid,
+        coll_doc["created"], 
+        added_items_to_commit)
+    new_coll_object.added_items = new_added_item_objects
 
     return(new_coll_object)
 
@@ -151,7 +154,7 @@ def save_collection_from_doc(collection_doc):
     return new_coll_object
 
 def delete_collection(cid):
-    coll_object = Collection.query.filter_by(cid=cid).first()
+    coll_object = Collection.query.filter_by(cid=cid).limit(1).first()
     db.session.delete(coll_object)
     db.session.commit()
     db.session.flush()
@@ -284,7 +287,7 @@ def get_titles(cids, mydao):
 def get_titles_new(cids):
     ret = {}
     for cid in cids:
-        coll = Collection.query.filter_by(cid=cid).first()
+        coll = Collection.query.filter_by(cid=cid).limit(1).first()
         ret[cid] = coll.title
     return ret
 

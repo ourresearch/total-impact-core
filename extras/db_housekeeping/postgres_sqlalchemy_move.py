@@ -28,6 +28,9 @@ logging.basicConfig(
 
 logger = logging.getLogger("postgres_sqlalchemy_move")
  
+# print out extra debugging
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 
 def item_action_on_a_page(page):
     items = [row.doc for row in page]
@@ -47,7 +50,7 @@ def collection_action_on_a_page(page):
     collection_tiids_to_commit = {}
     added_items_to_commit = {}
     for coll_doc in collections:
-        new_coll_object = collection.create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit, added_items_to_commit)
+         new_coll_object = collection.create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit, added_items_to_commit)
         #print coll_doc["_id"], len(new_coll_object.tiids)
     db.session.commit()
     db.session.flush()
