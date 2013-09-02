@@ -28,7 +28,7 @@ class NotAuthenticatedError(Exception):
     pass
 
 def delete_item(cid):
-    item_object = Item.query.filter_by(tiid=tiid).first()
+    item_object = Item.query.filter_by(tiid=tiid).limit(1).first()
     db.session.delete(item_object)
     db.session.commit()
     db.session.flush()
@@ -54,7 +54,7 @@ def create_alias_objects(alias_tuples, created, tuples_to_commit, skip_biblio=Tr
             continue
 
         try:
-            alias_object = Alias.filter_by_alias(alias_tuple).first()
+            alias_object = Alias.filter_by_alias(alias_tuple).limit(1).first()
         except TypeError:
             alias_object = None
 
@@ -90,7 +90,7 @@ def create_metric_objects(item_object, old_style_metric_dict):
             new_style_metric_dict["raw_value"] = metric_details["values"]["raw_history"][collected_date]
 
             try:
-                metric_object = Metric.query.filter_by(**new_style_metric_dict).first()
+                metric_object = Metric.query.filter_by(**new_style_metric_dict).limit(1).first()
             except TypeError:
                 metric_object = None
             if not metric_object:
@@ -112,7 +112,7 @@ def create_biblio_objects(item_object, old_style_biblio_dict, provider="unknown"
                     "provider":provider, 
                     "collected_date":item_object.created}
         try:
-            biblio_object = Biblio.query.filter_by(**new_style_biblio_dict).first()
+            biblio_object = Biblio.query.filter_by(**new_style_biblio_dict).limit(1).first()
         except TypeError:
             biblio_object = None
         if not biblio_object:
@@ -124,7 +124,7 @@ def create_biblio_objects(item_object, old_style_biblio_dict, provider="unknown"
 
 
 def create_objects_from_item_doc(item_doc, alias_tuples_to_commit={}):
-    new_item_object = Item.query.filter_by(tiid=item_doc["_id"]).first()
+    new_item_object = Item.query.filter_by(tiid=item_doc["_id"]).limit(1).first()
     if not new_item_object:
         new_item_object = Item.create_from_old_doc(item_doc)
     db.session.add(new_item_object)

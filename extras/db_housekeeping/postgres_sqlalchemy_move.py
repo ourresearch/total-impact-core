@@ -72,7 +72,8 @@ def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page
 
         logger.info("%i. getting new page" %(row_count))
         elapsed_time = datetime.datetime.now() - start_time
-        print "******took {elapsed_seconds} seconds to do {row_count} docs, so {minutes_per_10k} minutes per 10k docs per thread, {total} total *****".format(
+        print "\n****** {start_key} took {elapsed_seconds} seconds to do {row_count} docs, so {minutes_per_10k} minutes per 10k docs per thread, {total} total *****".format(
+            start_key=start_key,
             row_count=row_count, 
             elapsed_seconds=elapsed_time.seconds, 
             minutes_per_10k=(elapsed_time.seconds)*10000/(row_count*60),
