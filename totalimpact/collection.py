@@ -45,7 +45,14 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
     coll_doc["alias_tiids"] = dict(zip(alias_strings, tiids))
 
     mydao.save(coll_doc)
+
     collection_object = save_collection_from_doc(coll_doc)
+
+    logger.info(
+        u"saved new collection '{id}' with {num_items} items.".format(
+            id=coll["_id"],
+            num_items=len(coll["alias_tiids"])
+        ))
 
     logger.info(json.dumps(coll_doc, sort_keys=True, indent=4))
 

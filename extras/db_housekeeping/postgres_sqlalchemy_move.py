@@ -38,7 +38,7 @@ def item_action_on_a_page(page):
     alias_tuples_to_commit = {}
     for item_doc in items:
         new_item_object = item_module.create_objects_from_item_doc(item_doc, alias_tuples_to_commit)
-        #print item_doc["_id"], len(new_item_object.aliases)
+    print "just finished", item_doc["_id"]
     db.session.commit()
     db.session.flush()
     return
@@ -51,7 +51,7 @@ def collection_action_on_a_page(page):
     added_items_to_commit = {}
     for coll_doc in collections:
          new_coll_object = collection.create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit, added_items_to_commit)
-        #print coll_doc["_id"], len(new_coll_object.tiids)
+    print "just finished", coll_doc["_id"]
     db.session.commit()
     db.session.flush()
     return
