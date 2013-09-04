@@ -38,7 +38,7 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
     coll_object.last_modified = now
     db.session.add(coll_object)
 
-    (new_tiid_objects, collection_tiids_to_commit) = create_collection_tiid_objects(tiids)
+    (new_tiid_objects, collection_tiids_to_commit) = create_collection_tiid_objects(tiids, cid)
     coll_object.tiid_links += [new_tiid_objects]
 
     (new_added_item_objects, added_items_to_commit) = create_added_item_objects(alias_tuples, cid)
