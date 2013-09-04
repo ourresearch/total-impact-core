@@ -709,18 +709,18 @@ def create_or_update_items_from_aliases(aliases, myredis, mydao):
         # remove unprintable characters and change list to tuples
         clean_aliases = [(clean_id(namespace), clean_id(nid)) for [namespace, nid] in aliases]
     except ValueError:
-        logger.error(u"bad input to POST /collection (requires [namespace, id] pairs):{input}".format(
+        logger.error(u"bad input to /collection (requires [namespace, id] pairs):{input}".format(
                 input=str(aliases)
             ))
         return None
 
-    logger.debug(u"POST /collection got list of aliases; create or find items for {aliases}".format(
+    logger.debug(u"/collection got list of aliases; create or find items for {aliases}".format(
             aliases=str(clean_aliases)
         ))
 
     (tiids, new_items) = create_or_find_items_from_aliases(clean_aliases, myredis, mydao)
 
-    logger.debug(u"POST /collection included {num} new items: {new_items}".format(
+    logger.debug(u"/collection included {num} new items: {new_items}".format(
             num=len(new_items),
             new_items=str(new_items)
         ))

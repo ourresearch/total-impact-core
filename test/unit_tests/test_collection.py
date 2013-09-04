@@ -29,6 +29,11 @@ class TestCollection():
 
         self.db = setup_postgres_for_unittests(db, app)
 
+        self.aliases = [
+            ["doi", "10.123"],
+            ["doi", "10.124"],
+            ["doi", "10.125"]
+        ]
 
     def tearDown(self):
         teardown_postgres_for_unittests(self.db)
@@ -64,9 +69,9 @@ class TestCollection():
         new_cid = new_collection.cid        
         print new_collection
 
-        new_collection.tiids = [new_collection_tiid]
+        new_collection.tiid_links = [new_collection_tiid]
         print new_collection.tiids
-        assert_equals(new_collection.tiids, [new_collection_tiid])
+        assert_equals(new_collection.tiid_links, [new_collection_tiid])
 
         self.db.session.add(new_collection_tiid)
         self.db.session.add(new_collection)
@@ -76,7 +81,7 @@ class TestCollection():
         # and now poof there it is
         response = collection.Collection.query.filter_by(cid="socrates").first()
         assert_equals(response.cid, "socrates")
-        assert_equals(response.tiids, [new_collection_tiid])
+        assert_equals(response.tiid_links, [new_collection_tiid])
         assert_equals(new_collection_tiid.collections.query.all(), [new_collection])
 
 
@@ -98,6 +103,28 @@ class TestCollection():
 
         response = collection.AddedItem.query.filter_by(namespace="url").first()
         assert_equals(response.nid, "http://starbucks.com")
+
+
+    def test_create_new_collection(self):
+        (coll_doc, collection_object) = collection.create_new_collection(
+            cid=None,
+            title="mah collection",
+            aliases=self.aliases,
+            ip_address=None,
+            refset_metadata=None,
+            myredis=self.r, 
+            mydao=self.d)
+
+        assert_equals(coll_doc["title"], "mah collection")
+        expected = ['doi:10.124', 'doi:10.125', 'doi:10.123']
+        assert_equals(coll_doc["alias_tiids"].keys(), expected)
+
+        assert_equals(collection_object.title, "mah collection")
+        expected = [(u'doi', u'10.124'), (u'doi', u'10.125'), (u'doi', u'10.123')]
+        assert_equals([added_item.alias_tuple for added_item in collection_object.added_items], expected)
+        assert_equals(len(collection_object.tiids), 3)
+        found_collection_object = collection.Collection.query.filter_by(cid=collection_object.cid).first()
+        assert_equals(found_collection_object.tiids, collection_object.tiids)
 
 
     def test_make_creates_identifier(self):

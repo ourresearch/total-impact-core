@@ -2,7 +2,7 @@ import unittest, json, uuid
 from copy import deepcopy
 from urllib import quote_plus
 import os
-from nose.tools import assert_equals, nottest, assert_greater
+from nose.tools import assert_equals, nottest, assert_greater, assert_items_equal
 
 from totalimpact import app, db, dao, views, tiredis, api_user, collection, item as item_module
 from totalimpact.providers.dryad import Dryad
@@ -343,9 +343,12 @@ class ViewsTester(unittest.TestCase):
         # 3+1 new items + 2 collections + 1 test_item + 1 api_user_doc + at least 7 design docs
         assert_greater(self.d.db.info()["doc_count"], 15)
 
+        collection_tiid_objects = collection.CollectionTiid.query.all()
+        assert_equals(len(collection_tiid_objects), 6)
+        assert_equals(len(set([obj.tiid for obj in collection_tiid_objects])), 4)
+
 
     def test_collection_post_new_collection(self):
-
         response = self.client.post(
             '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"My Title"}),
@@ -358,7 +361,7 @@ class ViewsTester(unittest.TestCase):
         response_loaded = json.loads(response.data)
         assert_equals(
                 set(response_loaded.keys()),
-                set(["collection", "key"])
+                set(["collection"])
         )
         coll = response_loaded["collection"]
         assert_equals(len(coll["_id"]), 6)
@@ -367,15 +370,9 @@ class ViewsTester(unittest.TestCase):
             set([":".join(alias) for alias in self.aliases])
         )
 
-    def test_new_collection_includes_key(self):
-        response = self.client.post(
-            '/v1/collection' + "?key=validkey",
-            data=json.dumps({"aliases": self.aliases, "title":"My Title"}),
-            content_type="application/json"
-        )
-        print response.data
-        resp_loaded = json.loads(response.data)
-        assert_equals(resp_loaded.keys(), ["key", "collection"])
+        collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
+        assert_equals(collection_object.tiids, coll["alias_tiids"].values())
+        assert_items_equal([added_item.alias_tuple for added_item in collection_object.added_items], [(unicode(a), unicode(b)) for (a, b) in self.aliases])
 
 
     def test_collection_get_with_no_id(self):
@@ -383,7 +380,6 @@ class ViewsTester(unittest.TestCase):
         assert_equals(response.status_code, 404)  #Not found
 
     def test_collection_get(self):
-
         response = self.client.post(
             '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
@@ -396,6 +392,7 @@ class ViewsTester(unittest.TestCase):
         resp = self.client.get('/v1/collection/'+collection_id + "?key=validkey")
         assert_equals(resp.status_code, 210)
         collection_data = json.loads(resp.data)
+        print collection_data.keys()
         assert_equals(
             set(collection_data.keys()),
             {u'title',
@@ -464,8 +461,6 @@ class ViewsTester(unittest.TestCase):
         )
         resp = json.loads(response.data)
         coll =  resp["collection"]
-        key =  resp["key"]
-
 
         # delete an item.
         tiid_to_delete = coll["alias_tiids"]["doi:10.123"]
@@ -494,11 +489,9 @@ class ViewsTester(unittest.TestCase):
         )
         resp = json.loads(response.data)
         coll = resp["collection"]
-        key = resp["key"]
 
         alias_list = []
         alias_list.append(["doi", "10.new"])
-
 
         r = self.client.put(
             "/v1/collection/{id}/items?api_admin_key={key}".format(

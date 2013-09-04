@@ -32,6 +32,71 @@ def get_alias_strings(aliases):
             alias_strings += [namespace+":"+json.dumps(nid)]
     return alias_strings   
 
+def add_items_to_collection_object(cid, tiids, alias_tuples):
+    now = datetime.datetime.now()
+    coll_object = Collection.query.filter_by(cid=cid).limit(1).first()
+    coll_object.last_modified = now
+    db.session.add(coll_object)
+
+    (new_tiid_objects, collection_tiids_to_commit) = create_collection_tiid_objects(tiids)
+    coll_object.tiid_links += [new_tiid_objects]
+
+    (new_added_item_objects, added_items_to_commit) = create_added_item_objects(alias_tuples, cid)
+    coll_object.added_items += [new_added_item_objects]
+
+    return coll_object
+
+
+def remove_items_from_collection_object(cid, tiids_to_remove):
+    now = datetime.datetime.now()
+    coll_object = Collection.query.filter_by(cid=cid).limit(1).first()
+    coll_object.last_modified = now
+    db.session.add(coll_object)
+
+    for coll_tiid in coll_object.tiid_links:
+        if coll_tiid.tiid in tiids_to_remove:
+            coll_object.tiid_links.remove(coll_tiid)
+
+    return coll_object
+
+
+def add_items_to_collection(cid, aliases, myredis, mydao):
+    (tiids, new_items) = item_module.create_or_update_items_from_aliases(
+        aliases, myredis, mydao)
+
+    coll_doc = mydao.get(cid)
+    print coll_doc
+    alias_strings = get_alias_strings(aliases)
+    # pretty sure this is putting the wrong tiids with the aliases...
+    new_alias_tiids = dict(zip(alias_strings, tiids))
+    coll_doc["alias_tiids"].update(new_alias_tiids)
+    coll_doc["last_modified"] = datetime.datetime.now().isoformat()
+    print coll_doc
+    mydao.db.save(coll_doc)
+
+    collection_object = add_items_to_collection_object(cid, tiids, aliases)
+    db.session.commit()
+    db.session.flush()
+
+    return (coll_doc, collection_object)
+
+
+def delete_items_from_collection(cid, tiids_to_delete, myredis, mydao):
+    coll_doc = mydao.get(cid)
+    new_alias_tiids = {}
+    for alias, tiid in coll_doc["alias_tiids"].iteritems():
+        if tiid not in tiids_to_delete:
+            new_alias_tiids[alias] = tiid
+    coll_doc["alias_tiids"] = new_alias_tiids
+    coll_doc["last_modified"] = datetime.datetime.now().isoformat()
+    mydao.db.save(coll_doc)
+
+    collection_object = remove_items_from_collection_object(cid, tiids_to_delete)
+    db.session.commit()
+    db.session.flush()
+
+    return (coll_doc, collection_object)
+
 
 def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myredis, mydao):
     (tiids, new_items) = item_module.create_or_update_items_from_aliases(aliases, myredis, mydao)
@@ -46,13 +111,13 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
 
     mydao.save(coll_doc)
 
-    collection_object = save_collection_from_doc(coll_doc)
+    collection_object = create_objects_from_collection_doc(coll_doc)
+    db.session.commit()
+    db.session.flush()
 
-    logger.info(
-        u"saved new collection '{id}' with {num_items} items.".format(
-            id=coll["_id"],
-            num_items=len(coll["alias_tiids"])
-        ))
+    logger.info(u"saved new collection '{id}' with {num_items} items.".format(
+            id=coll_doc["_id"],
+            num_items=len(coll_doc["alias_tiids"])))
 
     logger.info(json.dumps(coll_doc, sort_keys=True, indent=4))
 
@@ -76,22 +141,23 @@ def save_added_item(**kwargs):
 
 
 
-def create_collection_tiid_objects(tiids, created, collection_tiids_to_commit):
+def create_collection_tiid_objects(tiids, cid, collection_tiids_to_commit={}):
     new_tiid_objects = []
 
     for tiid in tiids:
         try:
-            tiid_object = CollectionTiid.query.filter_by(tiid=tiid).limit(1).first()
+            tiid_object = CollectionTiid.query.filter_by(cid=cid, tiid=tiid).limit(1).first()
         except TypeError:
             tiid_object = None
 
+        tiid_key = ":".join([cid, tiid])
         if tiid_object:
             pass
-        elif tiid in collection_tiids_to_commit:
-            tiid_object = collection_tiids_to_commit[tiid]
+        elif tiid_key in collection_tiids_to_commit:
+            tiid_object = collection_tiids_to_commit[tiid_key]
         else:
-            tiid_object = CollectionTiid(tiid=tiid)
-            collection_tiids_to_commit[tiid] = tiid_object
+            tiid_object = CollectionTiid(cid=cid, tiid=tiid)
+            collection_tiids_to_commit[tiid_key] = tiid_object
             
         db.session.add(tiid_object)
         new_tiid_objects += [tiid_object]    
@@ -99,7 +165,7 @@ def create_collection_tiid_objects(tiids, created, collection_tiids_to_commit):
     return (new_tiid_objects, collection_tiids_to_commit)
 
 
-def create_added_item_objects(alias_tuples, cid, created, added_items_to_commit):
+def create_added_item_objects(alias_tuples, cid, created=None, added_items_to_commit={}):
     new_added_item_objects = []
 
     for alias_tuple in alias_tuples:
@@ -111,11 +177,11 @@ def create_added_item_objects(alias_tuples, cid, created, added_items_to_commit)
             continue
 
         try:
-            added_item_object = AddedItem.query.filter_by(namespace=namespace, nid=nid).limit(1).first()
+            added_item_object = AddedItem.query.filter_by(cid=cid, namespace=namespace, nid=nid).limit(1).first()
         except TypeError:
             added_item_object = None
 
-        alias_key = ":".join(alias_tuple)
+        alias_key = ":".join([cid, alias_tuple[0], alias_tuple[1]])
         if added_item_object:
             pass
         elif alias_key in added_items_to_commit:
@@ -139,9 +205,9 @@ def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, 
 
     tiids = coll_doc["alias_tiids"].values()
     (new_tiid_objects, collection_tiids_to_commit) = create_collection_tiid_objects(tiids, 
-        coll_doc["created"], 
+        new_coll_object.cid,
         collection_tiids_to_commit)
-    new_coll_object.tiids = new_tiid_objects
+    new_coll_object.tiid_links = new_tiid_objects
 
     alias_strings = coll_doc["alias_tiids"].keys()
     alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]          
@@ -214,7 +280,7 @@ class Collection(db.Model):
     ip_address = db.Column(db.Text)
     title = db.Column(db.Text)
     refset_metadata = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
-    tiids = db.relationship('CollectionTiid', lazy='join', 
+    tiid_links = db.relationship('CollectionTiid', lazy='join', 
         backref=db.backref("collections", lazy="join"))
     added_items = db.relationship('AddedItem', lazy='join', 
         backref=db.backref("collections", lazy="join"))
@@ -237,10 +303,15 @@ class Collection(db.Model):
 
         super(Collection, self).__init__(**kwargs)
 
+    @property
+    def tiids(self):
+        return [tiid_link.tiid for tiid_link in self.tiid_links]
+
     def __repr__(self):
         return '<Collection {cid}, {title}>'.format(
             cid=self.cid, 
             title=self.title)
+
 
     @classmethod
     def create_from_old_doc(cls, doc):

@@ -295,6 +295,28 @@ def provider_memberitems_get(provider_name, query):
 
 
 
+def abort_if_fails_collection_edit_auth(request):
+    if request.args.get("api_admin_key"):
+        supplied_key = request.args.get("api_admin_key", "")
+        secret_key = os.getenv("API_KEY")  #ideally rename this to API_ADMIN_KEY
+        if secret_key == supplied_key:
+            return True
+    abort_custom(403, "This collection has no update key; it can't be changed.")
+
+def get_alias_strings(aliases):
+    alias_strings = []
+    for (namespace, nid) in aliases:
+        namespace = item_module.clean_id(namespace)
+        nid = item_module.clean_id(nid)
+        try:
+            alias_strings += [namespace+":"+nid]
+        except TypeError:
+            # jsonify the biblio dicts
+            alias_strings += [namespace+":"+json.dumps(nid)]
+    return alias_strings   
+
+
+
 '''
 GET /collection/:collection_ID
 returns a collection object and the items
@@ -360,16 +382,6 @@ def collection_get(cid='', format="json", include_history=False):
     return resp
 
 
-def get_coll_with_authentication_check(request, cid):
-    coll = dict(mydao.db[cid])
-    if request.args.get("api_admin_key"):
-        supplied_key = request.args.get("api_admin_key", "")
-        secret_key = os.getenv("API_KEY")  #ideally rename this to API_ADMIN_KEY
-        if secret_key == supplied_key:
-            return coll
-    abort_custom(403, "This collection has no update key; it can't be changed.")
-
-
 @app.route('/v1/collection/<cid>/items', methods=['POST'])
 def delete_and_put_helper(cid=""):
     """
@@ -377,93 +389,64 @@ def delete_and_put_helper(cid=""):
     """
     http_method = request.args.get("http_method", "")
     if http_method.lower() == "delete":
-        return delete_items(cid)
+        return delete_items_from_collection(cid)
     elif http_method.lower() == "put":
-        return put_collection(cid)
+        return add_items_to_collection(cid)
     else:
         abort_custom(404, "You must specify a valid HTTP method (POST or PUT) with the"
                    " http_method argument.")
 
 
 @app.route('/v1/collection/<cid>/items', methods=['DELETE'])
-def delete_items(cid=""):
+def delete_items_from_collection(cid=""):
     """
     Deletes items from a collection
     """
-    coll = get_coll_with_authentication_check(request, cid)
+    abort_if_fails_collection_edit_auth(request)
 
     try:
-        new_alias_tiids = {}
-        for alias, tiid in coll["alias_tiids"].iteritems():
-            if tiid not in request.json["tiids"]:
-                new_alias_tiids[alias] = tiid
-
-        coll["alias_tiids"] = new_alias_tiids
-
+        (coll_doc, collection_object) = collection.delete_items_from_collection(
+            cid=cid, 
+            tiids_to_delete=request.json["tiids"], 
+            myredis=myredis, 
+            mydao=mydao)
     except (AttributeError, TypeError, KeyError) as e:
         # we got missing or improperly formated data.
-        logger.error(
-            u"DELETE /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(
-                id=coll["_id"],
+        logger.error(u"DELETE /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(
+                id=cid,
                 error_str=e,
                 json=request.json))
         abort_custom(404, "Missing arguments.")
 
-    coll["last_modified"] = datetime.datetime.now().isoformat()
-    mydao.db.save(coll)
-
-    resp = make_response(json.dumps(coll, sort_keys=True, indent=4), 200)
+    resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
 
-def get_alias_strings(aliases):
-    alias_strings = []
-    for (namespace, nid) in aliases:
-        namespace = item_module.clean_id(namespace)
-        nid = item_module.clean_id(nid)
-        try:
-            alias_strings += [namespace+":"+nid]
-        except TypeError:
-            # jsonify the biblio dicts
-            alias_strings += [namespace+":"+json.dumps(nid)]
-    return alias_strings   
-
 
 @app.route("/v1/collection/<cid>/items", methods=["PUT"])
-def put_collection(cid=""):
+def add_items_to_collection(cid=""):
     """
     Adds new items to a collection.
     """
 
-    coll = get_coll_with_authentication_check(request, cid)
+    abort_if_fails_collection_edit_auth(request)
 
     try:
-        aliases = request.json["aliases"]
-        alias_strings = get_alias_strings(aliases)
-        logger.info(u"new alias strings {strings}".format(
-            strings=alias_strings))
-        (tiids, new_items) = item_module.create_or_update_items_from_aliases(
-            aliases, myredis, mydao)
-
-        # pretty sure this is putting the wrong tiids with the aliases...
-        new_alias_tiids = dict(zip(alias_strings, tiids))
-
-        coll["alias_tiids"].update(new_alias_tiids)
-
+        (coll_doc, collection_object) = collection.add_items_to_collection(
+            cid=cid, 
+            aliases=request.json["aliases"], 
+            myredis=myredis, 
+            mydao=mydao)
     except (AttributeError, TypeError) as e:
         # we got missing or improperly formated data.
-        logger.error(
-            u"PUT /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(
-                id=coll["_id"],
+        logger.error(u"PUT /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(
+                id=cid,
                 error_str=e,
                 json=request.json))
         abort_custom(404, "Missing arguments.")
 
-    coll["last_modified"] = datetime.datetime.now().isoformat()
-    mydao.db.save(coll)
-
-    resp = make_response(json.dumps(coll, sort_keys=True, indent=4), 200)
+    resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
 
     return resp
@@ -522,7 +505,7 @@ def delete_collection(cid=None):
     if admin_key != os.getenv("API_ADMIN_KEY"):
         abort_custom(401, "You need admin privilages to delete collections.")
 
-    coll = mydao.get(cid)
+    coll = mydao.db[cid]
     if coll is None:
         return make_response("Nothing to delete; collection didn't exist.")
 
@@ -540,8 +523,6 @@ def delete_collection(cid=None):
     return make_response("Deleted.")
 
 
-
-
 # creates a collection with aliases
 @app.route('/v1/collection', methods=['POST'])
 def collection_create():
@@ -550,43 +531,25 @@ def collection_create():
     creates new collection
     """
     response_code = None
-    coll, key = collection.make(request.args.get("collection_id", None))
-    refset_metadata = request.json.get("refset_metadata", None)
-    if refset_metadata:
-        coll["refset_metadata"] = refset_metadata
-    coll["ip_address"] = request.remote_addr
-
     try:
-        coll["title"] = request.json["title"]
-        aliases = request.json["aliases"]
-
-        (tiids, new_items) = item_module.create_or_update_items_from_aliases(aliases, myredis, mydao)
-        if not tiids:
-            abort_custom(404, "POST /collection requires a list of [namespace, id] pairs.")
+        cid = request.args.get("collection_id", None)
+        (coll_doc, collection_object) = collection.create_new_collection(
+            cid=cid, 
+            title=request.json.get("title", "my collection"), 
+            aliases=request.json["aliases"], 
+            ip_address=request.remote_addr, 
+            refset_metadata=request.json.get("refset_metadata", None), 
+            myredis=myredis, 
+            mydao=mydao)
     except (AttributeError, TypeError):
         # we got missing or improperly formated data.
-        logger.error(
-            u"we got missing or improperly formated data: '{id}' with {json}.".format(
-                id=coll["_id"],
+        logger.error(u"we got missing or improperly formated data: '{cid}' with {json}.".format(
+                cid=cid,
                 json=str(request.json)))
         abort_custom(404, "Missing arguments.")
 
-    alias_strings = get_alias_strings(aliases)
-
-    # save dict of alias:tiid
-    coll["alias_tiids"] = dict(zip(alias_strings, tiids))
-
-    logger.info(json.dumps(coll, sort_keys=True, indent=4))
-
-    mydao.save(coll)
     response_code = 201 # Created
-    logger.info(
-        u"saved new collection '{id}' with {num_items} items.".format(
-            id=coll["_id"],
-            num_items=len(coll["alias_tiids"])
-        ))
-
-    resp = make_response(json.dumps({"collection":coll, "key":key},
+    resp = make_response(json.dumps({"collection":coll_doc},
             sort_keys=True, indent=4), response_code)
     resp.mimetype = "application/json"
     return resp
