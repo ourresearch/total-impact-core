@@ -35,6 +35,8 @@ def get_alias_strings(aliases):
 def add_items_to_collection_object(cid, tiids, alias_tuples):
     now = datetime.datetime.now()
     coll_object = Collection.query.filter_by(cid=cid).limit(1).first()
+    if not coll_object:
+        return None
     coll_object.last_modified = now
     db.session.add(coll_object)
 
@@ -50,6 +52,8 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
 def remove_items_from_collection_object(cid, tiids_to_remove):
     now = datetime.datetime.now()
     coll_object = Collection.query.filter_by(cid=cid).limit(1).first()
+    if not coll_object:
+        return None    
     coll_object.last_modified = now
     db.session.add(coll_object)
 
@@ -75,6 +79,11 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
     mydao.db.save(coll_doc)
 
     collection_object = add_items_to_collection_object(cid, tiids, aliases)
+    if not collection_object:
+        # not migrated yet
+        logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
+                cid=cid))        
+        create_objects_from_collection_doc(coll_doc)
     db.session.commit()
     db.session.flush()
 
@@ -92,6 +101,11 @@ def delete_items_from_collection(cid, tiids_to_delete, myredis, mydao):
     mydao.db.save(coll_doc)
 
     collection_object = remove_items_from_collection_object(cid, tiids_to_delete)
+    if not collection_object:
+        # not migrated yet
+        logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
+                cid=cid))
+        create_objects_from_collection_doc(coll_doc)    
     db.session.commit()
     db.session.flush()
 
