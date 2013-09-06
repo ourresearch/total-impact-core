@@ -81,7 +81,9 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
         # not migrated yet
         logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
                 cid=cid))        
-        create_objects_from_collection_doc(coll_doc)
+        collection_obj = create_objects_from_collection_doc(coll_doc)
+        db.session.add(collection_obj)
+
     db.session.commit()
     db.session.flush()
 
@@ -103,7 +105,8 @@ def delete_items_from_collection(cid, tiids_to_delete, myredis, mydao):
         # not migrated yet
         logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
                 cid=cid))
-        create_objects_from_collection_doc(coll_doc)    
+        collection_obj = create_objects_from_collection_doc(coll_doc)    
+        db.session.add(collection_obj)
     db.session.commit()
     db.session.flush()
 
@@ -124,6 +127,7 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
     mydao.save(coll_doc)
 
     collection_obj = create_objects_from_collection_doc(coll_doc)
+    db.session.add(collection_obj)
     db.session.commit()
     db.session.flush()
 
@@ -171,7 +175,7 @@ def create_collection_tiid_objects(tiids, collection_obj, collection_tiids_to_co
             tiid_object = CollectionTiid(collection=collection_obj, tiid=tiid)
             collection_tiids_to_commit[tiid_key] = tiid_object
             
-        db.session.add(tiid_object)
+        #db.session.add(tiid_object)
         new_tiid_objects += [tiid_object]    
 
     return (new_tiid_objects, collection_tiids_to_commit)
@@ -202,7 +206,7 @@ def create_added_item_objects(alias_tuples, collection_obj, created=None, added_
             added_item_object = AddedItem(collection=collection_obj, namespace=namespace, nid=nid, created=created)
             added_items_to_commit[alias_key] = added_item_object
             
-        db.session.add(added_item_object)
+        #db.session.add(added_item_object)
         new_added_item_objects += [added_item_object]    
 
     return (new_added_item_objects, added_items_to_commit)
@@ -213,7 +217,6 @@ def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, 
     new_coll_object = Collection.query.filter_by(cid=coll_doc["_id"]).limit(1).first()
     if not new_coll_object:
         new_coll_object = Collection.create_from_old_doc(coll_doc)
-    db.session.add(new_coll_object)
 
     tiids = coll_doc["alias_tiids"].values()
     (new_tiid_objects, collection_tiids_to_commit) = create_collection_tiid_objects(tiids, 
@@ -234,6 +237,7 @@ def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, 
 
 def save_collection_from_doc(collection_doc):
     new_coll_object = create_objects_from_collection_doc(collection_doc)
+    db.session.add(new_coll_object)    
     db.session.commit()
     db.session.flush()
     return new_coll_object
