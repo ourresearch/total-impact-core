@@ -42,7 +42,9 @@ def create_alias_objects(item_object, alias_tuples, created, tuples_to_commit, s
             alias_tuple = canonical_alias_tuple(alias_tuple)
             (namespace, nid) = alias_tuple
         except ValueError:
-            print "FAIL to parse, skipping ", alias_tuple, created[0:10]
+            logger.error("FAIL to parse, skipping {tuple} {created}".format(
+                tuple=alias_tuple, 
+                created=created[0:10]))
             continue
 
         if skip_biblio and (namespace=="biblio"):
@@ -50,7 +52,9 @@ def create_alias_objects(item_object, alias_tuples, created, tuples_to_commit, s
             continue
 
         if not nid:
-            print "FAIL no nid, skipping ", alias_tuple, created[0:10]
+            logger.error("FAIL no nid, skipping {tuple} {created}".format(
+                tuple=alias_tuple, 
+                created=created[0:10]))
             continue
 
         try:
@@ -181,7 +185,6 @@ def save_alias_to_item(item_object, alias_tuple):
 def save_biblio_to_item(item_object, biblio_dict, provider="unknown"):
     for biblio_name in biblio_dict:
         biblio_object = Biblio(item_object, biblio_name, biblio_dict[biblio_name], provider)
-        print biblio_object
         db.session.add(biblio_object)
 
     db.session.add(item_object)

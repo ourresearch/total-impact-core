@@ -69,13 +69,11 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
         aliases, myredis, mydao)
 
     coll_doc = mydao.get(cid)
-    print coll_doc
     alias_strings = get_alias_strings(aliases)
     # pretty sure this is putting the wrong tiids with the aliases...
     new_alias_tiids = dict(zip(alias_strings, tiids))
     coll_doc["alias_tiids"].update(new_alias_tiids)
     coll_doc["last_modified"] = datetime.datetime.now().isoformat()
-    print coll_doc
     mydao.db.save(coll_doc)
 
     collection_object = add_items_to_collection_object(cid, tiids, aliases)
