@@ -82,7 +82,7 @@ class TestCollection():
         response = collection.Collection.query.filter_by(cid="socrates").first()
         assert_equals(response.cid, "socrates")
         assert_equals(response.tiid_links, [new_collection_tiid])
-        assert_equals(new_collection_tiid.collections.query.all(), [new_collection])
+        assert_equals(new_collection_tiid.collection.query.all(), [new_collection])
 
 
     def test_init_added_item(self):
