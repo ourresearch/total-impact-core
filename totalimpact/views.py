@@ -9,7 +9,7 @@ import shortuuid
 import analytics
 import requests
 
-from totalimpact import dao, app, tiredis, collection, api_user
+from totalimpact import dao, app, tiredis, collection, api_user, incoming_email
 from totalimpact import item as item_module
 from totalimpact.models import MemberItems, UserFactory, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderServerError, ProviderTimeout
@@ -22,7 +22,6 @@ logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 
 mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
-mypostgresdao = dao.PostgresDao(os.environ["POSTGRESQL_URL"])
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)  # main app is on DB 0
 
 logger.debug(u"Building reference sets")
@@ -75,7 +74,7 @@ def check_key():
 
     if "/v1/" in request.url:
         api_key = request.values.get('key', '')
-        if not api_user.is_valid_key(api_key, mypostgresdao):
+        if not api_user.is_valid_key(api_key):
             abort_custom(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a valid api key.")
     return # if success don't return any content
 
@@ -161,45 +160,6 @@ def hello():
     return resp
 
 
-'''
-GET /tiid/:namespace/:id
-404 if not found because not created yet
-303 else list of tiids
-'''
-@app.route('/tiid/<ns>/<path:nid>', methods=['GET'])
-# not supported in v1
-def tiid(ns, nid):
-    ns = item_module.clean_id(ns)
-    nid = item_module.clean_id(nid)
-
-    tiid = item_module.get_tiid_by_alias(ns, nid, mydao)
-
-    if not tiid:
-        abort_custom(404, "this tiid doesn't exist")
-    resp = make_response(json.dumps(tiid, sort_keys=True, indent=4), 303)
-    resp.mimetype = "application/json"
-    return resp
-
-
-@app.route('/item/<namespace>/<path:nid>', methods=['POST'])
-def item_namespace_post_with_tiid(namespace, nid):
-    """Creates a new item using the given namespace and id.
-    POST /item/:namespace/:nid
-    201
-    500?  if fails to create
-    example /item/PMID/234234232
-    original api returned tiid
-    /v1 returns nothing in body
-    """
-    namespace = item_module.clean_id(namespace)
-    nid = item_module.clean_id(nid)
-
-    tiid = item_module.create_item_from_namespace_nid(namespace, nid, myredis, mydao)
-    response_code = 201  # Created
-    resp = make_response(json.dumps(tiid), response_code)
-    resp.mimetype = "application/json"
-    return resp
-
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
     namespace = item_module.clean_id(namespace)
@@ -207,7 +167,7 @@ def item_namespace_post(namespace, nid):
 
     api_key = request.values.get('key')
     try:
-        api_user.register_item((namespace, nid), api_key, myredis, mydao, mypostgresdao)
+        api_user.register_item((namespace, nid), api_key, myredis, mydao)
         response_code = 201 # Created
     except api_user.ItemAlreadyRegisteredToThisKey:
         response_code = 200
@@ -217,51 +177,8 @@ def item_namespace_post(namespace, nid):
     resp = make_response(json.dumps("ok"), response_code)
     return resp
 
-# For /v1 support interface as get from namespace:nid instead of get from tiid
-@app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
-def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
-    namespace = item_module.clean_id(namespace)
-    nid = item_module.clean_id(nid)
 
-    include_history = request.args.get("include_history", 0) in ["1", "true", "True"]
-    register = request.args.get("register", 0) in ["1", "true", "True"]
-    callback_name = request.args.get("callback", None)
-    api_key = request.values.get('key')
-
-    debug_message = ""
-    if register:
-        try:
-            api_user.register_item((namespace, nid), api_key, myredis, mydao, mypostgresdao)
-        except api_user.ItemAlreadyRegisteredToThisKey:
-            debug_message = u"ItemAlreadyRegisteredToThisKey for key {api_key}".format(
-                api_key=api_key)
-            logger.debug(debug_message)
-        except api_user.ApiLimitExceededException:
-            debug_message = u"ApiLimitExceededException for key {api_key}".format(
-                api_key=api_key)
-            logger.debug(debug_message)
-
-    tiid = item_module.get_tiid_by_alias(namespace, nid, mydao)
-    if not tiid:
-        if not debug_message:
-            debug_message = "Item not in database. Call POST to register it"
-        # if registration failure, report that info. Else suggest they register.
-        abort_custom(404, debug_message)
-    return get_item_from_tiid(tiid, format, include_history, callback_name)
-
-
-'''GET /item/:tiid
-404 if tiid not found in db
-'''
-@app.route('/item/<tiid>', methods=['GET'])
 def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=None):
-
-    # If we want to continue to support this endpoint, we should probably
-    # take the params out of the method signature and get them from the request
-    # obj, so folks using the endpoint can have access to them.
-
-
-
     try:
         item = item_module.get_item(tiid, myrefsets, mydao, include_history)
     except (LookupError, AttributeError):
@@ -285,14 +202,45 @@ def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=N
     if callback_name is not None:
         resp_string = callback_name + '(' + resp_string + ')'
 
-
     resp = make_response(resp_string, response_code)
     resp.mimetype = "application/json"
 
     return resp
 
 
-@app.route('/provider', methods=['GET'])
+@app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
+def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
+    namespace = item_module.clean_id(namespace)
+    nid = item_module.clean_id(nid)
+
+    include_history = request.args.get("include_history", 0) in ["1", "true", "True"]
+    register = request.args.get("register", 0) in ["1", "true", "True"]
+    callback_name = request.args.get("callback", None)
+    api_key = request.values.get('key')
+
+    debug_message = ""
+    if register:
+        try:
+            api_user.register_item((namespace, nid), api_key, myredis, mydao)
+        except api_user.ItemAlreadyRegisteredToThisKey:
+            debug_message = u"ItemAlreadyRegisteredToThisKey for key {api_key}".format(
+                api_key=api_key)
+            logger.debug(debug_message)
+        except api_user.ApiLimitExceededException:
+            debug_message = u"ApiLimitExceededException for key {api_key}".format(
+                api_key=api_key)
+            logger.debug(debug_message)
+
+    tiid = item_module.get_tiid_by_alias(namespace, nid, mydao)
+    if not tiid:
+        if not debug_message:
+            debug_message = "Item not in database. Call POST to register it"
+        # if registration failure, report that info. Else suggest they register.
+        abort_custom(404, debug_message)
+    return get_item_from_tiid(tiid, format, include_history, callback_name)
+
+
+
 @app.route('/v1/provider', methods=['GET'])
 def provider():
     ret = ProviderFactory.get_all_metadata()
@@ -317,7 +265,6 @@ def provider_memberitems(provider_name):
     resp.mimetype = "application/json"
     resp.headers['Access-Control-Allow-Origin'] = "*"
     return resp
-
 
 @app.route("/v1/provider/<provider_name>/memberitems/<query>", methods=['GET'])
 def provider_memberitems_get(provider_name, query):
@@ -354,9 +301,7 @@ def provider_memberitems_get(provider_name, query):
 GET /collection/:collection_ID
 returns a collection object and the items
 '''
-@app.route('/collection/<cid>', methods=['GET'])
 @app.route('/v1/collection/<cid>', methods=['GET'])
-@app.route('/collection/<cid>.<format>', methods=['GET'])
 @app.route('/v1/collection/<cid>.<format>', methods=['GET'])
 def collection_get(cid='', format="json", include_history=False):
     coll = mydao.get(cid)
@@ -419,32 +364,14 @@ def collection_get(cid='', format="json", include_history=False):
 
 def get_coll_with_authentication_check(request, cid):
     coll = dict(mydao.db[cid])
-
-    # if admin override key, then everything is fine
     if request.args.get("api_admin_key"):
         supplied_key = request.args.get("api_admin_key", "")
         secret_key = os.getenv("API_KEY")  #ideally rename this to API_ADMIN_KEY
         if secret_key == supplied_key:
             return coll
-
-    # otherwise require authentication
-    key = request.args.get("edit_key", None)
-    if key is None:
-        abort_custom(404, "This method requires an update key.")
-
-    if "key" in coll.keys():
-        if coll["key"] != key:
-            abort_custom(403, "Wrong update key")
-    elif "key_hash" in coll.keys():
-        if not check_password_hash(coll["key_hash"], key):
-            abort_custom(403, "Wrong update key")
-    else:
-        abort_custom(501, "This collection has no update key; it cant' be changed.")
-
-    return coll
+    abort_custom(403, "This collection has no update key; it can't be changed.")
 
 
-@app.route('/collection/<cid>/items', methods=['POST'])
 @app.route('/v1/collection/<cid>/items', methods=['POST'])
 def delete_and_put_helper(cid=""):
     """
@@ -460,7 +387,6 @@ def delete_and_put_helper(cid=""):
                    " http_method argument.")
 
 
-@app.route('/collection/<cid>/items', methods=['DELETE'])
 @app.route('/v1/collection/<cid>/items', methods=['DELETE'])
 def delete_items(cid=""):
     """
@@ -506,7 +432,6 @@ def get_alias_strings(aliases):
     return alias_strings   
 
 
-@app.route("/collection/<cid>/items", methods=["PUT"])
 @app.route("/v1/collection/<cid>/items", methods=["PUT"])
 def put_collection(cid=""):
     """
@@ -549,7 +474,6 @@ def put_collection(cid=""):
 
 """ Updates all the items in a given collection.
 """
-@app.route("/collection/<cid>", methods=["POST"])
 @app.route("/v1/collection/<cid>", methods=["POST"])
 # not officially supported in api
 def collection_update(cid=""):
@@ -621,7 +545,6 @@ def delete_collection(cid=None):
 
 
 # creates a collection with aliases
-@app.route('/collection', methods=['POST'])
 @app.route('/v1/collection', methods=['POST'])
 def collection_create():
     """
@@ -714,7 +637,6 @@ def latest_collections(format=""):
     return resp            
 
 
-@app.route("/collections/<cids>")
 @app.route("/v1/collections/<cids>")
 def get_collection_titles(cids=''):
     from time import sleep
@@ -726,14 +648,12 @@ def get_collection_titles(cids=''):
     return resp
 
 
-@app.route("/collections/reference-sets")
 @app.route("/v1/collections/reference-sets")
 def reference_sets():
     resp = make_response(json.dumps(myrefsets, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
-@app.route("/collections/reference-sets-histograms")
 @app.route("/v1/collections/reference-sets-histograms")
 def reference_sets_histograms():
     rows = []
@@ -762,126 +682,27 @@ def reference_sets_histograms():
 def key():
     """ Generate a new api key and store api key info in a db doc """
     meta = request.json
-
-    password = meta["password"]
-    del(meta["password"])
-    if password != os.getenv("API_KEY"):
+    if meta["password"] != os.getenv("API_KEY"):
         abort_custom(403, "password not correct")
+    del meta["password"]
 
-    prefix = meta["prefix"]
-    del(meta["prefix"])
-
-    max_registered_items = meta["max_registered_items"]
-    del(meta["max_registered_items"])
-
-    new_api_key = api_user.save_api_user(prefix, max_registered_items, mypostgresdao, **meta)
+    new_api_user = api_user.save_api_user(**meta)
+    new_api_key = new_api_user.api_key
 
     resp = make_response(json.dumps({"api_key":new_api_key}, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 
-@app.route("/user/<userid>", methods=["GET"])
-@app.route("/v1/user/<userid>", methods=["GET"])
-def get_user(userid=''):
-    """
-    GET /user
-    Gets a user.
 
-    The user's private properties are not returned unless you pass a correct collection key.
-    """
-
-    key = request.args.get("key")
-    try:
-        user = UserFactory.get(userid, mydao, key)
-    except KeyError:
-        abort_custom(404, "User doesn't exist.")
-    except NotAuthenticatedError:
-        abort_custom(403, "You've got the wrong password.")
-
-    resp = make_response(json.dumps(user, indent=4), 200)
-    resp.mimetype = "application/json"
-    return resp
-
-
-@app.route('/user', methods=['PUT'])
-@app.route('/v1/user', methods=['PUT'])
-def update_user(userid=''):
-    """
-    PUT /user
-    creates new user
-    """
-
-    new_stuff = request.json
-    try:
-        key = new_stuff["key"]
-    except KeyError:
-        abort_custom(400, "the submitted user object is missing required properties.")
-    try:
-        res = UserFactory.put(new_stuff, key, mydao)
-    except NotAuthenticatedError:
-        abort_custom(403, "You've got the wrong password.")
-    except AttributeError:
-        abort_custom(400, "the submitted user object is missing required properties.")
-
-    resp = make_response(json.dumps(res, indent=4), 200)
-    resp.mimetype = "application/json"
-    return resp
-
-# can remove this wrapper and just use mypostgresdao version once finished with couchdb
-def save_email(payload):
-    doc_id = shortuuid.uuid()[0:24]
-    doc = {"_id":doc_id, 
-            "type":"email", 
-            "created":datetime.datetime.now().isoformat(),
-            "payload":payload}
-    mydao.save(doc)
-    mypostgresdao.save_email(doc)
-    return doc_id
-
-GOOGLE_SCHOLAR_CONFIRM_PATTERN = re.compile("""for the query:\nNew articles in (?P<name>.*)'s profile\n\nClick to confirm this request:\n(?P<url>.*)\n\n""")
-def alert_if_google_scholar_notification_confirmation(payload):
-    name = None
-    url = None
-    try:
-        email_body = payload["plain"]
-        match = GOOGLE_SCHOLAR_CONFIRM_PATTERN.search(email_body)
-        if match:
-            url = match.group("url")
-            name = match.group("name")
-            logger.info(u"Google Scholar notification confirmation for {name} is at {url}".format(
-                name=name, url=url))
-    except (KeyError, TypeError):
-        pass
-    return(name, url)
-
-GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN = re.compile("""Scholar Alert - (?P<name>.*) - new articles""")
-def alert_if_google_scholar_new_articles(payload, doc_id):
-    name = None
-    try:
-        subject = payload["headers"]["Subject"]
-        match = GOOGLE_SCHOLAR_NEW_ARTICLES_PATTERN.search(subject)
-        if match:
-            name = match.group("name")
-            logger.info(u"Just received Google Scholar alert: new articles for {name}, saved at {doc_id}".format(
-                name=name, doc_id=doc_id))
-    except (KeyError, TypeError):
-        pass
-    return(name)
 
 # route to receive email
 @app.route('/v1/inbox', methods=["POST"])
 def inbox():
     payload = request.json
-    doc_id = save_email(payload)
-    logger.debug(u"You've got mail. Payload: {payload}".format(
-        payload=payload))
-    logger.info(u"You've got mail. Saved as {doc_id}. Subject: {subject}".format(
-        doc_id=doc_id, subject=payload["headers"]["Subject"]))
-
-    alert_if_google_scholar_notification_confirmation(payload)
-    alert_if_google_scholar_new_articles(payload, doc_id)
-
-    resp = make_response(json.dumps({"_id":doc_id}, sort_keys=True, indent=4), 200)
+    email = incoming_email.save_incoming_email(payload)
+    logger.info(u"You've got mail. Subject: {subject}".format(
+        subject=email.subject))
+    resp = make_response(json.dumps({"subject":email.subject}, sort_keys=True, indent=4), 200)
     resp.mimetype = "application/json"
     return resp
 

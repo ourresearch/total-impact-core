@@ -1,11 +1,13 @@
 import unittest, json, uuid
 from copy import deepcopy
 from urllib import quote_plus
+import os
 from nose.tools import assert_equals, nottest, assert_greater
 
-from totalimpact import app, dao, views, tiredis, api_user
+from totalimpact import app, db, dao, views, tiredis, api_user
 from totalimpact.providers.dryad import Dryad
-import os
+
+from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
 
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
@@ -37,10 +39,6 @@ mydao = views.set_db("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 myredis = views.set_redis("redis://localhost:6379", db=8)
 
 class ViewsTester(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        pass
 
     def setUp(self):
         """
@@ -118,32 +116,19 @@ class ViewsTester(unittest.TestCase):
         }
         '''
 
-        test_api_user = """
-                {
-           "_id": "yDnhDa3fdFxxEsQnzYnA96",
-           "created": "2012-11-19T16:11:17.713812",
-           "current_key": "validkey",
-           "registered_items": {
-               "doi:10.1371/journal.pcbi.1000355": {
-                   "tiid": "b229e24abec811e1887612313d1a5e63",
-                   "registered_date": "2012-12-29T18:11:20.870026"
-               }
-           },
-           "max_registered_items": 1000,
-           "key_history": {
-               "2012-11-19T16:11:17.713812": "validkey"
-           },
-           "meta": {
-               "planned_use": "individual CV",
-               "example_url": "",
-               "api_key_owner": "Superman",
-               "notes": "",
-               "organization": "individual",
-               "email": "superman@secret.com"
-           },
-           "type": "api_user"
-        }
-        """
+        self.test_api_user_meta = {    
+                    'max_registered_items': 3, 
+                    'planned_use': 'individual CV', 
+                    'email': "test@example.com", 
+                    'notes': '', 
+                    'api_key_owner': 'Julia Smith', 
+                    "example_url": "", 
+                    "organization": "NASA",
+                    "prefix": "NASA",
+                }
+
+        self.db = setup_postgres_for_unittests(db, app)
+
 
         # hacky way to delete the "ti" db, then make it fresh again for each test.
         temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
@@ -152,14 +137,12 @@ class ViewsTester(unittest.TestCase):
         self.d.update_design_doc()
 
         self.d.save(json.loads(test_item))
-        self.d.save(json.loads(test_api_user))
 
-        #postgres
-        self.postgres_d = dao.PostgresDao("postgres://localhost/unittests")
-        self.postgres_d.delete_schema()
-        self.postgres_d.create_tables()
-        meta = json.loads(test_api_user)["meta"]
-        api_user.save_api_user_to_database("validkey", 1000, self.postgres_d, **meta)
+        self.existing_api_user = api_user.ApiUser(**self.test_api_user_meta)
+        self.existing_api_user.api_key = "validkey"  #override randomly assigned key
+        self.db.session.add(self.existing_api_user)
+        self.db.session.commit()
+        self.db.session.flush()                
 
         # do the same thing for the redis db.  We're using DB 8 for unittests.
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
@@ -170,20 +153,25 @@ class ViewsTester(unittest.TestCase):
         self.app.testing = True
         self.client = self.app.test_client()
 
+        # Mock out relevant methods of the Dryad provider
+        self.orig_Dryad_member_items = Dryad.member_items
+        Dryad.member_items = MOCK_member_items
+
+        self.aliases = [
+            ["doi", "10.123"],
+            ["doi", "10.124"],
+            ["doi", "10.125"]
+        ]
+
+
     def tearDown(self):
-        self.postgres_d.close()
+        teardown_postgres_for_unittests(self.db)
+        Dryad.member_items = self.orig_Dryad_member_items
 
-        pass
 
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
-class DaoTester(unittest.TestCase):
     def test_dao(self):
         assert_equals(mydao.db.name, os.getenv("CLOUDANT_DB"))
 
-class TestApiKeys(ViewsTester):
     def test_does_not_require_key_if_preversioned_url(self):
         resp = self.client.get("/")
         assert_equals(resp.status_code, 200)
@@ -200,19 +188,8 @@ class TestApiKeys(ViewsTester):
         resp = self.client.get("/v1/provider?key=invalidkey")
         assert_equals(resp.status_code, 403)
 
-class TestMemberItems(ViewsTester):
-
-    def setUp(self):                 
-        super(TestMemberItems, self).setUp()
-        # Mock out relevant methods of the Dryad provider
-        self.orig_Dryad_member_items = Dryad.member_items
-        Dryad.member_items = MOCK_member_items
-
-    def tearDown(self):
-        Dryad.member_items = self.orig_Dryad_member_items
-
     def test_memberitems_get(self):        
-        response = self.client.get('/provider/dryad/memberitems/Otto%2C%20Sarah%20P.?method=sync')
+        response = self.client.get('/v1/provider/dryad/memberitems/Otto%2C%20Sarah%20P.?method=sync&key=validkey')
         print response
         print response.data
         assert_equals(response.status_code, 200)
@@ -220,7 +197,7 @@ class TestMemberItems(ViewsTester):
         assert_equals(response.mimetype, "application/json")
 
     def test_memberitems_get_with_nonprinting_character(self):        
-        response = self.client.get(u'/provider/dryad/memberitems/Otto\u200e%2C%20Sarah%20P.?method=sync')
+        response = self.client.get(u'/v1/provider/dryad/memberitems/Otto\u200e%2C%20Sarah%20P.?method=sync&key=validkey')
         print response
         print response.data
         assert_equals(response.status_code, 200)
@@ -232,22 +209,15 @@ class TestMemberItems(ViewsTester):
         path = os.path.join(datadir, "Vision.bib")
         bibtex_str = open(path, "r").read()
 
+    def test_exists(self):
+        resp = self.client.get("/v1/provider?key=validkey")
+        assert resp
 
-class TestProvider(ViewsTester):
-
-        def test_exists(self):
-            resp = self.client.get("/provider")
-            assert resp
-
-        def test_gets_delicious_static_meta(self):
-            resp = self.client.get("/provider")
-            md = json.loads(resp.data)
-            print md["delicious"]
-            assert md["delicious"]['metrics']["bookmarks"]["description"]
-
-
-
-class TestItem(ViewsTester):
+    def test_gets_delicious_static_meta(self):
+        resp = self.client.get("/v1/provider?key=validkey")
+        md = json.loads(resp.data)
+        print md["delicious"]
+        assert md["delicious"]['metrics']["bookmarks"]["description"]
 
     def test_item_post_unknown_tiid(self):
         response = self.client.post('/v1/item/doi/AnIdOfSomeKind/' + "?key=validkey")
@@ -310,16 +280,14 @@ class TestItem(ViewsTester):
         assert_equals(response.status_code, 201)
 
     def test_item_nid_with_bad_character(self):
-        url = 'v1/item/doi/10.5061/dryad.' + u'\u200b' + 'j1fd7?key=validkey'
+        url = '/v1/item/doi/10.5061/dryad.' + u'\u200b' + 'j1fd7?key=validkey'
         response_get = self.client.get(url)
         assert_equals(response_get.status_code, 200)
 
     def test_item_removes_history_by_default(self):
-        url = 'v1/item/doi/10.5061/dryad.j1fd7?key=validkey'
+        url = '/v1/item/doi/10.5061/dryad.j1fd7?key=validkey'
         response = self.client.get(url)
         metrics = json.loads(response.data)["metrics"]
-
-
         assert_equals(
                 metrics["dryad:total_downloads"]["values"]["raw"],
                 207
@@ -330,7 +298,7 @@ class TestItem(ViewsTester):
         )
 
     def test_item_include_history_param(self):
-        url = 'v1/item/doi/10.5061/dryad.j1fd7?key=validkey&include_history=true'
+        url = '/v1/item/doi/10.5061/dryad.j1fd7?key=validkey&include_history=true'
         response = self.client.get(url)
 
         metrics = json.loads(response.data)["metrics"]
@@ -346,10 +314,6 @@ class TestItem(ViewsTester):
 #        )
 
 
-
-
-
-class TestItems(ViewsTester):
     def test_post_with_aliases_already_in_db(self):
         items = [
             ["doi", "10.123"],
@@ -357,7 +321,7 @@ class TestItems(ViewsTester):
             ["doi", "10.125"]
         ]
         resp = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": items, "title":"mah collection"}),
             content_type="application/json"
         )
@@ -370,7 +334,7 @@ class TestItems(ViewsTester):
         ]
 
         resp2 = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": new_items, "title": "mah_collection"}),
             content_type="application/json"
         )
@@ -380,21 +344,10 @@ class TestItems(ViewsTester):
         assert_greater(self.d.db.info()["doc_count"], 15)
 
 
-
-class TestCollection(ViewsTester):
-
-    def setUp(self):
-        self.aliases = [
-            ["doi", "10.123"],
-            ["doi", "10.124"],
-            ["doi", "10.125"]
-        ]
-        super(TestCollection, self).setUp()
-
     def test_collection_post_new_collection(self):
 
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"My Title"}),
             content_type="application/json")
 
@@ -415,9 +368,8 @@ class TestCollection(ViewsTester):
         )
 
     def test_new_collection_includes_key(self):
-
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"My Title"}),
             content_type="application/json"
         )
@@ -427,13 +379,13 @@ class TestCollection(ViewsTester):
 
 
     def test_collection_get_with_no_id(self):
-        response = self.client.get('/collection/')
+        response = self.client.get('/v1/collection/' + "?key=validkey")
         assert_equals(response.status_code, 404)  #Not found
 
     def test_collection_get(self):
 
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
@@ -441,7 +393,7 @@ class TestCollection(ViewsTester):
         collection_id = collection["_id"]
         print collection_id
 
-        resp = self.client.get('/collection/'+collection_id)
+        resp = self.client.get('/v1/collection/'+collection_id + "?key=validkey")
         assert_equals(resp.status_code, 210)
         collection_data = json.loads(resp.data)
         assert_equals(
@@ -462,7 +414,7 @@ class TestCollection(ViewsTester):
 
     def test_get_csv(self):
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
@@ -491,7 +443,7 @@ class TestCollection(ViewsTester):
             }
         mydao.save(collection)
         resp = self.client.post(
-            "/collection/123"
+            "/v1/collection/123" + "?key=validkey"
         )
         assert_equals(resp.data, "true")
 
@@ -506,7 +458,7 @@ class TestCollection(ViewsTester):
     def test_delete_collection_item(self):
         # make a new collection
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
@@ -518,7 +470,9 @@ class TestCollection(ViewsTester):
         # delete an item.
         tiid_to_delete = coll["alias_tiids"]["doi:10.123"]
         r = self.client.delete(
-            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key=key),
+            "/v1/collection/{id}/items?api_admin_key={key}".format(
+                id=coll["_id"], 
+                key=os.getenv("API_KEY")),
             data=json.dumps({"tiids": [tiid_to_delete]}),
             content_type="application/json"
         )
@@ -531,7 +485,7 @@ class TestCollection(ViewsTester):
     def test_add_collection_item(self):
         # make a new collection
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
@@ -544,7 +498,9 @@ class TestCollection(ViewsTester):
 
 
         r = self.client.put(
-            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key=key),
+            "/v1/collection/{id}/items?api_admin_key={key}".format(
+                id=coll["_id"], 
+                key=os.getenv("API_KEY")),
             data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
@@ -563,47 +519,37 @@ class TestCollection(ViewsTester):
 
         # make a new collection
         response = self.client.post(
-            '/collection',
+            '/v1/collection' + "?key=validkey",
             data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
             content_type="application/json"
         )
         resp = json.loads(response.data)
         coll =  resp["collection"]
-        key =  resp["key"]
 
         alias_list = []
         alias_list.append(["doi", "10.new"])
 
         # 403 Forbidden if wrong edit key
         r = self.client.put(
-            "/collection/{id}/items?edit_key={key}".format(id=coll["_id"], key="wrong!"),
+            "/v1/collection/{id}/items?api_admin_key={key}".format(
+                id=coll["_id"], 
+                key="wrong!"),
             data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
         assert_equals(r.status_code, 403)
 
-        # 404 Bad Request if no edit key
+        # 403 Bad Request if no edit key
         r = self.client.put(
-            "/collection/{id}/items".format(id=coll["_id"]),
+            "/v1/collection/{id}/items".format(id=coll["_id"]),
             data=json.dumps({"aliases": alias_list}),
             content_type="application/json"
         )
-        assert_equals(r.status_code, 404)
+        assert_equals(r.status_code, 403)
 
         # get the collection out the db and make sure nothing's changed
         changed_coll = self.d.get(coll["_id"])
         assert_equals(changed_coll["title"], "mah collection")
-
-
-
-
-class TestApi(ViewsTester):
-
-    def setUp(self):
-        super(TestApi, self).setUp()
-
-    def tearDown(self):
-        pass
 
     def test_tiid_get_tiids_for_multiple_known_aliases(self):
         # create two new items with the same plos alias
@@ -618,73 +564,40 @@ class TestApi(ViewsTester):
         # check that the tiid lists are the same
         assert_equals(first_plos_create_tiid, second_plos_create_tiid)
 
-class TestInbox(ViewsTester):
-
-    def setUp(self):
-        # example from http://docs.cloudmailin.com/http_post_formats/json/        
-        self.example_payload = {
-               "headers": {
-                   "To": "7be5eb5001593217143f@cloudmailin.net",
-                   "Mime-Version": "1.0",
-                   "X-Received": "by 10.58.45.134 with SMTP id n6mr13476387vem.35.1361476813304; Thu, 21 Feb 2013 12:00:13 -0800 (PST)",
-                   "Received": "by mail-vc0-f202.google.com with SMTP id m8so955261vcd.3 for <7be5eb5001593217143f@cloudmailin.net>; Thu, 21 Feb 2013 12:00:13 -0800",
-                   "From": "Google Scholar Alerts <scholaralerts-noreply@google.com>",
-                   "DKIM-Signature": "v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113; h=mime-version:x-received:message-id:date:subject:from:to :content-type; bh=74dhtWOnoX2dYtmZibjD2+Tp65AZ7UnVwRTR7Qwho/o=; b=Fabq5urMfTyUX0s3XgFhVx1pyZ+tW/n38Sm/3T5EXTWeG2k7C6mxbrv1DdmpNpl/a8 Sr70eG6St7oytXii5tg9TrwrlwhftpFZKkJQS8GMWswiEaBkOfnNkoRrN174jRYfBUuZ oKWJr49dxw9hV3uKYoSis0zL6R8P+7GXt1rtqblBELrfIJ3pKC7d7WS65i6hdM2kA+sY va9geqt1fFFN7098U7WELlM2JoXhS4fbIQTev/Z6cF89Sfs4888GXb7PIq0d1kfd6t7c kXK8bV6TkqSP4AxDm646Cv1TR9cfo6+9yCrkK8oW6ihAMzM0Lwobq22NLrRY2QK8494s WAuA==",
-                   "Date": "Thu, 21 Feb 2013 20:00:13 +0000",
-                   "Message-ID": "<089e0115f968d3b38604d6418577@google.com>",
-                   "Content-Type": "text/plain; charset=ISO-8859-1; delsp=yes; format=flowed",
-                   "Subject": "Confirm your Google Scholar Alert"
-               },
-               "reply_plain": None,
-               "attachments": [
-               ],
-               "plain": "Google received a request to start sending Scholar Alerts to  \n7be5eb5001593217143f@cloudmailin.net for the query:\nNew articles in Jonathan A. Eisen's profile\n\nClick to confirm this request:\nhttp://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nClick to cancel this request:\nhttp://scholar.google.ca/scholar_alerts?view_op=cancel_alert_options&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nThanks,\nThe Google Scholar Team",
-               "envelope": {
-                   "to": "7be5eb5001593217143f@cloudmailin.net",
-                   "helo_domain": "mail-vc0-f202.google.com",
-                   "from": "3zXwmURUKAO4iSXebQhQbUhji-dehUfboWeeWbU.Sec@scholar-alerts.bounces.google.com",
-                   "remote_ip": "209.85.220.202",
-                   "spf": {
-                       "domain": "scholar-alerts.bounces.google.com",
-                       "result": "neutral"
-                   }
-               },
-               "html": None
-            }
-        super(TestInbox, self).setUp()
-
-    def tearDown(self):
-        pass
 
     def test_inbox(self):
+        example_payload = {
+               "headers": {
+                   "To": "7be5eb5001593217143f@cloudmailin.net",
+                   "From": "Google Scholar Alerts <scholaralerts-noreply@google.com>",
+                   "Date": "Thu, 21 Feb 2013 20:00:13 +0000",
+                   "Subject": "Confirm your Google Scholar Alert"
+               },
+               "plain": "Google received a request to start sending Scholar Alerts to  \n7be5eb5001593217143f@cloudmailin.net for the query:\nNew articles in Jonathan A. Eisen's profile\n\nClick to confirm this request:\nhttp://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nClick to cancel this request:\nhttp://scholar.google.ca/scholar_alerts?view_op=cancel_alert_options&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net\n\nThanks,\nThe Google Scholar Team",
+            }
+
         response = self.client.post(
             "/v1/inbox?key=validkey",
-            data=json.dumps(self.example_payload),
+            data=json.dumps(example_payload),
             content_type="application/json"
         )
-        assert_equals(200, response.status_code)
-
-    def test_save_email(self):
-        doc_id = views.save_email(self.example_payload)
-
-        stored_email = self.postgres_d.get_email(doc_id)
-
-        assert_equals(stored_email[0].keys(), ['payload', 'id', 'created'])
-        assert_equals(json.loads(stored_email[0]["payload"]), self.example_payload)
-
-    def test_alert_if_google_scholar_notification_confirmation(self):
-        response = views.alert_if_google_scholar_notification_confirmation(self.example_payload)
-        expected = ('Jonathan A. Eisen', 'http://scholar.google.ca/scholar_alerts?update_op=confirm_alert&hl=en&alert_id=IMEzMffmofYJ&email_for_op=7be5eb5001593217143f%40cloudmailin.net')
-        assert_equals(response, expected)
-
-    def test_alert_if_google_scholar_new_articles(self):
-        self.example_payload["headers"]["Subject"] = "Scholar Alert - John P. A. Ioannidis - new articles"
-        response = views.alert_if_google_scholar_new_articles(self.example_payload, "1234")
-        expected = 'John P. A. Ioannidis'
-        assert_equals(response, expected)
+        assert_equals(response.status_code, 200)
+        assert_equals(json.loads(response.data), {u'subject': u'Confirm your Google Scholar Alert'})
 
 
-class TestTiid(ViewsTester):
+    def test_new_api_user(self):
+        # the api call needs the admin password
+        self.test_api_user_meta["password"] = os.getenv("API_KEY")
+
+        response = self.client.post(
+            '/v1/key?key=validkey',
+            data=json.dumps(self.test_api_user_meta),
+            content_type="application/json"
+        )
+        print response.data
+        resp_loaded = json.loads(response.data)
+        assert_equals(resp_loaded["api_key"].split("-")[0], self.test_api_user_meta["prefix"].lower())
+
 
     def test_item_post_known_tiid(self):
         response = self.client.post('/v1/item/doi/IdThatAlreadyExists/' + "?key=validkey")
@@ -695,104 +608,6 @@ class TestTiid(ViewsTester):
         # right now this makes a new item every time, creating many dups
         assert_equals(response.status_code, 201)
         assert_equals(json.loads(response.data), u'ok')
-
-class TestUser(ViewsTester):
-
-    def test_create(self):
-
-        user = {
-            "_id": "horace@rome.it",
-            "key": "hash",
-            "colls": {}
-        }
-        resp = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-        assert_equals("horace@rome.it", json.loads(resp.data)["_id"])
-
-
-    def test_create_without_key_in_body(self):
-        user = {
-            "_id": "horace@rome.it",
-            "colls": {}
-        }
-        resp = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-        assert_equals(400, resp.status_code)
-
-    def test_create_without_colls_in_body(self):
-        user = {
-            "_id": "horace@rome.it",
-            "key":"hash"
-        }
-        resp = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-        assert_equals(400, resp.status_code)
-
-
-    def test_get_user_doesnt_exist(self):
-        resp = self.client.get("/user/test@foo.com")
-        assert_equals(resp.status_code, 404)
-
-    def test_get_user(self):
-        user = {
-            "_id": "horace@rome.it",
-            "key": "hash",
-            "colls": {}
-        }
-        r = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-        resp = self.client.get("/user/horace@rome.it?key=hash")
-        resp_dict = json.loads(resp.data)
-        print resp_dict
-
-        assert_equals(resp_dict["_id"], "horace@rome.it")
-
-    def test_update_user(self):
-
-        user = {
-            "_id": "horace@rome.it",
-            "key": "hash",
-            "colls": {}
-        }
-        r = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-
-        # get the new user and add a coll
-        resp = self.client.get("/user/horace@rome.it?key=hash")
-        assert_equals(resp.status_code, 200)
-
-        user = json.loads(resp.data)
-        user["colls"] = ["cid:123"]
-
-        # put the new, modified user in the db
-        res = self.client.put(
-            "/user",
-            data=json.dumps(user),
-            content_type="application/json"
-        )
-
-#        returned_user = json.loads(res.data)
-#        assert_equals(returned_user["_id"], "catullus@rome.it")
-#
-#        # get the user out again, and check to see if it was modified
-#        resp = self.client.get("/user/catullus@rome.it?key=passwordhash")
-#        user = json.loads(resp.data)
-#        assert_equals(user["colls"], ["cid:123"])
 
 
 

@@ -2,6 +2,7 @@ from totalimpact import default_settings
 import os, logging, sys
 import analytics
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
 
 # see http://wiki.pylonshq.com/display/pylonscookbook/Alternative+logging+configuration
@@ -13,8 +14,13 @@ logging.basicConfig(
 
 logger = logging.getLogger("ti")
 
+
 app = Flask(__name__)
 app.config.from_object(default_settings)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("POSTGRESQL_URL")
+
+db = SQLAlchemy(app)
 
 # segment.io logging
 analytics.init(os.getenv("SEGMENTIO_PYTHON_KEY"))
