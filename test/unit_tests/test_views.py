@@ -371,7 +371,7 @@ class ViewsTester(unittest.TestCase):
         )
 
         collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
-        assert_equals(collection_object.tiids, coll["alias_tiids"].values())
+        assert_items_equal(collection_object.tiids, coll["alias_tiids"].values())
         assert_items_equal([added_item.alias_tuple for added_item in collection_object.added_items], [(unicode(a), unicode(b)) for (a, b) in self.aliases])
 
 
@@ -502,12 +502,17 @@ class ViewsTester(unittest.TestCase):
         )
 
         changed_coll = self.d.get(coll["_id"])
+        print changed_coll
 
         # we added a new item
         assert_equals(len(changed_coll["alias_tiids"]), 4)
 
         # it's got a tiid
         assert_equals(len(changed_coll["alias_tiids"]["doi:10.new"]), 24)
+
+        collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
+        print collection_object.tiids
+        assert_items_equal(collection_object.tiids, changed_coll["alias_tiids"].values())
 
 
 
