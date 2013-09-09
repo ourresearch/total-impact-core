@@ -252,17 +252,16 @@ def provider():
 @app.route('/v1/provider/<provider_name>/memberitems', methods=['POST'])
 def provider_memberitems(provider_name):
     """
-    Make a file into a dict strings describing items.
+    Make a descr string (like bibtex) into a dict strings describing items.
     """
 
-    file = request.files['file']
-    logger.debug(u"In"+provider_name+"/memberitems, got file: filename="+file.filename)
-    entries_str = file.read().decode("utf-8")
-
     provider = ProviderFactory.get_provider(provider_name)
-    items_dict = provider.parse(entries_str)
+    items_dict = provider.parse(request.json["descr"])
 
-    resp = make_response(json.dumps(items_dict), 200) # created
+    resp = make_response(
+        json.dumps({"memberitems": items_dict}, sort_keys=True, indent=4),
+        200
+    )
     resp.mimetype = "application/json"
     resp.headers['Access-Control-Allow-Origin'] = "*"
     return resp
@@ -273,19 +272,22 @@ def provider_memberitems_get(provider_name, query):
     Gets aliases associated with a query from a given provider.
     """
     query = unicode_helpers.remove_nonprinting_characters(query)
+    provider = ProviderFactory.get_provider(provider_name)
 
     try:
-        provider = ProviderFactory.get_provider(provider_name)
-        ret = provider.member_items(query)
+        items_dict = provider.member_items(query)
+
     except ProviderItemNotFoundError:
         abort_custom(404, "item not found")
+
     except (ProviderTimeout, ProviderServerError):
         abort_custom(503, "crossref lookup error, might be transient")
+
     except ProviderError:
         abort(500, "internal error from provider")
 
     resp = make_response(
-        json.dumps({"memberitems":ret}, sort_keys=True, indent=4),
+        json.dumps({"memberitems": items_dict}, sort_keys=True, indent=4),
         200
     )
     resp.mimetype = "application/json"
