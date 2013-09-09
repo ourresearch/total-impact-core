@@ -55,7 +55,6 @@ class TestApiUser():
         self.db.session.add(self.existing_api_user)
         self.db.session.add(self.existing_registered_item)
         self.db.session.commit()
-        self.db.session.flush()                
 
 
     def tearDown(self):
@@ -77,7 +76,6 @@ class TestApiUser():
 
         self.db.session.add(new_api_user)
         self.db.session.commit()
-        self.db.session.flush()
 
         # and now poof there it is
         matching_api_users = ApiUser.query.filter_by(email=self.test_email).first()
@@ -126,7 +124,6 @@ class TestApiUser():
                 pass
 
         self.db.session.commit()
-        self.db.session.flush()                
 
         response = api_user.is_over_quota(api_key)
         assert_equals(response, True)

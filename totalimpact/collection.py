@@ -33,6 +33,9 @@ def get_alias_strings(aliases):
     return alias_strings   
 
 def add_items_to_collection_object(cid, tiids, alias_tuples):
+    logger.info(u"in add_items_to_collection_object for {cid}".format(
+        cid=cid))        
+
     now = datetime.datetime.now()
     collection_obj = Collection.query.filter_by(cid=cid).limit(1).first()
     if not collection_obj:
@@ -50,6 +53,9 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
 
 
 def remove_items_from_collection_object(cid, tiids_to_remove):
+    logger.info(u"in remove_items_from_collection_object for {cid}".format(
+        cid=cid))        
+
     now = datetime.datetime.now()
     collection_obj = Collection.query.filter_by(cid=cid).limit(1).first()
     if not collection_obj:
@@ -65,6 +71,9 @@ def remove_items_from_collection_object(cid, tiids_to_remove):
 
 
 def add_items_to_collection(cid, aliases, myredis, mydao):
+    logger.info(u"in add_items_to_collection for {cid}".format(
+        cid=cid))        
+
     (tiids, new_items) = item_module.create_or_update_items_from_aliases(
         aliases, myredis, mydao)
 
@@ -75,6 +84,7 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
     coll_doc["alias_tiids"].update(new_alias_tiids)
     coll_doc["last_modified"] = datetime.datetime.now().isoformat()
     mydao.db.save(coll_doc)
+    #print json.dumps(collection, sort_keys=True, indent=4)
 
     collection_obj = add_items_to_collection_object(cid, tiids, aliases)
     if not collection_obj:
@@ -85,12 +95,14 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
         db.session.add(collection_obj)
 
     db.session.commit()
-    db.session.flush()
 
     return (coll_doc, collection_obj)
 
 
 def delete_items_from_collection(cid, tiids_to_delete, myredis, mydao):
+    logger.info(u"in delete_items_from_collection for {cid}".format(
+        cid=cid))        
+
     coll_doc = mydao.get(cid)
     new_alias_tiids = {}
     for alias, tiid in coll_doc["alias_tiids"].iteritems():
@@ -108,12 +120,14 @@ def delete_items_from_collection(cid, tiids_to_delete, myredis, mydao):
         collection_obj = create_objects_from_collection_doc(coll_doc)    
         db.session.add(collection_obj)
     db.session.commit()
-    db.session.flush()
 
     return (coll_doc, collection_obj)
 
 
 def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myredis, mydao):
+    logger.info(u"in create_new_collection for {cid}".format(
+        cid=cid))        
+
     (tiids, new_items) = item_module.create_or_update_items_from_aliases(aliases, myredis, mydao)
 
     coll_doc, key = make(cid)
@@ -126,10 +140,12 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
 
     mydao.save(coll_doc)
 
+    logger.info(u"in create_new_collection for {cid}, finished with couch now to postgres".format(
+        cid=cid))        
+
     collection_obj = create_objects_from_collection_doc(coll_doc)
     db.session.add(collection_obj)
     db.session.commit()
-    db.session.flush()
 
     logger.info(u"saved new collection '{id}' with {num_items} items.".format(
             id=coll_doc["_id"],
@@ -144,7 +160,6 @@ def save_collection(**kwargs):
     collection = Collection(**kwargs)
     db.session.add(collection)
     db.session.commit()
-    db.session.flush()
     return collection
 
 
@@ -152,12 +167,14 @@ def save_added_item(**kwargs):
     added_items = AddedItem(**kwargs)
     db.session.add(added_items)
     db.session.commit()
-    db.session.flush()
     return added_items
 
 
 
 def create_collection_tiid_objects(tiids, collection_obj, collection_tiids_to_commit={}):
+    logger.info(u"in create_new_collection for {cid}".format(
+        cid=collection_obj.cid))        
+
     new_tiid_objects = []
 
     for tiid in tiids:
@@ -182,6 +199,9 @@ def create_collection_tiid_objects(tiids, collection_obj, collection_tiids_to_co
 
 
 def create_added_item_objects(alias_tuples, collection_obj, created=None, added_items_to_commit={}):
+    logger.info(u"in create_added_item_objects for {cid}".format(
+        cid=collection_obj.cid))        
+
     new_added_item_objects = []
 
     for alias_tuple in alias_tuples:
@@ -214,6 +234,9 @@ def create_added_item_objects(alias_tuples, collection_obj, created=None, added_
 
 
 def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, added_items_to_commit={}):
+    logger.info(u"in create_objects_from_collection_doc for {cid}".format(
+        cid=coll_doc["_id"]))        
+
     new_coll_object = Collection.query.filter_by(cid=coll_doc["_id"]).limit(1).first()
     if not new_coll_object:
         new_coll_object = Collection.create_from_old_doc(coll_doc)
@@ -223,6 +246,9 @@ def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, 
         new_coll_object,
         collection_tiids_to_commit)
     new_coll_object.tiid_links = new_tiid_objects
+    logger.info(u"new_tiid_objects for {cid} are {new_tiid_objects}".format(
+        cid=coll_doc["_id"], 
+        new_tiid_objects=new_tiid_objects))        
 
     alias_strings = coll_doc["alias_tiids"].keys()
     alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]          
@@ -231,6 +257,9 @@ def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, 
         coll_doc["created"], 
         added_items_to_commit)
     new_coll_object.added_items = new_added_item_objects
+    logger.info(u"new_added_item_objects for {cid} are {new_added_item_objects}".format(
+        cid=coll_doc["_id"], 
+        new_added_item_objects=new_added_item_objects))      
 
     return(new_coll_object)
 
@@ -239,14 +268,12 @@ def save_collection_from_doc(collection_doc):
     new_coll_object = create_objects_from_collection_doc(collection_doc)
     db.session.add(new_coll_object)    
     db.session.commit()
-    db.session.flush()
     return new_coll_object
 
 def delete_collection(cid):
     coll_object = Collection.query.filter_by(cid=cid).limit(1).first()
     db.session.delete(coll_object)
     db.session.commit()
-    db.session.flush()
     return
 
 class AddedItem(db.Model):
@@ -258,6 +285,8 @@ class AddedItem(db.Model):
     created = db.Column(db.DateTime())
 
     def __init__(self, **kwargs):
+        logger.info(u"new AddedItem {kwargs}".format(
+            kwargs=kwargs))        
         now = datetime.datetime.now()
         if "created" in kwargs:
             self.created = kwargs["created"]
@@ -270,8 +299,8 @@ class AddedItem(db.Model):
         return ((self.namespace, self.nid))
 
     def __repr__(self):
-        return '<AddedItem {cid}, {alias_tuple} {tiid}>'.format(
-            cid=self.cid, 
+        return '<AddedItem {collection}, {alias_tuple} {tiid}>'.format(
+            collection=self.collection, 
             alias_tuple=self.alias_tuple,
             tiid=self.tiid)
 
@@ -281,11 +310,13 @@ class CollectionTiid(db.Model):
     tiid = db.Column(db.Text)
 
     def __init__(self, **kwargs):
+        logger.info(u"new CollectionTiid {kwargs}".format(
+            kwargs=kwargs))                
         super(CollectionTiid, self).__init__(**kwargs)
 
     def __repr__(self):
-        return '<CollectionTiid {cid} {tiid}>'.format(
-            cid=self.cid, 
+        return '<CollectionTiid {collection} {tiid}>'.format(
+            collection=self.collection, 
             tiid=self.tiid)
 
 
@@ -302,6 +333,9 @@ class Collection(db.Model):
         backref=db.backref("collection", lazy="join"))
 
     def __init__(self, collection_id=None, **kwargs):
+        logger.info(u"new Collection {kwargs}".format(
+            kwargs=kwargs))                
+
         if collection_id is None:
             collection_id = _make_id()
         self.cid = collection_id

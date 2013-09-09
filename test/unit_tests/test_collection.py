@@ -54,7 +54,6 @@ class TestCollection():
 
         self.db.session.add(new_collection)
         self.db.session.commit()
-        self.db.session.flush()
 
         # and now poof there it is
         response = collection.Collection.query.filter_by(cid="socrates").first()
@@ -76,7 +75,6 @@ class TestCollection():
         self.db.session.add(new_collection_tiid)
         self.db.session.add(new_collection)
         self.db.session.commit()
-        self.db.session.flush()
 
         # and now poof there it is
         response = collection.Collection.query.filter_by(cid="socrates").first()

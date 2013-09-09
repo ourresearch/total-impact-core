@@ -24,14 +24,12 @@ def save_api_user(**meta):
     api_user = ApiUser(**meta)
     db.session.add(api_user)
     db.session.commit()
-    db.session.flush()
     return api_user
 
 def save_registered_item(alias, api_user):
     registered_item = RegisteredItem(alias, api_user)
     db.session.add(registered_item)
     db.session.commit()
-    db.session.flush()
     return registered_item
 
 

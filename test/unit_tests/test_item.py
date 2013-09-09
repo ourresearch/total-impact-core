@@ -138,7 +138,6 @@ class TestItem():
 
         self.db.session.add(item_object)
         self.db.session.commit()
-        self.db.session.flush()
 
         # we have an item but it has no aliases
         found_item = Item.query.first()
@@ -161,7 +160,6 @@ class TestItem():
 
         self.db.session.add(new_alias)
         self.db.session.commit()
-        self.db.session.flush()
 
         # and now poof there it is
         response = Alias.query.all()

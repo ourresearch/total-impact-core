@@ -62,7 +62,6 @@ class TestIncomingEmail():
 
         self.db.session.add(self.existing_email)
         self.db.session.commit()
-        self.db.session.flush()                
 
         all_email = IncomingEmail.query.all()
         assert_equals(len(all_email), 1)

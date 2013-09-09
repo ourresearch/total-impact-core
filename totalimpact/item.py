@@ -31,7 +31,6 @@ def delete_item(cid):
     item_object = Item.query.filter_by(tiid=tiid).limit(1).first()
     db.session.delete(item_object)
     db.session.commit()
-    db.session.flush()
     return
 
 def create_alias_objects(item_object, alias_tuples, created, tuples_to_commit, skip_biblio=True):
@@ -178,7 +177,6 @@ def save_alias_to_item(item_object, alias_tuple):
 
     db.session.add(item_object)
     db.session.commit()
-    db.session.flush()
     return item_object
 
 # save an alias to an item, making the alias if necessary
@@ -189,7 +187,6 @@ def save_biblio_to_item(item_object, biblio_dict, provider="unknown"):
 
     db.session.add(item_object)
     db.session.commit()
-    db.session.flush()
     return item_object
 
 # save an alias to an item, making the metric if necessary
@@ -210,7 +207,6 @@ def save_metric_to_item(item_object, old_style_metric_dict, provider=None):
 
     db.session.add(item_object)
     db.session.commit()
-    db.session.flush()
     return item_object
 
 

@@ -12,7 +12,6 @@ def save_incoming_email(payload):
 
     db.session.add(email)
     db.session.commit()
-    db.session.flush()
 
     return email
 

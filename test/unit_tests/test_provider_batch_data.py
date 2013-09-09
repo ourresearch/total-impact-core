@@ -62,7 +62,6 @@ class TestProviderBatchData():
 
         self.db.session.add(new_batch_data)
         self.db.session.commit()
-        self.db.session.flush()
 
         # and now poof there it is
         matching = ProviderBatchData.query.filter_by(provider="pmc").first()
