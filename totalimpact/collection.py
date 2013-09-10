@@ -41,14 +41,17 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
     if not collection_obj:
         return None
     collection_obj.last_modified = now
-    db.session.add(collection_obj)
+    db.session.merge(collection_obj)
 
-    (new_tiid_objects, collection_tiids_to_commit) = create_collection_tiid_objects(tiids, collection_obj)
-    collection_obj.tiid_links += [new_tiid_objects]
+    for tiid in tiids:
+        if tiid not in collection_obj.tiids:
+            collection_obj.tiid_links.append(CollectionTiid(tiid=tiid))
 
-    (new_added_item_objects, added_items_to_commit) = create_added_item_objects(alias_tuples, collection_obj)
-    collection_obj.added_items += [new_added_item_objects]
+    for alias_tuple in alias_tuples:
+        if alias_tuple not in collection_obj.added_aliases:
+            collection_obj.added_items.append(AddedItem(alias_tuple=alias_tuple))
 
+    db.session.commit()
     return collection_obj
 
 
@@ -61,12 +64,13 @@ def remove_items_from_collection_object(cid, tiids_to_remove):
     if not collection_obj:
         return None    
     collection_obj.last_modified = now
-    db.session.add(collection_obj)
+    db.session.merge(collection_obj)
 
     for coll_tiid in collection_obj.tiid_links:
         if coll_tiid.tiid in tiids_to_remove:
             collection_obj.tiid_links.remove(coll_tiid)
 
+    db.session.commit()
     return collection_obj
 
 
@@ -92,9 +96,6 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
         logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
                 cid=cid))        
         collection_obj = create_objects_from_collection_doc(coll_doc)
-        db.session.add(collection_obj)
-
-    db.session.commit()
 
     return (coll_doc, collection_obj)
 
@@ -118,8 +119,6 @@ def delete_items_from_collection(cid, tiids_to_delete, myredis, mydao):
         logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
                 cid=cid))
         collection_obj = create_objects_from_collection_doc(coll_doc)    
-        db.session.add(collection_obj)
-    db.session.commit()
 
     return (coll_doc, collection_obj)
 
@@ -144,8 +143,6 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
         cid=cid))        
 
     collection_obj = create_objects_from_collection_doc(coll_doc)
-    db.session.add(collection_obj)
-    db.session.commit()
 
     logger.info(u"saved new collection '{id}' with {num_items} items.".format(
             id=coll_doc["_id"],
@@ -171,68 +168,6 @@ def save_added_item(**kwargs):
 
 
 
-def create_collection_tiid_objects(tiids, collection_obj, collection_tiids_to_commit={}):
-    logger.info(u"in create_new_collection for {cid}".format(
-        cid=collection_obj.cid))        
-
-    new_tiid_objects = []
-
-    for tiid in tiids:
-        try:
-            tiid_object = CollectionTiid.query.filter_by(cid=collection_obj.cid, tiid=tiid).limit(1).first()
-        except TypeError:
-            tiid_object = None
-
-        tiid_key = ":".join([collection_obj.cid, tiid])
-        if tiid_object:
-            pass
-        elif tiid_key in collection_tiids_to_commit:
-            tiid_object = collection_tiids_to_commit[tiid_key]
-        else:
-            tiid_object = CollectionTiid(collection=collection_obj, tiid=tiid)
-            collection_tiids_to_commit[tiid_key] = tiid_object
-            
-        #db.session.add(tiid_object)
-        new_tiid_objects += [tiid_object]    
-
-    return (new_tiid_objects, collection_tiids_to_commit)
-
-
-def create_added_item_objects(alias_tuples, collection_obj, created=None, added_items_to_commit={}):
-    logger.info(u"in create_added_item_objects for {cid}".format(
-        cid=collection_obj.cid))        
-
-    new_added_item_objects = []
-
-    for alias_tuple in alias_tuples:
-        try:
-            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-            (namespace, nid) = alias_tuple
-        except ValueError:
-            #print "FAIL to parse, skipping ", alias_tuple, created[0:10]
-            continue
-
-        try:
-            added_item_object = AddedItem.query.filter_by(cid=collection_obj.cid, namespace=namespace, nid=nid).limit(1).first()
-        except TypeError:
-            added_item_object = None
-
-        alias_key = ":".join([collection_obj.cid, alias_tuple[0], alias_tuple[1]])
-        if added_item_object:
-            pass
-        elif alias_key in added_items_to_commit:
-            added_item_object = added_items_to_commit[alias_key]
-        else:
-            added_item_object = AddedItem(collection=collection_obj, namespace=namespace, nid=nid, created=created)
-            added_items_to_commit[alias_key] = added_item_object
-            
-        #db.session.add(added_item_object)
-        new_added_item_objects += [added_item_object]    
-
-    return (new_added_item_objects, added_items_to_commit)
-
-
-
 def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, added_items_to_commit={}):
     logger.info(u"in create_objects_from_collection_doc for {cid}".format(
         cid=coll_doc["_id"]))        
@@ -240,34 +175,34 @@ def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, 
     new_coll_object = Collection.query.filter_by(cid=coll_doc["_id"]).limit(1).first()
     if not new_coll_object:
         new_coll_object = Collection.create_from_old_doc(coll_doc)
+    db.session.add(new_coll_object)    
 
     tiids = coll_doc["alias_tiids"].values()
-    (new_tiid_objects, collection_tiids_to_commit) = create_collection_tiid_objects(tiids, 
-        new_coll_object,
-        collection_tiids_to_commit)
-    new_coll_object.tiid_links = new_tiid_objects
-    logger.info(u"new_tiid_objects for {cid} are {new_tiid_objects}".format(
-        cid=coll_doc["_id"], 
-        new_tiid_objects=new_tiid_objects))        
+    for tiid in tiids:
+        if tiid not in new_coll_object.tiids:
+            new_coll_object.tiid_links.append(CollectionTiid(tiid=tiid))
 
-    alias_strings = coll_doc["alias_tiids"].keys()
-    alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]          
-    (new_added_item_objects, added_items_to_commit) = create_added_item_objects(alias_tuples, 
-        new_coll_object,
-        coll_doc["created"], 
-        added_items_to_commit)
-    new_coll_object.added_items = new_added_item_objects
+    logger.info(u"new_tiid_objects for {cid} are {new_tiid_objects}".format(
+        cid=new_coll_object.cid, 
+        new_tiid_objects=new_coll_object.tiids))        
+
+    alias_strings = tiids = coll_doc["alias_tiids"].keys()
+    alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]
+    for alias_tuple in alias_tuples:
+        if alias_tuple not in new_coll_object.added_aliases:
+            new_coll_object.added_items.append(AddedItem(alias_tuple=alias_tuple))
+
     logger.info(u"new_added_item_objects for {cid} are {new_added_item_objects}".format(
-        cid=coll_doc["_id"], 
-        new_added_item_objects=new_added_item_objects))      
+        cid=new_coll_object.cid, 
+        new_added_item_objects=new_coll_object.added_aliases))      
+
+    db.session.commit()
 
     return(new_coll_object)
 
 
 def save_collection_from_doc(collection_doc):
     new_coll_object = create_objects_from_collection_doc(collection_doc)
-    db.session.add(new_coll_object)    
-    db.session.commit()
     return new_coll_object
 
 def delete_collection(cid):
@@ -277,10 +212,9 @@ def delete_collection(cid):
     return
 
 class AddedItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    cid = db.Column(db.Text, db.ForeignKey('collection.cid'))
-    namespace = db.Column(db.Text)
-    nid = db.Column(db.Text)
+    cid = db.Column(db.Text, db.ForeignKey('collection.cid'), primary_key=True)
+    namespace = db.Column(db.Text, primary_key=True)
+    nid = db.Column(db.Text, primary_key=True)
     tiid = db.Column(db.Text)
     created = db.Column(db.DateTime())
 
@@ -298,6 +232,12 @@ class AddedItem(db.Model):
     def alias_tuple(self):
         return ((self.namespace, self.nid))
 
+    @alias_tuple.setter
+    def alias_tuple(self, alias_tuple):
+        (namespace, nid) = alias_tuple
+        self.namespace = namespace
+        self.nid = nid
+
     def __repr__(self):
         return '<AddedItem {collection}, {alias_tuple} {tiid}>'.format(
             collection=self.collection, 
@@ -305,9 +245,8 @@ class AddedItem(db.Model):
             tiid=self.tiid)
 
 class CollectionTiid(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    cid = db.Column(db.Text, db.ForeignKey('collection.cid'))
-    tiid = db.Column(db.Text)
+    cid = db.Column(db.Text, db.ForeignKey('collection.cid'), primary_key=True)
+    tiid = db.Column(db.Text, primary_key=True)
 
     def __init__(self, **kwargs):
         logger.info(u"new CollectionTiid {kwargs}".format(
@@ -327,9 +266,9 @@ class Collection(db.Model):
     ip_address = db.Column(db.Text)
     title = db.Column(db.Text)
     refset_metadata = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
-    tiid_links = db.relationship('CollectionTiid', lazy='join', 
+    tiid_links = db.relationship('CollectionTiid', lazy='join', cascade="all, delete-orphan",
         backref=db.backref("collection", lazy="join"))
-    added_items = db.relationship('AddedItem', lazy='join', 
+    added_items = db.relationship('AddedItem', lazy='join', cascade="all, delete-orphan",
         backref=db.backref("collection", lazy="join"))
 
     def __init__(self, collection_id=None, **kwargs):
@@ -356,6 +295,10 @@ class Collection(db.Model):
     @property
     def tiids(self):
         return [tiid_link.tiid for tiid_link in self.tiid_links]
+
+    @property
+    def added_aliases(self):
+        return [added_item.alias_tuple for added_item in self.added_items]
 
     def __repr__(self):
         return '<Collection {cid}, {title}>'.format(
