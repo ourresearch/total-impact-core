@@ -83,26 +83,6 @@ class TestCollection():
         assert_equals(new_collection_tiid.collection.query.all(), [new_collection])
 
 
-    def test_init_added_item(self):
-        #make sure nothing there beforehand
-        response = collection.AddedItem.query.filter_by(cid="socrates").first()
-        assert_equals(response, None)
-
-        new_collection = collection.save_collection(cid="socrates")
-
-        added_items1 = collection.save_added_item(cid="socrates", tiid="aaaaa")
-        added_items2 = collection.save_added_item(cid="socrates", tiid="bbbbb", namespace="url", nid="http://starbucks.com")
-        added_items3 = collection.save_added_item(cid="socrates", tiid="ccccc")
-
-        response = collection.AddedItem.query.filter_by(cid="socrates").all()
-        assert_equals(len(response), 3)
-        assert_equals(response[0].cid, "socrates")
-        assert_equals(response[0].tiid, "aaaaa")
-
-        response = collection.AddedItem.query.filter_by(namespace="url").first()
-        assert_equals(response.nid, "http://starbucks.com")
-
-
     def test_create_new_collection(self):
         (coll_doc, collection_object) = collection.create_new_collection(
             cid=None,
@@ -126,10 +106,10 @@ class TestCollection():
 
 
     def test_make_creates_identifier(self):
-        coll = collection.save_collection()
+        coll = collection.Collection()
         assert_equals(len(coll.cid), 6)
 
-        coll = collection.save_collection(cid="socrates")
+        coll = collection.Collection(cid="socrates")
         assert_equals(coll.cid, "socrates")
 
 
@@ -140,10 +120,11 @@ class TestCollection():
             {"collection_id": "3", "title": "title 3"}
         ]
 
-        # put all these in the db
         for collection_params in colls:
-            collection.save_collection(**collection_params)
+            new_collection = collection.Collection(**collection_params)
+            self.db.session.add(new_collection)
 
+        self.db.session.commit()
         titlesDict = collection.get_titles_new(["1", "2", "3"])
         assert_equals(titlesDict["1"], "title 1")
         assert_equals(titlesDict["3"], "title 3")

@@ -391,7 +391,7 @@ def delete_and_put_helper(cid=""):
     """
     http_method = request.args.get("http_method", "")
     if http_method.lower() == "delete":
-        return delete_items_from_collection(cid)
+        return remove_items_from_collection(cid)
     elif http_method.lower() == "put":
         return add_items_to_collection(cid)
     else:
@@ -400,14 +400,14 @@ def delete_and_put_helper(cid=""):
 
 
 @app.route('/v1/collection/<cid>/items', methods=['DELETE'])
-def delete_items_from_collection(cid=""):
+def remove_items_from_collection(cid=""):
     """
     Deletes items from a collection
     """
     abort_if_fails_collection_edit_auth(request)
 
     try:
-        (coll_doc, collection_object) = collection.delete_items_from_collection(
+        (coll_doc, collection_object) = collection.remove_items_from_collection(
             cid=cid, 
             tiids_to_delete=request.json["tiids"], 
             myredis=myredis, 

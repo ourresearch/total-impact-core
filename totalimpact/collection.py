@@ -37,7 +37,7 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
         cid=cid))        
 
     now = datetime.datetime.now()
-    collection_obj = Collection.query.filter_by(cid=cid).limit(1).first()
+    collection_obj = Collection.query.filter_by(cid=cid).first()
     if not collection_obj:
         return None
     collection_obj.last_modified = now
@@ -60,7 +60,7 @@ def remove_items_from_collection_object(cid, tiids_to_remove):
         cid=cid))        
 
     now = datetime.datetime.now()
-    collection_obj = Collection.query.filter_by(cid=cid).limit(1).first()
+    collection_obj = Collection.query.filter_by(cid=cid).first()
     if not collection_obj:
         return None    
     collection_obj.last_modified = now
@@ -100,7 +100,7 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
     return (coll_doc, collection_obj)
 
 
-def delete_items_from_collection(cid, tiids_to_delete, myredis, mydao):
+def remove_items_from_collection(cid, tiids_to_delete, myredis, mydao):
     logger.info(u"in delete_items_from_collection for {cid}".format(
         cid=cid))        
 
@@ -153,26 +153,11 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
     return (coll_doc, collection_obj)
 
 
-def save_collection(**kwargs):
-    collection = Collection(**kwargs)
-    db.session.add(collection)
-    db.session.commit()
-    return collection
-
-
-def save_added_item(**kwargs):
-    added_items = AddedItem(**kwargs)
-    db.session.add(added_items)
-    db.session.commit()
-    return added_items
-
-
-
 def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, added_items_to_commit={}):
     logger.info(u"in create_objects_from_collection_doc for {cid}".format(
         cid=coll_doc["_id"]))        
 
-    new_coll_object = Collection.query.filter_by(cid=coll_doc["_id"]).limit(1).first()
+    new_coll_object = Collection.query.filter_by(cid=coll_doc["_id"]).first()
     if not new_coll_object:
         new_coll_object = Collection.create_from_old_doc(coll_doc)
     db.session.add(new_coll_object)    
@@ -201,12 +186,9 @@ def create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit={}, 
     return(new_coll_object)
 
 
-def save_collection_from_doc(collection_doc):
-    new_coll_object = create_objects_from_collection_doc(collection_doc)
-    return new_coll_object
 
 def delete_collection(cid):
-    coll_object = Collection.query.filter_by(cid=cid).limit(1).first()
+    coll_object = Collection.query.filter_by(cid=cid).first()
     db.session.delete(coll_object)
     db.session.commit()
     return
@@ -358,7 +340,7 @@ def get_titles(cids, mydao):
 def get_titles_new(cids):
     ret = {}
     for cid in cids:
-        coll = Collection.query.filter_by(cid=cid).limit(1).first()
+        coll = Collection.query.filter_by(cid=cid).first()
         ret[cid] = coll.title
     return ret
 
