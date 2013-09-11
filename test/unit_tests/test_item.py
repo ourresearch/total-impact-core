@@ -153,12 +153,13 @@ class TestItem():
 
         new_alias = Alias(alias_tuple=test_alias)
         print new_alias
+        self.db.session.add(item_object)
+        item_object.aliases = [new_alias]
 
         # still not there
         response = Alias.filter_by_alias(test_alias).first()
         assert_equals(response, None)
 
-        self.db.session.add(new_alias)
         self.db.session.commit()
 
         # and now poof there it is
@@ -191,7 +192,10 @@ class TestItem():
         print new_item
 
         #add biblio
-        item_module.save_biblio_to_item(new_item, test_biblio)
+        self.db.session.add(new_item)
+        new_biblio_objects = item_module.create_biblio_objects([test_biblio]) 
+        new_item.biblios = new_biblio_objects
+        self.db.session.commit()
 
         # now poof there is biblio
         found_item = Item.query.filter_by(tiid=tiid).first()
@@ -219,8 +223,11 @@ class TestItem():
         tiid = new_item.tiid
         print new_item
 
-        #add biblio
-        item_module.save_metric_to_item(new_item, test_metrics)
+        #add metrics
+        metric_objects = item_module.create_metric_objects(test_metrics)
+        new_item.metrics = metric_objects
+        self.db.session.add(new_item)
+        self.db.session.commit()
 
         # now poof there is metrics
         found_item = Item.query.filter_by(tiid=tiid).first()
@@ -282,7 +289,10 @@ class TestItem():
            }
         }
 
-        item_module.save_metric_to_item(new_item, test_metrics2)
+        metric_objects = item_module.create_metric_objects(test_metrics2)
+        new_item.metrics += metric_objects
+        self.db.session.add(new_item)
+        self.db.session.commit()
 
         # now poof there is metrics
         found_item = Item.query.filter_by(tiid=tiid).first()

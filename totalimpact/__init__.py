@@ -19,6 +19,7 @@ app = Flask(__name__)
 app.config.from_object(default_settings)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("POSTGRESQL_URL")
+app.config["SQLALCHEMY_POOL_SIZE"] = 10
 #app.config["SQLALCHEMY_ECHO"] = True
 
 db = SQLAlchemy(app)
