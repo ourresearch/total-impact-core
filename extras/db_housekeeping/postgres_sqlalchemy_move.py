@@ -18,7 +18,7 @@ from totalimpact import item as item_module
 from totalimpact.item import Item, Alias, Metric, Biblio
 
 # run in heroku by a) commiting, b) pushing to heroku, and c) running
-# heroku run python extras/db_housekeeping/postgres_mirror.py
+# heroku run python extras/db_housekeeping/postgres_sqlalchemy_move.py --collections
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -31,27 +31,23 @@ logger = logging.getLogger("postgres_sqlalchemy_move")
 # print out extra debugging
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
+logging.getLogger('ti.collection').setLevel(logging.INFO)
 
 def item_action_on_a_page(page):
     items = [row.doc for row in page]
 
-    alias_tuples_to_commit = {}
     for item_doc in items:
-        new_item_object = item_module.create_objects_from_item_doc(item_doc, alias_tuples_to_commit)
+        new_item_object = item_module.create_objects_from_item_doc(item_doc)
     print "just finished", item_doc["_id"]
-    db.session.commit()
     return
 
 
 def collection_action_on_a_page(page):
     collections = [row.doc for row in page]
 
-    collection_tiids_to_commit = {}
-    added_items_to_commit = {}
     for coll_doc in collections:
-         new_coll_object = collection.create_objects_from_collection_doc(coll_doc, collection_tiids_to_commit, added_items_to_commit)
+         new_coll_object = collection.create_objects_from_collection_doc(coll_doc)
     print "just finished", coll_doc["_id"]
-    db.session.commit()
     return
 
 
@@ -70,13 +66,13 @@ def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page
 
         logger.info("%i. getting new page" %(row_count))
         elapsed_time = datetime.datetime.now() - start_time
-        print "\n****** {timestamp} {start_key} took {elapsed_seconds} seconds to do {row_count} docs, so {minutes_per_10k} minutes per 10k docs per thread, {total} total *****".format(
+        print "\n****** {timestamp} {start_key} took {elapsed_seconds} seconds to do {row_count} docs, so {minutes_per_10k} minutes per 10k docs per thread*****".format(
             timestamp=datetime.datetime.now().isoformat(),
             start_key=start_key,
             row_count=row_count, 
             elapsed_seconds=elapsed_time.seconds, 
-            minutes_per_10k=(elapsed_time.seconds)*10000/(row_count*60),
-            total=((elapsed_time.seconds)*10000/(row_count*60))/(threading.active_count() - 1)
+            minutes_per_10k=(elapsed_time.seconds)*10000/(row_count*60)
+            #,total=((elapsed_time.seconds)*10000/(row_count*60))/(threading.active_count() - 1)
             )
 
         if couch_page.has_next:
@@ -92,61 +88,39 @@ def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page
         elapsed_time=elapsed_time.isoformat())
 
 
-def run_through_items(startkey="00000", page_size=100, number_of_threads=1):
+def run_through_pages(doc_type, doc_func, startkey="00000", page_size=100, number_of_threads=1):
     starts = string.digits + string.ascii_lowercase
     step_size = int(len(starts) / number_of_threads)
     boundaries = (string.digits + string.ascii_lowercase)[0::step_size] + 'z'
     key_pages = zip(boundaries[:-1], boundaries[1:])
     for (startkey, endkey) in key_pages:
         myview_name = "temp/by_type_and_id"
-        mystart_key = ["item", startkey*5] # repeats it 5 times
-        myend_key = ["item", endkey*5]
+        mystart_key = [doc_type, startkey*5] # repeats it 5 times
+        myend_key = [doc_type, endkey*5]
 
-        print "launching thread loop through first {page_size} from {start_key} to {end_key}".format(
+        print "launching loop through first {page_size} from {start_key} to {end_key}".format(
             page_size=page_size, 
             start_key=mystart_key, 
             end_key=myend_key)
 
-        t = threading.Thread(target=run_on_documents, 
-            args=(item_action_on_a_page, 
+        run_on_documents(doc_func, 
                 myview_name, 
                 mystart_key, 
                 myend_key, 
                 0,
-                page_size),
-            name="run_through_items:{mystart_key} to {myend_key}".format(
-                mystart_key=mystart_key, 
-                myend_key=myend_key))
-        t.start()
-
-
-
-def run_through_collections(startkey="00000", page_size=100, number_of_threads=1):
-    starts = string.digits + string.ascii_lowercase
-    step_size = int(len(starts) / number_of_threads)
-    boundaries = (string.digits + string.ascii_lowercase)[0::step_size] + 'z'
-    key_pages = zip(boundaries[:-1], boundaries[1:])
-    for (startkey, endkey) in key_pages:
-        myview_name = "temp/by_type_and_id"
-        mystart_key = ["collection", startkey*5] # repeats it 5 times
-        myend_key = ["collection", endkey*5]
-
-        print "launching thread loop through first {page_size} from {start_key} to {end_key}".format(
-            page_size=page_size, 
-            start_key=mystart_key, 
-            end_key=myend_key)
-
-        t = threading.Thread(target=run_on_documents, 
-            args=(collection_action_on_a_page, 
-                myview_name, 
-                mystart_key, 
-                myend_key, 
-                0,
-                page_size),
-            name="run_through_collections:{mystart_key} to {myend_key}".format(
-                mystart_key=mystart_key, 
-                myend_key=myend_key))
-        t.start()
+                page_size)
+        # t = threading.Thread(target=run_on_documents, 
+        #     args=(collection_action_on_a_page, 
+        #         myview_name, 
+        #         mystart_key, 
+        #         myend_key, 
+        #         0,
+        #         page_size),
+        #     name="run_through_collections:{mystart_key} to {myend_key}".format(
+        #         mystart_key=mystart_key, 
+        #         myend_key=myend_key)
+        #     )
+        # t.start()
 
 
 def setup_postgres(drop_all=False):
@@ -241,9 +215,9 @@ if __name__ == "__main__":
     setup_postgres(drop_all=args["drop"])
     couch_db = setup_couch()
     if args["collections"]:
-        run_through_collections(args["collections_startkey"], args["pagesize"], args["threads"])
+        run_through_pages("collection", collection_action_on_a_page, args["collections_startkey"], args["pagesize"], args["threads"])
     if args["items"]:
-        run_through_items(args["items_startkey"], args["pagesize"], args["threads"])
+        run_through_pages("item", item_action_on_a_page, args["items_startkey"], args["pagesize"], args["threads"])
 
     db.session.close_all()
 
