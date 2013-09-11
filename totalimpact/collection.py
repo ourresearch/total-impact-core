@@ -22,9 +22,9 @@ logger = logging.getLogger('ti.collection')
 
 def get_alias_strings(aliases):
     alias_strings = []
-    for (namespace, nid) in aliases:
-        namespace = item_module.clean_id(namespace)
-        nid = item_module.clean_id(nid)
+    for alias in aliases:
+        alias = canonical_alias_tuple(alias)
+        (namespace, nid) = alias
         try:
             alias_strings += [namespace+":"+nid]
         except TypeError:
@@ -205,7 +205,7 @@ class AddedItem(db.Model):
         logger.debug(u"new AddedItem {kwargs}".format(
             kwargs=kwargs))    
         if "alias_tuple" in kwargs:
-            alias_tuple = canonical_alias_tuple(kwargs["alias_tuple"])
+            alias_tuple = item_module.canonical_alias_tuple(kwargs["alias_tuple"])
             (namespace, nid) = alias_tuple
             self.namespace = namespace
             self.nid = nid                
