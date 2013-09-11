@@ -11,7 +11,7 @@ import requests
 
 from totalimpact import dao, app, tiredis, collection, api_user, incoming_email
 from totalimpact import item as item_module
-from totalimpact.models import MemberItems, UserFactory, NotAuthenticatedError
+from totalimpact.models import MemberItems, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderServerError, ProviderTimeout
 from totalimpact import unicode_helpers
 from totalimpact import default_settings

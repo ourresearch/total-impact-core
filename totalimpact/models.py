@@ -94,38 +94,6 @@ class MemberItems():
 
         return True
 
-class UserFactory():
 
-
-    @classmethod
-    def get(cls, id, dao, key):
-        try:
-            doc = dao.db[id]
-        except ResourceNotFound:
-            raise KeyError("User doesn't exist.")
-
-        else:
-            if doc["key"] == key:
-                return doc
-            else:
-                raise NotAuthenticatedError
-
-
-    @classmethod
-    def put(cls, userdict,  password, dao):
-
-        if "_id" not in userdict.keys() or "colls" not in userdict.keys():
-            raise AttributeError
-
-        try:
-            doc = cls.get(userdict["_id"], dao, password)
-            userdict["_rev"] = doc["_rev"]
-        except KeyError:
-            # no worries, we'll just make a new user.
-            userdict["created"] = datetime.datetime.now().isoformat()
-
-        userdict["type"] = "user"
-        dao.db.save(userdict)
-        return userdict
 
 
