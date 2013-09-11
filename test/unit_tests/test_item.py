@@ -151,7 +151,7 @@ class TestItem():
         response = Alias.filter_by_alias(test_alias).first()
         assert_equals(response, None)
 
-        new_alias = Alias(item_object, test_alias)
+        new_alias = Alias(alias_tuple=test_alias)
         print new_alias
 
         # still not there

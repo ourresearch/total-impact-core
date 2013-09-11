@@ -36,11 +36,10 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
     logger.debug(u"in add_items_to_collection_object for {cid}".format(
         cid=cid))        
 
-    now = datetime.datetime.now()
     collection_obj = Collection.query.filter_by(cid=cid).first()
     if not collection_obj:
         return None
-    collection_obj.last_modified = now
+    collection_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(collection_obj)
 
     for tiid in tiids:
@@ -59,11 +58,10 @@ def remove_items_from_collection_object(cid, tiids_to_remove):
     logger.debug(u"in remove_items_from_collection_object for {cid}".format(
         cid=cid))        
 
-    now = datetime.datetime.now()
     collection_obj = Collection.query.filter_by(cid=cid).first()
     if not collection_obj:
         return None    
-    collection_obj.last_modified = now
+    collection_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(collection_obj)
 
     for coll_tiid in collection_obj.tiid_links:
@@ -86,7 +84,7 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
     # pretty sure this is putting the wrong tiids with the aliases...
     new_alias_tiids = dict(zip(alias_strings, tiids))
     coll_doc["alias_tiids"].update(new_alias_tiids)
-    coll_doc["last_modified"] = datetime.datetime.now().isoformat()
+    coll_doc["last_modified"] = datetime.datetime.utcnow().isoformat()
     mydao.db.save(coll_doc)
     #print json.dumps(collection, sort_keys=True, indent=4)
 
@@ -110,7 +108,7 @@ def remove_items_from_collection(cid, tiids_to_delete, myredis, mydao):
         if tiid not in tiids_to_delete:
             new_alias_tiids[alias] = tiid
     coll_doc["alias_tiids"] = new_alias_tiids
-    coll_doc["last_modified"] = datetime.datetime.now().isoformat()
+    coll_doc["last_modified"] = datetime.datetime.utcnow().isoformat()
     mydao.db.save(coll_doc)
 
     collection_obj = remove_items_from_collection_object(cid, tiids_to_delete)
@@ -205,12 +203,16 @@ class AddedItem(db.Model):
 
     def __init__(self, **kwargs):
         logger.debug(u"new AddedItem {kwargs}".format(
-            kwargs=kwargs))        
-        now = datetime.datetime.now()
+            kwargs=kwargs))    
+        if "alias_tuple" in kwargs:
+            alias_tuple = canonical_alias_tuple(kwargs["alias_tuple"])
+            (namespace, nid) = alias_tuple
+            self.namespace = namespace
+            self.nid = nid                
         if "created" in kwargs:
             self.created = kwargs["created"]
         else:   
-            self.created = datetime.datetime.now()
+            self.created = datetime.datetime.utcnow()
         super(AddedItem, self).__init__(**kwargs)
 
     @hybrid_property
@@ -269,7 +271,7 @@ class Collection(db.Model):
             collection_id = _make_id()
         self.cid = collection_id
 
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         if "created" in kwargs:
             self.created = kwargs["created"]
         else:   

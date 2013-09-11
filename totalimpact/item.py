@@ -76,7 +76,7 @@ def create_alias_objects(item_object, alias_tuples, created, tuples_to_commit, s
     return (new_alias_objects, tuples_to_commit)
 
 
-def create_metric_objects(item_object, old_style_metric_dict):
+def create_metric_objects(old_style_metric_dict):
     new_metric_objects = []
 
     for full_metric_name in old_style_metric_dict:
@@ -97,9 +97,8 @@ def create_metric_objects(item_object, old_style_metric_dict):
             except TypeError:
                 metric_object = None
             if not metric_object:
-                metric_object = Metric(item_object, **new_style_metric_dict)
+                metric_object = Metric(**new_style_metric_dict)
                 
-            db.session.add(metric_object)
             new_metric_objects += [metric_object]    
 
     return new_metric_objects
@@ -109,7 +108,7 @@ def create_biblio_objects(item_object, old_style_biblio_dict, provider="unknown"
     new_biblio_objects = []
 
     for biblio_name in old_style_biblio_dict:
-        new_style_biblio_dict = {"item":item_object, 
+        new_style_biblio_dict = {
                     "biblio_name":biblio_name, 
                     "biblio_value":old_style_biblio_dict[biblio_name], 
                     "provider":provider, 
@@ -126,19 +125,22 @@ def create_biblio_objects(item_object, old_style_biblio_dict, provider="unknown"
     return new_biblio_objects
 
 
-def create_objects_from_item_doc(item_doc, alias_tuples_to_commit={}):
+def create_objects_from_item_doc(item_doc):
+    logger.debug(u"in create_objects_from_item_doc for {tiid}".format(
+        tiid=item_doc["_id"]))        
+
     new_item_object = Item.query.filter_by(tiid=item_doc["_id"]).limit(1).first()
     if not new_item_object:
         new_item_object = Item.create_from_old_doc(item_doc)
     db.session.add(new_item_object)
 
     alias_dict = item_doc["aliases"]
-    alias_tuples = alias_tuples_from_dict(alias_dict)            
-    (new_alias_objects, alias_tuples_to_commit) = create_alias_objects(alias_tuples, 
-            item_doc["created"], 
-            alias_tuples_to_commit, 
-            skip_biblio=True)
-    new_item_object.aliases = new_alias_objects
+    alias_tuples = alias_tuples_from_dict(alias_dict)   
+    for alias_tuple in alias_tuples:
+        if alias_tuple not in new_item_object.alias_tuples:
+            (namespace, nid) = alias_tuple
+            if nid and namespace and (namespace != "biblio"):
+                new_item_object.aliases.append(Alias(alias_tuple=alias_tuple, collected_date=item_doc["last_modified"]))
 
     # biblio within aliases
     if "biblio" in alias_dict:
@@ -146,21 +148,21 @@ def create_objects_from_item_doc(item_doc, alias_tuples_to_commit={}):
         provider_number = 0
         for biblio_dict in biblio_dicts:
             provider_number += 1
-            new_biblio_objects = create_biblio_objects(new_item_object, 
-                    biblio_dict, 
-                    provider="unknown"+str(provider_number))
-            new_item_object.biblios += new_biblio_objects
-
-    # biblio within biblio
-    # if "biblio" in item_doc:
-    #     biblio_dict = item_doc["biblio"]
-    #     new_biblio_objects = create_biblio_objects(new_item_object, biblio_dict) 
-    #     new_item_object.biblios = new_biblio_objects
+            provider = "unknown" + str(provider_number)
+            for biblio_name in biblio_dict:
+                biblio_object = Biblio(biblio_name=biblio_name, 
+                        biblio_value=biblio_dict[biblio_name], 
+                        provider=provider, 
+                        collected_date=item_doc["last_modified"])
+                if not biblio_object in new_item_object.biblios:
+                    new_item_object.biblios.append(biblio_object)
 
     if "metrics" in item_doc:
         metrics_dict = item_doc["metrics"]
-        new_metric_objects = create_metric_objects(new_item_object, metrics_dict) 
+        new_metric_objects = create_metric_objects(metrics_dict) 
         new_item_object.metrics = new_metric_objects
+
+    db.session.commit()
 
     return new_item_object
 
@@ -170,7 +172,7 @@ def create_objects_from_item_doc(item_doc, alias_tuples_to_commit={}):
 def save_alias_to_item(item_object, alias_tuple):
     alias_object = Alias.filter_by_alias(alias_tuple)
     if not alias_object:
-        alias_object = Alias(item_object, alias_tuple)
+        alias_object = Alias(alias_tuple)
     db.session.add(alias_object)
 
     item_object.aliases += [alias_object]
@@ -182,7 +184,7 @@ def save_alias_to_item(item_object, alias_tuple):
 # save an alias to an item, making the alias if necessary
 def save_biblio_to_item(item_object, biblio_dict, provider="unknown"):
     for biblio_name in biblio_dict:
-        biblio_object = Biblio(item_object, biblio_name, biblio_dict[biblio_name], provider)
+        biblio_object = Biblio(biblio_name, biblio_dict[biblio_name], provider)
         db.session.add(biblio_object)
 
     db.session.add(item_object)
@@ -202,7 +204,7 @@ def save_metric_to_item(item_object, old_style_metric_dict, provider=None):
     for collected_date in metric_details["values"]["raw_history"]:
         new_style_metric_dict["collected_date"] = collected_date
         new_style_metric_dict["raw_value"] = metric_details["values"]["raw_history"][collected_date]
-        metric_object = Metric(item_object, **new_style_metric_dict)
+        metric_object = Metric(**new_style_metric_dict)
         db.session.add(metric_object)
 
     db.session.add(item_object)
@@ -210,20 +212,7 @@ def save_metric_to_item(item_object, old_style_metric_dict, provider=None):
     return item_object
 
 
-
-# item_alias = db.Table('item_alias',
-#     db.Column('tiid', db.Text, db.ForeignKey('item.tiid')),
-#     db.Column('namespace', db.Text),
-#     db.Column('nid', db.Text),
-#     #db.Column('nid', json_sqlalchemy.JSONAlchemy(db.Text)),
-#     db.ForeignKeyConstraint( 
-#         ('namespace', 'nid'),
-#         ('alias.namespace', 'alias.nid')  )
-# )
-
 class Metric(db.Model):
-    item = db.relationship('Item', backref='metrics', lazy='join')
-
     tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True)
     provider = db.Column(db.Text, primary_key=True)
     metric_name = db.Column(db.Text, primary_key=True)
@@ -231,8 +220,7 @@ class Metric(db.Model):
     raw_value = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
     drilldown_url = db.Column(db.Text)
 
-    def __init__(self, item, provider, metric_name, raw_value, drilldown_url, collected_date=None):
-        self.item = item
+    def __init__(self, provider, metric_name, raw_value, drilldown_url, collected_date=None):
         self.provider = provider
         self.metric_name = metric_name
         self.raw_value = raw_value        
@@ -244,36 +232,36 @@ class Metric(db.Model):
         super(Metric, self).__init__()
 
     def __repr__(self):
-        return '<Metric {tiid} {provider}:{metric_name}>'.format(
+        return '<Metric {item} {provider}:{metric_name}>'.format(
             provider=self.provider, 
             metric_name=self.metric_name, 
-            tiid=self.tiid)
+            item=self.item)
 
 
 class Biblio(db.Model):
-    item = db.relationship('Item', backref='biblios', lazy='join')
-
     tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True)
     provider = db.Column(db.Text, primary_key=True)
     biblio_name = db.Column(db.Text, primary_key=True)
     biblio_value = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
     collected_date = db.Column(db.DateTime())
 
-    def __init__(self, item, biblio_name, biblio_value, provider="unknown", collected_date=None):
-        self.item = item
-        self.biblio_name = biblio_name
-        self.biblio_value = biblio_value
-        self.provider = provider
-        if collected_date:
-            self.collected_date = collected_date
-        else:
-            self.collected_date = datetime.datetime.utcnow()            
-        super(Biblio, self).__init__()
+    def __init__(self, **kwargs):
+        logger.debug(u"new Biblio {kwargs}".format(
+            kwargs=kwargs))                
+
+        if "collected_date" in kwargs:
+            self.collected_date = kwargs["collected_date"]
+        else:   
+            self.collected_date = datetime.datetime.utcnow()
+        if not "provider" in kwargs:
+            self.provider = "unknown"
+           
+        super(Biblio, self).__init__(**kwargs)
 
     def __repr__(self):
-        return '<Biblio {biblio_name}, {tiid}>'.format(
+        return '<Biblio {biblio_name}, {item}>'.format(
             biblio_name=self.biblio_name, 
-            tiid=self.tiid)
+            item=self.item)
 
     @classmethod
     def filter_by_tiid(cls, tiid):
@@ -290,34 +278,45 @@ class Biblio(db.Model):
 
 
 class Alias(db.Model):
-    #items = db.relationship('Item', secondary=item_alias,
-    #    backref=db.backref('aliases', lazy='join'), lazy='join')
-
-    item = db.relationship('Item', backref='aliases', lazy='join')
-
     tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True)
     namespace = db.Column(db.Text, primary_key=True)
     nid = db.Column(db.Text, primary_key=True)
     collected_date = db.Column(db.DateTime())
 
-    def __init__(self, item, alias_tuple, collected_date=None):
-        self.item = item        
-        alias_tuple = canonical_alias_tuple(alias_tuple)
-        (namespace, nid) = alias_tuple
-        self.namespace = namespace
-        self.nid = nid
-        if collected_date:
-            self.collected_date = collected_date
+    def __init__(self, **kwargs):
+        logger.debug(u"new Alias {kwargs}".format(
+            kwargs=kwargs))                
+
+        if "alias_tuple" in kwargs:
+            alias_tuple = canonical_alias_tuple(kwargs["alias_tuple"])
+            (namespace, nid) = alias_tuple
+            self.namespace = namespace
+            self.nid = nid                
+        if "collected_date" in kwargs:
+            self.collected_date = kwargs["collected_date"]
         else:   
             self.collected_date = datetime.datetime.utcnow()
-        super(Alias, self).__init__()
+
+        super(Alias, self).__init__(**kwargs)
         
     @hybrid_property
     def alias_tuple(self):
         return ((self.namespace, self.nid))
 
+    @alias_tuple.setter
+    def alias_tuple(self, alias_tuple):
+        try:
+            (namespace, nid) = alias_tuple
+        except ValueError:
+            logger.debug("could not separate alias tuple {alias_tuple}".format(
+                alias_tuple=alias_tuple))
+            raise
+        self.namespace = namespace
+        self.nid = nid        
+
     def __repr__(self):
-        return '<Alias {alias_tuple}>'.format(
+        return '<Alias {item}, {alias_tuple}>'.format(
+            item=self.item,
             alias_tuple=self.alias_tuple)
 
     @classmethod
@@ -340,14 +339,24 @@ class Item(db.Model):
     created = db.Column(db.DateTime())
     last_modified = db.Column(db.DateTime())
     last_update_run = db.Column(db.DateTime())
+    aliases = db.relationship('Alias', lazy='join', cascade="all, delete-orphan",
+        backref=db.backref("item", lazy="join"))
+    biblios = db.relationship('Biblio', lazy='join', cascade="all, delete-orphan",
+        backref=db.backref("item", lazy="join"))
+    metrics = db.relationship('Metric', lazy='join', cascade="all, delete-orphan",
+        backref=db.backref("item", lazy="join"))
+
 
     def __init__(self, **kwargs):
+        logger.debug(u"new Item {kwargs}".format(
+            kwargs=kwargs))                
+
         if "tiid" in kwargs:
             self.tiid = kwargs["tiid"]
         else:
             self.tiid = shortuuid.uuid()[0:24]
        
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         if "created" in kwargs:
             self.created = kwargs["created"]
         else:   
@@ -361,11 +370,16 @@ class Item(db.Model):
         else:   
             self.last_update_run = now
 
-        super(Item, self).__init__()
+        super(Item, self).__init__(**kwargs)
 
     def __repr__(self):
-        return '<Item {tiid}>'.format(
-            tiid=self.tiid)
+        return '<Item {tiid}, {aliases}>'.format(
+            tiid=self.tiid, 
+            aliases=self.aliases)
+
+    @property
+    def alias_tuples(self):
+        return [alias.alias_tuple for alias in self.aliases]
 
     @classmethod
     def create_from_old_doc(cls, doc):
@@ -480,7 +494,7 @@ def add_metrics_data(metric_name, metrics_method_response, item):
     this_metric_values["raw"] = metric_value
 
     this_metric_values_raw_history = this_metric_values.setdefault("raw_history", {})
-    now = datetime.datetime.now().isoformat()
+    now = datetime.datetime.utcnow().isoformat()
     this_metric_values_raw_history[now] = metric_value
     return item
 

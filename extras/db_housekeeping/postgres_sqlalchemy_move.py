@@ -32,6 +32,7 @@ logger = logging.getLogger("postgres_sqlalchemy_move")
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 logging.getLogger('ti.collection').setLevel(logging.INFO)
+logging.getLogger('ti.item').setLevel(logging.INFO)
 
 def item_action_on_a_page(page):
     items = [row.doc for row in page]
@@ -85,7 +86,7 @@ def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page
 
     print "took {elapsed_time} to do {row_count}".format(
         row_count=row_count, 
-        elapsed_time=elapsed_time.isoformat())
+        elapsed_time=elapsed_time)
 
 
 def run_through_pages(doc_type, doc_func, startkey="00000", page_size=100, number_of_threads=1):
