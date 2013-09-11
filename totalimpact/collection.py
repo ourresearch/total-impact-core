@@ -222,6 +222,7 @@ class AddedItem(db.Model):
     @alias_tuple.setter
     def alias_tuple(self, alias_tuple):
         try:
+            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
             (namespace, nid) = alias_tuple
         except ValueError:
             logger.debug("could not separate alias tuple {alias_tuple}".format(
