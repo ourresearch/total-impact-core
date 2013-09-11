@@ -34,25 +34,27 @@ logger = logging.getLogger("postgres_sqlalchemy_move")
 logging.getLogger('ti.collection').setLevel(logging.INFO)
 logging.getLogger('ti.item').setLevel(logging.INFO)
 
-def item_action_on_a_page(page):
+def item_action_on_a_page(page, skip_till_key="0000"):
     items = [row.doc for row in page]
 
     for item_doc in items:
-        new_item_object = item_module.create_objects_from_item_doc(item_doc)
+        if item_doc["_id"] > skip_till_key:
+            new_item_object = item_module.create_objects_from_item_doc(item_doc)
     print "just finished", item_doc["_id"]
     return
 
 
-def collection_action_on_a_page(page):
+def collection_action_on_a_page(page, skip_till_key="0000"):
     collections = [row.doc for row in page]
 
     for coll_doc in collections:
+        if coll_doc["_id"] > skip_till_key:        
          new_coll_object = collection.create_objects_from_collection_doc(coll_doc)
     print "just finished", coll_doc["_id"]
     return
 
 
-def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page_size=500):
+def run_on_documents(func_page, view_name, start_key, end_key, skip_till_key, row_count=0, page_size=500):
     couch_page = CouchPaginator(couch_db, view_name, page_size, start_key=start_key, end_key=end_key, include_docs=True)
     start_time = datetime.datetime.now()
 
@@ -62,18 +64,19 @@ def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page
         end_key=end_key)
 
     while couch_page:
-        func_page(couch_page)
+        func_page(couch_page, skip_till_key)
         row_count += page_size
 
         logger.info("%i. getting new page" %(row_count))
         elapsed_time = datetime.datetime.now() - start_time
-        print "\n****** {timestamp} {start_key} took {elapsed_seconds} seconds to do {row_count} docs, so {minutes_per_10k} minutes per 10k docs per thread*****".format(
+        number_db_threads = max(1, threading.active_count() - 1)
+        print "\n****** {timestamp} {start_key} took {elapsed_seconds} seconds to do {row_count} docs, so {minutes_per_10k} minutes per 10k docs per thread, {total}mins total *****".format(
             timestamp=datetime.datetime.now().isoformat(),
             start_key=start_key,
             row_count=row_count, 
             elapsed_seconds=elapsed_time.seconds, 
-            minutes_per_10k=(elapsed_time.seconds)*10000/(row_count*60)
-            #,total=((elapsed_time.seconds)*10000/(row_count*60))/(threading.active_count() - 1)
+            minutes_per_10k=(elapsed_time.seconds)*10000/(row_count*60),
+            total=((elapsed_time.seconds)*10000/(row_count*60))/number_db_threads
             )
 
         if couch_page.has_next:
@@ -88,8 +91,10 @@ def run_on_documents(func_page, view_name, start_key, end_key, row_count=0, page
         row_count=row_count, 
         elapsed_time=elapsed_time)
 
+    db.session.remove()
 
-def run_through_pages(doc_type, doc_func, startkey="00000", page_size=100, number_of_threads=1):
+
+def run_through_pages(doc_type, doc_func, skip_till_key="00000", page_size=100, number_of_threads=1):
     starts = string.digits + string.ascii_lowercase
     step_size = int(len(starts) / number_of_threads)
     boundaries = (string.digits + string.ascii_lowercase)[0::step_size] + 'z'
@@ -109,6 +114,7 @@ def run_through_pages(doc_type, doc_func, startkey="00000", page_size=100, numbe
                     myview_name, 
                     mystart_key, 
                     myend_key, 
+                    skip_till_key,
                     0,
                     page_size)
         else:
@@ -117,6 +123,7 @@ def run_through_pages(doc_type, doc_func, startkey="00000", page_size=100, numbe
                     myview_name, 
                     mystart_key, 
                     myend_key, 
+                    skip_till_key,
                     0,
                     page_size),
                 name="{mystart_key} to {myend_key}".format(
@@ -203,11 +210,11 @@ if __name__ == "__main__":
         default=1,
         type=int,
         help="number of db threads")
-    parser.add_argument('--items_startkey', 
+    parser.add_argument('--itemsskiptillkey', 
         default="000000",
         type=str,
         help="id to start the item view")
-    parser.add_argument('--collections_startkey', 
+    parser.add_argument('--collectionsskiptillkey', 
         default="000000",
         type=str,
         help="id to start the collection view")
@@ -218,9 +225,9 @@ if __name__ == "__main__":
     setup_postgres(drop_all=args["drop"])
     couch_db = setup_couch()
     if args["collections"]:
-        run_through_pages("collection", collection_action_on_a_page, args["collections_startkey"], args["pagesize"], args["threads"])
+        run_through_pages("collection", collection_action_on_a_page, args["collectionsskiptillkey"], args["pagesize"], args["threads"])
     if args["items"]:
-        run_through_pages("item", item_action_on_a_page, args["items_startkey"], args["pagesize"], args["threads"])
+        run_through_pages("item", item_action_on_a_page, args["itemsskiptillkey"], args["pagesize"], args["threads"])
 
     db.session.close_all()
 
