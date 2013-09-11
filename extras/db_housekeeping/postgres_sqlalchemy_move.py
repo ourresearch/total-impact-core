@@ -104,24 +104,26 @@ def run_through_pages(doc_type, doc_func, startkey="00000", page_size=100, numbe
             start_key=mystart_key, 
             end_key=myend_key)
 
-        # run_on_documents(doc_func, 
-        #         myview_name, 
-        #         mystart_key, 
-        #         myend_key, 
-        #         0,
-        #         page_size)
-        t = threading.Thread(target=run_on_documents, 
-            args=(doc_func, 
-                myview_name, 
-                mystart_key, 
-                myend_key, 
-                0,
-                page_size),
-            name="{mystart_key} to {myend_key}".format(
-                mystart_key=mystart_key, 
-                myend_key=myend_key)
-            )
-        t.start()
+        if number_of_threads==1:
+            run_on_documents(doc_func, 
+                    myview_name, 
+                    mystart_key, 
+                    myend_key, 
+                    0,
+                    page_size)
+        else:
+            t = threading.Thread(target=run_on_documents, 
+                args=(doc_func, 
+                    myview_name, 
+                    mystart_key, 
+                    myend_key, 
+                    0,
+                    page_size),
+                name="{mystart_key} to {myend_key}".format(
+                    mystart_key=mystart_key, 
+                    myend_key=myend_key)
+                )
+            t.start()
 
 
 def setup_postgres(drop_all=False):
