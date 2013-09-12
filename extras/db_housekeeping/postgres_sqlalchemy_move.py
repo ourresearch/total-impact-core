@@ -95,32 +95,31 @@ def run_on_documents(func_page, view_name, start_key, end_key, skip_till_key, ro
 
 
 def run_through_pages(doc_type, doc_func, skip_till_key="00000", page_size=100, number_of_threads=1):
-    starts = string.digits + string.ascii_lowercase
-    step_size = int(len(starts) / number_of_threads)
-    boundaries = (string.digits + string.ascii_lowercase)[0::step_size] + 'z'
-    key_pages = zip(boundaries[:-1], boundaries[1:])
-    for (startkey, endkey) in key_pages:
-        myview_name = "temp/by_type_and_id"
-        mystart_key = [doc_type, startkey*5] # repeats it 5 times
-        myend_key = [doc_type, endkey*5]
+    if number_of_threads == 1:
+        run_on_documents(doc_func, 
+            "temp/by_type_and_id", 
+            [doc_type, skip_till_key], 
+            [doc_type, "zzzzz"], 
+            skip_till_key,
+            0,
+            page_size)
+    else:    
+        starts = string.digits + string.ascii_lowercase
+        step_size = int(len(starts) / number_of_threads)
+        boundaries = (string.digits + string.ascii_lowercase)[0::step_size] + 'z'
+        key_pages = zip(boundaries[:-1], boundaries[1:])
+        for (startkey, endkey) in key_pages:
+            mystart_key = [doc_type, startkey*5] # repeats it 5 times
+            myend_key = [doc_type, endkey*5]
 
-        print "launching loop through first {page_size} from {start_key} to {end_key}".format(
-            page_size=page_size, 
-            start_key=mystart_key, 
-            end_key=myend_key)
+            print "launching loop through first {page_size} from {start_key} to {end_key}".format(
+                page_size=page_size, 
+                start_key=mystart_key, 
+                end_key=myend_key)
 
-        if number_of_threads==1:
-            run_on_documents(doc_func, 
-                    myview_name, 
-                    mystart_key, 
-                    myend_key, 
-                    skip_till_key,
-                    0,
-                    page_size)
-        else:
             t = threading.Thread(target=run_on_documents, 
                 args=(doc_func, 
-                    myview_name, 
+                    "temp/by_type_and_id", 
                     mystart_key, 
                     myend_key, 
                     skip_till_key,
