@@ -1,13 +1,15 @@
 import os, collections, simplejson
 
+from totalimpact import db, app
 from totalimpact.providers import pmc
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderFactory
-from totalimpact import dao
+from totalimpact import provider_batch_data
 from test.utils import http
+from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
 
-from nose.tools import assert_equals, raises, nottest
+from nose.tools import assert_equals, raises, nottest, assert_items_equal
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/pmc")
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "monthly_download")
@@ -25,11 +27,7 @@ class TestPmc(ProviderTestCase):
     def setUp(self):
         ProviderTestCase.setUp(self)
 
-        # hacky way to delete the "ti" db, then make it fresh again for each test.
-        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
-        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        self.d.update_design_doc()
+        self.db = setup_postgres_for_unittests(db, app)
 
         sample_data_dump = open(SAMPLE_EXTRACT_METRICS_PAGE, "r").read()
         sample_data_dump_different_month = open(SAMPLE_EXTRACT_METRICS_PAGE_DIFFERENT_MONTH, "r").read()
@@ -50,10 +48,10 @@ class TestPmc(ProviderTestCase):
                 "provider": "pmc", 
                 "raw": sample_data_dump_different_month,
                 "provider_raw_version": 1.0,
-                "created": "2012-11-29T07:34:01.126892",
+                "created": "2012-11-29T08:34:01.126892",
                 "aliases": {"pmid":["111"]},
-                "min_event_date": "2012-11-01T07:34:01.126892",
-                "max_event_date": "2012-11-31T07:34:01.126892"
+                "min_event_date": "2012-01-01T07:34:01.126892",
+                "max_event_date": "2012-01-31T07:34:01.126892"
             },
             {
                "_id": "abc123",
@@ -79,33 +77,39 @@ class TestPmc(ProviderTestCase):
                },
                "provider_raw_version": 1,
                "type": "provider_data_dump",
-               "min_event_date": "2012-10-01T07:34:01.126892",
-               "created": "2012-11-29T07:34:01.126892"
+               "min_event_date": "2012-10-02T07:34:01.126892",
+               "created": "2012-11-29T09:34:01.126892"
             }
         ]
         #print test_monthly_data
         for doc in test_monthly_data:
-            self.d.db.save(doc)
+            new_object = provider_batch_data.create_objects_from_doc(doc)
+            print new_object
 
-        self.provider = pmc.Pmc(mydao=self.d) 
+        self.provider = pmc.Pmc()
+        print "after pmc"
+
+    def tearDown(self):
+        teardown_postgres_for_unittests(self.db)
+
 
     def test_has_applicable_batch_data_true(self):
         # ensure that it matches an appropriate ids
-        response = self.provider.has_applicable_batch_data("pmid", "111", self.d)
+        response = self.provider.has_applicable_batch_data("pmid", "111")
         assert_equals(response, True)
 
     def test_has_applicable_batch_data_false(self):
         # ensure that it matches an appropriate ids
-        response = self.provider.has_applicable_batch_data("pmid", "notapmidintheview", self.d)
+        response = self.provider.has_applicable_batch_data("pmid", "notapmidintheview")
         assert_equals(response, False)
 
     def test_build_batch_data_dict(self):
         # ensure that it matches an appropriate ids
-        response = self.provider.build_batch_data_dict(self.d)
+        response = self.provider.build_batch_data_dict()
         #print response
         print response.keys()
         expected = [('pmid', '23071903'), ('pmid', '23066503'), ('pmid', '111'), ('pmid', '23110254'), ('pmid', '23110252'), ('pmid', '23066505'), ('pmid', '23066504'), ('pmid', '23110255'), ('pmid', '23066507'), ('pmid', '23066506'), ('pmid', '23066510'), ('pmid', '23066509'), ('pmid', '23066508'), ('pmid', '222'), ('pmid', '23110253')]
-        assert_equals(response.keys(), expected)
+        assert_items_equal(response.keys(), expected)
 
     def test_is_relevant_alias(self):
         # ensure that it matches an appropriate ids

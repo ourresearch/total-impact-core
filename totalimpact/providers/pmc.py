@@ -1,7 +1,9 @@
 import hashlib, simplejson, os, couchdb, collections
 
+from totalimpact import db
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.provider_batch_data import ProviderBatchData
 
 import logging
 logger = logging.getLogger('ti.providers.pmc')
@@ -59,52 +61,34 @@ class Pmc(Provider):
         }               
     }
 
-    def __init__(self, mydao=None):
-        global batch_data
-        if not batch_data:
-            batch_data = self.build_batch_data_dict(mydao)
-            pass
+    def __init__(self):
         super(Pmc, self).__init__()
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
         return("pmid" == namespace)
 
-    def build_batch_data_dict(self, mydao=None):
-        if not mydao:
-            from totalimpact import dao
-            mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
-
+    def build_batch_data_dict(self):
         logger.info(u"Building batch data for PMC")
-
-        results = mydao.db.view('provider_batch_data/by_alias_provider_batch_data', include_docs=True)
-
         batch_data = collections.defaultdict(list)
 
-        try:
-            rows = results.rows
-        except couchdb.ResourceNotFound:
-            return None
-
-        for row in results.rows:
-            [provider, [namespace, nid]] = row.key
-            if provider == "pmc":
-                pmid_alias = (namespace, nid)
-                batch_data[pmid_alias] += [{"raw": row.doc["raw"], "max_event_date":row.value}]
+        matches = ProviderBatchData.query.filter_by(provider="pmc").all()
+        for provider_batch_data_obj in matches:
+            for nid in provider_batch_data_obj.aliases["pmid"]:
+                pmid_alias = ("pmid", nid)
+                batch_data[pmid_alias] += [{"raw": provider_batch_data_obj.raw, 
+                                            "max_event_date":provider_batch_data_obj.max_event_date}]
 
         logger.info(u"Finished building batch data for PMC: {n} rows".format(n=len(batch_data)))
 
         return batch_data
 
-    def has_applicable_batch_data(self, namespace, nid, mydao):
+    def has_applicable_batch_data(self, namespace, nid):
         has_applicable_batch_data = False
 
-        res = mydao.view('provider_batch_data/by_alias_provider_batch_data')
-        # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
-        matches = res["pmc", [namespace, nid]] 
-
-        if matches.rows:
-            if len(matches.rows) > 0:
+        matches = ProviderBatchData.query.filter_by(provider="pmc").all()
+        for provider_batch_data_obj in matches:
+            if nid in provider_batch_data_obj.aliases[namespace]:
                 has_applicable_batch_data = True
 
         return has_applicable_batch_data
@@ -125,6 +109,7 @@ class Pmc(Provider):
         try:
             articles = doc.getElementsByTagName("article")
             for article in articles:
+                print article
                 metrics_dict = {}            
                 meta_data = article.getElementsByTagName("meta-data")[0]
                 pmid = meta_data.getAttribute("pubmed-id")
@@ -186,7 +171,8 @@ class Pmc(Provider):
         # if haven't loaded batch_data, return no metrics
         global batch_data
         if not batch_data:
-            return {}
+            batch_data = self.build_batch_data_dict()
+            pass
 
         metrics_and_drilldown = {}
 
