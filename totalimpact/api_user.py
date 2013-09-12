@@ -23,13 +23,25 @@ class ItemAlreadyRegisteredToThisKey(Exception):
 def save_api_user(**meta):
     api_user = ApiUser(**meta)
     db.session.add(api_user)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check for {api_user}, rolling back.  Message: {message}".format(
+            api_user=api_user, 
+            message=e.message))        
     return api_user
 
 def save_registered_item(alias, api_user):
     registered_item = RegisteredItem(alias, api_user)
     db.session.add(registered_item)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check for {registered_item}, rolling back.  Message: {message}".format(
+            registered_item=registered_item, 
+            message=e.message))        
     return registered_item
 
 

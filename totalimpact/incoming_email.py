@@ -11,7 +11,13 @@ def save_incoming_email(payload):
     email.log_if_google_scholar_new_articles()
 
     db.session.add(email)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in add_items_to_collection_object for {cid}, rolling back.  Message: {message}".format(
+            cid=cid, 
+            message=e.message))        
 
     return email
 

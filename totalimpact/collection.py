@@ -50,7 +50,14 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
         if alias_tuple not in collection_obj.added_aliases:
             collection_obj.added_items.append(AddedItem(alias_tuple=alias_tuple))
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in add_items_to_collection_object for {cid}, rolling back.  Message: {message}".format(
+            cid=cid, 
+            message=e.message))        
+
     return collection_obj
 
 
@@ -68,7 +75,13 @@ def remove_items_from_collection_object(cid, tiids_to_remove):
         if coll_tiid.tiid in tiids_to_remove:
             collection_obj.tiid_links.remove(coll_tiid)
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in remove_items_from_collection_object for {cid}, rolling back.  Message: {message}".format(
+            cid=cid, 
+            message=e.message))        
     return collection_obj
 
 
@@ -152,6 +165,8 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
 
 
 def create_objects_from_collection_doc(coll_doc):
+    cid = coll_doc["_id"]
+    
     logger.debug(u"in create_objects_from_collection_doc for {cid}".format(
         cid=coll_doc["_id"]))        
 
@@ -182,7 +197,13 @@ def create_objects_from_collection_doc(coll_doc):
         cid=new_coll_object.cid, 
         new_added_item_objects=new_coll_object.added_aliases))      
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in create_objects_from_collection_doc for {cid}, rolling back.  Message: {message}".format(
+            cid=cid, 
+            message=e.message))        
 
     return(new_coll_object)
 
@@ -190,7 +211,13 @@ def create_objects_from_collection_doc(coll_doc):
 def delete_collection(cid):
     coll_object = Collection.query.filter_by(cid=cid).first()
     db.session.delete(coll_object)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in delete_collection for {cid}, rolling back.  Message: {message}".format(
+            cid=cid, 
+            message=e.message))        
     return
 
 

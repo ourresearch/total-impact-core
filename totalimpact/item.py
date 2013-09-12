@@ -27,13 +27,16 @@ logger = logging.getLogger('ti.item')
 class NotAuthenticatedError(Exception):
     pass
 
-def delete_item(cid):
+def delete_item(tiid):
     item_object = Item.query.filter_by(tiid=tiid).first()
     db.session.delete(item_object)
-    db.session.commit()
-    return
-
-
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in delete_item for {tiid}, rolling back.  Message: {message}".format(
+            tiid=tiid, 
+            message=e.message))   
 
 
 def create_metric_objects(old_style_metric_dict):
@@ -85,6 +88,8 @@ def create_alias_objects(old_style_alias_dict, collected_date=datetime.datetime.
 
 
 def create_objects_from_item_doc(item_doc):
+    tiid = item_doc["_id"]
+
     logger.debug(u"in create_objects_from_item_doc for {tiid}".format(
         tiid=item_doc["_id"]))        
 
@@ -106,7 +111,13 @@ def create_objects_from_item_doc(item_doc):
         new_metric_objects = create_metric_objects(item_doc["metrics"]) 
         new_item_object.metrics = new_metric_objects
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in create_objects_from_item_doc for {tiid}, rolling back.  Message: {message}".format(
+            tiid=tiid, 
+            message=e.message))   
 
     return new_item_object
 
@@ -449,7 +460,13 @@ def add_metric_to_item_object(full_metric_name, metrics_method_response, item_do
     logger.debug(u"in add_metrics_to_item_object for obj {metric_object} after set".format(
         metric_object=metric_object))        
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in add_metric_to_item_object for {tiid}, rolling back.  Message: {message}".format(
+            tiid=tiid, 
+            message=e.message)) 
     return item_obj
 
 
@@ -467,7 +484,13 @@ def add_aliases_to_item_object(aliases_dict, item_doc):
 
     item_obj.aliases = create_alias_objects(aliases_dict)
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in add_aliases_to_item_object for {tiid}, rolling back.  Message: {message}".format(
+            tiid=tiid, 
+            message=e.message)) 
     return item_obj
 
 def add_biblio_to_item_object(new_biblio_dict, item_doc):
@@ -484,7 +507,14 @@ def add_biblio_to_item_object(new_biblio_dict, item_doc):
 
     item_obj.biblios += create_biblio_objects([new_biblio_dict])
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in add_biblio_to_item_object for {tiid}, rolling back.  Message: {message}".format(
+            tiid=tiid, 
+            message=e.message)) 
+        
     return item_obj
 
 

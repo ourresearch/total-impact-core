@@ -465,7 +465,7 @@ def collection_update(cid=""):
     try:
         collection = mydao.get(cid)
         tiids = collection["alias_tiids"].values()
-    except Exception:
+    except (TypeError, AttributeError):
         logger.exception(u"couldn't get tiids in POST collection '{cid}'".format(
             cid=cid
         ))

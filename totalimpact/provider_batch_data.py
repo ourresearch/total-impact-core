@@ -41,7 +41,14 @@ def create_objects_from_doc(doc):
         del new_dict["type"]
         new_object = ProviderBatchData(**new_dict)
     db.session.add(new_object)
-    db.session.commit()
+
+    try:
+        db.session.commit()
+    except IntegrityError, e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in create_objects_from_doc for {new_object}, rolling back.  Message: {message}".format(
+            new_object=new_object, 
+            message=e.message))  
 
     return new_object
 
