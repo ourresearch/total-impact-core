@@ -8,6 +8,7 @@ import json
 import re
 import datetime
 import calendar
+from totalimpact import provider_batch_data
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -57,14 +58,17 @@ def get_pmc_stats_page(options_dict):
     page = resp.text
     return page
 
-def write_batch_dict_to_couch(batch_dict):
-    cloudant_db = os.getenv("CLOUDANT_DB")
-    cloudant_url = os.getenv("CLOUDANT_URL")
+def write_batch_dict(batch_dict):
+    logger.info("connected to postgres at " + os.getenv("POSTGRESQL_URL"))
+    new_object = provider_batch_data.create_objects_from_doc(batch_dict)
+    print "added to db if it wasn't already there"
 
-    couch = couchdb.Server(url=cloudant_url)
-    db = couch[cloudant_db]
-    logger.info("connected to couch at " + cloudant_url + " / " + cloudant_db)
-    db.save(batch_dict)
+    print "current batch data:"
+    matches = provider_batch_data.ProviderBatchData.query.filter_by(provider="pmc").order_by("min_event_date").all()
+    for match in matches:
+        print match        
+
+
 
 
 if __name__ == '__main__':
@@ -82,7 +86,10 @@ if __name__ == '__main__':
     page = get_pmc_stats_page(options_dict)
     batch_dict = build_batch_dict(page, options_dict)
     print(json.dumps(batch_dict, indent=4))
-    write_batch_dict_to_couch(batch_dict)
+    if batch_dict["aliases"]["pmid"]:
+        write_batch_dict(batch_dict)
+    else:
+        print "no data for this month, not saving anything"
 
 
 

@@ -21,10 +21,10 @@ class ProviderBatchData(db.Model):
         super(ProviderBatchData, self).__init__(**kwargs)
 
     def __repr__(self):
-        return '<ProviderBatchData {provider}, {min_event_date}, {max_event_date}>'.format(
+        return '<ProviderBatchData {provider}, {min_event_date}, {len_aliases} aliases>'.format(
             provider=self.provider, 
-            min_event_date=self.min_event_date, 
-            max_event_date=self.max_event_date)
+            min_event_date=self.min_event_date.isoformat()[0:10], 
+            len_aliases=sum([len(self.aliases[namespace]) for namespace in self.aliases]))
 
 def create_objects_from_doc(doc):
     logger.debug(u"in create_objects_from_doc for {id}".format(
