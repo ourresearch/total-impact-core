@@ -410,7 +410,7 @@ def add_metric_to_item_object(full_metric_name, metrics_method_response, item_do
     item_obj = Item.query.filter_by(tiid=tiid).first()
 
     if not item_obj:
-        item_obj = Item.create_objects_from_item_doc(item_doc)
+        item_obj = create_objects_from_item_doc(item_doc)
 
     logger.debug(u"in add_metrics_to_item_object for {tiid} with {item_obj}".format(
         tiid=tiid,
@@ -460,7 +460,7 @@ def add_aliases_to_item_object(aliases_dict, item_doc):
 
     item_obj = Item.query.filter_by(tiid=tiid).first()
     if not item_obj:
-        item_obj = Item.create_objects_from_item_doc(item_doc)
+        item_obj = create_objects_from_item_doc(item_doc)
 
     item_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(item_obj)
@@ -478,7 +478,7 @@ def add_biblio_to_item_object(new_biblio_dict, item_doc):
 
     item_obj = Item.query.filter_by(tiid=tiid).first()
     if not item_obj:
-        item_obj = Item.create_objects_from_item_doc(item_doc)
+        item_obj = create_objects_from_item_doc(item_doc)
     item_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(item_obj)
 
