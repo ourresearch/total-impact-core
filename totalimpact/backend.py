@@ -193,29 +193,37 @@ class CouchWorker(Worker):
         self.name = self.couch_queue.queue_name + "_worker"
 
     @classmethod
-    def update_item_with_new_aliases(cls, alias_dict, item):
-        if alias_dict == item["aliases"]:
-            item = None
+    def update_item_with_new_aliases(cls, alias_dict, item_doc):
+        if alias_dict == item_doc["aliases"]:
+            item_doc = None
         else:
-            merged_aliases = item_module.merge_alias_dicts(alias_dict, item["aliases"])
-            item["aliases"] = merged_aliases
-        return(item)
+            merged_aliases = item_module.merge_alias_dicts(alias_dict, item_doc["aliases"])
+            item_doc["aliases"] = merged_aliases
+
+            item_obj = item_module.add_aliases_to_item_object(alias_dict, item_doc)
+
+        return(item_doc)
 
     @classmethod
-    def update_item_with_new_biblio(cls, new_biblio_dict, item):
+    def update_item_with_new_biblio(cls, new_biblio_dict, item_doc):
         # return None if no changes
         # don't change if biblio already there
-        response = item_module.get_biblio_to_update(item["biblio"], new_biblio_dict)
+
+        response = item_module.get_biblio_to_update(item_doc["biblio"], new_biblio_dict)
         if response:
-            item["biblio"] = response
+            item_doc["biblio"] = response
+            item_obj = item_module.add_biblio_to_item_object(new_biblio_dict, item_doc)
         else:
-            item = None
-        return(item)
+            item_doc = None
+
+        return(item_doc)
+
 
     @classmethod
-    def update_item_with_new_metrics(cls, metric_name, metrics_method_response, item):
-        item = item_module.add_metrics_data(metric_name, metrics_method_response, item)
-        return(item)        
+    def update_item_with_new_metrics(cls, metric_name, metrics_method_response, item_doc):
+        item_doc = item_module.add_metrics_data(metric_name, metrics_method_response, item_doc)
+        item_obj = item_module.add_metric_to_item_object(metric_name, metrics_method_response, item_doc)
+        return(item_doc)        
 
     def decr_num_providers_left(self, metric_name, tiid):
         provider_name = metric_name.split(":")[0]

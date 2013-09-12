@@ -23,7 +23,7 @@ logger = logging.getLogger('ti.collection')
 def get_alias_strings(aliases):
     alias_strings = []
     for alias in aliases:
-        alias = canonical_alias_tuple(alias)
+        alias = item_module.canonical_alias_tuple(alias)
         (namespace, nid) = alias
         try:
             alias_strings += [namespace+":"+nid]

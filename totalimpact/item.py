@@ -74,6 +74,16 @@ def create_biblio_objects(list_of_old_style_biblio_dicts, collected_date=datetim
     return new_biblio_objects
 
 
+def create_alias_objects(old_style_alias_dict, collected_date=datetime.datetime.utcnow()):
+    new_alias_objects = []
+    alias_tuples = alias_tuples_from_dict(old_style_alias_dict)   
+    for alias_tuple in alias_tuples:
+        (namespace, nid) = alias_tuple
+        if nid and namespace and (namespace != "biblio"):
+            new_alias_objects += [Alias(alias_tuple=alias_tuple, collected_date=collected_date)]
+    return new_alias_objects
+
+
 def create_objects_from_item_doc(item_doc):
     logger.debug(u"in create_objects_from_item_doc for {tiid}".format(
         tiid=item_doc["_id"]))        
@@ -84,12 +94,8 @@ def create_objects_from_item_doc(item_doc):
     db.session.add(new_item_object)
 
     alias_dict = item_doc["aliases"]
-    alias_tuples = alias_tuples_from_dict(alias_dict)   
-    for alias_tuple in alias_tuples:
-        if alias_tuple not in new_item_object.alias_tuples:
-            (namespace, nid) = alias_tuple
-            if nid and namespace and (namespace != "biblio"):
-                new_item_object.aliases.append(Alias(alias_tuple=alias_tuple, collected_date=item_doc["last_modified"]))
+    new_alias_objects = create_alias_objects(alias_dict, item_doc["last_modified"])
+    new_item_object.aliases = new_alias_objects
 
     # biblio within aliases, skip just the biblio section
     if "biblio" in alias_dict:
@@ -267,9 +273,8 @@ class Item(db.Model):
         super(Item, self).__init__(**kwargs)
 
     def __repr__(self):
-        return '<Item {tiid}, {aliases}>'.format(
-            tiid=self.tiid, 
-            aliases=self.aliases)
+        return '<Item {tiid}>'.format(
+            tiid=self.tiid)
 
     @property
     def alias_tuples(self):
@@ -277,12 +282,16 @@ class Item(db.Model):
 
     @classmethod
     def create_from_old_doc(cls, doc):
+        logger.debug(u"in create_from_old_doc for {tiid}".format(
+            tiid=doc["_id"]))
+
         doc_copy = copy.deepcopy(doc)
         doc_copy["tiid"] = doc_copy["_id"]
         for key in doc_copy.keys():
             if key not in ["tiid", "created", "last_modified", "last_update_run"]:
                 del doc_copy[key]
         new_item_object = Item(**doc_copy)
+
         return new_item_object
 
 
@@ -391,6 +400,93 @@ def add_metrics_data(metric_name, metrics_method_response, item):
     now = datetime.datetime.utcnow().isoformat()
     this_metric_values_raw_history[now] = metric_value
     return item
+
+
+def add_metric_to_item_object(full_metric_name, metrics_method_response, item_doc):
+    tiid = item_doc["_id"]
+    logger.debug(u"in add_metrics_to_item_object for {tiid}".format(
+        tiid=tiid))        
+
+    item_obj = Item.query.filter_by(tiid=tiid).first()
+
+    if not item_obj:
+        item_obj = Item.create_objects_from_item_doc(item_doc)
+
+    logger.debug(u"in add_metrics_to_item_object for {tiid} with {item_obj}".format(
+        tiid=tiid,
+        item_obj=item_obj))        
+
+    item_obj.last_modified = datetime.datetime.utcnow()
+    db.session.merge(item_obj)
+
+    logger.debug(u"in add_metrics_to_item_object for {tiid} after merge".format(
+        tiid=tiid))        
+
+    logger.debug(u"in add_metrics_to_item_object: {metrics_method_response}, {full_metric_name}".format(
+        metrics_method_response=metrics_method_response, 
+        full_metric_name=full_metric_name))        
+
+    (metric_value, provenance_url) = metrics_method_response
+    (provider, metric_name) = full_metric_name.split(":")
+
+    logger.debug(u"in add_metrics_to_item_object for {tiid} before dict".format(
+        tiid=tiid))        
+
+    new_style_metric_dict = {
+        "metric_name": metric_name, 
+        "provider": provider, 
+        "raw_value": metric_value,
+        "drilldown_url": provenance_url,
+        "collected_date": datetime.datetime.utcnow()
+    }    
+    metric_object = Metric(**new_style_metric_dict)
+
+    logger.debug(u"in add_metrics_to_item_object for obj {metric_object}".format(
+        metric_object=metric_object))        
+
+    metric_object.item = item_obj
+
+    logger.debug(u"in add_metrics_to_item_object for obj {metric_object} after set".format(
+        metric_object=metric_object))        
+
+    db.session.commit()
+    return item_obj
+
+
+def add_aliases_to_item_object(aliases_dict, item_doc):
+    tiid = item_doc["_id"]
+    logger.debug(u"in add_aliases_to_item_object for {tiid}".format(
+        tiid=tiid))        
+
+    item_obj = Item.query.filter_by(tiid=tiid).first()
+    if not item_obj:
+        item_obj = Item.create_objects_from_item_doc(item_doc)
+
+    item_obj.last_modified = datetime.datetime.utcnow()
+    db.session.merge(item_obj)
+
+    item_obj.aliases = create_alias_objects(aliases_dict)
+
+    db.session.commit()
+    return item_obj
+
+def add_biblio_to_item_object(new_biblio_dict, item_doc):
+    tiid = item_doc["_id"]
+    logger.debug(u"in add_biblio_to_item_object for {tiid}, {new_biblio_dict}".format(
+        tiid=tiid, 
+        new_biblio_dict=new_biblio_dict))        
+
+    item_obj = Item.query.filter_by(tiid=tiid).first()
+    if not item_obj:
+        item_obj = Item.create_objects_from_item_doc(item_doc)
+    item_obj.last_modified = datetime.datetime.utcnow()
+    db.session.merge(item_obj)
+
+    item_obj.biblios += create_biblio_objects([new_biblio_dict])
+
+    db.session.commit()
+    return item_obj
+
 
 
 def get_biblio_to_update(old_biblio, new_biblio):
@@ -649,33 +745,44 @@ def create_or_update_items_from_aliases(aliases, myredis, mydao):
 
     return (tiids, new_items)
 
+   
 def create_item(namespace, nid, myredis, mydao):
     logger.debug(u"In create_item with alias" + str((namespace, nid)))
     item = make()
     namespace = clean_id(namespace)
     nid = clean_id(nid)
-    item["aliases"][namespace] = [nid]
-    item["aliases"] = canonical_aliases(item["aliases"])
+    item_doc["aliases"][namespace] = [nid]
+    item_doc["aliases"] = canonical_aliases(item_doc["aliases"])
 
     # set this so we know when it's still updating later on
     myredis.set_num_providers_left(
-        item["_id"],
+        item_doc["_id"],
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
     )
 
-    mydao.save(item)
+    mydao.save(item_doc)
 
-    myredis.add_to_alias_queue(item["_id"], item["aliases"])
 
-    logger.info(u"Created new item '{id}' with alias '{alias}'".format(
-        id=item["_id"],
+    logger.debug(u"in create_item for {tiid}, finished with couch now to postgres".format(
+        tiid=item_doc["_id"]))        
+
+    collection_obj = create_objects_from_item_doc(item_doc)
+
+    logger.info(u"saved new collection '{tiid}'".format(
+            id=item_doc["_id"]))
+
+    logger.debug(json.dumps(item_doc, sort_keys=True, indent=4))
+
+    myredis.add_to_alias_queue(item_doc["_id"], item_doc["aliases"])
+
+    logger.info(u"Created new item '{tiid}' with alias '{alias}'".format(
+        tiid=item_doc["_id"],
         alias=str((namespace, nid))
     ))
 
-    try:
-        return item["_id"]
-    except AttributeError:
-        abort(500)
+    return item_doc["_id"]
+
+
 
 def create_or_find_items_from_aliases(clean_aliases, myredis, mydao):
     tiids = []
@@ -698,6 +805,10 @@ def create_or_find_items_from_aliases(clean_aliases, myredis, mydao):
             item = make()
             item["aliases"][namespace] = [nid]
             item["aliases"] = canonical_aliases(item["aliases"])
+
+            logger.debug(u"in create_or_find_items_from_aliases for {tiid}, now to postgres".format(
+                tiid=item["_id"]))        
+            collection_obj = create_objects_from_item_doc(item)
 
             new_items.append(item)
             tiids.append(item["_id"]) 
