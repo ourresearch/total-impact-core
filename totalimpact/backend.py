@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, time, json, logging, threading, Queue, copy, sys, datetime
+import os, time, json, logging, threading, Queue, copy, sys, datetime, db
 from collections import defaultdict
 
 from totalimpact import dao, tiredis, default_settings
@@ -267,6 +267,7 @@ class CouchWorker(Worker):
 
                 if method_name=="metrics":
                     self.decr_num_providers_left(metric_name, tiid) # have to do this after the item save
+                db.session.release()
         else:
             #time.sleep(0.1)  # is this necessary?
             pass
