@@ -423,25 +423,11 @@ def add_metric_to_item_object(full_metric_name, metrics_method_response, item_do
     if not item_obj:
         item_obj = create_objects_from_item_doc(item_doc)
 
-    logger.debug(u"in add_metrics_to_item_object for {tiid} with {item_obj}".format(
-        tiid=tiid,
-        item_obj=item_obj))        
-
     item_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(item_obj)
 
-    logger.debug(u"in add_metrics_to_item_object for {tiid} after merge".format(
-        tiid=tiid))        
-
-    logger.debug(u"in add_metrics_to_item_object: {metrics_method_response}, {full_metric_name}".format(
-        metrics_method_response=metrics_method_response, 
-        full_metric_name=full_metric_name))        
-
     (metric_value, provenance_url) = metrics_method_response
     (provider, metric_name) = full_metric_name.split(":")
-
-    logger.debug(u"in add_metrics_to_item_object for {tiid} before dict".format(
-        tiid=tiid))        
 
     new_style_metric_dict = {
         "metric_name": metric_name, 
@@ -452,13 +438,7 @@ def add_metric_to_item_object(full_metric_name, metrics_method_response, item_do
     }    
     metric_object = Metric(**new_style_metric_dict)
 
-    logger.debug(u"in add_metrics_to_item_object for obj {metric_object}".format(
-        metric_object=metric_object))        
-
     metric_object.item = item_obj
-
-    logger.debug(u"in add_metrics_to_item_object for obj {metric_object} after set".format(
-        metric_object=metric_object))        
 
     try:
         db.session.commit()
