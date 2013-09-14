@@ -572,32 +572,7 @@ def tests_interactions(action_type=''):
         'interaction_test_report.html',
         report=report
     )
-
-# for internal use only
-@app.route("/collections/recent")
-@app.route("/collections/recent.<format>")
-def latest_collections(format=""):
-    res = mydao.db.view("queues/latest-collections", descending=True)
-    if request.args.get('include_tests') in [1, "yes", "true", "True"]:
-        include_tests = 1
-    else:
-        include_tests = 0
-
-    yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-    rows = res[[include_tests, "zzz"]:[include_tests ,yesterday.isoformat()]].rows
-    for row in rows:
-        row["url"] = "http://{root}/collection/{collection_id}".format(
-            root=os.getenv("WEBAPP_ROOT"),
-            collection_id=row["id"]
-        )
-
-    if format == "html":
-        resp = render_template("latest_collections.html", rows=rows)
-    else:
-        resp = make_response(json.dumps(rows, indent=4), 200)
-        resp.mimetype = "application/json"
-
-    return resp            
+       
 
 
 @app.route("/v1/collections/<cids>")
