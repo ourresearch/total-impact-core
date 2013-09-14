@@ -196,13 +196,14 @@ def create_objects_from_collection_doc(coll_doc):
     alias_strings = tiids = coll_doc["alias_tiids"].keys()
     alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]
     for alias_tuple in alias_tuples:
-        alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-        if alias_tuple not in new_coll_object.added_aliases:
-            try:
-                new_coll_object.added_items.append(AddedItem(alias_tuple=alias_tuple, created=coll_doc["last_modified"]))
-            except ValueError:
-                pass
-                
+        try:
+            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
+            if alias_tuple not in new_coll_object.added_aliases:
+                    new_coll_object.added_items.append(AddedItem(alias_tuple=alias_tuple, created=coll_doc["last_modified"]))
+        except ValueError:
+            logger.debug("could not separate alias tuple {alias_tuple}".format(
+                alias_tuple=alias_tuple))
+
     logger.debug(u"new_added_item_objects for {cid} are {new_added_item_objects}".format(
         cid=new_coll_object.cid, 
         new_added_item_objects=new_coll_object.added_aliases))      
