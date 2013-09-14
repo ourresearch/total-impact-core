@@ -780,7 +780,7 @@ def create_item(namespace, nid, myredis, mydao):
     collection_obj = create_objects_from_item_doc(item_doc)
 
     logger.info(u"saved new collection '{tiid}'".format(
-            id=item_doc["_id"]))
+            tiid=item_doc["_id"]))
 
     logger.debug(json.dumps(item_doc, sort_keys=True, indent=4))
 
