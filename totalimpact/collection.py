@@ -47,8 +47,11 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
         if tiid not in collection_obj.tiids:
             collection_obj.tiid_links.append(CollectionTiid(tiid=tiid))
 
-    unique_alias_tuples = set([item_module.canonical_alias_tuple(alias_tuple) for alias_tuple in alias_tuples])
-    for alias_tuple in unique_alias_tuples:
+    for alias_tuple in alias_tuples:
+        alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
+        logger.info(u"added_aliases: {added_aliases}, this tuple: {alias_tuple}".format(
+            added_aliases=collection_obj.added_aliases, 
+            alias_tuple=alias_tuple))
         if alias_tuple not in collection_obj.added_aliases:
             collection_obj.added_items.append(AddedItem(alias_tuple=alias_tuple))
 
@@ -189,6 +192,7 @@ def create_objects_from_collection_doc(coll_doc):
     alias_strings = tiids = coll_doc["alias_tiids"].keys()
     alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]
     for alias_tuple in alias_tuples:
+        alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
         if alias_tuple not in new_coll_object.added_aliases:
             try:
                 new_coll_object.added_items.append(AddedItem(alias_tuple=alias_tuple, created=coll_doc["last_modified"]))
