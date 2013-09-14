@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import os, time, json, logging, threading, Queue, copy, sys, datetime, db
+import os, time, json, logging, threading, Queue, copy, sys, datetime
 from collections import defaultdict
 
-from totalimpact import dao, tiredis, default_settings
+from totalimpact import dao, tiredis, default_settings, db
 from totalimpact import item as item_module
 from totalimpact.providers.provider import ProviderFactory, ProviderError
 
