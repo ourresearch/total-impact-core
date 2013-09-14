@@ -1,6 +1,7 @@
 import datetime, shortuuid, os
 import analytics
-from sqlalchemy.exc import IntegrityError, FlushError
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import FlushError
 from sqlalchemy import and_
 
 from totalimpact import item

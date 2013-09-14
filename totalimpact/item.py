@@ -9,7 +9,8 @@ from totalimpact import unicode_helpers
 from totalimpact import default_settings
 from totalimpact.utils import Retry
 
-from sqlalchemy.exc import IntegrityError, FlushError
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import FlushError
 from sqlalchemy.ext.hybrid import hybrid_property
 from totalimpact import json_sqlalchemy
 from totalimpact import db

@@ -2,7 +2,8 @@ from werkzeug import generate_password_hash, check_password_hash
 import shortuuid, string, random, datetime
 import csv, StringIO, json, copy
 from collections import OrderedDict, defaultdict
-from sqlalchemy.exc import IntegrityError, FlushError
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import FlushError
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from totalimpact import db

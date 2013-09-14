@@ -1,5 +1,6 @@
 import datetime, json, re, copy
-from sqlalchemy.exc import IntegrityError, FlushError
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import FlushError
 from totalimpact import db
 from totalimpact import json_sqlalchemy
 
