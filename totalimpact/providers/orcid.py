@@ -20,6 +20,7 @@ class Orcid(Provider):
         biblio = {}
         try:
             biblio["year"] = work["publication-date"]["year"]["value"]
+            biblio["year"] = re.sub("\D", "", biblio["year"])           
         except (KeyError, TypeError):
             biblio["year"]  = ""
 

@@ -105,6 +105,7 @@ class Pubmed(Provider):
                                                     month=biblio_dict["month"], 
                                                     day=biblio_dict["day"])
             biblio_dict["date"] = datetime_published.isoformat()
+            biblio_dict["year"] = re.sub("\D", "", biblio_dict["year"])
             del biblio_dict["month"]
             del biblio_dict["day"]
         except (AttributeError, TypeError, KeyError):

@@ -1,5 +1,5 @@
 from StringIO import StringIO
-import json
+import json, re
 
 from pybtex.database.input import bibtex
 from pybtex.errors import enable_strict_mode, format_error
@@ -118,7 +118,8 @@ class Bibtex(Provider):
                 parsed["first_page"] = ""
 
             try:
-                parsed["year"] = biblio.entries[mykey].fields["year"]
+                year_string = biblio.entries[mykey].fields["year"].replace("{}", "")
+                parsed["year"] = re.sub("\D", "", year_string)
             except KeyError:
                 parsed["year"]  = ""
 

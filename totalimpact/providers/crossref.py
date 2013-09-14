@@ -1,13 +1,13 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout, ProviderServerError
-import BeautifulSoup, itertools
+import itertools
+import httplib, urllib, re
 
 import logging
 logger = logging.getLogger('ti.providers.crossref')
 
 #!/usr/bin/env python
 
-import httplib, urllib, re
 
 class Crossref(Provider):  
 
@@ -106,6 +106,8 @@ class Crossref(Provider):
                     biblio_dict["year"] = str(biblio_dict["year"]["raw"])
                 elif "date-parts" in biblio_dict["year"]:
                     biblio_dict["year"] = str(biblio_dict["year"]["date-parts"][0][0])
+                biblio_dict["year"] = re.sub("\D", "", biblio_dict["year"])
+
         except IndexError:
             logger.info(u"/biblio_print could not parse year {biblio_dict}".format(
                 biblio_dict=biblio_dict))
