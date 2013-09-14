@@ -48,12 +48,16 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
             collection_obj.tiid_links.append(CollectionTiid(tiid=tiid))
 
     for alias_tuple in alias_tuples:
-        alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-        logger.info(u"added_aliases: {added_aliases}, this tuple: {alias_tuple}".format(
-            added_aliases=collection_obj.added_aliases, 
-            alias_tuple=alias_tuple))
-        if alias_tuple not in collection_obj.added_aliases:
-            collection_obj.added_items.append(AddedItem(alias_tuple=alias_tuple))
+        try:
+            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
+            logger.info(u"added_aliases: {added_aliases}, this tuple: {alias_tuple}".format(
+                added_aliases=collection_obj.added_aliases, 
+                alias_tuple=alias_tuple))
+            if alias_tuple not in collection_obj.added_aliases:
+                collection_obj.added_items.append(AddedItem(alias_tuple=alias_tuple))
+        except ValueError:
+            logger.debug("could not separate alias tuple {alias_tuple}".format(
+                alias_tuple=alias_tuple))            
 
     try:
         db.session.commit()
@@ -198,7 +202,7 @@ def create_objects_from_collection_doc(coll_doc):
                 new_coll_object.added_items.append(AddedItem(alias_tuple=alias_tuple, created=coll_doc["last_modified"]))
             except ValueError:
                 pass
-
+                
     logger.debug(u"new_added_item_objects for {cid} are {new_added_item_objects}".format(
         cid=new_coll_object.cid, 
         new_added_item_objects=new_coll_object.added_aliases))      
