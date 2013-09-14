@@ -1,3 +1,4 @@
+import re
 from totalimpact.providers import bibtex
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderItemNotFoundError
