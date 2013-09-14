@@ -48,6 +48,7 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
             collection_obj.tiid_links.append(CollectionTiid(tiid=tiid))
 
     for alias_tuple in alias_tuples:
+        alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
         if alias_tuple not in collection_obj.added_aliases:
             collection_obj.added_items.append(AddedItem(alias_tuple=alias_tuple))
 
