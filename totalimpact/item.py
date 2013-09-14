@@ -847,7 +847,7 @@ def get_tiid_by_alias(ns, nid, mydao):
     ns = clean_id(ns)
     nid = clean_id(nid)
 
-    res = mydao.view('queues/by_alias')
+    res = mydao.db.view('queues/by_alias')
 
     # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
     logger.debug(u"In get_tiid_by_alias with {ns}, {nid}".format(

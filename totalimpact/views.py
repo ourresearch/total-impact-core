@@ -478,27 +478,6 @@ def collection_update(cid=""):
     return resp
 
 
-def list_of_items_only_owned_by_test_users():
-    r = requests.get(
-        os.getenv("WEBAPP_ROOT") + "/users/test/collection_ids")
-
-    test_collection_ids = r.json()["collection_ids"]
-
-    items_only_in_test_collections = []
-    for cid in test_collection_ids:
-        coll = dao.db[cid]
-        for alias, tiid in coll["alias_tiids"].iteritems():
-            r = mydao.db.view("tiids_in_collections/tiids_in_collections")
-            num_collections_this_is_in = len(r.rows)
-            if num_collections_this_is_in <= 1:
-                # it's just in one coll, the test one.
-                items_only_in_test_collections.append(tiid)
-
-    return items_only_in_test_collections
-
-
-
-
 @app.route("/v1/collection/<cid>", methods=["DELETE"])
 def delete_collection(cid=None):
 
@@ -513,11 +492,8 @@ def delete_collection(cid=None):
 
     # delete items if we're told to
     if request.args.get("include_items") in [1, True, "true"]:
-        test_only_items = list_of_items_only_owned_by_test_users()
-
-        for alias, tiid in coll["alias_tiids"].iteritems():
-            if tiid in test_only_items:
-                del mydao.db[tiid]
+        # needs to be reimplemented.  in the mean time return not supported
+        abort_custom(501, "Deleting items is not currently supported.")
 
     # delete the collection
     del mydao.db[cid]

@@ -201,9 +201,6 @@ class Dao(object):
         return response
 
        
-    def view(self, viewname):
-        return self.db.view(viewname)
-
     @Retry(3, Exception, 0.1)
     def delete(self, id):
         doc = self.db.get(id)
