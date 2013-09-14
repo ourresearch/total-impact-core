@@ -9,7 +9,7 @@ from totalimpact import unicode_helpers
 from totalimpact import default_settings
 from totalimpact.utils import Retry
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, FlushError
 from sqlalchemy.ext.hybrid import hybrid_property
 from totalimpact import json_sqlalchemy
 from totalimpact import db
@@ -32,7 +32,7 @@ def delete_item(tiid):
     db.session.delete(item_object)
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check in delete_item for {tiid}, rolling back.  Message: {message}".format(
             tiid=tiid, 
@@ -113,7 +113,7 @@ def create_objects_from_item_doc(item_doc):
 
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check in create_objects_from_item_doc for {tiid}, rolling back.  Message: {message}".format(
             tiid=tiid, 
@@ -442,7 +442,7 @@ def add_metric_to_item_object(full_metric_name, metrics_method_response, item_do
 
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check in add_metric_to_item_object for {tiid}, rolling back.  Message: {message}".format(
             tiid=tiid, 
@@ -466,7 +466,7 @@ def add_aliases_to_item_object(aliases_dict, item_doc):
 
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check in add_aliases_to_item_object for {tiid}, rolling back.  Message: {message}".format(
             tiid=tiid, 
@@ -489,7 +489,7 @@ def add_biblio_to_item_object(new_biblio_dict, item_doc):
 
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check in add_biblio_to_item_object for {tiid}, rolling back.  Message: {message}".format(
             tiid=tiid, 

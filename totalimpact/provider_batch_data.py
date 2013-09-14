@@ -1,5 +1,5 @@
 import datetime, json, re, copy
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, FlushError
 from totalimpact import db
 from totalimpact import json_sqlalchemy
 
@@ -44,7 +44,7 @@ def create_objects_from_doc(doc):
 
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check in create_objects_from_doc for {new_object}, rolling back.  Message: {message}".format(
             new_object=new_object, 

@@ -2,7 +2,7 @@ from werkzeug import generate_password_hash, check_password_hash
 import shortuuid, string, random, datetime
 import csv, StringIO, json, copy
 from collections import OrderedDict, defaultdict
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, FlushError
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from totalimpact import db
@@ -52,7 +52,7 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
 
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check in add_items_to_collection_object for {cid}, rolling back.  Message: {message}".format(
             cid=cid, 
@@ -77,7 +77,7 @@ def remove_items_from_collection_object(cid, tiids_to_remove):
 
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check in remove_items_from_collection_object for {cid}, rolling back.  Message: {message}".format(
             cid=cid, 
@@ -199,7 +199,7 @@ def create_objects_from_collection_doc(coll_doc):
 
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check in create_objects_from_collection_doc for {cid}, rolling back.  Message: {message}".format(
             cid=cid, 
@@ -213,7 +213,7 @@ def delete_collection(cid):
     db.session.delete(coll_object)
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check in delete_collection for {cid}, rolling back.  Message: {message}".format(
             cid=cid, 

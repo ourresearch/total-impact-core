@@ -1,6 +1,6 @@
 import datetime, shortuuid, os
 import analytics
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, FlushError
 from sqlalchemy import and_
 
 from totalimpact import item
@@ -25,7 +25,7 @@ def save_api_user(**meta):
     db.session.add(api_user)
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check for {api_user}, rolling back.  Message: {message}".format(
             api_user=api_user, 
@@ -37,7 +37,7 @@ def save_registered_item(alias, api_user):
     db.session.add(registered_item)
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check for {registered_item}, rolling back.  Message: {message}".format(
             registered_item=registered_item, 

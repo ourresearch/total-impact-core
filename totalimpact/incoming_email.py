@@ -1,5 +1,5 @@
 import datetime, json, re
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, FlushError
 from totalimpact import db
 
 import logging
@@ -13,7 +13,7 @@ def save_incoming_email(payload):
     db.session.add(email)
     try:
         db.session.commit()
-    except IntegrityError, e:
+    except (IntegrityError, FlushError) as e:
         db.session.rollback()
         logger.warning(u"Fails Integrity check in add_items_to_collection_object for {cid}, rolling back.  Message: {message}".format(
             cid=cid, 
