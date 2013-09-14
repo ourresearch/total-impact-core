@@ -105,8 +105,9 @@ def run_through_pages(doc_type, doc_func, skip_till_key="00000", page_size=100, 
             page_size)
     else:    
         starts = string.digits + string.ascii_lowercase
+        starts = starts[int(skip_till_key):]
         step_size = int(len(starts) / number_of_threads)
-        boundaries = (string.digits + string.ascii_lowercase)[0::step_size] + 'z'
+        boundaries = starts[0::step_size] + 'z'
         key_pages = zip(boundaries[:-1], boundaries[1:])
         for (startkey, endkey) in key_pages:
             mystart_key = [doc_type, startkey*5] # repeats it 5 times
