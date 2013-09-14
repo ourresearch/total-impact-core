@@ -31,8 +31,8 @@ logger = logging.getLogger("postgres_sqlalchemy_move")
 # print out extra debugging
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
-logging.getLogger('ti.collection').setLevel(logging.INFO)
-logging.getLogger('ti.item').setLevel(logging.INFO)
+logging.getLogger('ti.collection').setLevel(logging.DEBUG)
+logging.getLogger('ti.item').setLevel(logging.DEBUG)
 
 def item_action_on_a_page(page, skip_till_key="0000"):
     items = [row.doc for row in page]
