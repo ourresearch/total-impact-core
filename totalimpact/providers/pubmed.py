@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, urllib, os, itertools, datetime
+import simplejson, urllib, os, itertools, datetime, re
 
 import logging
 logger = logging.getLogger('ti.providers.pubmed')
@@ -105,12 +105,18 @@ class Pubmed(Provider):
                                                     month=biblio_dict["month"], 
                                                     day=biblio_dict["day"])
             biblio_dict["date"] = datetime_published.isoformat()
-            biblio_dict["year"] = re.sub("\D", "", biblio_dict["year"])
+            biblio_dict["year"] = re.sub("\D", "", str(biblio_dict["year"]))
             del biblio_dict["month"]
             del biblio_dict["day"]
         except (AttributeError, TypeError, KeyError):
             logger.debug(u"%20s don't have full date information %s" % (self.provider_name, id))
             pass
+
+        try:
+            biblio_dict["year"] = str(biblio_dict["year"])
+        except (KeyError):
+            pass
+
         return biblio_dict  
 
     def _extract_aliases_from_doi(self, page, doi):

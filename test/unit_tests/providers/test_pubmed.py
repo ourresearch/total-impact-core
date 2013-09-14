@@ -65,27 +65,27 @@ class TestPubmed(ProviderTestCase):
     def test_extract_biblio(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
         ret = self.provider._extract_biblio(f.read())
-        expected = {'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00', 'journal': u'PLoS medicine', 'year': 2005, 'title': u'Why most published research findings are false.'}
+        expected = {'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00', 'journal': u'PLoS medicine', 'year': "2005", 'title': u'Why most published research findings are false.'}
         assert_equals(ret, expected)
 
     @http
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
-        expected = {'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00', 'journal': u'PLoS medicine', 'year': 2005, 'title': u'Why most published research findings are false.'}
+        expected = {'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00', 'journal': u'PLoS medicine', 'year': "2005", 'title': u'Why most published research findings are false.'}
         assert_equals(biblio_dict, expected)
 
     @http
     def test_aliases_from_pmid(self):
         aliases = self.provider.aliases([self.testitem_aliases])
         print aliases
-        expected = [('biblio', {'title': u'Why most published research findings are false.', 'journal': u'PLoS medicine', 'year': 2005, 'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00'}), ('doi', u'10.1371/journal.pmed.0020124'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0020124'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/16060722')]
+        expected = [('biblio', {'title': u'Why most published research findings are false.', 'journal': u'PLoS medicine', 'year': "2005", 'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00'}), ('doi', u'10.1371/journal.pmed.0020124'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0020124'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/16060722')]
         assert_equals(aliases, expected)
 
     @http
     def test_aliases_from_pmid_different_date_format(self):
         aliases = self.provider.aliases([("pmid", "11457506")])
         print aliases
-        expected = [('biblio', {'title': u'Radiation hybrid mapping of 11 alpha and beta nicotinic acetylcholine receptor genes in Rattus norvegicus.', 'journal': u'Brain research. Molecular brain research', 'year': 2001, 'month': u'Jul', 'authors': u'Tseng, Kwitek-Black, Erbe, Popper, Jacob, Wackym', 'day': 13}), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/11457506')]
+        expected = [('biblio', {'title': u'Radiation hybrid mapping of 11 alpha and beta nicotinic acetylcholine receptor genes in Rattus norvegicus.', 'journal': u'Brain research. Molecular brain research', 'year': "2001", 'month': u'Jul', 'authors': u'Tseng, Kwitek-Black, Erbe, Popper, Jacob, Wackym', 'day': 13}), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/11457506')]
         assert_equals(aliases, expected)
 
 
@@ -101,7 +101,7 @@ class TestPubmed(ProviderTestCase):
     def test_aliases_from_pmid_when_doi_in_different_part_of_xml(self):
         aliases = self.provider.aliases([("pmid", "23682040")])
         print aliases
-        expected = [('biblio', {'title': u'Influenza: marketing vaccine by marketing disease.', 'journal': u'BMJ (Clinical research ed.)', 'year': 2013, 'authors': u'Doshi', 'date': '2013-05-16T00:00:00'}), ('doi', u'10.1136/bmj.f3037'), ('url', u'http://dx.doi.org/10.1136/bmj.f3037'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/23682040')]
+        expected = [('biblio', {'title': u'Influenza: marketing vaccine by marketing disease.', 'journal': u'BMJ (Clinical research ed.)', 'year': "2013", 'authors': u'Doshi', 'date': '2013-05-16T00:00:00'}), ('doi', u'10.1136/bmj.f3037'), ('url', u'http://dx.doi.org/10.1136/bmj.f3037'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/23682040')]
         assert_equals(aliases, expected)
 
     @http
