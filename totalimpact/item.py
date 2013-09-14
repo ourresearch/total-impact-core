@@ -758,7 +758,7 @@ def create_or_update_items_from_aliases(aliases, myredis, mydao):
    
 def create_item(namespace, nid, myredis, mydao):
     logger.debug(u"In create_item with alias" + str((namespace, nid)))
-    item = make()
+    item_doc = make()
     namespace = clean_id(namespace)
     nid = clean_id(nid)
     item_doc["aliases"][namespace] = [nid]
