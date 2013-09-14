@@ -267,7 +267,7 @@ class CouchWorker(Worker):
 
                 if method_name=="metrics":
                     self.decr_num_providers_left(metric_name, tiid) # have to do this after the item save
-                db.session.release()
+                db.session.remove()
         else:
             #time.sleep(0.1)  # is this necessary?
             pass

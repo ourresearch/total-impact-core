@@ -416,7 +416,7 @@ def add_metrics_data(metric_name, metrics_method_response, item):
 def add_metric_to_item_object(full_metric_name, metrics_method_response, item_doc):
     tiid = item_doc["_id"]
     logger.debug(u"in add_metrics_to_item_object for {tiid}".format(
-        tiid=tiid))        
+        tiid=tiid))
 
     item_obj = Item.query.filter_by(tiid=tiid).first()
 
