@@ -39,7 +39,7 @@ def item_action_on_a_page(page, skip_till_key="0000"):
 
     for item_doc in items:
         if item_doc["_id"] > skip_till_key:
-            new_item_object = item_module.create_objects_from_item_doc(item_doc)
+            new_item_object = item_module.create_objects_from_item_doc(item_doc, skip_if_exists=True)
     print "just finished", item_doc["_id"]
     return
 

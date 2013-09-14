@@ -88,14 +88,16 @@ def create_alias_objects(old_style_alias_dict, collected_date=datetime.datetime.
     return new_alias_objects
 
 
-def create_objects_from_item_doc(item_doc):
+def create_objects_from_item_doc(item_doc, skip_if_exists=False):
     tiid = item_doc["_id"]
 
     logger.debug(u"in create_objects_from_item_doc for {tiid}".format(
         tiid=item_doc["_id"]))        
 
     new_item_object = Item.query.filter_by(tiid=item_doc["_id"]).first()
-    if not new_item_object:
+    if new_item_object and skip_if_exists:
+        return new_item_object
+    else:
         new_item_object = Item.create_from_old_doc(item_doc)
     db.session.add(new_item_object)
 
