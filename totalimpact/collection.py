@@ -101,7 +101,7 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
     (tiids, new_items) = item_module.create_or_update_items_from_aliases(
         aliases, myredis, mydao)
 
-    collection_obj = Collection.query.get(cid=cid)
+    collection_obj = Collection.query.get(cid)
     coll_doc = collection_obj.as_old_doc()
     alias_strings = get_alias_strings(aliases)
     # pretty sure this is putting the wrong tiids with the aliases...
@@ -125,7 +125,7 @@ def remove_items_from_collection(cid, tiids_to_delete, myredis, mydao):
     logger.debug(u"in delete_items_from_collection for {cid}".format(
         cid=cid))        
 
-    collection_obj = Collection.query.get(cid=cid)
+    collection_obj = Collection.query.get(cid)
     coll_doc = collection_obj.as_old_doc()
     new_alias_tiids = {}
     for alias, tiid in coll_doc["alias_tiids"].iteritems():

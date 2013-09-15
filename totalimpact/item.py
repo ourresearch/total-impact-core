@@ -918,7 +918,7 @@ def start_item_update(tiids, myredis, mydao, sleep_in_seconds=0):
             ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
         )
 
-        item_obj = Item.query.get(tiid=tiid)
+        item_obj = Item.query.get(tiid)
         item_doc = item_obj.as_old_doc()
         try:
             myredis.add_to_alias_queue(item_doc["_id"], item_doc["aliases"])
