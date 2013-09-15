@@ -15,7 +15,7 @@ from totalimpact import db, app
 from totalimpact import collection
 from totalimpact.collection import Collection, CollectionTiid, AddedItem
 from totalimpact import item as item_module
-from totalimpact.item import Item, Alias, Metric, Biblio
+from totalimpact.item import Item, Alias, Metric, Biblio, create_biblio_objects
 
 # run in heroku by a) commiting, b) pushing to heroku, and c) running
 # heroku run python extras/db_housekeeping/postgres_sqlalchemy_move.py --collections
@@ -33,6 +33,29 @@ logger = logging.getLogger("postgres_sqlalchemy_move")
 
 logging.getLogger('ti.collection').setLevel(logging.INFO)
 logging.getLogger('ti.item').setLevel(logging.INFO)
+
+def item_missing_biblios_on_a_page(page, skip_till_key="0000"):
+    items = [row.doc for row in page]
+
+    for item_doc in items:
+        tiid = item_doc["_id"]
+        if tiid > skip_till_key:
+            if not "biblio" in item_doc["aliases"]:
+                print tiid, "doesn't have biblio in aliases"
+                item_obj = Item.query.filter_by(tiid=tiid).first()
+                db.session.merge(item_obj)
+                item_obj.biblios = create_biblio_objects([item_doc["biblio"]])
+    try:
+        db.session.commit()
+    except (IntegrityError, FlushError) as e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in add_biblio_to_item_object for {tiid}, rolling back.  Message: {message}".format(
+            tiid=tiid, 
+            message=e.message)) 
+
+    print "just finished", tiid
+    return
+
 
 def item_action_on_a_page(page, skip_till_key="0000"):
     items = [row.doc for row in page]
@@ -227,7 +250,8 @@ if __name__ == "__main__":
     if args["collections"]:
         run_through_pages("collection", collection_action_on_a_page, args["collectionsskiptillkey"], args["pagesize"], args["threads"])
     if args["items"]:
-        run_through_pages("item", item_action_on_a_page, args["itemsskiptillkey"], args["pagesize"], args["threads"])
+        #run_through_pages("item", item_action_on_a_page, args["itemsskiptillkey"], args["pagesize"], args["threads"])
+        run_through_pages("item", item_missing_biblios_on_a_page, args["itemsskiptillkey"], args["pagesize"], args["threads"])
 
     db.session.close_all()
 
