@@ -8,7 +8,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from totalimpact import db
 from totalimpact import item as item_module
-from totalimpact.item import Alias
+from totalimpact.item import Alias, Item
 from totalimpact import json_sqlalchemy
 from totalimpact.providers.provider import ProviderFactory
 
@@ -235,7 +235,7 @@ def delete_collection(cid):
 
 
 class AddedItem(db.Model):
-    cid = db.Column(db.Text, db.ForeignKey('collection.cid'), primary_key=True)
+    cid = db.Column(db.Text, db.ForeignKey('collection.cid'), primary_key=True, index=True)
     namespace = db.Column(db.Text, primary_key=True)
     nid = db.Column(db.Text, primary_key=True)
     tiid = db.Column(db.Text)
@@ -278,7 +278,7 @@ class AddedItem(db.Model):
             tiid=self.tiid)
 
 class CollectionTiid(db.Model):
-    cid = db.Column(db.Text, db.ForeignKey('collection.cid'), primary_key=True)
+    cid = db.Column(db.Text, db.ForeignKey('collection.cid'), primary_key=True, index=True)
     tiid = db.Column(db.Text, primary_key=True)
 
     def __init__(self, **kwargs):
@@ -299,10 +299,10 @@ class Collection(db.Model):
     ip_address = db.Column(db.Text)
     title = db.Column(db.Text)
     refset_metadata = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
-    tiid_links = db.relationship('CollectionTiid', lazy='join', cascade="all, delete-orphan",
-        backref=db.backref("collection", lazy="join"))
-    added_items = db.relationship('AddedItem', lazy='join', cascade="all, delete-orphan",
-        backref=db.backref("collection", lazy="join"))
+    tiid_links = db.relationship('CollectionTiid', lazy='subquery', cascade="all, delete-orphan",
+        backref=db.backref("collection", lazy="subquery"))
+    added_items = db.relationship('AddedItem', lazy='subquery', cascade="all, delete-orphan",
+        backref=db.backref("collection", lazy="subquery"))
 
     def __init__(self, collection_id=None, **kwargs):
         logger.debug(u"new Collection {kwargs}".format(
@@ -405,16 +405,21 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     for tiid in collection_obj.tiids:
         collection["alias_tiids"][tiid] = tiid    
     collection["items"] = []
+    tiids = collection_obj.tiids
 
-    if len(collection_obj.tiids) > 0:
-        for tiid in collection_obj.tiids:
+    if tiids:
+        item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
+        for item_obj in item_objects:
+            logger.info(u"got item {tiid} for {cid}".format(
+                tiid=item_obj.tiid, cid=cid))
             try:
-                item_obj = item_module.Item.query.get(tiid)
                 item_doc = item_obj.as_old_doc()
+                logger.info(u"success!  found {tiid} for {cid}".format(
+                    tiid=item_obj.tiid, cid=cid))
                 item_for_client = item_module.build_item_for_client(item_doc, myrefsets, mydao, include_history)
-            except (KeyError, TypeError):
-                logger.info(u"Couldn't build item {item_doc}, excluding it from the returned collection {cid}".format(
-                    item_doc=item_doc, cid=cid))
+            except (KeyError, TypeError, AttributeError):
+                logger.info(u"Couldn't build item {tiid}, excluding it from the returned collection {cid}".format(
+                    tiid=item_obj.tiid, cid=cid))
                 item_for_client = None
                 raise
             if item_for_client:

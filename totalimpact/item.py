@@ -127,7 +127,7 @@ def create_objects_from_item_doc(item_doc, skip_if_exists=False):
 
 
 class Metric(db.Model):
-    tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True)
+    tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True, index=True)
     provider = db.Column(db.Text, primary_key=True)
     metric_name = db.Column(db.Text, primary_key=True)
     collected_date = db.Column(db.DateTime(), primary_key=True)
@@ -153,7 +153,7 @@ class Metric(db.Model):
 
 
 class Biblio(db.Model):
-    tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True)
+    tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True, index=True)
     provider = db.Column(db.Text, primary_key=True)
     biblio_name = db.Column(db.Text, primary_key=True)
     biblio_value = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
@@ -192,7 +192,7 @@ class Biblio(db.Model):
 
 
 class Alias(db.Model):
-    tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True)
+    tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True, index=True)
     namespace = db.Column(db.Text, primary_key=True)
     nid = db.Column(db.Text, primary_key=True)
     collected_date = db.Column(db.DateTime())
@@ -253,12 +253,12 @@ class Item(db.Model):
     created = db.Column(db.DateTime())
     last_modified = db.Column(db.DateTime())
     last_update_run = db.Column(db.DateTime())
-    aliases = db.relationship('Alias', lazy='join', cascade="all, delete-orphan",
-        backref=db.backref("item", lazy="join"))
-    biblios = db.relationship('Biblio', lazy='join', cascade="all, delete-orphan",
-        backref=db.backref("item", lazy="join"))
-    metrics = db.relationship('Metric', lazy='join', cascade="all, delete-orphan",
-        backref=db.backref("item", lazy="join"))
+    aliases = db.relationship('Alias', lazy='subquery', cascade="all, delete-orphan",
+        backref=db.backref("item", lazy="subquery"))
+    biblios = db.relationship('Biblio', lazy='subquery', cascade="all, delete-orphan",
+        backref=db.backref("item", lazy="subquery"))
+    metrics = db.relationship('Metric', lazy='subquery', cascade="all, delete-orphan",
+        backref=db.backref("item", lazy="subquery"))
 
 
     def __init__(self, **kwargs):
@@ -348,16 +348,13 @@ class Item(db.Model):
             item_doc = add_metrics_data(metric_name, metrics_method_response, item_doc, metric.collected_date.isoformat())
 
         for full_metric_name in item_doc["metrics"]:
-            (provider, metric_name) = full_metric_name.split(":")
-            item_doc["metrics"][full_metric_name]["values"]["raw"] = most_recent_metric_value(self.tiid, provider, metric_name)
+            most_recent_date_so_far = "1900"
+            for this_date in item_doc["metrics"][full_metric_name]["values"]["raw_history"]:
+                if this_date > most_recent_date_so_far:
+                    most_recent_date_so_far = this_date
+                    item_doc["metrics"][full_metric_name]["values"]["raw"] = item_doc["metrics"][full_metric_name]["values"]["raw_history"][this_date]
 
         return item_doc
-
-
-
-def most_recent_metric_value(tiid, provider, metric_name):
-    most_recent_metric = Metric.query.filter_by(tiid=tiid, provider=provider, metric_name=metric_name).order_by(Metric.collected_date.desc()).first()
-    return most_recent_metric.raw_value
 
 
 def largest_value_that_is_less_than_or_equal_to(target, collection):
