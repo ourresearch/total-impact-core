@@ -42,9 +42,11 @@ def item_missing_biblios_on_a_page(page, skip_till_key="0000"):
         if tiid > skip_till_key:
             if not "biblio" in item_doc["aliases"]:
                 print tiid, "doesn't have biblio in aliases"
-                item_obj = Item.query.filter_by(tiid=tiid).first()
-                db.session.merge(item_obj)
-                item_obj.biblios = create_biblio_objects([item_doc["biblio"]])
+                if "title" in item_doc["biblio"]:
+                    print "... but does have a title in biblio.  Mirroring."
+                    item_obj = Item.query.filter_by(tiid=tiid).first()
+                    db.session.merge(item_obj)
+                    item_obj.biblios = create_biblio_objects([item_doc["biblio"]])
     try:
         db.session.commit()
     except (IntegrityError, FlushError) as e:
