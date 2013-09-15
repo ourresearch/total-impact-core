@@ -393,7 +393,6 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     collection = {}
 
     collection_obj = Collection.query.get(cid)
-    print collection_obj
     if not collection_obj:
         return None
 
@@ -589,7 +588,6 @@ def build_all_reference_lookups(myredis, mydao):
     logger.info(u"querying for reference_set_rows")
 
     reference_set_rows = Collection.query.filter(Collection.refset_metadata != None).all()
-    print reference_set_rows
 
     #res = mydao.db.view("reference-sets/reference-sets", descending=True, include_docs=False, limits=100)
     #logger.info(u"Number rows = " + str(len(res.rows)))
@@ -636,7 +634,6 @@ def build_all_reference_lookups(myredis, mydao):
                         raise #not found
 
                     logger.info(u"Loading normalizations for %s" %coll_with_items["title"])
-                    print "coll_with_items[items]", coll_with_items
 
                     # hack for now to get big collections
                     normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])
