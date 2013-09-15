@@ -1,4 +1,5 @@
 from totalimpact import collection, dao, tiredis
+from totalimpact import item as item_module
 from totalimpact import db, app
 from collections import OrderedDict
 import os, json
@@ -113,7 +114,7 @@ class TestCollection():
         assert_equals(coll.cid, "socrates")
 
 
-    def test_get_titles_new(self):
+    def test_get_titles(self):
         colls = [
             {"collection_id": "1", "title": "title 1"},
             {"collection_id": "2", "title": "title 2"},
@@ -125,7 +126,7 @@ class TestCollection():
             self.db.session.add(new_collection)
 
         self.db.session.commit()
-        titlesDict = collection.get_titles_new(["1", "2", "3"])
+        titlesDict = collection.get_titles(["1", "2", "3"])
         assert_equals(titlesDict["1"], "title 1")
         assert_equals(titlesDict["3"], "title 3")
 
@@ -136,25 +137,32 @@ class TestCollection():
         assert_equals(response['plosalm:pmc_abstract'], [70, 37, 29, 0])
 
     def test_get_collection_with_items_for_client(self):
-        test_collection = {"_id": "testcollectionid", "title": "mycollection", "type":"collection", "alias_tiids": {
-                                                   "pmid:16023720": "iaw9rzldigp4xc7p20bycnkg",
-                                                   "pmid:16413797": "itsq6fgx8ogi9ixysbipmtxx"}}
+        test_collection = {"_id": "testcollectionid", 
+                            "title": "mycollection", 
+                            "type":"collection", 
+                            "created":  "2012-08-23T14:40:16.888800", 
+                            "last_modified":  "2012-08-23T14:40:16.888800", 
+                            "alias_tiids": {
+                                       "pmid:16023720": "iaw9rzldigp4xc7p20bycnkg",
+                                       "pmid:16413797": "itsq6fgx8ogi9ixysbipmtxx"}}
         self.d.db.save(test_collection)
+        test_object = collection.create_objects_from_collection_doc(test_collection) 
+        db.session.add(test_object) 
+
         test_items = [
-            {"_id": "iaw9rzldigp4xc7p20bycnkg", "type":"item", "biblio":{}, "aliases":[("pmid", "16023720")]},
-            {"_id": "itsq6fgx8ogi9ixysbipmtxx", "type":"item", "biblio":{}, "aliases":[("pmid", "16413797")]}
+            {"_id": "iaw9rzldigp4xc7p20bycnkg", "type":"item", "last_modified": "2012-08-23T14:40:16.888800", "biblio":{}, "aliases":{"pmid": ["16023720"]}},
+            {"_id": "itsq6fgx8ogi9ixysbipmtxx", "type":"item", "last_modified": "2012-08-23T14:40:16.888800", "biblio":{}, "aliases":{"pmid": ["16413797"]}}
         ]
         for item_doc in test_items:
             self.d.db.save(item_doc)
+            test_object = item_module.create_objects_from_item_doc(item_doc) 
+            db.session.add(test_object) 
+
+        db.session.commit()      
+
         response = collection.get_collection_with_items_for_client("testcollectionid", None, self.r, self.d)
         expected = "heather"
         assert_equals(response[1], False)
-        assert_equals(
-            set(response[0].keys()),
-            set(['items', '_rev', '_id', 'type', 'title', 'alias_tiids'])
-        )
-        assert_equals(sorted(response[0]["items"][0].keys()), sorted(['_rev', 'currently_updating', 'metrics', 'biblio', '_id', 'type', 'aliases']))
-
 
 
     def test_make_csv_rows(self):

@@ -13,72 +13,6 @@ from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unitt
 class TestItem():
 
     def setUp(self):
-        ALIAS_DATA = {
-            "title":["Why Most Published Research Findings Are False"],
-            "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
-            "doi": ["10.1371/journal.pmed.0020124"]
-        }
-
-
-        STATIC_META = {
-            "display_name": "readers",
-            "provider": "Mendeley",
-            "provider_url": "http://www.mendeley.com/",
-            "description": "Mendeley readers: the number of readers of the article",
-            "icon": "http://www.mendeley.com/favicon.ico",
-            "category": "bookmark",
-            "can_use_commercially": "0",
-            "can_embed": "1",
-            "can_aggregate": "1",
-            "other_terms_of_use": "Must show logo and say 'Powered by Santa'",
-            }
-
-        self.KEY1 = "8888888888.8"
-        self.KEY2 = "9999999999.9"
-        self.VAL1 = 1
-        self.VAL2 = 2
-
-        METRICS_DATA = {
-            "ignore": False,
-            "static_meta": STATIC_META,
-            "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
-            "values":{
-                "raw": self.VAL1,
-                "raw_history": {
-                    self.KEY1: self.VAL1,
-                    self.KEY2: self.VAL2
-                }
-            }
-        }
-
-        METRICS_DATA2 = {
-            "ignore": False,
-            "latest_value": 21,
-            "static_meta": STATIC_META,
-            "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
-            "values":{
-                "raw": self.VAL1,
-                "raw_history": {
-                    self.KEY1: self.VAL1,
-                    self.KEY2: self.VAL2
-                }
-            }
-        }
-
-        METRICS_DATA3 = {
-            "ignore": False,
-            "latest_value": 31,
-            "static_meta": STATIC_META,
-            "provenance_url": ["http://api.mendeley.com/research/public-chemical-compound-databases/"],
-            "values":{
-                "raw": self.VAL1,
-                "raw_history": {
-                    self.KEY1: self.VAL1,
-                    self.KEY2: self.VAL2
-                }
-            }
-        }
-
         BIBLIO_DATA = {
             "title": "An extension of de Finetti's theorem",
             "journal": "Advances in Applied Probability",
@@ -92,15 +26,61 @@ class TestItem():
             "pages": "268 to 270"
         }
 
+        ALIAS_DATA = {
+            "title":["Why Most Published Research Findings Are False"],
+            "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
+            "doi": ["10.1371/journal.pmed.0020124"],
+            "biblio": [BIBLIO_DATA]
+        }
+
+
+        self.KEY1 = '2012-08-23T14:40:16.888888'
+        self.KEY2 = '2012-08-23T14:40:16.999999'
+        self.VAL1 = 1
+        self.VAL2 = 2
+
+        METRICS_DATA = {
+            "provenance_url": "http://api.mendeley.com/research/public-chemical-compound-databases/",
+            "values":{
+                "raw": self.VAL2,
+                "raw_history": {
+                    self.KEY1: self.VAL1,
+                    self.KEY2: self.VAL2
+                }
+            }
+        }
+
+        METRICS_DATA2 = {
+            "provenance_url": "http://api.mendeley.com/research/public-chemical-compound-databases/",
+            "values":{
+                "raw": self.VAL2,
+                "raw_history": {
+                    self.KEY1: self.VAL1,
+                    self.KEY2: self.VAL2
+                }
+            }
+        }
+
+        METRICS_DATA3 = {
+            "provenance_url": "http://api.mendeley.com/research/public-chemical-compound-databases/",
+            "values":{
+                "raw": self.VAL2,
+                "raw_history": {
+                    self.KEY1: self.VAL1,
+                    self.KEY2: self.VAL2
+                }
+            }
+        }
+
 
         self.ITEM_DATA = {
             "_id": "test",
-            "created": 1330260456.916,
-            "last_modified": 12414214.234,
+            "created": '2012-08-23T14:40:16.399932',
+            "last_modified": '2012-08-23T14:40:16.399932',
             "aliases": ALIAS_DATA,
             "metrics": {
                 "wikipedia:mentions": METRICS_DATA,
-                "bar:views": METRICS_DATA2
+                "topsy:tweets": METRICS_DATA2
             },
             "biblio": BIBLIO_DATA,
             "type": "item"
@@ -109,6 +89,7 @@ class TestItem():
         self.TEST_PROVIDER_CONFIG = [
             ("wikipedia", {})
         ]
+
 
 
         # hacky way to delete the "ti" db, then make it fresh again for each test.
@@ -126,6 +107,8 @@ class TestItem():
         self.r.flushdb()
 
         self.db = setup_postgres_for_unittests(db, app)
+        
+
 
     def tearDown(self):
         teardown_postgres_for_unittests(self.db)
@@ -141,7 +124,7 @@ class TestItem():
 
         # we have an item but it has no aliases
         found_item = Item.query.first()
-        assert_true(len(found_item.tiid) > 20)
+        assert_true(len(found_item.tiid) > 10)
         assert_equals(found_item.aliases, [])
 
         test_alias = ("doi", "10.123/abc")
@@ -172,6 +155,8 @@ class TestItem():
         response = Alias.filter_by_alias(test_alias).first()
         assert_equals(response.alias_tuple, test_alias)
 
+        response = item_module.get_tiid_by_alias(test_namespace, test_nid)
+        assert_equals(response, found_item.tiid)
 
 
     def test_add_biblio(self):
@@ -313,8 +298,10 @@ class TestItem():
         assert_equals(item["aliases"], {})
 
     def test_adds_genre(self):
-        # put the item in the db
-        self.d.save(self.ITEM_DATA)
+        self.TEST_OBJECT = item_module.create_objects_from_item_doc(self.ITEM_DATA)        
+        self.db.session.add(self.TEST_OBJECT)
+        self.db.session.commit()
+
         item = item_module.get_item("test", self.myrefsets, self.d)
         assert_equals(item["biblio"]['genre'], "article")
 
@@ -405,6 +392,13 @@ class TestItem():
         alias_dict = item_module.alias_dict_from_tuples(aliases)
         assert_equals(alias_dict, {'unknown_namespace': ['myname']})
 
+    def test_as_old_doc(self):
+        test_object = item_module.create_objects_from_item_doc(self.ITEM_DATA)        
+        new_doc = test_object.as_old_doc()
+        print json.dumps(new_doc, sort_keys=True, indent=4)
+        print json.dumps(self.ITEM_DATA, sort_keys=True, indent=4)
+        assert_equals(new_doc, self.ITEM_DATA)
+
     def test_build_item_for_client(self):
         item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
         response = item_module.build_item_for_client(item, self.myrefsets, self.d, False)
@@ -413,7 +407,7 @@ class TestItem():
     def test_build_item_for_client_excludes_history_by_default(self):
         response = item_module.build_item_for_client(self.ITEM_DATA, self.myrefsets, self.d)
         assert_equals(response["metrics"]["wikipedia:mentions"]["values"].keys(), ["raw"])
-        assert_equals(response["metrics"]["bar:views"]["values"].keys(), ["raw"])
+        assert_equals(response["metrics"]["topsy:tweets"]["values"].keys(), ["raw"])
 
     def test_build_item_for_client_includes_history_with_arg(self):
         response = item_module.build_item_for_client(
@@ -426,7 +420,10 @@ class TestItem():
             response["metrics"]["wikipedia:mentions"]["values"]["raw_history"][self.KEY1],
             self.VAL1
         )
-
+        assert_equals(
+            response["metrics"]["wikipedia:mentions"]["values"]["raw_history"][self.KEY2],
+            self.VAL2
+        )
 
 
     def add_metrics_data(self):
@@ -460,33 +457,42 @@ class TestItem():
         assert_equals(response, False)
 
     def test_clean_for_export_no_key(self):
-        self.d.save(self.ITEM_DATA)
+        self.TEST_OBJECT = item_module.create_objects_from_item_doc(self.ITEM_DATA)        
+        self.db.session.add(self.TEST_OBJECT)
+        self.db.session.commit()
+
         item = item_module.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
         item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = item_module.clean_for_export(item)
         print response["metrics"].keys()
-        expected = ['bar:views', 'wikipedia:mentions']
+        expected = ['topsy:tweets', 'wikipedia:mentions']
         assert_equals(response["metrics"].keys(), expected)
 
     def test_clean_for_export_given_correct_secret_key(self):
-        self.d.save(self.ITEM_DATA)
+        self.TEST_OBJECT = item_module.create_objects_from_item_doc(self.ITEM_DATA)        
+        self.db.session.add(self.TEST_OBJECT)
+        self.db.session.commit()
+
         item = item_module.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
         item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = item_module.clean_for_export(item, "SECRET", "SECRET")
         print response["metrics"].keys()
-        expected = ['bar:views', 'wikipedia:mentions', 'scopus:citations', 'citeulike:bookmarks']
+        expected = ['topsy:tweets', 'wikipedia:mentions', 'scopus:citations', 'citeulike:bookmarks']
         assert_equals(sorted(response["metrics"].keys()), sorted(expected))
 
     def test_clean_for_export_given_wrong_secret_key(self):
-        self.d.save(self.ITEM_DATA)
+        self.TEST_OBJECT = item_module.create_objects_from_item_doc(self.ITEM_DATA)        
+        self.db.session.add(self.TEST_OBJECT)
+        self.db.session.commit()
+
         item = item_module.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
         item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = item_module.clean_for_export(item, "WRONG", "SECRET")
         print response["metrics"].keys()
-        expected = ['bar:views', 'wikipedia:mentions']
+        expected = ['topsy:tweets', 'wikipedia:mentions']
         assert_equals(response["metrics"].keys(), expected)
 
 

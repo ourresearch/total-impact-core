@@ -101,7 +101,8 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
     (tiids, new_items) = item_module.create_or_update_items_from_aliases(
         aliases, myredis, mydao)
 
-    coll_doc = mydao.get(cid)
+    collection_obj = Collection.query.get(cid=cid)
+    coll_doc = collection_obj.as_old_doc()
     alias_strings = get_alias_strings(aliases)
     # pretty sure this is putting the wrong tiids with the aliases...
     new_alias_tiids = dict(zip(alias_strings, tiids))
@@ -124,7 +125,8 @@ def remove_items_from_collection(cid, tiids_to_delete, myredis, mydao):
     logger.debug(u"in delete_items_from_collection for {cid}".format(
         cid=cid))        
 
-    coll_doc = mydao.get(cid)
+    collection_obj = Collection.query.get(cid=cid)
+    coll_doc = collection_obj.as_old_doc()
     new_alias_tiids = {}
     for alias, tiid in coll_doc["alias_tiids"].iteritems():
         if tiid not in tiids_to_delete:
@@ -379,14 +381,7 @@ def _make_id(len=6):
     choices = string.ascii_lowercase + string.digits
     return ''.join(random.choice(choices) for x in range(len))
 
-def get_titles(cids, mydao):
-    ret = {}
-    for cid in cids:
-        coll = mydao.db[cid]
-        ret[cid] = coll["title"]
-    return ret
-
-def get_titles_new(cids):
+def get_titles(cids, mydao=None):
     ret = {}
     for cid in cids:
         coll = Collection.query.filter_by(cid=cid).first()
@@ -395,26 +390,28 @@ def get_titles_new(cids):
 
 
 def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
-    startkey = [cid, 0]
-    endkey = [cid, "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"]
-    view_response = mydao.db.view("collections_with_items/collections_with_items", 
-                        include_docs=True, 
-                        startkey=startkey, 
-                        endkey=endkey)
-    # the first row is the collection document
-    first_row = view_response.rows[0]
-    collection = first_row.doc
-    try:
-        del collection["ip_address"]
-    except KeyError:
-        pass
+    collection = {}
 
-    # start with the 2nd row, since 1st row is the collection document
+    collection_obj = Collection.query.get(cid)
+    print collection_obj
+    if not collection_obj:
+        return None
+
+    # don't include ip_address in info for client
+    for key in ["created", "last_modified", "title"]:
+        collection[key] = getattr(collection_obj, key)
+    collection["_id"] = collection_obj.cid
+    collection["type"] = "collection"
+    collection["alias_tiids"] = {}
+    for tiid in collection_obj.tiids:
+        collection["alias_tiids"][tiid] = tiid    
     collection["items"] = []
-    if len(view_response.rows) > 1:
-        for row in view_response.rows[1:]:
-            item_doc = row.doc 
+
+    if len(collection_obj.tiids) > 0:
+        for tiid in collection_obj.tiids:
             try:
+                item_obj = item_module.Item.query.get(tiid)
+                item_doc = item_obj.as_old_doc()
                 item_for_client = item_module.build_item_for_client(item_doc, myrefsets, mydao, include_history)
             except (KeyError, TypeError):
                 logger.info(u"Couldn't build item {item_doc}, excluding it from the returned collection {cid}".format(
@@ -589,19 +586,27 @@ def build_all_reference_lookups(myredis, mydao):
                                                 confidence_interval_table)        
         #print(json.dumps(confidence_interval_table, indent=4))
 
-    res = mydao.db.view("reference-sets/reference-sets", descending=True, include_docs=False, limits=100)
-    logger.info(u"Number rows = " + str(len(res.rows)))
+    logger.info(u"querying for reference_set_rows")
+
+    reference_set_rows = Collection.query.filter(Collection.refset_metadata != None).all()
+    print reference_set_rows
+
+    #res = mydao.db.view("reference-sets/reference-sets", descending=True, include_docs=False, limits=100)
+    #logger.info(u"Number rows = " + str(len(res.rows)))
     reference_lookup_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict), "software": defaultdict(dict)}
     reference_histogram_dict = {"article": defaultdict(dict), "dataset": defaultdict(dict), "software": defaultdict(dict)}
 
     # randomize rows so that multiple gunicorn instances hit them in different orders
-    randomized_rows = res.rows
+    randomized_rows = reference_set_rows
     random.shuffle(randomized_rows)
     if randomized_rows:
         for row in randomized_rows:
             try:
-                (cid, title) = row.key
-                refset_metadata = row.value
+                #(cid, title) = row.key
+                #refset_metadata = row.value
+                cid = row.cid
+                title = row.title
+                refset_metadata = row.refset_metadata
                 genre = refset_metadata["genre"]
                 year = refset_metadata["year"]
                 refset_name = refset_metadata["name"]
@@ -623,7 +628,7 @@ def build_all_reference_lookups(myredis, mydao):
             else:
                 logger.info(u"Not found in cache, so now building from items")
                 if refset_name:
-                    cid = row.id
+                    #cid = row.id
                     try:
                         # send it without reference sets because we are trying to load the reference sets here!
                         (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)
@@ -631,6 +636,7 @@ def build_all_reference_lookups(myredis, mydao):
                         raise #not found
 
                     logger.info(u"Loading normalizations for %s" %coll_with_items["title"])
+                    print "coll_with_items[items]", coll_with_items
 
                     # hack for now to get big collections
                     normalization_numbers = get_metric_values_of_reference_sets(coll_with_items["items"])

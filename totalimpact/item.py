@@ -11,7 +11,7 @@ from totalimpact.utils import Retry
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import FlushError
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from totalimpact import json_sqlalchemy
 from totalimpact import db
 
@@ -294,6 +294,24 @@ class Item(db.Model):
     def alias_tuples(self):
         return [alias.alias_tuple for alias in self.aliases]
 
+    @property
+    def publication_date(self):
+        publication_date = None
+        for biblio in self.biblios:
+            if biblio.biblio_name == "date":
+                publication_date = biblio.biblio_value
+                continue
+            if (biblio.biblio_name == "year") and biblio.biblio_value:
+                publication_date = datetime.datetime(int(biblio.biblio_value), 12, 31)
+
+        if not publication_date:
+            publication_date = self.created
+        return publication_date.isoformat()
+
+    @hybrid_method
+    def published_before(self, mydate):
+        return (self.publication_date < mydate.isoformat())
+
     @classmethod
     def create_from_old_doc(cls, doc):
         logger.debug(u"in create_from_old_doc for {tiid}".format(
@@ -308,12 +326,39 @@ class Item(db.Model):
 
         return new_item_object
 
+    def as_old_doc(self):
+        item_doc = {}
+        item_doc["_id"] = self.tiid
+        item_doc["last_modified"] = self.last_modified.isoformat()
+        item_doc["created"] = self.created.isoformat()
+        item_doc["type"] = "item"
+
+        item_doc["biblio"] = {}
+        for biblio in self.biblios:
+            item_doc["biblio"][biblio.biblio_name] = biblio.biblio_value    
+
+        item_doc["aliases"] = alias_dict_from_tuples(self.alias_tuples)
+        if item_doc["biblio"]:
+            item_doc["aliases"]["biblio"] = [item_doc["biblio"]]
+
+        item_doc["metrics"] = {}
+        for metric in self.metrics:
+            metric_name = metric.provider + ":" + metric.metric_name
+            metrics_method_response = (metric.raw_value, metric.drilldown_url)
+            item_doc = add_metrics_data(metric_name, metrics_method_response, item_doc, metric.collected_date.isoformat())
+
+        for full_metric_name in item_doc["metrics"]:
+            (provider, metric_name) = full_metric_name.split(":")
+            item_doc["metrics"][full_metric_name]["values"]["raw"] = most_recent_metric_value(self.tiid, provider, metric_name)
+
+        print item_doc
+        return item_doc
 
 
 
-
-
-
+def most_recent_metric_value(tiid, provider, metric_name):
+    most_recent_metric = Metric.query.filter_by(tiid=tiid, provider=provider, metric_name=metric_name).order_by(Metric.collected_date.desc()).first()
+    return most_recent_metric.raw_value
 
 
 def largest_value_that_is_less_than_or_equal_to(target, collection):
@@ -339,7 +384,10 @@ def clean_id(nid):
     return(nid)
 
 def get_item(tiid, myrefsets, dao, include_history=False):
-    item_doc = dao.get(tiid)
+    item_obj = Item.query.get(tiid)
+    print "item_obj", item_obj
+
+    item_doc = item_obj.as_old_doc()
     if not item_doc:
         return None
     try:
@@ -399,7 +447,7 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
 
     return item
 
-def add_metrics_data(metric_name, metrics_method_response, item):
+def add_metrics_data(metric_name, metrics_method_response, item, timestamp=None):
     metrics = item.setdefault("metrics", {})
     
     (metric_value, provenance_url) = metrics_method_response
@@ -411,8 +459,9 @@ def add_metrics_data(metric_name, metrics_method_response, item):
     this_metric_values["raw"] = metric_value
 
     this_metric_values_raw_history = this_metric_values.setdefault("raw_history", {})
-    now = datetime.datetime.utcnow().isoformat()
-    this_metric_values_raw_history[now] = metric_value
+    if not timestamp:
+        timestamp = datetime.datetime.utcnow().isoformat()
+    this_metric_values_raw_history[timestamp] = metric_value
     return item
 
 
@@ -844,29 +893,21 @@ def create_item_from_namespace_nid(namespace, nid, myredis, mydao):
 
     return tiid
 
-def get_tiid_by_alias(ns, nid, mydao):
-    # clean before logging or anything
-    ns = clean_id(ns)
-    nid = clean_id(nid)
-
-    res = mydao.db.view('queues/by_alias')
-
+def get_tiid_by_alias(ns, nid, mydao=None):
     # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
     logger.debug(u"In get_tiid_by_alias with {ns}, {nid}".format(
         ns=ns, nid=nid))
 
     # change input to lowercase etc
     (ns, nid) = canonical_alias_tuple((ns, nid))
-    matches = res[[ns, nid]] 
 
-    if matches.rows:
-        if len(matches.rows) > 1:
-            logger.warning(u"More than one tiid for alias (%s, %s)" % (ns, nid))
-        tiid = matches.rows[0]["id"]
+    alias_obj = Alias.query.filter_by(namespace=ns, nid=nid).first()
+    try:
+        tiid = alias_obj.tiid
         logger.debug(u"Found a tiid for {nid} in get_tiid_by_alias: {tiid}".format(
             nid=nid, 
             tiid=tiid))
-    else:
+    except AttributeError:
         logger.debug(u"no match for {nid}!".format(nid=nid))
         tiid = None
     return tiid
@@ -882,7 +923,8 @@ def start_item_update(tiids, myredis, mydao, sleep_in_seconds=0):
             ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
         )
 
-        item_doc = mydao.get(tiid)
+        item_obj = Item.query.get(tiid=tiid)
+        item_doc = item_obj.as_old_doc()
         try:
             myredis.add_to_alias_queue(item_doc["_id"], item_doc["aliases"])
         except (KeyError, TypeError):
