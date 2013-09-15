@@ -351,7 +351,6 @@ class Item(db.Model):
             (provider, metric_name) = full_metric_name.split(":")
             item_doc["metrics"][full_metric_name]["values"]["raw"] = most_recent_metric_value(self.tiid, provider, metric_name)
 
-        print item_doc
         return item_doc
 
 
@@ -385,7 +384,6 @@ def clean_id(nid):
 
 def get_item(tiid, myrefsets, dao, include_history=False):
     item_obj = Item.query.get(tiid)
-    print "item_obj", item_obj
 
     item_doc = item_obj.as_old_doc()
     if not item_doc:
