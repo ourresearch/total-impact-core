@@ -1,4 +1,4 @@
-from flask import json, request, abort, make_response
+from flask import json, request, abort, make_response, g
 from flask import render_template
 import sys, os
 import datetime, re, couchdb, copy
@@ -47,25 +47,6 @@ def set_redis(url, db):
     myredis = tiredis.from_url(url, db)
     return myredis
 
-@app.before_request
-def stop_user_who_is_swamping_us():
-    ip = request.remote_addr
-    key = request.values.get('key', '')
-    if ip in ["91.121.68.140"]:
-        logger.debug(u"got a call from {ip}; aborting with 403.".format(ip=ip) )
-        abort_custom(403, """Sorry, we're blocking your IP address {ip} because \
-            we can't handle requests as quickly as you're sending them, and so
-            they're swamping our system. Please email us at \
-            team@impactstory.org for details and possible workarounds.
-        """.format(ip=ip))
-
-    # if key  in ["VANWIJIKc233acaa"]:
-    #     logger.debug(u"got a call from {key}; aborting with 403.".format(key=key) )
-    #     abort(403, """Sorry, we're blocking your api key '{key}' because \
-    #             we can't handle requests as quickly as you're sending them, and so
-    #             they're swamping our system. Please email us at \
-    #             team@impactstory.org for details and possible workarounds.
-    #         """.format(key=key))
 
 
 def check_key():
@@ -94,11 +75,70 @@ def abort_custom(status_code, msg):
     else:
         resp_string = json.dumps(body_dict, sort_keys=True, indent=4)
 
-
     resp = make_response(resp_string, status_code)
     resp.mimetype = "application/json"
-
     abort(resp)
+
+def check_mimetype():
+    g.return_as_html = False
+    if request.path.endswith(".html"):
+        g.return_as_html = True
+        request.path = request.path.replace(".html", "")
+
+def stop_user_who_is_swamping_us():
+    ip = request.remote_addr
+    key = request.values.get('key', '')
+    if ip in ["91.121.68.140"]:
+        logger.debug(u"got a call from {ip}; aborting with 403.".format(ip=ip) )
+        abort_custom(403, """Sorry, we're blocking your IP address {ip} because \
+            we can't handle requests as quickly as you're sending them, and so
+            they're swamping our system. Please email us at \
+            team@impactstory.org for details and possible workarounds.
+        """.format(ip=ip))
+
+    # if key  in ["VANWIJIKc233acaa"]:
+    #     logger.debug(u"got a call from {key}; aborting with 403.".format(key=key) )
+    #     abort(403, """Sorry, we're blocking your api key '{key}' because \
+    #             we can't handle requests as quickly as you're sending them, and so
+    #             they're swamping our system. Please email us at \
+    #             team@impactstory.org for details and possible workarounds.
+    #         """.format(key=key))
+
+
+@app.before_request
+def before_request():
+    stop_user_who_is_swamping_us()
+    track_api_event()
+    check_key()
+    check_mimetype()
+
+
+@app.after_request
+def add_crossdomain_header(resp):
+    #support CORS    
+    resp.headers['Access-Control-Allow-Origin'] = "*"
+    resp.headers['Access-Control-Allow-Methods'] = "POST, GET, OPTIONS, PUT, DELETE"
+    resp.headers['Access-Control-Allow-Headers'] = "origin, content-type, accept, x-requested-with"
+    return resp
+
+@app.after_request
+def set_mimetype_and_encoding(resp):
+    resp.headers.add("Content-Encoding", "UTF-8")
+
+    if "csv" in resp.mimetype:
+        return resp
+    if "static" in request.path:
+        return resp
+    elif g.return_as_html:
+        logger.info(u"rendering output through debug_api.html template")
+        resp.mimetype = "text/html"
+        return make_response(render_template(
+            'debug_api.html',
+            data=resp.data))
+    else:
+        logger.info(u"rendering output as json")
+        resp.mimetype = "application/json"
+    return resp
 
 
 def track_api_event():
@@ -129,21 +169,6 @@ def track_api_event():
                 }, 
                 context={ "providers": { 'Mixpanel': False } })
 
-
-@app.before_request
-def before_request():
-    track_api_event()
-    check_key()
-
-
-@app.after_request
-def add_crossdomain_header(resp):
-    #support CORS    
-    resp.headers['Access-Control-Allow-Origin'] = "*"
-    resp.headers['Access-Control-Allow-Methods'] = "POST, GET, OPTIONS, PUT, DELETE"
-    resp.headers['Access-Control-Allow-Headers'] = "origin, content-type, accept, x-requested-with"
-    return resp
-
 # adding a simple route to confirm working API
 @app.route('/')
 @app.route('/v1')
@@ -156,7 +181,6 @@ def hello():
         "version": app.config["VERSION"]
     }
     resp = make_response(json.dumps(msg, sort_keys=True, indent=4), 200)
-    resp.mimetype = "application/json"
     return resp
 
 
@@ -203,7 +227,6 @@ def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=N
         resp_string = callback_name + '(' + resp_string + ')'
 
     resp = make_response(resp_string, response_code)
-    resp.mimetype = "application/json"
 
     return resp
 
@@ -245,7 +268,6 @@ def get_item_from_namespace_nid(namespace, nid, format=None, include_history=Fal
 def provider():
     ret = ProviderFactory.get_all_metadata()
     resp = make_response(json.dumps(ret, sort_keys=True, indent=4), 200)
-    resp.mimetype = "application/json"
 
     return resp
 
@@ -262,8 +284,6 @@ def provider_memberitems(provider_name):
         json.dumps({"memberitems": items_dict}, sort_keys=True, indent=4),
         200
     )
-    resp.mimetype = "application/json"
-    resp.headers['Access-Control-Allow-Origin'] = "*"
     return resp
 
 @app.route("/v1/provider/<provider_name>/memberitems/<query>", methods=['GET'])
@@ -290,8 +310,6 @@ def provider_memberitems_get(provider_name, query):
         json.dumps({"memberitems": items_dict}, sort_keys=True, indent=4),
         200
     )
-    resp.mimetype = "application/json"
-    resp.headers['Access-Control-Allow-Origin'] = "*"
     return resp
 
 
@@ -340,14 +358,13 @@ def collection_get(cid='', format="json", include_history=False):
             response_code = 200
             resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
                                  response_code)
-            resp.mimetype = "application/json"
     else:
-        try:
-            include_history = (request.args.get("include_history", 0) in ["1", "true", "True"])
-            (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history)
-        except (LookupError, AttributeError):  
-            logger.error(u"couldn't get tiids for GET collection '{cid}'".format(cid=cid))
-            abort_custom(404, "couldn't find items for collection")
+        # try:
+        include_history = (request.args.get("include_history", 0) in ["1", "true", "True"])
+        (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history)
+        # except (LookupError, AttributeError):  
+        #     logger.error(u"couldn't get tiids for GET collection '{cid}'".format(cid=cid))
+        #     abort_custom(404, "couldn't find items for collection")
 
         # return success if all reporting is complete for all items    
         if something_currently_updating:
@@ -380,7 +397,6 @@ def collection_get(cid='', format="json", include_history=False):
             coll_with_items["items"] = clean_if_necessary_items
             resp = make_response(json.dumps(coll_with_items, sort_keys=True, indent=4),
                                  response_code)
-            resp.mimetype = "application/json"
     return resp
 
 
@@ -421,7 +437,6 @@ def remove_items_from_collection(cid=""):
         abort_custom(404, "Missing arguments.")
 
     resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
-    resp.mimetype = "application/json"
     return resp
 
 
@@ -449,7 +464,6 @@ def add_items_to_collection(cid=""):
         abort_custom(404, "Missing arguments.")
 
     resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
-    resp.mimetype = "application/json"
 
     return resp
 
@@ -474,7 +488,6 @@ def collection_update(cid=""):
     item_module.start_item_update(tiids, myredis, mydao)
 
     resp = make_response("true", 200)
-    resp.mimetype = "application/json"
     return resp
 
 
@@ -529,7 +542,6 @@ def collection_create():
     response_code = 201 # Created
     resp = make_response(json.dumps({"collection":coll_doc},
             sort_keys=True, indent=4), response_code)
-    resp.mimetype = "application/json"
     return resp
 
 
@@ -558,14 +570,12 @@ def get_collection_titles(cids=''):
     cids_arr = cids.split(",")
     coll_info = collection.get_titles(cids_arr, mydao)
     resp = make_response(json.dumps(coll_info, indent=4), 200)
-    resp.mimetype = "application/json"
     return resp
 
 
 @app.route("/v1/collections/reference-sets")
 def reference_sets():
     resp = make_response(json.dumps(myrefsets, indent=4), 200)
-    resp.mimetype = "application/json"
     return resp
 
 @app.route("/v1/collections/reference-sets-histograms")
@@ -604,7 +614,6 @@ def key():
     new_api_key = new_api_user.api_key
 
     resp = make_response(json.dumps({"api_key":new_api_key}, indent=4), 200)
-    resp.mimetype = "application/json"
     return resp
 
 
@@ -617,51 +626,6 @@ def inbox():
     logger.info(u"You've got mail. Subject: {subject}".format(
         subject=email.subject))
     resp = make_response(json.dumps({"subject":email.subject}, sort_keys=True, indent=4), 200)
-    resp.mimetype = "application/json"
     return resp
-
-
-try:
-    # see http://support.blitz.io/discussions/problems/363-authorization-error
-    @app.route('/mu-' + os.environ["BLITZ_API_KEY"], methods=["GET"])
-    def blitz_validation():
-        resp = make_response("42", 200)
-        return resp
-except KeyError:
-    logger.error(u"BLITZ_API_KEY environment variable not defined, not setting up validation api endpoint")
-
-@app.route('/hirefire/test', methods=["GET"])
-def hirefire_test():
-    resp = make_response("HireFire", 200)
-    resp.mimetype = "text/html"
-    return resp
-
-try:
-    @app.route('/hirefire/' + os.environ["HIREFIRE_TOKEN"] + '/info', methods=["GET"])
-    def hirefire_worker_count():
-        import time
-        time.sleep(3)
-
-        resp = make_response(json.dumps([{"worker":1}]), 200)
-        resp.mimetype = "application:json"
-        return resp
-except KeyError:
-    logger.error(u"HIREFIRE_TOKEN environment variable not defined, not setting up validation api endpoint")
-
-
-@app.route('/hirefireapp/test', methods=["GET"])
-def hirefireapp_test():
-    resp = make_response("HireFire", 200)
-    resp.mimetype = "text/html"
-    return resp
-
-try:
-    @app.route('/hirefireapp/' + os.environ["HIREFIREAPP_TOKEN"] + '/info', methods=["GET"])
-    def hirefireapp_worker_count():
-        resp = make_response(json.dumps({"worker":1}), 200)
-        resp.mimetype = "application:json"
-        return resp
-except KeyError:
-    logger.error(u"HIREFIREAPP_TOKEN environment variable not defined, not setting up validation api endpoint")
 
 
