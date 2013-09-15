@@ -17,7 +17,13 @@ class JSONEncodedObj(sqlalchemy.types.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         if value is not None:
-            value = json.loads(value)
+            try:
+                value = json.loads(value)
+            except:
+                print "ERROR in json_sqlalchemy process_result_value"
+                print "on json.loads on", value
+                print "just returning value directly instead"
+                return value
         return value
 
 class MutationObj(Mutable):
