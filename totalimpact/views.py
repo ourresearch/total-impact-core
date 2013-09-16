@@ -423,7 +423,7 @@ def remove_items_from_collection(cid=""):
     abort_if_fails_collection_edit_auth(request)
 
     try:
-        (coll_doc, collection_object) = collection.remove_items_from_collection(
+        collection_object = collection.remove_items_from_collection(
             cid=cid, 
             tiids_to_delete=request.json["tiids"], 
             myredis=myredis, 
@@ -451,7 +451,7 @@ def add_items_to_collection(cid=""):
     abort_if_fails_collection_edit_auth(request)
 
     try:
-        (coll_doc, collection_object) = collection.add_items_to_collection(
+        collection_object = collection.add_items_to_collection(
             cid=cid, 
             aliases=request.json["aliases"], 
             myredis=myredis, 
@@ -464,13 +464,7 @@ def add_items_to_collection(cid=""):
                 json=request.json))
         abort_custom(500, "Error adding items to collection")
 
-    logger.debug(u"after try in views add_items_to_collection for {cid}".format(
-        cid=cid))        
-
     coll_doc = get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False)
-
-    logger.debug(u"after coll_doc in views add_items_to_collection for {cid}".format(
-        cid=cid))        
 
     resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
 
