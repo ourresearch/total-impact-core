@@ -434,7 +434,7 @@ def remove_items_from_collection(cid=""):
                 id=cid,
                 error_str=e,
                 json=request.json))
-        abort_custom(404, "Missing arguments.")
+        abort_custom(500, "Error deleting items from collection")
 
     coll_doc = get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False)
     resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
@@ -462,7 +462,7 @@ def add_items_to_collection(cid=""):
                 id=cid,
                 error_str=e,
                 json=request.json))
-        abort_custom(404, "Missing arguments.")
+        abort_custom(500, "Error adding items to collection")
 
     coll_doc = get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False)
     resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
@@ -485,7 +485,7 @@ def collection_update(cid=""):
         logger.exception(u"couldn't get tiids in POST collection '{cid}'".format(
             cid=cid
         ))
-        abort_custom(404, "couldn't get items for this collection...maybe doesn't exist?")
+        abort_custom(500, "Error doing collection_update")
 
     item_module.start_item_update(tiids, myredis, mydao)
 

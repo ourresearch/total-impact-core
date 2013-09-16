@@ -50,11 +50,15 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
     for alias_tuple in alias_tuples:
         try:
             alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-            logger.info(u"added_aliases: {added_aliases}, this tuple: {alias_tuple}".format(
-                added_aliases=collection_obj.added_aliases, 
-                alias_tuple=alias_tuple))
+            #logger.info(u"added_aliases: {added_aliases}, this tuple: {alias_tuple}".format(
+            #    added_aliases=collection_obj.added_aliases, 
+            #    alias_tuple=alias_tuple))
             if alias_tuple not in collection_obj.added_aliases:
+                logger.debug("about to add {alias_tuple}".format(
+                    alias_tuple=alias_tuple))            
                 collection_obj.added_items.append(AddedItem(alias_tuple=alias_tuple))
+                logger.debug("just added {alias_tuple}".format(
+                    alias_tuple=alias_tuple))            
         except ValueError:
             logger.debug("could not separate alias tuple {alias_tuple}".format(
                 alias_tuple=alias_tuple))            
