@@ -102,21 +102,21 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
         aliases, myredis, mydao)
 
     collection_obj = Collection.query.get(cid)
-    coll_doc = collection_obj.as_old_doc()
-    alias_strings = get_alias_strings(aliases)
-    # pretty sure this is putting the wrong tiids with the aliases...
-    new_alias_tiids = dict(zip(alias_strings, tiids))
-    coll_doc["alias_tiids"].update(new_alias_tiids)
-    coll_doc["last_modified"] = datetime.datetime.utcnow().isoformat()
-    mydao.db.save(coll_doc)
-    #print json.dumps(collection, sort_keys=True, indent=4)
+    # coll_doc = collection_obj.as_old_doc()
+    # alias_strings = get_alias_strings(aliases)
+    # # pretty sure this is putting the wrong tiids with the aliases...
+    # new_alias_tiids = dict(zip(alias_strings, tiids))
+    # coll_doc["alias_tiids"].update(new_alias_tiids)
+    # coll_doc["last_modified"] = datetime.datetime.utcnow().isoformat()
+    # mydao.db.save(coll_doc)
+    # #print json.dumps(collection, sort_keys=True, indent=4)
 
     collection_obj = add_items_to_collection_object(cid, tiids, aliases)
-    if not collection_obj:
-        # not migrated yet
-        logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
-                cid=cid))        
-        collection_obj = create_objects_from_collection_doc(coll_doc)
+    # if not collection_obj:
+    #     # not migrated yet
+    #     logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
+    #             cid=cid))        
+    #     collection_obj = create_objects_from_collection_doc(coll_doc)
 
     return (coll_doc, collection_obj)
 
@@ -126,21 +126,21 @@ def remove_items_from_collection(cid, tiids_to_delete, myredis, mydao):
         cid=cid))        
 
     collection_obj = Collection.query.get(cid)
-    coll_doc = collection_obj.as_old_doc()
-    new_alias_tiids = {}
-    for alias, tiid in coll_doc["alias_tiids"].iteritems():
-        if tiid not in tiids_to_delete:
-            new_alias_tiids[alias] = tiid
-    coll_doc["alias_tiids"] = new_alias_tiids
-    coll_doc["last_modified"] = datetime.datetime.utcnow().isoformat()
-    mydao.db.save(coll_doc)
+    # coll_doc = collection_obj.as_old_doc()
+    # new_alias_tiids = {}
+    # for alias, tiid in coll_doc["alias_tiids"].iteritems():
+    #     if tiid not in tiids_to_delete:
+    #         new_alias_tiids[alias] = tiid
+    # coll_doc["alias_tiids"] = new_alias_tiids
+    # coll_doc["last_modified"] = datetime.datetime.utcnow().isoformat()
+    # mydao.db.save(coll_doc)
 
     collection_obj = remove_items_from_collection_object(cid, tiids_to_delete)
-    if not collection_obj:
-        # not migrated yet
-        logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
-                cid=cid))
-        collection_obj = create_objects_from_collection_doc(coll_doc)    
+    # if not collection_obj:
+    #     # not migrated yet
+    #     logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
+    #             cid=cid))
+    #     collection_obj = create_objects_from_collection_doc(coll_doc)    
 
     return (coll_doc, collection_obj)
 
@@ -159,7 +159,7 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
     alias_strings = get_alias_strings(aliases)
     coll_doc["alias_tiids"] = dict(zip(alias_strings, tiids))
 
-    mydao.save(coll_doc)
+    # mydao.save(coll_doc)
 
     logger.debug(u"in create_new_collection for {cid}, finished with couch now to postgres".format(
         cid=cid))        
@@ -387,6 +387,7 @@ def get_titles(cids, mydao=None):
         coll = Collection.query.filter_by(cid=cid).first()
         ret[cid] = coll.title
     return ret
+
 
 
 def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
