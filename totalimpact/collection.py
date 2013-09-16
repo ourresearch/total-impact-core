@@ -45,7 +45,7 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
 
     for tiid in tiids:
         if tiid not in collection_obj.tiids:
-            collection_obj.tiid_links.append(CollectionTiid(tiid=tiid))
+            collection_obj.tiid_links += [CollectionTiid(tiid=tiid)]
 
     for alias_tuple in alias_tuples:
         try:
@@ -54,11 +54,7 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
             #    added_aliases=collection_obj.added_aliases, 
             #    alias_tuple=alias_tuple))
             if alias_tuple not in collection_obj.added_aliases:
-                logger.debug("about to add {alias_tuple}".format(
-                    alias_tuple=alias_tuple))            
-                collection_obj.added_items.append(AddedItem(alias_tuple=alias_tuple))
-                logger.debug("just added {alias_tuple}".format(
-                    alias_tuple=alias_tuple))            
+                collection_obj.added_items += [AddedItem(alias_tuple=alias_tuple)]
         except ValueError:
             logger.debug("could not separate alias tuple {alias_tuple}".format(
                 alias_tuple=alias_tuple))            
@@ -69,7 +65,10 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
         db.session.rollback()
         logger.warning(u"Fails Integrity check in add_items_to_collection_object for {cid}, rolling back.  Message: {message}".format(
             cid=cid, 
-            message=e.message))        
+            message=e.message)) 
+
+    logger.debug("returning {collection_obj}".format(
+        collection_obj=collection_obj))            
 
     return collection_obj
 
@@ -121,6 +120,9 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
     #     logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
     #             cid=cid))        
     #     collection_obj = create_objects_from_collection_doc(coll_doc)
+
+    logger.debug(u"just finished add_items_to_collection for {cid}".format(
+        cid=cid))        
 
     return collection_obj
 
@@ -193,7 +195,7 @@ def create_objects_from_collection_doc(coll_doc):
     tiids = coll_doc["alias_tiids"].values()
     for tiid in tiids:
         if tiid not in new_coll_object.tiids:
-            new_coll_object.tiid_links.append(CollectionTiid(tiid=tiid))
+            new_coll_object.tiid_links += [CollectionTiid(tiid=tiid)]
 
     logger.debug(u"new_tiid_objects for {cid} are {new_tiid_objects}".format(
         cid=new_coll_object.cid, 
@@ -205,7 +207,7 @@ def create_objects_from_collection_doc(coll_doc):
         try:
             alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
             if alias_tuple not in new_coll_object.added_aliases:
-                    new_coll_object.added_items.append(AddedItem(alias_tuple=alias_tuple, created=coll_doc["last_modified"]))
+                    new_coll_object.added_items += [AddedItem(alias_tuple=alias_tuple, created=coll_doc["last_modified"])]
         except ValueError:
             logger.debug("could not separate alias tuple {alias_tuple}".format(
                 alias_tuple=alias_tuple))
