@@ -436,6 +436,7 @@ def remove_items_from_collection(cid=""):
                 json=request.json))
         abort_custom(404, "Missing arguments.")
 
+    coll_doc = get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False)
     resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
     return resp
 
@@ -463,6 +464,7 @@ def add_items_to_collection(cid=""):
                 json=request.json))
         abort_custom(404, "Missing arguments.")
 
+    coll_doc = get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False)
     resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
 
     return resp

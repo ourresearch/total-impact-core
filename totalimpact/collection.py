@@ -118,7 +118,7 @@ def add_items_to_collection(cid, aliases, myredis, mydao):
     #             cid=cid))        
     #     collection_obj = create_objects_from_collection_doc(coll_doc)
 
-    return (coll_doc, collection_obj)
+    return collection_obj
 
 
 def remove_items_from_collection(cid, tiids_to_delete, myredis, mydao):
@@ -142,7 +142,7 @@ def remove_items_from_collection(cid, tiids_to_delete, myredis, mydao):
     #             cid=cid))
     #     collection_obj = create_objects_from_collection_doc(coll_doc)    
 
-    return (coll_doc, collection_obj)
+    return collection_obj
 
 
 def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myredis, mydao):
