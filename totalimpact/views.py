@@ -436,7 +436,7 @@ def remove_items_from_collection(cid=""):
                 json=request.json))
         abort_custom(500, "Error deleting items from collection")
 
-    (coll_with_items, is_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False)
+    (coll_doc, is_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False)
     resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
     return resp
 
@@ -464,7 +464,7 @@ def add_items_to_collection(cid=""):
                 json=request.json))
         abort_custom(500, "Error adding items to collection")
 
-    (coll_with_items, is_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False)
+    (coll_doc, is_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False)
 
     resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
 
