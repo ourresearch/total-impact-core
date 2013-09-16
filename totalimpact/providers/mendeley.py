@@ -157,9 +157,13 @@ class Mendeley(Provider):
                     logger.warning(u"Mendeley: NO TITLES for aliases, skipping")
                     continue  # nothing to see here.  Skip to next record
 
-                if (len(str(biblio["year"])) != 4):
+                try:
+                    if (len(str(biblio["year"])) != 4):
+                        logger.warning(u"Mendeley: NO YEAR for aliases, skipping")
+                        continue
+                except (TypeError, KeyError, AttributeError):
                     logger.warning(u"Mendeley: NO YEAR for aliases, skipping")
-                    continue
+                    continue  # nothing to see here.  Skip to next record
 
                 if (mendeley_title == aliases_title):
                     if (str(mendeley_record["year"]) == str(biblio["year"])):
