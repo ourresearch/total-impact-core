@@ -414,8 +414,6 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
                 tiid=item_obj.tiid, cid=cid))
             try:
                 item_doc = item_obj.as_old_doc()
-                logger.info(u"success!  found {tiid} for {cid}".format(
-                    tiid=item_obj.tiid, cid=cid))
                 item_for_client = item_module.build_item_for_client(item_doc, myrefsets, mydao, include_history)
             except (KeyError, TypeError, AttributeError):
                 logger.info(u"Couldn't build item {tiid}, excluding it from the returned collection {cid}".format(
