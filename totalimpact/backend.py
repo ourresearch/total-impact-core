@@ -263,7 +263,7 @@ class CouchWorker(Worker):
                     updated_item["last_modified"] = datetime.datetime.now().isoformat()
                     logger.info(u"{:20}: added {method_name}, saving item {tiid}".format(
                         self.name, method_name=method_name, tiid=tiid))
-                    self.mydao.save(updated_item)
+                    # self.mydao.save(updated_item)
 
                 if method_name=="metrics":
                     self.decr_num_providers_left(metric_name, tiid) # have to do this after the item save

@@ -814,11 +814,9 @@ def create_item(namespace, nid, myredis, mydao):
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS)
     )
 
-    mydao.save(item_doc)
-
-
-    logger.debug(u"in create_item for {tiid}, finished with couch now to postgres".format(
-        tiid=item_doc["_id"]))        
+    # mydao.save(item_doc)
+    # logger.debug(u"in create_item for {tiid}, finished with couch now to postgres".format(
+    #     tiid=item_doc["_id"]))        
 
     collection_obj = create_objects_from_item_doc(item_doc)
 

@@ -410,8 +410,8 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     if tiids:
         item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
         for item_obj in item_objects:
-            logger.info(u"got item {tiid} for {cid}".format(
-                tiid=item_obj.tiid, cid=cid))
+            #logger.info(u"got item {tiid} for {cid}".format(
+            #    tiid=item_obj.tiid, cid=cid))
             try:
                 item_doc = item_obj.as_old_doc()
                 item_for_client = item_module.build_item_for_client(item_doc, myrefsets, mydao, include_history)
