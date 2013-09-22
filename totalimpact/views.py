@@ -370,7 +370,7 @@ def collection_get(cid='', format="json", include_history=False):
         #     logger.error(u"couldn't get tiids for GET collection '{cid}'".format(cid=cid))
         #     abort_custom(404, "couldn't find items for collection")
 
-        logger.error(u"in collection_get".format(cid=cid))
+        logger.info(u"in collection_get".format(cid=cid))
 
         # return success if all reporting is complete for all items    
         if something_currently_updating:
