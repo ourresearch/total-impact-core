@@ -12,6 +12,8 @@ from totalimpact.utils import Retry
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import FlushError
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
+from sqlalchemy.sql import text    
+
 from totalimpact import json_sqlalchemy
 from totalimpact import db
 
@@ -379,14 +381,14 @@ def clean_id(nid):
         pass
     return(nid)
 
-def get_item(tiid, myrefsets, dao, include_history=False):
+def get_item(tiid, myrefsets=None, mydao=None, include_history=False):
     item_obj = Item.query.get(tiid)
 
     item_doc = item_obj.as_old_doc()
     if not item_doc:
         return None
     try:
-        item = build_item_for_client(item_doc, myrefsets, dao, include_history)
+        item = build_item_for_client(item_doc, myrefsets, mydao, include_history)
     except Exception, e:
         item = None
         logger.error(u"Exception %s: Skipping item, unable to build %s, %s" % (e.__repr__(), tiid, str(item)))
@@ -509,7 +511,7 @@ def add_aliases_to_item_object(aliases_dict, item_doc):
     item_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(item_obj)
 
-    item_obj.aliases = create_alias_objects(aliases_dict)
+    item_obj.aliases += create_alias_objects(aliases_dict)
 
     try:
         db.session.commit()
@@ -784,8 +786,8 @@ def create_or_update_items_from_aliases(aliases, myredis, mydao):
 
     # batch upload the new docs to the db
     # make sure they are there before the provider updates start happening
-    for doc in mydao.db.update(new_items):
-        pass
+    #for doc in mydao.db.update(new_items):
+    #    pass
 
     # for each item, set the number of providers that need to run before the update is done
     # and put them on the update queue
@@ -883,32 +885,55 @@ def create_item_from_namespace_nid(namespace, nid, myredis, mydao):
 
     return tiid
 
+def get_tiid_by_biblio(biblio_dict):
+    try:
+        raw_sql = text("""select tiid from min_biblio 
+                                        where title=:title
+                                        and authors=:authors
+                                        and journal=:journal""")
+        biblio_statement = db.session.execute(raw_sql, params={
+            "title":'"'+biblio_dict["title"]+'"',
+            "authors":'"'+biblio_dict["authors"]+'"',
+            "journal":'"'+biblio_dict["journal"]+'"'
+            })
+        biblio = biblio_statement.first()
+        db.session.commit()
+        tiid = biblio.tiid
+    except AttributeError:
+        tiid = None
+
+    return tiid
+
 def get_tiid_by_alias(ns, nid, mydao=None):
     # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
     logger.debug(u"In get_tiid_by_alias with {ns}, {nid}".format(
         ns=ns, nid=nid))
 
+    tiid = None
+
     # change input to lowercase etc
     (ns, nid) = canonical_alias_tuple((ns, nid))
 
-    alias_obj = Alias.query.filter_by(namespace=ns, nid=nid).first()
-    try:
-        tiid = alias_obj.tiid
-        logger.debug(u"Found a tiid for {nid} in get_tiid_by_alias: {tiid}".format(
-            nid=nid, 
-            tiid=tiid))
-    except AttributeError:
-        logger.debug(u"no match for {nid}!".format(nid=nid))
-        tiid = None
+    if (ns=="biblio"):
+        tiid = get_tiid_by_biblio(nid)
+    else:
+        alias_obj = Alias.query.filter_by(namespace=ns, nid=nid).first()
+        try:
+            tiid = alias_obj.tiid
+            logger.debug(u"Found a tiid for {nid} in get_tiid_by_alias: {tiid}".format(
+                nid=nid, 
+                tiid=tiid))
+        except AttributeError:
+            pass
+
+    if not tiid:
+        logger.debug(u"no match for tiid for {nid}!".format(nid=nid))
     return tiid
 
 def start_item_update(tiids, myredis, mydao, sleep_in_seconds=0):
     # put each of them on the update queue
     for tiid in tiids:
         logger.debug(u"In start_item_update: " + tiid)
-
-
-
         item_obj = Item.query.get(tiid)
         if item_obj:
             # set this so we know when it's still updating later on
