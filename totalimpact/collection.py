@@ -241,9 +241,10 @@ def delete_collection(cid):
 
 
 class AddedItem(db.Model):
-    cid = db.Column(db.Text, db.ForeignKey('collection.cid'), primary_key=True, index=True)
-    namespace = db.Column(db.Text, primary_key=True)
-    nid = db.Column(db.Text, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    cid = db.Column(db.Text, db.ForeignKey('collection.cid'), index=True)
+    namespace = db.Column(db.Text)
+    nid = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
     tiid = db.Column(db.Text)
     created = db.Column(db.DateTime())
 
@@ -395,13 +396,30 @@ def get_titles(cids, mydao=None):
     return ret
 
 
-
-def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
+def get_collection_doc(cid):
     collection = {}
 
     collection_obj = Collection.query.get(cid)
     if not collection_obj:
         return None
+
+    # don't include ip_address in info for client
+    for key in ["created", "last_modified", "title"]:
+        collection[key] = getattr(collection_obj, key)
+    collection["_id"] = collection_obj.cid
+    collection["type"] = "collection"
+    collection["alias_tiids"] = {}
+    for tiid in collection_obj.tiids:
+        collection["alias_tiids"][tiid] = tiid  
+    return(collection)
+
+
+def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
+    collection = get_collection_doc(cid)
+    if not collection:
+        return (None, None)
+
+    collection_obj = Collection.query.get(cid)
 
     # don't include ip_address in info for client
     for key in ["created", "last_modified", "title"]:
