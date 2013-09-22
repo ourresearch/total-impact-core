@@ -20,7 +20,8 @@ app.config.from_object(default_settings)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("POSTGRESQL_URL")
 app.config["SQLALCHEMY_POOL_SIZE"] = 50
-#app.config["SQLALCHEMY_ECHO"] = True
+# app.config["SQLALCHEMY_ECHO"] = True
+# app.config["SQLALCHEMY_RECORD_QUERIES"] = True
 
 db = SQLAlchemy(app)
 
@@ -29,6 +30,7 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 if (os.getenv("FLASK_DEBUG", False) == "True"):
     logger.info("Setting app.debug=True; Flask-DebugToolbar will display")
     app.debug = True
+    app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
 toolbar = DebugToolbarExtension(app)
 
 
