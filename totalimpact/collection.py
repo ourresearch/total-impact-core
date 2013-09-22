@@ -429,7 +429,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     # don't include ip_address in info for client
     collection["alias_tiids"] = {}
     tiids = collection_obj.tiids
-    for tiid in tiids
+    for tiid in tiids:
         collection["alias_tiids"][tiid] = tiid    
     collection["items"] = []
 
