@@ -43,7 +43,7 @@ class TestMendeley(ProviderTestCase):
     def test_extract_provenance_url(self):
         f = open(SAMPLE_EXTRACT_PROVENANCE_URL_PAGE, "r")
         provenance_url = self.provider._extract_provenance_url(f.read())
-        assert_equals(provenance_url, "http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/")
+        assert_equals(provenance_url, "http://api.mendeley.com/catalog/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/")
 
     def test_get_ids_from_title(self):
         f = open(SAMPLE_EXTRACT_UUID_PAGE, "r")
@@ -55,7 +55,7 @@ class TestMendeley(ProviderTestCase):
         f = open(SAMPLE_EXTRACT_UUID_PAGE_NO_DOI, "r")
         response = self.provider._get_uuid_from_title(self.testitem_metrics_dict, f.read())
         print response
-        expected = {'url': 'http://www.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/', 'uuid': '1f471f70-1e4f-11e1-b17d-0024e8453de6'}
+        expected = {'url': 'http://www.mendeley.com/catalog/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/', 'uuid': '1f471f70-1e4f-11e1-b17d-0024e8453de6'}
         assert_equals(response, expected)
 
     def test_get_ids_from_title_no_doi_wrong_year(self):
@@ -67,7 +67,7 @@ class TestMendeley(ProviderTestCase):
     def test_get_metrics_and_drilldown_from_metrics_page(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         response = self.provider._get_metrics_and_drilldown_from_metrics_page(f.read())
-        expected = {'mendeley:discipline': ([{'id': 3, 'value': 80, 'name': 'Biological Sciences'}, {'id': 19, 'value': 14, 'name': 'Medicine'}, {'id': 22, 'value': 2, 'name': 'Psychology'}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:country': ([{'name': 'United States', 'value': 42}, {'name': 'Japan', 'value': 12}, {'name': 'United Kingdom', 'value': 9}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:career_stage': ([{'name': 'Ph.D. Student', 'value': 31}, {'name': 'Post Doc', 'value': 21}, {'name': 'Professor', 'value': 7}], 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:readers': (102, 'http://api.mendeley.com/research/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/')}
+        expected = {'mendeley:discipline': ([{'id': 3, 'value': 80, 'name': 'Biological Sciences'}, {'id': 19, 'value': 14, 'name': 'Medicine'}, {'id': 22, 'value': 2, 'name': 'Psychology'}], 'http://api.mendeley.com/catalog/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:country': ([{'name': 'United States', 'value': 42}, {'name': 'Japan', 'value': 12}, {'name': 'United Kingdom', 'value': 9}], 'http://api.mendeley.com/catalog/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:career_stage': ([{'name': 'Ph.D. Student', 'value': 31}, {'name': 'Post Doc', 'value': 21}, {'name': 'Professor', 'value': 7}], 'http://api.mendeley.com/catalog/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/'), 'mendeley:readers': (102, 'http://api.mendeley.com/catalog/mutations-causing-syndromic-autism-define-axis-synaptic-pathophysiology/')}
         assert_equals(response, expected)
 
     def test_remove_punctuation(self):
@@ -78,10 +78,10 @@ class TestMendeley(ProviderTestCase):
     def test_metrics_pmid(self):
         # at the moment this item 
         metrics_dict = self.provider.metrics([("pmid", "12578738")])
-        expected = {'mendeley:discipline': ([{u'id': 6, u'value': 33, u'name': u'Computer and Information Science'}, {u'id': 3, u'value': 33, u'name': u'Biological Sciences'}, {u'id': 19, u'value': 12, u'name': u'Medicine'}], u'http://api.mendeley.com/research/value-data/'), 
-                'mendeley:country': ([{u'name': u'United States', u'value': 22}, {u'name': u'United Kingdom', u'value': 16}, {u'name': u'Netherlands', u'value': 12}], u'http://api.mendeley.com/research/value-data/'), 
-                'mendeley:career_stage': ([{u'name': u'Ph.D. Student', u'value': 19}, {u'name': u'Other Professional', u'value': 15}, {u'name': u'Researcher (at an Academic Institution)', u'value': 14}], u'http://api.mendeley.com/research/value-data/'), 
-                'mendeley:readers': (129, u'http://api.mendeley.com/research/value-data/')}
+        expected = {'mendeley:discipline': ([{u'id': 6, u'value': 33, u'name': u'Computer and Information Science'}, {u'id': 3, u'value': 33, u'name': u'Biological Sciences'}, {u'id': 19, u'value': 12, u'name': u'Medicine'}], u'http://api.mendeley.com/catalog/value-data/'), 
+                'mendeley:country': ([{u'name': u'United States', u'value': 22}, {u'name': u'United Kingdom', u'value': 16}, {u'name': u'Netherlands', u'value': 12}], u'http://api.mendeley.com/catalog/value-data/'), 
+                'mendeley:career_stage': ([{u'name': u'Ph.D. Student', u'value': 19}, {u'name': u'Other Professional', u'value': 15}, {u'name': u'Researcher (at an Academic Institution)', u'value': 14}], u'http://api.mendeley.com/catalog/value-data/'), 
+                'mendeley:readers': (129, u'http://api.mendeley.com/catalog/value-data/')}
         print metrics_dict
         assert_equals(set(metrics_dict.keys()), set(expected.keys())) 
         # can't tell more about dicsciplines etc because they are percentages and may go up or down
@@ -91,7 +91,7 @@ class TestMendeley(ProviderTestCase):
         # at the moment this item 
         new_aliases = self.provider.aliases([self.testitem_aliases_biblio_no_doi])
         print new_aliases
-        expected = [('url', u'http://www.mendeley.com/research/scientometrics-2-0-new-metrics-scholarly-impact-social-web-3/'), ('uuid', u'c81ce3f0-cea0-11df-922b-0024e8453de6')]
+        expected = [('url', u'http://www.mendeley.com/catalog/scientometrics-2-0-new-metrics-scholarly-impact-social-web-3/'), ('uuid', u'c81ce3f0-cea0-11df-922b-0024e8453de6')]
         assert_equals(new_aliases, expected)
 
     @http
@@ -100,7 +100,7 @@ class TestMendeley(ProviderTestCase):
         alias = (u'biblio', {u'title': u'Altmetrics in the wild: Using social media to explore scholarly impact', u'first_author': u'Priem', u'journal': u'arXiv preprint arXiv:1203.4745', u'authors': u'Priem, Piwowar, Hemminger', u'number': u'', u'volume': u'', u'first_page': u'', u'year': u'2012'})
         new_aliases = self.provider.aliases([alias])
         print new_aliases
-        expected = [('url', u'http://www.mendeley.com/research/altmetrics-wild-using-social-media-explore-scholarly-impact/'), ('uuid', u'ea6244c0-7dca-11e1-ac31-0024e8453de6')]
+        expected = [('url', u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), ('uuid', u'ea6244c0-7dca-11e1-ac31-0024e8453de6')]
         assert_equals(new_aliases, expected)
 
     # override common tests
