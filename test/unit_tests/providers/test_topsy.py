@@ -43,7 +43,7 @@ class TestTopsy(ProviderTestCase):
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
         #expected = {'topsy:influential_tweets': (36, 'http://topsy.com/total-impact.org?utm_source=otter'), 'topsy:tweets': (358, 'http://topsy.com/total-impact.org?utm_source=otter')}
-        expected = {'topsy:influential_tweets': (19, 'http://topsy.com/trackback?url=http%3A//total-impact.org'), 'topsy:tweets': (121, 'http://topsy.com/trackback?url=http%3A//total-impact.org')}
+        expected = {'topsy:influential_tweets': (16, 'http://topsy.com/trackback?url=http%3A//total-impact.org'), 'topsy:tweets': (121, 'http://topsy.com/trackback?url=http%3A//total-impact.org')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]

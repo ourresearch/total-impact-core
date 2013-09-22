@@ -76,7 +76,7 @@ class TestCrossRef(ProviderTestCase):
     @http
     def test_biblio_science(self):
         biblio = self.provider.biblio([("doi", "10.1126/science.169.3946.635")])
-        expected = {'title': u'The Structure of Ordinary Water: New data and interpretations are yielding new insights into this fascinating substance', 'journal': u'Science', 'year': '1970', 'repository': u'American Association for the Advancement of Science', 'authors': u'Frank'}
+        expected = {'title': u'The Structure of Ordinary Water: New data and interpretations are yielding new insights into this fascinating substance', 'journal': u'Science', 'year': '1970', 'repository': u'American Association for the Advancement of Science (AAAS)', 'authors': u'Frank'}
         print biblio
         assert_equals(biblio, expected) 
 
@@ -134,7 +134,7 @@ class TestCrossRef(ProviderTestCase):
         biblio = {'title': 'Evaluating data citation and sharing policies in the environmental sciences', 'first_author': 'Weber', 'journal': 'Proceedings of the American Society for Information Science and Technology', 'year': '2010', 'number': '1', 'volume': '47', 'first_page': '1', 'authors': 'Weber, Piwowar, Vision'}
         response = self.provider.aliases([("biblio", biblio)])
         print response
-        expected = [('biblio', {'repository': u'Wiley Blackwell (John Wiley & Sons)', 'title': u'Evaluating data citation and sharing policies in the environmental sciences', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': '2010', 'authors': u'Weber, Piwowar, Vision'}), ('doi', u'10.1002/meet.14504701445'), ('url', u'http://dx.doi.org/10.1002/meet.14504701445'), ('url', u'http://onlinelibrary.wiley.com/doi/10.1002/meet.14504701445/abstract')]
+        expected = [('biblio', {'repository': u'Wiley Blackwell (John Wiley &amp; Sons)', 'title': u'Evaluating data citation and sharing policies in the environmental sciences', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': '2010', 'authors': u'Weber, Piwowar, Vision'}), ('doi', u'10.1002/meet.14504701445'), ('url', u'http://dx.doi.org/10.1002/meet.14504701445'), ('url', u'http://onlinelibrary.wiley.com/doi/10.1002/meet.14504701445/abstract')]
         assert_equals(response, expected)
 
     @http
