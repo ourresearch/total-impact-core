@@ -520,7 +520,7 @@ def add_aliases_to_item_object(aliases_dict, item_doc):
     item_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(item_obj)
 
-    item_obj.aliases += create_alias_objects(aliases_dict)
+    item_obj.aliases = create_alias_objects(aliases_dict)
 
     try:
         db.session.commit()
