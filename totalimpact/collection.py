@@ -421,11 +421,12 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
 
     collection_obj = Collection.query.get(cid)
 
-    # don't include ip_address in info for client
-    for key in ["created", "last_modified", "title"]:
-        collection[key] = getattr(collection_obj, key)
     collection["_id"] = collection_obj.cid
     collection["type"] = "collection"
+    collection["title"] = collection_obj.title
+    collection["created"] = collection_obj.created.isoformat()
+    collection["last_modified"] = collection_obj.last_modified.isoformat()
+    # don't include ip_address in info for client
     collection["alias_tiids"] = {}
     for tiid in collection_obj.tiids:
         collection["alias_tiids"][tiid] = tiid    
