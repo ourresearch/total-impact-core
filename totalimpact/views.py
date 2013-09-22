@@ -9,7 +9,7 @@ import shortuuid
 import analytics
 import requests
 
-from totalimpact import dao, app, tiredis, collection, api_user, incoming_email
+from totalimpact import app, tiredis, collection, api_user, incoming_email
 from totalimpact import item as item_module
 from totalimpact.models import MemberItems, NotAuthenticatedError
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderServerError, ProviderTimeout
@@ -21,7 +21,7 @@ import logging
 logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 
-mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.getenv("CLOUDANT_DB"))
+mydao = None
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)  # main app is on DB 0
 
 logger.debug(u"Building reference sets")
@@ -37,7 +37,7 @@ def set_db(url, db):
     """useful for unit testing, where you want to use a local database
     """
     global mydao 
-    mydao = dao.Dao(url, db)
+    mydao = None
     return mydao
 
 def set_redis(url, db):
@@ -50,7 +50,7 @@ def set_redis(url, db):
 
 
 def check_key():
-    if request.args.get("api_admin_key"):
+    if request.values.get("api_admin_key"):
         return
 
     if "/v1/" in request.url:
@@ -129,15 +129,19 @@ def set_mimetype_and_encoding(resp):
         return resp
     if "static" in request.path:
         return resp
-    elif g.return_as_html:
-        logger.info(u"rendering output through debug_api.html template")
-        resp.mimetype = "text/html"
-        return make_response(render_template(
-            'debug_api.html',
-            data=resp.data))
-    else:
-        logger.info(u"rendering output as json")
-        resp.mimetype = "application/json"
+
+    try:
+        if g.return_as_html:
+            logger.info(u"rendering output through debug_api.html template")
+            resp.mimetype = "text/html"
+            return make_response(render_template(
+                'debug_api.html',
+                data=resp.data))
+    except AttributeError:
+        pass
+
+    logger.info(u"rendering output as json")
+    resp.mimetype = "application/json"
     return resp
 
 
@@ -344,7 +348,7 @@ returns a collection object and the items
 @app.route('/v1/collection/<cid>', methods=['GET'])
 @app.route('/v1/collection/<cid>.<format>', methods=['GET'])
 def collection_get(cid='', format="json", include_history=False):
-    coll = mydao.get(cid)
+    coll = collection.get_collection_doc(cid)
     if not coll:
         abort_custom(404, "collection not found")
 
@@ -365,6 +369,8 @@ def collection_get(cid='', format="json", include_history=False):
         # except (LookupError, AttributeError):  
         #     logger.error(u"couldn't get tiids for GET collection '{cid}'".format(cid=cid))
         #     abort_custom(404, "couldn't find items for collection")
+
+        logger.error(u"in collection_get".format(cid=cid))
 
         # return success if all reporting is complete for all items    
         if something_currently_updating:
@@ -480,8 +486,8 @@ def collection_update(cid=""):
 
     # first, get the tiids in this collection:
     try:
-        collection = mydao.get(cid)
-        tiids = collection["alias_tiids"].values()
+        coll_doc = collection.get_collection_doc(cid)
+        tiids = coll_doc["alias_tiids"].values()
     except (TypeError, AttributeError):
         logger.exception(u"couldn't get tiids in POST collection '{cid}'".format(
             cid=cid
@@ -496,25 +502,7 @@ def collection_update(cid=""):
 
 @app.route("/v1/collection/<cid>", methods=["DELETE"])
 def delete_collection(cid=None):
-
-    # authenticate
-    admin_key = request.args.get("api_admin_key")
-    if admin_key != os.getenv("API_ADMIN_KEY"):
-        abort_custom(401, "You need admin privilages to delete collections.")
-
-    coll = mydao.db[cid]
-    if coll is None:
-        return make_response("Nothing to delete; collection didn't exist.")
-
-    # delete items if we're told to
-    if request.args.get("include_items") in [1, True, "true"]:
-        # needs to be reimplemented.  in the mean time return not supported
-        abort_custom(501, "Deleting items is not currently supported.")
-
-    # delete the collection
-    del mydao.db[cid]
-
-    return make_response("Deleted.")
+    abort_custom(501, "Deleting collections is not currently supported.")
 
 
 # creates a collection with aliases

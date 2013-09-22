@@ -3,7 +3,7 @@
 import os, time, json, logging, threading, Queue, copy, sys, datetime
 from collections import defaultdict
 
-from totalimpact import dao, tiredis, default_settings, db
+from totalimpact import tiredis, default_settings, db
 from totalimpact import item as item_module
 from totalimpact.providers.provider import ProviderFactory, ProviderError
 
@@ -239,7 +239,9 @@ class CouchWorker(Worker):
                 logger.info(u"{:20}: blank doc, nothing to save".format(
                     self.name))
             else:
-                item = self.mydao.get(tiid)
+                item_obj = item_module.Item.query.get(tiid)
+                item = item_obj.as_old_doc()
+
                 if not item:
                     if method_name=="metrics":
                         self.myredis.decr_num_providers_left(tiid, "(unknown)")
@@ -263,7 +265,7 @@ class CouchWorker(Worker):
                     updated_item["last_modified"] = datetime.datetime.now().isoformat()
                     logger.info(u"{:20}: added {method_name}, saving item {tiid}".format(
                         self.name, method_name=method_name, tiid=tiid))
-                    # self.mydao.save(updated_item)
+                    db.session.merge(item_obj)
 
                 if method_name=="metrics":
                     self.decr_num_providers_left(metric_name, tiid) # have to do this after the item save
@@ -352,9 +354,7 @@ class Backend(Worker):
 
 def main():
 
-
-
-    mydao = dao.Dao(os.environ["CLOUDANT_URL"], os.environ["CLOUDANT_DB"])
+    mydao = None
 
     myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
     alias_queue = RedisQueue("aliasqueue", myredis)

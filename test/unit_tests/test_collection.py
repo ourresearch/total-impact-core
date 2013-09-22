@@ -1,4 +1,4 @@
-from totalimpact import collection, dao, tiredis
+from totalimpact import collection, tiredis
 from totalimpact import item as item_module
 from totalimpact import db, app
 from collections import OrderedDict
@@ -18,11 +18,7 @@ API_ITEMS_JSON = json.loads(open(api_items_loc, "r").read())
 class TestCollection():
 
     def setUp(self):
-        # hacky way to delete the "ti" db, then make it fresh again for each test.
-        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
-        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        self.d.update_design_doc()
+        self.d = None
 
         # do the same thing for the redis db, set up the test redis database.  We're using DB Number 8
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
@@ -145,7 +141,6 @@ class TestCollection():
                             "alias_tiids": {
                                        "pmid:16023720": "iaw9rzldigp4xc7p20bycnkg",
                                        "pmid:16413797": "itsq6fgx8ogi9ixysbipmtxx"}}
-        self.d.db.save(test_collection)
         test_object = collection.create_objects_from_collection_doc(test_collection) 
         db.session.add(test_object) 
 
@@ -154,7 +149,6 @@ class TestCollection():
             {"_id": "itsq6fgx8ogi9ixysbipmtxx", "type":"item", "last_modified": "2012-08-23T14:40:16.888800", "biblio":{}, "aliases":{"pmid": ["16413797"]}}
         ]
         for item_doc in test_items:
-            self.d.db.save(item_doc)
             test_object = item_module.create_objects_from_item_doc(item_doc) 
             db.session.add(test_object) 
 

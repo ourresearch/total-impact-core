@@ -2,7 +2,7 @@ from nose.tools import raises, assert_equals, assert_true, nottest
 import os, unittest, hashlib, json, pprint, datetime
 from time import sleep
 from werkzeug.security import generate_password_hash
-from totalimpact import models, dao, tiredis
+from totalimpact import models, tiredis
 from totalimpact import db, app
 from totalimpact import item as item_module
 from totalimpact.item import Item, Metric, Biblio, Alias
@@ -13,12 +13,13 @@ from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unitt
 class TestItem():
 
     def setUp(self):
-        BIBLIO_DATA = {
+        self.BIBLIO_DATA = {
             "title": "An extension of de Finetti's theorem",
             "journal": "Advances in Applied Probability",
             "author": [
                 "Pitman, J"
             ],
+            "authors": "Pitman",
             "collection": "pitnoid",
             "volume": "10",
             "id": "p78",
@@ -30,7 +31,7 @@ class TestItem():
             "title":["Why Most Published Research Findings Are False"],
             "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
             "doi": ["10.1371/journal.pmed.0020124"],
-            "biblio": [BIBLIO_DATA]
+            "biblio": [self.BIBLIO_DATA]
         }
 
 
@@ -82,7 +83,7 @@ class TestItem():
                 "wikipedia:mentions": METRICS_DATA,
                 "topsy:tweets": METRICS_DATA2
             },
-            "biblio": BIBLIO_DATA,
+            "biblio": self.BIBLIO_DATA,
             "type": "item"
         }
 
@@ -90,13 +91,7 @@ class TestItem():
             ("wikipedia", {})
         ]
 
-
-
-        # hacky way to delete the "ti" db, then make it fresh again for each test.
-        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
-        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        self.d.update_design_doc()
+        self.d = None
         
         self.myrefsets = {"nih": {"2011": {
                         "facebook:comments": {0: [1, 99], 1: [91, 99]}, "mendeley:groups": {0: [1, 99], 3: [91, 99]}
@@ -105,6 +100,10 @@ class TestItem():
         # setup a clean new redis test database.  We're putting unittest redis at DB Number 8.
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
+
+
+        db.session.execute("""drop view if exists min_biblio""")
+        db.session.commit()        
 
         self.db = setup_postgres_for_unittests(db, app)
         
@@ -160,34 +159,50 @@ class TestItem():
 
 
     def test_add_biblio(self):
-        test_biblio = {
-            "title": "An extension of de Finetti's theorem",
-            "journal": "Advances in Applied Probability",
-            "author": [
-                "Pitman, J"
-            ],
-            "collection": "pitnoid",
-            "volume": "10",
-            "id": "p78",
-            "year": "1978",
-            "pages": "268 to 270"
-        }
         new_item = Item()
         tiid = new_item.tiid
         print new_item
 
         #add biblio
         self.db.session.add(new_item)
-        new_biblio_objects = item_module.create_biblio_objects([test_biblio]) 
+        new_biblio_objects = item_module.create_biblio_objects([self.BIBLIO_DATA]) 
         new_item.biblios = new_biblio_objects
         self.db.session.commit()
 
         # now poof there is biblio
         found_item = Item.query.filter_by(tiid=tiid).first()
-        expected = [u'10', u"An extension of de Finetti's theorem", u'Advances in Applied Probability', [u"Pitman, J"], u'1978', u'p78', u'pitnoid', u'268 to 270']
+        expected = [u'10', u'Pitman', u"An extension of de Finetti's theorem", u'Advances in Applied Probability', [u"Pitman, J"], u'1978', u'p78', u'pitnoid', u'268 to 270']
         assert_equals([bib.biblio_value for bib in found_item.biblios], expected)
         
-        assert_equals(Biblio.as_dict_by_tiid(tiid), test_biblio)
+        assert_equals(Biblio.as_dict_by_tiid(tiid), self.BIBLIO_DATA)
+
+
+    def test_get_tiid_by_biblio(self):
+        result = self.db.session.execute("""create view min_biblio as (
+                    select 
+                        a.tiid, 
+                        a.provider, 
+                        a.biblio_value as title, 
+                        b.biblio_value as authors, 
+                        c.biblio_value as journal, 
+                        a.collected_date
+                    from biblio a
+                    join biblio b using (tiid, provider)
+                    join biblio c using (tiid, provider)
+                    where 
+                    a.biblio_name = 'title'
+                    and b.biblio_name = 'authors'
+                    and c.biblio_name = 'journal'
+                    )""")
+        self.db.session.commit()
+
+        new_item = Item()
+        self.db.session.add(new_item)
+        new_item.biblios = item_module.create_biblio_objects([self.BIBLIO_DATA]) 
+        self.db.session.commit()
+
+        found_tiid = item_module.get_tiid_by_biblio(self.BIBLIO_DATA)
+        assert_equals(found_tiid, new_item.tiid)
 
 
     def test_add_metrics(self):

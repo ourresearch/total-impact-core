@@ -4,7 +4,7 @@ from urllib import quote_plus
 import os
 from nose.tools import assert_equals, nottest, assert_greater, assert_items_equal
 
-from totalimpact import app, db, dao, views, tiredis, api_user, collection, item as item_module
+from totalimpact import app, db, views, tiredis, api_user, collection, item as item_module
 from totalimpact.providers.dryad import Dryad
 
 from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
@@ -84,7 +84,10 @@ class ViewsTester(unittest.TestCase):
                         "provider_url": "http://www.delicious.com/"
                     },
                     "values": {
-                        "raw": 1
+                        "raw": 1,
+                        "raw_history": {
+                            "2012-06-23T09:21:16.027149": 1
+                        }
                     }
                 },
                 "dryad:total_downloads": {
@@ -129,20 +132,14 @@ class ViewsTester(unittest.TestCase):
 
         self.db = setup_postgres_for_unittests(db, app)
 
-
-        # hacky way to delete the "ti" db, then make it fresh again for each test.
-        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
-        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        self.d.update_design_doc()
-
-        self.d.save(json.loads(test_item))
+        item = item_module.create_objects_from_item_doc(json.loads(test_item))
+        self.db.session.add(item)
 
         self.existing_api_user = api_user.ApiUser(**self.test_api_user_meta)
         self.existing_api_user.api_key = "validkey"  #override randomly assigned key
         self.db.session.add(self.existing_api_user)
         self.db.session.commit()
-        self.db.session.flush()                
+
 
         # do the same thing for the redis db.  We're using DB 8 for unittests.
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
@@ -168,9 +165,6 @@ class ViewsTester(unittest.TestCase):
         teardown_postgres_for_unittests(self.db)
         Dryad.member_items = self.orig_Dryad_member_items
 
-
-    def test_dao(self):
-        assert_equals(mydao.db.name, os.getenv("CLOUDANT_DB"))
 
     def test_does_not_require_key_if_preversioned_url(self):
         resp = self.client.get("/")
@@ -288,13 +282,10 @@ class ViewsTester(unittest.TestCase):
         url = '/v1/item/doi/10.5061/dryad.j1fd7?key=validkey'
         response = self.client.get(url)
         metrics = json.loads(response.data)["metrics"]
-        assert_equals(
-                metrics["dryad:total_downloads"]["values"]["raw"],
-                207
-            )
+        assert_equals(metrics["dryad:total_downloads"]["values"]["raw"], 132)
         assert_equals(
             set(metrics["dryad:total_downloads"]["values"].keys()),
-            set(["dryad", "raw"]) # no raw_history
+            set(["raw"]) # no raw_history
         )
 
     def test_item_include_history_param(self):
@@ -305,13 +296,10 @@ class ViewsTester(unittest.TestCase):
         print (metrics["dryad:total_downloads"])
         assert_equals(
             set(metrics["dryad:total_downloads"]["values"].keys()),
-            set(["dryad", "raw", "raw_history"])
+            set(["raw", "raw_history"])
         )
 
-#        assert_equals(
-#            metrics["dryad:total_downloads"]["values"]["raw_history"].values(),
-#            ["103", "103", "103"]
-#        )
+        assert_equals(metrics["dryad:total_downloads"]["values"]["raw_history"].values(), [132, 132, 132])
 
 
     def test_post_with_aliases_already_in_db(self):
@@ -339,9 +327,6 @@ class ViewsTester(unittest.TestCase):
             content_type="application/json"
         )
         new_coll = json.loads(resp2.data)["collection"]
-
-        # 3+1 new items + 2 collections + 1 test_item + 1 api_user_doc + at least 7 design docs
-        assert_greater(self.d.db.info()["doc_count"], 15)
 
         collection_tiid_objects = collection.CollectionTiid.query.all()
         assert_equals(len(collection_tiid_objects), 6)
@@ -397,13 +382,10 @@ class ViewsTester(unittest.TestCase):
             set(collection_data.keys()),
             {u'title',
              u'items',
-             u'_rev',
              u'created',
              u'last_modified',
              u'alias_tiids',
              u'_id',
-             u'key',
-             u'owner',
              u'type'}
         )
         assert_equals(len(collection_data["items"]), len(self.aliases))
@@ -425,31 +407,31 @@ class ViewsTester(unittest.TestCase):
         assert_equals(len(rows), 5) # header plus 3 items plus csvDictWriter adds an extra line
 
     def test_collection_update_puts_items_on_alias_queue(self):
-        # put some stuff in the collection:
-        # put some items in the db
-        for doc in mydao.db.update([
-                {"_id":"larry", "aliases":{}},
-                {"_id":"curly", "aliases":{}},
-                {"_id":"moe", "aliases":{}}
-        ]):
-            pass # no need to do anything, just put 'em in couch.
-
-        collection = {
-            "_id":"123",
-            "alias_tiids": {"doi:abc":"larry", "doi:def":"moe", "ghi":"curly"}
-            }
-        mydao.save(collection)
+        items = [
+            ["doi", "10.123"],
+            ["doi", "10.124"],
+            ["doi", "10.125"]
+        ]
         resp = self.client.post(
-            "/v1/collection/123" + "?key=validkey"
+            '/v1/collection' + "?key=validkey",
+            data=json.dumps({"aliases": items, "title":"mah collection"}),
+            content_type="application/json"
+        )
+        coll = json.loads(resp.data)["collection"]
+        print coll
+        cid = coll["_id"]
+
+        resp = self.client.post(
+            "/v1/collection/" + cid + "?key=validkey"
         )
         assert_equals(resp.data, "true")
 
-        larry = mydao.get("larry")
-        print larry
-
         # test it is on the redis queue
-        response = self.r.rpop("aliasqueue")
-        assert_equals(response, '["moe", {}, []]')
+        response_json = self.r.rpop("aliasqueue")
+        response = json.loads(response_json)
+        assert_equals(len(response), 3)
+        assert_equals(response[1], {"doi": ["10.123"]})
+        assert_equals(response[2], [])
         
 
     def test_delete_collection_item(self):
@@ -464,6 +446,10 @@ class ViewsTester(unittest.TestCase):
 
         # delete an item.
         tiid_to_delete = coll["alias_tiids"]["doi:10.123"]
+
+        collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
+        assert(tiid_to_delete in collection_object.tiids)
+
         r = self.client.delete(
             "/v1/collection/{id}/items?api_admin_key={key}".format(
                 id=coll["_id"], 
@@ -472,12 +458,10 @@ class ViewsTester(unittest.TestCase):
             content_type="application/json"
         )
 
-        changed_coll = self.d.get(coll["_id"])
-        assert_equals(set(changed_coll["alias_tiids"]),
-                      set(["doi:10.124", "doi:10.125"]))
+        collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
+        assert_equals(len(collection_object.tiids), 2)
 
-        #collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
-        #assert_equals(collection_object.tiids, "hi")
+        assert(tiid_to_delete not in collection_object.tiids)
 
 
     def test_add_collection_item(self):
@@ -501,18 +485,12 @@ class ViewsTester(unittest.TestCase):
             content_type="application/json"
         )
 
-        changed_coll = self.d.get(coll["_id"])
+        changed_coll = collection.Collection.query.filter_by(cid=coll["_id"]).first()
         print changed_coll
 
         # we added a new item
-        assert_equals(len(changed_coll["alias_tiids"]), 4)
+        assert_equals(len(changed_coll.tiids), 4)
 
-        # it's got a tiid
-        assert_equals(len(changed_coll["alias_tiids"]["doi:10.new"]), 24)
-
-        collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
-        print collection_object.tiids
-        assert_items_equal(collection_object.tiids, changed_coll["alias_tiids"].values())
 
 
 
@@ -549,8 +527,10 @@ class ViewsTester(unittest.TestCase):
         assert_equals(r.status_code, 403)
 
         # get the collection out the db and make sure nothing's changed
-        changed_coll = self.d.get(coll["_id"])
-        assert_equals(changed_coll["title"], "mah collection")
+        changed_coll = collection.Collection.query.filter_by(cid=coll["_id"]).first()
+
+        assert_equals(changed_coll.title, "mah collection")
+
 
     def test_tiid_get_tiids_for_multiple_known_aliases(self):
         # create two new items with the same plos alias

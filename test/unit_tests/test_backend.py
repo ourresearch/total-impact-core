@@ -1,10 +1,14 @@
 import json, os, Queue, datetime
 
-from totalimpact import dao, tiredis, backend, default_settings
+from totalimpact import tiredis, backend, default_settings
+from totalimpact import db, app
+from totalimpact import item as item_module
 from totalimpact.providers.provider import Provider, ProviderTimeout, ProviderFactory
 from nose.tools import raises, assert_equals, nottest
 from test.utils import slow
 from test import mocks
+
+from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
 
 
 class TestBackend():
@@ -14,10 +18,7 @@ class TestBackend():
         self.TEST_PROVIDER_CONFIG = [
             ("wikipedia", {})
         ]
-        # hacky way to delete the "ti" db, then make it fresh again for each test.
-        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
-        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
+        self.d = None
 
         # do the same thing for the redis db, set up the test redis database.  We're using DB Number 8
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
@@ -40,14 +41,20 @@ class TestBackend():
             "num_providers_still_updating":1,
             "aliases":{"pmid":["111"]},
             "biblio": {},
-            "metrics": {}
+            "metrics": {},
+            "last_modified": datetime.datetime(2013, 1, 1)
         }
         self.fake_aliases_dict = {"pmid":["222"]}
         self.tiid = "abcd"
 
+        self.db = setup_postgres_for_unittests(db, app)
+
+
     def teardown(self):
-        self.d.delete_db(os.environ["CLOUDANT_DB"])
         self.r.flushdb()
+
+        teardown_postgres_for_unittests(self.db)
+
 
 
 class TestProviderWorker(TestBackend):
@@ -125,7 +132,7 @@ class TestCouchWorker(TestBackend):
     def test_update_item_with_new_aliases(self):
         response = backend.CouchWorker.update_item_with_new_aliases(self.fake_aliases_dict, self.fake_item)
         expected = {'metrics': {}, 'num_providers_still_updating': 1, 'biblio': {}, '_id': '1', 'type': 'item', 
-            'aliases': {'pmid': ['222', '111']}}
+            'aliases': {'pmid': ['222', '111']}, 'last_modified': datetime.datetime(2013, 1, 1, 0, 0)}
         assert_equals(response, expected)
 
     def test_update_item_with_new_aliases_using_dup_alias(self):
@@ -176,7 +183,9 @@ class TestCouchWorker(TestBackend):
                 "dummy")
 
         # save basic item beforehand
-        self.d.save(self.fake_item)
+        item_obj = item_module.create_objects_from_item_doc(self.fake_item)
+        self.db.session.add(item_obj)
+        self.db.session.commit()
 
         # run
         couch_worker = backend.CouchWorker(test_couch_queue, self.r, self.d)
@@ -185,14 +194,14 @@ class TestCouchWorker(TestBackend):
         assert_equals(response, expected)
 
         # check couch_queue has value after
-        couch_response = self.d.get(self.fake_item["_id"])
-        print couch_response
+        response = item_module.get_item(self.fake_item["_id"])
+        print response
         expected = {'pmid': ['111'], 'doi': ['10.5061/dryad.3td2f']}
-        assert_equals(couch_response["aliases"], expected)
+        assert_equals(response["aliases"], expected)
 
         # check has updated last_modified time
-        now = datetime.datetime.now().isoformat()
-        assert_equals(couch_response["last_modified"][0:10], now[0:10])
+        now = datetime.datetime.utcnow().isoformat()
+        assert_equals(response["last_modified"][0:10], now[0:10])
 
     def test_run_metrics_in_queue(self):
         test_couch_queue = backend.PythonQueue("test_couch_queue")
@@ -208,21 +217,23 @@ class TestCouchWorker(TestBackend):
                 "dummy")
 
         # save basic item beforehand
-        self.d.save(self.fake_item)
+        item_obj = item_module.create_objects_from_item_doc(self.fake_item)
+        self.db.session.add(item_obj)
+        self.db.session.commit()
 
         # run
         couch_worker = backend.CouchWorker(test_couch_queue, self.r, self.d)    
         couch_worker.run()
             
         # check couch_queue has value after
-        couch_response = self.d.get(self.fake_item["_id"])
-        print couch_response
+        response = item_module.get_item(self.fake_item["_id"])
+        print response
         expected = 361
-        assert_equals(couch_response["metrics"]['dryad:package_views']['values']["raw"], expected)
+        assert_equals(response["metrics"]['dryad:package_views']['values']["raw"], expected)
 
         # check has updated last_modified time
-        now = datetime.datetime.now().isoformat()
-        assert_equals(couch_response["last_modified"][0:10], now[0:10])
+        now = datetime.datetime.utcnow().isoformat()
+        assert_equals(response["last_modified"][0:10], now[0:10])
 
 
 class TestBackendClass(TestBackend):

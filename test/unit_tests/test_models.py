@@ -2,7 +2,7 @@ from nose.tools import raises, assert_equals, nottest
 import os, unittest, hashlib, json, pprint, datetime
 from time import sleep
 from werkzeug.security import generate_password_hash
-from totalimpact import models, dao, tiredis
+from totalimpact import models, tiredis
 from totalimpact.providers import bibtex, github
 
 
@@ -66,54 +66,5 @@ class TestMemberItems():
         assert_equals(res["complete"], 4)
         assert_equals(res["memberitems"], self.memberitems_resp)
 
-class TestUserFactory():
-    def setUp(self):
-        # hacky way to delete the "ti" db, then make it fresh again for each test.
-        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
-        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
 
-        self.id = "ovid@rome.it"
-        self.key = "ahashgeneratedbytheclient"
-
-        self.user_doc = {
-            "_id": self.id,
-            "key": self.key,
-            "colls": {
-                "cid1": "self.KEY1",
-                "cid2": "self.KEY2"
-            }
-        }
-        self.d.save(self.user_doc)
-
-    def test_get(self):
-        user_dict = models.UserFactory.get(self.id, self.d, self.key)
-        print user_dict
-        assert_equals(user_dict, self.user_doc)
-
-    @raises(models.NotAuthenticatedError)
-    def test_get_when_pw_is_wrong(self):
-        user_dict = models.UserFactory.get(self.id, self.d, "wrong password")
-
-    @raises(KeyError)
-    def test_get_when_username_is_wrong(self):
-        user_dict = models.UserFactory.get("wrong email", self.d, self.key)
-
-    def test_create(self):
-        self.user_doc["_id"] = "new person"
-        doc = models.UserFactory.put(self.user_doc, self.key, self.d)
-        assert_equals("new person",doc["_id"] )
-        assert_equals(self.key, doc["key"] )
-
-    def test_update_user(self):
-
-        # modify the user, then put it again
-        self.user_doc["colls"]["cid3"] = "key3"
-        models.UserFactory.put(self.user_doc, self.key, self.d)
-
-        updated_user = models.UserFactory.get("ovid@rome.it", self.d, self.key)
-        assert_equals(
-            updated_user["colls"],
-            {"cid1": "self.KEY1", "cid2":"self.KEY2", "cid3":"key3"}
-        )
 

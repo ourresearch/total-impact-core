@@ -16,15 +16,9 @@ from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unitt
 class TestApiUser():
 
     def setUp(self):
+        self.d = None
+        
         self.db = setup_postgres_for_unittests(db, app)
-
-        from totalimpact import dao
-
-        # hacky way to delete the "ti" db, then make it fresh again for each test.
-        temp_dao = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        temp_dao.delete_db(os.getenv("CLOUDANT_DB"))
-        self.d = dao.Dao("http://localhost:5984", os.getenv("CLOUDANT_DB"))
-        self.d.update_design_doc()
 
         # setup a clean new redis test database.  We're putting unittest redis at DB Number 8.
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
