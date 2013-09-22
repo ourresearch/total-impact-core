@@ -24,7 +24,7 @@ class ProviderBatchData(db.Model):
     def __repr__(self):
         return '<ProviderBatchData {provider}, {min_event_date}, {len_aliases} aliases>'.format(
             provider=self.provider, 
-            min_event_date=self.min_event_date.isoformat()[0:10], 
+            min_event_date=self.min_event_date, 
             len_aliases=sum([len(self.aliases[namespace]) for namespace in self.aliases]))
 
 def create_objects_from_doc(doc):
