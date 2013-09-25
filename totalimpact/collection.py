@@ -425,8 +425,9 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     collection_doc = get_collection_doc_from_object(collection_obj)
     if not collection_doc:
         return (None, None)
-          
+
     collection_doc["items"] = []
+    tiids = collection_obj.tiids
 
     if tiids:
         logger.info(u"before query for tiids for {cid}".format(
