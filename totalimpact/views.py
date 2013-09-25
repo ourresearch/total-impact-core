@@ -348,13 +348,13 @@ returns a collection object and the items
 @app.route('/v1/collection/<cid>', methods=['GET'])
 @app.route('/v1/collection/<cid>.<format>', methods=['GET'])
 def collection_get(cid='', format="json", include_history=False):
-    coll = collection.get_collection_doc(cid)
-    if not coll:
-        abort_custom(404, "collection not found")
-
 
     # if not include items, then just return the collection straight from couch
     if (request.args.get("include_items") in ["0", "false", "False"]):
+        coll = collection.get_collection_doc(cid)
+        if not coll:
+            abort_custom(404, "collection not found")
+
         # except if format is csv.  can't do that.
         if format == "csv":
             abort_custom(405, "csv method not supported for include_items")
