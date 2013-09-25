@@ -399,16 +399,16 @@ def get_titles(cids, mydao=None):
 def get_collection_doc_from_object(collection_obj):
     collection_doc = {}
 
-    collection["_id"] = collection_obj.cid
-    collection["type"] = "collection"
-    collection["title"] = collection_obj.title
-    collection["created"] = collection_obj.created.isoformat()
-    collection["last_modified"] = collection_obj.last_modified.isoformat()
+    collection_doc["_id"] = collection_obj.cid
+    collection_doc["type"] = "collection"
+    collection_doc["title"] = collection_obj.title
+    collection_doc["created"] = collection_obj.created.isoformat()
+    collection_doc["last_modified"] = collection_obj.last_modified.isoformat()
     # don't include ip_address in info for client
-    collection["alias_tiids"] = {}
+    collection_doc["alias_tiids"] = {}
     tiids = collection_obj.tiids
     for tiid in tiids:
-        collection["alias_tiids"][tiid] = tiid  
+        collection_doc["alias_tiids"][tiid] = tiid  
 
     return(collection_doc)
 
@@ -422,11 +422,11 @@ def get_collection_doc(cid):
 
 def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
     collection_obj = Collection.query.get(cid)
-    collection = get_collection_doc_from_object(collection_obj)
-    if not collection:
+    collection_doc = get_collection_doc_from_object(collection_obj)
+    if not collection_doc:
         return (None, None)
           
-    collection["items"] = []
+    collection_doc["items"] = []
 
     if tiids:
         logger.info(u"before query for tiids for {cid}".format(
@@ -446,16 +446,16 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
                 item_for_client = None
                 raise
             if item_for_client:
-                collection["items"] += [item_for_client]
+                collection_doc["items"] += [item_for_client]
     
     something_currently_updating = False
-    for item in collection["items"]:
+    for item in collection_doc["items"]:
         item["currently_updating"] = item_module.is_currently_updating(item["_id"], myredis)
         something_currently_updating = something_currently_updating or item["currently_updating"]
 
-    logger.debug(u"Got items for collection %s" %cid)
+    logger.debug(u"Got items for collection_doc %s" %cid)
 
-    return (collection, something_currently_updating)
+    return (collection_doc, something_currently_updating)
 
 def clean_value_for_csv(value_to_store):
     try:
