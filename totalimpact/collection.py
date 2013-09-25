@@ -434,10 +434,14 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     collection["items"] = []
 
     if tiids:
+        logger.info(u"before query for tiids for {cid}".format(
+            cid=cid))
         item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
+        logger.info(u"after query for tiids for {cid}".format(
+            cid=cid))
         for item_obj in item_objects:
-            logger.info(u"got item {tiid} for {cid}".format(
-               tiid=item_obj.tiid, cid=cid))
+            #logger.info(u"got item {tiid} for {cid}".format(
+            #    tiid=item_obj.tiid, cid=cid))
             try:
                 item_doc = item_obj.as_old_doc()
                 item_for_client = item_module.build_item_for_client(item_doc, myrefsets, mydao, include_history)
@@ -455,7 +459,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
         something_currently_updating = something_currently_updating or item["currently_updating"]
 
     logger.debug(u"Got items for collection %s" %cid)
-    # print json.dumps(collection, sort_keys=True, indent=4)
+
     return (collection, something_currently_updating)
 
 def clean_value_for_csv(value_to_store):

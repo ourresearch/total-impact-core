@@ -219,7 +219,7 @@ class Alias(db.Model):
     def alias_tuple(self):
         return ((self.namespace, self.nid))
 
-    @alias_tuple.setter
+    @alias_tuple.setter`
     def alias_tuple(self, alias_tuple):
         try:
             (namespace, nid) = alias_tuple
@@ -329,8 +329,8 @@ class Item(db.Model):
         return new_item_object
 
     def as_old_doc(self):
-        logger.debug(u"in as_old_doc for {tiid}".format(
-            tiid=self.tiid))
+        # logger.debug(u"in as_old_doc for {tiid}".format(
+        #     tiid=self.tiid))
 
         item_doc = {}
         item_doc["_id"] = self.tiid
@@ -419,8 +419,8 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
     metrics = item.setdefault("metrics", {})
     for metric_name in metrics:
 
-        logger.debug(u"in build_item_for_client, working on {metric_name}".format(
-            metric_name=metric_name))
+        # logger.debug(u"in build_item_for_client, working on {metric_name}".format(
+        #     metric_name=metric_name))
 
         #delete the raw history from what we return to the client for now
         if not include_history:
