@@ -396,7 +396,7 @@ def get_titles(cids, mydao=None):
     return ret
 
 
-def get_collection_doc_from_object(coll_obj):
+def get_collection_doc_from_object(collection_obj):
     collection_doc = {}
 
     collection["_id"] = collection_obj.cid
