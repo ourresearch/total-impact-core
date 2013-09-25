@@ -219,7 +219,7 @@ class Alias(db.Model):
     def alias_tuple(self):
         return ((self.namespace, self.nid))
 
-    @alias_tuple.setter`
+    @alias_tuple.setter
     def alias_tuple(self, alias_tuple):
         try:
             (namespace, nid) = alias_tuple

@@ -396,30 +396,8 @@ def get_titles(cids, mydao=None):
     return ret
 
 
-def get_collection_doc(cid):
-    collection = {}
-
-    collection_obj = Collection.query.get(cid)
-    if not collection_obj:
-        return None
-
-    # don't include ip_address in info for client
-    for key in ["created", "last_modified", "title"]:
-        collection[key] = getattr(collection_obj, key)
-    collection["_id"] = collection_obj.cid
-    collection["type"] = "collection"
-    collection["alias_tiids"] = {}
-    for tiid in collection_obj.tiids:
-        collection["alias_tiids"][tiid] = tiid  
-    return(collection)
-
-
-def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
-    collection = get_collection_doc(cid)
-    if not collection:
-        return (None, None)
-
-    collection_obj = Collection.query.get(cid)
+def get_collection_doc_from_object(coll_obj):
+    collection_doc = {}
 
     collection["_id"] = collection_obj.cid
     collection["type"] = "collection"
@@ -430,7 +408,24 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     collection["alias_tiids"] = {}
     tiids = collection_obj.tiids
     for tiid in tiids:
-        collection["alias_tiids"][tiid] = tiid    
+        collection["alias_tiids"][tiid] = tiid  
+
+    return(collection_doc)
+
+def get_collection_doc(cid):
+    collection_obj = Collection.query.get(cid)
+    if not collection_obj:
+        return None
+    return get_collection_doc_from_object(collection_obj)
+
+
+
+def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
+    collection_obj = Collection.query.get(cid)
+    collection = get_collection_doc_from_object(collection_obj)
+    if not collection:
+        return (None, None)
+          
     collection["items"] = []
 
     if tiids:
