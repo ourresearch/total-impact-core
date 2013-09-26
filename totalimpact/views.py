@@ -28,7 +28,7 @@ logger.debug(u"Building reference sets")
 myrefsets = None
 myrefsets_histograms = None
 try:
-    #(myrefsets, myrefsets_histograms) = collection.build_all_reference_lookups(myredis, mydao)
+    (myrefsets, myrefsets_histograms) = collection.build_all_reference_lookups(myredis, mydao)
     logger.debug(u"Reference sets dict has %i keys" %len(myrefsets.keys()))
 except (couchdb.ResourceNotFound, LookupError, AttributeError), e:
     logger.error(u"Exception %s: Unable to load reference sets" % (e.__repr__()))
