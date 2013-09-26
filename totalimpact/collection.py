@@ -448,12 +448,16 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
         logger.info(u"after metric query for tiids for {cid}".format(
             cid=cid))
 
-        for metric_object in metric_objects:
-            matching_item = Item.query.get(metric_object.tiid)
-            db.session.expunge(matching_item)
-            matching_item.metrics += [metric_object]
+        items_by_tiid = {}
+        for item_obj in item_objects:
+            items_by_tiid[item_obj.tiid] = item_obj            
 
         db.session.expunge_all()
+
+        for metric_object in metric_objects:
+            matching_item = items_by_tiid[metric_object.tiid]
+            matching_item.metrics += [metric_object]
+
 
         logger.info(u"after query for tiids for {cid}".format(
             cid=cid))
