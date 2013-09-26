@@ -132,7 +132,7 @@ class TestCollection():
         print response
         assert_equals(response['plosalm:pmc_abstract'], [70, 37, 29, 0])
 
-    def test_get_collection_with_items_for_client(self):
+    def create_test_collection(self):
         test_collection = {"_id": "testcollectionid", 
                             "title": "mycollection", 
                             "type":"collection", 
@@ -144,19 +144,94 @@ class TestCollection():
         test_object = collection.create_objects_from_collection_doc(test_collection) 
         db.session.add(test_object) 
 
-        test_items = [
-            {"_id": "iaw9rzldigp4xc7p20bycnkg", "type":"item", "last_modified": "2012-08-23T14:40:16.888800", "biblio":{}, "aliases":{"pmid": ["16023720"]}},
-            {"_id": "itsq6fgx8ogi9ixysbipmtxx", "type":"item", "last_modified": "2012-08-23T14:40:16.888800", "biblio":{}, "aliases":{"pmid": ["16413797"]}}
+        biblio1 = {
+               "journal": "The Astrophysical Journal",
+               "authors": "Kwok, Purton, Fitzgerald",
+               "year": "1978",
+               "title": "On the origin of planetary nebulae"
+           }
+        biblio2 = {
+               "journal": "The Astrophysical Journal 2",
+               "authors": "Kwok, Purton, Fitzgerald",
+               "year": "1900",
+               "title": "On the origin of planetary nebulae The Sequel"
+           }
+        metrics1 = {
+           "mendeley:readers": {
+               "provenance_url": "http://www.mendeley.com/research/origin-planetary-nebulae/",
+               "values": {
+                   "raw_history": {
+                       "2013-06-22T20:41:03.178277": 4,
+                       "2013-01-15T22:21:55.253826": 3,
+                       "2013-07-24T17:59:26.817504": 4,
+                       "2013-07-24T18:04:41.035841": 9,
+                   },
+                   "raw": 9
+               }
+           },
+           "mendeley:discipline": {
+               "provenance_url": "http://www.mendeley.com/research/origin-planetary-nebulae/",
+               "values": {
+                   "raw_history": {
+                       "2013-06-22T23:03:15.852461": [
+                           {
+                               "name": "Astronomy / Astrophysics / Space Science",
+                               "value": 100,
+                               "id": 2
+                           }
+                       ]
+                    }
+                }
+            }
+        }
+        metrics2 = {
+           "topsy:tweets": {
+               "provenance_url": "http://topsydrilldown",
+               "values": {
+                   "raw_history": {
+                       "2013-11-22T20:41:03.178277": 22
+                   },
+                   "raw": 22
+                }
+            }
+        }
+
+        test_item_docs = [
+            {"_id": "iaw9rzldigp4xc7p20bycnkg", "type":"item", "created": "2012-08-23T14:40:16.888800", "last_modified": "2012-08-23T14:40:16.888800", "biblio":biblio1, "metrics":metrics1, "aliases":{"pmid": ["16023720"]}},
+            {"_id": "itsq6fgx8ogi9ixysbipmtxx", "type":"item", "created": "2012-08-23T14:40:16.888800", "last_modified": "2012-08-23T14:40:16.888800", "biblio":biblio2, "metrics":metrics2, "aliases":{"pmid": ["16413797"]}}
         ]
-        for item_doc in test_items:
+
+        for item_doc in test_item_docs:
             test_object = item_module.create_objects_from_item_doc(item_doc) 
             db.session.add(test_object) 
 
-        db.session.commit()      
+        db.session.commit() 
 
-        response = collection.get_collection_with_items_for_client("testcollectionid", None, self.r, self.d)
-        expected = "heather"
-        assert_equals(response[1], False)
+
+    def test_get_collection_with_items_for_client_no_history(self):
+        self.create_test_collection()
+
+        (returned_doc, still_updating) = collection.get_collection_with_items_for_client("testcollectionid", None, self.r, self.d)
+        assert_equals(still_updating, False)
+        print returned_doc
+        print json.dumps(returned_doc, sort_keys=True, indent=4)
+        expected =  {'created': '2012-08-23T14:40:16.888800', 'items': [{'created': '2012-08-23T14:40:16.888800', 'currently_updating': False, 'metrics': {u'mendeley:discipline': {'provenance_url': u'http://www.mendeley.com/research/origin-planetary-nebulae/', 'values': {'raw': [{u'name': u'Astronomy / Astrophysics / Space Science', u'value': 100, u'id': 2}]}, 'static_meta': {'provider_url': 'http://www.mendeley.com/', 'icon': 'http://www.mendeley.com/favicon.ico', 'display_name': 'discipline, top 3 percentages', 'description': 'Percent of readers by discipline, for top three disciplines (csv, api only)', 'provider': 'Mendeley'}}, u'mendeley:readers': {'provenance_url': u'http://www.mendeley.com/research/origin-planetary-nebulae/', 'values': {'raw': 9}, 'static_meta': {'provider_url': 'http://www.mendeley.com/', 'icon': 'http://www.mendeley.com/favicon.ico', 'display_name': 'readers', 'description': 'The number of readers who have added the article to their libraries', 'provider': 'Mendeley'}}}, 'last_modified': '2012-08-23T14:40:16.888800', 'biblio': {'genre': 'article'}, '_id': u'iaw9rzldigp4xc7p20bycnkg', 'type': 'item', 'aliases': {u'pmid': [u'16023720']}}, {'created': '2012-08-23T14:40:16.888800', 'currently_updating': False, 'metrics': {u'topsy:tweets': {'provenance_url': u'http://topsydrilldown', 'values': {'raw': 22}, 'static_meta': {'provider_url': 'http://www.topsy.com/', 'icon': 'http://twitter.com/phoenix/favicon.ico', 'display_name': 'tweets', 'description': 'Number of times the item has been tweeted', 'provider': 'Topsy'}}}, 'last_modified': '2012-08-23T14:40:16.888800', 'biblio': {'genre': 'article'}, '_id': u'itsq6fgx8ogi9ixysbipmtxx', 'type': 'item', 'aliases': {u'pmid': [u'16413797']}}], 'title': u'mycollection', 'alias_tiids': {u'iaw9rzldigp4xc7p20bycnkg': u'iaw9rzldigp4xc7p20bycnkg', u'itsq6fgx8ogi9ixysbipmtxx': u'itsq6fgx8ogi9ixysbipmtxx'}, 'last_modified': '2012-08-23T14:40:16.888800', '_id': u'testcollectionid', 'type': 'collection'}
+        #print json.dumps(expected, sort_keys=True, indent=4)
+
+        assert_equals(returned_doc, expected)
+
+
+    def test_get_collection_with_items_for_client_include_history(self):
+        self.create_test_collection()
+
+        (returned_doc, still_updating) = collection.get_collection_with_items_for_client("testcollectionid", None, self.r, self.d, include_history=True)
+        assert_equals(still_updating, False)
+        print returned_doc
+        print json.dumps(returned_doc, sort_keys=True, indent=4)
+        expected = {'created': '2012-08-23T14:40:16.888800', 'items': [{'created': '2012-08-23T14:40:16.888800', 'currently_updating': False, 'metrics': {u'mendeley:discipline': {'provenance_url': u'http://www.mendeley.com/research/origin-planetary-nebulae/', 'values': {'raw': [{u'name': u'Astronomy / Astrophysics / Space Science', u'value': 100, u'id': 2}], 'raw_history': {'2013-06-22T23:03:15.852461': [{u'name': u'Astronomy / Astrophysics / Space Science', u'value': 100, u'id': 2}]}}, 'static_meta': {'provider_url': 'http://www.mendeley.com/', 'icon': 'http://www.mendeley.com/favicon.ico', 'display_name': 'discipline, top 3 percentages', 'description': 'Percent of readers by discipline, for top three disciplines (csv, api only)', 'provider': 'Mendeley'}}, u'mendeley:readers': {'provenance_url': u'http://www.mendeley.com/research/origin-planetary-nebulae/', 'values': {'raw': 9, 'raw_history': {'2013-06-22T20:41:03.178277': 4, '2013-07-24T17:59:26.817504': 4, '2013-01-15T22:21:55.253826': 3, '2013-07-24T18:04:41.035841': 9}}, 'static_meta': {'provider_url': 'http://www.mendeley.com/', 'icon': 'http://www.mendeley.com/favicon.ico', 'display_name': 'readers', 'description': 'The number of readers who have added the article to their libraries', 'provider': 'Mendeley'}}}, 'last_modified': '2012-08-23T14:40:16.888800', 'biblio': {'genre': 'article'}, '_id': u'iaw9rzldigp4xc7p20bycnkg', 'type': 'item', 'aliases': {u'pmid': [u'16023720']}}, {'created': '2012-08-23T14:40:16.888800', 'currently_updating': False, 'metrics': {u'topsy:tweets': {'provenance_url': u'http://topsydrilldown', 'values': {'raw': 22, 'raw_history': {'2013-11-22T20:41:03.178277': 22}}, 'static_meta': {'provider_url': 'http://www.topsy.com/', 'icon': 'http://twitter.com/phoenix/favicon.ico', 'display_name': 'tweets', 'description': 'Number of times the item has been tweeted', 'provider': 'Topsy'}}}, 'last_modified': '2012-08-23T14:40:16.888800', 'biblio': {'genre': 'article'}, '_id': u'itsq6fgx8ogi9ixysbipmtxx', 'type': 'item', 'aliases': {u'pmid': [u'16413797']}}], 'title': u'mycollection', 'alias_tiids': {u'iaw9rzldigp4xc7p20bycnkg': u'iaw9rzldigp4xc7p20bycnkg', u'itsq6fgx8ogi9ixysbipmtxx': u'itsq6fgx8ogi9ixysbipmtxx'}, 'last_modified': '2012-08-23T14:40:16.888800', '_id': u'testcollectionid', 'type': 'collection'}
+        #print json.dumps(expected, sort_keys=True, indent=4)
+
+        assert_equals(returned_doc, expected)
 
 
     def test_make_csv_rows(self):
