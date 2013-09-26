@@ -197,11 +197,10 @@ class CouchWorker(Worker):
         if alias_dict == item_doc["aliases"]:
             item_doc = None
         else:
-            merged_aliases = item_module.merge_alias_dicts(alias_dict, item_doc["aliases"])
-            item_doc["aliases"] = merged_aliases
-
             item_obj = item_module.add_aliases_to_item_object(alias_dict, item_doc)
 
+            merged_aliases = item_module.merge_alias_dicts(alias_dict, item_doc["aliases"])
+            item_doc["aliases"] = merged_aliases
         return(item_doc)
 
     @classmethod
