@@ -259,8 +259,8 @@ class Item(db.Model):
         backref=db.backref("item", lazy="subquery"))
     biblios = db.relationship('Biblio', lazy='subquery', cascade="all, delete-orphan",
         backref=db.backref("item", lazy="subquery"))
-    metrics = db.relationship('Metric', lazy='subquery', cascade="all, delete-orphan",
-        backref=db.backref("item", lazy="subquery"))
+    metrics = db.relationship('Metric', lazy='noload', cascade="all, delete-orphan",
+        backref=db.backref("item", lazy="noload"))
 
 
     def __init__(self, **kwargs):

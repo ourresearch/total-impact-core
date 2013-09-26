@@ -433,6 +433,28 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
         logger.info(u"before query for tiids for {cid}".format(
             cid=cid))
         item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
+
+        logger.info(u"after item query for tiids for {cid}".format(
+            cid=cid))
+        tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])
+        metric_objects = item_module.Metric.query.from_statement("""
+            with max_collect as ( select tiid, provider, metric_name, max(collected_date) as collected_date
+                    from metric
+                    where tiid in (""" + tiid_string + """)
+                    group by tiid, provider, metric_name)
+                    select max_collect.*, m.raw_value, m.drilldown_url
+                      from metric m
+                      natural join max_collect""").all()
+        logger.info(u"after metric query for tiids for {cid}".format(
+            cid=cid))
+
+        for metric_object in metric_objects:
+            matching_item = Item.query.get(metric_object.tiid)
+            db.session.expunge(matching_item)
+            matching_item.metrics += [metric_object]
+
+        db.session.expunge_all()
+
         logger.info(u"after query for tiids for {cid}".format(
             cid=cid))
         for item_obj in item_objects:

@@ -348,6 +348,7 @@ returns a collection object and the items
 @app.route('/v1/collection/<cid>', methods=['GET'])
 @app.route('/v1/collection/<cid>.<format>', methods=['GET'])
 def collection_get(cid='', format="json", include_history=False):
+    logger.info(u"in collection_get".format(cid=cid))
 
     # if not include items, then just return the collection straight from couch
     if (request.args.get("include_items") in ["0", "false", "False"]):
@@ -363,14 +364,8 @@ def collection_get(cid='', format="json", include_history=False):
             resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
                                  response_code)
     else:
-        # try:
         include_history = (request.args.get("include_history", 0) in ["1", "true", "True"])
         (coll_with_items, something_currently_updating) = collection.get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history)
-        # except (LookupError, AttributeError):  
-        #     logger.error(u"couldn't get tiids for GET collection '{cid}'".format(cid=cid))
-        #     abort_custom(404, "couldn't find items for collection")
-
-        logger.info(u"in collection_get".format(cid=cid))
 
         # return success if all reporting is complete for all items    
         if something_currently_updating:
