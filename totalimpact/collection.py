@@ -73,7 +73,26 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
     return collection_obj
 
 
-def remove_items_from_collection_object(cid, tiids_to_remove):
+
+def add_items_to_collection(cid, aliases, myredis, mydao):
+    logger.debug(u"in add_items_to_collection for {cid}".format(
+        cid=cid))        
+
+    aliases_tiids_map = item_module.get_tiids_from_aliases(aliases)
+    aliases_tiids_map = item_module.create_missing_tiids_from_aliases(aliases_tiids_map, myredis)
+
+    aliases = aliases_tiids_map.keys()
+    tiids = aliases_tiids_map.values()
+
+    collection_obj = add_items_to_collection_object(cid, tiids, aliases)
+
+    logger.debug(u"just finished add_items_to_collection for {cid}".format(
+        cid=cid))        
+
+    return collection_obj
+
+
+def remove_items_from_collection(cid, tiids_to_delete, myredis, mydao=None):
     logger.debug(u"in remove_items_from_collection_object for {cid}".format(
         cid=cid))        
 
@@ -84,7 +103,7 @@ def remove_items_from_collection_object(cid, tiids_to_remove):
     db.session.merge(collection_obj)
 
     for coll_tiid in collection_obj.tiid_links:
-        if coll_tiid.tiid in tiids_to_remove:
+        if coll_tiid.tiid in tiids_to_delete:
             collection_obj.tiid_links.remove(coll_tiid)
 
     try:
@@ -93,60 +112,7 @@ def remove_items_from_collection_object(cid, tiids_to_remove):
         db.session.rollback()
         logger.warning(u"Fails Integrity check in remove_items_from_collection_object for {cid}, rolling back.  Message: {message}".format(
             cid=cid, 
-            message=e.message))        
-    return collection_obj
-
-
-def add_items_to_collection(cid, aliases, myredis, mydao):
-    logger.debug(u"in add_items_to_collection for {cid}".format(
-        cid=cid))        
-
-    (tiids, new_items) = item_module.create_or_update_items_from_aliases(
-        aliases, myredis, mydao)
-
-    collection_obj = Collection.query.get(cid)
-    # coll_doc = collection_obj.as_old_doc()
-    # alias_strings = get_alias_strings(aliases)
-    # # pretty sure this is putting the wrong tiids with the aliases...
-    # new_alias_tiids = dict(zip(alias_strings, tiids))
-    # coll_doc["alias_tiids"].update(new_alias_tiids)
-    # coll_doc["last_modified"] = datetime.datetime.utcnow().isoformat()
-    # mydao.db.save(coll_doc)
-    # #print json.dumps(collection, sort_keys=True, indent=4)
-
-    collection_obj = add_items_to_collection_object(cid, tiids, aliases)
-    # if not collection_obj:
-    #     # not migrated yet
-    #     logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
-    #             cid=cid))        
-    #     collection_obj = create_objects_from_collection_doc(coll_doc)
-
-    logger.debug(u"just finished add_items_to_collection for {cid}".format(
-        cid=cid))        
-
-    return collection_obj
-
-
-def remove_items_from_collection(cid, tiids_to_delete, myredis, mydao):
-    logger.debug(u"in delete_items_from_collection for {cid}".format(
-        cid=cid))        
-
-    collection_obj = Collection.query.get(cid)
-    # coll_doc = collection_obj.as_old_doc()
-    # new_alias_tiids = {}
-    # for alias, tiid in coll_doc["alias_tiids"].iteritems():
-    #     if tiid not in tiids_to_delete:
-    #         new_alias_tiids[alias] = tiid
-    # coll_doc["alias_tiids"] = new_alias_tiids
-    # coll_doc["last_modified"] = datetime.datetime.utcnow().isoformat()
-    # mydao.db.save(coll_doc)
-
-    collection_obj = remove_items_from_collection_object(cid, tiids_to_delete)
-    # if not collection_obj:
-    #     # not migrated yet
-    #     logger.info(u"couldn't find collection object {cid} (not migrated yet?) so creating now from doc".format(
-    #             cid=cid))
-    #     collection_obj = create_objects_from_collection_doc(coll_doc)    
+            message=e.message))
 
     return collection_obj
 
@@ -155,7 +121,12 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
     logger.debug(u"in create_new_collection for {cid}".format(
         cid=cid))        
 
-    (tiids, new_items) = item_module.create_or_update_items_from_aliases(aliases, myredis, mydao)
+    aliases_tiids_map = item_module.get_tiids_from_aliases(aliases)
+    aliases_tiids_map = item_module.create_missing_tiids_from_aliases(aliases_tiids_map, myredis)
+
+    aliases = aliases_tiids_map.keys()
+    tiids = aliases_tiids_map.values()
+    print aliases
 
     coll_doc, key = make(cid)
     if refset_metadata:
@@ -201,7 +172,7 @@ def create_objects_from_collection_doc(coll_doc):
         cid=new_coll_object.cid, 
         new_tiid_objects=new_coll_object.tiids))        
 
-    alias_strings = tiids = coll_doc["alias_tiids"].keys()
+    alias_strings = coll_doc["alias_tiids"].keys()
     alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]
     for alias_tuple in alias_tuples:
         try:
