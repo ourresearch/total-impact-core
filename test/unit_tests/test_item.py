@@ -1,4 +1,4 @@
-from nose.tools import raises, assert_equals, assert_true, nottest
+from nose.tools import raises, assert_equals, assert_true, assert_greater, nottest
 import os, unittest, hashlib, json, pprint, datetime
 from time import sleep
 from werkzeug.security import generate_password_hash
@@ -27,7 +27,7 @@ class TestItem():
             "pages": "268 to 270"
         }
 
-        ALIAS_DATA = {
+        self.ALIAS_DATA = {
             "title":["Why Most Published Research Findings Are False"],
             "url":["http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124"],
             "doi": ["10.1371/journal.pmed.0020124"],
@@ -78,7 +78,7 @@ class TestItem():
             "_id": "test",
             "created": '2012-08-23T14:40:16.399932',
             "last_modified": '2012-08-23T14:40:16.399932',
-            "aliases": ALIAS_DATA,
+            "aliases": self.ALIAS_DATA,
             "metrics": {
                 "wikipedia:mentions": METRICS_DATA,
                 "topsy:tweets": METRICS_DATA2
@@ -112,6 +112,11 @@ class TestItem():
     def tearDown(self):
         teardown_postgres_for_unittests(self.db)
 
+
+    def save_test_item(self):
+        self.TEST_OBJECT = item_module.create_objects_from_item_doc(self.ITEM_DATA)        
+        self.db.session.add(self.TEST_OBJECT)
+        self.db.session.commit()
 
 
     def test_init_item_and_add_aliases(self):
@@ -170,14 +175,14 @@ class TestItem():
         self.db.session.commit()
 
         # now poof there is biblio
-        found_item = Item.query.filter_by(tiid=tiid).first()
+        found_item = Item.from_tiid(tiid)
         expected = [u'10', u'Pitman', u"An extension of de Finetti's theorem", u'Advances in Applied Probability', [u"Pitman, J"], u'1978', u'p78', u'pitnoid', u'268 to 270']
         assert_equals([bib.biblio_value for bib in found_item.biblios], expected)
         
         assert_equals(Biblio.as_dict_by_tiid(tiid), self.BIBLIO_DATA)
 
 
-    def test_get_tiid_by_biblio(self):
+    def create_min_biblio_view(self):
         result = self.db.session.execute("""create view min_biblio as (
                     select 
                         a.tiid, 
@@ -195,6 +200,10 @@ class TestItem():
                     and c.biblio_name = 'journal'
                     )""")
         self.db.session.commit()
+
+
+    def test_get_tiid_by_biblio(self):
+        self.create_min_biblio_view()
 
         new_item = Item()
         self.db.session.add(new_item)
@@ -230,7 +239,7 @@ class TestItem():
         self.db.session.commit()
 
         # now poof there is metrics
-        found_item = Item.query.filter_by(tiid=tiid).first()
+        found_item = Item.from_tiid(tiid)
         expected = "hi"
         assert_equals(len(found_item.metrics), 3)
         assert_equals(found_item.metrics[0].tiid, tiid)
@@ -295,7 +304,7 @@ class TestItem():
         self.db.session.commit()
 
         # now poof there is metrics
-        found_item = Item.query.filter_by(tiid=tiid).first()
+        found_item = Item.from_tiid(tiid)
         expected = "hi"
         assert_equals(len(found_item.metrics), 5)
         assert_equals(found_item.metrics[4].tiid, tiid)
@@ -441,21 +450,14 @@ class TestItem():
         )
 
 
-    def add_metrics_data(self):
+    def test_add_metrics_data(self):
         item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
         metrics_method_response = (2, 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/')
         response = item_module.add_metrics_data("mendeley:readers", metrics_method_response, item)
-        print response
-
-        expected = {'metrics': {'mendeley:groups': {'provenance_url': 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/', 
-                                                    "values": {'raw': 2, 'raw_history': {'2012-08-23T21:41:05.526046': 2}}}}, 
-            'last_modified': '2012-08-23T14:40:16.399932', 
-            'created': '2012-08-23T14:40:16.399932', 
-            'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}, 
-            '_id': '4mlln04q1rxy6l9oeb3t7ftv', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 
-            'biblio': {'authors': u'Norton, McBain, \xd6ng\xfcr, Chen', 'journal': 'Brain and Cognition', 'year': 2011, 'title': 'Perceptual training strongly improves visual motion perception in schizophrenia'}, 
-            'type': 'item'}
-        assert_equals(response, expected)
+        print json.dumps(response, sort_keys=True, indent=4)
+        assert_equals(response["metrics"]["mendeley:readers"]["values"]["raw"], 2)
+        assert_equals(response["metrics"]["mendeley:readers"]["values"]["raw_history"].values(), [2])
+        assert_equals(response["metrics"]["mendeley:readers"]["provenance_url"], 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/')
 
     def test_is_currently_updating_unknown(self):
         response = item_module.is_currently_updating("tiidnotinredis", self.r)
@@ -472,9 +474,7 @@ class TestItem():
         assert_equals(response, False)
 
     def test_clean_for_export_no_key(self):
-        self.TEST_OBJECT = item_module.create_objects_from_item_doc(self.ITEM_DATA)        
-        self.db.session.add(self.TEST_OBJECT)
-        self.db.session.commit()
+        self.save_test_item()
 
         item = item_module.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
@@ -485,9 +485,7 @@ class TestItem():
         assert_equals(response["metrics"].keys(), expected)
 
     def test_clean_for_export_given_correct_secret_key(self):
-        self.TEST_OBJECT = item_module.create_objects_from_item_doc(self.ITEM_DATA)        
-        self.db.session.add(self.TEST_OBJECT)
-        self.db.session.commit()
+        self.save_test_item()
 
         item = item_module.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
@@ -498,9 +496,7 @@ class TestItem():
         assert_equals(sorted(response["metrics"].keys()), sorted(expected))
 
     def test_clean_for_export_given_wrong_secret_key(self):
-        self.TEST_OBJECT = item_module.create_objects_from_item_doc(self.ITEM_DATA)        
-        self.db.session.add(self.TEST_OBJECT)
-        self.db.session.commit()
+        self.save_test_item()
 
         item = item_module.get_item("test", self.myrefsets, self.d)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
@@ -510,5 +506,39 @@ class TestItem():
         expected = ['topsy:tweets', 'wikipedia:mentions']
         assert_equals(response["metrics"].keys(), expected)
 
+    def test_get_tiids_from_aliases(self):
+        self.create_min_biblio_view()
+
+        self.save_test_item()
+
+        aliases = [ ("doi", "10.1371/journal.pmed.0020124"), 
+                    ("doi", "not_a_doi_in_our_db"), 
+                    ("url", self.ALIAS_DATA["url"][0]),
+                    ("biblio", json.dumps(self.ALIAS_DATA["biblio"][0]))
+                    ]
+        response = item_module.get_tiids_from_aliases(aliases)
+        print response
+        expected = {('doi', 'not_a_doi_in_our_db'): None, ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124'): u'test', ('doi', '10.1371/journal.pmed.0020124'): u'test', ('biblio', '{"volume": "10", "authors": "Pitman", "title": "An extension of de Finetti\'s theorem", "journal": "Advances in Applied Probability", "author": ["Pitman, J"], "year": "1978", "id": "p78", "collection": "pitnoid", "pages": "268 to 270"}'): u'test'}
+        assert_equals(response, expected)
+
+    def test_create_missing_tiids_from_aliases(self):
+        self.create_min_biblio_view()
+
+        aliases_tiids_map = {('url', 'http://starbucks.com'): None, ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124'): u'test'}
+
+        response = item_module.create_missing_tiids_from_aliases(aliases_tiids_map, self.r)
+        print response
+        assert_greater(len(aliases_tiids_map[('url', 'http://starbucks.com')]), 10)
+
+    def test_get_items_from_tiids(self):
+        aliases_tiids_map = {('url', 'http://starbucks.com'): None, ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124'): u'test'}
+        aliases_tiids_map = item_module.create_missing_tiids_from_aliases(aliases_tiids_map, self.r)
+        tiids = aliases_tiids_map.values()
+        response = item_module.get_items_from_tiids(tiids)
+        print response
+        expected = "hi"
+        assert_greater(len(aliases_tiids_map[('url', 'http://starbucks.com')]), 10)
+
+       
 
 
