@@ -27,6 +27,11 @@ logger = logging.getLogger('ti.item')
 # print out extra debugging
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
+
+all_static_meta = ProviderFactory.get_all_static_meta()
+
+
+
 class NotAuthenticatedError(Exception):
     pass
 
@@ -382,9 +387,6 @@ def largest_value_that_is_less_than_or_equal_to(target, collection):
         response = min([(int(i), i) for i in collection])[1]
     return response
 
-all_static_meta = ProviderFactory.get_all_static_meta()
-
-
 
 def clean_id(nid):
     try:
@@ -487,14 +489,6 @@ def add_metric_to_item_object(full_metric_name, metrics_method_response, item_do
     logger.debug(u"in add_metrics_to_item_object for {tiid}".format(
         tiid=tiid))
 
-    # item_obj = Item.from_tiid(tiid)
-
-    # if not item_obj:
-    #     item_obj = create_objects_from_item_doc(item_doc)
-
-    # item_obj.last_modified = datetime.datetime.utcnow()
-    # db.session.merge(item_obj)
-
     (metric_value, provenance_url) = metrics_method_response
     (provider, metric_name) = full_metric_name.split(":")
 
@@ -508,8 +502,6 @@ def add_metric_to_item_object(full_metric_name, metrics_method_response, item_do
     }    
     metric_object = Metric(**new_style_metric_dict)
     db.session.add(metric_object)
-
-    # metric_object.item = item_obj
 
     try:
         db.session.commit()
@@ -620,6 +612,9 @@ def clean_for_export(item, supplied_key=None, secret_key=None):
 
 
 def decide_genre(alias_dict):
+    logger.debug(u"in decide_genre with {alias_dict}".format(
+        alias_dict=alias_dict))        
+
     genre = "unknown"
     host = "unknown"
 
@@ -841,7 +836,6 @@ def create_missing_tiids_from_aliases(aliases_tiid_mapping, myredis):
     for alias in aliases_tiid_mapping:
         tiid = aliases_tiid_mapping[alias]
         if not tiid:
-            print "here's the alias", alias
             (ns, nid) = alias
             item_doc = make()
             if ns=="biblio":
@@ -892,6 +886,8 @@ def get_tiid_by_biblio(biblio_dict):
         db.session.commit()
         tiid = biblio.tiid
     except AttributeError:
+        logger.error(u"AttributeError in  get_tiid_by_biblio with {biblio_dict}".format(
+            biblio_dict=biblio_dict))
         tiid = None
 
     return tiid
