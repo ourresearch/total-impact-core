@@ -1,6 +1,7 @@
 from totalimpact import default_settings
 import os, logging, sys
 import analytics
+import sqlalchemy.exc
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_debugtoolbar import DebugToolbarExtension
@@ -40,4 +41,10 @@ analytics.identify("CORE", {
 				       'internal': True,
 				       'name': 'IMPACTSTORY CORE'})
 
-from totalimpact import views
+try:
+	from totalimpact import views
+except sqlalchemy.exc.ProgrammingError:
+	logger.info("SQLAlchemy database tables not found, so creating them")
+	db.session.rollback()
+	db.create_all()
+	from totalimpact import views
