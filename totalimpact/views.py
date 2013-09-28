@@ -455,8 +455,7 @@ def add_items_to_collection(cid=""):
         collection_object = collection.add_items_to_collection(
             cid=cid, 
             aliases=request.json["aliases"], 
-            myredis=myredis, 
-            mydao=mydao)
+            myredis=myredis)
     except (AttributeError, TypeError) as e:
         # we got missing or improperly formated data.
         logger.error(u"PUT /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(

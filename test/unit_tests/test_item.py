@@ -101,10 +101,6 @@ class TestItem():
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
 
-
-        db.session.execute("""drop view if exists min_biblio""")
-        db.session.commit()        
-
         self.db = setup_postgres_for_unittests(db, app)
         
 
@@ -182,28 +178,7 @@ class TestItem():
         assert_equals(Biblio.as_dict_by_tiid(tiid), self.BIBLIO_DATA)
 
 
-    def create_min_biblio_view(self):
-        result = self.db.session.execute("""create view min_biblio as (
-                    select 
-                        a.tiid, 
-                        a.provider, 
-                        a.biblio_value as title, 
-                        b.biblio_value as authors, 
-                        c.biblio_value as journal, 
-                        a.collected_date
-                    from biblio a
-                    join biblio b using (tiid, provider)
-                    join biblio c using (tiid, provider)
-                    where 
-                    a.biblio_name = 'title'
-                    and b.biblio_name = 'authors'
-                    and c.biblio_name = 'journal'
-                    )""")
-        self.db.session.commit()
-
-
     def test_get_tiid_by_biblio(self):
-        self.create_min_biblio_view()
 
         new_item = Item()
         self.db.session.add(new_item)
@@ -507,7 +482,6 @@ class TestItem():
         assert_equals(response["metrics"].keys(), expected)
 
     def test_get_tiids_from_aliases(self):
-        self.create_min_biblio_view()
 
         self.save_test_item()
 
@@ -522,7 +496,6 @@ class TestItem():
         assert_equals(response, expected)
 
     def test_create_missing_tiids_from_aliases(self):
-        self.create_min_biblio_view()
 
         aliases_tiids_map = {('url', 'http://starbucks.com'): None, ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124'): u'test'}
 
