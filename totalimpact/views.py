@@ -473,11 +473,11 @@ def add_items_to_collection(cid=""):
 
 
 
-""" Updates all the items in a given collection.
+""" Refreshes all the items in a given collection.
 """
 @app.route("/v1/collection/<cid>", methods=["POST"])
 # not officially supported in api
-def collection_update(cid=""):
+def collection_metrics_refresh(cid=""):
 
     # first, get the tiids in this collection:
     try:
@@ -489,7 +489,8 @@ def collection_update(cid=""):
         ))
         abort_custom(500, "Error doing collection_update")
 
-    item_module.start_item_update(tiids, myredis, mydao)
+    for tiid in tiids:
+        item_module.start_item_update(tiid, None, myredis)
 
     resp = make_response("true", 200)
     return resp
