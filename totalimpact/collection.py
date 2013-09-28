@@ -74,12 +74,15 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
 
 
 
-def add_items_to_collection(cid, aliases, myredis, mydao):
+def add_items_to_collection(cid, aliases, myredis, mydao=None):
     logger.debug(u"in add_items_to_collection for {cid}".format(
         cid=cid))        
 
     aliases_tiids_map = item_module.get_tiids_from_aliases(aliases)
     aliases_tiids_map = item_module.create_missing_tiids_from_aliases(aliases_tiids_map, myredis)
+
+    logger.debug(u"in add_items_to_collection with {aliases_tiids_map}".format(
+        aliases_tiids_map=aliases_tiids_map)) 
 
     aliases = aliases_tiids_map.keys()
     tiids = aliases_tiids_map.values()

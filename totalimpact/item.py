@@ -411,8 +411,8 @@ def get_item(tiid, myrefsets=None, mydao=None, include_history=False):
 
 
 def build_item_for_client(item, myrefsets, mydao, include_history=False):
-    logger.debug(u"in build_item_for_client {tiid}".format(
-        tiid=item["_id"]))
+    # logger.debug(u"in build_item_for_client {tiid}".format(
+    #     tiid=item["_id"]))
 
     try:
         (genre, host) = decide_genre(item['aliases'])
@@ -815,13 +815,14 @@ def create_item(namespace, nid, myredis, mydao):
 
 def get_tiids_from_aliases(aliases):
     clean_aliases = [canonical_alias_tuple((ns, nid)) for (ns, nid) in aliases]
-    aliases_tiid_mapping = dict((alias, None) for alias in clean_aliases)
+    aliases_tiid_mapping = {}
 
     for alias in clean_aliases:
+        alias_key = alias
         tiid = None
         (ns, nid) = alias
         if (ns=="biblio"):
-            nid = json.loads(nid)
+            alias_key = (ns, json.dumps(nid))
             tiid = get_tiid_by_biblio(nid)        
         else:
             alias_obj = Alias.query.filter_by(namespace=ns, nid=nid).first()
@@ -832,8 +833,7 @@ def get_tiids_from_aliases(aliases):
                     tiid=tiid))
             except AttributeError:
                 pass
-        if tiid:
-            aliases_tiid_mapping[alias] = tiid
+        aliases_tiid_mapping[alias_key] = tiid
     return aliases_tiid_mapping
 
 
@@ -841,9 +841,13 @@ def create_missing_tiids_from_aliases(aliases_tiid_mapping, myredis):
     for alias in aliases_tiid_mapping:
         tiid = aliases_tiid_mapping[alias]
         if not tiid:
+            print "here's the alias", alias
             (ns, nid) = alias
             item_doc = make()
-            item_doc["aliases"][ns] = [nid]
+            if ns=="biblio":
+                item_doc["aliases"][ns] = [json.loads(nid)]
+            else:
+                item_doc["aliases"][ns] = [nid]
             tiid = item_doc["_id"]
 
             logger.debug(u"in create_missing_tiids_from_aliases for {tiid}, now to postgres".format(
