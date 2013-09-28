@@ -231,10 +231,6 @@ class TestCouchWorker(TestBackend):
         expected = 361
         assert_equals(response["metrics"]['dryad:package_views']['values']["raw"], expected)
 
-        # check has updated last_modified time
-        now = datetime.datetime.utcnow().isoformat()
-        assert_equals(response["last_modified"][0:10], now[0:10])
-
 
 class TestBackendClass(TestBackend):
 
