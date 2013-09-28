@@ -329,8 +329,8 @@ class Backend(Worker):
     def run(self):
         alias_message = self.alias_queue.pop()
         if alias_message:
-            #logger.info(u"/biblio_print, alias_message said {alias_message}".format(
-            #    alias_message=alias_message))            
+            logger.info(u"/biblio_print, alias_message said {alias_message}".format(
+               alias_message=alias_message))            
             (tiid, alias_dict, aliases_providers_run) = alias_message
 
             relevant_provider_names = self.sniffer(alias_dict, aliases_providers_run)

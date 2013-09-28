@@ -919,6 +919,8 @@ def get_tiid_by_alias(ns, nid, mydao=None):
     return tiid
 
 def start_item_update(tiid, aliases_dict, myredis):
+    logger.debug(u"In start_item_update with {tiid}, {aliases_dict}".format(
+        tiid=tiid, aliases_dict=aliases_dict))
     myredis.set_num_providers_left(tiid,
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS))
     myredis.add_to_alias_queue(tiid, aliases_dict)
