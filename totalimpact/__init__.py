@@ -48,3 +48,6 @@ except sqlalchemy.exc.ProgrammingError:
 	db.session.rollback()
 	db.create_all()
 	from totalimpact import views
+
+from totalimpact import extra_schema 
+

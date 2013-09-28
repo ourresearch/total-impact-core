@@ -48,6 +48,8 @@ def drop_everything(db, app):
         tbs.append(t)
         all_fks.extend(fks)
 
+    conn.execute("""drop view if exists min_biblio""")
+
     for fkc in all_fks:
         conn.execute(DropConstraint(fkc))
 
@@ -63,6 +65,10 @@ def setup_postgres_for_unittests(db, app):
 
     drop_everything(db, app)
     db.create_all()
+
+    from totalimpact import extra_schema 
+    extra_schema.create_view_min_biblio()
+
     return db
 
 
