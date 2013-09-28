@@ -235,6 +235,26 @@ class TestCollection():
         assert_equals(returned_doc, expected)
 
 
+    def test_add_items_to_collection(self):
+        self.create_test_collection()
+        cid = "testcollectionid"
+
+        assert_equals(len(collection.Collection.query.get(cid).tiids), 2)
+        collection_object = collection.add_items_to_collection(
+            cid=cid, 
+            aliases=[("doi", "10.1371/journal.pone.0004803")], 
+            myredis=self.r)
+        assert_equals(len(collection_object.tiids), 3)
+        assert_equals(len(collection.Collection.query.get(cid).tiids), 3)
+
+        collection_object = collection.add_items_to_collection(
+            cid=cid, 
+            aliases=[("biblio", {u'title': u'Scientometrics 2.0: New metrics of scholarly impact on the social Web', u'first_author': u'Priem', u'journal': u'First Monday', u'authors': u'Priem, Hemminger', u'number': u'7', u'volume': u'15', u'first_page': u'', u'year': u'2010'})],
+            myredis=self.r)
+        assert_equals(len(collection_object.tiids), 4)
+        assert_equals(len(collection.Collection.query.get(cid).tiids), 4)
+
+
     def test_make_csv_rows(self):
         csv = collection.make_csv_rows(API_ITEMS_JSON)
         expected = (OrderedDict([('tiid', u'f2dc3f36b1da11e19199c8bcc8937e3f'), ('title', 'Design Principles for Riboswitch Function'), ('doi', '10.1371/journal.pcbi.1000363'), (u'dryad:most_downloaded_file', ''), (u'dryad:package_views', ''), (u'dryad:total_downloads', ''), (u'mendeley:groups', 4), (u'mendeley:readers', 57), (u'plosalm:crossref', 16), (u'plosalm:html_views', 3361), (u'plosalm:pdf_views', 1112), (u'plosalm:pmc_abstract', 37), (u'plosalm:pmc_figure', 54), (u'plosalm:pmc_full-text', 434), (u'plosalm:pmc_pdf', 285), (u'plosalm:pmc_supp-data', 41), (u'plosalm:pmc_unique-ip', 495), (u'plosalm:pubmed_central', 9), (u'plosalm:scopus', 19), (u'wikipedia:mentions', '')]), [OrderedDict([('tiid', u'f2b45fcab1da11e19199c8bcc8937e3f'), ('title', 'Tumor-Immune Interaction, Surgical Treatment, and Cancer Recurrence in a Mathematical Model of Melanoma'), ('doi', '10.1371/journal.pcbi.1000362'), (u'dryad:most_downloaded_file', ''), (u'dryad:package_views', ''), (u'dryad:total_downloads', ''), (u'mendeley:groups', 1), (u'mendeley:readers', 13), (u'plosalm:crossref', 7), (u'plosalm:html_views', 2075), (u'plosalm:pdf_views', 484), (u'plosalm:pmc_abstract', 29), (u'plosalm:pmc_figure', 13), (u'plosalm:pmc_full-text', 232), (u'plosalm:pmc_pdf', 113), (u'plosalm:pmc_supp-data', 0), (u'plosalm:pmc_unique-ip', 251), (u'plosalm:pubmed_central', 2), (u'plosalm:scopus', 11), (u'wikipedia:mentions', '')]), OrderedDict([('tiid', u'c1eba010b1da11e19199c8bcc8937e3f'), ('title', 'Data from: Comparison of quantitative and molecular genetic variation of native vs. invasive populations of purple loosestrife (Lythrum salicaria L., Lythraceae)'), ('doi', '10.5061/dryad.1295'), (u'dryad:most_downloaded_file', 70), (u'dryad:package_views', 537), (u'dryad:total_downloads', 114), (u'mendeley:groups', ''), (u'mendeley:readers', ''), (u'plosalm:crossref', ''), (u'plosalm:html_views', ''), (u'plosalm:pdf_views', ''), (u'plosalm:pmc_abstract', ''), (u'plosalm:pmc_figure', ''), (u'plosalm:pmc_full-text', ''), (u'plosalm:pmc_pdf', ''), (u'plosalm:pmc_supp-data', ''), (u'plosalm:pmc_unique-ip', ''), (u'plosalm:pubmed_central', ''), (u'plosalm:scopus', ''), (u'wikipedia:mentions', '')]), OrderedDict([('tiid', u'c202754cb1da11e19199c8bcc8937e3f'), ('title', 'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article'), ('doi', '10.1371/journal.pcbi.1000361'), (u'dryad:most_downloaded_file', ''), (u'dryad:package_views', ''), (u'dryad:total_downloads', ''), (u'mendeley:groups', 4), (u'mendeley:readers', 52), (u'plosalm:crossref', 13), (u'plosalm:html_views', 11521), (u'plosalm:pdf_views', 1097), (u'plosalm:pmc_abstract', 70), (u'plosalm:pmc_figure', 39), (u'plosalm:pmc_full-text', 624), (u'plosalm:pmc_pdf', 149), (u'plosalm:pmc_supp-data', 6), (u'plosalm:pmc_unique-ip', 580), (u'plosalm:pubmed_central', 12), (u'plosalm:scopus', 19), (u'wikipedia:mentions', 1)]), OrderedDict([('tiid', u'f2dc3f36b1da11e19199c8bcc8937e3f'), ('title', 'Design Principles for Riboswitch Function'), ('doi', '10.1371/journal.pcbi.1000363'), (u'dryad:most_downloaded_file', ''), (u'dryad:package_views', ''), (u'dryad:total_downloads', ''), (u'mendeley:groups', 4), (u'mendeley:readers', 57), (u'plosalm:crossref', 16), (u'plosalm:html_views', 3361), (u'plosalm:pdf_views', 1112), (u'plosalm:pmc_abstract', 37), (u'plosalm:pmc_figure', 54), (u'plosalm:pmc_full-text', 434), (u'plosalm:pmc_pdf', 285), (u'plosalm:pmc_supp-data', 41), (u'plosalm:pmc_unique-ip', 495), (u'plosalm:pubmed_central', 9), (u'plosalm:scopus', 19), (u'wikipedia:mentions', '')])])
