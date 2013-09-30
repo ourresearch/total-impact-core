@@ -20,8 +20,8 @@ class RedisQueue(object):
 
     def push(self, message):
         message_json = json.dumps(message)
-        #logger.info(u"{:20}: /biblio_print >>>PUSHING to redis {message_json}".format(
-        #    self.name, message_json=message_json))        
+        logger.info(u"{:20}: /biblio_print >>>PUSHING to redis {message_json}".format(
+            self.name, message_json=message_json))        
         self.myredis.lpush(self.queue_name, message_json)
 
     def pop(self):
@@ -32,7 +32,7 @@ class RedisQueue(object):
             queue, message_json = received
             try:
                 logger.debug(u"{:20}: Popped from redis: starts {message_json}".format(
-                    self.name, message_json=message_json[0:30]))        
+                    self.name, message_json=message_json[0:50]))        
                 message = json.loads(message_json) 
             except (TypeError, KeyError):
                 logger.info(u"{:20}: error processing redis message {message_json}".format(
@@ -101,6 +101,11 @@ class ProviderWorker(Worker):
             selected_couch_queue.push(couch_message)
 
     def add_to_alias_and_couch_queues(self, tiid, alias_dict, method_name, aliases_providers_run):
+        logger.info(u"Adding to alias queue {alias_dict} {method_name} from {tiid} for {provider_name}".format(
+            alais_dict=alias_dict, 
+            method_name=method_name, 
+            tiid=tiid, 
+            provider_name=self.provider_name))     
         self.add_to_couch_queue_if_nonzero(tiid, alias_dict, method_name)
         alias_message = [tiid, alias_dict, aliases_providers_run]
         self.alias_queue.push(alias_message)
