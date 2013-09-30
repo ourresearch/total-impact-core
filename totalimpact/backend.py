@@ -243,6 +243,7 @@ class CouchWorker(Worker):
                 logger.info(u"{:20}: blank doc, nothing to save".format(
                     self.name))
             else:
+                # don't need it with metrics for this purpose
                 item_obj = item_module.Item.query.get(tiid)
                 item = item_obj.as_old_doc()
 

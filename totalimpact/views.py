@@ -489,7 +489,10 @@ def collection_metrics_refresh(cid=""):
         abort_custom(500, "Error doing collection_update")
 
     for tiid in tiids:
-        item_module.start_item_update(tiid, None, myredis)
+        # don't need metrics for this
+        item_obj = item_module.Item.from_tiid(tiid)
+        item = item_obj.as_old_doc()        
+        item_module.start_item_update(tiid, item["aliases"], myredis)
 
     resp = make_response("true", 200)
     return resp
