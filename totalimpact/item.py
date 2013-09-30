@@ -612,8 +612,8 @@ def clean_for_export(item, supplied_key=None, secret_key=None):
 
 
 def decide_genre(alias_dict):
-    logger.debug(u"in decide_genre with {alias_dict}".format(
-        alias_dict=alias_dict))        
+    # logger.debug(u"in decide_genre with {alias_dict}".format(
+    #     alias_dict=alias_dict))        
 
     genre = "unknown"
     host = "unknown"
