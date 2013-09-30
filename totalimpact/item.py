@@ -864,6 +864,38 @@ def create_missing_tiids_from_aliases(aliases_tiid_mapping, myredis):
     return aliases_tiid_mapping
 
 
+def create_tiids_from_aliases(aliases, myredis):
+    tiid_alias_mapping = {}
+    clean_aliases = [canonical_alias_tuple((ns, nid)) for (ns, nid) in aliases]    
+    for alias in clean_aliases:
+        (ns, nid) = alias
+        item_doc = make()
+        if ns=="biblio":
+            item_doc["aliases"][ns] = [nid]
+        else:
+            item_doc["aliases"][ns] = [nid]
+        tiid = item_doc["_id"]
+
+        logger.debug(u"in create_missing_tiids_from_aliases for {tiid}, now to postgres".format(
+            tiid=tiid))   
+        item_obj = create_objects_from_item_doc(item_doc)
+        db.session.merge(item_obj)
+
+        tiid_alias_mapping[tiid] = alias
+
+        start_item_update(tiid, item_doc["aliases"], myredis)
+
+    try:
+        db.session.commit()
+    except (IntegrityError, FlushError) as e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in create_missing_tiids_from_aliases for {tiid}, rolling back.  Message: {message}".format(
+            tiid=tiid, 
+            message=e.message)) 
+
+    return tiid_alias_mapping
+
+
 def get_items_from_tiids(tiids):
     items = []
     for tiid in tiids:

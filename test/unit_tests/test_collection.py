@@ -239,6 +239,7 @@ class TestCollection():
         self.create_test_collection()
         cid = "testcollectionid"
 
+        # try a doi
         assert_equals(len(collection.Collection.query.get(cid).tiids), 2)
         collection_object = collection.add_items_to_collection(
             cid=cid, 
@@ -247,12 +248,35 @@ class TestCollection():
         assert_equals(len(collection_object.tiids), 3)
         assert_equals(len(collection.Collection.query.get(cid).tiids), 3)
 
+        test_biblio = {
+                "authors": "Milojevi\u0107, Hemminger, Priem, Chen, Leydesdorff, Weingart",
+                "first_author": "Milojevi\u0107",
+                "first_page": "1",
+                "genre": "unknown",
+                "journal": "Proceedings of the American Society for Information Science and Technology",
+                "number": "1",
+                "title": "Information visualization state of the art and future directions",
+                "volume": "49",
+                "year": "2012"
+            }
+
+        # try a biblio
         collection_object = collection.add_items_to_collection(
             cid=cid, 
-            aliases=[("biblio", {u'title': u'Scientometrics 2.0: New metrics of scholarly impact on the social Web', u'first_author': u'Priem', u'journal': u'First Monday', u'authors': u'Priem, Hemminger', u'number': u'7', u'volume': u'15', u'first_page': u'', u'year': u'2010'})],
+            aliases=[("biblio", test_biblio)],
             myredis=self.r)
         assert_equals(len(collection_object.tiids), 4)
         assert_equals(len(collection.Collection.query.get(cid).tiids), 4)
+
+        # try the biblio again... now it adds a new one
+        collection_object = collection.add_items_to_collection(
+            cid=cid, 
+            aliases=[("biblio", test_biblio)],
+            myredis=self.r)
+
+        assert_equals(len(collection_object.tiids), 5)
+        assert_equals(len(collection.Collection.query.get(cid).tiids), 5)
+
 
 
     def test_make_csv_rows(self):

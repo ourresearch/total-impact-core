@@ -78,14 +78,13 @@ def add_items_to_collection(cid, aliases, myredis, mydao=None):
     logger.debug(u"in add_items_to_collection for {cid}".format(
         cid=cid))        
 
-    aliases_tiids_map = item_module.get_tiids_from_aliases(aliases)
-    aliases_tiids_map = item_module.create_missing_tiids_from_aliases(aliases_tiids_map, myredis)
+    tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, myredis)
 
-    logger.debug(u"in add_items_to_collection with {aliases_tiids_map}".format(
-        aliases_tiids_map=aliases_tiids_map)) 
+    logger.debug(u"in add_items_to_collection with {tiids_aliases_map}".format(
+        tiids_aliases_map=tiids_aliases_map)) 
 
-    aliases = aliases_tiids_map.keys()
-    tiids = aliases_tiids_map.values()
+    tiids = tiids_aliases_map.keys()
+    aliases = tiids_aliases_map.values()
 
     collection_obj = add_items_to_collection_object(cid, tiids, aliases)
 
@@ -124,12 +123,13 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
     logger.debug(u"in create_new_collection for {cid}".format(
         cid=cid))        
 
-    aliases_tiids_map = item_module.get_tiids_from_aliases(aliases)
-    aliases_tiids_map = item_module.create_missing_tiids_from_aliases(aliases_tiids_map, myredis)
+    tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, myredis)
 
-    aliases = aliases_tiids_map.keys()
-    tiids = aliases_tiids_map.values()
-    print aliases
+    logger.debug(u"in add_items_to_collection with {tiids_aliases_map}".format(
+        tiids_aliases_map=tiids_aliases_map)) 
+
+    tiids = tiids_aliases_map.keys()
+    aliases = tiids_aliases_map.values()
 
     coll_doc, key = make(cid)
     if refset_metadata:
@@ -138,8 +138,6 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
     coll_doc["title"] = title
     alias_strings = get_alias_strings(aliases)
     coll_doc["alias_tiids"] = dict(zip(alias_strings, tiids))
-
-    # mydao.save(coll_doc)
 
     logger.debug(u"in create_new_collection for {cid}, finished with couch now to postgres".format(
         cid=cid))        

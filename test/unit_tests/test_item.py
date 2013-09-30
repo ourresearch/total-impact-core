@@ -503,6 +503,16 @@ class TestItem():
         print response
         assert_greater(len(aliases_tiids_map[('url', 'http://starbucks.com')]), 10)
 
+
+    def test_create_tiids_from_aliases(self):
+
+        aliases = [('url', 'http://starbucks.com'), ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124')]
+
+        response = item_module.create_tiids_from_aliases(aliases, self.r)
+        print response
+        assert_greater(len(response.keys()))
+
+
     def test_get_items_from_tiids(self):
         aliases_tiids_map = {('url', 'http://starbucks.com'): None, ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124'): u'test'}
         aliases_tiids_map = item_module.create_missing_tiids_from_aliases(aliases_tiids_map, self.r)
