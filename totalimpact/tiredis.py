@@ -16,8 +16,8 @@ def decr_num_providers_left(self, item_id, provider_name):
 
 def add_to_alias_queue(self, tiid, aliases_dict, aliases_already_run=[]):
     queue_string = json.dumps([tiid, aliases_dict, aliases_already_run])
-    logger.debug(u"Adding to alias_queue: {tiid}".format(
-        tiid=tiid))
+    logger.debug(u"Adding to alias_queue: {tiid} {aliases_dict} {aliases_already_run}".format(
+        tiid=tiid, aliases_dict=aliases_dict, aliases_already_run=aliases_already_run))
     self.lpush("aliasqueue", queue_string)
 
 def set_value(self, key, value, time_to_expire):

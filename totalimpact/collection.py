@@ -402,12 +402,8 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     tiids = collection_obj.tiids
 
     if tiids:
-        logger.info(u"before query for tiids for {cid}".format(
-            cid=cid))
         item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
 
-        logger.info(u"after item query for tiids for {cid}".format(
-            cid=cid))
         tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])
         metric_objects = item_module.Metric.query.from_statement("""
             with max_collect as ( select tiid, provider, metric_name, max(collected_date) as collected_date
@@ -417,8 +413,6 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
                     select max_collect.*, m.raw_value, m.drilldown_url
                       from metric m
                       natural join max_collect""").all()
-        logger.info(u"after metric query for tiids for {cid}".format(
-            cid=cid))
 
         items_by_tiid = {}
         for item_obj in item_objects:
@@ -430,9 +424,6 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
             matching_item = items_by_tiid[metric_object.tiid]
             matching_item.metrics += [metric_object]
 
-
-        logger.info(u"after query for tiids for {cid}".format(
-            cid=cid))
         for item_obj in item_objects:
             #logger.info(u"got item {tiid} for {cid}".format(
             #    tiid=item_obj.tiid, cid=cid))
