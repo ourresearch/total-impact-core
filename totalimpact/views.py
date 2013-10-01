@@ -206,6 +206,7 @@ def item_namespace_post(namespace, nid):
     return resp
 
 
+@app.route('/v1/item/<tiid>', methods=['GET'])
 def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=None):
     try:
         item = item_module.get_item(tiid, myrefsets, mydao, include_history)
@@ -317,6 +318,36 @@ def provider_memberitems_get(provider_name, query):
     return resp
 
 
+@app.route("/v1/provider/<provider_name>/importer/<query>", methods=['GET'])
+def provider_importer_get(provider_name, query):
+    """
+    Gets aliases associated with a query from a given provider.
+    """
+    query = unicode_helpers.remove_nonprinting_characters(query)
+    provider = ProviderFactory.get_provider(provider_name)
+
+    try:
+        aliases = provider.member_items(query)
+
+    except ProviderItemNotFoundError:
+        abort_custom(404, "item not found")
+
+    except (ProviderTimeout, ProviderServerError):
+        abort_custom(503, "crossref lookup error, might be transient")
+
+    except ProviderError:
+        abort(500, "internal error from provider")
+
+
+    tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, myredis)
+    logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
+        tiids_aliases_map=tiids_aliases_map)) 
+
+    resp = make_response(
+        json.dumps({"products": tiids_aliases_map}, sort_keys=True, indent=4),
+        200
+    )
+    return resp
 
 
 def abort_if_fails_collection_edit_auth(request):
