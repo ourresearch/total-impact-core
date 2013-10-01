@@ -318,33 +318,33 @@ def provider_memberitems_get(provider_name, query):
     return resp
 
 
-@app.route("/v1/provider/<provider_name>/importer/<query>", methods=['GET'])
-def provider_importer_get(provider_name, query):
+@app.route("/v1/importer/<provider_name>", methods=['POST'])
+def importer_post(provider_name):
     """
     Gets aliases associated with a query from a given provider.
     """
-    query = unicode_helpers.remove_nonprinting_characters(query)
+    input_string = request.json["input"]
+
+    input_string = unicode_helpers.remove_nonprinting_characters(input_string)
     provider = ProviderFactory.get_provider(provider_name)
 
     try:
-        aliases = provider.member_items(query)
-
+        aliases = provider.member_items(input_string)
     except ProviderItemNotFoundError:
         abort_custom(404, "item not found")
-
     except (ProviderTimeout, ProviderServerError):
-        abort_custom(503, "crossref lookup error, might be transient")
-
+        abort_custom(503, "timeout error, might be transient")
     except ProviderError:
         abort(500, "internal error from provider")
-
 
     tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, myredis)
     logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
         tiids_aliases_map=tiids_aliases_map)) 
 
+    tiids_response_list = [{"tiid": tiid} for tiid in tiids_aliases_map.keys()]
+
     resp = make_response(
-        json.dumps({"products": tiids_aliases_map}, sort_keys=True, indent=4),
+        json.dumps(tiids_response_list, sort_keys=True, indent=4),
         200
     )
     return resp
