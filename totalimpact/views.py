@@ -326,6 +326,12 @@ def importer_post(provider_name):
     input_string = request.json["input"]
 
     input_string = unicode_helpers.remove_nonprinting_characters(input_string)
+    if provider_name == "pmids":
+        provider_name = "pubmed"
+    elif provider_name == "dois":
+        provider_name = "crossref"
+    elif provider_name == "urls":
+        provider_name = "webpage"
     provider = ProviderFactory.get_provider(provider_name)
 
     try:

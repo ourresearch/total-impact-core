@@ -25,6 +25,7 @@ class TestPubmed(ProviderTestCase):
     testitem_aliases = ("pmid", TEST_PMID)
     testitem_biblio = ("pmid", TEST_PMID)
     testitem_metrics = ("pmid", TEST_PMID)
+    testitem_members = "123\n456\n789"
 
     def setUp(self):
         ProviderTestCase.setUp(self)
@@ -67,6 +68,22 @@ class TestPubmed(ProviderTestCase):
         ret = self.provider._extract_biblio(f.read())
         expected = {'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00', 'journal': u'PLoS medicine', 'year': "2005", 'title': u'Why most published research findings are false.'}
         assert_equals(ret, expected)
+
+    def test_member_items(self):
+        ret = self.provider.member_items("123\n456\n678")
+        expected = [('pmid', '123'), ('pmid', '456'), ('pmid', '678')]
+        assert_equals(ret, expected)        
+
+    def test_provider_member_items_400(self):
+        pass
+    def test_provider_member_items_500(self):
+        pass
+    def test_provider_member_items_empty(self):
+        pass
+    def test_provider_member_items_nonsense_txt(self):
+        pass
+    def test_provider_member_items_nonsense_xml(self):
+        pass
 
     @http
     def test_biblio(self):
