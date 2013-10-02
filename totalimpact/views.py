@@ -534,24 +534,34 @@ def delete_collection(cid=None):
     abort_custom(501, "Deleting collections is not currently supported.")
 
 
-# creates a collection with aliases
+# creates a collection from aliases or tiids
 @app.route('/v1/collection', methods=['POST'])
 def collection_create():
     """
     POST /collection
     creates new collection
     """
+
     response_code = None
     try:
         cid = request.args.get("collection_id", None)
-        (coll_doc, collection_object) = collection.create_new_collection(
-            cid=cid, 
-            title=request.json.get("title", "my collection"), 
-            aliases=request.json["aliases"], 
-            ip_address=request.remote_addr, 
-            refset_metadata=request.json.get("refset_metadata", None), 
-            myredis=myredis, 
-            mydao=mydao)
+        if "tiids" in request.json:
+            (coll_doc, collection_object) = collection.create_new_collection_from_tiids(
+                cid=cid, 
+                title=request.json.get("title", "my collection"), 
+                aliases=request.json["tiids"], 
+                ip_address=request.remote_addr, 
+                refset_metadata=request.json.get("refset_metadata", None))
+        else:
+            # to be depricated
+            (coll_doc, collection_object) = collection.create_new_collection(
+                cid=cid, 
+                title=request.json.get("title", "my collection"), 
+                aliases=request.json["aliases"], 
+                ip_address=request.remote_addr, 
+                refset_metadata=request.json.get("refset_metadata", None), 
+                myredis=myredis, 
+                mydao=mydao)
     except (AttributeError, TypeError):
         # we got missing or improperly formated data.
         logger.error(u"we got missing or improperly formated data: '{cid}' with {json}.".format(
@@ -563,6 +573,9 @@ def collection_create():
     resp = make_response(json.dumps({"collection":coll_doc},
             sort_keys=True, indent=4), response_code)
     return resp
+
+
+
 
 
 # for internal use only

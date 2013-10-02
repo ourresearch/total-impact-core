@@ -119,6 +119,29 @@ def remove_items_from_collection(cid, tiids_to_delete, myredis, mydao=None):
     return collection_obj
 
 
+def create_new_collection_from_tiids(cid, title, tiids, ip_address, refset_metadata):
+    logger.debug(u"in create_new_collection_from_tiids for {cid}".format(
+        cid=cid))        
+
+    coll_doc, key = make(cid)
+    if refset_metadata:
+        coll_doc["refset_metadata"] = refset_metadata
+    coll_doc["ip_address"] = ip_address
+    coll_doc["title"] = title
+    coll_doc["alias_tiids"] = dict(zip(tiids, tiids))
+
+    collection_obj = create_objects_from_collection_doc(coll_doc)
+
+    logger.info(u"saved new collection '{id}' with {num_items} items.".format(
+            id=coll_doc["_id"],
+            num_items=len(coll_doc["alias_tiids"])))
+
+    logger.debug(json.dumps(coll_doc, sort_keys=True, indent=4))
+
+    return (coll_doc, collection_obj)
+
+
+
 def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myredis, mydao):
     logger.debug(u"in create_new_collection for {cid}".format(
         cid=cid))        
@@ -138,9 +161,6 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
     coll_doc["title"] = title
     alias_strings = get_alias_strings(aliases)
     coll_doc["alias_tiids"] = dict(zip(alias_strings, tiids))
-
-    logger.debug(u"in create_new_collection for {cid}, finished with couch now to postgres".format(
-        cid=cid))        
 
     collection_obj = create_objects_from_collection_doc(coll_doc)
 

@@ -102,6 +102,25 @@ class TestCollection():
         assert_equals(found_collection_object.tiids, collection_object.tiids)
 
 
+    def test_create_new_collection_from_tiids(self):
+        tiids = ['234', '345']
+        (coll_doc, collection_object) = collection.create_new_collection_from_tiids(
+            cid=None,
+            title="mah collection",
+            tiids=tiids,
+            ip_address=None,
+            refset_metadata=None)
+
+        assert_equals(coll_doc["title"], "mah collection")
+        assert_equals(coll_doc["alias_tiids"].keys(), tiids)
+
+        assert_equals(collection_object.title, "mah collection")
+        assert_equals(collection_object.added_items, [])
+        assert_equals(collection_object.tiids, tiids)
+        found_collection_object = collection.Collection.query.filter_by(cid=collection_object.cid).first()
+        assert_equals(found_collection_object.tiids, collection_object.tiids)
+
+
     def test_make_creates_identifier(self):
         coll = collection.Collection()
         assert_equals(len(coll.cid), 6)
