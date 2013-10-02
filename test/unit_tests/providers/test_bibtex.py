@@ -2,6 +2,7 @@ from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderServerError
 
+
 import os, json
 from nose.tools import assert_equals, raises, nottest
 
@@ -71,15 +72,6 @@ class TestBibtex(ProviderTestCase):
 
     def setUp(self):
         ProviderTestCase.setUp(self)
-
-    def test_extract_members_success(self):
-        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
-        parsed = self.provider.parse(file_contents)
-
-        members = self.provider.member_items(json.dumps(parsed))
-        print members
-        expected = [('biblio', {u'title': u'Scientometrics 2.0: New metrics of scholarly impact on the social Web', u'first_author': u'Priem', u'journal': u'First Monday', u'number': u'7', u'volume': u'15', u'first_page': u'', u'authors': u'Priem, Hemminger', u'year': u'2010'})]
-        assert_equals(members[0], expected[0])
         
     def test_parse_none(self):
         file_contents = ""
@@ -126,5 +118,10 @@ class TestBibtex(ProviderTestCase):
         response = self.provider.parse(file_contents)
         #print 1/0
 
+    def test_member_items(self):
+        file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_CONTENTS
+        response = self.provider.member_items(file_contents)
 
+        expected = [('biblio', {'title': u'Scientometrics 2.0: New metrics of scholarly impact on the social Web', 'first_author': u'Priem', 'journal': u'First Monday', 'year': '2010', 'number': '7', 'volume': '15', 'first_page': '', 'authors': u'Priem, Hemminger'}), ('biblio', {'title': u'Data for free: Using LMS activity logs to measure community in online courses', 'first_author': u'Black', 'journal': u'The Internet and Higher Education', 'year': '2008', 'number': '2', 'volume': '11', 'first_page': '65', 'authors': u'Black, Dawson, Priem'}), ('biblio', {'title': u'How and why scholars cite on Twitter', 'first_author': u'Priem', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': '2010', 'number': '1', 'volume': '47', 'first_page': '1', 'authors': u'Priem, Costello'}), ('biblio', {'title': u'Archiving scholars\u2019 tweets', 'first_author': u'COSTELLO', 'journal': '', 'year': '', 'number': '', 'volume': '', 'first_page': '', 'authors': u'COSTELLO, PRIEM'}), ('biblio', {'title': u'Altmetrics in the wild: An exploratory study of impact metrics based on social media', 'first_author': u'Priem', 'journal': '', 'year': '', 'number': '', 'volume': '', 'first_page': '', 'authors': u'Priem, Piwowar, Hemminger'}), ('biblio', {'title': u'Frontiers: Decoupling the scholarly journal', 'first_author': u'Priem', 'journal': u'Frontiers in Computational Neuroscience', 'year': '', 'number': '', 'volume': '', 'first_page': '', 'authors': u'Priem, Hemminger'}), ('biblio', {'title': u'FAIL BETTER: TOWARD A TAXONOMY OF E-LEARNING ERROR', 'first_author': u'PRIEM', 'journal': '', 'year': '', 'number': '', 'volume': '', 'first_page': '', 'authors': u'PRIEM'}), ('biblio', {'title': u'Shaking it up: embracing new methods for publishing, finding, discussing, and measuring our research output', 'first_author': u'Garnett', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': '2011', 'number': '1', 'volume': '48', 'first_page': '1', 'authors': u'Garnett, Holmberg, Pikas, Piwowar, Priem, Weber'}), ('biblio', {'title': u'Shaken and stirred: ASIST 2011 attendee reactions to Shaking it up: embracing new methods for publishing, finding, discussing, and measuring our research output', 'first_author': u'Garnett', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': '2011', 'number': '1', 'volume': '48', 'first_page': '1', 'authors': u'Garnett, Piwowar, Holmberg, Priem, Pikas, Weber'}), ('biblio', {'title': u'Altmetrics: a manifesto', 'first_author': u'Priem', 'journal': '', 'year': '2010', 'number': '', 'volume': '', 'first_page': '', 'authors': u'Priem, Taraborelli, Groth, Neylon'}), ('biblio', {'title': u'Altmetrics in the wild: Using social media to explore scholarly impact', 'first_author': u'Priem', 'journal': u'arXiv preprint arXiv:1203.4745', 'year': '2012', 'number': '', 'volume': '', 'first_page': '', 'authors': u'Priem, Piwowar, Hemminger'}), ('biblio', {'title': u'Uncovering impacts: a case study in using altmetrics tools', 'first_author': u'Priem', 'journal': u'Workshop on the Semantic Publishing (SePublica 2012) 9 th Extended Semantic Web Conference Hersonissos, Crete, Greece, May 28, 2012', 'year': '2012', 'number': '', 'volume': '', 'first_page': '40', 'authors': u'Priem, Parra, Piwowar, Groth, Waagmeester'}), ('biblio', {'title': u"Beyond citations: Scholars' visibility on the social Web", 'first_author': u'Bar-Ilan', 'journal': u'arXiv preprint arXiv:1205.5611', 'year': '2012', 'number': '', 'volume': '', 'first_page': '', 'authors': u'Bar-Ilan, Haustein, Peters, Priem, Shema, Terliesner'}), ('biblio', {'title': u'The Altmetrics Collection', 'first_author': u'Priem', 'journal': u'PloS one', 'year': '2012', 'number': '11', 'volume': '7', 'first_page': 'e48753', 'authors': u'Priem, Groth, Taraborelli'}), ('biblio', {'title': u'Information visualization state of the art and future directions', 'first_author': u'Milojevi\u0107', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': '2012', 'number': '1', 'volume': '49', 'first_page': '1', 'authors': u'Milojevi\u0107, Hemminger, Priem, Chen, Leydesdorff, Weingart'})]
+        assert_equals(response, expected)
 

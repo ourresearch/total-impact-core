@@ -182,6 +182,44 @@ class ViewsTester(unittest.TestCase):
         resp = self.client.get("/v1/provider?key=invalidkey")
         assert_equals(resp.status_code, 403)
 
+    def test_importer_post(self):        
+        response = self.client.post(
+            '/v1/importer/github' + "?key=validkey",
+            data=json.dumps({"input": "jasonpriem"}),
+            content_type="application/json"
+        )
+        print response
+        print response.data
+        assert_equals(response.status_code, 200)
+        assert_equals(response.mimetype, "application/json")
+        assert_equals(json.loads(response.data)[0].keys(), ["tiid"])
+
+    def test_importer_post_bibtex(self): 
+        bibtex_snippet = """@article{rogers2008affirming,
+              title={Affirming Complexity:" White Teeth" and Cosmopolitanism},
+              author={Rogers, K.},
+              journal={Interdisciplinary Literary Studies},
+              year={2008}
+            }"""       
+        response = self.client.post(
+            '/v1/importer/bibtex' + "?key=validkey",
+            data=json.dumps({"input": bibtex_snippet}),
+            content_type="application/json"
+        )
+        print response
+        print response.data
+        assert_equals(response.status_code, 200)
+        assert_equals(response.mimetype, "application/json")
+        assert_equals(len(json.loads(response.data)), 1)
+        assert_equals(json.loads(response.data)[0].keys(), ["tiid"])    
+
+        tiid = json.loads(response.data)[0].values()[0]
+        item = item_module.Item.from_tiid(tiid)
+        for biblio in item.biblios:
+            if biblio.biblio_name == "authors":
+                assert_equals(biblio.biblio_value, "Rogers")
+
+
     def test_memberitems_get(self):        
         response = self.client.get('/v1/provider/dryad/memberitems/Otto%2C%20Sarah%20P.?method=sync&key=validkey')
         print response
