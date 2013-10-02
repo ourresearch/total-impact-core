@@ -549,7 +549,7 @@ def collection_create():
             (coll_doc, collection_object) = collection.create_new_collection_from_tiids(
                 cid=cid, 
                 title=request.json.get("title", "my collection"), 
-                aliases=request.json["tiids"], 
+                tiids=request.json["tiids"], 
                 ip_address=request.remote_addr, 
                 refset_metadata=request.json.get("refset_metadata", None))
         else:
