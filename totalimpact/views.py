@@ -541,15 +541,14 @@ def collection_create():
     POST /collection
     creates new collection
     """
-
     response_code = None
     try:
-        cid = request.args.get("collection_id", None)
+        cid = request.args.get("collection_id", collection._make_id())
         if "tiids" in request.json:
             (coll_doc, collection_object) = collection.create_new_collection_from_tiids(
                 cid=cid, 
                 title=request.json.get("title", "my collection"), 
-                tiids=request.json["tiids"], 
+                tiids=request.json.get("tiids"), 
                 ip_address=request.remote_addr, 
                 refset_metadata=request.json.get("refset_metadata", None))
         else:

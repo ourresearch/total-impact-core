@@ -330,7 +330,7 @@ class ViewsTester(unittest.TestCase):
 
         collection_tiid_objects = collection.CollectionTiid.query.all()
         assert_equals(len(collection_tiid_objects), 6)
-        assert_equals(len(set([obj.tiid for obj in collection_tiid_objects])), 4)
+        assert_equals(len(set([obj.tiid for obj in collection_tiid_objects])), 6)
 
 
     def test_collection_post_new_collection(self):
@@ -358,6 +358,31 @@ class ViewsTester(unittest.TestCase):
         collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
         assert_items_equal(collection_object.tiids, coll["alias_tiids"].values())
         assert_items_equal([added_item.alias_tuple for added_item in collection_object.added_items], [(unicode(a), unicode(b)) for (a, b) in self.aliases])
+
+
+    def test_collection_post_new_from_tiids(self):
+        tiids = ["123", "456"]
+        response = self.client.post(
+            '/v1/collection' + "?key=validkey",
+            data=json.dumps({"tiids": tiids, "title":"My Title"}),
+            content_type="application/json")
+
+        print response
+        print response.data
+        assert_equals(response.status_code, 201)  #Created
+        assert_equals(response.mimetype, "application/json")
+        response_loaded = json.loads(response.data)
+        assert_equals(
+                set(response_loaded.keys()),
+                set(["collection"])
+        )
+        coll = response_loaded["collection"]
+        assert_equals(len(coll["_id"]), 6)
+        assert_equals(coll["alias_tiids"].keys(), tiids)
+
+        collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
+        assert_items_equal(collection_object.tiids, tiids)
+        assert_items_equal(collection_object.added_items, [])
 
 
     def test_collection_get_with_no_id(self):
