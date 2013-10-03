@@ -642,8 +642,9 @@ def decide_genre(alias_dict):
 
     # override with "article" if it has a journal
     if "biblio" in alias_dict:
-        if "journal" in alias_dict["biblio"]:
-            genre = "article"
+        for biblio_dict in alias_dict["biblio"]:
+            if "journal" in biblio_dict:
+                genre = "article"
 
     return (genre, host)
 
