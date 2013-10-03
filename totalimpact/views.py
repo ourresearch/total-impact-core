@@ -372,10 +372,12 @@ def importer_post(provider_name):
 def abort_if_fails_collection_edit_auth(request):
     if request.args.get("api_admin_key"):
         supplied_key = request.args.get("api_admin_key", "")
-        secret_key = os.getenv("API_KEY")  #ideally rename this to API_ADMIN_KEY
-        if secret_key == supplied_key:
+        if os.getenv("API_KEY") == supplied_key:  #remove this once webapp sends admin_api_key
+            return True
+        if os.getenv("ADMIN_API_KEY") == supplied_key:
             return True
     abort_custom(403, "This collection has no update key; it can't be changed.")
+
 
 def get_alias_strings(aliases):
     alias_strings = []
