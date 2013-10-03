@@ -212,9 +212,8 @@ class ViewsTester(unittest.TestCase):
         assert_equals(response.status_code, 200)
         assert_equals(response.mimetype, "application/json")
         assert_equals(len(json.loads(response.data)), 1)
-        assert_equals(json.loads(response.data)[0].keys(), ["tiid"])    
 
-        tiid = json.loads(response.data)[0].values()[0]
+        tiid = json.loads(response.data)["products"].keys()[0]
         item = item_module.Item.from_tiid(tiid)
         for biblio in item.biblios:
             if biblio.biblio_name == "authors":
@@ -276,7 +275,7 @@ class ViewsTester(unittest.TestCase):
             data=json.dumps({"input": TEST_DRYAD_DOI}),
             content_type="application/json"
         )
-        created_tiid = json.loads(response.data)[0].values()[0]
+        created_tiid = json.loads(response.data)["products"].keys()[0]
         print created_tiid
 
         response = self.client.get('/v1/tiid/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey")
@@ -578,7 +577,7 @@ class ViewsTester(unittest.TestCase):
             data=json.dumps({"input": TEST_DRYAD_DOI}),
             content_type="application/json"
         )
-        created_tiid = json.loads(response.data)[0].values()[0]
+        created_tiid = json.loads(response.data)["products"].keys()[0]
         print created_tiid
 
         # make a new collection
@@ -598,10 +597,10 @@ class ViewsTester(unittest.TestCase):
         )
         coll = response_loaded["collection"]
         assert_equals(len(coll["_id"]), 6)
-        assert_equals(coll["alias_tiids"].keys(), tiids)
+        assert_equals(coll["alias_tiids"].keys(), [created_tiid])
 
         collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
-        assert_items_equal(collection_object.tiids, tiids)
+        assert_items_equal(collection_object.tiids, [created_tiid])
         assert_items_equal(collection_object.added_items, [])
 
 
