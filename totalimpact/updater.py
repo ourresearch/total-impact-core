@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import argparse
-import logging, couchdb, os, sys, random, datetime
+import logging, os, sys, random, datetime
 
-from totalimpact import dao, tiredis, item
+from totalimpact import tiredis, item
 
 logger = logging.getLogger('ti.updater')
 logger.setLevel(logging.DEBUG)
@@ -271,7 +271,8 @@ def main(action_type, number_to_update=35, specific_publisher=None):
     cloudant_url = os.getenv("CLOUDANT_URL")
     redis_url = os.getenv("REDIS_URL")
 
-    mydao = dao.Dao(cloudant_url, cloudant_db)
+    mydao = None
+
     myredis = tiredis.from_url(redis_url)
 
     try:
@@ -289,6 +290,9 @@ def main(action_type, number_to_update=35, specific_publisher=None):
         sys.exit()
  
 if __name__ == "__main__":
+    print "Sorry, not migrated to postgres yet"
+    sys.exit()
+
     # get args from the command line:
     parser = argparse.ArgumentParser(description="Run periodic metrics updating from the command line")
     parser.add_argument("action_type", type=str, help="The action to test; available actions are 'active_publishers' and 'least_recently_updated'")

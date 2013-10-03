@@ -1,7 +1,7 @@
 from flask import json, request, abort, make_response, g
 from flask import render_template
 import sys, os
-import datetime, re, couchdb, copy
+import datetime, re, copy
 from werkzeug.security import check_password_hash
 from collections import defaultdict
 import redis
@@ -30,7 +30,7 @@ myrefsets_histograms = None
 try:
     (myrefsets, myrefsets_histograms) = collection.build_all_reference_lookups(myredis, mydao)
     logger.debug(u"Reference sets dict has %i keys" %len(myrefsets.keys()))
-except (couchdb.ResourceNotFound, LookupError, AttributeError), e:
+except (LookupError, AttributeError), e:
     logger.error(u"Exception %s: Unable to load reference sets" % (e.__repr__()))
 
 def set_db(url, db):

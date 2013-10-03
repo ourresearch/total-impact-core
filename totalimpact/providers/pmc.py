@@ -1,4 +1,4 @@
-import hashlib, simplejson, os, couchdb, collections
+import hashlib, simplejson, os, collections
 
 from totalimpact import db
 from totalimpact.providers import provider
