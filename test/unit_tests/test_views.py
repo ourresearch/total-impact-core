@@ -544,7 +544,7 @@ class ViewsTester(unittest.TestCase):
         assert(tiid_to_delete not in collection_object.tiids)
 
 
-    def test_add_collection_item(self):
+    def test_add_collection_item_through_aliases(self):        
         # make a new collection
         response = self.client.post(
             '/v1/collection' + "?key=validkey",
@@ -572,6 +572,64 @@ class ViewsTester(unittest.TestCase):
         assert_equals(len(changed_coll.tiids), 4)
 
 
+    def test_add_collection_item_through_tiids(self):
+        response = self.client.post(
+            '/v1/importer/dois' + "?key=validkey",
+            data=json.dumps({"input": TEST_DRYAD_DOI}),
+            content_type="application/json"
+        )
+        created_tiid = json.loads(response.data)[0].values()[0]
+        print created_tiid
+
+        # make a new collection
+        response = self.client.post(
+            '/v1/collection' + "?key=validkey",
+            data=json.dumps({"tiids": [created_tiid], "title":"My Title"}),
+            content_type="application/json")
+
+        print response
+        print response.data
+        assert_equals(response.status_code, 201)  #Created
+        assert_equals(response.mimetype, "application/json")
+        response_loaded = json.loads(response.data)
+        assert_equals(
+                set(response_loaded.keys()),
+                set(["collection"])
+        )
+        coll = response_loaded["collection"]
+        assert_equals(len(coll["_id"]), 6)
+        assert_equals(coll["alias_tiids"].keys(), tiids)
+
+        collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
+        assert_items_equal(collection_object.tiids, tiids)
+        assert_items_equal(collection_object.added_items, [])
+
+
+        # make a new collection
+        response = self.client.post(
+            '/v1/collection' + "?key=validkey",
+            data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
+            content_type="application/json"
+        )
+        resp = json.loads(response.data)
+        coll = resp["collection"]
+
+        alias_list = []
+        alias_list.append(["doi", "10.new"])
+
+        r = self.client.put(
+            "/v1/collection/{id}/items?api_admin_key={key}".format(
+                id=coll["_id"], 
+                key=os.getenv("API_KEY")),
+            data=json.dumps({"aliases": alias_list}),
+            content_type="application/json"
+        )
+
+        changed_coll = collection.Collection.query.filter_by(cid=coll["_id"]).first()
+        print changed_coll
+
+        # we added a new item
+        assert_equals(len(changed_coll.tiids), 4)
 
 
     def test_change_collection_requires_key(self):

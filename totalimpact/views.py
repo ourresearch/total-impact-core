@@ -486,7 +486,6 @@ def remove_items_from_collection(cid=""):
     return resp
 
 
-
 @app.route("/v1/collection/<cid>/items", methods=["PUT"])
 def add_items_to_collection(cid=""):
     """
@@ -496,10 +495,17 @@ def add_items_to_collection(cid=""):
     abort_if_fails_collection_edit_auth(request)
 
     try:
-        collection_object = collection.add_items_to_collection(
-            cid=cid, 
-            aliases=request.json["aliases"], 
-            myredis=myredis)
+        if "tiids" in request.json:
+            collection_object = collection.add_items_to_collection_object(
+                    cid=cid, 
+                    tiids=request.json["tiids"], 
+                    alias_tuples=None)
+        else:
+            #to be depricated
+            collection_object = collection.add_items_to_collection(
+                cid=cid, 
+                aliases=request.json["aliases"], 
+                myredis=myredis)
     except (AttributeError, TypeError) as e:
         # we got missing or improperly formated data.
         logger.error(u"PUT /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(
