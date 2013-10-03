@@ -11,7 +11,7 @@ from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unitt
 
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
-PLOS_TEST_DOI = "10.1371/journal.pone.0004803"
+TEST_PLOS_DOI = "10.1371/journal.pone.0004803"
 GOLD_MEMBER_ITEM_CONTENT = ["MEMBERITEM CONTENT"]
 TEST_COLLECTION_ID = "TestCollectionId"
 TEST_COLLECTION_TIID_LIST = ["tiid1", "tiid2"]
@@ -181,19 +181,6 @@ class ViewsTester(unittest.TestCase):
     def test_forbidden_if_unregistered_key_in_v1(self):
         resp = self.client.get("/v1/provider?key=invalidkey")
         assert_equals(resp.status_code, 403)
-
-    @http
-    def test_importer_post(self):        
-        response = self.client.post(
-            '/v1/importer/github' + "?key=validkey",
-            data=json.dumps({"input": "jasonpriem"}),
-            content_type="application/json"
-        )
-        print response
-        print response.data
-        assert_equals(response.status_code, 200)
-        assert_equals(response.mimetype, "application/json")
-        assert_equals(json.loads(response.data)[0].keys(), ["tiid"])
 
     def test_importer_post_bibtex(self): 
         bibtex_snippet = """@article{rogers2008affirming,
@@ -543,67 +530,43 @@ class ViewsTester(unittest.TestCase):
         assert(tiid_to_delete not in collection_object.tiids)
 
 
-    def test_add_collection_item_through_aliases(self):        
-        # make a new collection
+    def test_add_collection_item_through_tiids(self):
+        # make two items through an importer
+        response = self.client.post(
+            '/v1/importer/dois' + "?key=validkey",
+            data=json.dumps({"input": TEST_DRYAD_DOI + "\n" + TEST_PLOS_DOI}),
+            content_type="application/json"
+        )
+        created_tiids = json.loads(response.data)["products"].keys()
+        print created_tiids
+
+        # make a new collection using the first item
         response = self.client.post(
             '/v1/collection' + "?key=validkey",
-            data=json.dumps({"aliases": self.aliases, "title":"mah collection"}),
-            content_type="application/json"
-        )
-        resp = json.loads(response.data)
-        coll = resp["collection"]
+            data=json.dumps({"tiids": [created_tiids[0]], "title":"My Title"}),
+            content_type="application/json")
 
-        alias_list = []
-        alias_list.append(["doi", "10.new"])
+        coll = json.loads(response.data)["collection"]
+        cid = coll["_id"]
 
+        # now add the other item
         r = self.client.put(
             "/v1/collection/{id}/items?api_admin_key={key}".format(
-                id=coll["_id"], 
+                id=cid, 
                 key=os.getenv("API_KEY")),
-            data=json.dumps({"aliases": alias_list}),
+            data=json.dumps({"tiids": [created_tiids[1]]}),
             content_type="application/json"
         )
 
-        changed_coll = collection.Collection.query.filter_by(cid=coll["_id"]).first()
+        changed_coll = collection.Collection.query.filter_by(cid=cid).first()
         print changed_coll
 
         # we added a new item
-        assert_equals(len(changed_coll.tiids), 4)
+        print changed_coll.tiids
+        assert_equals(changed_coll.tiids, created_tiids)
 
 
-    def test_add_collection_item_through_tiids(self):
-        response = self.client.post(
-            '/v1/importer/dois' + "?key=validkey",
-            data=json.dumps({"input": TEST_DRYAD_DOI}),
-            content_type="application/json"
-        )
-        created_tiid = json.loads(response.data)["products"].keys()[0]
-        print created_tiid
-
-        # make a new collection
-        response = self.client.post(
-            '/v1/collection' + "?key=validkey",
-            data=json.dumps({"tiids": [created_tiid], "title":"My Title"}),
-            content_type="application/json")
-
-        print response
-        print response.data
-        assert_equals(response.status_code, 201)  #Created
-        assert_equals(response.mimetype, "application/json")
-        response_loaded = json.loads(response.data)
-        assert_equals(
-                set(response_loaded.keys()),
-                set(["collection"])
-        )
-        coll = response_loaded["collection"]
-        assert_equals(len(coll["_id"]), 6)
-        assert_equals(coll["alias_tiids"].keys(), [created_tiid])
-
-        collection_object = collection.Collection.query.filter_by(cid=coll["_id"]).first()
-        assert_items_equal(collection_object.tiids, [created_tiid])
-        assert_items_equal(collection_object.added_items, [])
-
-
+    def test_add_collection_item_through_aliases(self):        
         # make a new collection
         response = self.client.post(
             '/v1/collection' + "?key=validkey",
@@ -672,11 +635,11 @@ class ViewsTester(unittest.TestCase):
     def test_tiid_get_tiids_for_multiple_known_aliases(self):
         # create two new items with the same plos alias
         first_plos_create_tiid_resp = self.client.post('/v1/item/doi/' +
-                quote_plus(PLOS_TEST_DOI) + "?key=validkey")
+                quote_plus(TEST_PLOS_DOI) + "?key=validkey")
         first_plos_create_tiid = json.loads(first_plos_create_tiid_resp.data)
 
         second_plos_create_tiid_resp = self.client.post('/v1/item/doi/' +
-                quote_plus(PLOS_TEST_DOI) + "?key=validkey")
+                quote_plus(TEST_PLOS_DOI) + "?key=validkey")
         second_plos_create_tiid = json.loads(second_plos_create_tiid_resp.data)
 
         # check that the tiid lists are the same

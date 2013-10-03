@@ -33,7 +33,7 @@ def get_alias_strings(aliases):
             alias_strings += [namespace+":"+json.dumps(nid)]
     return alias_strings   
 
-def add_items_to_collection_object(cid, tiids, alias_tuples):
+def add_items_to_collection_object(cid, tiids, alias_tuples=[]):
     logger.debug(u"in add_items_to_collection_object for {cid}".format(
         cid=cid))        
 
@@ -47,17 +47,17 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
         if tiid not in collection_obj.tiids:
             collection_obj.tiid_links += [CollectionTiid(tiid=tiid)]
 
-    for alias_tuple in alias_tuples:
-        try:
-            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-            #logger.info(u"added_aliases: {added_aliases}, this tuple: {alias_tuple}".format(
-            #    added_aliases=collection_obj.added_aliases, 
-            #    alias_tuple=alias_tuple))
-            if alias_tuple not in collection_obj.added_aliases:
-                collection_obj.added_items += [AddedItem(alias_tuple=alias_tuple)]
-        except ValueError:
-            logger.debug("could not separate alias tuple {alias_tuple}".format(
-                alias_tuple=alias_tuple))            
+    # for alias_tuple in alias_tuples:
+    #     try:
+    #         alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
+    #         #logger.info(u"added_aliases: {added_aliases}, this tuple: {alias_tuple}".format(
+    #         #    added_aliases=collection_obj.added_aliases, 
+    #         #    alias_tuple=alias_tuple))
+    #         if alias_tuple not in collection_obj.added_aliases:
+    #             collection_obj.added_items += [AddedItem(alias_tuple=alias_tuple)]
+    #     except ValueError:
+    #         logger.debug("could not separate alias tuple {alias_tuple}".format(
+    #             alias_tuple=alias_tuple))            
 
     try:
         db.session.commit()
