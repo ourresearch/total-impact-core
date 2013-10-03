@@ -339,12 +339,12 @@ def importer_post(provider_name):
 
     tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, myredis)
     logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
-        tiids_aliases_map=tiids_aliases_map)) 
+        tiids_aliases_map=tiids_aliases_map))
 
-    tiids_response_list = [{"tiid": tiid} for tiid in tiids_aliases_map.keys()]
+    products_dict = {k: {} for k in tiids_aliases_map.keys()}
 
     resp = make_response(
-        json.dumps(tiids_response_list, sort_keys=True, indent=4),
+        json.dumps({"products": products_dict}, sort_keys=True, indent=4),
         200
     )
     return resp
