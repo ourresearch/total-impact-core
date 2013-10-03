@@ -250,13 +250,6 @@ class Alias(db.Model):
         response = cls.query.filter_by(namespace=namespace, nid=nid)
         return response
 
-    @classmethod
-    def get_by_alias(cls, alias_tuple):
-        alias_tuple = canonical_alias_tuple(alias_tuple)
-        (namespace, nid) = alias_tuple
-        response = cls.query.get((namespace, nid))
-        return response
-
 
 class Item(db.Model):
     tiid = db.Column(db.Text, primary_key=True)
@@ -925,13 +918,10 @@ def get_tiid_by_biblio(biblio_dict):
     return tiid
 
 def get_tiid_by_alias(ns, nid, mydao=None):
-    # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
     logger.debug(u"In get_tiid_by_alias with {ns}, {nid}".format(
         ns=ns, nid=nid))
 
     tiid = None
-
-
     if (ns=="biblio"):
         tiid = get_tiid_by_biblio(nid)
     else:
@@ -941,14 +931,14 @@ def get_tiid_by_alias(ns, nid, mydao=None):
         try:
             tiid = alias_obj.tiid
             logger.debug(u"Found a tiid for {nid} in get_tiid_by_alias: {tiid}".format(
-                nid=nid, 
-                tiid=tiid))
+                nid=nid, tiid=tiid))
         except AttributeError:
             pass
 
     if not tiid:
         logger.debug(u"no match for tiid for {nid}!".format(nid=nid))
     return tiid
+
 
 def start_item_update(tiid, aliases_dict, myredis):
     logger.debug(u"In start_item_update with {tiid}, {aliases_dict}".format(

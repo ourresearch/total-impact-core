@@ -7,7 +7,7 @@ from nose.tools import assert_equals, nottest, assert_greater, assert_items_equa
 from totalimpact import app, db, views, tiredis, api_user, collection, item as item_module
 from totalimpact.providers.dryad import Dryad
 
-from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
+from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests, http
 
 
 TEST_DRYAD_DOI = "10.5061/dryad.7898"
@@ -182,6 +182,7 @@ class ViewsTester(unittest.TestCase):
         resp = self.client.get("/v1/provider?key=invalidkey")
         assert_equals(resp.status_code, 403)
 
+    @http
     def test_importer_post(self):        
         response = self.client.post(
             '/v1/importer/github' + "?key=validkey",
@@ -269,6 +270,20 @@ class ViewsTester(unittest.TestCase):
 
         assert_equals([unicode(TEST_DRYAD_DOI)], saved_item["aliases"]["doi"])
 
+    def test_tiid_get(self):
+        response = self.client.post(
+            '/v1/importer/dois' + "?key=validkey",
+            data=json.dumps({"input": TEST_DRYAD_DOI}),
+            content_type="application/json"
+        )
+        created_tiid = json.loads(response.data)[0].values()[0]
+        print created_tiid
+
+        response = self.client.get('/v1/tiid/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey")
+        print response.data
+        found_tiid = json.loads(response.data)["tiid"]
+
+        assert_equals(created_tiid, found_tiid)
 
     def test_item_get_missing_no_create_param_returns_404(self):
         url = '/v1/item/doi/' + quote_plus(TEST_DRYAD_DOI) + "?key=validkey"

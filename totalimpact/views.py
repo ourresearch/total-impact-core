@@ -235,6 +235,13 @@ def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=N
 
     return resp
 
+@app.route('/v1/tiid/<namespace>/<path:nid>', methods=['GET'])
+def get_tiid_from_namespace_nid(namespace, nid):
+    tiid = item_module.get_tiid_by_alias(namespace, nid)
+    if not tiid:
+        abort_custom(404, "alias not in database")
+    return make_response(json.dumps({"tiid": tiid}, sort_keys=True, indent=4), 200)
+
 
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
 def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
