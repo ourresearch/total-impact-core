@@ -338,7 +338,11 @@ def importer_post(provider_name):
         provider_name = "crossref"
     elif provider_name == "urls":
         provider_name = "webpage"
-    provider = ProviderFactory.get_provider(provider_name)
+    try:
+        provider = ProviderFactory.get_provider(provider_name)
+    except ImportError:
+        abort_custom(404, "an importer for provider '{provider_name}' is not found".format(
+            provider_name=provider_name))
 
     try:
         aliases = provider.member_items(input_string)
