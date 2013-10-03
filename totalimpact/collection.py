@@ -544,8 +544,11 @@ def get_metric_values_of_reference_sets(items):
     for key in metrics_to_normalize:
         if ("plosalm" in key):
             del metric_value_lists[key]
-        elif not isinstance(metric_value_lists[key][0], int):
-            del metric_value_lists[key]
+        else:
+            try:
+                metric_value_lists[key] = [int(value) for value in metric_value_lists[key]]
+            except ValueError:
+                del metric_value_lists[key]    
     return metric_value_lists  
 
 def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_interval_table):
@@ -664,7 +667,6 @@ def build_all_reference_lookups(myredis, mydao):
             else:
                 logger.info(u"Not found in cache, so now building from items")
                 if refset_name:
-                    #cid = row.id
                     try:
                         # send it without reference sets because we are trying to load the reference sets here!
                         (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)
