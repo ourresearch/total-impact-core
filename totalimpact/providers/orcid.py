@@ -89,6 +89,7 @@ class Orcid(Provider):
         if not provider_url_template:
             provider_url_template = self.member_items_url_template
 
+        query_string = query_string.replace("http://orcid.org/", "")
         url = self._get_templated_url(provider_url_template, query_string, "members")
         headers = {}
         headers["accept"] = "application/json"
