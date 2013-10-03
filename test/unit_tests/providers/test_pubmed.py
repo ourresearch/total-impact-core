@@ -70,8 +70,8 @@ class TestPubmed(ProviderTestCase):
         assert_equals(ret, expected)
 
     def test_member_items(self):
-        ret = self.provider.member_items("123\n456\n678")
-        expected = [('pmid', '123'), ('pmid', '456'), ('pmid', '678')]
+        ret = self.provider.member_items(self.testitem_members)
+        expected = [('pmid', '123'), ('pmid', '456'), ('pmid', '789')]
         assert_equals(ret, expected)        
 
     def test_provider_member_items_400(self):
