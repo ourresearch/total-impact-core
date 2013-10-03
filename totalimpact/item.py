@@ -462,10 +462,10 @@ def as_int_or_float_if_possible(input_value):
     value = input_value
     try:
         value = int(input_value)
-    except ValueError:
+    except (ValueError, TypeError):
         try:
             value = float(input_value)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
     return(value)
 
