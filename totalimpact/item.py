@@ -640,6 +640,11 @@ def decide_genre(alias_dict):
             genre = "webpage"
             host = "webpage"
 
+    # override with "article" if it has a journal
+    if "biblio" in alias_dict:
+        if "journal" in alias_dict["biblio"]:
+            genre = "article"
+
     return (genre, host)
 
 def canonical_alias_tuple(alias):
