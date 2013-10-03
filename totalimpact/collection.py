@@ -193,20 +193,20 @@ def create_objects_from_collection_doc(coll_doc):
         cid=new_coll_object.cid, 
         new_tiid_objects=new_coll_object.tiids))        
 
-    alias_strings = coll_doc["alias_tiids"].keys()
-    alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]
-    for alias_tuple in alias_tuples:
-        try:
-            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-            if alias_tuple not in new_coll_object.added_aliases:
-                    new_coll_object.added_items += [AddedItem(alias_tuple=alias_tuple, created=coll_doc["last_modified"])]
-        except ValueError:
-            logger.debug("could not separate alias tuple {alias_tuple}".format(
-                alias_tuple=alias_tuple))
+    # alias_strings = coll_doc["alias_tiids"].keys()
+    # alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]
+    # for alias_tuple in alias_tuples:
+    #     try:
+    #         alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
+    #         if alias_tuple not in new_coll_object.added_aliases:
+    #                 new_coll_object.added_items += [AddedItem(alias_tuple=alias_tuple, created=coll_doc["last_modified"])]
+    #     except ValueError:
+    #         logger.debug("could not separate alias tuple {alias_tuple}".format(
+    #             alias_tuple=alias_tuple))
 
-    logger.debug(u"new_added_item_objects for {cid} are {new_added_item_objects}".format(
-        cid=new_coll_object.cid, 
-        new_added_item_objects=new_coll_object.added_aliases))      
+    # logger.debug(u"new_added_item_objects for {cid} are {new_added_item_objects}".format(
+    #     cid=new_coll_object.cid, 
+    #     new_added_item_objects=new_coll_object.added_aliases))      
 
     try:
         db.session.commit()
@@ -232,49 +232,49 @@ def delete_collection(cid):
     return
 
 
-class AddedItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    cid = db.Column(db.Text, db.ForeignKey('collection.cid'), index=True)
-    namespace = db.Column(db.Text)
-    nid = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
-    tiid = db.Column(db.Text)
-    created = db.Column(db.DateTime())
+# class AddedItem(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     cid = db.Column(db.Text, db.ForeignKey('collection.cid'), index=True)
+#     namespace = db.Column(db.Text)
+#     nid = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
+#     tiid = db.Column(db.Text)
+#     created = db.Column(db.DateTime())
 
-    def __init__(self, **kwargs):
-        logger.debug(u"new AddedItem {kwargs}".format(
-            kwargs=kwargs))    
-        if "alias_tuple" in kwargs:
-            alias_tuple = item_module.canonical_alias_tuple(kwargs["alias_tuple"])
-            (namespace, nid) = alias_tuple
-            self.namespace = namespace
-            self.nid = nid                
-        if "created" in kwargs:
-            self.created = kwargs["created"]
-        else:   
-            self.created = datetime.datetime.utcnow()
-        super(AddedItem, self).__init__(**kwargs)
+#     def __init__(self, **kwargs):
+#         logger.debug(u"new AddedItem {kwargs}".format(
+#             kwargs=kwargs))    
+#         if "alias_tuple" in kwargs:
+#             alias_tuple = item_module.canonical_alias_tuple(kwargs["alias_tuple"])
+#             (namespace, nid) = alias_tuple
+#             self.namespace = namespace
+#             self.nid = nid                
+#         if "created" in kwargs:
+#             self.created = kwargs["created"]
+#         else:   
+#             self.created = datetime.datetime.utcnow()
+#         super(AddedItem, self).__init__(**kwargs)
 
-    @hybrid_property
-    def alias_tuple(self):
-        return ((self.namespace, self.nid))
+#     @hybrid_property
+#     def alias_tuple(self):
+#         return ((self.namespace, self.nid))
 
-    @alias_tuple.setter
-    def alias_tuple(self, alias_tuple):
-        try:
-            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-            (namespace, nid) = alias_tuple
-        except ValueError:
-            logger.debug("could not separate alias tuple {alias_tuple}".format(
-                alias_tuple=alias_tuple))
-            raise
-        self.namespace = namespace
-        self.nid = nid
+#     @alias_tuple.setter
+#     def alias_tuple(self, alias_tuple):
+#         try:
+#             alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
+#             (namespace, nid) = alias_tuple
+#         except ValueError:
+#             logger.debug("could not separate alias tuple {alias_tuple}".format(
+#                 alias_tuple=alias_tuple))
+#             raise
+#         self.namespace = namespace
+#         self.nid = nid
 
-    def __repr__(self):
-        return '<AddedItem {collection}, {alias_tuple} {tiid}>'.format(
-            collection=self.collection, 
-            alias_tuple=self.alias_tuple,
-            tiid=self.tiid)
+#     def __repr__(self):
+#         return '<AddedItem {collection}, {alias_tuple} {tiid}>'.format(
+#             collection=self.collection, 
+#             alias_tuple=self.alias_tuple,
+#             tiid=self.tiid)
 
 class CollectionTiid(db.Model):
     cid = db.Column(db.Text, db.ForeignKey('collection.cid'), primary_key=True, index=True)
@@ -300,8 +300,8 @@ class Collection(db.Model):
     refset_metadata = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
     tiid_links = db.relationship('CollectionTiid', lazy='subquery', cascade="all, delete-orphan",
         backref=db.backref("collection", lazy="subquery"))
-    added_items = db.relationship('AddedItem', lazy='subquery', cascade="all, delete-orphan",
-        backref=db.backref("collection", lazy="subquery"))
+    # added_items = db.relationship('AddedItem', lazy='subquery', cascade="all, delete-orphan",
+    #     backref=db.backref("collection", lazy="subquery"))
 
     def __init__(self, collection_id=None, **kwargs):
         logger.debug(u"new Collection {kwargs}".format(
