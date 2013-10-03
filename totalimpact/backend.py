@@ -102,7 +102,7 @@ class ProviderWorker(Worker):
 
     def add_to_alias_and_couch_queues(self, tiid, alias_dict, method_name, aliases_providers_run):
         logger.info(u"Adding to alias queue {alias_dict} {method_name} from {tiid} for {provider_name}".format(
-            alais_dict=alias_dict, 
+            alias_dict=alias_dict, 
             method_name=method_name, 
             tiid=tiid, 
             provider_name=self.provider_name))     
