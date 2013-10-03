@@ -20,6 +20,7 @@ class TestCrossRef(ProviderTestCase):
 
     testitem_aliases = ("doi", TEST_DOI)
     testitem_biblio = ("doi", TEST_DOI)
+    testitem_members = "10.123/example\ndoi:10.456/example2\nhttp://doi.org/10.2342/example3"
 
     def setUp(self):
         ProviderTestCase.setUp(self)
@@ -36,6 +37,22 @@ class TestCrossRef(ProviderTestCase):
         expected = {'title': 'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': 'PLoS Computational Biology', 'year': '2009', 'repository': 'Public Library of Science', 'authors': 'Shotton, Portwin, Klyne, Miles'}
         print biblio
         assert_equals(biblio, expected)
+
+    def test_member_items(self):
+        ret = self.provider.member_items(self.testitem_members)
+        expected = [('doi', '10.123/example'), ('doi', '10.456/example2'), ('doi', '10.2342/example3')]
+        assert_equals(ret, expected)        
+
+    def test_provider_member_items_400(self):
+        pass
+    def test_provider_member_items_500(self):
+        pass
+    def test_provider_member_items_empty(self):
+        pass
+    def test_provider_member_items_nonsense_txt(self):
+        pass
+    def test_provider_member_items_nonsense_xml(self):
+        pass
 
     @http
     def test_get_aliases_for_id(self):

@@ -1,5 +1,6 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderTimeout, ProviderServerError
+from totalimpact.unicode_helpers import remove_nonprinting_characters
 import itertools
 import httplib, urllib, re
 
@@ -8,6 +9,18 @@ logger = logging.getLogger('ti.providers.crossref')
 
 #!/usr/bin/env python
 
+def clean_doi(input_doi):
+    doi = None
+    input_doi = remove_nonprinting_characters(input_doi)
+    if input_doi.startswith("http"):
+        match = re.match("^https*://(dx\.)*doi.org/(10\..+)", input_doi)
+        doi = match.group(2)
+    elif input_doi.startswith("doi:"):
+        match = re.match("^doi:(10\..+)", input_doi)
+        doi = match.group(1)
+    elif input_doi.startswith("10."):
+        doi = input_doi
+    return doi
 
 class Crossref(Provider):  
 
@@ -29,6 +42,11 @@ class Crossref(Provider):
     @property
     def provides_aliases(self):
          return True
+
+    # overriding default because overriding member_items method
+    @property
+    def provides_members(self):
+        return True
 
     # default method; providers can override
     def get_biblio_for_id(self, 
@@ -262,4 +280,23 @@ class Crossref(Provider):
                 pass
 
         return new_aliases
+
+
+    # overriding because don't need to look up
+    def member_items(self, 
+            query_string, 
+            provider_url_template=None, 
+            cache_enabled=True):
+
+        if not self.provides_members:
+            raise NotImplementedError()
+
+        self.logger.debug(u"%s getting member_items for %s" % (self.provider_name, query_string))
+
+        doi_string = query_string.strip(" ")
+        dois = [clean_doi(doi) for doi in doi_string.split("\n")]
+        aliases_tuples = [("doi", doi) for doi in dois]
+
+        return(aliases_tuples)
+
 
