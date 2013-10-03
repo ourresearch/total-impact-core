@@ -374,7 +374,7 @@ def abort_if_fails_collection_edit_auth(request):
         supplied_key = request.args.get("api_admin_key", "")
         if os.getenv("API_KEY") == supplied_key:  #remove this once webapp sends admin_api_key
             return True
-        if os.getenv("ADMIN_API_KEY") == supplied_key:
+        if os.getenv("API_ADMIN_KEY") == supplied_key:
             return True
     abort_custom(403, "This collection has no update key; it can't be changed.")
 
