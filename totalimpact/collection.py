@@ -544,11 +544,8 @@ def get_metric_values_of_reference_sets(items):
     for key in metrics_to_normalize:
         if ("plosalm" in key):
             del metric_value_lists[key]
-        else:
-            try:
-                metric_value_lists[key] = [int(value) for value in metric_value_lists[key]]
-            except ValueError:
-                del metric_value_lists[key]    
+        elif not isinstance(metric_value_lists[key][0], (int, float)):
+            del metric_value_lists[key]
     return metric_value_lists  
 
 def get_normalization_confidence_interval_ranges(metric_value_lists, confidence_interval_table):

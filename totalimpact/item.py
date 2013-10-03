@@ -458,6 +458,18 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
 
     return item
 
+def as_int_or_float_if_possible(input_value):
+    value = input_value
+    try:
+        value = int(input_value)
+    except ValueError:
+        try:
+            value = float(input_value)
+        except ValueError:
+            pass
+    return(value)
+
+
 def add_metrics_data(metric_name, metrics_method_response, item, timestamp=None):
     metrics = item.setdefault("metrics", {})
     
@@ -467,12 +479,12 @@ def add_metrics_data(metric_name, metrics_method_response, item, timestamp=None)
     this_metric["provenance_url"] = provenance_url
 
     this_metric_values = this_metric.setdefault("values", {})
-    this_metric_values["raw"] = metric_value
+    this_metric_values["raw"] = as_int_or_float_if_possible(metric_value)
 
     this_metric_values_raw_history = this_metric_values.setdefault("raw_history", {})
     if not timestamp:
         timestamp = datetime.datetime.utcnow().isoformat()
-    this_metric_values_raw_history[timestamp] = metric_value
+    this_metric_values_raw_history[timestamp] = as_int_or_float_if_possible(metric_value)
     return item
 
 
