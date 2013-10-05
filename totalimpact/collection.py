@@ -411,6 +411,57 @@ def get_collection_doc(cid):
     return get_collection_doc_from_object(collection_obj)
 
 
+def is_something_currently_updating(items_dict, myredis):
+    something_currently_updating = False
+    for tiid in items_dict:
+        this_item_updating = item_module.is_currently_updating(tiid, myredis)
+        print tiid, this_item_updating
+        something_currently_updating = something_currently_updating or this_item_updating
+    return something_currently_updating
+
+
+def get_readonly_item_objects_with_metrics(tiids):
+    item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
+
+    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])
+    metric_objects = item_module.Metric.query.from_statement("""
+        with max_collect as ( select tiid, provider, metric_name, max(collected_date) as collected_date
+                from metric
+                where tiid in (""" + tiid_string + """)
+                group by tiid, provider, metric_name)
+                select max_collect.*, m.raw_value, m.drilldown_url
+                  from metric m
+                  natural join max_collect""").all()
+
+    items_by_tiid = {}
+    for item_obj in item_objects:
+        items_by_tiid[item_obj.tiid] = item_obj            
+
+    db.session.expunge_all()
+
+    for metric_object in metric_objects:
+        item_obj = items_by_tiid[metric_object.tiid]
+        item_obj.metrics += [metric_object]
+
+    return item_objects
+
+
+def get_items_for_client(tiids, myrefsets):
+    item_objects = get_readonly_item_objects_with_metrics(tiids)
+
+    dict_of_item_docs = {}
+    for item_obj in item_objects:
+        try:
+            item_doc = item_obj.as_old_doc()
+            item_doc_for_client = item_module.build_item_for_client(item_doc, myrefsets, None, True)
+            dict_of_item_docs[item_obj.tiid] = item_doc_for_client
+        except (KeyError, TypeError, AttributeError):
+            logger.info(u"Couldn't build item {tiid}".format(tiid=item_obj.tiid))
+            raise
+    
+    return dict_of_item_docs
+
+
 
 def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
     collection_obj = Collection.query.get(cid)

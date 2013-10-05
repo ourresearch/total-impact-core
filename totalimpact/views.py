@@ -532,6 +532,26 @@ def add_items_to_collection(cid=""):
 
 
 
+""" Refreshes all the items from tiids
+"""
+@app.route("/v1/products/<tiids_string>", methods=["POST"])
+# not officially supported in api
+def products_refresh_post(tiids_string):
+    tiids = tiids_string.split(",")
+    for tiid in tiids:
+        try:
+            item_obj = item_module.Item.from_tiid(tiid)
+            item = item_obj.as_old_doc()        
+            item_module.start_item_update(tiid, item["aliases"], myredis)
+        except AttributeError:
+            logger.debug(u"couldn't find tiid {tiid} in {cid} so not refreshing its metrics".format(
+                cid=cid, tiid=tiid))
+
+    resp = make_response("true", 200)
+    return resp
+
+
+
 """ Refreshes all the items in a given collection.
 """
 @app.route("/v1/collection/<cid>", methods=["POST"])
@@ -577,6 +597,28 @@ def products_create():
 
     return resp
 
+
+# returns products from tiids
+@app.route('/v1/products/<tiids_string>', methods=['GET'])
+def products_get(tiids_string):
+    tiids = tiids_string.split(",")
+
+    items_dict = collection.get_items_for_client(tiids, myrefsets)
+
+    secret_key = os.getenv("API_ADMIN_KEY")
+    supplied_key = request.args.get("api_admin_key", "")
+    cleaned_items_dict = {}
+    for tiid in items_dict:
+        cleaned_items_dict[tiid] = item_module.clean_for_export(items_dict[tiid], supplied_key, secret_key)
+
+    response_code = 200
+    if collection.is_something_currently_updating(cleaned_items_dict, myredis):
+        response_code = 210 # update is not complete yet
+
+    resp = make_response(json.dumps({"products": cleaned_items_dict}, sort_keys=True, indent=4),
+                         response_code)
+
+    return resp
 
 
 # creates a collection from aliases or tiids
