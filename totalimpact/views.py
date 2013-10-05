@@ -325,6 +325,14 @@ def provider_memberitems_get(provider_name, query):
     return resp
 
 
+def format_into_products_dict(tiids_aliases_map):
+    products_dict = {}
+    for tiid in tiids_aliases_map:
+        (ns, nid) = tiids_aliases_map[tiid]
+        products_dict[tiid] = {"aliases": {ns: [nid]}}
+    return products_dict
+
+
 @app.route("/v1/importer/<provider_name>", methods=['POST'])
 def importer_post(provider_name):
     """
@@ -357,15 +365,9 @@ def importer_post(provider_name):
     logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
         tiids_aliases_map=tiids_aliases_map))
 
-    products_dict = {}
-    for tiid in tiids_aliases_map:
-        (ns, nid) = tiids_aliases_map[tiid]
-        products_dict[tiid] = {"aliases": {ns: [nid]}}
+    products_dict = format_into_products_dict(tiids_aliases_map)
 
-    resp = make_response(
-        json.dumps({"products": products_dict}, sort_keys=True, indent=4),
-        200
-    )
+    resp = make_response(json.dumps({"products": products_dict}, sort_keys=True, indent=4), 200)
     return resp
 
 
@@ -562,6 +564,19 @@ def collection_metrics_refresh(cid=""):
 @app.route("/v1/collection/<cid>", methods=["DELETE"])
 def delete_collection(cid=None):
     abort_custom(501, "Deleting collections is not currently supported.")
+
+
+
+# creates products from aliases
+@app.route('/v1/products', methods=['POST'])
+def products_create():
+    tiids_aliases_map = item_module.create_tiids_from_aliases(request.json["aliases"], myredis)
+    products_dict = format_into_products_dict(tiids_aliases_map)
+
+    resp = make_response(json.dumps({"products": products_dict}, sort_keys=True, indent=4), 200)
+
+    return resp
+
 
 
 # creates a collection from aliases or tiids

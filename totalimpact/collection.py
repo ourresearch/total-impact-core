@@ -328,9 +328,9 @@ class Collection(db.Model):
     def tiids(self):
         return [tiid_link.tiid for tiid_link in self.tiid_links]
 
-    @property
-    def added_aliases(self):
-        return [added_item.alias_tuple for added_item in self.added_items]
+    # @property
+    # def added_aliases(self):
+    #     return [added_item.alias_tuple for added_item in self.added_items]
 
     def __repr__(self):
         return '<Collection {cid}, {title}>'.format(
