@@ -415,7 +415,6 @@ def is_something_currently_updating(items_dict, myredis):
     something_currently_updating = False
     for tiid in items_dict:
         this_item_updating = item_module.is_currently_updating(tiid, myredis)
-        print tiid, this_item_updating
         something_currently_updating = something_currently_updating or this_item_updating
     return something_currently_updating
 

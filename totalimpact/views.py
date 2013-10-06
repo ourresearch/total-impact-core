@@ -598,11 +598,7 @@ def products_create():
     return resp
 
 
-# returns products from tiids
-@app.route('/v1/products/<tiids_string>', methods=['GET'])
-def products_get(tiids_string):
-    tiids = tiids_string.split(",")
-
+def cleaned_items(tiids):
     items_dict = collection.get_items_for_client(tiids, myrefsets)
 
     secret_key = os.getenv("API_ADMIN_KEY")
@@ -610,6 +606,34 @@ def products_get(tiids_string):
     cleaned_items_dict = {}
     for tiid in items_dict:
         cleaned_items_dict[tiid] = item_module.clean_for_export(items_dict[tiid], supplied_key, secret_key)
+    return cleaned_items_dict
+
+
+# returns a product from a tiid
+@app.route('/v1/product/<tiid>', methods=['GET'])
+def single_product_get(tiid):
+    cleaned_items_dict = cleaned_items([tiid])
+    print cleaned_items_dict
+    try:
+        single_item = cleaned_items_dict[tiid]
+    except TypeError:
+        abort_custom(404, "No product found with that tiid")
+
+    response_code = 200
+    if collection.is_something_currently_updating(cleaned_items_dict, myredis):
+        response_code = 210 # update is not complete yet
+
+    resp = make_response(json.dumps(single_item, sort_keys=True, indent=4),
+                         response_code)
+
+    return resp
+
+
+# returns products from tiids
+@app.route('/v1/products/<tiids_string>', methods=['GET'])
+def products_get(tiids_string):
+    tiids = tiids_string.split(",")
+    cleaned_items_dict = cleaned_items(tiids)
 
     response_code = 200
     if collection.is_something_currently_updating(cleaned_items_dict, myredis):
