@@ -613,7 +613,6 @@ def cleaned_items(tiids):
 @app.route('/v1/product/<tiid>', methods=['GET'])
 def single_product_get(tiid):
     cleaned_items_dict = cleaned_items([tiid])
-    print cleaned_items_dict
     try:
         single_item = cleaned_items_dict[tiid]
     except TypeError:

@@ -419,32 +419,6 @@ def is_something_currently_updating(items_dict, myredis):
     return something_currently_updating
 
 
-def get_readonly_item_objects_with_metrics(tiids):
-    item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
-
-    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])
-    metric_objects = item_module.Metric.query.from_statement("""
-        with max_collect as ( select tiid, provider, metric_name, max(collected_date) as collected_date
-                from metric
-                where tiid in (""" + tiid_string + """)
-                group by tiid, provider, metric_name)
-                select max_collect.*, m.raw_value, m.drilldown_url
-                  from metric m
-                  natural join max_collect""").all()
-
-    items_by_tiid = {}
-    for item_obj in item_objects:
-        items_by_tiid[item_obj.tiid] = item_obj            
-
-    db.session.expunge_all()
-
-    for metric_object in metric_objects:
-        item_obj = items_by_tiid[metric_object.tiid]
-        item_obj.metrics += [metric_object]
-
-    return item_objects
-
-
 def get_items_for_client(tiids, myrefsets):
     item_objects = get_readonly_item_objects_with_metrics(tiids)
 
@@ -461,6 +435,40 @@ def get_items_for_client(tiids, myrefsets):
     return dict_of_item_docs
 
 
+def get_readonly_item_objects_with_metrics(tiids):
+    logger.info(u"in get_readonly_item_objects_with_metrics")
+
+    item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
+    items_by_tiid = {}
+    for item_obj in item_objects:
+        items_by_tiid[item_obj.tiid] = item_obj            
+
+    db.session.expunge_all()
+
+    # we use string concatination below because haven't figured out bind params yet
+    # abort if anything suspicious in tiids
+    for tiid in tiids:
+        for e in tiid:
+            if not e.isalnum():
+                return {}
+
+    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])
+    metric_objects = item_module.Metric.query.from_statement("""
+        WITH max_collect AS 
+            (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
+                FROM metric
+                WHERE tiid in ({tiid_string})
+                GROUP BY tiid, provider, metric_name)
+            SELECT max_collect.*, m.raw_value, m.drilldown_url
+                FROM metric m
+                NATURAL JOIN max_collect""".format(tiid_string=tiid_string)).all()
+
+    for metric_object in metric_objects:
+        item_obj = items_by_tiid[metric_object.tiid]
+        item_obj.metrics += [metric_object]
+
+    return item_objects
+
 
 def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
     collection_obj = Collection.query.get(cid)
@@ -472,27 +480,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     tiids = collection_obj.tiids
 
     if tiids:
-        item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
-
-        tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])
-        metric_objects = item_module.Metric.query.from_statement("""
-            with max_collect as ( select tiid, provider, metric_name, max(collected_date) as collected_date
-                    from metric
-                    where tiid in (""" + tiid_string + """)
-                    group by tiid, provider, metric_name)
-                    select max_collect.*, m.raw_value, m.drilldown_url
-                      from metric m
-                      natural join max_collect""").all()
-
-        items_by_tiid = {}
-        for item_obj in item_objects:
-            items_by_tiid[item_obj.tiid] = item_obj            
-
-        db.session.expunge_all()
-
-        for metric_object in metric_objects:
-            matching_item = items_by_tiid[metric_object.tiid]
-            matching_item.metrics += [metric_object]
+        item_objects = get_readonly_item_objects_with_metrics(tiids)
 
         for item_obj in item_objects:
             #logger.info(u"got item {tiid} for {cid}".format(
