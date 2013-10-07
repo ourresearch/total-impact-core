@@ -412,7 +412,7 @@ def collection_get(cid='', format="json", include_history=False):
 
         # except if format is csv.  can't do that.
         if format == "csv":
-            abort_custom(405, "csv method not supported for include_items")
+            abort_custom(405, "csv method not supported for not include_items")
         else:
             response_code = 200
             resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
@@ -631,7 +631,8 @@ def single_product_get(tiid):
 
 # returns products from tiids
 @app.route('/v1/products/<tiids_string>', methods=['GET'])
-def products_get(tiids_string):
+@app.route('/v1/products.<format>/<tiids_string>', methods=['GET'])
+def products_get(tiids_string, format="json"):
     tiids = tiids_string.split(",")
     cleaned_items_dict = cleaned_items(tiids)
 
@@ -639,10 +640,18 @@ def products_get(tiids_string):
     if collection.is_something_currently_updating(cleaned_items_dict, myredis):
         response_code = 210 # update is not complete yet
 
-    resp = make_response(json.dumps({"products": cleaned_items_dict}, sort_keys=True, indent=4),
-                         response_code)
+    if format == "csv":
+        csv = collection.make_csv_stream(cleaned_items_dict.values())
+        resp = make_response(csv, response_code)
+        resp.mimetype = "text/csv;charset=UTF-8"
+        resp.headers.add("Content-Encoding", "UTF-8")
+    else:
+        resp = make_response(json.dumps({"products": cleaned_items_dict}, sort_keys=True, indent=4),
+                             response_code)
 
     return resp
+
+
 
 
 # creates a collection from aliases or tiids

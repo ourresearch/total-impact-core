@@ -551,9 +551,8 @@ def make_csv_rows(items):
                 ordered_fieldnames[alias_name] = ""
         for metric_name in header_metric_names:
             try:
-                values = item['metrics'][metric_name]['values']
-                latest_key = sorted(values, reverse=True)[0]
-                ordered_fieldnames[metric_name] = clean_value_for_csv(values[latest_key])
+                raw_value = item['metrics'][metric_name]['values']['raw']
+                ordered_fieldnames[metric_name] = clean_value_for_csv(raw_value)
             except (AttributeError, KeyError):
                 ordered_fieldnames[metric_name] = ""
         rows += [ordered_fieldnames]
