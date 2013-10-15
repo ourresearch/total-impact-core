@@ -224,7 +224,7 @@ def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=N
         item["currently_updating"] = False
 
     api_key = request.args.get("key", None)
-    clean_item = item_module.clean_for_export(item, api_key, os.getenv("API_KEY"))
+    clean_item = item_module.clean_for_export(item, api_key, os.getenv("API_ADMIN_KEY"))
     clean_item["HTTP_status_code"] = response_code  # hack for clients who can't read real response codes
 
     resp_string = json.dumps(clean_item, sort_keys=True, indent=4)
@@ -440,7 +440,7 @@ def collection_get(cid='', format="json", include_history=False):
                              "UTF-8")
         else:
 
-            secret_key = os.getenv("API_KEY")  #ideally rename this to API_ADMIN_KEY
+            secret_key = os.getenv("API_ADMIN_KEY") 
             if request.args.get("api_admin_key"):
                 supplied_key = request.args.get("api_admin_key", "")
             else:
