@@ -50,11 +50,10 @@ def set_redis(url, db):
 
 
 def check_key():
-    if request.values.get("api_admin_key"):
-        return
-
     if "/v1/" in request.url:
         api_key = request.values.get('key', '')
+        if not api_key:
+            api_key = request.args.get("api_admin_key", "")
         if not api_user.is_valid_key(api_key):
             abort_custom(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a valid api key.")
     return # if success don't return any content
