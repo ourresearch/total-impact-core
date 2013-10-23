@@ -543,8 +543,8 @@ def products_refresh_post(tiids_string):
             item = item_obj.as_old_doc()        
             item_module.start_item_update(tiid, item["aliases"], myredis)
         except AttributeError:
-            logger.debug(u"couldn't find tiid {tiid} in {cid} so not refreshing its metrics".format(
-                cid=cid, tiid=tiid))
+            logger.debug(u"couldn't find tiid {tiid}  so not refreshing its metrics".format(
+                tiid=tiid))
 
     resp = make_response("true", 200)
     return resp
