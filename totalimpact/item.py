@@ -169,8 +169,8 @@ class Biblio(db.Model):
     collected_date = db.Column(db.DateTime())
 
     def __init__(self, **kwargs):
-        logger.debug(u"new Biblio {kwargs}".format(
-            kwargs=kwargs))                
+        # logger.debug(u"new Biblio {kwargs}".format(
+        #     kwargs=kwargs))                
 
         if "collected_date" in kwargs:
             self.collected_date = kwargs["collected_date"]
@@ -207,8 +207,8 @@ class Alias(db.Model):
     collected_date = db.Column(db.DateTime())
 
     def __init__(self, **kwargs):
-        logger.debug(u"new Alias {kwargs}".format(
-            kwargs=kwargs))                
+        # logger.debug(u"new Alias {kwargs}".format(
+        #     kwargs=kwargs))                
 
         if "alias_tuple" in kwargs:
             alias_tuple = canonical_alias_tuple(kwargs["alias_tuple"])
@@ -264,8 +264,8 @@ class Item(db.Model):
     metrics_query = db.relationship('Metric', lazy='dynamic')
 
     def __init__(self, **kwargs):
-        logger.debug(u"new Item {kwargs}".format(
-            kwargs=kwargs))                
+        # logger.debug(u"new Item {kwargs}".format(
+        #     kwargs=kwargs))                
 
         if "tiid" in kwargs:
             self.tiid = kwargs["tiid"]
@@ -490,8 +490,8 @@ def add_metrics_data(metric_name, metrics_method_response, item, timestamp=None)
 
 def add_metric_to_item_object(full_metric_name, metrics_method_response, item_doc):
     tiid = item_doc["_id"]
-    logger.debug(u"in add_metrics_to_item_object for {tiid}".format(
-        tiid=tiid))
+    # logger.debug(u"in add_metrics_to_item_object for {tiid}".format(
+    #     tiid=tiid))
 
     (metric_value, provenance_url) = metrics_method_response
     (provider, metric_name) = full_metric_name.split(":")

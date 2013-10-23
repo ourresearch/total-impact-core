@@ -20,8 +20,8 @@ class RedisQueue(object):
 
     def push(self, message):
         message_json = json.dumps(message)
-        logger.info(u"{:20}: /biblio_print >>>PUSHING to redis {message_json}".format(
-            self.name, message_json=message_json))        
+        # logger.info(u"{:20}: /biblio_print >>>PUSHING to redis {message_json}".format(
+        #     self.name, message_json=message_json))        
         self.myredis.lpush(self.queue_name, message_json)
 
     def pop(self):
@@ -101,11 +101,11 @@ class ProviderWorker(Worker):
             selected_couch_queue.push(couch_message)
 
     def add_to_alias_and_couch_queues(self, tiid, alias_dict, method_name, aliases_providers_run):
-        logger.info(u"Adding to alias queue {alias_dict} {method_name} from {tiid} for {provider_name}".format(
-            alias_dict=alias_dict, 
-            method_name=method_name, 
-            tiid=tiid, 
-            provider_name=self.provider_name))     
+        # logger.info(u"Adding to alias queue {alias_dict} {method_name} from {tiid} for {provider_name}".format(
+        #     alias_dict=alias_dict, 
+        #     method_name=method_name, 
+        #     tiid=tiid, 
+        #     provider_name=self.provider_name))     
         self.add_to_couch_queue_if_nonzero(tiid, alias_dict, method_name)
         alias_message = [tiid, alias_dict, aliases_providers_run]
         self.alias_queue.push(alias_message)
@@ -335,8 +335,8 @@ class Backend(Worker):
     def run(self):
         alias_message = self.alias_queue.pop()
         if alias_message:
-            logger.info(u"/biblio_print, alias_message said {alias_message}".format(
-               alias_message=alias_message))            
+            # logger.info(u"/biblio_print, alias_message said {alias_message}".format(
+            #    alias_message=alias_message))            
             (tiid, alias_dict, aliases_providers_run) = alias_message
 
             relevant_provider_names = self.sniffer(alias_dict, aliases_providers_run)
