@@ -545,7 +545,7 @@ def add_aliases_to_item_object(aliases_dict, item_doc):
 
 def add_biblio_to_item_object(new_biblio_dict, item_doc):
     tiid = item_doc["_id"]
-    logger.debug(u"in add_biblio_to_item_object for {tiid}, {new_biblio_dict}".format(
+    logger.debug(u"in add_biblio_to_item_object for {tiid}, /biblio_print {new_biblio_dict}".format(
         tiid=tiid, 
         new_biblio_dict=new_biblio_dict))        
 
@@ -958,7 +958,7 @@ def get_tiid_by_alias(ns, nid, mydao=None):
 
 
 def start_item_update(tiid, aliases_dict, myredis):
-    logger.debug(u"In start_item_update with {tiid}, {aliases_dict}".format(
+    logger.debug(u"In start_item_update with {tiid}, /biblio_print {aliases_dict}".format(
         tiid=tiid, aliases_dict=aliases_dict))
     myredis.set_num_providers_left(tiid,
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS))
