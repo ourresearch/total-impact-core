@@ -532,7 +532,10 @@ def add_aliases_to_item_object(aliases_dict, item_doc):
     item_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(item_obj)
 
-    item_obj.aliases += create_alias_objects(aliases_dict)
+    alias_objects = create_alias_objects(aliases_dict)
+    for alias_obj in alias_objects:
+        if not alias_obj.alias_tuple in item_obj.alias_tuples:
+            item_obj.aliases.append(alias_obj)    
 
     try:
         db.session.commit()
