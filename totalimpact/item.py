@@ -389,7 +389,7 @@ def clean_id(nid):
         pass
     return(nid)
 
-def get_item(tiid, myrefsets=None, mydao=None, include_history=False):
+def get_item(tiid, myrefsets=None, myredis):
     item_obj = Item.from_tiid(tiid)
 
     item_doc = item_obj.as_old_doc()
@@ -771,7 +771,7 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
     items = []
     for tiid in tiids:
         try:
-            item = get_item(tiid, myrefsets, mydao)
+            item = get_item(tiid, myrefsets, myredis)
         except (LookupError, AttributeError), e:
             logger.warning(u"Got an error looking up tiid '{tiid}'; error: {error}".format(
                     tiid=tiid, error=e.__repr__()))

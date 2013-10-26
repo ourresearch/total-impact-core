@@ -208,7 +208,7 @@ def item_namespace_post(namespace, nid):
 @app.route('/v1/item/<tiid>', methods=['GET'])
 def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=None):
     try:
-        item = item_module.get_item(tiid, myrefsets, mydao, include_history)
+        item = item_module.get_item(tiid, myrefsets, myredis)
     except (LookupError, AttributeError):
         abort_custom(404, "item does not exist")
 
