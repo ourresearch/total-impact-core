@@ -389,7 +389,7 @@ def clean_id(nid):
         pass
     return(nid)
 
-def get_item(tiid, myrefsets=None, myredis):
+def get_item(tiid, myrefsets, myredis):
     item_obj = Item.from_tiid(tiid)
 
     item_doc = item_obj.as_old_doc()
