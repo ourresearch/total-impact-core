@@ -396,7 +396,7 @@ def get_item(tiid, myrefsets=None, mydao=None, include_history=False):
     if not item_doc:
         return None
     try:
-        item_for_client = build_item_for_client(item_doc, myrefsets, mydao, include_history)
+        item_for_client = build_item_for_client(item_doc, myrefsets, myredis)
     except Exception, e:
         item_for_client = None
         logger.error(u"Exception %s: Skipping item, unable to build %s, %s" % (e.__repr__(), tiid, str(item_for_client)))
@@ -404,7 +404,7 @@ def get_item(tiid, myrefsets=None, mydao=None, include_history=False):
 
 
 
-def build_item_for_client(item, myrefsets, mydao, include_history=False):
+def build_item_for_client(item, myrefsets, myredis):
     # logger.debug(u"in build_item_for_client {tiid}".format(
     #     tiid=item["_id"]))
 
@@ -428,11 +428,10 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
         #     metric_name=metric_name))
 
         #delete the raw history from what we return to the client for now
-        if not include_history:
-            try:
-                del metrics[metric_name]["values"]["raw_history"]
-            except KeyError:
-                pass
+        try:
+            del metrics[metric_name]["values"]["raw_history"]
+        except KeyError:
+            pass
 
         if metric_name in all_static_meta.keys():  # make sure we still support this metrics type
             # add static data
@@ -455,6 +454,8 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
 
     # ditch metrics we don't have static_meta for:
     item["metrics"] = {k:v for k, v in item["metrics"].iteritems() if "static_meta"  in v}
+
+    item["currently_updating"] = is_currently_updating(item["_id"], myredis)
 
     return item
 

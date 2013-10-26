@@ -597,8 +597,8 @@ def products_create():
     return resp
 
 
-def cleaned_items(tiids):
-    items_dict = collection.get_items_for_client(tiids, myrefsets)
+def cleaned_items(tiids, myredis):
+    items_dict = collection.get_items_for_client(tiids, myrefsets, myredis)
 
     secret_key = os.getenv("API_ADMIN_KEY")
     supplied_key = request.args.get("api_admin_key", "")
@@ -611,7 +611,7 @@ def cleaned_items(tiids):
 # returns a product from a tiid
 @app.route('/v1/product/<tiid>', methods=['GET'])
 def single_product_get(tiid):
-    cleaned_items_dict = cleaned_items([tiid])
+    cleaned_items_dict = cleaned_items([tiid], myredis)
     try:
         single_item = cleaned_items_dict[tiid]
     except TypeError:
@@ -632,7 +632,7 @@ def single_product_get(tiid):
 @app.route('/v1/products.<format>/<tiids_string>', methods=['GET'])
 def products_get(tiids_string, format="json"):
     tiids = tiids_string.split(",")
-    cleaned_items_dict = cleaned_items(tiids)
+    cleaned_items_dict = cleaned_items(tiids, myredis)
 
     response_code = 200
     if collection.is_something_currently_updating(cleaned_items_dict, myredis):

@@ -419,14 +419,14 @@ def is_something_currently_updating(items_dict, myredis):
     return something_currently_updating
 
 
-def get_items_for_client(tiids, myrefsets):
+def get_items_for_client(tiids, myrefsets, myredis):
     item_objects = get_readonly_item_objects_with_metrics(tiids)
 
     dict_of_item_docs = {}
     for item_obj in item_objects:
         try:
             item_doc = item_obj.as_old_doc()
-            item_doc_for_client = item_module.build_item_for_client(item_doc, myrefsets, None, True)
+            item_doc_for_client = item_module.build_item_for_client(item_doc, myrefsets, myredis)
             dict_of_item_docs[item_obj.tiid] = item_doc_for_client
         except (KeyError, TypeError, AttributeError):
             logger.info(u"Couldn't build item {tiid}".format(tiid=item_obj.tiid))
@@ -487,7 +487,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
             #    tiid=item_obj.tiid, cid=cid))
             try:
                 item_doc = item_obj.as_old_doc()
-                item_for_client = item_module.build_item_for_client(item_doc, myrefsets, mydao, include_history)
+                item_for_client = item_module.build_item_for_client(item_doc, myrefsets, myredis)
             except (KeyError, TypeError, AttributeError):
                 logger.info(u"Couldn't build item {tiid}, excluding it from the returned collection {cid}".format(
                     tiid=item_obj.tiid, cid=cid))
