@@ -364,18 +364,9 @@ def importer_post(provider_name):
     logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
         tiids_aliases_map=tiids_aliases_map))
 
-<<<<<<< HEAD
-    products_dict = {k: {} for k in tiids_aliases_map.keys()}
-
-    resp = make_response(
-        json.dumps({"products": products_dict}, sort_keys=True, indent=4),
-        200
-    )
-=======
     products_dict = format_into_products_dict(tiids_aliases_map)
 
     resp = make_response(json.dumps({"products": products_dict}, sort_keys=True, indent=4), 200)
->>>>>>> af19c33fce74e537029826e878ae4fb468c073c8
     return resp
 
 
