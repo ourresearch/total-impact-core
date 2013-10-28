@@ -1,5 +1,4 @@
 from werkzeug import generate_password_hash, check_password_hash
-from couchdb import ResourceNotFound, ResourceConflict
 import shortuuid, datetime, hashlib, threading, json, time, copy, re
 
 from totalimpact.providers.provider import ProviderFactory
@@ -170,8 +169,8 @@ class Biblio(db.Model):
     collected_date = db.Column(db.DateTime())
 
     def __init__(self, **kwargs):
-        logger.debug(u"new Biblio {kwargs}".format(
-            kwargs=kwargs))                
+        # logger.debug(u"new Biblio {kwargs}".format(
+        #     kwargs=kwargs))                
 
         if "collected_date" in kwargs:
             self.collected_date = kwargs["collected_date"]
@@ -208,8 +207,8 @@ class Alias(db.Model):
     collected_date = db.Column(db.DateTime())
 
     def __init__(self, **kwargs):
-        logger.debug(u"new Alias {kwargs}".format(
-            kwargs=kwargs))                
+        # logger.debug(u"new Alias {kwargs}".format(
+        #     kwargs=kwargs))                
 
         if "alias_tuple" in kwargs:
             alias_tuple = canonical_alias_tuple(kwargs["alias_tuple"])
@@ -250,13 +249,6 @@ class Alias(db.Model):
         response = cls.query.filter_by(namespace=namespace, nid=nid)
         return response
 
-    @classmethod
-    def get_by_alias(cls, alias_tuple):
-        alias_tuple = canonical_alias_tuple(alias_tuple)
-        (namespace, nid) = alias_tuple
-        response = cls.query.get((namespace, nid))
-        return response
-
 
 class Item(db.Model):
     tiid = db.Column(db.Text, primary_key=True)
@@ -272,8 +264,8 @@ class Item(db.Model):
     metrics_query = db.relationship('Metric', lazy='dynamic')
 
     def __init__(self, **kwargs):
-        logger.debug(u"new Item {kwargs}".format(
-            kwargs=kwargs))                
+        # logger.debug(u"new Item {kwargs}".format(
+        #     kwargs=kwargs))                
 
         if "tiid" in kwargs:
             self.tiid = kwargs["tiid"]
@@ -397,14 +389,14 @@ def clean_id(nid):
         pass
     return(nid)
 
-def get_item(tiid, myrefsets=None, mydao=None, include_history=False):
+def get_item(tiid, myrefsets, myredis):
     item_obj = Item.from_tiid(tiid)
 
     item_doc = item_obj.as_old_doc()
     if not item_doc:
         return None
     try:
-        item_for_client = build_item_for_client(item_doc, myrefsets, mydao, include_history)
+        item_for_client = build_item_for_client(item_doc, myrefsets, myredis)
     except Exception, e:
         item_for_client = None
         logger.error(u"Exception %s: Skipping item, unable to build %s, %s" % (e.__repr__(), tiid, str(item_for_client)))
@@ -412,7 +404,7 @@ def get_item(tiid, myrefsets=None, mydao=None, include_history=False):
 
 
 
-def build_item_for_client(item, myrefsets, mydao, include_history=False):
+def build_item_for_client(item, myrefsets, myredis):
     # logger.debug(u"in build_item_for_client {tiid}".format(
     #     tiid=item["_id"]))
 
@@ -436,11 +428,10 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
         #     metric_name=metric_name))
 
         #delete the raw history from what we return to the client for now
-        if not include_history:
-            try:
-                del metrics[metric_name]["values"]["raw_history"]
-            except KeyError:
-                pass
+        try:
+            del metrics[metric_name]["values"]["raw_history"]
+        except KeyError:
+            pass
 
         if metric_name in all_static_meta.keys():  # make sure we still support this metrics type
             # add static data
@@ -464,7 +455,21 @@ def build_item_for_client(item, myrefsets, mydao, include_history=False):
     # ditch metrics we don't have static_meta for:
     item["metrics"] = {k:v for k, v in item["metrics"].iteritems() if "static_meta"  in v}
 
+    item["currently_updating"] = is_currently_updating(item["_id"], myredis)
+
     return item
+
+def as_int_or_float_if_possible(input_value):
+    value = input_value
+    try:
+        value = int(input_value)
+    except (ValueError, TypeError):
+        try:
+            value = float(input_value)
+        except (ValueError, TypeError):
+            pass
+    return(value)
+
 
 def add_metrics_data(metric_name, metrics_method_response, item, timestamp=None):
     metrics = item.setdefault("metrics", {})
@@ -475,19 +480,19 @@ def add_metrics_data(metric_name, metrics_method_response, item, timestamp=None)
     this_metric["provenance_url"] = provenance_url
 
     this_metric_values = this_metric.setdefault("values", {})
-    this_metric_values["raw"] = metric_value
+    this_metric_values["raw"] = as_int_or_float_if_possible(metric_value)
 
     this_metric_values_raw_history = this_metric_values.setdefault("raw_history", {})
     if not timestamp:
         timestamp = datetime.datetime.utcnow().isoformat()
-    this_metric_values_raw_history[timestamp] = metric_value
+    this_metric_values_raw_history[timestamp] = as_int_or_float_if_possible(metric_value)
     return item
 
 
 def add_metric_to_item_object(full_metric_name, metrics_method_response, item_doc):
     tiid = item_doc["_id"]
-    logger.debug(u"in add_metrics_to_item_object for {tiid}".format(
-        tiid=tiid))
+    # logger.debug(u"in add_metrics_to_item_object for {tiid}".format(
+    #     tiid=tiid))
 
     (metric_value, provenance_url) = metrics_method_response
     (provider, metric_name) = full_metric_name.split(":")
@@ -528,7 +533,10 @@ def add_aliases_to_item_object(aliases_dict, item_doc):
     item_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(item_obj)
 
-    item_obj.aliases += create_alias_objects(aliases_dict)
+    alias_objects = create_alias_objects(aliases_dict)
+    for alias_obj in alias_objects:
+        if not alias_obj.alias_tuple in item_obj.alias_tuples:
+            item_obj.aliases.append(alias_obj)    
 
     try:
         db.session.commit()
@@ -541,7 +549,7 @@ def add_aliases_to_item_object(aliases_dict, item_doc):
 
 def add_biblio_to_item_object(new_biblio_dict, item_doc):
     tiid = item_doc["_id"]
-    logger.debug(u"in add_biblio_to_item_object for {tiid}, {new_biblio_dict}".format(
+    logger.debug(u"in add_biblio_to_item_object for {tiid}, /biblio_print {new_biblio_dict}".format(
         tiid=tiid, 
         new_biblio_dict=new_biblio_dict))        
 
@@ -646,6 +654,12 @@ def decide_genre(alias_dict):
         else:
             genre = "webpage"
             host = "webpage"
+
+    # override with "article" if it has a journal
+    if "biblio" in alias_dict:
+        for biblio_dict in alias_dict["biblio"]:
+            if "journal" in biblio_dict:
+                genre = "article"
 
     return (genre, host)
 
@@ -757,7 +771,7 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
     items = []
     for tiid in tiids:
         try:
-            item = get_item(tiid, myrefsets, mydao)
+            item = get_item(tiid, myrefsets, myredis)
         except (LookupError, AttributeError), e:
             logger.warning(u"Got an error looking up tiid '{tiid}'; error: {error}".format(
                     tiid=tiid, error=e.__repr__()))
@@ -925,13 +939,10 @@ def get_tiid_by_biblio(biblio_dict):
     return tiid
 
 def get_tiid_by_alias(ns, nid, mydao=None):
-    # for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults# for expl of notation, see http://packages.python.org/CouchDB/client.html#viewresults
     logger.debug(u"In get_tiid_by_alias with {ns}, {nid}".format(
         ns=ns, nid=nid))
 
     tiid = None
-
-
     if (ns=="biblio"):
         tiid = get_tiid_by_biblio(nid)
     else:
@@ -941,8 +952,7 @@ def get_tiid_by_alias(ns, nid, mydao=None):
         try:
             tiid = alias_obj.tiid
             logger.debug(u"Found a tiid for {nid} in get_tiid_by_alias: {tiid}".format(
-                nid=nid, 
-                tiid=tiid))
+                nid=nid, tiid=tiid))
         except AttributeError:
             pass
 
@@ -950,8 +960,9 @@ def get_tiid_by_alias(ns, nid, mydao=None):
         logger.debug(u"no match for tiid for {nid}!".format(nid=nid))
     return tiid
 
+
 def start_item_update(tiid, aliases_dict, myredis):
-    logger.debug(u"In start_item_update with {tiid}, {aliases_dict}".format(
+    logger.debug(u"In start_item_update with {tiid}, /biblio_print {aliases_dict}".format(
         tiid=tiid, aliases_dict=aliases_dict))
     myredis.set_num_providers_left(tiid,
         ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS))

@@ -9,6 +9,12 @@ import re
 import logging
 logger = logging.getLogger('ti.providers.webpage')
 
+
+def clean_url(input_url):
+    url = unicode_helpers.remove_nonprinting_characters(input_url)
+    return url
+
+
 class Webpage(Provider):  
 
     example_id = ("url", "http://total-impact.org/")
@@ -26,6 +32,12 @@ class Webpage(Provider):
         (namespace, nid) = alias
         is_relevant = (namespace in ["url", "biblio"])
         return(is_relevant)
+
+    # overriding default because overriding member_items method
+    @property
+    def provides_members(self):
+        return True
+
 
     # copy biblio from aliases into item["biblio"] if no better source
     def biblio(self, 
@@ -121,3 +133,21 @@ class Webpage(Provider):
             except AttributeError:
                 pass
         return biblio_dict    
+
+    # overriding because don't need to look up
+    def member_items(self, 
+            query_string, 
+            provider_url_template=None, 
+            cache_enabled=True):
+
+        if not self.provides_members:
+            raise NotImplementedError()
+
+        self.logger.debug(u"%s getting member_items for %s" % (self.provider_name, query_string))
+
+        url_string = query_string.strip(" ")
+        urls = [clean_url(url) for url in url_string.split("\n")]
+        aliases_tuples = [("url", url) for url in urls]
+
+        return(aliases_tuples)
+

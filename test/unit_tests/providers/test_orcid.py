@@ -74,6 +74,13 @@ class TestOrcid(ProviderTestCase):
         assert len(members) >= len(expected), str(members)
 
     @http
+    def test_member_items_url_format(self):
+        members = self.provider.member_items("http://orcid.org/" + TEST_ORCID_ID)
+        print members
+        expected = [('doi', '10.1002/meet.14504701413'), ('doi', '10.1038/npre.2007.425.2'), ('doi', '10.1002/meet.14504701421'), ('doi', '10.1038/npre.2008.2152.1'), ('doi', '10.1038/npre.2007.361'), ('doi', '10.1038/473285a'), ('doi', '10.1038/npre.2010.4267.1'), ('doi', '10.1016/j.joi.2009.11.010'), ('doi', '10.1038/npre.2010.5452.1')]
+        assert len(members) >= len(expected), str(members)
+
+    @http
     def test_member_items_some_missing_dois(self):
         members = self.provider.member_items("0000-0001-5109-3700")  #another.  some don't have dois
         print members

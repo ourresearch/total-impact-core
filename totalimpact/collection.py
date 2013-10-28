@@ -33,7 +33,7 @@ def get_alias_strings(aliases):
             alias_strings += [namespace+":"+json.dumps(nid)]
     return alias_strings   
 
-def add_items_to_collection_object(cid, tiids, alias_tuples):
+def add_items_to_collection_object(cid, tiids, alias_tuples=[]):
     logger.debug(u"in add_items_to_collection_object for {cid}".format(
         cid=cid))        
 
@@ -47,17 +47,17 @@ def add_items_to_collection_object(cid, tiids, alias_tuples):
         if tiid not in collection_obj.tiids:
             collection_obj.tiid_links += [CollectionTiid(tiid=tiid)]
 
-    for alias_tuple in alias_tuples:
-        try:
-            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-            #logger.info(u"added_aliases: {added_aliases}, this tuple: {alias_tuple}".format(
-            #    added_aliases=collection_obj.added_aliases, 
-            #    alias_tuple=alias_tuple))
-            if alias_tuple not in collection_obj.added_aliases:
-                collection_obj.added_items += [AddedItem(alias_tuple=alias_tuple)]
-        except ValueError:
-            logger.debug("could not separate alias tuple {alias_tuple}".format(
-                alias_tuple=alias_tuple))            
+    # for alias_tuple in alias_tuples:
+    #     try:
+    #         alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
+    #         #logger.info(u"added_aliases: {added_aliases}, this tuple: {alias_tuple}".format(
+    #         #    added_aliases=collection_obj.added_aliases, 
+    #         #    alias_tuple=alias_tuple))
+    #         if alias_tuple not in collection_obj.added_aliases:
+    #             collection_obj.added_items += [AddedItem(alias_tuple=alias_tuple)]
+    #     except ValueError:
+    #         logger.debug("could not separate alias tuple {alias_tuple}".format(
+    #             alias_tuple=alias_tuple))            
 
     try:
         db.session.commit()
@@ -193,20 +193,20 @@ def create_objects_from_collection_doc(coll_doc):
         cid=new_coll_object.cid, 
         new_tiid_objects=new_coll_object.tiids))        
 
-    alias_strings = coll_doc["alias_tiids"].keys()
-    alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]
-    for alias_tuple in alias_tuples:
-        try:
-            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-            if alias_tuple not in new_coll_object.added_aliases:
-                    new_coll_object.added_items += [AddedItem(alias_tuple=alias_tuple, created=coll_doc["last_modified"])]
-        except ValueError:
-            logger.debug("could not separate alias tuple {alias_tuple}".format(
-                alias_tuple=alias_tuple))
+    # alias_strings = coll_doc["alias_tiids"].keys()
+    # alias_tuples = [alias_string.split(":", 1) for alias_string in alias_strings]
+    # for alias_tuple in alias_tuples:
+    #     try:
+    #         alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
+    #         if alias_tuple not in new_coll_object.added_aliases:
+    #                 new_coll_object.added_items += [AddedItem(alias_tuple=alias_tuple, created=coll_doc["last_modified"])]
+    #     except ValueError:
+    #         logger.debug("could not separate alias tuple {alias_tuple}".format(
+    #             alias_tuple=alias_tuple))
 
-    logger.debug(u"new_added_item_objects for {cid} are {new_added_item_objects}".format(
-        cid=new_coll_object.cid, 
-        new_added_item_objects=new_coll_object.added_aliases))      
+    # logger.debug(u"new_added_item_objects for {cid} are {new_added_item_objects}".format(
+    #     cid=new_coll_object.cid, 
+    #     new_added_item_objects=new_coll_object.added_aliases))      
 
     try:
         db.session.commit()
@@ -232,49 +232,49 @@ def delete_collection(cid):
     return
 
 
-class AddedItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    cid = db.Column(db.Text, db.ForeignKey('collection.cid'), index=True)
-    namespace = db.Column(db.Text)
-    nid = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
-    tiid = db.Column(db.Text)
-    created = db.Column(db.DateTime())
+# class AddedItem(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     cid = db.Column(db.Text, db.ForeignKey('collection.cid'), index=True)
+#     namespace = db.Column(db.Text)
+#     nid = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
+#     tiid = db.Column(db.Text)
+#     created = db.Column(db.DateTime())
 
-    def __init__(self, **kwargs):
-        logger.debug(u"new AddedItem {kwargs}".format(
-            kwargs=kwargs))    
-        if "alias_tuple" in kwargs:
-            alias_tuple = item_module.canonical_alias_tuple(kwargs["alias_tuple"])
-            (namespace, nid) = alias_tuple
-            self.namespace = namespace
-            self.nid = nid                
-        if "created" in kwargs:
-            self.created = kwargs["created"]
-        else:   
-            self.created = datetime.datetime.utcnow()
-        super(AddedItem, self).__init__(**kwargs)
+#     def __init__(self, **kwargs):
+#         logger.debug(u"new AddedItem {kwargs}".format(
+#             kwargs=kwargs))    
+#         if "alias_tuple" in kwargs:
+#             alias_tuple = item_module.canonical_alias_tuple(kwargs["alias_tuple"])
+#             (namespace, nid) = alias_tuple
+#             self.namespace = namespace
+#             self.nid = nid                
+#         if "created" in kwargs:
+#             self.created = kwargs["created"]
+#         else:   
+#             self.created = datetime.datetime.utcnow()
+#         super(AddedItem, self).__init__(**kwargs)
 
-    @hybrid_property
-    def alias_tuple(self):
-        return ((self.namespace, self.nid))
+#     @hybrid_property
+#     def alias_tuple(self):
+#         return ((self.namespace, self.nid))
 
-    @alias_tuple.setter
-    def alias_tuple(self, alias_tuple):
-        try:
-            alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
-            (namespace, nid) = alias_tuple
-        except ValueError:
-            logger.debug("could not separate alias tuple {alias_tuple}".format(
-                alias_tuple=alias_tuple))
-            raise
-        self.namespace = namespace
-        self.nid = nid
+#     @alias_tuple.setter
+#     def alias_tuple(self, alias_tuple):
+#         try:
+#             alias_tuple = item_module.canonical_alias_tuple(alias_tuple)
+#             (namespace, nid) = alias_tuple
+#         except ValueError:
+#             logger.debug("could not separate alias tuple {alias_tuple}".format(
+#                 alias_tuple=alias_tuple))
+#             raise
+#         self.namespace = namespace
+#         self.nid = nid
 
-    def __repr__(self):
-        return '<AddedItem {collection}, {alias_tuple} {tiid}>'.format(
-            collection=self.collection, 
-            alias_tuple=self.alias_tuple,
-            tiid=self.tiid)
+#     def __repr__(self):
+#         return '<AddedItem {collection}, {alias_tuple} {tiid}>'.format(
+#             collection=self.collection, 
+#             alias_tuple=self.alias_tuple,
+#             tiid=self.tiid)
 
 class CollectionTiid(db.Model):
     cid = db.Column(db.Text, db.ForeignKey('collection.cid'), primary_key=True, index=True)
@@ -300,8 +300,8 @@ class Collection(db.Model):
     refset_metadata = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
     tiid_links = db.relationship('CollectionTiid', lazy='subquery', cascade="all, delete-orphan",
         backref=db.backref("collection", lazy="subquery"))
-    added_items = db.relationship('AddedItem', lazy='subquery', cascade="all, delete-orphan",
-        backref=db.backref("collection", lazy="subquery"))
+    # added_items = db.relationship('AddedItem', lazy='subquery', cascade="all, delete-orphan",
+    #     backref=db.backref("collection", lazy="subquery"))
 
     def __init__(self, collection_id=None, **kwargs):
         logger.debug(u"new Collection {kwargs}".format(
@@ -328,9 +328,9 @@ class Collection(db.Model):
     def tiids(self):
         return [tiid_link.tiid for tiid_link in self.tiid_links]
 
-    @property
-    def added_aliases(self):
-        return [added_item.alias_tuple for added_item in self.added_items]
+    # @property
+    # def added_aliases(self):
+    #     return [added_item.alias_tuple for added_item in self.added_items]
 
     def __repr__(self):
         return '<Collection {cid}, {title}>'.format(
@@ -411,6 +411,64 @@ def get_collection_doc(cid):
     return get_collection_doc_from_object(collection_obj)
 
 
+def is_something_currently_updating(items_dict, myredis):
+    something_currently_updating = False
+    for tiid in items_dict:
+        this_item_updating = item_module.is_currently_updating(tiid, myredis)
+        something_currently_updating = something_currently_updating or this_item_updating
+    return something_currently_updating
+
+
+def get_items_for_client(tiids, myrefsets, myredis):
+    item_objects = get_readonly_item_objects_with_metrics(tiids)
+
+    dict_of_item_docs = {}
+    for item_obj in item_objects:
+        try:
+            item_doc = item_obj.as_old_doc()
+            item_doc_for_client = item_module.build_item_for_client(item_doc, myrefsets, myredis)
+            dict_of_item_docs[item_obj.tiid] = item_doc_for_client
+        except (KeyError, TypeError, AttributeError):
+            logger.info(u"Couldn't build item {tiid}".format(tiid=item_obj.tiid))
+            raise
+    
+    return dict_of_item_docs
+
+
+def get_readonly_item_objects_with_metrics(tiids):
+    logger.info(u"in get_readonly_item_objects_with_metrics")
+
+    item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
+    items_by_tiid = {}
+    for item_obj in item_objects:
+        items_by_tiid[item_obj.tiid] = item_obj            
+
+    db.session.expunge_all()
+
+    # we use string concatination below because haven't figured out bind params yet
+    # abort if anything suspicious in tiids
+    for tiid in tiids:
+        for e in tiid:
+            if not e.isalnum():
+                return {}
+
+    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])
+    metric_objects = item_module.Metric.query.from_statement("""
+        WITH max_collect AS 
+            (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
+                FROM metric
+                WHERE tiid in ({tiid_string})
+                GROUP BY tiid, provider, metric_name)
+            SELECT max_collect.*, m.raw_value, m.drilldown_url
+                FROM metric m
+                NATURAL JOIN max_collect""".format(tiid_string=tiid_string)).all()
+
+    for metric_object in metric_objects:
+        item_obj = items_by_tiid[metric_object.tiid]
+        item_obj.metrics += [metric_object]
+
+    return item_objects
+
 
 def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
     collection_obj = Collection.query.get(cid)
@@ -422,34 +480,14 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     tiids = collection_obj.tiids
 
     if tiids:
-        item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
-
-        tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])
-        metric_objects = item_module.Metric.query.from_statement("""
-            with max_collect as ( select tiid, provider, metric_name, max(collected_date) as collected_date
-                    from metric
-                    where tiid in (""" + tiid_string + """)
-                    group by tiid, provider, metric_name)
-                    select max_collect.*, m.raw_value, m.drilldown_url
-                      from metric m
-                      natural join max_collect""").all()
-
-        items_by_tiid = {}
-        for item_obj in item_objects:
-            items_by_tiid[item_obj.tiid] = item_obj            
-
-        db.session.expunge_all()
-
-        for metric_object in metric_objects:
-            matching_item = items_by_tiid[metric_object.tiid]
-            matching_item.metrics += [metric_object]
+        item_objects = get_readonly_item_objects_with_metrics(tiids)
 
         for item_obj in item_objects:
             #logger.info(u"got item {tiid} for {cid}".format(
             #    tiid=item_obj.tiid, cid=cid))
             try:
                 item_doc = item_obj.as_old_doc()
-                item_for_client = item_module.build_item_for_client(item_doc, myrefsets, mydao, include_history)
+                item_for_client = item_module.build_item_for_client(item_doc, myrefsets, myredis)
             except (KeyError, TypeError, AttributeError):
                 logger.info(u"Couldn't build item {tiid}, excluding it from the returned collection {cid}".format(
                     tiid=item_obj.tiid, cid=cid))
@@ -501,9 +539,8 @@ def make_csv_rows(items):
                 ordered_fieldnames[alias_name] = ""
         for metric_name in header_metric_names:
             try:
-                values = item['metrics'][metric_name]['values']
-                latest_key = sorted(values, reverse=True)[0]
-                ordered_fieldnames[metric_name] = clean_value_for_csv(values[latest_key])
+                raw_value = item['metrics'][metric_name]['values']['raw']
+                ordered_fieldnames[metric_name] = clean_value_for_csv(raw_value)
             except (AttributeError, KeyError):
                 ordered_fieldnames[metric_name] = ""
         rows += [ordered_fieldnames]
@@ -544,7 +581,7 @@ def get_metric_values_of_reference_sets(items):
     for key in metrics_to_normalize:
         if ("plosalm" in key):
             del metric_value_lists[key]
-        elif not isinstance(metric_value_lists[key][0], int):
+        elif not isinstance(metric_value_lists[key][0], (int, float)):
             del metric_value_lists[key]
     return metric_value_lists  
 
@@ -664,7 +701,6 @@ def build_all_reference_lookups(myredis, mydao):
             else:
                 logger.info(u"Not found in cache, so now building from items")
                 if refset_name:
-                    #cid = row.id
                     try:
                         # send it without reference sets because we are trying to load the reference sets here!
                         (coll_with_items, is_updating) = get_collection_with_items_for_client(cid, None, myredis, mydao)

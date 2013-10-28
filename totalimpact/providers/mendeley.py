@@ -190,7 +190,7 @@ class Mendeley(Provider):
                         logger.debug(u"Mendeley: years don't match %s and %s" %(
                             str(mendeley_record["year"]), str(biblio["year"])))
                 else:
-                    logger.debug(u"Mendeley: titles don't match %s and %s" %(
+                    logger.debug(u"Mendeley: titles don't match /biblio_print %s and %s" %(
                         self.remove_punctuation(mendeley_record["title"]), self.remove_punctuation(biblio["title"])))
         # no joy
         return None

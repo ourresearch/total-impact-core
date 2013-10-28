@@ -73,9 +73,14 @@ class Pubmed(Provider):
     def provides_aliases(self):
         return True
 
-    # overriding default because overriding aliases method
+    # overriding default because overriding metrics method
     @property
     def provides_metrics(self):
+        return True
+
+    # overriding default because overriding member_items method
+    @property
+    def provides_members(self):
         return True
 
     def _extract_biblio(self, page, id=None):
@@ -280,7 +285,6 @@ class Pubmed(Provider):
         return pmcids
 
     def provenance_url(self, metric_name, aliases):
-
         id = self.get_best_id(aliases)     
         if not id:
             # not relevant to Pubmed
@@ -308,6 +312,23 @@ class Pubmed(Provider):
                     urllib.quote(pmids_string), "provenance")
 
         return url
+
+
+    # overriding because don't need to look up
+    def member_items(self, 
+            query_string, 
+            provider_url_template=None, 
+            cache_enabled=True):
+
+        if not self.provides_members:
+            raise NotImplementedError()
+
+        self.logger.debug(u"%s getting member_items for %s" % (self.provider_name, query_string))
+
+        pmids = re.findall("\d+", query_string)
+        aliases_tuples = [("pmid", pmid) for pmid in pmids]
+
+        return(aliases_tuples)
 
 
 

@@ -1,7 +1,7 @@
 from flask import json, request, abort, make_response, g
 from flask import render_template
 import sys, os
-import datetime, re, couchdb, copy
+import datetime, re, copy
 from werkzeug.security import check_password_hash
 from collections import defaultdict
 import redis
@@ -30,7 +30,7 @@ myrefsets_histograms = None
 try:
     (myrefsets, myrefsets_histograms) = collection.build_all_reference_lookups(myredis, mydao)
     logger.debug(u"Reference sets dict has %i keys" %len(myrefsets.keys()))
-except (couchdb.ResourceNotFound, LookupError, AttributeError), e:
+except (LookupError, AttributeError), e:
     logger.error(u"Exception %s: Unable to load reference sets" % (e.__repr__()))
 
 def set_db(url, db):
@@ -50,11 +50,10 @@ def set_redis(url, db):
 
 
 def check_key():
-    if request.values.get("api_admin_key"):
-        return
-
     if "/v1/" in request.url:
         api_key = request.values.get('key', '')
+        if not api_key:
+            api_key = request.args.get("api_admin_key", "")
         if not api_user.is_valid_key(api_key):
             abort_custom(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a valid api key.")
     return # if success don't return any content
@@ -209,7 +208,7 @@ def item_namespace_post(namespace, nid):
 @app.route('/v1/item/<tiid>', methods=['GET'])
 def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=None):
     try:
-        item = item_module.get_item(tiid, myrefsets, mydao, include_history)
+        item = item_module.get_item(tiid, myrefsets, myredis)
     except (LookupError, AttributeError):
         abort_custom(404, "item does not exist")
 
@@ -224,7 +223,7 @@ def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=N
         item["currently_updating"] = False
 
     api_key = request.args.get("key", None)
-    clean_item = item_module.clean_for_export(item, api_key, os.getenv("API_KEY"))
+    clean_item = item_module.clean_for_export(item, api_key, os.getenv("API_ADMIN_KEY"))
     clean_item["HTTP_status_code"] = response_code  # hack for clients who can't read real response codes
 
     resp_string = json.dumps(clean_item, sort_keys=True, indent=4)
@@ -234,6 +233,13 @@ def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=N
     resp = make_response(resp_string, response_code)
 
     return resp
+
+@app.route('/v1/tiid/<namespace>/<path:nid>', methods=['GET'])
+def get_tiid_from_namespace_nid(namespace, nid):
+    tiid = item_module.get_tiid_by_alias(namespace, nid)
+    if not tiid:
+        abort_custom(404, "alias not in database")
+    return make_response(json.dumps({"tiid": tiid}, sort_keys=True, indent=4), 200)
 
 
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
@@ -318,6 +324,14 @@ def provider_memberitems_get(provider_name, query):
     return resp
 
 
+def format_into_products_dict(tiids_aliases_map):
+    products_dict = {}
+    for tiid in tiids_aliases_map:
+        (ns, nid) = tiids_aliases_map[tiid]
+        products_dict[tiid] = {"aliases": {ns: [nid]}}
+    return products_dict
+
+
 @app.route("/v1/importer/<provider_name>", methods=['POST'])
 def importer_post(provider_name):
     """
@@ -325,8 +339,17 @@ def importer_post(provider_name):
     """
     input_string = request.json["input"]
 
-    input_string = unicode_helpers.remove_nonprinting_characters(input_string)
-    provider = ProviderFactory.get_provider(provider_name)
+    if provider_name == "pmids":
+        provider_name = "pubmed"
+    elif provider_name == "dois":
+        provider_name = "crossref"
+    elif provider_name == "urls":
+        provider_name = "webpage"
+    try:
+        provider = ProviderFactory.get_provider(provider_name)
+    except ImportError:
+        abort_custom(404, "an importer for provider '{provider_name}' is not found".format(
+            provider_name=provider_name))
 
     try:
         aliases = provider.member_items(input_string)
@@ -339,24 +362,32 @@ def importer_post(provider_name):
 
     tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, myredis)
     logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
-        tiids_aliases_map=tiids_aliases_map)) 
+        tiids_aliases_map=tiids_aliases_map))
 
+<<<<<<< HEAD
     products_dict = {k: {} for k in tiids_aliases_map.keys()}
 
     resp = make_response(
         json.dumps({"products": products_dict}, sort_keys=True, indent=4),
         200
     )
+=======
+    products_dict = format_into_products_dict(tiids_aliases_map)
+
+    resp = make_response(json.dumps({"products": products_dict}, sort_keys=True, indent=4), 200)
+>>>>>>> af19c33fce74e537029826e878ae4fb468c073c8
     return resp
 
 
 def abort_if_fails_collection_edit_auth(request):
     if request.args.get("api_admin_key"):
         supplied_key = request.args.get("api_admin_key", "")
-        secret_key = os.getenv("API_KEY")  #ideally rename this to API_ADMIN_KEY
-        if secret_key == supplied_key:
+        if os.getenv("API_KEY") == supplied_key:  #remove this once webapp sends admin_api_key
+            return True
+        if os.getenv("API_ADMIN_KEY") == supplied_key:
             return True
     abort_custom(403, "This collection has no update key; it can't be changed.")
+
 
 def get_alias_strings(aliases):
     alias_strings = []
@@ -389,7 +420,7 @@ def collection_get(cid='', format="json", include_history=False):
 
         # except if format is csv.  can't do that.
         if format == "csv":
-            abort_custom(405, "csv method not supported for include_items")
+            abort_custom(405, "csv method not supported for not include_items")
         else:
             response_code = 200
             resp = make_response(json.dumps(coll, sort_keys=True, indent=4),
@@ -417,7 +448,7 @@ def collection_get(cid='', format="json", include_history=False):
                              "UTF-8")
         else:
 
-            secret_key = os.getenv("API_KEY")  #ideally rename this to API_ADMIN_KEY
+            secret_key = os.getenv("API_ADMIN_KEY") 
             if request.args.get("api_admin_key"):
                 supplied_key = request.args.get("api_admin_key", "")
             else:
@@ -473,7 +504,6 @@ def remove_items_from_collection(cid=""):
     return resp
 
 
-
 @app.route("/v1/collection/<cid>/items", methods=["PUT"])
 def add_items_to_collection(cid=""):
     """
@@ -483,10 +513,17 @@ def add_items_to_collection(cid=""):
     abort_if_fails_collection_edit_auth(request)
 
     try:
-        collection_object = collection.add_items_to_collection(
-            cid=cid, 
-            aliases=request.json["aliases"], 
-            myredis=myredis)
+        if "tiids" in request.json:
+            collection_object = collection.add_items_to_collection_object(
+                    cid=cid, 
+                    tiids=request.json["tiids"], 
+                    alias_tuples=None)
+        else:
+            #to be depricated
+            collection_object = collection.add_items_to_collection(
+                cid=cid, 
+                aliases=request.json["aliases"], 
+                myredis=myredis)
     except (AttributeError, TypeError) as e:
         # we got missing or improperly formated data.
         logger.error(u"PUT /collection/{id}/items threw an error: '{error_str}'. input: {json}.".format(
@@ -499,6 +536,26 @@ def add_items_to_collection(cid=""):
 
     resp = make_response(json.dumps(coll_doc, sort_keys=True, indent=4), 200)
 
+    return resp
+
+
+
+""" Refreshes all the items from tiids
+"""
+@app.route("/v1/products/<tiids_string>", methods=["POST"])
+# not officially supported in api
+def products_refresh_post(tiids_string):
+    tiids = tiids_string.split(",")
+    for tiid in tiids:
+        try:
+            item_obj = item_module.Item.from_tiid(tiid)
+            item = item_obj.as_old_doc()        
+            item_module.start_item_update(tiid, item["aliases"], myredis)
+        except AttributeError:
+            logger.debug(u"couldn't find tiid {tiid}  so not refreshing its metrics".format(
+                tiid=tiid))
+
+    resp = make_response("true", 200)
     return resp
 
 
@@ -520,10 +577,13 @@ def collection_metrics_refresh(cid=""):
         abort_custom(500, "Error doing collection_update")
 
     for tiid in tiids:
-        # don't need metrics for this
-        item_obj = item_module.Item.from_tiid(tiid)
-        item = item_obj.as_old_doc()        
-        item_module.start_item_update(tiid, item["aliases"], myredis)
+        try:
+            item_obj = item_module.Item.from_tiid(tiid)
+            item = item_obj.as_old_doc()        
+            item_module.start_item_update(tiid, item["aliases"], myredis)
+        except AttributeError:
+            logger.debug(u"couldn't find tiid {tiid} in {cid} so not refreshing its metrics".format(
+                cid=cid, tiid=tiid))
 
     resp = make_response("true", 200)
     return resp
@@ -532,6 +592,73 @@ def collection_metrics_refresh(cid=""):
 @app.route("/v1/collection/<cid>", methods=["DELETE"])
 def delete_collection(cid=None):
     abort_custom(501, "Deleting collections is not currently supported.")
+
+
+
+# creates products from aliases
+@app.route('/v1/products', methods=['POST'])
+def products_create():
+    tiids_aliases_map = item_module.create_tiids_from_aliases(request.json["aliases"], myredis)
+    products_dict = format_into_products_dict(tiids_aliases_map)
+
+    resp = make_response(json.dumps({"products": products_dict}, sort_keys=True, indent=4), 200)
+
+    return resp
+
+
+def cleaned_items(tiids, myredis):
+    items_dict = collection.get_items_for_client(tiids, myrefsets, myredis)
+
+    secret_key = os.getenv("API_ADMIN_KEY")
+    supplied_key = request.args.get("api_admin_key", "")
+    cleaned_items_dict = {}
+    for tiid in items_dict:
+        cleaned_items_dict[tiid] = item_module.clean_for_export(items_dict[tiid], supplied_key, secret_key)
+    return cleaned_items_dict
+
+
+# returns a product from a tiid
+@app.route('/v1/product/<tiid>', methods=['GET'])
+def single_product_get(tiid):
+    cleaned_items_dict = cleaned_items([tiid], myredis)
+    try:
+        single_item = cleaned_items_dict[tiid]
+    except TypeError:
+        abort_custom(404, "No product found with that tiid")
+
+    response_code = 200
+    if collection.is_something_currently_updating(cleaned_items_dict, myredis):
+        response_code = 210 # update is not complete yet
+
+    resp = make_response(json.dumps(single_item, sort_keys=True, indent=4),
+                         response_code)
+
+    return resp
+
+
+# returns products from tiids
+@app.route('/v1/products/<tiids_string>', methods=['GET'])
+@app.route('/v1/products.<format>/<tiids_string>', methods=['GET'])
+def products_get(tiids_string, format="json"):
+    tiids = tiids_string.split(",")
+    cleaned_items_dict = cleaned_items(tiids, myredis)
+
+    response_code = 200
+    if collection.is_something_currently_updating(cleaned_items_dict, myredis):
+        response_code = 210 # update is not complete yet
+
+    if format == "csv":
+        csv = collection.make_csv_stream(cleaned_items_dict.values())
+        resp = make_response(csv, response_code)
+        resp.mimetype = "text/csv;charset=UTF-8"
+        resp.headers.add("Content-Encoding", "UTF-8")
+    else:
+        resp = make_response(json.dumps({"products": cleaned_items_dict}, sort_keys=True, indent=4),
+                             response_code)
+
+    return resp
+
+
 
 
 # creates a collection from aliases or tiids
