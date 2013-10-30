@@ -10,7 +10,7 @@ class Delicious(Provider):
 
     example_id = ("url", "http://total-impact.org")
     metrics_url_template = "http://feeds.delicious.com/v2/json/url/%s?count=100"
-    provenance_url_ultimate_template = "http://delicious.com/{user}/search?p={url}"
+    provenance_url_template = "http://delicious.com/link/%s"
     url = "http://www.delicious.com"
     descr = "Online social bookmarking service"
     static_meta_dict = {
@@ -69,30 +69,9 @@ class Delicious(Provider):
             return None
 
         # first we need to get a user, by looking up metrics again
-        url = self._get_templated_url(self.metrics_url_template, id, "metrics")
+        url = self._get_templated_url(self.provenance_url_template, id, "provenance")
 
-        # try to get a response from the data provider                
-        response = self.http_get(url, cache_enabled=True, allow_redirects=True)
-        
-        status_code = response.status_code
-        if status_code != 200:
-            if status_code == 404:
-                return {}
-            else:
-                raise(self._get_error(status_code))
-
-        page = response.text
-        data = provider._load_json(page)
-        first_user = data[0]["a"]
-        url = id
-        if url.endswith("/"):
-            url = url[:-1]  #remote trailing slash or delicious can't find the url
-
-        provenance_url = self.provenance_url_ultimate_template.format(
-            user=first_user.encode("UTF-8"), 
-            url=urllib.quote(url.encode("UTF-8"), safe=""))
-
-        return provenance_url
+        return url
 
 
 

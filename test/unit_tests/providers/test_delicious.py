@@ -37,13 +37,13 @@ class TestDelicious(ProviderTestCase):
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("bookmarks", 
             [self.testitem_aliases])
-        expected = "http://delicious.com/wbq/search?p=http%3A%2F%2Ftotal-impact.org"
+        expected = "http://delicious.com/link/2d6bf502d610eaa99db37fada1957a95"
         assert_equals(provenance_url, expected)
 
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'delicious:bookmarks': (75, 'http://delicious.com/wbq/search?p=http%3A%2F%2Ftotal-impact.org')}
+        expected = {'delicious:bookmarks': (75, 'http://delicious.com/link/2d6bf502d610eaa99db37fada1957a95')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
@@ -52,7 +52,7 @@ class TestDelicious(ProviderTestCase):
     @http
     def test_metrics2(self):
         metrics_dict = self.provider.metrics([("url", TEST_ID2)])
-        expected = {'delicious:bookmarks': (3, 'http://delicious.com/jbrittholbrook/search?p=http%3A%2F%2Fcas-csid.cas.unt.edu%2F%3Fp%3D3575')}
+        expected = {'delicious:bookmarks': (3, 'http://delicious.com/link/41ce360e970852cc77349af2615c9d02')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
