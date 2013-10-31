@@ -20,6 +20,7 @@ PROVIDERS = [
     ("figshare", {}),            
     ("github", {}),
     ("slideshare", {}),
+    ("vimeo", {}),
     ("youtube", {}),
 
     # if-need-be biblio providers go here, in order with best first
