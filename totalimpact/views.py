@@ -592,7 +592,7 @@ def products_post():
     if "aliases" in request.json:
         tiids_aliases_map = item_module.create_tiids_from_aliases(request.json["aliases"], myredis)
         products_dict = format_into_products_dict(tiids_aliases_map)
-        resp = make_response(json.dumps({"products": products_dict}, sort_keys=True, indent=4), 200)
+        response = make_response(json.dumps({"products": products_dict}, sort_keys=True, indent=4), 200)
         return response
     elif "tiids" in request.json:
         # overloading post for get because tiids string gets long
