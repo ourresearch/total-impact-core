@@ -31,7 +31,7 @@ class Plossearch(Provider):
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
         if namespace in ["url", "doi"]:
-            for host in ["dryad", "figshare", "github"]:
+            for host in ["dryad", "figshare", "github", "youtube", "vimeo"]:
                 if host in nid:
                     return True
         return False

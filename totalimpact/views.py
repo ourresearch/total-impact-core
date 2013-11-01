@@ -588,13 +588,20 @@ def delete_collection(cid=None):
 
 # creates products from aliases
 @app.route('/v1/products', methods=['POST'])
-def products_create():
-    tiids_aliases_map = item_module.create_tiids_from_aliases(request.json["aliases"], myredis)
-    products_dict = format_into_products_dict(tiids_aliases_map)
-
-    resp = make_response(json.dumps({"products": products_dict}, sort_keys=True, indent=4), 200)
-
-    return resp
+def products_post():
+    if "aliases" in request.json:
+        tiids_aliases_map = item_module.create_tiids_from_aliases(request.json["aliases"], myredis)
+        products_dict = format_into_products_dict(tiids_aliases_map)
+        response = make_response(json.dumps({"products": products_dict}, sort_keys=True, indent=4), 200)
+        return response
+    elif "tiids" in request.json:
+        # overloading post for get because tiids string gets long
+        logger.debug("in products_post with tiids, so getting products to return")
+        tiids = request.json["tiids"]
+        tiids_string = ",".join(tiids)
+        return products_get(tiids_string)
+    else:
+        abort_custom(400, "bad arguments")
 
 
 def cleaned_items(tiids, myredis):

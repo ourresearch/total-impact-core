@@ -639,9 +639,10 @@ def _extract_from_data_dict(data, dict_of_keylists):
             value = _lookup_json(data, keylist)
 
             # only set metrics for non-zero and non-null metrics
-            if value:
+            if value and (value != "0"):
                 return_dict[metric] = value
     return return_dict
+
 
 def _extract_from_json(page, dict_of_keylists):
     data = _load_json(page)
@@ -730,6 +731,10 @@ def _lookup_xml_from_soup(soup, keylist):
         pass
 
     return(response)
+
+def _metrics_dict_as_ints(metrics_dict):
+    metrics_dict_ints = {key:int(val) for (key, val) in metrics_dict.items()}
+    return metrics_dict_ints
 
 def _extract_from_xml(page, dict_of_keylists):
     (doc, lookup_function) = _get_doc_from_xml(page)

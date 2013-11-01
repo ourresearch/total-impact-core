@@ -651,6 +651,12 @@ def decide_genre(alias_dict):
         elif "github.com" in joined_url_string:
             genre = "software"
             host = "github"
+        elif "youtube.com" in joined_url_string:
+            genre = "video"
+            host = "youtube"
+        elif "vimeo.com" in joined_url_string:
+            genre = "video"
+            host = "vimeo"
         else:
             genre = "webpage"
             host = "webpage"
@@ -890,7 +896,7 @@ def create_tiids_from_aliases(aliases, myredis):
             item_doc["aliases"][ns] = [nid]
         tiid = item_doc["_id"]
 
-        logger.debug(u"in create_missing_tiids_from_aliases for {tiid}, now to postgres".format(
+        logger.debug(u"in create_tiids_from_aliases for {tiid}, now to postgres".format(
             tiid=tiid))   
         item_obj = create_objects_from_item_doc(item_doc)
         db.session.merge(item_obj)
@@ -903,7 +909,7 @@ def create_tiids_from_aliases(aliases, myredis):
         db.session.commit()
     except (IntegrityError, FlushError) as e:
         db.session.rollback()
-        logger.warning(u"Fails Integrity check in create_missing_tiids_from_aliases for {tiid}, rolling back.  Message: {message}".format(
+        logger.warning(u"Fails Integrity check in create_tiids_from_aliases for {tiid}, rolling back.  Message: {message}".format(
             tiid=tiid, 
             message=e.message)) 
 

@@ -1,0 +1,56 @@
+{
+ "kind": "youtube#videoListResponse",
+ "etag": "\"WD4VMEpMvsFyTbuuNulahhED0yg/tBhH_Se4T0KC5-t3Z2iAGFhYxG8\"",
+ "pageInfo": {
+  "totalResults": 1,
+  "resultsPerPage": 1
+ },
+ "items": [
+  {
+   "kind": "youtube#video",
+   "etag": "\"WD4VMEpMvsFyTbuuNulahhED0yg/r6vQJQulhVRzRCLUkWSMXt7Yf30\"",
+   "id": "d39DL4ed754",
+   "snippet": {
+    "publishedAt": "2013-10-15T21:48:48.000Z",
+    "channelId": "UCGGn6p9kcZX6IqpxIylT1zA",
+    "title": "Y Combinator video outtakes",
+    "description": "",
+    "thumbnails": {
+     "default": {
+      "url": "https://i1.ytimg.com/vi/d39DL4ed754/default.jpg"
+     },
+     "medium": {
+      "url": "https://i1.ytimg.com/vi/d39DL4ed754/mqdefault.jpg"
+     },
+     "high": {
+      "url": "https://i1.ytimg.com/vi/d39DL4ed754/hqdefault.jpg"
+     }
+    },
+    "channelTitle": "ImpactStory",
+    "categoryId": "22",
+    "liveBroadcastContent": "none"
+   },
+   "contentDetails": {
+    "duration": "PT2M3S",
+    "dimension": "2d",
+    "definition": "sd",
+    "caption": "false",
+    "licensedContent": false
+   },
+   "status": {
+    "uploadStatus": "processed",
+    "privacyStatus": "public",
+    "license": "youtube",
+    "embeddable": true,
+    "publicStatsViewable": true
+   },
+   "statistics": {
+    "viewCount": "113",
+    "likeCount": "3",
+    "dislikeCount": "0",
+    "favoriteCount": "0",
+    "commentCount": "0"
+   }
+  }
+ ]
+}
