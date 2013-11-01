@@ -22,14 +22,14 @@ class Plosalm(Provider):
             "display_name": "html views",
             "provider": "PLOS",
             "provider_url": "http://www.plos.org/",
-            "description": "the number of views of the PLoS HTML article",
+            "description": "the number of views of the HTML article on PLOS",
             "icon": PLOS_ICON,
         },    
         "pdf_views": {
             "display_name": "pdf views",
             "provider": "PLOS",
             "provider_url": "http://www.plos.org/",
-            "description": "the number of downloads of the PDF",
+            "description": "the number of downloads of the PDF from PLOS",
             "icon": PLOS_ICON,
         }  
     }
