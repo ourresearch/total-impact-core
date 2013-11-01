@@ -11,7 +11,7 @@ class Plosalm(Provider):
     example_id = ("doi", "10.1371/journal.pcbi.1000361")
 
     url = "http://www.plos.org/"
-    descr = "PLoS article level metrics."
+    descr = "PLOS article level metrics."
     metrics_url_template = "http://alm.plos.org/api/v3/articles?ids=%s&source=citations,counter&api_key=" + os.environ["PLOS_KEY_V3"]
     provenance_url_template = "http://dx.doi.org/%s"
 
@@ -20,14 +20,14 @@ class Plosalm(Provider):
     static_meta_dict =  {
         "html_views": {
             "display_name": "html views",
-            "provider": "PLoS",
+            "provider": "PLOS",
             "provider_url": "http://www.plos.org/",
             "description": "the number of views of the PLoS HTML article",
             "icon": PLOS_ICON,
         },    
         "pdf_views": {
             "display_name": "pdf views",
-            "provider": "PLoS",
+            "provider": "PLOS",
             "provider_url": "http://www.plos.org/",
             "description": "the number of downloads of the PDF",
             "icon": PLOS_ICON,
