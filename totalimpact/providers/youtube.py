@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, os
+import simplejson, os, re
 
 import logging
 logger = logging.getLogger('ti.providers.youtube')
@@ -66,7 +66,8 @@ class Youtube(Provider):
             return False
 
     def _get_video_id(self, video_url):
-        (dummy, nid_as_youtube_url) = video_url.split("=")
+        match = re.findall("watch\?v=([\dA-Za-z_]+)", video_url)
+        nid_as_youtube_url = match[0]
         return nid_as_youtube_url
 
     #override because need to break up id
