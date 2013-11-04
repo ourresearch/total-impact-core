@@ -12,7 +12,7 @@ class Plossearch(Provider):
 
     url = "http://www.plos.org/"
     descr = "PLoS article level metrics."
-    metrics_url_template = 'http://api.plos.org/search?q="%s"&api_key=' + os.environ["PLOS_KEY"]
+    metrics_url_template = 'http://api.plos.org/search?q="%s"&api_key=' + os.environ["PLOS_KEY_V3"]
     provenance_url_template = 'http://www.plosone.org/search/advanced?queryTerm=&unformattedQuery=everything:"%s"'
 
     static_meta_dict =  {
@@ -59,6 +59,7 @@ class Plossearch(Provider):
 
     # need to override to url encode for metrics
     def _get_templated_url(self, template, id, method=None):
+        id = re.sub('^http(s?)://', '', id)
         id = urllib.quote(id, safe="")
         url = template % id
         return(url)

@@ -34,13 +34,13 @@ class TestPlossearch(ProviderTestCase):
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("tweets", 
             [self.testitem_aliases])
-        expected = 'http://www.plosone.org/search/advanced?queryTerm=&unformattedQuery=everything:"http%3A%2F%2Fhdl.handle.net%2F10255%2Fdryad.235"'
+        expected = 'http://www.plosone.org/search/advanced?queryTerm=&unformattedQuery=everything:"hdl.handle.net%2F10255%2Fdryad.235"'
         assert_equals(provenance_url, expected)
 
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        expected = {'plossearch:mentions': (2, 'http://www.plosone.org/search/advanced?queryTerm=&unformattedQuery=everything:"http%3A%2F%2Fhdl.handle.net%2F10255%2Fdryad.235"')}
+        expected = {'plossearch:mentions': (2, 'http://www.plosone.org/search/advanced?queryTerm=&unformattedQuery=everything:"hdl.handle.net%2F10255%2Fdryad.235"')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
@@ -51,7 +51,7 @@ class TestPlossearch(ProviderTestCase):
         metrics_dict = self.provider.metrics([("url","http://dx.doi.org/10.5061/dryad.234"), 
                                                 ("doi", "10.5061/dryad.234"), 
                                                 ("url","http://hdl.handle.net/10255/dryad.235")])
-        expected = {'plossearch:mentions': (2, 'http://www.plosone.org/search/advanced?queryTerm=&unformattedQuery=everything:"http%3A%2F%2Fhdl.handle.net%2F10255%2Fdryad.235"')}
+        expected = {'plossearch:mentions': (2, 'http://www.plosone.org/search/advanced?queryTerm=&unformattedQuery=everything:"hdl.handle.net%2F10255%2Fdryad.235"')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
