@@ -1,1 +1,33 @@
-sciverse.Backend._requests.search1.callback({"OK":{"totalResults":"1","results":[{"doi":"10.1371/journal.pone.0000308","doctype":"Journal","affiliation":"","inwardurl":"http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=36248970413","page":"","abs":"","title":"Sharing detailed research data is associated with increased citation rate","vol":"2","citedbycount":"65","eid":"2-s2.0-36248970413","authlist":"","issue":"3","pubdate":"2007-03-21","firstauth":"Piwowar, H.A.","issn":"19326203","sourcetitle":"PLoS ONE","scp":"36248970413"}],"returnedResults":"25","position":"0"}})
+{
+    "search-results": {
+        "opensearch:Query": {
+            "@searchTerms": "DOI%2810.1371%2Fjournal.pone.0000308%29", 
+            "@role": "request", 
+            "@startPage": "0"
+        }, 
+        "opensearch:itemsPerPage": "1", 
+        "opensearch:totalResults": "1", 
+        "link": [
+            {
+                "@href": "http://api.elsevier.com:80/content/search/index:scopus?start=0&count=25&query=DOI(10.1371/journal.pone.0000308)&field=citedby-count&apiKey=REDACTED&insttoken=REDACTED", 
+                "@ref": "self", 
+                "@_fa": "true", 
+                "@type": "application/json"
+            }, 
+            {
+                "@href": "http://api.elsevier.com:80/content/search/index:scopus?start=0&count=25&query=DOI(10.1371/journal.pone.0000308)&field=citedby-count&apiKey=REDACTED&insttoken=REDACTED", 
+                "@ref": "first", 
+                "@_fa": "true", 
+                "@type": "application/json"
+            }
+        ], 
+        "opensearch:startIndex": "0", 
+        "entry": [
+            {
+                "prism:url": "http://api.elsevier.com/content/abstract/scopus_id:36248970413", 
+                "@_fa": "true", 
+                "citedby-count": "97"
+            }
+        ]
+    }
+}

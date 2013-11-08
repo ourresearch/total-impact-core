@@ -14,7 +14,7 @@ class Scopus(Provider):
     descr = "The world's largest abstract and citation database of peer-reviewed literature."
     # template urls below because they need a freshly-minted random string
     metrics_url_template = None
-    provenance_url_template = None
+    provenance_url_template = "http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=%s"
 
     static_meta_dict =  { 
         "citations": {
@@ -32,7 +32,7 @@ class Scopus(Provider):
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
-        return("doi" == namespace)
+        return (namespace in ["doi", "biblio"])
 
 
     def _get_json(self, fullpage):
@@ -50,7 +50,7 @@ class Scopus(Provider):
 
     def _extract_metrics(self, record, status_code=200, id=None):
         try:
-            citations = int(record["citedbycount"])    
+            citations = int(record["citedby-count"])    
         except (KeyError, TypeError, ValueError):
             return {}
 
@@ -62,13 +62,16 @@ class Scopus(Provider):
 
     def _extract_provenance_url(self, record, status_code=200, id=None):
         try:
-            provenance_url = record["inwardurl"] 
+            api_url = record["prism:url"] 
+            match = re.findall("scopus_id:([\dA-Z]+)", api_url)
+            scopus_id = match[0]
+            provenance_url = self._get_templated_url(self.provenance_url_template, scopus_id)
         except (KeyError, TypeError):
             provenance_url = ""
         return provenance_url
 
-    def _get_page(self, url):
-        response = self.http_get(url, timeout=30)
+    def _get_page(self, url, headers={}):
+        response = self.http_get(url, headers=headers, timeout=30)
         if response.status_code != 200:
             if response.status_code == 404:
                 return None
@@ -79,21 +82,21 @@ class Scopus(Provider):
             raise ProviderContentMalformedError()
         return page
 
-    def _extract_relevant_record_with_doi(self, fullpage, id):
-        data = self._get_json(fullpage)
+    def _extract_relevant_record(self, fullpage, id):
+        data = provider._load_json(fullpage)
         response = None
         try:
-            citation_rows = data["OK"]["results"]
-            for citation_row in citation_rows:
-                if citation_row["doi"].lower()==id.lower():
-                    response = citation_row
+            response = data["search-results"]["entry"][0]
         except (KeyError, ValueError):
             # not in Scopus database
             return None
         return response
 
     def _get_scopus_page(self, url):
-        page = self._get_page(url)
+        headers = {}
+        headers["accept"] = "application/json"
+
+        page = self._get_page(url, headers)
         if not page:
             logger.info(u"empty page with id {id}".format(id=id))
             return None
@@ -106,7 +109,7 @@ class Scopus(Provider):
     def _get_relevant_record_with_doi(self, id):
         # pick a new random string so don't time out.  Unfort, url now can't cache.
         random_string = "".join(random.sample(string.letters, 10))
-        url_template = 'http://searchapi.scopus.com/documentSearch.url?&search=%s&callback=sciverse.Backend._requests.search1.callback&preventCache='+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
+        url_template = "https://api.elsevier.com/content/search/index:SCOPUS?query=DOI(%s)&field=citedby-count&apiKey="+os.environ["SCOPUS_KEY"]+"&insttoken="+os.environ["SCOPUS_INSTTOKEN"]
         url = self._get_templated_url(url_template, id)
 
         page = self._get_scopus_page(url)
@@ -114,52 +117,28 @@ class Scopus(Provider):
         if not page:
             return None  # empty result set
 
-        relevant_record = self._extract_relevant_record_with_doi(page, id)
-        if not relevant_record:
-            data = self._get_json(page)
-            try:
-                number_results = data["OK"]["totalResults"]
-            except (KeyError, ValueError):
-                return None            
-            url = "{previous_url}&offset={last_record}".format(
-                previous_url=url, last_record=(int(number_results)-1))
-            page = self._get_page(url)
-            relevant_record = self._extract_relevant_record_with_doi(page, id)
-            if not relevant_record:
-                logger.warning(u"not empty result set, yet couldn't find a page with doi {id}".format(id=id))
-                return None
+        relevant_record = self._extract_relevant_record(page, id)
         return relevant_record
 
-    def _extract_relevant_record_with_biblio(self, fullpage, id):
-        scopus_data = self._get_json(fullpage)
-        relevant_record = None
-        try:
-            citation_rows = scopus_data["OK"]["results"]
-            if len(citation_rows)==1:
-                relevant_record = citation_rows[0]
-            else:
-                #logger.warning(u"ambiguous result set with biblio, not selecting any {id}".format(id=id))
-                return None
-        except (KeyError, ValueError):
-            # not in Scopus database
-            return None
-        return relevant_record
 
     def _get_relevant_record_with_biblio(self, biblio_dict):
         random_string = "".join(random.sample(string.letters, 10))
-        url_template = "http://searchapi.scopus.com/documentSearch.url?&search=First%20Author:{first_author};Journal:%22{journal}%22;Title:{title}&callback=sciverse.Backend._requests.search1.callback&preventCache="+random_string+"&apiKey="+os.environ["SCOPUS_KEY"]
+        url_template = "https://api.elsevier.com/content/search/index:SCOPUS?query=AUTHOR-NAME({first_author})%20AND%20TITLE({title})%20AND%20SRCTITLE({journal})&field=citedby-count&apiKey="+os.environ["SCOPUS_KEY"]+"&insttoken="+os.environ["SCOPUS_INSTTOKEN"]
         try:        
+            if not "first_author" in biblio_dict:
+                biblio_dict["first_author"] = biblio_dict["authors"].split(" ")[0]
             url = url_template.format(
                     first_author=urllib.quote(biblio_dict["first_author"]), 
                     title=urllib.quote(biblio_dict["title"]), 
                     journal=urllib.quote(biblio_dict["journal"]))
         except KeyError:
+            logger.debug("tried _get_relevant_record_with_biblio but leaving because KeyError")
             return None
         page = self._get_scopus_page(url)
         if not page:
             return None  # empty result set
 
-        relevant_record = self._extract_relevant_record_with_biblio(page, biblio_dict)
+        relevant_record = self._extract_relevant_record(page, biblio_dict)
         return relevant_record
 
 
