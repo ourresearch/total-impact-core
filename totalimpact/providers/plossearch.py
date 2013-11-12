@@ -18,7 +18,7 @@ class Plossearch(Provider):
     static_meta_dict =  {
         "mentions": {
             "display_name": "mentions",
-            "provider": "PLoS",
+            "provider": "PLOS",
             "provider_url": "http://www.plos.org/",
             "description": "the number of times the doi was mentioned in the full-text of PLOS papers",
             "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg" ,
