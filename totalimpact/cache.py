@@ -24,9 +24,9 @@ class Cache(object):
 
     def _get_memcached_client(self):
         mc = pylibmc.Client(
-            servers=[os.environ.get('MEMCACHE_SERVERS')],
-            username=os.environ.get('MEMCACHE_USERNAME'),
-            password=os.environ.get('MEMCACHE_PASSWORD'),
+            servers=[os.environ.get('MEMCACHIER_SERVERS')],
+            username=os.environ.get('MEMCACHIER_USERNAME'),
+            password=os.environ.get('MEMCACHIER_PASSWORD'),
             binary=True)
         return mc
  
