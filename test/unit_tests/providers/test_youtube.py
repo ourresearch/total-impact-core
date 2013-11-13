@@ -48,7 +48,7 @@ class TestYoutube(ProviderTestCase):
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
         print metrics_dict
-        expected = {'youtube:comments': (0, 'http://www.youtube.com/watch?v=d39DL4ed754'), 'youtube:views': (113, 'http://www.youtube.com/watch?v=d39DL4ed754'), 'youtube:dislikes': (0, 'http://www.youtube.com/watch?v=d39DL4ed754'), 'youtube:likes': (3, 'http://www.youtube.com/watch?v=d39DL4ed754'), 'youtube:favorites': (0, 'http://www.youtube.com/watch?v=d39DL4ed754')}
+        expected = {'youtube:views': (123, 'http://www.youtube.com/watch?v=d39DL4ed754'), 'youtube:likes': (3, 'http://www.youtube.com/watch?v=d39DL4ed754')}
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
