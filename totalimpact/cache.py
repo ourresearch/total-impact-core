@@ -23,10 +23,16 @@ class Cache(object):
         return hash_key
 
     def _get_memcached_client(self):
+        servers = [os.environ.get('MEMCACHIER_SERVERS')]
+        username=os.environ.get('MEMCACHIER_USERNAME')
+        password=os.environ.get('MEMCACHIER_PASSWORD')
+        if "localhost" in servers:
+            username = None
+            password = None
         mc = pylibmc.Client(
-            servers=[os.environ.get('MEMCACHIER_SERVERS')],
-            username=os.environ.get('MEMCACHIER_USERNAME'),
-            password=os.environ.get('MEMCACHIER_PASSWORD'),
+            servers=servers, 
+            username=username,
+            password=password,
             binary=True)
         return mc
  
