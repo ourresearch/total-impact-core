@@ -60,7 +60,7 @@ class Twitter_Account(Provider):
         try:
             nid = nid.lower()
         except AttributeError:
-            pass 
+            return False 
         if (namespace == "url"):
             if ("twitter.com" in nid) and ("/status/" not in nid):
                 return True
@@ -87,10 +87,10 @@ class Twitter_Account(Provider):
 
     def get_account_data(self, aliases):
         nid = self.get_best_id(aliases)
-        screen_name = self.screen_name(nid)
-
         if not nid:
             return None
+
+        screen_name = self.screen_name(nid)
 
         r = self.client.api.users.show.get(screen_name=screen_name)
         return r.data
