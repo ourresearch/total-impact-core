@@ -651,6 +651,9 @@ def decide_genre(alias_dict):
         elif "github.com" in joined_url_string:
             genre = "software"
             host = "github"
+        elif "twitter.com" in joined_url_string:
+            genre = "profile"
+            host = "twitter_account"
         elif "youtube.com" in joined_url_string:
             genre = "video"
             host = "youtube"
