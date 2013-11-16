@@ -17,6 +17,7 @@ class TestFigshare(ProviderTestCase):
 
     provider_name = "figshare"
 
+    testitem_members = "http://figshare.com/authors/schamberlain/96554"
     testitem_aliases = ("doi", "10.6084/m9.figshare.92393")
     testitem_metrics = ("doi", "10.6084/m9.figshare.92393")
     testitem_biblio = ("doi", "10.6084/m9.figshare.92393")
@@ -35,6 +36,13 @@ class TestFigshare(ProviderTestCase):
         metrics_dict = self.provider._extract_metrics(f.read(), id="10.6084/m9.figshare.92393")
         print metrics_dict
         assert_equals(metrics_dict["figshare:downloads"], 19)
+
+    def test_extract_members_success(self):
+        f = open(SAMPLE_EXTRACT_MEMBER_ITEMS_PAGE, "r")
+        response = self.provider._extract_members(f.read())
+        print response
+        expected = [('doi', '10.6084/m9.figshare.806563'), ('doi', '10.6084/m9.figshare.806423'), ('doi', '10.6084/m9.figshare.803123'), ('doi', '10.6084/m9.figshare.791569'), ('doi', '10.6084/m9.figshare.758498'), ('doi', '10.6084/m9.figshare.757866'), ('doi', '10.6084/m9.figshare.739343'), ('doi', '10.6084/m9.figshare.729248'), ('doi', '10.6084/m9.figshare.719786'), ('doi', '10.6084/m9.figshare.669696')]
+        assert_equals(response, expected)
 
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("figshare:downloads", [self.testitem_aliases])
@@ -64,3 +72,10 @@ class TestFigshare(ProviderTestCase):
         expected = [('biblio', {'title': u'Gaussian Job Archive for B2(2-)', 'authors_literal': u'M J Harvey, Henry Rzepa', 'repository': u'Figshare', 'year': u'2012'}), ('url', 'http://dx.doi.org/10.6084/m9.figshare.92393'), ('url', u'http://figshare.com/articles/Gaussian_Job_Archive_for_B2(2-)/92393')]
         assert_equals(sorted(aliases), sorted(expected))
 
+    @http
+    def test_members(self):
+        members = self.provider.member_items(self.testitem_members)
+        print members
+        expected = [('doi', u'10.6084/m9.figshare.806563'), ('doi', u'10.6084/m9.figshare.806423'), ('doi', u'10.6084/m9.figshare.803123'), ('doi', u'10.6084/m9.figshare.791569'), ('doi', u'10.6084/m9.figshare.758498'), ('doi', u'10.6084/m9.figshare.757866'), ('doi', u'10.6084/m9.figshare.739343'), ('doi', u'10.6084/m9.figshare.729248'), ('doi', u'10.6084/m9.figshare.719786'), ('doi', u'10.6084/m9.figshare.669696'), ('doi', u'10.6084/m9.figshare.106915'), ('doi', u'10.6084/m9.figshare.97222'), ('doi', u'10.6084/m9.figshare.97221'), ('doi', u'10.6084/m9.figshare.97215'), ('doi', u'10.6084/m9.figshare.94296'), ('doi', u'10.6084/m9.figshare.94295'), ('doi', u'10.6084/m9.figshare.94219'), ('doi', u'10.6084/m9.figshare.94218'), ('doi', u'10.6084/m9.figshare.94217'), ('doi', u'10.6084/m9.figshare.94216'), ('doi', u'10.6084/m9.figshare.94090'), ('doi', u'10.6084/m9.figshare.94089'), ('doi', u'10.6084/m9.figshare.94030'), ('doi', u'10.6084/m9.figshare.91145'), ('doi', u'10.6084/m9.figshare.90832')]
+        for expected_item in expected:
+            assert expected_item in members
