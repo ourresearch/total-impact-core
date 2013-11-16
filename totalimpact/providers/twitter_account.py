@@ -37,11 +37,6 @@ class Twitter_Account(Provider):
 
     def __init__(self):
         super(Twitter_Account, self).__init__()
-        temp_client = AppClient(os.getenv("TWITTER_CONSUMER_KEY"), 
-                            os.getenv("TWITTER_CONSUMER_SECRET"))
-        access_token = temp_client.get_access_token()
-        logger.debug(u"generated access token = {generated}, env = {env}".format(
-            generated=access_token, env=os.getenv("TWITTER_ACCESS_TOKEN")))
         self.client = AppClient(os.getenv("TWITTER_CONSUMER_KEY"), 
                             os.getenv("TWITTER_CONSUMER_SECRET"),
                             os.getenv("TWITTER_ACCESS_TOKEN"))
