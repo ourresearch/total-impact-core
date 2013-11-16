@@ -10,11 +10,12 @@ def get_nth_figshare_id(url_template, year, n):
     url = url_template.format(page=page_minus_one+1, year=year)
     print url
     r = requests.get(url, timeout=10)    
-    response = r.json
+    response = json.loads(r.text)
     try:
         items = response["items"]
         item = items[offset]
         doi = item["DOI"]
+        year_of_item = item["published_date"][-4:]
     except (AttributeError):
         print "no doi found ", item
         doi = None
@@ -24,7 +25,7 @@ def get_nth_figshare_id(url_template, year, n):
         return get_nth_figshare_id(url_template, year, n+10)
 
     doi = doi.replace("http://dx.doi.org/", "")
-    return(doi)
+    return({"doi":doi, "year":year_of_item})
 
 def get_random_figshare_dois(year, sample_size, email, query, seed=None):
     if year < 2011:
@@ -36,7 +37,7 @@ def get_random_figshare_dois(year, sample_size, email, query, seed=None):
     url = url_template.format(page=1, year=year)
     print url
     r = requests.get(url)
-    initial_response = r.json
+    initial_response = json.loads(r.text)
     print initial_response
     population_size = initial_response["items_found"]
     print "Number of figshare items returned by this query: %i" %population_size
@@ -184,11 +185,11 @@ def build_collections(refset_name, get_random_ids_func, genre, namespace, query_
     ids = get_random_ids_func(year, sample_size, email, query, seed)
     if ids:
         print ids
-        refset_metadata = collection_metadata(genre, refset_name, year, seed, sample_size)
-        title = title_template.format(**refset_metadata)
-        collection_id = make_collection(namespace, ids, title, refset_metadata)
-        print collection_id
-        collection_ids.append(collection_id)
+        # refset_metadata = collection_metadata(genre, refset_name, year, seed, sample_size)
+        # title = title_template.format(**refset_metadata)
+        # collection_id = make_collection(namespace, ids, title, refset_metadata)
+        # print collection_id
+        # collection_ids.append(collection_id)
     return collection_ids
 
 
@@ -232,8 +233,8 @@ api_url = "http://total-impact-core-staging.herokuapp.com"
 
 sample_size = 100
 seed = 42
-years = range(2007, 2013)
-refset_name = "dryad"
+years = range(2012, 2013)
+refset_name = "figshare"
 
 collection_ids = build_reference_sets(refset_name, query_templates, title_template, years, sample_size, seed)
 for collection_id in collection_ids:
