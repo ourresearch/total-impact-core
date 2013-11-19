@@ -31,7 +31,7 @@ def get_random_figshare_dois(year, sample_size, email, query, seed=None):
     if year < 2011:
         return []
 
-    url_template = "http://api.figshare.com/v1/articles/search?search_for=*&from_date={year}-01-01&to_date={year}-12-31&page={page}"
+    url_template = "http://api.figshare.com/v1/articles/search?search_for=*&from_date={year}-01-01&to_date={year}-12-31&page={page}&has_publisher_id=0"
 
     # Do an initial query to get the total number of hits
     url = url_template.format(page=1, year=year)
@@ -54,9 +54,10 @@ def get_random_figshare_dois(year, sample_size, email, query, seed=None):
 
     figshare_ids = []
     for random_index in random_indexes:
-        figshare_id = get_nth_figshare_id(url_template, year, random_index)
-        print "figshare_id:" + figshare_id
-        figshare_ids.append(figshare_id)
+        figshare_dict = get_nth_figshare_id(url_template, year, random_index)
+        doi = figshare_dict["doi"]
+        print "figshare_id:" + doi
+        figshare_ids.append(doi)
     return figshare_ids
 
 
@@ -185,11 +186,11 @@ def build_collections(refset_name, get_random_ids_func, genre, namespace, query_
     ids = get_random_ids_func(year, sample_size, email, query, seed)
     if ids:
         print ids
-        # refset_metadata = collection_metadata(genre, refset_name, year, seed, sample_size)
-        # title = title_template.format(**refset_metadata)
-        # collection_id = make_collection(namespace, ids, title, refset_metadata)
-        # print collection_id
-        # collection_ids.append(collection_id)
+        refset_metadata = collection_metadata(genre, refset_name, year, seed, sample_size)
+        title = title_template.format(**refset_metadata)
+        collection_id = make_collection(namespace, ids, title, refset_metadata)
+        print collection_id
+        collection_ids.append(collection_id)
     return collection_ids
 
 
@@ -233,8 +234,8 @@ api_url = "http://total-impact-core-staging.herokuapp.com"
 
 sample_size = 100
 seed = 42
-years = range(2012, 2013)
-refset_name = "figshare"
+years = range(2013, 2014)
+refset_name = "dryad"
 
 collection_ids = build_reference_sets(refset_name, query_templates, title_template, years, sample_size, seed)
 for collection_id in collection_ids:
