@@ -1,0 +1,17 @@
+{
+    "ID": 1015265,
+    "name": "Research Remix",
+    "description": "Blogging about the science, engineering, and human factors of biomedical research data reuse",
+    "URL": "http:\/\/researchremix.wordpress.com",
+    "jetpack": false,
+    "subscribers_count": 66,
+    "meta": {
+        "links": {
+            "self": "https:\/\/public-api.wordpress.com\/rest\/v1\/sites\/1015265",
+            "help": "https:\/\/public-api.wordpress.com\/rest\/v1\/sites\/1015265\/help",
+            "posts": "https:\/\/public-api.wordpress.com\/rest\/v1\/sites\/1015265\/posts\/",
+            "comments": "https:\/\/public-api.wordpress.com\/rest\/v1\/sites\/1015265\/comments\/"
+        }
+    },
+    "is_private": false
+}

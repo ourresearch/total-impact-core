@@ -22,12 +22,14 @@ PROVIDERS = [
     ("slideshare", {}),
     ("twitter_account", {}),
     ("vimeo", {}),
+    ("wordpresscom", {}),
     ("youtube", {}),
 
     # if-need-be biblio providers go here, in order with best first
     ("mendeley", {}),
     ("bibtex", {}),
     ("dataone", {}),
+    ("wordpresscom", {}),
     ("webpage", {}),
 
     # don't-have-biblio providers go here, alphabetical order

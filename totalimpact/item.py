@@ -642,6 +642,10 @@ def decide_genre(alias_dict):
     elif "pmid" in alias_dict:
         genre = "article"
 
+    elif "blog" in alias_dict:
+        genre = "blog"
+        host = "wordpresscom"
+
     elif "url" in alias_dict:
         joined_url_string = "".join(alias_dict["url"])
         joined_url_string = joined_url_string.lower()
@@ -652,7 +656,8 @@ def decide_genre(alias_dict):
             genre = "software"
             host = "github"
         elif "twitter.com" in joined_url_string:
-            genre = "social media account"
+            #genre = "social media account"
+            genre = "account"
             host = "twitter_account"
         elif "youtube.com" in joined_url_string:
             genre = "video"

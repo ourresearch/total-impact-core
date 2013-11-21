@@ -38,9 +38,14 @@ class Topsy(Provider):
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
-        return("url" == namespace)
+        return namespace in ["blog", "url"]
 
     def get_best_id(self, aliases):
+        for alias in aliases:
+            (namespace, nid) = alias
+            if ("blog"==namespace):
+                return alias
+        #else
         return self.get_relevant_alias_with_most_metrics("topsy:tweets", aliases)
 
     def _extract_metrics(self, page, status_code=200, id=None):
