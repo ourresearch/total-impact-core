@@ -62,7 +62,7 @@ if (os.getenv("FLASK_DEBUG", False) == "True"):
     logger.info("Setting app.debug=True; Flask-DebugToolbar will display")
     app.debug = True
     app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
-toolbar = DebugToolbarExtension(app)
+    toolbar = DebugToolbarExtension(app)
 
 
 # segment.io logging
