@@ -29,7 +29,7 @@ PROVIDERS = [
     ("mendeley", {}),
     ("bibtex", {}),
     ("dataone", {}),
-    #("wordpresscom", {}),
+    ("wordpresscom", {}),
     ("webpage", {}),
 
     # don't-have-biblio providers go here, alphabetical order
