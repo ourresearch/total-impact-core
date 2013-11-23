@@ -1,4 +1,4 @@
-from birdy.twitter import AppClient
+from birdy.twitter import AppClient, TwitterApiError
 import os, re
 
 from totalimpact.providers import provider
@@ -91,9 +91,12 @@ class Twitter_Account(Provider):
         if not nid:
             return None
 
-        screen_name = self.screen_name(nid)
+        try:
+            screen_name = self.screen_name(nid)
+            r = self.client.api.users.show.get(screen_name=screen_name)
+        except (IndexError, TwitterApiError):
+            return None
 
-        r = self.client.api.users.show.get(screen_name=screen_name)
         return r.data
 
 
@@ -104,13 +107,15 @@ class Twitter_Account(Provider):
             provider_url_template=None,
             cache_enabled=True):
 
-        data = self.get_account_data(aliases)
-        if not data:
-            return {}
-
         biblio_dict = {}
         biblio_dict["repository"] = "Twitter"
-        biblio_dict["title"] = data["screen_name"]
+
+        data = self.get_account_data(aliases)
+        if not data:
+            return biblio_dict
+
+        biblio_dict["title"] = u"@{screen_name}".format(
+            screen_name=data["screen_name"])
         biblio_dict["authors"] = data["name"]
         biblio_dict["description"] = data["description"]
         biblio_dict["created_at"] = data["created_at"]

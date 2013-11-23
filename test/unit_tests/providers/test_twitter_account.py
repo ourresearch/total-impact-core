@@ -60,6 +60,14 @@ class TestTwitter_account(ProviderTestCase):
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
     @http
+    def test_metrics_bad_twitttername(self):
+        metrics_dict = self.provider.metrics([("url", "http://twitter.com/researchremix22")])
+        print metrics_dict
+        expected = {}
+        assert_equals(metrics_dict, expected)
+
+
+    @http
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
