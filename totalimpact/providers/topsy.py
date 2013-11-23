@@ -44,7 +44,7 @@ class Topsy(Provider):
         for alias in aliases:
             (namespace, nid) = alias
             if ("blog"==namespace):
-                return alias
+                return nid
         #else
         return self.get_relevant_alias_with_most_metrics("topsy:tweets", aliases)
 
