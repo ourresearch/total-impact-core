@@ -14,9 +14,10 @@ class Twitter_Account(Provider):
     url = "http://twitter.com"
     descr = "Social networking and microblogging service."
     member_items_url_template = "http://twitter.com/%s"
-    provenance_url_template = "%s"
-    biblio_url_template = "https://api.github.com/repos/%s?client_id=" + os.environ["GITHUB_CLIENT_ID"] + "&client_secret=" + os.environ["GITHUB_CLIENT_SECRET"]
-    metrics_url_template = "https://api.github.com/repos/%s?client_id=" + os.environ["GITHUB_CLIENT_ID"] + "&client_secret=" + os.environ["GITHUB_CLIENT_SECRET"]
+    provenance_url_templates = {
+        "twitter_account:followers": "https://twitter.com/%s/followers",
+        "twitter_account:lists": "https://twitter.com/%s/memberships"
+        }
 
     static_meta_dict = {
         "followers": {
@@ -145,5 +146,17 @@ class Twitter_Account(Provider):
             metrics_and_drilldown[metric_name] = (metrics_dict[metric_name], drilldown_url)
 
         return metrics_and_drilldown  
+
+
+    # overriding default because different provenance url for each metric
+    def provenance_url(self, metric_name, aliases):
+        print aliases
+
+        nid = self.get_best_id(aliases)
+        if not nid:
+            return None
+        screen_name = self.screen_name(nid)
+        provenance_url = self._get_templated_url(self.provenance_url_templates[metric_name], screen_name, "provenance")
+        return provenance_url
 
 

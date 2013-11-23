@@ -47,14 +47,14 @@ class TestTwitter_account(ProviderTestCase):
 
 
     def test_provenance_url(self):
-        provenance_url = self.provider.provenance_url("twitter:url", [self.testitem_aliases])
-        assert_equals(provenance_url, 'http://twitter.com/jasonpriem')
+        provenance_url = self.provider.provenance_url("twitter_account:lists", [self.testitem_aliases])
+        assert_equals(provenance_url, 'https://twitter.com/jasonpriem/memberships')
 
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
         print metrics_dict
-        expected = {'twitter_account:lists': (214, 'http://twitter.com/jasonpriem'), 'twitter_account:followers': (3036, 'http://twitter.com/jasonpriem')}
+        expected = {'twitter_account:lists': (215, 'https://twitter.com/jasonpriem/memberships'), 'twitter_account:followers': (3069, 'https://twitter.com/jasonpriem/followers')}
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
@@ -63,7 +63,7 @@ class TestTwitter_account(ProviderTestCase):
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'created_at': u'Mon Jun 16 19:19:43 +0000 2008', 'authors': u'Jason Priem', 'description': u'Info Science PhD student, ImpactStory co-founder. I care hard about #OA, #altmetrics, and bringing scholarly communication into the age of the web.', 'title': u'jasonpriem'}
+        expected = {'created_at': u'Mon Jun 16 19:19:43 +0000 2008', 'authors': u'Jason Priem', 'description': u'Info Science PhD student, ImpactStory co-founder. I care hard about #OA, #altmetrics, and bringing scholarly communication into the age of the web.', 'repository': 'Twitter', 'title': u'jasonpriem'}
         assert_items_equal(biblio_dict.keys(), expected.keys())
         for key in expected.keys():
             assert_equals(biblio_dict[key], expected[key])
