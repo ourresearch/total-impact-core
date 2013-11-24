@@ -90,6 +90,9 @@ class Topsy(Provider):
             metrics_url_template = self.metrics_url_template_general
             nid = self.get_relevant_alias_with_most_metrics("topsy:tweets", aliases, metrics_url_template, cache_enabled)
 
+        if not nid:
+            return {}
+            
         metrics = self.get_metrics_for_id(nid, metrics_url_template, cache_enabled)
         metrics_and_drilldown = {}
         for metric_name in metrics:
