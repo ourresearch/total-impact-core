@@ -531,24 +531,38 @@ def add_items_to_collection(cid=""):
 
 
 
-""" Refreshes all the items from tiids
-"""
-@app.route("/v1/products/<tiids_string>", methods=["POST"])
-# not officially supported in api
-def products_refresh_post(tiids_string):
-    tiids = tiids_string.split(",")
+
+def refresh_from_tiids(tiids, myredis):
     for tiid in tiids:
         try:
             item_obj = item_module.Item.from_tiid(tiid)
             item = item_obj.as_old_doc()        
             item_module.start_item_update(tiid, item["aliases"], myredis)
         except AttributeError:
-            logger.debug(u"couldn't find tiid {tiid}  so not refreshing its metrics".format(
+            logger.debug(u"couldn't find tiid {tiid} so not refreshing its metrics".format(
                 tiid=tiid))
+    return tiids
 
+
+""" Refreshes all the items from tiids
+"""
+@app.route("/v1/products/<tiids_string>", methods=["POST"])
+# not officially supported in api
+def products_refresh_post_inline(tiids_string):
+    tiids = tiids_string.split(",")
+    refresh_from_tiids(tiids, myredis)
     resp = make_response("true", 200)
     return resp
 
+
+# refreshes items from tiids list in body of POST
+@app.route('/v1/products/refresh', methods=['POST'])
+def products_refresh_post():
+    logger.debug(u"in products_refresh_post with tiids")
+    tiids = request.json["tiids"]
+    refresh_from_tiids(tiids, myredis)
+    resp = make_response("true", 200)    
+    return resp
 
 
 """ Refreshes all the items in a given collection.
@@ -556,7 +570,6 @@ def products_refresh_post(tiids_string):
 @app.route("/v1/collection/<cid>", methods=["POST"])
 # not officially supported in api
 def collection_metrics_refresh(cid=""):
-
     # first, get the tiids in this collection:
     try:
         coll_doc = collection.get_collection_doc(cid)
@@ -567,17 +580,11 @@ def collection_metrics_refresh(cid=""):
         ))
         abort_custom(500, "Error doing collection_update")
 
-    for tiid in tiids:
-        try:
-            item_obj = item_module.Item.from_tiid(tiid)
-            item = item_obj.as_old_doc()        
-            item_module.start_item_update(tiid, item["aliases"], myredis)
-        except AttributeError:
-            logger.debug(u"couldn't find tiid {tiid} in {cid} so not refreshing its metrics".format(
-                cid=cid, tiid=tiid))
+    refresh_from_tiids(tiids, myredis)
 
     resp = make_response("true", 200)
     return resp
+
 
 
 @app.route("/v1/collection/<cid>", methods=["DELETE"])
@@ -596,7 +603,7 @@ def products_post():
         return response
     elif "tiids" in request.json:
         # overloading post for get because tiids string gets long
-        logger.debug("in products_post with tiids, so getting products to return")
+        logger.debug(u"in products_post with tiids, so getting products to return")
         tiids = request.json["tiids"]
         tiids_string = ",".join(tiids)
         return products_get(tiids_string)
