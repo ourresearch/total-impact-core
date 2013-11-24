@@ -13,7 +13,7 @@ from sqlalchemy.orm.exc import FlushError
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.sql import text    
 
-from totalimpact import json_sqlalchemy
+from totalimpact import json_sqlalchemy, tiredis
 from totalimpact import db
 
 
@@ -588,7 +588,7 @@ def get_biblio_to_update(old_biblio, new_biblio):
 
 
 def make():
-    now = datetime.datetime.now().isoformat()
+    now = datetime.datetime.utcnow().isoformat()
     # if the alphabet below changes, need to update couch queue lookups
     shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
 
@@ -803,11 +803,9 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
     return (items, something_currently_updating)
 
 def is_currently_updating(tiid, myredis):
-    num_providers_left = myredis.get_num_providers_left(tiid)
-    if num_providers_left:
-        currently_updating = myredis.get_num_providers_left(tiid) > 0
-    else: # not in redis, maybe because it expired.  Assume it is not currently updating.
-        currently_updating = False        
+    num_providers_currently_updating = myredis.get_num_providers_currently_updating(tiid)
+    currently_updating = num_providers_currently_updating > 0
+    print "is_currently_updating", tiid, num_providers_currently_updating, currently_updating
     return currently_updating
 
    
@@ -978,8 +976,8 @@ def get_tiid_by_alias(ns, nid, mydao=None):
 def start_item_update(tiid, aliases_dict, myredis):
     logger.debug(u"In start_item_update with {tiid}, /biblio_print {aliases_dict}".format(
         tiid=tiid, aliases_dict=aliases_dict))
-    myredis.set_num_providers_left(tiid,
-        ProviderFactory.num_providers_with_metrics(default_settings.PROVIDERS))
+    myredis.init_currently_updating_status(tiid,
+        ProviderFactory.providers_with_metrics(default_settings.PROVIDERS))
     myredis.add_to_alias_queue(tiid, aliases_dict)
 
 

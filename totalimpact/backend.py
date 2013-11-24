@@ -90,12 +90,12 @@ class ProviderWorker(Worker):
             #logger.info(u"{:20}: Not writing to couch: empty {method_name} from {tiid} for {provider_name}".format(
             #    "provider_worker", method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
             if method_name=="metrics":
-                self.myredis.decr_num_providers_left(tiid, "(unknown)")
+                myredis.set_provider_finished(tiid, self.provider_name)
             return
         else:
             logger.info(u"Adding to couch queue {method_name} from {tiid} for {provider_name}".format(
                 method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
-            couch_message = (tiid, new_content, method_name)
+            couch_message = (tiid, new_content, method_name, self.provider_name)
             couch_queue_index = tiid[0] #index them by the first letter in the tiid
             selected_couch_queue = self.couch_queues[couch_queue_index] 
             selected_couch_queue.push(couch_message)
@@ -167,6 +167,10 @@ class ProviderWorker(Worker):
             #logger.info(u"POPPED from queue for {provider}".format(
             #    provider=self.provider_name))
             (tiid, alias_dict, method_name, aliases_providers_run) = provider_message
+
+            if (method_name == "metrics") and self.provider.provides_metrics:
+                myredis.set_provider_started(tiid, self.provider.provider_name)
+
             if method_name == "aliases":
                 callback = self.add_to_alias_and_couch_queues
             else:
@@ -229,16 +233,11 @@ class CouchWorker(Worker):
         item_obj = item_module.add_metric_to_item_object(metric_name, metrics_method_response, item_doc)
         return(item_doc)        
 
-    def decr_num_providers_left(self, metric_name, tiid):
-        provider_name = metric_name.split(":")[0]
-        if not provider_name:
-            provider_name = "(unknown)"
-        self.myredis.decr_num_providers_left(tiid, provider_name)
 
     def run(self):
         couch_message = self.couch_queue.pop()
         if couch_message:
-            (tiid, new_content, method_name) = couch_message
+            (tiid, new_content, method_name, provider_name) = couch_message
             if not new_content:
                 logger.info(u"{:20}: blank doc, nothing to save".format(
                     self.name))
@@ -249,7 +248,7 @@ class CouchWorker(Worker):
 
                 if not item:
                     if method_name=="metrics":
-                        self.myredis.decr_num_providers_left(tiid, "(unknown)")
+                        myredis.set_provider_finished(tiid, provider_name)
                     logger.error(u"Empty item from couch for tiid {tiid}, can't save {method_name}".format(
                         tiid=tiid, method_name=method_name))
                     return
@@ -267,13 +266,13 @@ class CouchWorker(Worker):
 
                 # now that is has been updated it, change last_modified and save
                 if updated_item:
-                    updated_item["last_modified"] = datetime.datetime.now().isoformat()
+                    updated_item["last_modified"] = datetime.datetime.utcnow().isoformat()
                     logger.info(u"{:20}: added {method_name}, saving item {tiid}".format(
                         self.name, method_name=method_name, tiid=tiid))
                     db.session.merge(item_obj)
 
                 if method_name=="metrics":
-                    self.decr_num_providers_left(metric_name, tiid) # have to do this after the item save
+                    myredis.set_provider_finished(tiid, provider_name) # have to do this after the item save
                 db.session.remove()
         else:
             #time.sleep(0.1)  # is this necessary?
