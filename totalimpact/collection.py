@@ -358,7 +358,7 @@ def make(collection_id=None):
     if collection_id is None:
         collection_id = _make_id()
 
-    now = datetime.datetime.now().isoformat()
+    now = datetime.datetime.utcnow().isoformat()
     collection = {}
 
     collection["_id"] = collection_id

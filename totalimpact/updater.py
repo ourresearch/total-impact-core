@@ -61,7 +61,7 @@ gold_update_schedule = [
     {"group":"B", "max_days_since_created": 30, "max_days_since_updated": 7 , "exclude_old": True},
     {"group":"C", "max_days_since_created": 365*100, "max_days_since_updated": 30, "exclude_old": False}] #everything else once a month
 
-def gold_update(number_to_update, myredis, now=datetime.datetime.now()):
+def gold_update(number_to_update, myredis, now=datetime.datetime.utcnow()):
     all_tiids = []
     tiids_to_update = []
     # do magic
