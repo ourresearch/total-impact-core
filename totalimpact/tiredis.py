@@ -5,8 +5,6 @@ from totalimpact.providers.provider import ProviderFactory
 
 logger = logging.getLogger("ti.tiredis")
 
-currently_updating_status = defaultdict(dict)
-
 
 def from_url(url, db=0):
     r = redis.from_url(url, db)
@@ -28,30 +26,45 @@ for message_json in received:
 
 
 def clear_currently_updating_status(self):
-    global currently_updating_status
     currently_updating_status = defaultdict(dict)
 
 
+def set_currently_updating(self, tiid, value):
+    key = "currently_updating:"+tiid 
+    expire = 60*60*24  # for a day    
+    self.set_value(key, value, expire)
+
+def get_currently_updating(self, tiid, value):
+    key = "currently_updating:"+tiid 
+    return self.get_value(key)
+
+def delete_currently_updating(self, tiid, value):
+    key = "currently_updating:"+tiid 
+    return self.delete(key)
+
+
 def init_currently_updating_status(self, item_id, providers):
-    global currently_updating_status
+    currently_updating_status = get_currently_updating(item_id)
     logger.debug(u"set_all_providers for '{tiid}'.".format(
         tiid=item_id
     ))
     now = datetime.datetime.utcnow().isoformat()
     for provider_name in providers:
-        currently_updating_status[item_id][provider_name] = now + ": not started"
+        currently_updating_status[provider_name] = now + ": not started"
+    set_currently_updating(item_id, currently_updating_status)
 
 
 def set_provider_started(self, item_id, provider_name):
-    global currently_updating_status
+    currently_updating_status = get_currently_updating(item_id)
     now = datetime.datetime.utcnow().isoformat()
-    currently_updating_status[item_id][provider_name] = now + ": started"
+    currently_updating_status[provider_name] = now + ": started"
     logger.info(u"set_provider_started for %s %s" % (
         item_id, provider_name))
+    set_currently_updating(item_id, currently_updating_status[item_id])
 
 
 def set_provider_finished(self, item_id, provider_name):
-    global currently_updating_status
+    currently_updating_status = get_currently_updating(item_id)
     if provider_name in currently_updating_status[item_id]:
         del currently_updating_status[item_id][provider_name]
     providers_left = get_providers_currently_updating(item_id)
@@ -59,13 +72,18 @@ def set_provider_finished(self, item_id, provider_name):
         del currently_updating_status[item_id]
     logger.info(u"set_provider_finished for {tiid} {provider_name}.  Still finishing: {providers_left}".format(
         tiid=item_id, provider_name=provider_name, providers_left=providers_left))
+    if item_id in currently_updating_status:
+        set_currently_updating(item_id, currently_updating_status[item_id])
+    else:
+        delete_currently_updating(item_id)
+
     return providers_left
 
 
 def get_providers_currently_updating(self, item_id):
-    global currently_updating_status
-    providers_currently_updating = [provider for provider in currently_updating_status[item_id] if currently_updating_status[item_id][provider]]
+    currently_updating_status = get_currently_updating(item_id)
     print "get_providers_currently_updating", currently_updating_status
+    providers_currently_updating = [provider for provider in currently_updating_status if currently_updating_tiid[provider]]
     return providers_currently_updating
 
 
@@ -145,6 +163,9 @@ def get_reference_lookup_dict(self, genre, refset_name, year):
 
 redis.Redis.set_value = set_value
 redis.Redis.get_value = get_value
+redis.Redis.set_currently_updating = set_currently_updating
+redis.Redis.get_currently_updating = get_currently_updating
+redis.Redis.delete_currently_updating = delete_currently_updating
 redis.Redis.clear_currently_updating_status = clear_currently_updating_status
 redis.Redis.init_currently_updating_status = init_currently_updating_status
 redis.Redis.set_provider_started = set_provider_started
