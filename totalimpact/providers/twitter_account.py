@@ -155,8 +155,6 @@ class Twitter_Account(Provider):
 
     # overriding default because different provenance url for each metric
     def provenance_url(self, metric_name, aliases):
-        print aliases
-
         nid = self.get_best_id(aliases)
         if not nid:
             return None

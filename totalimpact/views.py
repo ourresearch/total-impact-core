@@ -337,7 +337,6 @@ def importer_post(provider_name):
     """
     Gets aliases associated with a query from a given provider.
     """
-    input_string = request.json["input"]
 
     if provider_name == "pmids":
         provider_name = "pubmed"
@@ -351,8 +350,17 @@ def importer_post(provider_name):
         abort_custom(404, "an importer for provider '{provider_name}' is not found".format(
             provider_name=provider_name))
 
+
+    if request.json.keys() == ["primary"]:
+        input_val = request.json["primary"]
+    else:
+        input_val = request.json
+
+    logger.debug(u"in provider_importer_get with input_val {input_val}".format(
+        input_val=input_val))
+
     try:
-        aliases = provider.member_items(input_string)
+        aliases = provider.member_items(input_val)
     except ProviderItemNotFoundError:
         abort_custom(404, "item not found")
     except (ProviderTimeout, ProviderServerError):

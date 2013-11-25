@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, re, os
+import json, re, os
 
 import logging
 logger = logging.getLogger('ti.providers.topsy')
@@ -51,7 +51,8 @@ class Topsy(Provider):
         for alias in aliases:
             (namespace, nid) = alias
             if ("blog"==namespace):
-                blog_url = nid.lower().replace("http://", "")
+                blog_url = json.loads(nid)["url"]
+                blog_url = blog_url.lower().replace("http://", "")
                 return blog_url
         return None
 

@@ -51,7 +51,6 @@ class TestTopsy(ProviderTestCase):
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        #expected = {'topsy:influential_tweets': (36, 'http://topsy.com/total-impact.org?utm_source=otter'), 'topsy:tweets': (358, 'http://topsy.com/total-impact.org?utm_source=otter')}
         expected = {'topsy:influential_tweets': (7, 'http://topsy.com/trackback?url=http%3A//total-impact.org&window=a'), 'topsy:tweets': (46, 'http://topsy.com/trackback?url=http%3A//total-impact.org&window=a')}
         print metrics_dict
         for key in expected:
@@ -60,9 +59,8 @@ class TestTopsy(ProviderTestCase):
 
     @http
     def test_metrics_blog(self):
-        metrics_dict = self.provider.metrics([("blog", "http://blog.impactstory.org")])
-        #expected = {'topsy:influential_tweets': (36, 'http://topsy.com/total-impact.org?utm_source=otter'), 'topsy:tweets': (358, 'http://topsy.com/total-impact.org?utm_source=otter')}
-        expected = {'topsy:tweets': (539, 'http://topsy.com/s?q=site%3Ablog.impactstory.org&window=a')}
+        metrics_dict = self.provider.metrics([("blog", '{"url": "http://retractionwatch.wordpress.com", "api_key": null}')])
+        expected = {'topsy:tweets': (8706, 'http://topsy.com/s?q=site%3Aretractionwatch.wordpress.com&window=a')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
