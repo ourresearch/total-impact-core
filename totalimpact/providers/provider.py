@@ -47,13 +47,14 @@ class ProviderFactory(object):
         return providers
 
     @classmethod
-    def num_providers_with_metrics(cls, config_providers):
+    def providers_with_metrics(cls, config_providers):
         providers = cls.get_providers(config_providers)
-        num_providers_with_metrics = 0
+        providers_with_metrics = []
         for provider in providers:
+            print provider.provider_name, "provides_metrics:", provider.provides_metrics
             if provider.provides_metrics:
-                num_providers_with_metrics += 1
-        return num_providers_with_metrics
+                providers_with_metrics += [provider.provider_name]
+        return providers_with_metrics
 
     @classmethod
     def get_all_static_meta(cls, config_providers=default_settings.PROVIDERS):
