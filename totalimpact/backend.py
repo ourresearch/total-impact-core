@@ -109,15 +109,13 @@ class ProviderWorker(Worker):
             selected_couch_queue = self.couch_queues[couch_queue_index] 
             selected_couch_queue.push(couch_message)
 
-    def add_to_alias_and_couch_queues(self, tiid, alias_dict, method_name, aliases_providers_run):
-        logger.info(u"In add_to_alias_and_couch_queues with {tiid}, {method_name}, {provider_name}".format(
-           method_name=method_name, tiid=tiid, provider_name=self.provider_name))
 
-        # logger.info(u"Adding to alias queue {alias_dict} {method_name} from {tiid} for {provider_name}".format(
-        #     alias_dict=alias_dict, 
-        #     method_name=method_name, 
-        #     tiid=tiid, 
-        #     provider_name=self.provider_name))     
+    def add_to_alias_and_couch_queues(self, tiid, alias_dict, method_name, aliases_providers_run):
+        logger.info(u"Adding to alias queue {alias_dict} {method_name} from {tiid} for {provider_name}".format(
+            alias_dict=alias_dict, 
+            method_name=method_name, 
+            tiid=tiid, 
+            provider_name=self.provider_name))     
         self.add_to_couch_queue_if_nonzero(tiid, alias_dict, method_name)
         alias_message = [tiid, alias_dict, aliases_providers_run]
         logger.info(u"NOW PUSHING to alias_queue from {method_name} from {tiid} for {provider_name}".format(
