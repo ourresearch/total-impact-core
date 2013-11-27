@@ -17,36 +17,34 @@ class TestTiRedis():
         # we're putting unittests for redis in their own db (number 8) so they can be deleted with abandon
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
-        tiredis.clear_currently_updating_status()
-
 
     def test_from_url(self):
         self.r.set("test", "foo")
         assert_equals(self.r.get("test"), "foo")
 
     def test_init_currently_updating_status(self):
-        tiredis.init_currently_updating_status("abcd", ["topsy", "wikipedia"])
+        self.r.init_currently_updating_status("abcd", ["topsy", "wikipedia"])
         expected = {'wikipedia': '2013-11-23T23:50:58.230265: not started', 'topsy': '2013-11-23T23:50:58.230265: not started'}
-        assert_items_equal(tiredis.currently_updating_status["abcd"].keys(), expected.keys())
-        assert_equals(": not started" in tiredis.currently_updating_status["abcd"]["wikipedia"], True)
+        assert_items_equal(self.r.get_currently_updating("abcd"), expected.keys())
+        assert_equals(": not started" in self.r.get_currently_updating("abcd")["wikipedia"], True)
 
     def test_set_provider_started(self):
-        tiredis.init_currently_updating_status("abcd", ["topsy", "wikipedia"])
+        self.r.init_currently_updating_status("abcd", ["topsy", "wikipedia"])
         expected = {'wikipedia': '2013-11-23T23:50:58.230265: not started', 'topsy': '2013-11-23T23:50:58.230265: not started'}
-        tiredis.set_provider_started("abcd", "wikipedia")
-        assert_equals("not started" in tiredis.currently_updating_status["abcd"]["wikipedia"], False)
-        assert_equals(": started" in tiredis.currently_updating_status["abcd"]["wikipedia"], True)
+        self.r.set_provider_started("abcd", "wikipedia")
+        assert_equals("not started" in self.r.get_currently_updating("abcd")["wikipedia"], False)
+        assert_equals(": started" in self.r.get_currently_updating("abcd")["wikipedia"], True)
 
     def test_set_provider_finished(self):
-        assert_equals(tiredis.get_num_providers_still_working("abcd"), 0)        
-        tiredis.init_currently_updating_status("abcd", ["topsy", "wikipedia"])
-        assert_equals(tiredis.get_num_providers_still_working("abcd"), 2)        
+        assert_equals(self.r.get_num_providers_currently_updating("abcd"), 0)        
+        self.r.init_currently_updating_status("abcd", ["topsy", "wikipedia"])
+        assert_equals(self.r.get_num_providers_currently_updating("abcd"), 2)        
         expected = {'wikipedia': '2013-11-23T23:50:58.230265: not started', 'topsy': '2013-11-23T23:50:58.230265: not started'}
-        tiredis.set_provider_finished("abcd", "wikipedia")
-        assert_equals(tiredis.get_num_providers_still_working("abcd"), 1)
-        assert_items_equal(tiredis.currently_updating_status["abcd"].keys(), ["topsy"])
-        tiredis.set_provider_finished("abcd", "topsy")
-        assert_equals(tiredis.get_num_providers_still_working("abcd"), 0)
+        self.r.set_provider_finished("abcd", "wikipedia")
+        assert_equals(self.r.get_num_providers_currently_updating("abcd"), 1)
+        assert_items_equal(self.r.get_currently_updating("abcd").keys(), ["topsy"])
+        self.r.set_provider_finished("abcd", "topsy")
+        assert_equals(self.r.get_num_providers_currently_updating("abcd"), 0)
 
 
     def test_memberitems_status(self):

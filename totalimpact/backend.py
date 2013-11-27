@@ -99,7 +99,7 @@ class ProviderWorker(Worker):
             #logger.info(u"{:20}: Not writing to couch: empty {method_name} from {tiid} for {provider_name}".format(
             #    "provider_worker", method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
             if method_name=="metrics":
-                self.myredis.decr_num_providers_left(tiid, self.provider_name)
+                self.myredis.set_provider_finished(tiid, self.provider_name)
             return
         else:
             logger.info(u"ADDING to couch queue {method_name} from {tiid} for {provider_name}".format(
@@ -182,7 +182,7 @@ class ProviderWorker(Worker):
             (tiid, alias_dict, method_name, aliases_providers_run) = provider_message
 
             if (method_name == "metrics") and self.provider.provides_metrics:
-                myredis.set_provider_started(tiid, self.provider.provider_name)
+                self.myredis.set_provider_started(tiid, self.provider.provider_name)
 
             if method_name == "aliases":
                 callback = self.add_to_alias_and_couch_queues
@@ -267,7 +267,7 @@ class CouchWorker(Worker):
 
                 if not item:
                     if method_name=="metrics":
-                        myredis.set_provider_finished(tiid, provider_name)
+                        self.myredis.set_provider_finished(tiid, provider_name)
                     logger.error(u"Empty item from couch for tiid {tiid}, can't save {method_name}".format(
                         tiid=tiid, method_name=method_name))
                     return
@@ -291,7 +291,7 @@ class CouchWorker(Worker):
                     db.session.merge(item_obj)
 
                 if method_name=="metrics":
-                    myredis.set_provider_finished(tiid, provider_name) # have to do this after the item save
+                    self.myredis.set_provider_finished(tiid, provider_name) # have to do this after the item save
                 db.session.remove()
         else:
             #time.sleep(0.1)  # is this necessary?

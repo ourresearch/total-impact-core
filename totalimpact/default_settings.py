@@ -28,7 +28,6 @@ PROVIDERS = [
     # if-need-be biblio providers go here, in order with best first
     ("mendeley", {}),
     ("bibtex", {}),
-    ("dataone", {}),
     ("wordpresscom", {}),
     ("webpage", {}),
 
@@ -37,7 +36,6 @@ PROVIDERS = [
     ("delicious", {}),   
     ("plosalm", {}),
     ("plossearch", {}),
-    ("pmc", {}),
     ("scienceseeker", {}),
     ("scopus", {}),
     ("topsy", {}),
