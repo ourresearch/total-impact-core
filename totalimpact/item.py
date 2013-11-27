@@ -805,7 +805,6 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
 def is_currently_updating(tiid, myredis):
     num_providers_currently_updating = myredis.get_num_providers_currently_updating(tiid)
     currently_updating = num_providers_currently_updating > 0
-    print "is_currently_updating", tiid, num_providers_currently_updating, currently_updating
     return currently_updating
 
    
