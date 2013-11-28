@@ -4,6 +4,7 @@ from totalimpact.cache import Cache
 from totalimpact import providers
 from totalimpact import default_settings
 from totalimpact import utils
+from totalimpact import app
 
 import requests, os, time, threading, sys, traceback, importlib, urllib, logging, itertools
 import simplejson
@@ -18,6 +19,7 @@ logger = logging.getLogger("ti.provider")
 
 # Requests' logging is too noisy
 requests_log = logging.getLogger("requests").setLevel(logging.WARNING) 
+
 
 class ProviderFactory(object):
 
@@ -477,8 +479,6 @@ class Provider(object):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
-        from totalimpact import app
-
         # first thing is to try to retrieve from cache
         # use the cache if the config parameter is set and the arg allows it
         use_cache = app.config["CACHE_ENABLED"] and cache_enabled
@@ -498,9 +498,6 @@ class Provider(object):
                 r = CachedResponse()
                 r.status_code = cache_data['status_code']
 
-                # Return a stripped down equivalent of requests.models.Response
-                # We don't store headers or other information here. If we need
-                # that later, we can add it
                 # use it if it was a 200, otherwise go get it again
                 if (r.status_code == 200):
                     r.url = cache_data['url']
@@ -513,40 +510,30 @@ class Provider(object):
             headers = {}
         headers["User-Agent"] = app.config["USER_AGENT"]
 
-        analytics.track("CORE", "Sent GET to Provider", {
-            "provider": self.provider_name, 
-            "url": url
-            }, 
+        analytics.track("CORE", "Sent GET to Provider", 
+            {"provider": self.provider_name, "url": url}, 
             context={ "providers": { 'Mixpanel': False } })
         
         # make the request        
         try:
-            from totalimpact import app
-            proxies = None
-            if app.config["PROXY"]:
-                proxies = {'http' : app.config["PROXY"], 'https' : app.config["PROXY"]}
             try:
                 self.logger.debug(u"/biblio_print LIVE {url}".format(url=url))
             except UnicodeDecodeError:
                 self.logger.debug(u"%s fyi: needing force url to unicode to print" %(self.provider_name))
                 self.logger.debug(u"/biblio_print LIVE {url}".format(url=unicode(url, "utf-8")))
 
-            r = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, allow_redirects=allow_redirects, verify=False)
+            r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=allow_redirects, verify=False)
 
         except requests.exceptions.Timeout as e:
-            analytics.track("CORE", "Received no response from Provider (timeout)", {
-                "provider": self.provider_name, 
-                "url": url
-                })
+            analytics.track("CORE", "Received no response from Provider (timeout)", 
+                {"provider": self.provider_name, "url": url})
 
             self.logger.info(u"%s Provider timed out during GET on %s" %(self.provider_name, url))
             raise ProviderTimeout("Provider timed out during GET on " + url, e)
 
         except requests.exceptions.RequestException as e:
-            analytics.track("CORE", "Received RequestException from Provider", {
-                "provider": self.provider_name, 
-                "url": url
-                })
+            analytics.track("CORE", "Received RequestException from Provider", 
+                {"provider": self.provider_name, "url": url})
 
             self.logger.info(u"%s RequestException during GET on %s" %(self.provider_name, url))
             raise ProviderHttpError("RequestException during GET on: " + url, e)
