@@ -11,6 +11,7 @@ import simplejson
 import BeautifulSoup
 import socket
 import analytics
+import grequests
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
 import re
@@ -19,6 +20,34 @@ logger = logging.getLogger("ti.provider")
 
 # Requests' logging is too noisy
 requests_log = logging.getLogger("requests").setLevel(logging.WARNING) 
+
+
+class CachedResponse:
+    def __init__(self, cache_data):
+        self.status_code = cache_data['status_code']
+        self.url = cache_data['url']
+        self.text = cache_data['text']
+
+def get_page_from_cache(url, headers, allow_redirects, cache):
+    cache_key = headers.copy()
+    cache_key.update({"url":url, "allow_redirects":allow_redirects})
+
+    cache_data = cache.get_cache_entry(cache_key)
+    # use it if it was a 200, otherwise go get it again
+    if cache_data and (cache_data['status_code'] == 200):
+        logger.debug(u"returning from cache: %s" %(url))
+        return CachedResponse(cache_data)
+    return None
+
+def store_page_in_cache(url, headers, allow_redirects, response, cache):
+    cache_key = headers.copy()
+    cache_key.update({"url":url, "allow_redirects":allow_redirects})
+
+    cache_data = {
+        'text':             response.text, 
+        'status_code':      response.status_code, 
+        'url':              response.url}
+    cache.set_cache_entry(cache_key, cache_data)
 
 
 class ProviderFactory(object):
@@ -471,83 +500,79 @@ class Provider(object):
                     url_with_biggest_so_far = url
                     biggest_so_far = metrics[metric_name]
         return(url_with_biggest_so_far)
-        
+       
+
     # Core methods
     # These should be consistent for all providers
     
-    def http_get(self, url, headers=None, timeout=20, cache_enabled=True, allow_redirects=False):
+    def http_get(self, url, headers={}, timeout=20, cache_enabled=True, allow_redirects=False):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
-        # first thing is to try to retrieve from cache
-        # use the cache if the config parameter is set and the arg allows it
-        use_cache = app.config["CACHE_ENABLED"] and cache_enabled
-
-        cache_data = None
-        if headers:
-            cache_key = headers.copy()
-        else:
-            cache_key = {}
-        cache_key.update({"url":url, "allow_redirects":allow_redirects})
-        if use_cache:
-            c = Cache(self.max_cache_duration)
-            cache_data = c.get_cache_entry(cache_key)
-            if cache_data:
-                class CachedResponse:
-                    pass
-                r = CachedResponse()
-                r.status_code = cache_data['status_code']
-
-                # use it if it was a 200, otherwise go get it again
-                if (r.status_code == 200):
-                    r.url = cache_data['url']
-                    r.text = cache_data['text']
-                    self.logger.debug(u"returning from cache: %s" %(url))
-                    return r
-            
-        # ensure that a user-agent string is set
-        if headers is None:
-            headers = {}
         headers["User-Agent"] = app.config["USER_AGENT"]
 
-        analytics.track("CORE", "Sent GET to Provider", 
-            {"provider": self.provider_name, "url": url}, 
-            context={ "providers": { 'Mixpanel': False } })
-        
-        # make the request        
+        # use the cache if the config parameter is set and the arg allows it
+        use_cache = app.config["CACHE_ENABLED"] and cache_enabled
+        if use_cache:
+            cache = Cache(self.max_cache_duration)
+            cached_response = get_page_from_cache(url, headers, allow_redirects, cache)
+            if cached_response:
+                return cached_response
+            
         try:
-            try:
-                self.logger.debug(u"/biblio_print LIVE {url}".format(url=url))
-            except UnicodeDecodeError:
-                self.logger.debug(u"%s fyi: needing force url to unicode to print" %(self.provider_name))
-                self.logger.debug(u"/biblio_print LIVE {url}".format(url=unicode(url, "utf-8")))
-
+            analytics.track("CORE", "Sent GET to Provider", {"provider": self.provider_name, "url": url}, 
+                context={ "providers": { 'Mixpanel': False } })
             r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=allow_redirects, verify=False)
+            if r and use_cache:
+                store_page_in_cache(url, headers, allow_redirects, r, cache)
 
         except requests.exceptions.Timeout as e:
+            self.logger.info(u"%s Provider timed out during GET on %s" %(self.provider_name, url))
             analytics.track("CORE", "Received no response from Provider (timeout)", 
                 {"provider": self.provider_name, "url": url})
-
-            self.logger.info(u"%s Provider timed out during GET on %s" %(self.provider_name, url))
             raise ProviderTimeout("Provider timed out during GET on " + url, e)
 
         except requests.exceptions.RequestException as e:
+            self.logger.info(u"%s RequestException during GET on %s" %(self.provider_name, url))
             analytics.track("CORE", "Received RequestException from Provider", 
                 {"provider": self.provider_name, "url": url})
-
-            self.logger.info(u"%s RequestException during GET on %s" %(self.provider_name, url))
             raise ProviderHttpError("RequestException during GET on: " + url, e)
 
         if not r.encoding:
-            r.encoding = "utf-8"            
-        
-        # cache the response and return
-        if r and use_cache:
-            cache_data = {'text' : r.text, 
-                'status_code' : r.status_code, 
-                'url': r.url}
-            c.set_cache_entry(cache_key, cache_data)
+            r.encoding = "utf-8"     
         return r
+
+
+    def http_get_multiple(self, urls, headers={}, timeout=20, cache_enabled=True, allow_redirects=False, num_concurrent_requests=False):
+        """ Returns a requests.models.Response object or raises exception
+            on failure. Will cache requests to the same URL. """
+
+        headers["User-Agent"] = app.config["USER_AGENT"]
+
+        # use the cache if the config parameter is set and the arg allows it
+        use_cache = app.config["CACHE_ENABLED"] and cache_enabled
+        if use_cache:
+            cache = Cache(self.max_cache_duration)
+
+        responses = {}
+        for url in urls:
+            responses[url] = None
+            if use_cache:
+                cached_response = get_page_from_cache(url, headers, allow_redirects, cache)
+                if cached_response:
+                    responses[url] = cached_response
+
+        uncached_urls = [url for url in responses if not responses[url]]
+        unsentrequests = (grequests.get(u, headers=headers, timeout=timeout, allow_redirects=allow_redirects) 
+                            for u in uncached_urls)
+        if unsentrequests:
+            fresh_responses = grequests.map(unsentrequests, size=num_concurrent_requests)
+            fresh_responses_dict = dict(zip(uncached_urls, fresh_responses))
+            if use_cache:
+                for url in fresh_responses_dict:
+                    store_page_in_cache(url, headers, allow_redirects, fresh_responses_dict[url], cache)
+        responses.update(fresh_responses_dict)
+        return responses
 
 
 class ProviderError(Exception):

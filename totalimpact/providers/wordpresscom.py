@@ -1,7 +1,8 @@
 from totalimpact.providers import provider
+from totalimpact.providers import topsy
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, os
+import simplejson, os, re
 
 import logging
 logger = logging.getLogger('ti.providers.wordpresscom')
@@ -43,21 +44,26 @@ class Wordpresscom(Provider):
     def provides_aliases(self):
         return True
 
+    def blog_url(self, nid):
+        return re.sub("http(s?)://", "", nid.lower())
+
     #override because need to break up id
     def _get_templated_url(self, template, nid, method=None):
         if method in ["metrics", "biblio"]:
-            nid = nid.replace("http://", "")
+            nid = self.blog_url(nid)
         url = template % (nid)
         return(url)
 
 
     # overriding
     def member_items(self, 
-            query_string, 
+            blog_url, 
             provider_url_template=None, 
             cache_enabled=True):
 
-        members = [("blog", url) for url in query_string.split("\n")]
+        members = [("blog", blog_url)]
+        members += [("blog post: {blog_url}".format(blog_url=self.blog_url(blog_url)), post_url) 
+                        for post_url in topsy.Topsy().top_tweeted_urls(blog_url)]
         return (members)
 
   

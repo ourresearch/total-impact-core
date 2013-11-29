@@ -2,6 +2,7 @@ from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
 import simplejson, re, os
+from operator import itemgetter
 
 import logging
 logger = logging.getLogger('ti.providers.topsy')
@@ -17,6 +18,10 @@ class Topsy(Provider):
 
     provenance_url_template_general = 'http://topsy.com/trackback?url=%s&window=a'
     provenance_url_template_site = 'http://topsy.com/s?q=site%%3A%s&window=a'  #escape % with %%
+
+    top_tweeted_url_templates = {
+        "site": 'http://otter.topsy.com/search.json?q=site:%s&window=a&page=%s&perpage=100&apikey=' + os.environ["TOPSY_KEY"]
+    }
 
     static_meta_dict =  {
         "tweets": {
@@ -47,16 +52,16 @@ class Topsy(Provider):
     def provides_metrics(self):
          return True
 
-    def get_blog_id(self, aliases):
+    def get_site_id(self, aliases):
         for alias in aliases:
             (namespace, nid) = alias
             if ("blog"==namespace):
-                blog_url = nid.lower().replace("http://", "")
+                blog_url = re.sub("http(s?)://", "", nid.lower())
                 return blog_url
         return None
 
     def get_best_id(self, aliases):
-        nid = self.get_blog_id(aliases)
+        nid = self.get_site_id(aliases)
         if nid:
             return nid
         else:
@@ -65,7 +70,7 @@ class Topsy(Provider):
 
 
     def provenance_url(self, metric_name, aliases):
-        nid = self.get_blog_id(aliases)
+        nid = self.get_site_id(aliases)
         if nid:
             provenance_url_template = self.provenance_url_template_site
         else:
@@ -83,7 +88,7 @@ class Topsy(Provider):
             cache_enabled=True):
 
         metrics_and_drilldown = {}
-        nid = self.get_blog_id(aliases)
+        nid = self.get_site_id(aliases)
         if nid:
             metrics_url_template = self.metrics_url_template_site
         else:
@@ -100,7 +105,6 @@ class Topsy(Provider):
             metrics_and_drilldown[metric_name] = (metrics[metric_name], drilldown_url)
 
         return metrics_and_drilldown 
-
 
 
     def _extract_metrics(self, page, status_code=200, id=None):
@@ -127,4 +131,25 @@ class Topsy(Provider):
 
         return metrics_dict
 
+    def top_tweeted_urls(self, query, query_type="site", number_to_return=10, pages=5):
+        template_url = self.top_tweeted_url_templates[query_type]
+        if query_type == "site":
+            query = re.sub("http(s?)://", "", query.lower())
+        urls = [template_url % (query, i) for i in range(1, pages+1)]
+        responses = self.http_get_multiple(urls)
+        tweeted_entries = [] 
+        for url in responses:
+            tweeted_entries += provider._load_json(responses[url].text)["response"]["list"]
+        sorted_list = sorted(tweeted_entries, key=itemgetter('hits'), reverse=True) 
+
+        top_tweeted_urls = []
+
+        for entry in sorted_list:
+            if query in entry["url"]:
+                if entry["url"] not in top_tweeted_urls:
+                    top_tweeted_urls.append(entry["url"])
+            elif entry["url_expansions"] and ("topsy_expanded_url" in entry["url_expansions"][0]):
+                if entry["url_expansions"][0]["topsy_expanded_url"] not in top_tweeted_urls:
+                    top_tweeted_urls.append(entry["url_expansions"][0]["topsy_expanded_url"])
+        return(top_tweeted_urls[0:number_to_return])
 
