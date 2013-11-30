@@ -98,3 +98,13 @@ class TestTopsy(ProviderTestCase):
                  u'http://blog.impactstory.org/2013/06/17/impact-profiles/']
         assert_equals(response, expected)        
 
+    @http
+    def test_top_tweeted_urls_tweets(self):
+        response = self.provider.top_tweeted_urls("jasonpriem", "tweets_about", number_to_return=10)
+        print response
+        expected = [u'http://blog.impactstory.org/2013/09/27/impactstory-awarded-300k-nsf-grant/',
+                 u'http://blog.impactstory.org/2013/01/18/github/',
+                 u'http://blog.impactstory.org/2013/06/17/sloan/',
+                 u'http://blog.impactstory.org/2013/07/04/impactstory-sloan-grant-proposal-details/',
+                 u'http://blog.impactstory.org/2013/06/17/impact-profiles/']
+        assert_equals(response, expected) 

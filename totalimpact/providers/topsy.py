@@ -146,6 +146,11 @@ class Topsy(Provider):
                 return entry["url"]
             else:
                 return None
+        elif query_type=="tweets_about":
+            if "/{query}/".format(query=query) not in entry["url"]:
+                return entry["url"]
+            else:
+                return None
         return entry["url"]
 
 
@@ -153,7 +158,7 @@ class Topsy(Provider):
 
         if query_type == "site":
             query = re.sub("http(s?)://", "", query.lower())
-        elif query_type == "twitter_account":
+        elif query_type in ["twitter_account", "tweets_about"]:
             query = query.replace("@", "")
 
         template_url = self.top_tweeted_url_templates[query_type]
