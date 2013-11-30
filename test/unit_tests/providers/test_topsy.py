@@ -51,7 +51,6 @@ class TestTopsy(ProviderTestCase):
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
-        #expected = {'topsy:influential_tweets': (36, 'http://topsy.com/total-impact.org?utm_source=otter'), 'topsy:tweets': (358, 'http://topsy.com/total-impact.org?utm_source=otter')}
         expected = {'topsy:influential_tweets': (7, 'http://topsy.com/trackback?url=http%3A//total-impact.org&window=a'), 'topsy:tweets': (46, 'http://topsy.com/trackback?url=http%3A//total-impact.org&window=a')}
         print metrics_dict
         for key in expected:
@@ -60,9 +59,8 @@ class TestTopsy(ProviderTestCase):
 
     @http
     def test_metrics_blog(self):
-        metrics_dict = self.provider.metrics([("blog", "http://blog.impactstory.org")])
-        #expected = {'topsy:influential_tweets': (36, 'http://topsy.com/total-impact.org?utm_source=otter'), 'topsy:tweets': (358, 'http://topsy.com/total-impact.org?utm_source=otter')}
-        expected = {'topsy:tweets': (539, 'http://topsy.com/s?q=site%3Ablog.impactstory.org&window=a')}
+        metrics_dict = self.provider.metrics([("blog", '{"url": "http://retractionwatch.wordpress.com", "api_key": null}')])
+        expected = {'topsy:tweets': (8706, 'http://topsy.com/s?q=site%3Aretractionwatch.wordpress.com&window=a')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
@@ -79,7 +77,7 @@ class TestTopsy(ProviderTestCase):
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
     @http
-    def test_top_tweeted_urls(self):
+    def test_top_tweeted_urls_site(self):
         response = self.provider.top_tweeted_urls("http://blog.impactstory.org", number_to_return=5)
         print response
         expected = [u'http://blog.impactstory.org/2013/09/27/impactstory-awarded-300k-nsf-grant/',
@@ -88,4 +86,15 @@ class TestTopsy(ProviderTestCase):
                  u'http://blog.impactstory.org/2013/07/04/impactstory-sloan-grant-proposal-details/',
                  u'http://blog.impactstory.org/2013/06/17/impact-profiles/']
         assert_equals(response, expected)
+
+    @http
+    def test_top_tweeted_urls_tweets(self):
+        response = self.provider.top_tweeted_urls("impactstory", "twitter_account", number_to_return=10)
+        print response
+        expected = [u'http://blog.impactstory.org/2013/09/27/impactstory-awarded-300k-nsf-grant/',
+                 u'http://blog.impactstory.org/2013/01/18/github/',
+                 u'http://blog.impactstory.org/2013/06/17/sloan/',
+                 u'http://blog.impactstory.org/2013/07/04/impactstory-sloan-grant-proposal-details/',
+                 u'http://blog.impactstory.org/2013/06/17/impact-profiles/']
+        assert_equals(response, expected)        
 

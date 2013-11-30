@@ -2,7 +2,7 @@ from totalimpact.providers import provider
 from totalimpact.providers import topsy
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, os, re
+import json, os, re
 
 import logging
 logger = logging.getLogger('ti.providers.wordpresscom')
@@ -15,6 +15,7 @@ class Wordpresscom(Provider):
     descr = "A blog web hosting service provider owned by Automattic, and powered by the open source WordPress software."
     biblio_url_template = "https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1"
     metrics_url_template = "https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1"
+    metrics_url_template_views = "http://stats.wordpress.com/csv.php?api_key=%s&blog_uri=%s&table=views&days=-1&format=json&summarize=1"
     provenance_url_template = "%s"
 
     static_meta_dict = {
@@ -23,6 +24,13 @@ class Wordpresscom(Provider):
             "provider": "WordPress.com",
             "provider_url": "http://wordpress.com",
             "description": "The number of people who have subscribed to this blog on WordPress.com",
+            "icon": "https://wordpress.com/favicon.ico",
+        },
+        "views": {
+            "display_name": "views",
+            "provider": "WordPress.com",
+            "provider_url": "http://wordpress.com",
+            "description": "The number of total times that posts on this blog have been viewed",
             "icon": "https://wordpress.com/favicon.ico",
         }
     }     
@@ -49,24 +57,43 @@ class Wordpresscom(Provider):
 
     #override because need to break up id
     def _get_templated_url(self, template, nid, method=None):
+        blog_url = self.url_from_nid(nid)
         if method in ["metrics", "biblio"]:
-            nid = self.blog_url(nid)
-        url = template % (nid)
+            blog_url = self.blog_url(blog_url)
+        url = template % (blog_url)
         return(url)
 
 
     # overriding
     def member_items(self, 
-            blog_url, 
+            input_val, 
             provider_url_template=None, 
             cache_enabled=True):
 
-        members = [("blog", blog_url)]
-        members += [("blog post: {blog_url}".format(blog_url=self.blog_url(blog_url)), post_url) 
-                        for post_url in topsy.Topsy().top_tweeted_urls(blog_url)]
+        clean_dict = {"api_key": None}
+
+        if isinstance(input_val, dict):
+            if "blogUrl" in input_val:
+                clean_dict["url"] = input_val["blogUrl"]
+            if "apiKey" in input_val:
+                clean_dict["api_key"] = input_val["apiKey"]
+        else:
+            clean_dict["url"] = input_val
+
+        members = [("blog", json.dumps(clean_dict))]
+        blog_url = self.blog_url(clean_dict["url"])
+        for post_url in topsy.Topsy().top_tweeted_urls(blog_url):
+            members += [("blog_post".format(blog_url=blog_url), post_url)] 
+
         return (members)
 
+
+    def url_from_nid(self, nid):
+        return json.loads(nid)["url"]    
   
+    def api_key_from_nid(self, nid):
+        return json.loads(nid)["api_key"]    
+
     # overriding
     def aliases(self, 
             aliases, 
@@ -76,16 +103,16 @@ class Wordpresscom(Provider):
         new_aliases = []
 
         for alias in aliases:
-            if self.is_relevant_alias(alias):
-                (namespace, nid) = alias
-                new_alias = ("url", nid)
+            (namespace, nid) = alias
+            if namespace=="blog":
+                new_alias = ("url", self.url_from_nid(nid))
                 if new_alias not in aliases:
                     new_aliases += [new_alias]
 
         return new_aliases
 
 
-    def _extract_biblio(self, page, id=None):
+    def _extract_biblio(self, page, nid=None):
         if not "is_private" in page:
             raise ProviderContentMalformedError
 
@@ -94,9 +121,10 @@ class Wordpresscom(Provider):
             'description' : ['description']
         }
         biblio_dict = provider._extract_from_json(page, dict_of_keylists)
-        biblio_dict["url"] = id
+        biblio_dict["url"] = self.url_from_nid(nid)
 
         return biblio_dict         
+
 
     def _extract_metrics(self, page, status_code=200, id=None):
         if status_code != 200:
@@ -114,4 +142,18 @@ class Wordpresscom(Provider):
 
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)
 
+        blog_url = self.url_from_nid(id)
+        api_key = self.api_key_from_nid(id)
+        url = self.metrics_url_template_views % (api_key, blog_url)
+
+        response = self.http_get(url)
+
+        try:
+            data = json.loads(response.text)
+            metrics_dict["wordpresscom:views"] = data["views"] 
+        except ValueError:
+            pass
+
         return metrics_dict
+
+

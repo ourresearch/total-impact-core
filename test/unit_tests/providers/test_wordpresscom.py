@@ -15,10 +15,11 @@ class TestWordpresscom(ProviderTestCase):
 
     provider_name = "wordpresscom"
 
-    testitem_members = "http://retractionwatch.wordpress.com"
-    testitem_aliases = ("blog", "http://retractionwatch.wordpress.com")
-    testitem_metrics = ("blog", "http://retractionwatch.wordpress.com")
-    testitem_biblio = ("blog", "http://retractionwatch.wordpress.com")
+    api_key = os.environ["WORDPRESS_OUR_BLOG_API_KEY"]
+    testitem_members = {"blogUrl": "http://researchremix.wordpress.com", "apiKey": api_key}
+    testitem_aliases = ("blog", '{"url": "http://researchremix.wordpress.com", "api_key": "'+api_key+'"}')
+    testitem_metrics = ("blog", '{"url": "http://researchremix.wordpress.com", "api_key": "'+api_key+'"}')
+    testitem_biblio = ("blog", '{"url": "http://researchremix.wordpress.com", "api_key": "'+api_key+'"}')
 
     def setUp(self):
         ProviderTestCase.setUp(self) 
@@ -32,20 +33,20 @@ class TestWordpresscom(ProviderTestCase):
 
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("github:forks", [self.testitem_aliases])
-        assert_equals(provenance_url, 'http://retractionwatch.wordpress.com')
+        assert_equals(provenance_url, u'http://researchremix.wordpress.com')
 
 
     def test_members(self):
         response = self.provider.member_items(self.testitem_members)
         print response
-        expected = [('blog', 'http://retractionwatch.wordpress.com'), ('blog post: retractionwatch.wordpress.com', u'http://retractionwatch.wordpress.com/2012/12/11/elsevier-editorial-system-hacked-reviews-faked-11-retractions-follow/'), ('blog post: retractionwatch.wordpress.com', u'http://retractionwatch.wordpress.com/'), ('blog post: retractionwatch.wordpress.com', u'http://retractionwatch.wordpress.com/2013/06/19/why-i-retracted-my-nature-paper-a-guest-post-from-david-vaux-about-correcting-the-scientific-record/'), ('blog post: retractionwatch.wordpress.com', u'http://retractionwatch.wordpress.com/2013/10/03/science-reporter-spoofs-hundreds-of-journals-with-a-fake-paper/'), ('blog post: retractionwatch.wordpress.com', u'http://retractionwatch.wordpress.com/2011/04/06/forget-chocolate-on-valentines-day-try-semen-says-surgery-news-editor-retraction-resignation-follow/'), ('blog post: retractionwatch.wordpress.com', u'http://retractionwatch.wordpress.com/2013/09/23/a-serbian-sokal-authors-spoof-pub-with-ron-jeremy-and-michael-jackson-references/'), ('blog post: retractionwatch.wordpress.com', u'http://retractionwatch.wordpress.com/2013/07/04/retraction-of-19-year-old-nature-paper-reveals-hidden-cameras-lab-break-in-evidence-tampering/'), ('blog post: retractionwatch.wordpress.com', u'http://retractionwatch.wordpress.com/2012/04/17/math-paper-retracted-because-it-contains-no-scientific-content/'), ('blog post: retractionwatch.wordpress.com', u'http://retractionwatch.wordpress.com/2013/09/19/editor-close-to-10-of-the-papers-we-receive-show-some-sign-of-academic-misconduct/'), ('blog post: retractionwatch.wordpress.com', u'http://retractionwatch.wordpress.com/2013/05/22/cell-reviewing-allegations-of-image-reuse-in-human-embryonic-stem-cell-cloning-paper/')]
+        expected = [('blog', '{"url": "http://researchremix.wordpress.com", "api_key": "d05cf89d301d"}'), ('blog post: researchremix.wordpress.com', u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/'), ('blog post: researchremix.wordpress.com', u'http://researchremix.wordpress.com/2013/05/11/society-oa-options/'), ('blog post: researchremix.wordpress.com', u'http://researchremix.wordpress.com/2012/05/29/non-american-please-sign/'), ('blog post: researchremix.wordpress.com', u'http://researchremix.wordpress.com/2013/03/05/why-google-isnt-good-enough-for-academic-search/'), ('blog post: researchremix.wordpress.com', u'http://researchremix.wordpress.com/2012/03/05/talking-text-mining-with-elsevier/'), ('blog post: researchremix.wordpress.com', u'http://researchremix.wordpress.com/2013/03/13/why-google/'), ('blog post: researchremix.wordpress.com', u'http://researchremix.wordpress.com/2012/01/31/31-flavours/'), ('blog post: researchremix.wordpress.com', u'http://researchremix.wordpress.com/2011/02/18/early_results/'), ('blog post: researchremix.wordpress.com', u'http://researchremix.wordpress.com/2012/01/07/rwa-job-losses/'), ('blog post: researchremix.wordpress.com', u'http://researchremix.wordpress.com/2012/05/29/dear-research-data-advocate-please-sign-the-petition-oamonday/')]
         assert_equals(response, expected)
 
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
         print metrics_dict
-        expected = {'wordpresscom:subscribers': (735, 'http://retractionwatch.wordpress.com')}
+        expected = {'wordpresscom:views': (74942, u'http://researchremix.wordpress.com'), 'wordpresscom:subscribers': (66, u'http://researchremix.wordpress.com')}
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
@@ -54,7 +55,7 @@ class TestWordpresscom(ProviderTestCase):
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'url': 'http://retractionwatch.wordpress.com', 'description': u'Tracking retractions as a window into the scientific process', 'title': u'Retraction Watch'}
+        expected = {'url': u'http://researchremix.wordpress.com', 'description': u'Blogging about the science, engineering, and human factors of biomedical research data reuse', 'title': u'Research Remix'}
         assert_equals(biblio_dict.keys(), expected.keys())
         for key in ["url", "title", "description"]:
             assert_equals(biblio_dict[key], expected[key])

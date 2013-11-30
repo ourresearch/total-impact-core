@@ -1,4 +1,4 @@
-from nose.tools import raises, assert_equals, nottest
+from nose.tools import raises, assert_equals, assert_items_equal, nottest
 import redis
 import json
 
@@ -18,30 +18,32 @@ class TestTiRedis():
         self.r = tiredis.from_url("redis://localhost:6379", db=8)
         self.r.flushdb()
 
-
     def test_from_url(self):
         self.r.set("test", "foo")
         assert_equals(self.r.get("test"), "foo")
 
-    def test_set_num_providers_left(self):
-        self.r.set_num_providers_left("abcd", 11)
-        assert_equals("11", self.r.get("num_providers_left:abcd"))
+    def test_init_currently_updating_status(self):
+        self.r.init_currently_updating_status("abcd", ["topsy", "wikipedia"])
+        assert_items_equal(self.r.get_providers_currently_updating("abcd"), ["topsy", "wikipedia"])
+        assert_equals(self.r.get_currently_updating("abcd", "wikipedia").values(), ["in queue"])
 
-    def test_get_num_providers_left(self):
-        self.r.set_num_providers_left("abcd", 11)
-        num_left = self.r.get_num_providers_left("abcd")
-        assert_equals(11, num_left)
+    def test_set_provider_started(self):
+        self.r.init_currently_updating_status("abcd", ["topsy", "wikipedia"])
+        self.r.set_provider_started("abcd", "wikipedia")
+        assert_equals("queue" in self.r.get_currently_updating("abcd", "wikipedia"), False)
+        assert_equals(self.r.get_currently_updating("abcd", "wikipedia").values(), ["started"])
 
-    def test_get_num_providers_left_is_none(self):
-        num_left = self.r.get_num_providers_left("notinthedatabase")
-        assert_equals(None, num_left)
+    def test_set_provider_finished(self):
+        assert_equals(self.r.get_num_providers_currently_updating("abcd"), 0)        
+        self.r.init_currently_updating_status("abcd", ["topsy", "wikipedia"])
+        assert_equals(self.r.get_num_providers_currently_updating("abcd"), 2)        
+        self.r.set_provider_finished("abcd", "wikipedia")
+        assert_equals(self.r.get_num_providers_currently_updating("abcd"), 1)
+        print self.r.get_currently_updating("abcd", "topsy")
+        assert_equals(self.r.get_currently_updating("abcd", "topsy").values(), ["in queue"])
+        self.r.set_provider_finished("abcd", "topsy")
+        assert_equals(self.r.get_num_providers_currently_updating("abcd"), 0)
 
-    def test_decr_num_providers_left(self):
-        self.r.set_num_providers_left("abcd", 11)
-        assert_equals("11", self.r.get("num_providers_left:abcd"))
-
-        self.r.decr_num_providers_left("abcd", "myprovider")
-        assert_equals("10", self.r.get("num_providers_left:abcd"))
 
     def test_memberitems_status(self):
         self.r.set_memberitems_status("abcd", 11)

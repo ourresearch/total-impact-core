@@ -2,6 +2,7 @@ from birdy.twitter import AppClient, TwitterApiError
 import os, re
 
 from totalimpact.providers import provider
+from totalimpact.providers import topsy
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
 import logging
@@ -74,7 +75,6 @@ class Twitter_Account(Provider):
         return match[0]
 
 
-    # default method; providers can override
     def member_items(self, 
             query_string, 
             provider_url_template=None, 
@@ -83,6 +83,10 @@ class Twitter_Account(Provider):
         twitter_username = query_string.replace("@", "")
         url = self._get_templated_url(self.member_items_url_template, twitter_username, "members")
         members = [("url", url)]
+
+        for tweet_url in topsy.Topsy().top_tweeted_urls(twitter_username, "twitter_account", number_to_return=25):
+            members += [("url", tweet_url)] 
+
         return(members)
 
 
@@ -155,8 +159,6 @@ class Twitter_Account(Provider):
 
     # overriding default because different provenance url for each metric
     def provenance_url(self, metric_name, aliases):
-        print aliases
-
         nid = self.get_best_id(aliases)
         if not nid:
             return None

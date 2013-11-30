@@ -1,5 +1,5 @@
 from totalimpact.providers import provider
-from totalimpact.providers import topsy
+from totalimpact.providers import webpage
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
 import simplejson, os, re
@@ -17,6 +17,8 @@ class Blog_Post(Provider):
 
     def __init__(self):
         super(Blog_Post, self).__init__()
+        self.webpage = webpage.Webpage()
+
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
@@ -28,6 +30,10 @@ class Blog_Post(Provider):
     def provides_aliases(self):
         return True
 
+    # overriding default because overriding aliases method
+    @property
+    def provides_biblio(self):
+        return True
   
     # overriding
     def aliases(self, 
@@ -45,3 +51,12 @@ class Blog_Post(Provider):
                     new_aliases += [new_alias]
 
         return new_aliases
+
+    # overriding
+    def biblio(self, 
+            aliases, 
+            provider_url_template=None,
+            cache_enabled=True): 
+        logger.info(u"calling webpage to handle aliases")
+        return self.webpage.biblio(aliases, provider_url_template, cache_enabled) 
+

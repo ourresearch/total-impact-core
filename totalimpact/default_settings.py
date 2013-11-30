@@ -15,12 +15,14 @@ PROVIDERS = [
     ("pubmed", {}),
 
     # best biblio providers go here, in order with best first
+    ("blog_post", {}),
     ("crossref", {}),
     ("dryad", {}),            
     ("figshare", {}),            
     ("github", {}),
     ("slideshare", {}),
     ("twitter_account", {}),
+    ("twitter_tweet", {}),
     ("vimeo", {}),
     ("wordpresscom", {}),
     ("youtube", {}),
@@ -28,7 +30,6 @@ PROVIDERS = [
     # if-need-be biblio providers go here, in order with best first
     ("mendeley", {}),
     ("bibtex", {}),
-    ("dataone", {}),
     ("wordpresscom", {}),
     ("webpage", {}),
 
@@ -37,7 +38,6 @@ PROVIDERS = [
     ("delicious", {}),   
     ("plosalm", {}),
     ("plossearch", {}),
-    ("pmc", {}),
     ("scienceseeker", {}),
     ("scopus", {}),
     ("topsy", {}),

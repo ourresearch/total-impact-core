@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, re, os
+import json, re, os
 from operator import itemgetter
 
 import logging
@@ -20,7 +20,9 @@ class Topsy(Provider):
     provenance_url_template_site = 'http://topsy.com/s?q=site%%3A%s&window=a'  #escape % with %%
 
     top_tweeted_url_templates = {
-        "site": 'http://otter.topsy.com/search.json?q=site:%s&window=a&page=%s&perpage=100&apikey=' + os.environ["TOPSY_KEY"]
+        "site": 'http://otter.topsy.com/search.json?q=site:%s&window=a&type=link&page=%s&perpage=100&apikey=' + os.environ["TOPSY_KEY"],
+        "twitter_account": 'http://otter.topsy.com/search.json?q=@%s&window=a&type=tweet&page=%s&perpage=100&apikey=' + os.environ["TOPSY_KEY"],
+        "tweets_about": 'http://otter.topsy.com/search.json?q=@%s&window=a&type=tweet&page=%s&perpage=100&apikey=' + os.environ["TOPSY_KEY"]
     }
 
     static_meta_dict =  {
@@ -56,7 +58,8 @@ class Topsy(Provider):
         for alias in aliases:
             (namespace, nid) = alias
             if ("blog"==namespace):
-                blog_url = re.sub("http(s?)://", "", nid.lower())
+                blog_url = json.loads(nid)["url"]
+                blog_url = re.sub("http(s?)://", "", blog_url.lower())
                 return blog_url
         return None
 
@@ -131,25 +134,42 @@ class Topsy(Provider):
 
         return metrics_dict
 
+
+    def get_url_from_entry(self, query, entry, query_type):
+        if query_type=="site":
+            if query in entry["url"]:
+                return entry["url"]
+            elif entry["url_expansions"] and ("topsy_expanded_url" in entry["url_expansions"][0]):
+                return entry["url_expansions"][0]["topsy_expanded_url"]
+        elif query_type=="twitter_account":
+            if "/{query}/".format(query=query) in entry["url"]:
+                return entry["url"]
+            else:
+                return None
+        return entry["url"]
+
+
     def top_tweeted_urls(self, query, query_type="site", number_to_return=10, pages=5):
-        template_url = self.top_tweeted_url_templates[query_type]
+
         if query_type == "site":
             query = re.sub("http(s?)://", "", query.lower())
+        elif query_type == "twitter_account":
+            query = query.replace("@", "")
+
+        template_url = self.top_tweeted_url_templates[query_type]
         urls = [template_url % (query, i) for i in range(1, pages+1)]
+        print urls
         responses = self.http_get_multiple(urls)
         tweeted_entries = [] 
         for url in responses:
             tweeted_entries += provider._load_json(responses[url].text)["response"]["list"]
         sorted_list = sorted(tweeted_entries, key=itemgetter('hits'), reverse=True) 
 
-        top_tweeted_urls = []
+        top_tweeted_urls = [] #needs to be ordered
 
         for entry in sorted_list:
-            if query in entry["url"]:
-                if entry["url"] not in top_tweeted_urls:
-                    top_tweeted_urls.append(entry["url"])
-            elif entry["url_expansions"] and ("topsy_expanded_url" in entry["url_expansions"][0]):
-                if entry["url_expansions"][0]["topsy_expanded_url"] not in top_tweeted_urls:
-                    top_tweeted_urls.append(entry["url_expansions"][0]["topsy_expanded_url"])
+            url = self.get_url_from_entry(query, entry, query_type)
+            if url and (url not in top_tweeted_urls):
+                top_tweeted_urls.append(url)    
         return(top_tweeted_urls[0:number_to_return])
 
