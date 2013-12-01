@@ -57,7 +57,7 @@ class Wordpresscom(Provider):
             provider_url_template=None, 
             cache_enabled=True):
 
-        members = [("blog", url) for url in query_string.split("\n")]
+        members = [("blog", url) for url in query_string.split("\n") if url]
         return (members)
 
   

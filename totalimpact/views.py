@@ -337,7 +337,12 @@ def importer_post(provider_name):
     """
     Gets aliases associated with a query from a given provider.
     """
-    input_string = request.json["input"]
+    try:
+        input_string = request.json["input"]
+    except KeyError:
+        abort_custom(404, "Missing input key in {input_string} (first 50 chars)".format(
+            input_string=request.json[0:50]))
+
 
     if provider_name == "pmids":
         provider_name = "pubmed"
