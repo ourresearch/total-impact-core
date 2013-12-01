@@ -12,7 +12,7 @@ class Twitter_Tweet(Provider):
 
     url = "http://twitter.com"
     descr = "Social networking and microblogging service."
-    biblio_template_url = "https://api.twitter.com/1/statuses/oembed.json?id=%s&hide_media=1&hide_thread=1&maxwidth=650&omit_script=1"
+    biblio_template_url = "https://api.twitter.com/1/statuses/oembed.json?id=%s&hide_media=1&hide_thread=1&maxwidth=650"
   
 
     def __init__(self):
