@@ -61,9 +61,10 @@ class Youtube(Provider):
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
         if (("url" == namespace) and ("youtube.com/" in nid)):
-            return True
-        else:
-            return False
+            nid_as_youtube_url = self._get_video_id(nid)
+            if nid_as_youtube_url:
+                return True
+        return False
 
     def _get_video_id(self, video_url):
         match = re.findall("watch.*[\?|&]v=([\dA-Za-z_\-]+)", video_url)
