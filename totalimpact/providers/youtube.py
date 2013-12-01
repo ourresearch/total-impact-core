@@ -66,7 +66,7 @@ class Youtube(Provider):
             return False
 
     def _get_video_id(self, video_url):
-        match = re.findall("watch\?v=([\dA-Za-z_\-]+)", video_url)
+        match = re.findall("watch.*[\?|&]v=([\dA-Za-z_\-]+)", video_url)
         try:
             nid_as_youtube_url = match[0]
         except IndexError:
