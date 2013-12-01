@@ -147,7 +147,7 @@ class Webpage(Provider):
 
         url_string = query_string.strip(" ")
         urls = [clean_url(url) for url in url_string.split("\n")]
-        aliases_tuples = [("url", url) for url in urls]
+        aliases_tuples = [("url", url) for url in urls if url]
 
         return(aliases_tuples)
 
