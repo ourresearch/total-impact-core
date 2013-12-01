@@ -66,8 +66,13 @@ class Youtube(Provider):
             return False
 
     def _get_video_id(self, video_url):
-        match = re.findall("watch\?v=([\dA-Za-z_]+)", video_url)
-        nid_as_youtube_url = match[0]
+        match = re.findall("watch\?v=([\dA-Za-z_\-]+)", video_url)
+        try:
+            nid_as_youtube_url = match[0]
+        except IndexError:
+            nid_as_youtube_url = None
+            logging.error(u"couldn't get video_id for {video_url}".format(
+                video_url=video_url))
         return nid_as_youtube_url
 
     #override because need to break up id
