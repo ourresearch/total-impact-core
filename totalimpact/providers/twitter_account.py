@@ -85,8 +85,8 @@ class Twitter_Account(Provider):
         members = [("url", url)]
 
         # import top tweets
-        # for tweet_url in topsy.Topsy().top_tweeted_urls(twitter_username, "twitter_account", number_to_return=25):
-        #     members += [("url", tweet_url)] 
+        for tweet_url in topsy.Topsy().top_tweeted_urls(twitter_username, "twitter_account", number_to_return=25):
+            members += [("url", tweet_url)] 
 
         return(members)
 
