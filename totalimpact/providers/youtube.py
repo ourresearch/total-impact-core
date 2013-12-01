@@ -79,10 +79,15 @@ class Youtube(Provider):
     #override because need to break up id
     def _get_templated_url(self, template, nid_as_youtube_url, method=None):
         nid_as_video_id = self._get_video_id(nid_as_youtube_url)
+        if not nid_as_video_id:
+            raise ProviderContentMalformedError
         url = template % (nid_as_video_id)
         return(url)
 
     def _extract_biblio(self, page, id=None):
+
+        if not "snippet" in page:
+            raise ProviderContentMalformedError
 
         json_response = provider._load_json(page)
         this_video_json = json_response["items"][0]
@@ -113,7 +118,7 @@ class Youtube(Provider):
             else:
                 raise(self._get_error(status_code))
 
-        if not "kind" in page:
+        if not "snippet" in page:
             raise ProviderContentMalformedError
 
         json_response = provider._load_json(page)
