@@ -295,7 +295,7 @@ class Crossref(Provider):
 
         doi_string = query_string.strip(" ")
         dois = [clean_doi(doi) for doi in doi_string.split("\n")]
-        aliases_tuples = [("doi", doi) for doi in dois]
+        aliases_tuples = [("doi", doi) for doi in dois if doi]
 
         return(aliases_tuples)
 

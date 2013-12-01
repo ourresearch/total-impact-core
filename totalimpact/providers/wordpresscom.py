@@ -81,9 +81,11 @@ class Wordpresscom(Provider):
             clean_dict["url"] = input_val
 
         members = [("blog", json.dumps(clean_dict))]
-        blog_url = self.blog_url(clean_dict["url"])
-        for post_url in topsy.Topsy().top_tweeted_urls(blog_url):
-            members += [("blog_post".format(blog_url=blog_url), post_url)] 
+
+        # import top blog posts
+        # blog_url = self.blog_url(clean_dict["url"])
+        # for post_url in topsy.Topsy().top_tweeted_urls(blog_url):
+        #     members += [("blog_post".format(blog_url=blog_url), post_url)] 
 
         return (members)
 

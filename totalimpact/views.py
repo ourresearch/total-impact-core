@@ -338,6 +338,12 @@ def importer_post(provider_name):
     Gets aliases associated with a query from a given provider.
     """
 
+    # pass in just the string if only one key (for backwards compatibility), otherwise dict
+    if request.json.keys() == ["primary"]:
+        input_val = request.json["primary"]
+    else:
+        input_val = request.json
+
     if provider_name == "pmids":
         provider_name = "pubmed"
     elif provider_name == "dois":
@@ -349,13 +355,6 @@ def importer_post(provider_name):
     except ImportError:
         abort_custom(404, "an importer for provider '{provider_name}' is not found".format(
             provider_name=provider_name))
-
-    print "****", request.json
-    
-    if request.json.keys() == ["primary"]:
-        input_val = request.json["primary"]
-    else:
-        input_val = request.json
 
     logger.debug(u"in importer_post with {provider_name}: {input_val}".format(
         provider_name=provider_name, input_val=input_val))

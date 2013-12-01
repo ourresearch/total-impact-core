@@ -326,7 +326,7 @@ class Pubmed(Provider):
         self.logger.debug(u"%s getting member_items for %s" % (self.provider_name, query_string))
 
         pmids = re.findall("\d+", query_string)
-        aliases_tuples = [("pmid", pmid) for pmid in pmids]
+        aliases_tuples = [("pmid", pmid) for pmid in pmids if pmid]
 
         return(aliases_tuples)
 
