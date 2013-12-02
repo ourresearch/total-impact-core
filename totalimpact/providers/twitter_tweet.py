@@ -10,8 +10,6 @@ class Twitter_Tweet(Provider):
 
     example_id = ("url", "http://twitter.com/jasonpriem")
 
-    url = "http://twitter.com"
-    descr = "Social networking and microblogging service."
     biblio_template_url = "https://api.twitter.com/1/statuses/oembed.json?id=%s&hide_media=1&hide_thread=1&maxwidth=650&omit_script=1"
   
 
