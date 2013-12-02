@@ -10,17 +10,23 @@ logger = logging.getLogger('ti.providers.crossref')
 #!/usr/bin/env python
 
 def clean_doi(input_doi):
-    doi = None
     input_doi = remove_nonprinting_characters(input_doi)
-    if input_doi.startswith("http"):
-        match = re.match("^https*://(dx\.)*doi.org/(10\..+)", input_doi)
-        doi = match.group(2)
-    elif input_doi.startswith("doi:"):
-        match = re.match("^doi:(10\..+)", input_doi)
-        doi = match.group(1)
-    elif input_doi.startswith("10."):
-        doi = input_doi
+    try:
+        if input_doi.startswith("http"):
+            match = re.match("^https*://(dx\.)*doi.org/(10\..+)", input_doi)
+            doi = match.group(2)
+        elif input_doi.startswith("doi:"):
+            match = re.match("^doi:(10\..+)", input_doi)
+            doi = match.group(1)
+        elif input_doi.startswith("10."):
+            doi = input_doi
+        else:
+            doi = None
+    except AttributeError:
+        doi = None
+
     return doi
+
 
 class Crossref(Provider):  
 
@@ -294,6 +300,8 @@ class Crossref(Provider):
         self.logger.debug(u"%s getting member_items for %s" % (self.provider_name, query_string))
 
         doi_string = query_string.strip(" ")
+        if not doi_string:
+            return []
         dois = [clean_doi(doi) for doi in doi_string.split("\n")]
         aliases_tuples = [("doi", doi) for doi in dois if doi]
 
