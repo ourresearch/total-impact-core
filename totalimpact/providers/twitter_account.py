@@ -125,6 +125,9 @@ class Twitter_Account(Provider):
         biblio_dict["description"] = data["description"]
         biblio_dict["created_at"] = data["created_at"]
 
+        biblio_dict["is_account"] = True  # special key to tell webapp to render as genre heading
+        biblio_dict["account"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
+
         return biblio_dict
   
 

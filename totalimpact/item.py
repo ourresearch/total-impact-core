@@ -650,7 +650,7 @@ def decide_genre(alias_dict):
         host = "wordpresscom"
 
     elif "blog_post" in alias_dict:
-        genre = "blog_post"
+        genre = "blog"
         host = "blog_post"
 
     elif "url" in alias_dict:
@@ -664,10 +664,10 @@ def decide_genre(alias_dict):
             host = "github"
         elif "twitter.com" in joined_url_string:
             if "/status/" in joined_url_string:
-                genre = "tweet"
+                genre = "twitter"
                 host = "twitter_tweet"
             else:
-                genre = "account"
+                genre = "twitter"
                 host = "twitter_account"
         elif "youtube.com" in joined_url_string:
             genre = "video"

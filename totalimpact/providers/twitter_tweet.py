@@ -66,6 +66,7 @@ class Twitter_Tweet(Provider):
         biblio_dict["title"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
         biblio_dict["authors"] = data["author_name"]
         biblio_dict["embed"] = data["html"]
+        biblio_dict["account"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
 
         return biblio_dict
   
