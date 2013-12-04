@@ -88,8 +88,8 @@ class Figshare(Provider):
         biblio_dict["repository"] = "figshare"
         
         try:
-            biblio_dict["year"] = biblio_dict["published_date"][-4:]
-        except KeyError:
+            biblio_dict["year"] = int(biblio_dict["published_date"][-4:])
+        except (KeyError, TypeError):
             pass
 
         if "genre" in biblio_dict:

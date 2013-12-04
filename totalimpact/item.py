@@ -761,8 +761,12 @@ def get_metric_names(providers_config):
 
 def get_normalized_values(genre, host, year, metric_name, value, myrefsets):
     # Will be passed None as myrefsets type when loading items in reference collections :)
+
     if not myrefsets:
         return {}
+
+    if host in ["dryad", "figshare"]:
+        genre = "dataset"  #treat as dataset for the sake of normalization
 
     if genre not in myrefsets.keys():
         #logger.info(u"Genre {genre} not in refsets so give up".format(
