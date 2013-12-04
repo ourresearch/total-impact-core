@@ -634,8 +634,11 @@ def decide_genre(alias_dict):
             genre = "dataset"
             host = "dryad"
         elif ".figshare." in joined_doi_string:
-            genre = "dataset"
             host = "figshare"
+            try:
+                genre = alias_dict["biblio"][0]["genre"]
+            except (KeyError, AttributeError):
+                genre = "dataset"
         else:
             genre = "article"
 
@@ -647,7 +650,7 @@ def decide_genre(alias_dict):
         host = "wordpresscom"
 
     elif "blog_post" in alias_dict:
-        genre = "blog_post"
+        genre = "blog"
         host = "blog_post"
 
     elif "url" in alias_dict:
@@ -661,10 +664,10 @@ def decide_genre(alias_dict):
             host = "github"
         elif "twitter.com" in joined_url_string:
             if "/status/" in joined_url_string:
-                genre = "tweet"
+                genre = "twitter"
                 host = "twitter_tweet"
             else:
-                genre = "account"
+                genre = "twitter"
                 host = "twitter_account"
         elif "youtube.com" in joined_url_string:
             genre = "video"
@@ -676,13 +679,19 @@ def decide_genre(alias_dict):
             genre = "webpage"
             host = "webpage"
 
-    # override with "article" if it has a journal
-    if "biblio" in alias_dict:
+    # override if it came in with a genre, or call it an "article" if it has a journal
+    if (host=="unknown" and ("biblio" in alias_dict)):
         for biblio_dict in alias_dict["biblio"]:
-            if "journal" in biblio_dict:
+            if "genre" in biblio_dict and (biblio_dict["genre"] not in ["undefined", "other"]):
+                if "article" in biblio_dict["genre"]:
+                    genre = "article"  #disregard whether journal article or conference article for now
+                else:
+                    genre = biblio_dict["genre"]
+            elif ("journal" in biblio_dict) and biblio_dict["journal"]:  
                 genre = "article"
 
     return (genre, host)
+
 
 def canonical_alias_tuple(alias):
     (namespace, nid) = alias
@@ -752,8 +761,12 @@ def get_metric_names(providers_config):
 
 def get_normalized_values(genre, host, year, metric_name, value, myrefsets):
     # Will be passed None as myrefsets type when loading items in reference collections :)
+
     if not myrefsets:
         return {}
+
+    if host in ["dryad", "figshare"]:
+        genre = "dataset"  #treat as dataset for the sake of normalization
 
     if genre not in myrefsets.keys():
         #logger.info(u"Genre {genre} not in refsets so give up".format(

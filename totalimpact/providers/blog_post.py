@@ -58,5 +58,7 @@ class Blog_Post(Provider):
             provider_url_template=None,
             cache_enabled=True): 
         logger.info(u"calling webpage to handle aliases")
-        return self.webpage.biblio(aliases, provider_url_template, cache_enabled) 
+
+        biblio_dict = self.webpage.biblio(aliases, provider_url_template, cache_enabled) 
+        url = self.get_best_alias(aliases)
 

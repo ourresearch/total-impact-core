@@ -54,14 +54,6 @@ class Figshare(Provider):
         return is_figshare_doi
 
     @property
-    def provides_aliases(self):
-         return True
-
-    @property
-    def provides_biblio(self):
-         return True
-
-    @property
     def provides_members(self):
          return True
 
@@ -70,20 +62,59 @@ class Figshare(Provider):
         return match[0]
 
 
-    def aliases(self, 
-            aliases, 
-            provider_url_template=None,
-            cache_enabled=True):  
-        logger.info(u"calling crossref to handle aliases")
-        return self.crossref.aliases(aliases, provider_url_template, cache_enabled)          
+    def _extract_aliases(self, page, id=None):
+        dict_of_keylists = {"url": ["figshare_url"]}
+
+        item = self._extract_figshare_record(page, id)
+        aliases_dict = provider._extract_from_data_dict(item, dict_of_keylists)
+
+        if aliases_dict:
+            aliases_list = [(namespace, nid) for (namespace, nid) in aliases_dict.iteritems()]
+        else:
+            aliases_list = []
+        return aliases_list
 
 
-    def biblio(self, 
-            aliases, 
-            provider_url_template=None,
-            cache_enabled=True):  
-        logger.info(u"calling crossref to handle aliases")
-        return self.crossref.biblio(aliases, provider_url_template, cache_enabled) 
+    def _extract_biblio(self, page, id=None):
+        dict_of_keylists = {
+            'title' : ['title'],
+            'genre' : ['defined_type'],
+            #'authors_literal' : ['authors'],
+            'published_date' : ['published_date']
+        }
+        item = self._extract_figshare_record(page, id)
+        biblio_dict = provider._extract_from_data_dict(item, dict_of_keylists)
+
+        biblio_dict["repository"] = "figshare"
+        
+        try:
+            biblio_dict["year"] = int(biblio_dict["published_date"][-4:])
+        except (KeyError, TypeError):
+            pass
+
+        if "genre" in biblio_dict:
+            genre = biblio_dict["genre"].lower()
+            #override
+            if genre in ["figure", "poster"]:
+                genre = biblio_dict["genre"]
+            elif genre == "presentation":
+                genre = "slides"
+            elif genre == "paper":
+                genre = "article"
+            elif genre == "media":
+                genre = "video"   
+            else:
+                genre = "dataset"  #includes fileset 
+            biblio_dict["genre"] = genre        
+
+        # the authors data is messy, so just give up for now
+        # if "authors_literal" in biblio_dict:
+        #     surname_list = [author["last_name"] for author in biblio_dict["authors_literal"]]
+        #     if surname_list:
+        #         biblio_dict["authors"] = ", ".join(surname_list)
+        #         del biblio_dict["authors_literal"]
+
+        return biblio_dict   
 
 
     def _extract_figshare_record(self, page, id):

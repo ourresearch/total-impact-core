@@ -601,7 +601,7 @@ def delete_collection(cid=None):
 
 
 
-# creates products from aliases
+# creates products from aliases or returns items from tiids
 @app.route('/v1/products', methods=['POST'])
 def products_post():
     if "aliases" in request.json:

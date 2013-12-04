@@ -125,6 +125,9 @@ class Wordpresscom(Provider):
         biblio_dict = provider._extract_from_json(page, dict_of_keylists)
         biblio_dict["url"] = self.url_from_nid(nid)
 
+        biblio_dict["is_account"] = True  # special key to tell webapp to render as genre heading
+        biblio_dict["account"] = self.url_from_nid(nid)
+
         return biblio_dict         
 
 

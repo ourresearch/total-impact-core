@@ -52,11 +52,11 @@ class Bibjson(Provider):
 
 
 
-    def member_items(self, bibtex_contents, cache_enabled=True):
-        logger.debug(u"%20s getting member_items for bibtex" % (self.provider_name))
+    def member_items(self, bibjson_contents, cache_enabled=True):
+        logger.debug(u"%20s getting member_items for bibjson" % (self.provider_name))
 
-        parsed_bibtex = self.parse(bibtex_contents)
+        parsed_bibjson = self.parse(bibjson_contents)
 
-        aliases = [("biblio", entry) for entry in parsed_bibtex]
+        aliases = [("biblio", entry) for entry in parsed_bibjson]
 
         return(aliases)

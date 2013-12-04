@@ -86,8 +86,8 @@ class ProviderWorker(Worker):
 
     # last variable is an artifact so it has same call signature as other callbacks
     def add_to_couch_queue_if_nonzero(self, tiid, new_content, method_name, dummy=None):
-        logger.info(u"In add_to_couch_queue_if_nonzero with {tiid}, {method_name}, {provider_name}".format(
-           method_name=method_name, tiid=tiid, provider_name=self.provider_name))
+        # logger.info(u"In add_to_couch_queue_if_nonzero with {tiid}, {method_name}, {provider_name}".format(
+        #    method_name=method_name, tiid=tiid, provider_name=self.provider_name))
 
         if not new_content:
             #logger.info(u"{:20}: Not writing to couch: empty {method_name} from {tiid} for {provider_name}".format(
@@ -96,8 +96,8 @@ class ProviderWorker(Worker):
                 self.myredis.set_provider_finished(tiid, self.provider_name)
             return
         else:
-            logger.info(u"ADDING to couch queue {method_name} from {tiid} for {provider_name}".format(
-                method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
+            # logger.info(u"ADDING to couch queue {method_name} from {tiid} for {provider_name}".format(
+            #     method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
             couch_message = (tiid, new_content, method_name, self.provider_name)
             couch_queue_index = tiid[0] #index them by the first letter in the tiid
             selected_couch_queue = self.couch_queues[couch_queue_index] 
@@ -112,8 +112,8 @@ class ProviderWorker(Worker):
             provider_name=self.provider_name))     
         self.add_to_couch_queue_if_nonzero(tiid, alias_dict, method_name)
         alias_message = [tiid, alias_dict, aliases_providers_run]
-        logger.info(u"NOW PUSHING to alias_queue from {method_name} from {tiid} for {provider_name}".format(
-            method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
+        # logger.info(u"NOW PUSHING to alias_queue from {method_name} from {tiid} for {provider_name}".format(
+        #     method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
         self.alias_queue.push(alias_message)
 
 
@@ -180,14 +180,8 @@ class ProviderWorker(Worker):
 
             if method_name == "aliases":
                 callback = self.add_to_alias_and_couch_queues
-                logger.info(u"BEFORE STARTING thread for {tiid} with callback ADD_TO_ALIAS_AND_COUCH_QUEUES, {method_name} {provider}".format(
-                   method_name=method_name.upper(), tiid=tiid, num=len(thread_count[self.provider.provider_name].keys()),
-                   provider=self.provider.provider_name.upper()))
             else:
                 callback = self.add_to_couch_queue_if_nonzero
-                logger.info(u"BEFORE STARTING thread for {tiid} with callback ADD_TO_COUCH_QUEUE, {method_name} {provider}".format(
-                   method_name=method_name.upper(), tiid=tiid, num=len(thread_count[self.provider.provider_name].keys()),
-                   provider=self.provider.provider_name.upper()))
 
             #logger.info(u"BEFORE STARTING thread for {tiid} {method_name} {provider}".format(
             #    method_name=method_name.upper(), tiid=tiid, num=len(thread_count[self.provider.provider_name].keys()),

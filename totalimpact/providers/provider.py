@@ -113,8 +113,16 @@ class ProviderFactory(object):
             provider_data = {}
             provider_data["provides_metrics"] = provider.provides_metrics
             provider_data["provides_aliases"] = provider.provides_aliases
-            provider_data["url"] = provider.url
-            provider_data["descr"] = provider.descr
+
+            try:
+                provider_data["url"] = provider.url
+            except AttributeError:
+                pass
+
+            try:
+                provider_data["descr"] = provider.descr
+            except AttributeError:
+                pass
 
             try:
                 provider_data["metrics"] = provider.static_meta_dict
@@ -523,6 +531,7 @@ class Provider(object):
         try:
             analytics.track("CORE", "Sent GET to Provider", {"provider": self.provider_name, "url": url}, 
                 context={ "providers": { 'Mixpanel': False } })
+            self.logger.info(u"%s LIVE GET on %s" %(self.provider_name, url))
             r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=allow_redirects, verify=False)
             if r and use_cache:
                 store_page_in_cache(url, headers, allow_redirects, r, cache)
