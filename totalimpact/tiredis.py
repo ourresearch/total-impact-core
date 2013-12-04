@@ -100,10 +100,10 @@ def get_num_providers_currently_updating(self, item_id):
         elapsed = now - last_update_time.replace(tzinfo=None)
         if elapsed < datetime.timedelta(hours=0, minutes=1):
             num_currently_updating += 1 
-            logger.warning(u"In get_num_providers_currently_updating, elapsed time still short, call currently updating for {tiid}{provider}".format(
-                tiid=item_id, provider=provider))
+            # logger.warning(u"In get_num_providers_currently_updating, elapsed time still short, set currently_updating=True for {tiid}{provider}".format(
+            #     tiid=item_id, provider=provider))
         else:
-            logger.warning(u"In get_num_providers_currently_updating, elapsed time is too long, don't call currently updating for {tiid}{provider}".format(
+            logger.warning(u"In get_num_providers_currently_updating, elapsed time is too long, set currently_updating=False for {tiid}{provider}".format(
                 tiid=item_id, provider=provider))
 
     return num_currently_updating
