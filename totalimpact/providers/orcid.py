@@ -57,7 +57,7 @@ class Orcid(Provider):
                 pass
 
             try:
-                biblio["genre"] = work["work-type"].lower()
+                biblio["genre"] = work["work-type"].lower().replace("_", " ")
             except (KeyError, TypeError):
                 pass
 
