@@ -79,7 +79,7 @@ class Figshare(Provider):
         dict_of_keylists = {
             'title' : ['title'],
             'genre' : ['defined_type'],
-            'authors_literal' : ['authors'],
+            #'authors_literal' : ['authors'],
             'published_date' : ['published_date']
         }
         item = self._extract_figshare_record(page, id)
@@ -107,11 +107,12 @@ class Figshare(Provider):
                 genre = "dataset"  #includes fileset 
             biblio_dict["genre"] = genre        
 
-        if "authors_literal" in biblio_dict:
-            surname_list = [author["last_name"] for author in biblio_dict["authors_literal"]]
-            if surname_list:
-                biblio_dict["authors"] = ", ".join(surname_list)
-                del biblio_dict["authors_literal"]
+        # the authors data is messy, so just give up for now
+        # if "authors_literal" in biblio_dict:
+        #     surname_list = [author["last_name"] for author in biblio_dict["authors_literal"]]
+        #     if surname_list:
+        #         biblio_dict["authors"] = ", ".join(surname_list)
+        #         del biblio_dict["authors_literal"]
 
         return biblio_dict   
 
