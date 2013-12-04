@@ -680,7 +680,10 @@ def decide_genre(alias_dict):
     if "biblio" in alias_dict:
         for biblio_dict in alias_dict["biblio"]:
             if "genre" in biblio_dict:
-                genre = biblio_dict["genre"]
+                if biblio_dict["genre"] == "journal_article":
+                    genre = "article"
+                else:
+                    genre = biblio_dict["genre"]
             if ("journal" in biblio_dict) and biblio_dict["journal"]:
                 genre = "article"
 
