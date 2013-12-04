@@ -680,11 +680,12 @@ def decide_genre(alias_dict):
     if "biblio" in alias_dict:
         for biblio_dict in alias_dict["biblio"]:
             if "genre" in biblio_dict:
-                if biblio_dict["genre"] == "journal_article":
+                if "article" in biblio_dict["genre"]: # journal_article, magazine_article
                     genre = "article"
-                else:
+                elif biblio_dict["genre"] not in ["undefined", "other"]:
                     genre = biblio_dict["genre"]
-            if ("journal" in biblio_dict) and biblio_dict["journal"]:
+            # after all that, if it has a non null journal, call it an article
+            if ("journal" in biblio_dict) and biblio_dict["journal"]:  
                 genre = "article"
 
     return (genre, host)
