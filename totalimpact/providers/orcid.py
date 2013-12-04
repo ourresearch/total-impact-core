@@ -1,6 +1,7 @@
-import re
+import re, json
 from totalimpact.providers import bibtex
 from totalimpact.providers import provider
+from totalimpact.providers import bibtex
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderItemNotFoundError
 
 import logging
@@ -19,28 +20,46 @@ class Orcid(Provider):
             return {}
 
         biblio = {}
-        try:
-            biblio["year"] = work["publication-date"]["year"]["value"]
-            biblio["year"] = re.sub("\D", "", biblio["year"])           
-        except (KeyError, TypeError):
-            biblio["year"]  = ""
 
         try:
-            biblio["title"] = work["work-title"]["title"]["value"]
+            if work["work-citation"]["work-citation-type"]=="BIBTEX":
+                biblio = bibtex.Bibtex().parse(work["work-cition"]["citation"])
+            
         except (KeyError, TypeError):
-            biblio["title"]  = ""
 
-        try:
-            biblio["journal"] = work["work-title"]["subtitle"]["value"]
-        except (KeyError, TypeError):
-            biblio["journal"]  = ""
+            try:
+                biblio["year"] = work["publication-date"]["year"]["value"]
+                biblio["year"] = re.sub("\D", "", biblio["year"])           
+            except (KeyError, TypeError):
+                biblio["year"]  = ""
 
-        try:
-            biblio["url"] = work["url"]["value"]
-        except (KeyError, TypeError):
-            biblio["url"]  = ""
+            try:
+                biblio["title"] = work["work-title"]["title"]["value"]
+            except (KeyError, TypeError):
+                biblio["title"]  = ""
 
-        biblio["authors"]  = ""
+            try:
+                biblio["journal"] = work["work-title"]["subtitle"]["value"]
+            except (KeyError, TypeError):
+                biblio["journal"]  = ""
+
+            try:
+                biblio["url"] = work["url"]["value"]
+            except (KeyError, TypeError):
+                biblio["url"]  = ""
+
+            biblio["authors"]  = ""
+
+            try:
+                if work["work-external-identifiers"]["work-external-identifier"][0]['work-external-identifier-type'] == "ISBN":
+                    biblio["isbn"] = work["work-external-identifiers"]["work-external-identifier"][0]["work-external-identifier-id"]['value']
+            except (KeyError, TypeError):
+                pass
+
+            try:
+                biblio["genre"] = work["work-type"].lower()
+            except (KeyError, TypeError):
+                pass
 
         return biblio
 
@@ -65,8 +84,10 @@ class Orcid(Provider):
                         new_member = ("doi", myid['work-external-identifier-id']['value'])
                     if myid['work-external-identifier-type'] == "PMID":
                         new_member = ("pmid", myid['work-external-identifier-id']['value'])
-
             except KeyError:
+                pass
+
+            if not new_member:
                 logger.info(u"no external identifiers, try saving whole citation")
                 biblio = self._parse_orcid_work(work)
                 new_member = ("biblio", biblio)
