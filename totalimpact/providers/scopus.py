@@ -127,6 +127,8 @@ class Scopus(Provider):
         try:        
             if not "first_author" in biblio_dict:
                 biblio_dict["first_author"] = biblio_dict["authors"].split(" ")[0]
+            if not biblio_dict["first_author"]:
+                return None
             url = url_template.format(
                     first_author=urllib.quote(biblio_dict["first_author"]), 
                     title=urllib.quote(biblio_dict["title"]), 

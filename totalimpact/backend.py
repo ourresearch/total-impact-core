@@ -86,8 +86,8 @@ class ProviderWorker(Worker):
 
     # last variable is an artifact so it has same call signature as other callbacks
     def add_to_couch_queue_if_nonzero(self, tiid, new_content, method_name, dummy=None):
-        logger.info(u"In add_to_couch_queue_if_nonzero with {tiid}, {method_name}, {provider_name}".format(
-           method_name=method_name, tiid=tiid, provider_name=self.provider_name))
+        # logger.info(u"In add_to_couch_queue_if_nonzero with {tiid}, {method_name}, {provider_name}".format(
+        #    method_name=method_name, tiid=tiid, provider_name=self.provider_name))
 
         if not new_content:
             #logger.info(u"{:20}: Not writing to couch: empty {method_name} from {tiid} for {provider_name}".format(
