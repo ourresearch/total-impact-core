@@ -634,8 +634,11 @@ def decide_genre(alias_dict):
             genre = "dataset"
             host = "dryad"
         elif ".figshare." in joined_doi_string:
-            genre = "dataset"
             host = "figshare"
+            try:
+                genre = alias_dict["biblio"][0]["genre"]
+            except (KeyError, AttributeError):
+                genre = "dataset"
         else:
             genre = "article"
 
@@ -676,19 +679,19 @@ def decide_genre(alias_dict):
             genre = "webpage"
             host = "webpage"
 
-    # override with "article" if it has a journal
-    if "biblio" in alias_dict:
+    # override if it came in with a genre, or call it an "article" if it has a journal
+    if (host=="unknown" and ("biblio" in alias_dict)):
         for biblio_dict in alias_dict["biblio"]:
-            if "genre" in biblio_dict:
-                if "article" in biblio_dict["genre"]: # journal_article, magazine_article
-                    genre = "article"
-                elif biblio_dict["genre"] not in ["undefined", "other"]:
+            if "genre" in biblio_dict and (biblio_dict["genre"] not in ["undefined", "other"]):
+                if "article" in biblio_dict["genre"]:
+                    genre = "article"  #disregard whether journal article or conference article for now
+                else:
                     genre = biblio_dict["genre"]
-            # after all that, if it has a non null journal, call it an article
-            if ("journal" in biblio_dict) and biblio_dict["journal"]:  
+            elif ("journal" in biblio_dict) and biblio_dict["journal"]:  
                 genre = "article"
 
     return (genre, host)
+
 
 def canonical_alias_tuple(alias):
     (namespace, nid) = alias

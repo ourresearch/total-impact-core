@@ -20,7 +20,7 @@ class TestFigshare(ProviderTestCase):
     testitem_members = "http://figshare.com/authors/schamberlain/96554"
     testitem_aliases = ("doi", "10.6084/m9.figshare.92393")
     testitem_metrics = ("doi", "10.6084/m9.figshare.92393")
-    testitem_biblio = ("doi", "10.6084/m9.figshare.92393")
+    testitem_biblio = ("doi", "10.6084/m9.figshare.865731")
 
     def setUp(self):
         ProviderTestCase.setUp(self) 
@@ -31,6 +31,14 @@ class TestFigshare(ProviderTestCase):
 
         assert_equals(self.provider.is_relevant_alias(("doi", "NOT A FIGSHARE ID")), False)
   
+    def test_extract_biblio_success(self):
+        f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
+        biblio_dict = self.provider._extract_biblio(f.read(), id="10.6084/m9.figshare.92393")
+        print biblio_dict
+        expected = {'repository': 'figshare', 'title': 'Gaussian Job Archive for B2(2-)', 'published_date': '14:13, Jun 15, 2012', 'authors': 'Rzepa, Harvey', 'year': '2012', 'genre': 'dataset'}
+        assert_equals(biblio_dict, expected)
+
+
     def test_extract_metrics_success(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         metrics_dict = self.provider._extract_metrics(f.read(), id="10.6084/m9.figshare.92393")
@@ -62,14 +70,14 @@ class TestFigshare(ProviderTestCase):
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'title': u'Gaussian Job Archive for B2(2-)', 'year': u'2012', 'repository': u'Figshare', 'authors_literal': u'M J Harvey, Henry Rzepa'}
+        expected = {'repository': 'figshare', 'title': u'Open Science', 'published_date': u'03:41, Dec 03, 2013', 'authors': u'Simpson', 'year': u'2013', 'genre': 'slides'}
         assert_equals(biblio_dict, expected)
 
     @http
     def test_alias(self):
         aliases = self.provider.aliases([self.testitem_aliases])
         print aliases
-        expected = [('biblio', {'title': u'Gaussian Job Archive for B2(2-)', 'authors_literal': u'M J Harvey, Henry Rzepa', 'repository': u'Figshare', 'year': u'2012'}), ('url', 'http://dx.doi.org/10.6084/m9.figshare.92393'), ('url', u'http://figshare.com/articles/Gaussian_Job_Archive_for_B2(2-)/92393')]
+        expected = [('url', u'http://figshare.com/articles/Gaussian_Job_Archive_for_B2(2-)/92393')]
         assert_equals(sorted(aliases), sorted(expected))
 
     @http
