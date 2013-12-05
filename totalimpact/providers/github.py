@@ -1,7 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
-import simplejson, os
+import os, re
 
 import logging
 logger = logging.getLogger('ti.providers.github')
@@ -54,8 +54,10 @@ class Github(Provider):
 
     #override because need to break up id
     def _get_templated_url(self, template, nid, method=None):
+        url = None
         if method=="members":
-            url = template % (nid)
+            if "account_name" in nid:
+                url = template % (nid["account_name"])
         else:
             if "http" in nid:
                 (host, username, repo_name) = nid.rsplit("/", 2)
@@ -65,10 +67,24 @@ class Github(Provider):
 
         return(url)
 
-    def _extract_members(self, page, query_string): 
-        data = provider._load_json(page)
-        hits = [hit["name"] for hit in data]
-        members = [("url", self.repo_url_template %(query_string, hit)) for hit in list(set(hits))]
+    def _extract_members(self, page, input_dict): 
+        members = []
+        # add repositories from account
+        if "account_name" in input_dict:
+            account_name = input_dict["account_name"]
+            data = provider._load_json(page)
+            hits = [hit["name"] for hit in data]
+            members += [("url", self.repo_url_template %(account_name, hit)) for hit in list(set(hits))]
+
+        # add the straight repository urls, if any
+        if "repository_urls" in input_dict:
+            for url in input_dict["repository_urls"].split("\n"):
+                url = url.strip()
+                if url:
+                    url = re.sub("^https*://github.com", "", url)
+                    url = re.sub("/$", "", url)
+                    url = u"https://github.com" + url
+                    members += [("url", url)]
         return(members)
 
     def _extract_biblio(self, page, id=None):

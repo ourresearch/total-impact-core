@@ -287,23 +287,27 @@ class Provider(object):
             provider_url_template = self.member_items_url_template
 
         url = self._get_templated_url(provider_url_template, query_string, "members")
-        
-        # try to get a response from the data provider  
-        response = self.http_get(url, cache_enabled=cache_enabled)
+        if url:        
+            # try to get a response from the data provider  
+            response = self.http_get(url, cache_enabled=cache_enabled)
 
-        if response.status_code != 200:
-            self.logger.info(u"%s status_code=%i" 
-                % (self.provider_name, response.status_code))            
-            if response.status_code == 404:
-                raise ProviderItemNotFoundError
-            elif response.status_code == 303: #redirect
-                pass                
-            else:
-                self._get_error(response.status_code, response)
+            if response.status_code != 200:
+                self.logger.info(u"%s status_code=%i" 
+                    % (self.provider_name, response.status_code))            
+                if response.status_code == 404:
+                    raise ProviderItemNotFoundError
+                elif response.status_code == 303: #redirect
+                    pass                
+                else:
+                    self._get_error(response.status_code, response)
+            page = response.text
+        else:
+            page = ""  
+            # but run extract_members anyway because it may parse the query_string in other ways
 
         # extract the member ids
         try:
-            members = self._extract_members(response.text, query_string)
+            members = self._extract_members(page, query_string)
         except (AttributeError, TypeError):
             members = []
 
@@ -329,6 +333,7 @@ class Provider(object):
             provider_url_template = self.biblio_url_template
 
         return self.get_biblio_for_id(id, provider_url_template, cache_enabled)
+
 
     # default method; providers can override
     def get_biblio_for_id(self, 
