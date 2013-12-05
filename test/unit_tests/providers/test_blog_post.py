@@ -5,13 +5,14 @@ from test.utils import http
 
 import os
 import collections
+import json
 from nose.tools import assert_equals, assert_items_equal, raises, nottest
 
 class TestBlog_post(ProviderTestCase):
 
     provider_name = "blog_post"
 
-    testitem_aliases = ("blog_post:retractionwatch.wordpress.com", u'http://retractionwatch.wordpress.com/2012/12/11/elsevier-editorial-system-hacked-reviews-faked-11-retractions-follow/')
+    testitem_aliases = ('blog_post', json.dumps({"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "api_key": None, "blog_url": "researchremix.wordpress.com"}))
 
     def setUp(self):
         ProviderTestCase.setUp(self) 
@@ -26,10 +27,15 @@ class TestBlog_post(ProviderTestCase):
     def test_aliases(self):
         response = self.provider.aliases([self.testitem_aliases])
         print response
-        expected = [('url', u'http://retractionwatch.wordpress.com/2012/12/11/elsevier-editorial-system-hacked-reviews-faked-11-retractions-follow/')]
+        expected = [('url', u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/')]
         assert_equals(response, expected)
 
     def test_provider_aliases_400(self):
         pass
     def test_provider_aliases_500(self):
+        pass
+
+    def test_provider_biblio_400(self):
+        pass
+    def test_provider_biblio_500(self):
         pass

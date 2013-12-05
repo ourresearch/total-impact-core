@@ -1,15 +1,15 @@
 from totalimpact.providers import provider
 from totalimpact.providers import webpage
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderServerError
 
-import simplejson, os, re
+import json, os, re
 
 import logging
 logger = logging.getLogger('ti.providers.blog_post')
 
 class Blog_Post(Provider):  
 
-    example_id = ("blog_post:retractionwatch.wordpress.com", u'http://retractionwatch.wordpress.com/2012/12/11/elsevier-editorial-system-hacked-reviews-faked-11-retractions-follow/')
+    example_id = ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "blog_url": "researchremix.wordpress.com"}')
 
     provenance_url_template = "%s"
 
@@ -35,6 +35,14 @@ class Blog_Post(Provider):
     def provides_biblio(self):
         return True
   
+
+    def post_url_from_nid(self, nid):
+        return json.loads(nid)["post_url"]    
+  
+    def blog_url_from_from_nid(self, nid):
+        return json.loads(nid)["blog_url"]    
+
+
     # overriding
     def aliases(self, 
             aliases, 
@@ -46,7 +54,7 @@ class Blog_Post(Provider):
         for alias in aliases:
             if self.is_relevant_alias(alias):
                 (namespace, nid) = alias
-                new_alias = ("url", nid)
+                new_alias = ("url", self.post_url_from_nid(nid))
                 if new_alias not in aliases:
                     new_aliases += [new_alias]
 
@@ -59,6 +67,10 @@ class Blog_Post(Provider):
             cache_enabled=True): 
         logger.info(u"calling webpage to handle aliases")
 
-        biblio_dict = self.webpage.biblio(aliases, provider_url_template, cache_enabled) 
-        url = self.get_best_alias(aliases)
+        nid = self.get_best_id(aliases)
+
+        biblio_dict = self.webpage.biblio([("url", self.post_url_from_nid(nid))], provider_url_template, cache_enabled) 
+        biblio_dict["url"] = self.post_url_from_nid(nid)
+        biblio_dict["account"] = self.blog_url_from_from_nid(nid)
+        return biblio_dict
 

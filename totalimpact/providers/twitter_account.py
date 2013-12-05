@@ -106,7 +106,6 @@ class Twitter_Account(Provider):
 
 
 
-    # default method; providers can override
     def biblio(self, 
             aliases,
             provider_url_template=None,
@@ -126,13 +125,13 @@ class Twitter_Account(Provider):
         biblio_dict["created_at"] = data["created_at"]
 
         biblio_dict["is_account"] = True  # special key to tell webapp to render as genre heading
-        biblio_dict["account"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
+        biblio_dict["account"] = u"@{screen_name}".format(
+            screen_name=data["screen_name"])
 
         return biblio_dict
   
 
 
-    # default method; providers can override
     def metrics(self, 
             aliases,
             provider_url_template=None,
