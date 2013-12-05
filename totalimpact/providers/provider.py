@@ -51,6 +51,34 @@ def store_page_in_cache(url, headers, allow_redirects, response, cache):
     cache.set_cache_entry(cache_key, cache_data)
 
 
+def import_products(provider_name, input_dict):
+
+    logger.debug(u"in import_products with {provider_name}: {input_val}".format(
+        provider_name=provider_name, input_val=input_val))
+
+    aliases = []
+
+    # pass in just the string if only one key (for backwards compatibility), otherwise dict
+    if request.json.keys() == ["primary"]:
+        input_val = request.json["primary"]
+    else:
+        input_val = request.json
+
+        # pull in standard items, if we were passed any of these
+        if "standard_pmids_input" in input_val:
+            aliases += provider.pubmed.PubMed().member_items(input_val["standard_pmids_input"])
+        if "standard_dois_input" in input_val:
+            aliases += provider.crossref.Crossref().member_items(input_val["standard_dois_input"])
+        if "standard_urls_input" in input_val:
+            aliases += provider.webpage.Webpage().member_items(input_val["standard_urls_input"])
+
+    provider = ProviderFactory.get_provider(provider_name)
+    aliases += provider.member_items(input_val)
+
+    return(aliases)
+
+
+
 class ProviderFactory(object):
 
     @classmethod
@@ -287,23 +315,22 @@ class Provider(object):
             provider_url_template = self.member_items_url_template
 
         url = self._get_templated_url(provider_url_template, query_string, "members")
-        if url:        
-            # try to get a response from the data provider  
-            response = self.http_get(url, cache_enabled=cache_enabled)
+        if not url:
+            return []
 
-            if response.status_code != 200:
-                self.logger.info(u"%s status_code=%i" 
-                    % (self.provider_name, response.status_code))            
-                if response.status_code == 404:
-                    raise ProviderItemNotFoundError
-                elif response.status_code == 303: #redirect
-                    pass                
-                else:
-                    self._get_error(response.status_code, response)
-            page = response.text
-        else:
-            page = ""  
-            # but run extract_members anyway because it may parse the query_string in other ways
+        # try to get a response from the data provider  
+        response = self.http_get(url, cache_enabled=cache_enabled)
+
+        if response.status_code != 200:
+            self.logger.info(u"%s status_code=%i" 
+                % (self.provider_name, response.status_code))            
+            if response.status_code == 404:
+                raise ProviderItemNotFoundError
+            elif response.status_code == 303: #redirect
+                pass                
+            else:
+                self._get_error(response.status_code, response)
+        page = response.text
 
         # extract the member ids
         try:

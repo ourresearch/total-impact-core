@@ -282,46 +282,6 @@ def provider():
 
     return resp
 
-@app.route('/v1/provider/<provider_name>/memberitems', methods=['POST'])
-def provider_memberitems(provider_name):
-    """
-    Make a descr string (like bibtex) into a dict strings describing items.
-    """
-
-    provider = ProviderFactory.get_provider(provider_name)
-    items_dict = provider.parse(request.json["descr"])
-
-    resp = make_response(
-        json.dumps({"memberitems": items_dict}, sort_keys=True, indent=4),
-        200
-    )
-    return resp
-
-@app.route("/v1/provider/<provider_name>/memberitems/<query>", methods=['GET'])
-def provider_memberitems_get(provider_name, query):
-    """
-    Gets aliases associated with a query from a given provider.
-    """
-    query = unicode_helpers.remove_nonprinting_characters(query)
-    provider = ProviderFactory.get_provider(provider_name)
-
-    try:
-        items_dict = provider.member_items(query)
-
-    except ProviderItemNotFoundError:
-        abort_custom(404, "item not found")
-
-    except (ProviderTimeout, ProviderServerError):
-        abort_custom(503, "crossref lookup error, might be transient")
-
-    except ProviderError:
-        abort(500, "internal error from provider")
-
-    resp = make_response(
-        json.dumps({"memberitems": items_dict}, sort_keys=True, indent=4),
-        200
-    )
-    return resp
 
 
 def format_into_products_dict(tiids_aliases_map):
@@ -338,29 +298,11 @@ def importer_post(provider_name):
     Gets aliases associated with a query from a given provider.
     """
 
-    # pass in just the string if only one key (for backwards compatibility), otherwise dict
-    if request.json.keys() == ["primary"]:
-        input_val = request.json["primary"]
-    else:
-        input_val = request.json
-
-    if provider_name == "pmids":
-        provider_name = "pubmed"
-    elif provider_name == "dois":
-        provider_name = "crossref"
-    elif provider_name == "urls":
-        provider_name = "webpage"
     try:
-        provider = ProviderFactory.get_provider(provider_name)
+        aliases = provider.import_products(provider_name, request.json)
     except ImportError:
         abort_custom(404, "an importer for provider '{provider_name}' is not found".format(
-            provider_name=provider_name))
-
-    logger.debug(u"in importer_post with {provider_name}: {input_val}".format(
-        provider_name=provider_name, input_val=input_val))
-
-    try:
-        aliases = provider.member_items(input_val)
+            provider_name=provider_name))        
     except ProviderItemNotFoundError:
         abort_custom(404, "item not found")
     except (ProviderTimeout, ProviderServerError):

@@ -76,16 +76,8 @@ class Github(Provider):
             hits = [hit["name"] for hit in data]
             members += [("url", self.repo_url_template %(account_name, hit)) for hit in list(set(hits))]
 
-        # add the straight repository urls, if any
-        if "repository_urls" in input_dict:
-            for url in input_dict["repository_urls"].split("\n"):
-                url = url.strip()
-                if url:
-                    url = re.sub("^https*://github.com", "", url)
-                    url = re.sub("/$", "", url)
-                    url = u"https://github.com" + url
-                    members += [("url", url)]
         return(members)
+
 
     def _extract_biblio(self, page, id=None):
         dict_of_keylists = {
