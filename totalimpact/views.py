@@ -12,6 +12,7 @@ import requests
 from totalimpact import app, tiredis, collection, api_user, incoming_email
 from totalimpact import item as item_module
 from totalimpact.models import MemberItems, NotAuthenticatedError
+from totalimpact.providers import provider as provider_module
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderServerError, ProviderTimeout
 from totalimpact import unicode_helpers
 from totalimpact import default_settings
@@ -299,7 +300,7 @@ def importer_post(provider_name):
     """
 
     try:
-        aliases = provider.import_products(provider_name, request.json)
+        aliases = provider_module.import_products(provider_name, request.json)
     except ImportError:
         abort_custom(404, "an importer for provider '{provider_name}' is not found".format(
             provider_name=provider_name))        

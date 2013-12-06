@@ -1,6 +1,7 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.providers import provider
 from test.utils import http
 
 import os
@@ -17,7 +18,7 @@ class TestGithub(ProviderTestCase):
 
     provider_name = "github"
 
-    testitem_members = {"account_name": "egonw", "repository_urls": "https://github.com/openphacts/BridgeDb\nhttps://github.com/total-impact/totalimpactcore"}
+    testitem_members = "egonw"
     testitem_aliases = ("url", "https://github.com/egonw/cdk")
     testitem_metrics = ("url", "https://github.com/egonw/cdk")
     testitem_biblio = ("url", "https://github.com/egonw/cdk")
@@ -82,7 +83,16 @@ class TestGithub(ProviderTestCase):
     def test_members(self):
         members = self.provider.member_items(self.testitem_members)
         print members
-        expected = [('url', u'https://github.com/egonw/blueobelisk.debian'), ('url', u'https://github.com/egonw/ACS-Twitter-Visualization'), ('url', u'https://github.com/egonw/bioclipse.cir'), ('url', u'https://github.com/egonw/bioclipse.social'), ('url', u'https://github.com/egonw/bioclipse.sb'), ('url', u'https://github.com/egonw/acsrdf2010'), ('url', u'https://github.com/egonw/bioclipse.brunn'), ('url', u'https://github.com/egonw/5stardata.info'), ('url', u'https://github.com/egonw/biostar-central'), ('url', u'https://github.com/egonw/bioclipse.core'), ('url', u'https://github.com/egonw/bioclipse.statistics'), ('url', u'https://github.com/egonw/bioclipse.rdf'), ('url', u'https://github.com/egonw/bioclipse.wikipathways'), ('url', u'https://github.com/egonw/bioclipse.ds'), ('url', u'https://github.com/egonw/cb'), ('url', u'https://github.com/egonw/bioclipse.bridgedb'), ('url', u'https://github.com/egonw/bioclipse.opentox'), ('url', u'https://github.com/egonw/bopaper'), ('url', u'https://github.com/egonw/bioclipse.openphacts'), ('url', u'https://github.com/egonw/bioclipse.ambit'), ('url', u'https://github.com/egonw/bioclipse.cheminformatics'), ('url', u'https://github.com/egonw/AZOrange'), ('url', u'https://github.com/egonw/blueobelisk.userscript'), ('url', u'https://github.com/egonw/BridgeDb'), ('url', u'https://github.com/egonw/bioclipse.bigcatedu'), ('url', u'https://github.com/egonw/bioclipse.oscar'), ('url', u'https://github.com/egonw/bioclipse.ons'), ('url', u'https://github.com/egonw/bioclipse.experimental'), ('url', u'https://github.com/egonw/biblatex-biomedcentral'), ('url', u'https://github.com/egonw/cacm-article'), ('url', 'https://github.com/openphacts/BridgeDb'), ('url', 'https://github.com/total-impact/totalimpactcore')]
+        expected = [('url', u'https://github.com/egonw/blueobelisk.debian'), ('url', u'https://github.com/egonw/ACS-Twitter-Visualization'), ('url', u'https://github.com/egonw/bioclipse.cir'), ('url', u'https://github.com/egonw/bioclipse.social'), ('url', u'https://github.com/egonw/bioclipse.sb'), ('url', u'https://github.com/egonw/acsrdf2010'), ('url', u'https://github.com/egonw/bioclipse.brunn'), ('url', u'https://github.com/egonw/5stardata.info'), ('url', u'https://github.com/egonw/biostar-central'), ('url', u'https://github.com/egonw/bioclipse.core'), ('url', u'https://github.com/egonw/bioclipse.statistics'), ('url', u'https://github.com/egonw/bioclipse.rdf'), ('url', u'https://github.com/egonw/bioclipse.wikipathways'), ('url', u'https://github.com/egonw/bioclipse.ds'), ('url', u'https://github.com/egonw/cb'), ('url', u'https://github.com/egonw/bioclipse.bridgedb'), ('url', u'https://github.com/egonw/bioclipse.opentox'), ('url', u'https://github.com/egonw/bopaper'), ('url', u'https://github.com/egonw/bioclipse.openphacts'), ('url', u'https://github.com/egonw/bioclipse.ambit'), ('url', u'https://github.com/egonw/bioclipse.cheminformatics'), ('url', u'https://github.com/egonw/AZOrange'), ('url', u'https://github.com/egonw/blueobelisk.userscript'), ('url', u'https://github.com/egonw/BridgeDb'), ('url', u'https://github.com/egonw/bioclipse.bigcatedu'), ('url', u'https://github.com/egonw/bioclipse.oscar'), ('url', u'https://github.com/egonw/bioclipse.ons'), ('url', u'https://github.com/egonw/bioclipse.experimental'), ('url', u'https://github.com/egonw/biblatex-biomedcentral'), ('url', u'https://github.com/egonw/cacm-article')]
+        for member in expected:
+            assert(member in members)
+
+    @http
+    def test_provider_import(self):
+        test_tabs = {"account_name": "egonw", "standard_urls_input": "https://github.com/openphacts/BridgeDb\nhttps://github.com/total-impact/totalimpactcore"}
+        members = provider.import_products("github", test_tabs)
+        print members
+        expected = [('url', u'https://github.com/openphacts/BridgeDb'), ('url', u'https://github.com/total-impact/totalimpactcore'), ('url', u'https://github.com/egonw/blueobelisk.debian'), ('url', u'https://github.com/egonw/ACS-Twitter-Visualization'), ('url', u'https://github.com/egonw/bioclipse.cir'), ('url', u'https://github.com/egonw/bioclipse.social'), ('url', u'https://github.com/egonw/bioclipse.sb'), ('url', u'https://github.com/egonw/acsrdf2010'), ('url', u'https://github.com/egonw/bioclipse.brunn'), ('url', u'https://github.com/egonw/5stardata.info'), ('url', u'https://github.com/egonw/biostar-central'), ('url', u'https://github.com/egonw/bioclipse.core'), ('url', u'https://github.com/egonw/bioclipse.statistics'), ('url', u'https://github.com/egonw/bioclipse.rdf'), ('url', u'https://github.com/egonw/bioclipse.wikipathways'), ('url', u'https://github.com/egonw/bioclipse.ds'), ('url', u'https://github.com/egonw/cb'), ('url', u'https://github.com/egonw/bioclipse.bridgedb'), ('url', u'https://github.com/egonw/bioclipse.opentox'), ('url', u'https://github.com/egonw/bopaper'), ('url', u'https://github.com/egonw/bioclipse.openphacts'), ('url', u'https://github.com/egonw/bioclipse.ambit'), ('url', u'https://github.com/egonw/bioclipse.cheminformatics'), ('url', u'https://github.com/egonw/AZOrange'), ('url', u'https://github.com/egonw/blueobelisk.userscript'), ('url', u'https://github.com/egonw/BridgeDb'), ('url', u'https://github.com/egonw/bioclipse.bigcatedu'), ('url', u'https://github.com/egonw/bioclipse.oscar'), ('url', u'https://github.com/egonw/bioclipse.ons'), ('url', u'https://github.com/egonw/bioclipse.experimental'), ('url', u'https://github.com/egonw/biblatex-biomedcentral'), ('url', u'https://github.com/egonw/cacm-article')]
         for member in expected:
             assert(member in members)
 

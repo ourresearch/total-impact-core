@@ -1,6 +1,7 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.providers import provider
 from test.utils import http
 
 import os
@@ -87,3 +88,13 @@ class TestFigshare(ProviderTestCase):
         expected = [('doi', u'10.6084/m9.figshare.806563'), ('doi', u'10.6084/m9.figshare.806423'), ('doi', u'10.6084/m9.figshare.803123'), ('doi', u'10.6084/m9.figshare.791569'), ('doi', u'10.6084/m9.figshare.758498'), ('doi', u'10.6084/m9.figshare.757866'), ('doi', u'10.6084/m9.figshare.739343'), ('doi', u'10.6084/m9.figshare.729248'), ('doi', u'10.6084/m9.figshare.719786'), ('doi', u'10.6084/m9.figshare.669696'), ('doi', u'10.6084/m9.figshare.106915'), ('doi', u'10.6084/m9.figshare.97222'), ('doi', u'10.6084/m9.figshare.97221'), ('doi', u'10.6084/m9.figshare.97215'), ('doi', u'10.6084/m9.figshare.94296'), ('doi', u'10.6084/m9.figshare.94295'), ('doi', u'10.6084/m9.figshare.94219'), ('doi', u'10.6084/m9.figshare.94218'), ('doi', u'10.6084/m9.figshare.94217'), ('doi', u'10.6084/m9.figshare.94216'), ('doi', u'10.6084/m9.figshare.94090'), ('doi', u'10.6084/m9.figshare.94089'), ('doi', u'10.6084/m9.figshare.94030'), ('doi', u'10.6084/m9.figshare.91145'), ('doi', u'10.6084/m9.figshare.90832')]
         for expected_item in expected:
             assert expected_item in members
+
+    @http
+    def test_provider_import(self):
+        tabs_input = {"account_name": "http://figshare.com/authors/schamberlain/96554", "standard_dois_input": "10.6084/m9.figshare.92393\nhttps://doi.org/10.6084/m9.figshare.865731"}
+        members = provider.import_products("figshare", tabs_input)
+        print members
+        expected = [('doi', '10.6084/m9.figshare.92393'), ('doi', '10.6084/m9.figshare.865731'), ('doi', u'10.6084/m9.figshare.806563'), ('doi', u'10.6084/m9.figshare.806423'), ('doi', u'10.6084/m9.figshare.803123'), ('doi', u'10.6084/m9.figshare.791569'), ('doi', u'10.6084/m9.figshare.758498'), ('doi', u'10.6084/m9.figshare.757866'), ('doi', u'10.6084/m9.figshare.739343'), ('doi', u'10.6084/m9.figshare.729248'), ('doi', u'10.6084/m9.figshare.719786'), ('doi', u'10.6084/m9.figshare.669696'), ('doi', u'10.6084/m9.figshare.106915'), ('doi', u'10.6084/m9.figshare.97222'), ('doi', u'10.6084/m9.figshare.97221'), ('doi', u'10.6084/m9.figshare.97215'), ('doi', u'10.6084/m9.figshare.94296'), ('doi', u'10.6084/m9.figshare.94295'), ('doi', u'10.6084/m9.figshare.94219'), ('doi', u'10.6084/m9.figshare.94218'), ('doi', u'10.6084/m9.figshare.94217'), ('doi', u'10.6084/m9.figshare.94216'), ('doi', u'10.6084/m9.figshare.94090'), ('doi', u'10.6084/m9.figshare.94089'), ('doi', u'10.6084/m9.figshare.94030'), ('doi', u'10.6084/m9.figshare.91145'), ('doi', u'10.6084/m9.figshare.90832')]
+        for member in expected:
+            assert(member in members)
+

@@ -26,28 +26,28 @@ class Slideshare(Provider):
     static_meta_dict = {
         "downloads": {
             "display_name": "downloads",
-            "provider": "Slideshare",
+            "provider": "SlideShare",
             "provider_url": "http://www.slideshare.net/",
             "description": "The number of times the presentation has been downloaded",
             "icon": "http://www.slideshare.net/favicon.ico" ,
         },    
         "favorites": {
             "display_name": "favorites",
-            "provider": "Slideshare",
+            "provider": "SlideShare",
             "provider_url": "http://www.slideshare.net/",
             "description": "The number of times the presentation has been favorited",
             "icon": "http://www.slideshare.net/favicon.ico" ,
         },    
         "comments": {
             "display_name": "comments",
-            "provider": "Slideshare",
+            "provider": "SlideShare",
             "provider_url": "http://www.slideshare.net/",
             "description": "The number of comments the presentation has received",
             "icon": "http://www.slideshare.net/favicon.ico" ,
         },    
         "views": {
             "display_name": "views",
-            "provider": "Slideshare",
+            "provider": "SlideShare",
             "provider_url": "http://www.slideshare.net/",
             "description": "The number of times the presentation has been viewed",
             "icon": "http://www.slideshare.net/favicon.ico" ,

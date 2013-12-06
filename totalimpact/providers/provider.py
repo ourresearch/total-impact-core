@@ -52,25 +52,33 @@ def store_page_in_cache(url, headers, allow_redirects, response, cache):
 
 
 def import_products(provider_name, input_dict):
-
     logger.debug(u"in import_products with {provider_name}: {input_val}".format(
-        provider_name=provider_name, input_val=input_val))
+        provider_name=provider_name, input_val=input_dict))
 
     aliases = []
 
-    # pass in just the string if only one key (for backwards compatibility), otherwise dict
-    if request.json.keys() == ["primary"]:
-        input_val = request.json["primary"]
-    else:
-        input_val = request.json
+    # pull in standard items, if we were passed any of these
+    if "standard_dois_input" in input_dict:
+        aliases += providers.crossref.Crossref().member_items(input_dict["standard_dois_input"])
+        del input_dict["standard_dois_input"]
+    if "standard_pmids_input" in input_dict:
+        aliases += providers.pubmed.PubMed().member_items(input_dict["standard_pmids_input"])
+        del input_dict["standard_pmids_input"]
+    if "standard_urls_input" in input_dict:
+        aliases += providers.webpage.Webpage().member_items(input_dict["standard_urls_input"])
+        del input_dict["standard_urls_input"]
 
-        # pull in standard items, if we were passed any of these
-        if "standard_pmids_input" in input_val:
-            aliases += provider.pubmed.PubMed().member_items(input_val["standard_pmids_input"])
-        if "standard_dois_input" in input_val:
-            aliases += provider.crossref.Crossref().member_items(input_val["standard_dois_input"])
-        if "standard_urls_input" in input_val:
-            aliases += provider.webpage.Webpage().member_items(input_val["standard_urls_input"])
+    # if that's all we had, return
+    if not input_dict.keys():
+        return aliases
+
+    # pass in just the string if only one key (for backwards compatibility), otherwise dict
+    if input_dict.keys() == ["primary"]:
+        input_val = input_dict["primary"]
+    elif input_dict.keys() == ["account_name"]:
+        input_val = input_dict["account_name"]
+    else: 
+        input_val = input_dict
 
     provider = ProviderFactory.get_provider(provider_name)
     aliases += provider.member_items(input_val)

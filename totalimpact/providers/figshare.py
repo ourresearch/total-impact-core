@@ -154,19 +154,19 @@ class Figshare(Provider):
 
     # default method; providers can override
     def member_items(self, 
-            query_string, 
+            account_name,
             provider_url_template=None, 
             cache_enabled=True):
 
         if not self.provides_members:
             raise NotImplementedError()
 
-        self.logger.debug(u"%s getting member_items for %s" % (self.provider_name, query_string))
+        self.logger.debug(u"%s getting member_items for %s" % (self.provider_name, account_name))
 
         if not provider_url_template:
             provider_url_template = self.member_items_url_template
 
-        figshare_userid = self.get_figshare_userid_from_author_url(query_string)
+        figshare_userid = self.get_figshare_userid_from_author_url(account_name)
         next_page = 1
         members = []
         while next_page:
@@ -195,7 +195,7 @@ class Figshare(Provider):
                     next_page += 1
                 else:
                     next_page = None
-                members += self._extract_members(page, query_string)
+                members += self._extract_members(page, account_name)
             except (AttributeError, TypeError):
                 next_page = None
 

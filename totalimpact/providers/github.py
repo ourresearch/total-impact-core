@@ -56,8 +56,7 @@ class Github(Provider):
     def _get_templated_url(self, template, nid, method=None):
         url = None
         if method=="members":
-            if "account_name" in nid:
-                url = template % (nid["account_name"])
+            url = template % nid
         else:
             if "http" in nid:
                 (host, username, repo_name) = nid.rsplit("/", 2)
@@ -67,14 +66,12 @@ class Github(Provider):
 
         return(url)
 
-    def _extract_members(self, page, input_dict): 
+    def _extract_members(self, page, account_name): 
         members = []
         # add repositories from account
-        if "account_name" in input_dict:
-            account_name = input_dict["account_name"]
-            data = provider._load_json(page)
-            hits = [hit["name"] for hit in data]
-            members += [("url", self.repo_url_template %(account_name, hit)) for hit in list(set(hits))]
+        data = provider._load_json(page)
+        hits = [hit["name"] for hit in data]
+        members += [("url", self.repo_url_template %(account_name, hit)) for hit in list(set(hits))]
 
         return(members)
 
