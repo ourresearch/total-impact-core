@@ -12,11 +12,6 @@ logger = logging.getLogger('ti.providers.webpage')
 
 def clean_url(input_url):
     url = unicode_helpers.remove_nonprinting_characters(input_url)
-
-    url = re.sub("^https*://", "", url)
-    url = u"https://" + url
-    url = re.sub("/$", "", url)
-
     return url
 
 
