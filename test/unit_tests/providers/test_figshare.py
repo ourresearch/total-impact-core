@@ -35,7 +35,7 @@ class TestFigshare(ProviderTestCase):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
         biblio_dict = self.provider._extract_biblio(f.read(), id="10.6084/m9.figshare.92393")
         print biblio_dict
-        expected = {'repository': 'figshare', 'title': 'Gaussian Job Archive for B2(2-)', 'published_date': '14:13, Jun 15, 2012', 'authors': 'Rzepa, Harvey', 'year': '2012', 'genre': 'dataset'}
+        expected = {'genre': 'dataset', 'title': 'Gaussian Job Archive for B2(2-)', 'year': 2012, 'repository': 'figshare', 'published_date': '14:13, Jun 15, 2012'}
         assert_equals(biblio_dict, expected)
 
 
@@ -70,7 +70,7 @@ class TestFigshare(ProviderTestCase):
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'repository': 'figshare', 'title': u'Open Science', 'published_date': u'03:41, Dec 03, 2013', 'authors': u'Simpson', 'year': u'2013', 'genre': 'slides'}
+        expected = {'genre': 'slides', 'title': u'Open Science', 'year': 2013, 'repository': 'figshare', 'published_date': u'03:41, Dec 03, 2013'}
         assert_equals(biblio_dict, expected)
 
     @http

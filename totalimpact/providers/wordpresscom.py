@@ -83,9 +83,14 @@ class Wordpresscom(Provider):
         members = [("blog", json.dumps(clean_dict))]
 
         # import top blog posts
-        # blog_url = self.blog_url(clean_dict["url"])
-        # for post_url in topsy.Topsy().top_tweeted_urls(blog_url):
-        #     members += [("blog_post".format(blog_url=blog_url), post_url)] 
+        blog_url = clean_dict["url"]
+        for post_url in topsy.Topsy().top_tweeted_urls(blog_url):
+            blog_post_nid = {   
+                    "post_url": post_url, 
+                    "blog_url": blog_url, 
+                    "api_key": clean_dict["api_key"]
+                    }
+            members += [("blog_post", json.dumps(blog_post_nid))] 
 
         return (members)
 
