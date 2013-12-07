@@ -62,7 +62,7 @@ def import_products(provider_name, input_dict):
         aliases += providers.crossref.Crossref().member_items(input_dict["standard_dois_input"])
         del input_dict["standard_dois_input"]
     if "standard_pmids_input" in input_dict:
-        aliases += providers.pubmed.PubMed().member_items(input_dict["standard_pmids_input"])
+        aliases += providers.pubmed.Pubmed().member_items(input_dict["standard_pmids_input"])
         del input_dict["standard_pmids_input"]
     if "standard_urls_input" in input_dict:
         aliases += providers.webpage.Webpage().member_items(input_dict["standard_urls_input"])
