@@ -30,6 +30,14 @@ class TestBlog_post(ProviderTestCase):
         expected = [('url', u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/')]
         assert_equals(response, expected)
 
+    @http
+    def test_biblio(self):
+        response = self.provider.biblio([self.testitem_aliases])
+        print response
+        expected = {'url': u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/', 'account': u'researchremix.wordpress.com', 'blog_title': 'Research Remix', 'title': 'Elsevier agrees UBC researchers can text-mine for citizen science, research tools'}
+        assert_equals(response, expected)
+
+
     def test_provider_aliases_400(self):
         pass
     def test_provider_aliases_500(self):

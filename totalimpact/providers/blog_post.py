@@ -72,5 +72,10 @@ class Blog_Post(Provider):
         biblio_dict = self.webpage.biblio([("url", self.post_url_from_nid(nid))], provider_url_template, cache_enabled) 
         biblio_dict["url"] = self.post_url_from_nid(nid)
         biblio_dict["account"] = self.blog_url_from_from_nid(nid)
+        if ("title" in biblio_dict) and ("|" in biblio_dict["title"]):
+            (title, blog_title) = biblio_dict["title"].rsplit("|", 1)
+            biblio_dict["title"] = title.strip()
+            biblio_dict["blog_title"] = blog_title.strip()
+
         return biblio_dict
 
