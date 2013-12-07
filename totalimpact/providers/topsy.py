@@ -163,7 +163,6 @@ class Topsy(Provider):
 
         template_url = self.top_tweeted_url_templates[query_type]
         urls = [template_url % (query, i) for i in range(1, pages+1)]
-        print urls
         responses = self.http_get_multiple(urls)
         tweeted_entries = [] 
         for url in responses:

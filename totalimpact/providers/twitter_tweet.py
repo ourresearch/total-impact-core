@@ -1,4 +1,4 @@
-import os, re
+import os, re, datetime
 
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
@@ -67,6 +67,11 @@ class Twitter_Tweet(Provider):
         biblio_dict["authors"] = data["author_name"]
         biblio_dict["embed"] = data["html"]
         biblio_dict["account"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
+        tweet_match = re.findall('<p>(.*?)</p>.*statuses/\d+">(.*?)</a></blockquote>', biblio_dict["embed"])
+        biblio_dict["tweet_text"] = tweet_match[0][0]
+        biblio_dict["date"] = datetime.datetime.strptime(tweet_match[0][1], "%B %d, %Y").isoformat()
+        biblio_dict["year"] = biblio_dict["date"][0:4]
+        biblio_dict["url"] = url
 
         return biblio_dict
   
