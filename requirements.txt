@@ -14,9 +14,6 @@ birdy==0.1
 certifi==0.0.8
 chardet==1.0.1
 distribute==0.6.10
-gevent==1.0
-greenlet==0.4.1
-grequests==0.2.0
 gunicorn==0.14.3
 iso8601==0.1.4
 lxml==2.3.4

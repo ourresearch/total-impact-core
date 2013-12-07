@@ -15,6 +15,9 @@ def clean_doi(input_doi):
         if input_doi.startswith("http"):
             match = re.match("^https*://(dx\.)*doi.org/(10\..+)", input_doi)
             doi = match.group(2)
+        elif "doi.org" in input_doi:
+            match = re.match("^(dx\.)*doi.org/(10\..+)", input_doi)
+            doi = match.group(2)
         elif input_doi.startswith("doi:"):
             match = re.match("^doi:(10\..+)", input_doi)
             doi = match.group(1)

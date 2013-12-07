@@ -11,8 +11,6 @@ import simplejson
 import BeautifulSoup
 import socket
 import analytics
-import grequests
-reload(socket)
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
 import re
@@ -62,7 +60,7 @@ def import_products(provider_name, input_dict):
         aliases += providers.crossref.Crossref().member_items(input_dict["standard_dois_input"])
         del input_dict["standard_dois_input"]
     if "standard_pmids_input" in input_dict:
-        aliases += providers.pubmed.PubMed().member_items(input_dict["standard_pmids_input"])
+        aliases += providers.pubmed.Pubmed().member_items(input_dict["standard_pmids_input"])
         del input_dict["standard_pmids_input"]
     if "standard_urls_input" in input_dict:
         aliases += providers.webpage.Webpage().member_items(input_dict["standard_urls_input"])
@@ -613,10 +611,14 @@ class Provider(object):
                     responses[url] = cached_response
 
         uncached_urls = [url for url in responses if not responses[url]]
-        unsentrequests = (grequests.get(u, headers=headers, timeout=timeout, allow_redirects=allow_redirects) 
-                            for u in uncached_urls)
-        if unsentrequests:
-            fresh_responses = grequests.map(unsentrequests, size=num_concurrent_requests)
+
+        # replace the loop below with requests made in parallel, ideally!
+        fresh_responses = []
+        fresh_responses_dict = {}
+        for u in uncached_urls:
+            fresh_responses += [self.http_get(u, headers=headers, timeout=timeout, allow_redirects=allow_redirects)]
+
+        if fresh_responses:
             fresh_responses_dict = dict(zip(uncached_urls, fresh_responses))
             if use_cache:
                 for url in fresh_responses_dict:
