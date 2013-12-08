@@ -1,5 +1,6 @@
 from totalimpact.providers import provider
 from totalimpact.providers import topsy
+from totalimpact.providers import webpage
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
 import json, os, re
@@ -23,14 +24,14 @@ class Wordpresscom(Provider):
             "display_name": "subscribers",
             "provider": "WordPress.com",
             "provider_url": "http://wordpress.com",
-            "description": "The number of people who have subscribed to this blog on WordPress.com",
+            "description": "The number of people who receive emails about new posts on this blog.",
             "icon": "https://wordpress.com/favicon.ico",
         },
         "views": {
             "display_name": "views",
             "provider": "WordPress.com",
             "provider_url": "http://wordpress.com",
-            "description": "The number of total times that posts on this blog have been viewed",
+            "description": "The number of times a blog post has been viewed.",
             "icon": "https://wordpress.com/favicon.ico",
         }
     }     
@@ -51,6 +52,12 @@ class Wordpresscom(Provider):
     @property
     def provides_aliases(self):
         return True
+
+    # overriding default because overriding aliases method
+    @property
+    def provides_biblio(self):
+        return True
+
 
     def blog_url(self, nid):
         return re.sub("http(s?)://", "", nid.lower())
@@ -84,7 +91,7 @@ class Wordpresscom(Provider):
 
         # import top blog posts
         blog_url = clean_dict["url"]
-        for post_url in topsy.Topsy().top_tweeted_urls(blog_url):
+        for post_url in topsy.Topsy().top_tweeted_urls(blog_url, number_to_return=10):
             blog_post_nid = {   
                     "post_url": post_url, 
                     "blog_url": blog_url, 
@@ -119,21 +126,19 @@ class Wordpresscom(Provider):
         return new_aliases
 
 
-    def _extract_biblio(self, page, nid=None):
-        if not "is_private" in page:
-            raise ProviderContentMalformedError
+    def biblio(self, 
+            aliases,
+            provider_url_template=None,
+            cache_enabled=True):
 
-        dict_of_keylists = {
-            'title' : ['name'],
-            'description' : ['description']
-        }
-        biblio_dict = provider._extract_from_json(page, dict_of_keylists)
-        biblio_dict["url"] = self.url_from_nid(nid)
-
+        blog_nid = self.get_best_id(aliases)
+        biblio_dict = {}
+        biblio_dict["url"] = self.url_from_nid(blog_nid)
+        biblio_dict["account"] = self.url_from_nid(blog_nid)
         biblio_dict["is_account"] = True  # special key to tell webapp to render as genre heading
-        biblio_dict["account"] = self.url_from_nid(nid)
 
-        return biblio_dict         
+        return biblio_dict
+
 
 
     def _extract_metrics(self, page, status_code=200, id=None):
@@ -152,17 +157,16 @@ class Wordpresscom(Provider):
 
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)
 
-        blog_url = self.url_from_nid(id)
         api_key = self.api_key_from_nid(id)
-        url = self.metrics_url_template_views % (api_key, blog_url)
-
-        response = self.http_get(url)
-
-        try:
-            data = json.loads(response.text)
-            metrics_dict["wordpresscom:views"] = data["views"] 
-        except ValueError:
-            pass
+        if api_key:
+            blog_url = self.url_from_nid(id)
+            url = self.metrics_url_template_views % (api_key, blog_url)
+            response = self.http_get(url)
+            try:
+                data = json.loads(response.text)
+                metrics_dict["wordpresscom:views"] = data["views"] 
+            except ValueError:
+                pass
 
         return metrics_dict
 

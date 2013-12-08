@@ -68,14 +68,14 @@ def set_provider_started(self, item_id, provider_name):
     now = datetime.datetime.utcnow().isoformat()
     currently_updating_status = {now: "started"}
     self.set_currently_updating(item_id, provider_name, currently_updating_status)
-    logger.info(u"set_provider_started for %s %s" % (
-        item_id, provider_name))
+    # logger.info(u"set_provider_started for %s %s" % (
+    #     item_id, provider_name))
 
 
 def set_provider_finished(self, item_id, provider_name):
     self.delete_currently_updating(item_id, provider_name)
-    logger.info(u"set_provider_finished for {tiid} {provider_name}".format(
-        tiid=item_id, provider_name=provider_name))
+    # logger.info(u"set_provider_finished for {tiid} {provider_name}".format(
+    #     tiid=item_id, provider_name=provider_name))
 
 
 def get_providers_currently_updating(self, item_id):

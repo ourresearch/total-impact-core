@@ -5,7 +5,7 @@ from test.utils import http
 
 import os
 import collections
-from nose.tools import assert_equals, raises
+from nose.tools import assert_equals, assert_items_equal, raises
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/wordpresscom")
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
@@ -55,10 +55,9 @@ class TestWordpresscom(ProviderTestCase):
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'url': u'http://researchremix.wordpress.com', 'account': u'http://researchremix.wordpress.com', 'description': u'Blogging about the science, engineering, and human factors of biomedical research data reuse', 'is_account': True, 'title': u'Research Remix'}
-        assert_equals(biblio_dict.keys(), expected.keys())
-        for key in ["url", "title", "description"]:
-            assert_equals(biblio_dict[key], expected[key])
+        expected = {'url': u'http://researchremix.wordpress.com', 'account': u'http://researchremix.wordpress.com', 'is_account': True}
+        assert_items_equal(biblio_dict.keys(), expected.keys())
+
 
     # not relevant given library approach
 
@@ -78,3 +77,7 @@ class TestWordpresscom(ProviderTestCase):
     def test_provider_aliases_500(self):
         pass
 
+    def test_provider_biblio_400(self):
+        pass
+    def test_provider_biblio_500(self):
+        pass

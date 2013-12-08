@@ -513,6 +513,8 @@ class Provider(object):
         if not provider_url_template:
             provider_url_template = self.metrics_url_template
         url = self._get_templated_url(provider_url_template, id, "metrics")
+        if not url:
+            return {}
 
         # try to get a response from the data provider                
         response = self.http_get(url, cache_enabled=cache_enabled, allow_redirects=True)
@@ -838,3 +840,7 @@ def alias_dict_from_tuples(aliases_tuples):
             alias_dict[ns] = [ids]
     return alias_dict
     
+def strip_leading_http(url):
+    response = re.sub(u"^https*://", "", url)
+    return response
+
