@@ -421,6 +421,12 @@ def build_item_for_client(item, myrefsets, myredis):
     except (KeyError, TypeError):
         pass    
 
+    # remove aliases that have passwords in them
+    cleaned_alias_list = []
+    for alias_key in item["aliases"]:
+        if alias_key.endswith("confidential"):
+            item["aliases"][alias_key] = ["REDACTED"]
+
     metrics = item.setdefault("metrics", {})
     for metric_name in metrics:
 
@@ -649,7 +655,7 @@ def decide_genre(alias_dict):
         genre = "blog"
         host = "wordpresscom"
 
-    elif "blog_post" in alias_dict:
+    elif "blog_post_confidential" in alias_dict:
         genre = "blog"
         host = "blog_post"
 

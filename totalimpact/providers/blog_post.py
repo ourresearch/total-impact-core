@@ -9,7 +9,7 @@ logger = logging.getLogger('ti.providers.blog_post')
 
 class Blog_Post(Provider):  
 
-    example_id = ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "blog_url": "researchremix.wordpress.com"}')
+    example_id = ('blog_post_confidential', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "blog_url": "researchremix.wordpress.com"}')
     metrics_url_template = "http://stats.wordpress.com/csv.php?api_key=%s&blog_uri=%s&table=views&days=-1&format=json&summarize=1&table=postviews&post_id=%s"
 
     provenance_url_template = "%s"
@@ -24,14 +24,14 @@ class Blog_Post(Provider):
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
-        return "blog_post" in namespace
+        return "blog_post_confidential" in namespace
 
 
     def get_best_id(self, aliases):
         aliases_dict = provider.alias_dict_from_tuples(aliases)
 
         # go through in preferred order
-        for key in ["wordpress_blog_post", "blog_post", "url"]:
+        for key in ["wordpress_blog_post_confidential", "blog_post_confidential", "url"]:
             if key in aliases_dict:
                 nid = aliases_dict[key][0]
                 return nid
@@ -100,35 +100,32 @@ class Blog_Post(Provider):
         aliases_dict = provider.alias_dict_from_tuples(aliases)
         new_aliases = []
 
-        if "blog_post" in aliases_dict:
-            nid = aliases_dict["blog_post"][0]
+        if "blog_post_confidential" in aliases_dict:
+            nid = aliases_dict["blog_post_confidential"][0]
             post_url = self.post_url_from_nid(nid)
             new_alias = ("url", post_url)
             if new_alias not in aliases:
                 # add url as alias
                 new_aliases += [new_alias]
 
-            if not "wordpress_post" in aliases_dict:
+            if not "wordpress_blog_post_confidential" in aliases_dict:
                 blog_url = provider.strip_leading_http(self.blog_url_from_nid(nid))
                 wordpress_blog_api_url = u"https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1" % blog_url
 
                 response = self.http_get(wordpress_blog_api_url)
-
                 if "name" in response.text:
-
-                    # it is a wordpress blog, so now get its ID
+                    # it is a wordpress blog, so now get its wordpress post ID
                     if post_url.endswith("/"):
                         post_url = post_url[:-1]
                     post_end_slug = post_url.rsplit("/", 1)[1]
+
                     wordpress_post_api_url = u"https://public-api.wordpress.com/rest/v1/sites/%s/posts/slug:%s" %(blog_url, post_end_slug)
-
                     response = self.http_get(wordpress_post_api_url)
-
                     if "ID" in response.text:
                         wordpress_post_id = json.loads(response.text)["ID"]
                         nid_as_dict = json.loads(nid)
                         nid_as_dict.update({"wordpress_post_id": wordpress_post_id})
-                        new_aliases += [("wordpress_blog_post", json.dumps(nid_as_dict))]
+                        new_aliases += [("wordpress_blog_post_confidential", json.dumps(nid_as_dict))]
 
         return new_aliases
 
@@ -141,9 +138,11 @@ class Blog_Post(Provider):
         logger.info(u"calling webpage to handle aliases")
 
         nid = self.get_best_id(aliases)
+        aliases_dict = provider.alias_dict_from_tuples(aliases)   
+        post_url = aliases_dict["url"][0]     
 
-        biblio_dict = self.webpage.biblio([("url", self.post_url_from_nid(nid))], provider_url_template, cache_enabled) 
-        biblio_dict["url"] = self.post_url_from_nid(nid)
+        biblio_dict = self.webpage.biblio([("url", post_url)], provider_url_template, cache_enabled) 
+        biblio_dict["url"] = post_url
         biblio_dict["account"] = self.blog_url_from_nid(nid)
         if ("title" in biblio_dict) and ("|" in biblio_dict["title"]):
             (title, blog_title) = biblio_dict["title"].rsplit("|", 1)

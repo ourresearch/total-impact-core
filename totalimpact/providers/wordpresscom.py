@@ -73,31 +73,51 @@ class Wordpresscom(Provider):
 
     # overriding
     def member_items(self, 
-            input_val, 
+            input_dict, 
             provider_url_template=None, 
             cache_enabled=True):
 
-        clean_dict = {"api_key": None}
+        members = []
 
-        if isinstance(input_val, dict):
-            if "blogUrl" in input_val:
-                clean_dict["url"] = input_val["blogUrl"]
-            if "apiKey" in input_val:
-                clean_dict["api_key"] = input_val["apiKey"]
+        if "apiKey" in input_dict:
+            api_key = input_dict["apiKey"]
         else:
-            clean_dict["url"] = input_val
+            api_key = None
 
-        members = [("blog", json.dumps(clean_dict))]
+        if "blogUrl" in input_dict:
+            blog_url = input_dict["blogUrl"]
+        else:
+            blog_url = None
 
-        # import top blog posts
-        blog_url = clean_dict["url"]
-        for post_url in topsy.Topsy().top_tweeted_urls(blog_url, number_to_return=10):
-            blog_post_nid = {   
-                    "post_url": post_url, 
-                    "blog_url": blog_url, 
-                    "api_key": clean_dict["api_key"]
-                    }
-            members += [("blog_post", json.dumps(blog_post_nid))] 
+        # handle individual blog posts
+        if "blog_post_urls" in input_dict:
+            members_as_webpages = webpage.Webpage().member_items(input_dict["blog_post_urls"])
+            for (url_namespace, post_url) in members_as_webpages:
+                if blog_url:
+                    blog_url_for_blog_post_urls = blog_url
+                else:
+                    blog_url_for_blog_post_urls = "http://"+provider.strip_leading_http(post_url).split("/", 1)[0]
+                blog_post_nid = {   
+                        "post_url": post_url, 
+                        "blog_url": blog_url_for_blog_post_urls, 
+                        "api_key": api_key
+                        }
+                members += [("blog_post_CONFIDENTIAL", json.dumps(blog_post_nid))] 
+
+
+        if blog_url:
+            blog_nid = {"api_key": api_key, "url": blog_url}
+            members += [("blog", json.dumps(blog_nid))]
+
+            # import top blog posts
+            blog_url = blog_url
+            for post_url in topsy.Topsy().top_tweeted_urls(blog_url, number_to_return=10):
+                blog_post_nid = {   
+                        "post_url": post_url, 
+                        "blog_url": blog_url, 
+                        "api_key": api_key
+                        }
+                members += [("blog_post_CONFIDENTIAL", json.dumps(blog_post_nid))] 
 
         return (members)
 
