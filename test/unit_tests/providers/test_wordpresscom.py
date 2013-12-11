@@ -16,10 +16,10 @@ class TestWordpresscom(ProviderTestCase):
     provider_name = "wordpresscom"
 
     api_key = os.environ["WORDPRESS_OUR_BLOG_API_KEY"]
-    testitem_members = {"blogUrl": "http://researchremix.wordpress.com", "apiKey": api_key}
-    testitem_aliases = ("blog", '{"url": "http://researchremix.wordpress.com", "api_key": "'+api_key+'"}')
-    testitem_metrics = ("blog", '{"url": "http://researchremix.wordpress.com", "api_key": "'+api_key+'"}')
-    testitem_biblio = ("blog", '{"url": "http://researchremix.wordpress.com", "api_key": "'+api_key+'"}')
+    testitem_members = {"blogUrl": "http://researchremix.wordpress.com"}
+    testitem_aliases = ("blog", "http://researchremix.wordpress.com")
+    testitem_metrics = ("blog", "http://researchremix.wordpress.com")
+    testitem_biblio = ("blog", "http://researchremix.wordpress.com")
 
     def setUp(self):
         ProviderTestCase.setUp(self) 
@@ -32,30 +32,45 @@ class TestWordpresscom(ProviderTestCase):
   
 
     def test_provenance_url(self):
-        provenance_url = self.provider.provenance_url("github:forks", [self.testitem_aliases])
+        provenance_url = self.provider.provenance_url("wordpresscom:subscribers", [self.testitem_aliases])
         assert_equals(provenance_url, u'http://researchremix.wordpress.com')
 
 
+    @http
     def test_members(self):
         response = self.provider.member_items(self.testitem_members)
         print response
-        expected = [('blog', '{"url": "http://researchremix.wordpress.com", "api_key": "'+self.api_key+'"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2013/05/11/society-oa-options/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/05/29/non-american-please-sign/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2013/03/05/why-google-isnt-good-enough-for-academic-search/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/03/05/talking-text-mining-with-elsevier/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2013/03/13/why-google/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/01/31/31-flavours/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2011/02/18/early_results/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/01/07/rwa-job-losses/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/05/29/dear-research-data-advocate-please-sign-the-petition-oamonday/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com"}')]
+        expected = [('blog', 'http://researchremix.wordpress.com'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "blog_url": "http://researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2013/05/11/society-oa-options/", "blog_url": "http://researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/05/29/non-american-please-sign/", "blog_url": "http://researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2013/03/05/why-google-isnt-good-enough-for-academic-search/", "blog_url": "http://researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/03/05/talking-text-mining-with-elsevier/", "blog_url": "http://researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2013/03/13/why-google/", "blog_url": "http://researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/01/31/31-flavours/", "blog_url": "http://researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2011/02/18/early_results/", "blog_url": "http://researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/05/29/dear-research-data-advocate-please-sign-the-petition-oamonday/", "blog_url": "http://researchremix.wordpress.com"}'), ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/01/07/rwa-job-losses/", "blog_url": "http://researchremix.wordpress.com"}')]
         assert_equals(response, expected)
 
     @http
-    def test_metrics(self):
+    def test_metrics_wordpress_com(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
         print metrics_dict
-        expected = {'wordpresscom:views': (74942, u'http://researchremix.wordpress.com'), 'wordpresscom:subscribers': (66, u'http://researchremix.wordpress.com')}
+        expected = {'wordpresscom:subscribers': (66, u'http://researchremix.wordpress.com')}
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
     @http
-    def test_biblio(self):
+    def test_metrics_not_wordpress_com(self):
+        metrics_dict = self.provider.metrics([("blog", "http://jasonpriem.com")])
+        print metrics_dict
+        expected = {}
+        assert_equals(metrics_dict, expected)
+
+    @http
+    def test_biblio_wordpress_com(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'url': u'http://researchremix.wordpress.com', 'account': u'http://researchremix.wordpress.com', 'is_account': True}
+        expected = {'account': 'http://researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'description': u'Blogging about the science, engineering, and human factors of biomedical research data reuse', 'title': u'Research Remix', 'url': 'http://researchremix.wordpress.com', 'is_account': True}
+        assert_items_equal(biblio_dict.keys(), expected.keys())
+
+    @http
+    def test_biblio_not_wordpress_com(self):
+        biblio_dict = self.provider.biblio([("blog", "http://jasonpriem.com")])
+        print biblio_dict
+        expected = {'url': 'http://jasonpriem.com', 'account': 'http://jasonpriem.com', 'is_account': True}
         assert_items_equal(biblio_dict.keys(), expected.keys())
 
 

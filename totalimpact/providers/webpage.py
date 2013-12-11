@@ -108,14 +108,14 @@ class Webpage(Provider):
 
             try:
                 response = parsed_html.find(".//title").text
-                if response:
+                if response and response.strip():
                     biblio_dict["title"] = response.strip()
             except AttributeError:
                 pass
 
             try:
                 response = parsed_html.find(".//h1").text
-                if response:
+                if response and response.strip():
                     biblio_dict["h1"] = response.strip()
             except AttributeError:
                 pass            

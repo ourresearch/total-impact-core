@@ -59,15 +59,11 @@ class Wordpresscom(Provider):
         return True
 
 
-    def blog_url(self, nid):
-        return re.sub("http(s?)://", "", nid.lower())
-
-    #override because need to break up id
+    #override because need to break strip http
     def _get_templated_url(self, template, nid, method=None):
-        blog_url = self.url_from_nid(nid)
         if method in ["metrics", "biblio"]:
-            blog_url = self.blog_url(blog_url)
-        url = template % (blog_url)
+            nid = provider.strip_leading_http(nid).lower()
+        url = template % (nid)
         return(url)
 
 
@@ -79,15 +75,22 @@ class Wordpresscom(Provider):
 
         members = []
 
-        if "apiKey" in input_dict:
-            api_key = input_dict["apiKey"]
-        else:
-            api_key = None
-
         if "blogUrl" in input_dict:
             blog_url = input_dict["blogUrl"]
         else:
             blog_url = None
+
+        if blog_url:
+            members += [("blog", blog_url)]
+
+            # import top blog posts
+            for post_url in topsy.Topsy().top_tweeted_urls(blog_url, number_to_return=10):
+                blog_post_nid = {   
+                        "post_url": post_url, 
+                        "blog_url": blog_url
+                        }
+                members += [("blog_post", json.dumps(blog_post_nid))] 
+
 
         # handle individual blog posts
         if "blog_post_urls" in input_dict:
@@ -99,34 +102,12 @@ class Wordpresscom(Provider):
                     blog_url_for_blog_post_urls = "http://"+provider.strip_leading_http(post_url).split("/", 1)[0]
                 blog_post_nid = {   
                         "post_url": post_url, 
-                        "blog_url": blog_url_for_blog_post_urls, 
-                        "api_key": api_key
+                        "blog_url": blog_url_for_blog_post_urls 
                         }
-                members += [("blog_post_CONFIDENTIAL", json.dumps(blog_post_nid))] 
-
-
-        if blog_url:
-            blog_nid = {"api_key": api_key, "url": blog_url}
-            members += [("blog", json.dumps(blog_nid))]
-
-            # import top blog posts
-            blog_url = blog_url
-            for post_url in topsy.Topsy().top_tweeted_urls(blog_url, number_to_return=10):
-                blog_post_nid = {   
-                        "post_url": post_url, 
-                        "blog_url": blog_url, 
-                        "api_key": api_key
-                        }
-                members += [("blog_post_CONFIDENTIAL", json.dumps(blog_post_nid))] 
+                members += [("blog_post", json.dumps(blog_post_nid))] 
 
         return (members)
-
-
-    def url_from_nid(self, nid):
-        return json.loads(nid)["url"]    
   
-    def api_key_from_nid(self, nid):
-        return json.loads(nid)["api_key"]    
 
     # overriding
     def aliases(self, 
@@ -139,26 +120,53 @@ class Wordpresscom(Provider):
         for alias in aliases:
             (namespace, nid) = alias
             if namespace=="blog":
-                new_alias = ("url", self.url_from_nid(nid))
+                new_alias = ("url", nid)
                 if new_alias not in aliases:
                     new_aliases += [new_alias]
 
         return new_aliases
 
 
-    def biblio(self, 
-            aliases,
-            provider_url_template=None,
+    # overridding
+    def get_biblio_for_id(self, 
+            id,
+            provider_url_template=None, 
             cache_enabled=True):
 
-        blog_nid = self.get_best_id(aliases)
+        self.logger.debug(u"%s getting biblio for %s" % (self.provider_name, id))
+
+        # set up stuff that is true for all blogs, wordpress and not
         biblio_dict = {}
-        biblio_dict["url"] = self.url_from_nid(blog_nid)
-        biblio_dict["account"] = self.url_from_nid(blog_nid)
+        biblio_dict["url"] = id
+        biblio_dict["account"] = id
         biblio_dict["is_account"] = True  # special key to tell webapp to render as genre heading
+
+        # now add things that are true just for wordpress blogs
+
+        if not provider_url_template:
+            provider_url_template = self.biblio_url_template
+        url = self._get_templated_url(provider_url_template, id, "biblio")
+
+        # try to get a response from the data provider        
+        response = self.http_get(url, cache_enabled=cache_enabled)
+
+        if (response.status_code == 200) and ("name" in response.text):
+            biblio_dict["hosting_platform"] = "wordpress.com"
+            try:
+                biblio_dict.update(self._extract_biblio(response.text, id))
+            except (AttributeError, TypeError):
+                pass
 
         return biblio_dict
 
+
+    def _extract_biblio(self, page, id=None):
+        dict_of_keylists = {
+            'title' : ['name'],
+            'description' : ['description']
+        }
+        biblio_dict = provider._extract_from_json(page, dict_of_keylists)
+        return biblio_dict   
 
 
     def _extract_metrics(self, page, status_code=200, id=None):
@@ -177,16 +185,16 @@ class Wordpresscom(Provider):
 
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)
 
-        api_key = self.api_key_from_nid(id)
-        if api_key:
-            blog_url = self.url_from_nid(id)
-            url = self.metrics_url_template_views % (api_key, blog_url)
-            response = self.http_get(url)
-            try:
-                data = json.loads(response.text)
-                metrics_dict["wordpresscom:views"] = data["views"] 
-            except ValueError:
-                pass
+        # api_key = self.api_key_from_nid(id)
+        # if api_key:
+        #     blog_url = self.url_from_nid(id)
+        #     url = self.metrics_url_template_views % (api_key, blog_url)
+        #     response = self.http_get(url)
+        #     try:
+        #         data = json.loads(response.text)
+        #         metrics_dict["wordpresscom:views"] = data["views"] 
+        #     except ValueError:
+        #         pass
 
         return metrics_dict
 

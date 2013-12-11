@@ -12,7 +12,8 @@ class TestBlog_post(ProviderTestCase):
 
     provider_name = "blog_post"
 
-    testitem_aliases = ('blog_post', json.dumps({"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "api_key": None, "blog_url": "researchremix.wordpress.com"}))
+    testitem_aliases = ('blog_post', json.dumps({"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "blog_url": "http://researchremix.wordpress.com"}))
+    testitem_aliases_not_wordpress_com = ('blog_post', json.dumps({"post_url": "http://jasonpriem.org/2012/05/toward-a-second-revolution-altmetrics-total-impact-and-the-decoupled-journal-video/", "blog_url": "http://jasonpriem.org/blog"}))
     api_key = os.environ["WORDPRESS_OUR_BLOG_API_KEY"]
 
     def setUp(self):
@@ -29,7 +30,7 @@ class TestBlog_post(ProviderTestCase):
     def test_aliases_wordpress_com(self):
         response = self.provider.aliases([self.testitem_aliases])
         print response
-        expected = [('url', u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/'), ('wordpress_blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "api_key": null, "blog_url": "researchremix.wordpress.com", "wordpress_post_id": 1119}')]
+        expected = [('url', u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/'), ('wordpress_blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "blog_url": "http://researchremix.wordpress.com", "wordpress_post_id": 1119}')]
         assert_equals(response, expected)
 
     @http
@@ -41,10 +42,17 @@ class TestBlog_post(ProviderTestCase):
 
 
     @http
-    def test_biblio(self):
+    def test_biblio_wordpress(self):
         response = self.provider.biblio([self.testitem_aliases])
         print response
-        expected = {'url': u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/', 'account': u'researchremix.wordpress.com', 'blog_title': 'Research Remix', 'title': 'Elsevier agrees UBC researchers can text-mine for citizen science, research tools'}
+        expected = {'url': u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/', 'account': u'http://researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'blog_title': 'Research Remix', 'title': 'Elsevier agrees UBC researchers can text-mine for citizen science, research tools'}
+        assert_equals(response, expected)
+
+    @http
+    def test_biblio_not_wordpress(self):
+        response = self.provider.biblio([self.testitem_aliases_not_wordpress_com])
+        print response
+        expected = {'url': u'http://jasonpriem.org/2012/05/toward-a-second-revolution-altmetrics-total-impact-and-the-decoupled-journal-video/', 'account': u'http://jasonpriem.org/blog', 'title': u'Toward a second revolution: Altmetrics, total-impact, and the decoupled journal [video]  \u2013 Jason Priem'}
         assert_equals(response, expected)
 
     @http
@@ -52,7 +60,7 @@ class TestBlog_post(ProviderTestCase):
         wordpress_aliases = [('url', u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/'), ('wordpress_blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com", "wordpress_post_id": 1119}')]
         response = self.provider.metrics(wordpress_aliases)
         print response
-        expected = {'wordpresscom:views': (1862, u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/')}
+        expected = {}
         assert_equals(response, expected)
 
 
