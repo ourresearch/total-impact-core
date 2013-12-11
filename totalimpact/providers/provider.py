@@ -543,7 +543,7 @@ class Provider(object):
         # also try adding a trailing slash to all of them, and a non trailing slash
         for (namespace, url) in self.relevant_aliases(aliases):
             if url.endswith("/"):
-                url_aliases += [("url", url), ("url", re.sub("\/$", ""))]
+                url_aliases += [("url", url), ("url", re.sub("\/$", "", url))]
             else: 
                 url_aliases += [("url", url), ("url", url+u"/")]
 

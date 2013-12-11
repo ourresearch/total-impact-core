@@ -5,7 +5,7 @@ from test.utils import http
 
 import os
 import collections
-from nose.tools import assert_equals, raises, nottest
+from nose.tools import assert_equals, assert_items_equal, raises, nottest
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/topsy")
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
@@ -65,6 +65,11 @@ class TestTopsy(ProviderTestCase):
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+
+        #now with trailing slawh
+        metrics_dict2 = self.provider.metrics([("url", "http://researchremix.wordpress.com/2011/08/10/personal/")])
+        assert_items_equal(metrics_dict, metrics_dict2)
+
 
     @http
     def test_metrics_blog(self):
