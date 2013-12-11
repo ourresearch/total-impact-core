@@ -66,12 +66,16 @@ class Twitter_Tweet(Provider):
         biblio_dict["title"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
         biblio_dict["authors"] = data["author_name"]
         biblio_dict["embed"] = data["html"]
-        biblio_dict["account"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
-        tweet_match = re.findall('<p>(.*?)</p>.*statuses/\d+">(.*?)</a></blockquote>', biblio_dict["embed"])
-        biblio_dict["tweet_text"] = tweet_match[0][0]
-        biblio_dict["date"] = datetime.datetime.strptime(tweet_match[0][1], "%B %d, %Y").isoformat()
-        biblio_dict["year"] = biblio_dict["date"][0:4]
         biblio_dict["url"] = url
+        biblio_dict["account"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
+        try:
+            tweet_match = re.findall(u'<p>(.*?)</p>.*statuses/\d+">(.*?)</a></blockquote>', biblio_dict["embed"])
+            biblio_dict["tweet_text"] = tweet_match[0][0]
+            biblio_dict["date"] = datetime.datetime.strptime(tweet_match[0][1], "%B %d, %Y").isoformat()
+            biblio_dict["year"] = biblio_dict["date"][0:4]
+        except (AttributeError):
+            logger.debug("couldn't parse tweet embed {embed}".format(
+                embed=biblio_dict["embed"]))
 
         return biblio_dict
   
