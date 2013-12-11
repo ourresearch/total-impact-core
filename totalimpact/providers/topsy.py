@@ -54,17 +54,16 @@ class Topsy(Provider):
     def provides_metrics(self):
          return True
 
-    def get_site_id(self, aliases):
+    def get_site_id_for_template(self, aliases):
         for alias in aliases:
             (namespace, nid) = alias
             if ("blog"==namespace):
-                blog_url = json.loads(nid)["url"]
-                blog_url = re.sub("http(s?)://", "", blog_url.lower())
-                return blog_url
+                blog_url_for_template = provider.strip_leading_http(nid).lower()
+                return blog_url_for_template
         return None
 
     def get_best_id(self, aliases):
-        nid = self.get_site_id(aliases)
+        nid = self.get_site_id_for_template(aliases)
         if nid:
             return nid
         else:
@@ -73,7 +72,7 @@ class Topsy(Provider):
 
 
     def provenance_url(self, metric_name, aliases):
-        nid = self.get_site_id(aliases)
+        nid = self.get_site_id_for_template(aliases)
         if nid:
             provenance_url_template = self.provenance_url_template_site
         else:
@@ -91,7 +90,7 @@ class Topsy(Provider):
             cache_enabled=True):
 
         metrics_and_drilldown = {}
-        nid = self.get_site_id(aliases)
+        nid = self.get_site_id_for_template(aliases)
         if nid:
             metrics_url_template = self.metrics_url_template_site
         else:
@@ -137,17 +136,17 @@ class Topsy(Provider):
 
     def get_url_from_entry(self, query, entry, query_type):
         if query_type=="site":
-            if query in entry["url"]:
+            if query.lower() in entry["url"].lower():
                 return entry["url"]
-            elif entry["url_expansions"] and ("topsy_expanded_url" in entry["url_expansions"][0]):
+            elif entry["url_expansions"] and ("topsy_expanded_url" in entry["url_expansions"][0].lower()):
                 return entry["url_expansions"][0]["topsy_expanded_url"]
         elif query_type=="twitter_account":
-            if "/{query}/".format(query=query) in entry["url"]:
+            if "/{query}/".format(query=query.lower()) in entry["url"].lower():
                 return entry["url"]
             else:
                 return None
         elif query_type=="tweets_about":
-            if "/{query}/".format(query=query) not in entry["url"]:
+            if "/{query}/".format(query=query.lower()) not in entry["url"].lower():
                 return entry["url"]
             else:
                 return None

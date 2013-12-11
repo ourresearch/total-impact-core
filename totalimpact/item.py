@@ -649,7 +649,7 @@ def decide_genre(alias_dict):
         genre = "blog"
         host = "wordpresscom"
 
-    elif "blog_post_confidential" in alias_dict:
+    elif "blog_post" in alias_dict:
         genre = "blog"
         host = "blog_post"
 

@@ -53,18 +53,18 @@ class Blog_Post(Provider):
     #override because need to break up id
     def _get_templated_url(self, template, nid, method=None):
         url = None
-        if method=="metrics":
-            if not not self.wordpress_post_id_from_nid(nid):
-                return None
-
-            url = template % (self.api_key_from_nid(nid), 
-                                self.blog_url_from_nid(nid), 
-                                self.wordpress_post_id_from_nid(nid))
-        elif method=="biblio":
+        if method=="biblio":
             nid = provider.strip_leading_http(nid).lower()
             url = template % (nid)
         elif method=="provenance":
             url = self.post_url_from_nid(nid)
+        # elif method=="metrics":
+        #     if not not self.wordpress_post_id_from_nid(nid):
+        #         return None
+
+        #     url = template % (self.api_key_from_nid(nid), 
+        #                         self.blog_url_from_nid(nid), 
+        #                         self.wordpress_post_id_from_nid(nid))
         else:
             url = template % (nid)
         return(url)
@@ -165,23 +165,23 @@ class Blog_Post(Provider):
         return biblio_dict
 
 
-    def _extract_metrics(self, page, status_code=200, id=None):
-        if status_code != 200:
-            if status_code == 404:
-                return {}
-            else:
-                raise(self._get_error(status_code))
+    # def _extract_metrics(self, page, status_code=200, id=None):
+    #     if status_code != 200:
+    #         if status_code == 404:
+    #             return {}
+    #         else:
+    #             raise(self._get_error(status_code))
 
-        if not "views" in page:
-            raise ProviderContentMalformedError
+    #     if not "views" in page:
+    #         raise ProviderContentMalformedError
 
-        # static meta for this is in wordpresscom provider
-        dict_of_keylists = {
-            'wordpresscom:views' : ['views']
-        }
+    #     # static meta for this is in wordpresscom provider
+    #     dict_of_keylists = {
+    #         'wordpresscom:views' : ['views']
+    #     }
 
-        metrics_dict = provider._extract_from_json(page, dict_of_keylists)
+    #     metrics_dict = provider._extract_from_json(page, dict_of_keylists)
 
-        return metrics_dict
+    #     return metrics_dict
 
 
