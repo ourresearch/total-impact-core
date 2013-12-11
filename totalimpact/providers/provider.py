@@ -538,7 +538,15 @@ class Provider(object):
     def get_relevant_alias_with_most_metrics(self, metric_name, aliases, provider_url_template=None, cache_enabled=None):
         url_with_biggest_so_far = None
         biggest_so_far = 0
-        url_aliases = self.relevant_aliases(aliases)
+        url_aliases = []
+        
+        # also try adding a trailing slash to all of them, and a non trailing slash
+        for (namespace, url) in self.relevant_aliases(aliases):
+            if url.endswith("/"):
+                url_aliases += [("url", url), ("url", re.sub("\/$", ""))]
+            else: 
+                url_aliases += [("url", url), ("url", url+u"/")]
+
         for url_alias in url_aliases:
             (namespace, url) = url_alias
             metrics = self.get_metrics_for_id(url, provider_url_template, cache_enabled)
