@@ -554,7 +554,7 @@ class Provider(object):
     # Core methods
     # These should be consistent for all providers
     
-    def http_get(self, url, headers={}, timeout=20, cache_enabled=True, allow_redirects=False):
+    def http_get(self, url, headers={}, timeout=20, cache_enabled=True, allow_redirects=True):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
@@ -593,7 +593,7 @@ class Provider(object):
         return r
 
 
-    def http_get_multiple(self, urls, headers={}, timeout=20, cache_enabled=True, allow_redirects=False, num_concurrent_requests=False):
+    def http_get_multiple(self, urls, headers={}, timeout=20, cache_enabled=True, allow_redirects=True, num_concurrent_requests=False):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 

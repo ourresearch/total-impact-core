@@ -20,7 +20,6 @@ class Blog_Post(Provider):
 
     def __init__(self):
         super(Blog_Post, self).__init__()
-        self.webpage = webpage.Webpage()
 
 
     def is_relevant_alias(self, alias):
@@ -145,13 +144,14 @@ class Blog_Post(Provider):
         post_url = self.post_url_from_nid(nid)
         blog_url = self.blog_url_from_nid(nid)
 
-        biblio_dict = self.webpage.biblio([("url", post_url)], provider_url_template, cache_enabled) 
+        biblio_dict = webpage.Webpage().biblio([("url", post_url)], provider_url_template, cache_enabled) 
         biblio_dict["url"] = post_url
         biblio_dict["account"] = self.blog_url_from_nid(nid)
         if ("title" in biblio_dict) and ("|" in biblio_dict["title"]):
             (title, blog_title) = biblio_dict["title"].rsplit("|", 1)
             biblio_dict["title"] = title.strip()
             biblio_dict["blog_title"] = blog_title.strip()
+            print "found title"
 
         # try to get a response from wordpress.com
         url = self._get_templated_url(self.biblio_url_template, blog_url, "biblio")           

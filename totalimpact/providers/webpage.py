@@ -72,7 +72,7 @@ class Webpage(Provider):
 
         # try to get a response from the data provider 
         try:      
-            response = self.http_get(url, cache_enabled=cache_enabled)
+            response = self.http_get(url, cache_enabled=cache_enabled, allow_redirects=True)
         except provider.ProviderTimeout:
             logger.info(u"%20s ProviderTimeout getting %s so giving up on webpage biblio" 
                 % (self.provider_name, id))

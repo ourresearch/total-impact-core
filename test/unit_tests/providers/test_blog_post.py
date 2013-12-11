@@ -49,13 +49,22 @@ class TestBlog_post(ProviderTestCase):
         assert_equals(response, expected)
 
     @http
-    def test_biblio_not_wordpress(self):
-        response = self.provider.biblio([self.testitem_aliases_not_wordpress_com])
+    def test_biblio_wordpress(self):
+        response = self.provider.biblio([self.testitem_aliases])
         print response
-        expected = {'url': u'http://jasonpriem.org/2012/05/toward-a-second-revolution-altmetrics-total-impact-and-the-decoupled-journal-video/', 'account': u'http://jasonpriem.org/blog', 'title': u'Toward a second revolution: Altmetrics, total-impact, and the decoupled journal [video]  \u2013 Jason Priem'}
+        expected = {'url': u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/', 'account': u'http://researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'blog_title': 'Research Remix', 'title': 'Elsevier agrees UBC researchers can text-mine for citizen science, research tools'}
         assert_equals(response, expected)
 
     @http
+    def test_biblio_not_wordpress2(self):
+        test_alias = ('blog_post', "{\"post_url\": \"http://researchremix.wordpress.com/2011/08/10/personal\", \"blog_url\": \"http://researchremix.wordpress.com\"}")
+        response = self.provider.biblio([test_alias])
+        print response
+        expected = {'url': u'http://researchremix.wordpress.com/2011/08/10/personal', 'account': u'http://researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'blog_title': 'Research Remix', 'title': 'Cancer data: it just got personal'}
+        assert_equals(response, expected)
+
+    @http
+    @nottest
     def test_metrics(self):
         wordpress_aliases = [('url', u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/'), ('wordpress_blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com", "wordpress_post_id": 1119}')]
         response = self.provider.metrics(wordpress_aliases)
