@@ -1,5 +1,6 @@
 from werkzeug import generate_password_hash, check_password_hash
 import shortuuid, datetime, hashlib, threading, json, time, copy, re
+from collections import defaultdict
 
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact.providers.provider import ProviderTimeout, ProviderServerError
@@ -293,11 +294,12 @@ class Item(db.Model):
             tiid=self.tiid)
 
     @classmethod
-    def from_tiid(cls, tiid):
+    def from_tiid(cls, tiid, with_metrics=True):
         item = cls.query.get(tiid)
         if not item:
             return None
-        item.metrics = item.metrics_query.all()
+        if with_metrics:
+            item.metrics = item.metrics_query.all()
         return item
 
     @property
@@ -912,10 +914,10 @@ def create_tiids_from_aliases(aliases, myredis):
     return tiid_alias_mapping
 
 
-def get_items_from_tiids(tiids):
+def get_items_from_tiids(tiids, with_metrics=True):
     items = []
     for tiid in tiids:
-        items += [Item.from_tiid(tiid)]
+        items += [Item.from_tiid(tiid, with_metrics)]
     return items
 
 
@@ -970,4 +972,29 @@ def start_item_update(tiid, aliases_dict, analytics_credentials, myredis):
         ProviderFactory.providers_with_metrics(default_settings.PROVIDERS))
     myredis.add_to_alias_queue(tiid, aliases_dict, analytics_credentials)
 
+
+def build_duplicates_list(tiids):
+    items = get_items_from_tiids(tiids, with_metrics=False)
+    distinct_groups = defaultdict(list)
+    duplication_list = {}
+    for item in items:
+        is_distinct_item = True
+
+        for alias in item.aliases:
+            if alias.alias_tuple in duplication_list:
+                # we already have one of the aliase
+                distinct_item_id =  duplication_list[alias.alias_tuple] 
+                is_distinct_item = False  
+
+        if is_distinct_item:
+            # we went through all the aliases and don't have any that match, so make a new entry
+            distinct_item_id = len(distinct_groups)
+
+        # whether distinct or not,
+        # add this to the group, and add all its aliases too    
+        distinct_groups[distinct_item_id] += [item.tiid]
+        for alias in item.aliases:
+            duplication_list[alias.alias_tuple] = distinct_item_id
+
+    return distinct_groups.values()
 
