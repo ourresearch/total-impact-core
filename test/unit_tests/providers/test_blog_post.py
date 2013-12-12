@@ -45,14 +45,14 @@ class TestBlog_post(ProviderTestCase):
     def test_biblio_wordpress(self):
         response = self.provider.biblio([self.testitem_aliases])
         print response
-        expected = {'url': u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/', 'account': u'http://researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'blog_title': 'Research Remix', 'title': 'Elsevier agrees UBC researchers can text-mine for citizen science, research tools'}
+        expected = {'url': u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/', 'account': u'researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'blog_title': 'Research Remix', 'title': 'Elsevier agrees UBC researchers can text-mine for citizen science, research tools'}
         assert_equals(response, expected)
 
     @http
     def test_biblio_wordpress(self):
         response = self.provider.biblio([self.testitem_aliases])
         print response
-        expected = {'url': u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/', 'account': u'http://researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'blog_title': 'Research Remix', 'title': 'Elsevier agrees UBC researchers can text-mine for citizen science, research tools'}
+        expected = {'url': u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/', 'account': u'researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'blog_title': 'Research Remix', 'title': 'Elsevier agrees UBC researchers can text-mine for citizen science, research tools'}
         assert_equals(response, expected)
 
     @http
@@ -60,7 +60,7 @@ class TestBlog_post(ProviderTestCase):
         test_alias = ('blog_post', "{\"post_url\": \"http://researchremix.wordpress.com/2011/08/10/personal\", \"blog_url\": \"http://researchremix.wordpress.com\"}")
         response = self.provider.biblio([test_alias])
         print response
-        expected = {'url': u'http://researchremix.wordpress.com/2011/08/10/personal', 'account': u'http://researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'blog_title': 'Research Remix', 'title': 'Cancer data: it just got personal'}
+        expected = {'url': u'http://researchremix.wordpress.com/2011/08/10/personal', 'account': u'researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'blog_title': 'Research Remix', 'title': 'Cancer data: it just got personal'}
         assert_equals(response, expected)
 
     @http

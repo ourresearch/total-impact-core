@@ -147,7 +147,7 @@ class Blog_Post(Provider):
 
         biblio_dict = webpage.Webpage().biblio([("url", post_url)], provider_url_template, cache_enabled) 
         biblio_dict["url"] = post_url
-        biblio_dict["account"] = self.blog_url_from_nid(nid)
+        biblio_dict["account"] = provider.strip_leading_http(self.blog_url_from_nid(nid))
         if ("title" in biblio_dict) and ("|" in biblio_dict["title"]):
             (title, blog_title) = biblio_dict["title"].rsplit("|", 1)
             biblio_dict["title"] = title.strip()
@@ -160,7 +160,7 @@ class Blog_Post(Provider):
             biblio_dict["hosting_platform"] = "wordpress.com"
 
         # in the future could get date posted from these sorts of calls:
-        # https://public-api.wordpress.com/rest/v1/sites/blog.impactstory.org/posts/slug:link-your-figshare-and-impactstory-accounts
+        # https://public-api.wordpress.com/rest/v1/sites/blog.impactstory.org/posts/slug:link-your-figshare-and-impactstory-strips
 
         return biblio_dict
 

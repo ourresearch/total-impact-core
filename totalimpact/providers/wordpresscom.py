@@ -180,7 +180,7 @@ class Wordpresscom(Provider):
         # set up stuff that is true for all blogs, wordpress and not
         biblio_dict = {}
         biblio_dict["url"] = id
-        biblio_dict["account"] = id
+        biblio_dict["account"] = provider.strip_leading_http(id)
         biblio_dict["is_account"] = True  # special key to tell webapp to render as genre heading
 
         # now add things that are true just for wordpress blogs

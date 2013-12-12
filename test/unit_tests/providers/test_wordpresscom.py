@@ -103,14 +103,14 @@ class TestWordpresscom(ProviderTestCase):
     def test_biblio_wordpress_com(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'account': 'http://researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'description': u'Blogging about the science, engineering, and human factors of biomedical research data reuse', 'title': u'Research Remix', 'url': 'http://researchremix.wordpress.com', 'is_account': True}
+        expected = {'account': 'researchremix.wordpress.com', 'hosting_platform': 'wordpress.com', 'description': u'Blogging about the science, engineering, and human factors of biomedical research data reuse', 'title': u'Research Remix', 'url': 'http://researchremix.wordpress.com', 'is_account': True}
         assert_items_equal(biblio_dict.keys(), expected.keys())
 
     @http
     def test_biblio_not_wordpress_com(self):
         biblio_dict = self.provider.biblio([("blog", "http://jasonpriem.com")])
         print biblio_dict
-        expected = {'url': 'http://jasonpriem.com', 'account': 'http://jasonpriem.com', 'is_account': True}
+        expected = {'url': 'http://jasonpriem.com', 'account': 'jasonpriem.com', 'is_account': True}
         assert_items_equal(biblio_dict.keys(), expected.keys())
 
 
