@@ -843,7 +843,8 @@ def create_item(namespace, nid, myredis, mydao):
 
     logger.debug(json.dumps(item_doc, sort_keys=True, indent=4))
 
-    start_item_update(item_doc["_id"], item_doc["aliases"], myredis)
+    analytics_credentials = {}
+    start_item_update(item_doc["_id"], item_doc["aliases"], analytics_credentials, myredis)
 
     logger.info(u"Created new item '{tiid}' with alias '{alias}'".format(
         tiid=item_doc["_id"],
@@ -877,37 +878,6 @@ def get_tiids_from_aliases(aliases):
     return aliases_tiid_mapping
 
 
-def create_missing_tiids_from_aliases(aliases_tiid_mapping, myredis):
-    for alias in aliases_tiid_mapping:
-        tiid = aliases_tiid_mapping[alias]
-        if not tiid:
-            (ns, nid) = alias
-            item_doc = make()
-            if ns=="biblio":
-                item_doc["aliases"][ns] = [json.loads(nid)]
-            else:
-                item_doc["aliases"][ns] = [nid]
-            tiid = item_doc["_id"]
-
-            logger.debug(u"in create_missing_tiids_from_aliases for {tiid}, now to postgres".format(
-                tiid=tiid))   
-            item_obj = create_objects_from_item_doc(item_doc)
-            db.session.merge(item_obj)
-
-            aliases_tiid_mapping[alias] = tiid
-
-            start_item_update(tiid, item_doc["aliases"], myredis)
-
-    try:
-        db.session.commit()
-    except (IntegrityError, FlushError) as e:
-        db.session.rollback()
-        logger.warning(u"Fails Integrity check in create_missing_tiids_from_aliases for {tiid}, rolling back.  Message: {message}".format(
-            tiid=tiid, 
-            message=e.message)) 
-
-    return aliases_tiid_mapping
-
 
 def create_tiids_from_aliases(aliases, myredis):
     tiid_alias_mapping = {}
@@ -928,7 +898,8 @@ def create_tiids_from_aliases(aliases, myredis):
 
         tiid_alias_mapping[tiid] = alias
 
-        start_item_update(tiid, item_doc["aliases"], myredis)
+        analytics_credentials={}
+        start_item_update(tiid, item_doc["aliases"], analytics_credentials, myredis)
 
     try:
         db.session.commit()
@@ -992,11 +963,11 @@ def get_tiid_by_alias(ns, nid, mydao=None):
     return tiid
 
 
-def start_item_update(tiid, aliases_dict, myredis):
+def start_item_update(tiid, aliases_dict, analytics_credentials, myredis):
     logger.debug(u"In start_item_update with {tiid}, /biblio_print {aliases_dict}".format(
         tiid=tiid, aliases_dict=aliases_dict))
     myredis.init_currently_updating_status(tiid,
         ProviderFactory.providers_with_metrics(default_settings.PROVIDERS))
-    myredis.add_to_alias_queue(tiid, aliases_dict)
+    myredis.add_to_alias_queue(tiid, aliases_dict, analytics_credentials)
 
 

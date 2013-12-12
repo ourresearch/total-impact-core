@@ -483,12 +483,12 @@ def add_items_to_collection(cid=""):
 
 
 
-def refresh_from_tiids(tiids, myredis):
+def refresh_from_tiids(tiids, analytics_credentials, myredis):
     for tiid in tiids:
         try:
             item_obj = item_module.Item.from_tiid(tiid)
             item = item_obj.as_old_doc()        
-            item_module.start_item_update(tiid, item["aliases"], myredis)
+            item_module.start_item_update(tiid, item["aliases"], analytics_credentials, myredis)
         except AttributeError:
             logger.debug(u"couldn't find tiid {tiid} so not refreshing its metrics".format(
                 tiid=tiid))
@@ -501,7 +501,11 @@ def refresh_from_tiids(tiids, myredis):
 # not officially supported in api
 def products_refresh_post_inline(tiids_string):
     tiids = tiids_string.split(",")
-    refresh_from_tiids(tiids, myredis)
+    try:
+        analytics_credentials = request.json["analytics_credentials"]
+    except (KeyError):
+        analytics_credentials = {}
+    refresh_from_tiids(tiids, analytics_credentials, myredis)
     resp = make_response("true", 200)
     return resp
 
@@ -511,7 +515,11 @@ def products_refresh_post_inline(tiids_string):
 def products_refresh_post():
     logger.debug(u"in products_refresh_post with tiids")
     tiids = request.json["tiids"]
-    refresh_from_tiids(tiids, myredis)
+    try:
+        analytics_credentials = request.json["analytics_credentials"]
+    except (KeyError):
+        analytics_credentials = {}
+    refresh_from_tiids(tiids, analytics_credentials, myredis)
     resp = make_response("true", 200)    
     return resp
 

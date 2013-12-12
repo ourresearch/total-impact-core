@@ -20,8 +20,8 @@ class RedisQueue(object):
 
     def push(self, message):
         message_json = json.dumps(message)
-        logger.info(u"{:20}: /biblio_print >>>PUSHING to redis {message_json}".format(
-            self.name, message_json=message_json))        
+        # logger.info(u"{:20}: /biblio_print >>>PUSHING to redis {message_json}".format(
+        #     self.name, message_json=message_json))        
         self.myredis.lpush(self.queue_name, message_json)
 
     def pop(self):
@@ -31,8 +31,8 @@ class RedisQueue(object):
         if received:
             queue, message_json = received
             try:
-                logger.debug(u"{:20}: <<<POPPED from redis: starts {message_json}".format(
-                    self.name, message_json=message_json[0:50]))        
+                # logger.debug(u"{:20}: <<<POPPED from redis: starts {message_json}".format(
+                #     self.name, message_json=message_json[0:50]))        
                 message = json.loads(message_json) 
             except (TypeError, KeyError):
                 logger.info(u"{:20}: ERROR processing redis message {message_json}".format(
@@ -85,7 +85,7 @@ class ProviderWorker(Worker):
         self.name = self.provider_name+"_worker"
 
     # last variable is an artifact so it has same call signature as other callbacks
-    def add_to_couch_queue_if_nonzero(self, tiid, new_content, method_name, dummy=None):
+    def add_to_couch_queue_if_nonzero(self, tiid, new_content, method_name, analytics_credentials, dummy=None):
         # logger.info(u"In add_to_couch_queue_if_nonzero with {tiid}, {method_name}, {provider_name}".format(
         #    method_name=method_name, tiid=tiid, provider_name=self.provider_name))
 
@@ -98,27 +98,39 @@ class ProviderWorker(Worker):
         else:
             # logger.info(u"ADDING to couch queue {method_name} from {tiid} for {provider_name}".format(
             #     method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
-            couch_message = (tiid, new_content, method_name, self.provider_name)
+            couch_message = {
+                "tiid": tiid, 
+                "new_content": new_content, 
+                "method_name": method_name,
+                "analytics_credentials": analytics_credentials,                
+                "provider_name": self.provider_name
+            }
+
             couch_queue_index = tiid[0] #index them by the first letter in the tiid
             selected_couch_queue = self.couch_queues[couch_queue_index] 
             selected_couch_queue.push(couch_message)
 
 
-    def add_to_alias_and_couch_queues(self, tiid, alias_dict, method_name, aliases_providers_run):
-        logger.info(u"Adding to alias queue {alias_dict} {method_name} from {tiid} for {provider_name}".format(
-            alias_dict=alias_dict, 
-            method_name=method_name, 
-            tiid=tiid, 
+    def add_to_alias_and_couch_queues(self, tiid, aliases_dict, method_name, analytics_credentials, alias_providers_already_run):
+
+        self.add_to_couch_queue_if_nonzero(tiid, aliases_dict, method_name, analytics_credentials)
+
+        alias_message = {
+                "tiid": tiid, 
+                "aliases_dict": aliases_dict,
+                "analytics_credentials": analytics_credentials,
+                "alias_providers_already_run": alias_providers_already_run
+            }        
+
+        logger.info(u"Adding to alias queue {alias_message} for {provider_name}".format(
+            alias_message=alias_message, 
             provider_name=self.provider_name))     
-        self.add_to_couch_queue_if_nonzero(tiid, alias_dict, method_name)
-        alias_message = [tiid, alias_dict, aliases_providers_run]
-        # logger.info(u"NOW PUSHING to alias_queue from {method_name} from {tiid} for {provider_name}".format(
-        #     method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
+
         self.alias_queue.push(alias_message)
 
 
     @classmethod
-    def wrapper(cls, tiid, input_aliases_dict, provider, method_name, aliases_providers_run, callback):
+    def wrapper(cls, tiid, input_aliases_dict, provider, method_name, analytics_credentials, aliases_providers_run, callback):
         #logger.info(u"{:20}: **Starting {tiid} {provider_name} {method_name} with {aliases}".format(
         #    "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=aliases))
 
@@ -129,7 +141,10 @@ class ProviderWorker(Worker):
         method = getattr(provider, method_name)
 
         try:
-            method_response = method(input_alias_tuples)
+            if (method_name=="metrics") and (provider_name=="wordpresscom"):
+                method_response = method(input_alias_tuples, analytics_credentials=analytics_credentials)
+            else:
+                method_response = method(input_alias_tuples)
         except ProviderError:
             method_response = None
             logger.info(u"{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
@@ -151,7 +166,7 @@ class ProviderWorker(Worker):
             worker_name, tiid=tiid, method_name=method_name.upper(), 
             provider_name=provider_name.upper(), response=response))
 
-        callback(tiid, response, method_name, aliases_providers_run)
+        callback(tiid, response, method_name, analytics_credentials, aliases_providers_run)
 
         try:
             del thread_count[provider_name][tiid+method_name]
@@ -159,6 +174,7 @@ class ProviderWorker(Worker):
             pass
 
         return response
+
 
     def run(self):
         num_active_threads_for_this_provider = len(thread_count[self.provider.provider_name])
@@ -173,7 +189,11 @@ class ProviderWorker(Worker):
         if provider_message:
             #logger.info(u"POPPED from queue for {provider}".format(
             #    provider=self.provider_name))
-            (tiid, alias_dict, method_name, aliases_providers_run) = provider_message
+            tiid = provider_message["tiid"]
+            aliases_dict = provider_message["aliases_dict"]
+            method_name = provider_message["method_name"]
+            analytics_credentials = provider_message["analytics_credentials"]
+            alias_providers_already_run = provider_message["alias_providers_already_run"]
 
             if (method_name == "metrics") and self.provider.provides_metrics:
                 self.myredis.set_provider_started(tiid, self.provider.provider_name)
@@ -195,7 +215,7 @@ class ProviderWorker(Worker):
                 provider=self.provider.provider_name.upper()))
 
             t = threading.Thread(target=ProviderWorker.wrapper, 
-                args=(tiid, alias_dict, self.provider, method_name, aliases_providers_run, callback), 
+                args=(tiid, aliases_dict, self.provider, method_name, analytics_credentials, alias_providers_already_run, callback), 
                 name=self.provider_name+"-"+method_name.upper()+"-"+tiid[0:4])
             t.start()
             return
@@ -244,7 +264,12 @@ class CouchWorker(Worker):
     def run(self):
         couch_message = self.couch_queue.pop()
         if couch_message:
-            (tiid, new_content, method_name, provider_name) = couch_message
+            tiid = couch_message["tiid"]
+            new_content = couch_message["new_content"]
+            method_name = couch_message["method_name"]
+            analytics_credentials = couch_message["analytics_credentials"]
+            provider_name = couch_message["provider_name"]
+
             if not new_content:
                 logger.info(u"{:20}: blank doc, nothing to save".format(
                     self.name))
@@ -342,10 +367,13 @@ class Backend(Worker):
         alias_message = self.alias_queue.pop()
         if alias_message:
             logger.info(u"/biblio_print, ALIAS_MESSAGE said {alias_message}".format(
-               alias_message=alias_message))            
-            (tiid, alias_dict, aliases_providers_run) = alias_message
+               alias_message=alias_message))
+            tiid = alias_message["tiid"]
+            aliases_dict = alias_message["aliases_dict"]
+            analytics_credentials = alias_message["analytics_credentials"]
+            alias_providers_already_run = alias_message["alias_providers_already_run"]            
 
-            relevant_provider_names = self.sniffer(alias_dict, aliases_providers_run)
+            relevant_provider_names = self.sniffer(aliases_dict, alias_providers_already_run)
             #logger.info(u"/biblio_print, backend for {tiid} sniffer got input {alias_dict}".format(
             #    tiid=tiid, alias_dict=alias_dict))
             logger.info(u"backend for {tiid} sniffer returned {providers}".format(
@@ -355,7 +383,12 @@ class Backend(Worker):
             for method_name in ["aliases", "biblio", "metrics"]:
                 for provider_name in relevant_provider_names[method_name]:
 
-                    provider_message = (tiid, alias_dict, method_name, aliases_providers_run)
+                    provider_message = {
+                        "tiid": tiid, 
+                        "aliases_dict": aliases_dict, 
+                        "method_name": method_name, 
+                        "analytics_credentials": analytics_credentials,
+                        "alias_providers_already_run": alias_providers_already_run}
                     self.provider_queues[provider_name].push(provider_message)
         else:
             #time.sleep(0.1)  # is this necessary?
