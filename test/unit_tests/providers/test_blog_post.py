@@ -35,7 +35,7 @@ class TestBlog_post(ProviderTestCase):
 
     @http
     def test_aliases_not_wordpress(self):
-        response = self.provider.aliases([('blog_post', json.dumps({"post_url": "http://jasonpriem.com/cv", "api_key": None, "blog_url": "jasonpriem.com"}))])
+        response = self.provider.aliases([('blog_post', json.dumps({"post_url": "http://jasonpriem.com/cv", "blog_url": "jasonpriem.com"}))])
         print response
         expected = [('url', u'http://jasonpriem.com/cv')]
         assert_equals(response, expected)
@@ -66,7 +66,7 @@ class TestBlog_post(ProviderTestCase):
     @http
     @nottest
     def test_metrics(self):
-        wordpress_aliases = [('url', u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/'), ('wordpress_blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "api_key": "'+self.api_key+'", "blog_url": "researchremix.wordpress.com", "wordpress_post_id": 1119}')]
+        wordpress_aliases = [('url', u'http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/'), ('wordpress_blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "blog_url": "researchremix.wordpress.com", "wordpress_post_id": 1119}')]
         response = self.provider.metrics(wordpress_aliases)
         print response
         expected = {}

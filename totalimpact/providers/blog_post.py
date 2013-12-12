@@ -165,23 +165,4 @@ class Blog_Post(Provider):
         return biblio_dict
 
 
-    # def _extract_metrics(self, page, status_code=200, id=None):
-    #     if status_code != 200:
-    #         if status_code == 404:
-    #             return {}
-    #         else:
-    #             raise(self._get_error(status_code))
-
-    #     if not "views" in page:
-    #         raise ProviderContentMalformedError
-
-    #     # static meta for this is in wordpresscom provider
-    #     dict_of_keylists = {
-    #         'wordpresscom:views' : ['views']
-    #     }
-
-    #     metrics_dict = provider._extract_from_json(page, dict_of_keylists)
-
-    #     return metrics_dict
-
 

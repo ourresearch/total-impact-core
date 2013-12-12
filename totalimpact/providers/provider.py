@@ -503,27 +503,36 @@ class Provider(object):
     def get_metrics_for_id(self, 
             id, 
             provider_url_template=None, 
-            cache_enabled=True):
+            cache_enabled=True, 
+            url_override=None,
+            extract_metrics_method=None):
 
         if not self.provides_metrics:
             return {}
 
+        if not extract_metrics_method:
+            extract_metrics_method = self._extract_metrics
+
         self.logger.debug(u"%s getting metrics for %s" % (self.provider_name, id))
 
-        if not provider_url_template:
-            provider_url_template = self.metrics_url_template
-        url = self._get_templated_url(provider_url_template, id, "metrics")
+        if url_override:
+            url = url_override
+        else:
+            if not provider_url_template:
+                provider_url_template = self.metrics_url_template
+            url = self._get_templated_url(provider_url_template, id, "metrics")
+
         if not url:
             return {}
 
-        # try to get a response from the data provider                
+        # try to get a response from the data provider
         response = self.http_get(url, cache_enabled=cache_enabled, allow_redirects=True)
 
         #self.logger.debug(u"%s get_metrics_for_id response.status_code %i" % (self.provider_name, response.status_code))
         
         # extract the metrics
         try:
-            metrics_dict = self._extract_metrics(response.text, response.status_code, id=id)
+            metrics_dict = extract_metrics_method(response.text, response.status_code, id=id)
         except socket.timeout, e:  # can apparently be thrown here
             self.logger.info(u"%s Provider timed out *after* GET in socket" %(self.provider_name))        
             raise ProviderTimeout("Provider timed out *after* GET in socket", e)        

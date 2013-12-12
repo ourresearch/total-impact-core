@@ -15,8 +15,10 @@ class Wordpresscom(Provider):
     url = "http://wordpress.com"
     descr = "A blog web hosting service provider owned by Automattic, and powered by the open source WordPress software."
     biblio_url_template = "https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1"
-    metrics_url_template = "https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1"
-    metrics_url_template_views = "http://stats.wordpress.com/csv.php?api_key=%s&blog_uri=%s&table=views&days=-1&format=json&summarize=1"
+    metrics_url_template_public = "https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1"
+    metrics_url_template_wordpress_blog_views = "http://stats.wordpress.com/csv.php?api_key=%s&blog_uri=%s&table=views&days=-1&format=json&summarize=1"
+    metrics_url_template_wordpress_post_views = "http://stats.wordpress.com/csv.php?api_key=%s&blog_uri=%s&table=views&days=-1&format=json&summarize=1&table=postviews&post_id=%s"
+
     provenance_url_template = "%s"
 
     static_meta_dict = {
@@ -33,6 +35,13 @@ class Wordpresscom(Provider):
             "provider_url": "http://wordpress.com",
             "description": "The number of times a blog post has been viewed.",
             "icon": "https://wordpress.com/favicon.ico",
+        },
+        "comments": {
+            "display_name": "comments",
+            "provider": "WordPress.com",
+            "provider_url": "http://wordpress.com",
+            "description": "The number of comments on a blog post.",
+            "icon": "https://wordpress.com/favicon.ico",
         }
     }     
 
@@ -41,7 +50,7 @@ class Wordpresscom(Provider):
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
-        return "blog"==namespace
+        return namespace in ["blog", "blog_post"]
 
     # overriding default because overriding member_items method
     @property
@@ -53,11 +62,15 @@ class Wordpresscom(Provider):
     def provides_aliases(self):
         return True
 
-    # overriding default because overriding aliases method
+    # overriding default because overriding biblio method
     @property
     def provides_biblio(self):
         return True
 
+    # overriding default because overriding metrics method
+    @property
+    def provides_metrics(self):
+        return True
 
     #override because need to break strip http
     def _get_templated_url(self, template, nid, method=None):
@@ -127,11 +140,22 @@ class Wordpresscom(Provider):
         return new_aliases
 
 
-    # overridding
-    def get_biblio_for_id(self, 
-            id,
-            provider_url_template=None, 
+    def biblio(self, 
+            aliases,
+            provider_url_template=None,
             cache_enabled=True):
+
+        aliases_dict = provider.alias_dict_from_tuples(aliases)
+        if "blog" in aliases_dict:
+            id = aliases_dict["blog"][0]
+
+        # Only lookup biblio for items with appropriate ids
+        if not id:
+            #self.logger.debug(u"%s not checking biblio, no relevant alias" % (self.provider_name))
+            return None
+
+        if not provider_url_template:
+            provider_url_template = self.biblio_url_template
 
         self.logger.debug(u"%s getting biblio for %s" % (self.provider_name, id))
 
@@ -169,7 +193,87 @@ class Wordpresscom(Provider):
         return biblio_dict   
 
 
-    def _extract_metrics(self, page, status_code=200, id=None):
+    def wordpress_post_id_from_nid(self, nid):
+        try:
+            return json.loads(nid)["wordpress_post_id"]    
+        except (KeyError, ValueError):
+            return None
+
+    def blog_url_from_nid(self, nid):
+        try:
+            return json.loads(nid)["blog_url"]    
+        except (KeyError, ValueError):
+            return None
+
+
+    # default method; providers can override    
+    def provenance_url(self, metric_name, aliases):
+        aliases_dict = provider.alias_dict_from_tuples(aliases)
+        if "url" in aliases_dict:
+            return aliases_dict["url"][0]
+        else:
+            return self.get_best_id(aliases)
+
+
+    def metrics(self, 
+            aliases,
+            provider_url_template=None,
+            cache_enabled=True, 
+            analytics_credentials=None):
+
+        metrics = {}
+
+        aliases_dict = provider.alias_dict_from_tuples(aliases)
+        if "blog" in aliases_dict:
+            blog_url = aliases_dict["blog"][0]
+
+            url_override = self.metrics_url_template_public % (provider.strip_leading_http(blog_url).lower())
+
+            new_metrics = self.get_metrics_for_id(blog_url,
+                                cache_enabled=cache_enabled, 
+                                extract_metrics_method=self._extract_metrics_subscribers,
+                                url_override=url_override)
+            metrics.update(new_metrics)
+
+        if ("blog" in aliases_dict) and analytics_credentials:
+            blog_url = aliases_dict["blog"][0]
+            api_key = analytics_credentials["wordpress_api_key"]
+
+            url_override = self.metrics_url_template_wordpress_blog_views % (api_key, provider.strip_leading_http(blog_url).lower())
+
+            new_metrics = self.get_metrics_for_id(blog_url,
+                                cache_enabled=cache_enabled, 
+                                extract_metrics_method=self._extract_metrics_blog_views,
+                                url_override=url_override)
+
+            metrics.update(new_metrics)
+
+        if ("wordpress_blog_post" in aliases_dict) and analytics_credentials:
+            nid = aliases_dict["wordpress_blog_post"][0]
+            post_id = self.wordpress_post_id_from_nid(nid)
+            blog_url = self.blog_url_from_nid(nid)
+            api_key = analytics_credentials["wordpress_api_key"]
+
+            url_override = self.metrics_url_template_wordpress_post_views % (api_key, provider.strip_leading_http(blog_url).lower(), post_id)
+
+            new_metrics = self.get_metrics_for_id(blog_url,
+                                cache_enabled=cache_enabled, 
+                                extract_metrics_method=self._extract_metrics_blog_views,
+                                url_override=url_override)
+
+            metrics.update(new_metrics)
+
+
+        metrics_and_drilldown = {}
+        for metric_name in metrics:
+            drilldown_url = self.provenance_url(metric_name, aliases)
+            metrics_and_drilldown[metric_name] = (metrics[metric_name], drilldown_url)
+
+        return metrics_and_drilldown 
+
+
+
+    def _extract_metrics_subscribers(self, page, status_code=200, id=None):
         if status_code != 200:
             if status_code == 404:
                 return {}
@@ -184,18 +288,24 @@ class Wordpresscom(Provider):
         }
 
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)
+        return metrics_dict
 
-        # api_key = self.api_key_from_nid(id)
-        # if api_key:
-        #     blog_url = self.url_from_nid(id)
-        #     url = self.metrics_url_template_views % (api_key, blog_url)
-        #     response = self.http_get(url)
-        #     try:
-        #         data = json.loads(response.text)
-        #         metrics_dict["wordpresscom:views"] = data["views"] 
-        #     except ValueError:
-        #         pass
 
+    def _extract_metrics_blog_views(self, page, status_code=200, id=None):
+        if status_code != 200:
+            if status_code == 404:
+                return {}
+            else:
+                raise(self._get_error(status_code))
+
+        if not "views" in page:
+            raise ProviderContentMalformedError
+
+        dict_of_keylists = {
+            'wordpresscom:views' : ['views']
+        }
+
+        metrics_dict = provider._extract_from_json(page, dict_of_keylists)        
         return metrics_dict
 
 

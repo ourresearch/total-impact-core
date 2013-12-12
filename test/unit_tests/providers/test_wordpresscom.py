@@ -44,7 +44,29 @@ class TestWordpresscom(ProviderTestCase):
         assert_equals(response, expected)
 
     @http
-    def test_metrics_wordpress_com(self):
+    def test_metrics_wordpress_com_api_key_whole_blog(self):
+        analytics_credentials = {"wordpress_api_key": self.api_key}
+        metrics_dict = self.provider.metrics([self.testitem_metrics], analytics_credentials=analytics_credentials)
+        print metrics_dict
+        expected = {'wordpresscom:views': (75558, 'http://researchremix.wordpress.com'), 'wordpresscom:subscribers': (66, 'http://researchremix.wordpress.com')}
+        for key in expected:
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+
+    @http
+    def test_metrics_wordpress_com_api_key_one_post(self):
+        analytics_credentials = {"wordpress_api_key": self.api_key}
+        wordpress_post_alias = ('wordpress_blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "blog_url": "researchremix.wordpress.com", "wordpress_post_id": 1119}')
+        metrics_dict = self.provider.metrics([wordpress_post_alias], analytics_credentials=analytics_credentials)
+        print metrics_dict
+        expected = {'wordpresscom:views': (1863, None)}
+        for key in expected:
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+
+
+    @http
+    def test_metrics_wordpress_com_without_api_key(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
         print metrics_dict
         expected = {'wordpresscom:subscribers': (66, u'http://researchremix.wordpress.com')}
