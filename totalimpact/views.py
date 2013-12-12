@@ -524,6 +524,16 @@ def products_refresh_post():
     return resp
 
 
+# sends back duplicate groups from tiids list in body of POST
+@app.route('/v1/products/duplicates', methods=['POST'])
+def products_duplicates_post():
+    logger.debug(u"in products_duplicates_post with tiids")
+    tiids = request.json["tiids"]
+    duplicates_list = item_module.build_duplicates_list(tiids)
+    resp = make_response(json.dumps({"duplicates_list": duplicates_list}, sort_keys=True, indent=4), 200)   
+    return resp
+
+
 """ Refreshes all the items in a given collection.
 """
 @app.route("/v1/collection/<cid>", methods=["POST"])

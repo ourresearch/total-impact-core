@@ -522,6 +522,30 @@ class TestItem():
         expected = "hi"
         assert_greater(len(aliases_tiids_map[('url', 'http://starbucks.com')]), 10)
 
+
+    def test_duplicates_list(self):
+        item_docs = [
+            {"_id": "a1", "last_modified": "now",
+                "aliases": {"doi":["doi.org/aaa"], "url":["111", "def.com"]}}
+            ,{"_id": "b2", "last_modified": "now",
+                "aliases": {"doi":["doi.org/222"]}}
+            ,{"_id": "c2", "last_modified": "now",
+                "aliases": {"doi":["doi.org/222"]}}
+            ,{"_id": "d2", "last_modified": "now",
+                "aliases": {"doi":["doi.org/222"], "url":["foo"]}}
+            ,{"_id": "e1",  "last_modified": "now",
+                "aliases": {"url":["111"]}}
+            ,{"_id": "f3",  "last_modified": "now",
+                "aliases": {"doi":["333"], "url":["333"]}}
+            ]
+
+        item_objs = [item_module.create_objects_from_item_doc(item_doc) for item_doc in item_docs]
+        tiids = [item.tiid for item in item_objs]
+
+        response = item_module.build_duplicates_list(tiids)
+        print response
+        expected = [[u'a1', u'e1'], [u'b2', u'c2', u'd2'], [u'f3']]
+        assert_equals(response, expected)
        
 
 
