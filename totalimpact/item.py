@@ -996,6 +996,5 @@ def build_duplicates_list(tiids):
         for alias in item.aliases:
             duplication_list[alias.alias_tuple] = distinct_item_id
 
-    print duplication_list
     return distinct_groups.values()
 
