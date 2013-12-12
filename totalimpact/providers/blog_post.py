@@ -12,7 +12,8 @@ class Blog_Post(Provider):
     example_id = ('blog_post', '{"post_url": "http://researchremix.wordpress.com/2012/04/17/elsevier-agrees/", "blog_url": "researchremix.wordpress.com"}')
     metrics_url_template = "http://stats.wordpress.com/csv.php?api_key=%s&blog_uri=%s&table=views&days=-1&format=json&summarize=1&table=postviews&post_id=%s"
     biblio_url_template = "https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1"
-
+    metrics_url_template_wordpress_site = "https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1"
+    metrics_url_template_wordpress_post = "https://public-api.wordpress.com/rest/v1/sites/%s/posts/slug:%s?pretty=1"
     provenance_url_template = "%s"
 
     static_meta_dict = {}
@@ -110,7 +111,7 @@ class Blog_Post(Provider):
             # now add the wordpress alias info if it isn't already there
             if not "wordpress_blog_post" in aliases_dict:
                 blog_url = provider.strip_leading_http(self.blog_url_from_nid(nid))
-                wordpress_blog_api_url = u"https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1" % blog_url
+                wordpress_blog_api_url = self.metrics_url_template_wordpress_site % blog_url
 
                 response = self.http_get(wordpress_blog_api_url)
                 if "name" in response.text:
@@ -119,7 +120,7 @@ class Blog_Post(Provider):
                         post_url = post_url[:-1]
                     post_end_slug = post_url.rsplit("/", 1)[1]
 
-                    wordpress_post_api_url = u"https://public-api.wordpress.com/rest/v1/sites/%s/posts/slug:%s" %(blog_url, post_end_slug)
+                    wordpress_post_api_url = self.metrics_url_template_wordpress_post %(blog_url, post_end_slug)
                     response = self.http_get(wordpress_post_api_url)
                     if "ID" in response.text:
                         wordpress_post_id = json.loads(response.text)["ID"]
@@ -151,7 +152,6 @@ class Blog_Post(Provider):
             (title, blog_title) = biblio_dict["title"].rsplit("|", 1)
             biblio_dict["title"] = title.strip()
             biblio_dict["blog_title"] = blog_title.strip()
-            print "found title"
 
         # try to get a response from wordpress.com
         url = self._get_templated_url(self.biblio_url_template, blog_url, "biblio")           

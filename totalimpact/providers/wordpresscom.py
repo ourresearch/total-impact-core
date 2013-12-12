@@ -15,10 +15,12 @@ class Wordpresscom(Provider):
     url = "http://wordpress.com"
     descr = "A blog web hosting service provider owned by Automattic, and powered by the open source WordPress software."
     biblio_url_template = "https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1"
+    aliases_url_template = "https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1"
     metrics_url_template_public = "https://public-api.wordpress.com/rest/v1/sites/%s/?pretty=1"
+    metrics_url_template_comments = "https://public-api.wordpress.com/rest/v1/sites/%s/comments?pretty=1"
     metrics_url_template_wordpress_blog_views = "http://stats.wordpress.com/csv.php?api_key=%s&blog_uri=%s&table=views&days=-1&format=json&summarize=1"
     metrics_url_template_wordpress_post_views = "http://stats.wordpress.com/csv.php?api_key=%s&blog_uri=%s&table=views&days=-1&format=json&summarize=1&table=postviews&post_id=%s"
-
+    metrics_url_template_wordpress_post_comments = "https://public-api.wordpress.com/rest/v1/sites/%s/posts/%s?pretty=1"
     provenance_url_template = "%s"
 
     static_meta_dict = {
@@ -26,21 +28,21 @@ class Wordpresscom(Provider):
             "display_name": "subscribers",
             "provider": "WordPress.com",
             "provider_url": "http://wordpress.com",
-            "description": "The number of people who receive emails about new posts on this blog.",
+            "description": "The number of people who receive emails about new posts on this blog",
             "icon": "https://wordpress.com/favicon.ico",
         },
         "views": {
             "display_name": "views",
             "provider": "WordPress.com",
             "provider_url": "http://wordpress.com",
-            "description": "The number of times a blog post has been viewed.",
+            "description": "The number of times a blog post has been viewed",
             "icon": "https://wordpress.com/favicon.ico",
         },
         "comments": {
             "display_name": "comments",
             "provider": "WordPress.com",
             "provider_url": "http://wordpress.com",
-            "description": "The number of comments on a blog post.",
+            "description": "The number of comments on a blog post",
             "icon": "https://wordpress.com/favicon.ico",
         }
     }     
@@ -74,7 +76,7 @@ class Wordpresscom(Provider):
 
     #override because need to break strip http
     def _get_templated_url(self, template, nid, method=None):
-        if method in ["metrics", "biblio"]:
+        if method in ["metrics", "biblio", "aliases"]:
             nid = provider.strip_leading_http(nid).lower()
         url = template % (nid)
         return(url)
@@ -129,6 +131,8 @@ class Wordpresscom(Provider):
             cache_enabled=True):            
 
         new_aliases = []
+        if not provider_url_template:
+            provider_url_template = self.aliases_url_template
 
         for alias in aliases:
             (namespace, nid) = alias
@@ -136,6 +140,20 @@ class Wordpresscom(Provider):
                 new_alias = ("url", nid)
                 if new_alias not in aliases:
                     new_aliases += [new_alias]
+
+                url = self._get_templated_url(provider_url_template, nid, "aliases")
+
+                # try to get a response from the data provider        
+                response = self.http_get(url, cache_enabled=cache_enabled)
+
+                if (response.status_code == 200) and ("ID" in response.text):
+                    dict_of_keylists = {
+                            'wordpress_blog_id' : ['ID']
+                        }
+                    aliases_dict = provider._extract_from_json(response.text, dict_of_keylists)
+                    new_alias = ("wordpress_blog_id", str(aliases_dict["wordpress_blog_id"]))
+                    if new_alias not in aliases:
+                        new_aliases += [new_alias]
 
         return new_aliases
 
@@ -235,6 +253,18 @@ class Wordpresscom(Provider):
                                 url_override=url_override)
             metrics.update(new_metrics)
 
+        if "wordpress_blog_id" in aliases_dict:
+            wordpress_blog_id = aliases_dict["wordpress_blog_id"][0]
+
+            url_override = self.metrics_url_template_comments % wordpress_blog_id
+
+            new_metrics = self.get_metrics_for_id(blog_url,
+                                cache_enabled=cache_enabled, 
+                                extract_metrics_method=self._extract_metrics_blog_comments,
+                                url_override=url_override)
+            metrics.update(new_metrics)
+
+
         if ("blog" in aliases_dict) and analytics_credentials:
             blog_url = aliases_dict["blog"][0]
             api_key = analytics_credentials["wordpress_api_key"]
@@ -248,20 +278,27 @@ class Wordpresscom(Provider):
 
             metrics.update(new_metrics)
 
-        if ("wordpress_blog_post" in aliases_dict) and analytics_credentials:
+        if ("wordpress_blog_post" in aliases_dict):
             nid = aliases_dict["wordpress_blog_post"][0]
             post_id = self.wordpress_post_id_from_nid(nid)
             blog_url = self.blog_url_from_nid(nid)
-            api_key = analytics_credentials["wordpress_api_key"]
 
-            url_override = self.metrics_url_template_wordpress_post_views % (api_key, provider.strip_leading_http(blog_url).lower(), post_id)
-
-            new_metrics = self.get_metrics_for_id(blog_url,
+            url_override = self.metrics_url_template_wordpress_post_comments % (provider.strip_leading_http(blog_url).lower(), post_id)
+            new_metrics = self.get_metrics_for_id(post_id,
                                 cache_enabled=cache_enabled, 
-                                extract_metrics_method=self._extract_metrics_blog_views,
+                                extract_metrics_method=self._extract_metrics_post_comments,
                                 url_override=url_override)
-
             metrics.update(new_metrics)
+
+            if analytics_credentials:
+                api_key = analytics_credentials["wordpress_api_key"]
+
+                url_override = self.metrics_url_template_wordpress_post_views % (api_key, provider.strip_leading_http(blog_url).lower(), post_id)
+                new_metrics = self.get_metrics_for_id(blog_url,
+                                    cache_enabled=cache_enabled, 
+                                    extract_metrics_method=self._extract_metrics_blog_views,
+                                    url_override=url_override)
+                metrics.update(new_metrics)
 
 
         metrics_and_drilldown = {}
@@ -308,4 +345,39 @@ class Wordpresscom(Provider):
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)        
         return metrics_dict
 
+
+    def _extract_metrics_blog_comments(self, page, status_code=200, id=None):
+        if status_code != 200:
+            if status_code == 404:
+                return {}
+            else:
+                raise(self._get_error(status_code))
+
+        if not "found" in page:
+            raise ProviderContentMalformedError
+
+        dict_of_keylists = {
+            'wordpresscom:comments' : ['found']
+        }
+
+        metrics_dict = provider._extract_from_json(page, dict_of_keylists)        
+        return metrics_dict
+
+
+    def _extract_metrics_post_comments(self, page, status_code=200, id=None):
+        if status_code != 200:
+            if status_code == 404:
+                return {}
+            else:
+                raise(self._get_error(status_code))
+
+        if not "comment_count" in page:
+            raise ProviderContentMalformedError
+
+        dict_of_keylists = {
+            'wordpresscom:comments' : ['comment_count']
+        }
+
+        metrics_dict = provider._extract_from_json(page, dict_of_keylists)        
+        return metrics_dict
 
