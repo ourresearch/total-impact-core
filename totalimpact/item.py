@@ -881,7 +881,7 @@ def get_tiids_from_aliases(aliases):
 
 
 
-def create_tiids_from_aliases(aliases, myredis):
+def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
     tiid_alias_mapping = {}
     clean_aliases = [canonical_alias_tuple((ns, nid)) for (ns, nid) in aliases]    
     for alias in clean_aliases:
@@ -900,7 +900,6 @@ def create_tiids_from_aliases(aliases, myredis):
 
         tiid_alias_mapping[tiid] = alias
 
-        analytics_credentials={}
         start_item_update(tiid, item_doc["aliases"], analytics_credentials, myredis)
 
     try:

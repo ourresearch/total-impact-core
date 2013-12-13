@@ -311,7 +311,12 @@ def importer_post(provider_name):
     except ProviderError:
         abort(500, "internal error from provider")
 
-    tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, myredis)
+    try:
+        analytics_credentials = request.json["analytics_credentials"]
+    except (KeyError):
+        analytics_credentials = {}
+
+    tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, analytics_credentials, myredis)
     logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
         tiids_aliases_map=tiids_aliases_map))
 
@@ -465,6 +470,7 @@ def add_items_to_collection(cid=""):
             collection_object = collection.add_items_to_collection(
                 cid=cid, 
                 aliases=request.json["aliases"], 
+                analytics_credentials={},
                 myredis=myredis)
     except (AttributeError, TypeError) as e:
         # we got missing or improperly formated data.
@@ -567,7 +573,8 @@ def delete_collection(cid=None):
 @app.route('/v1/products', methods=['POST'])
 def products_post():
     if "aliases" in request.json:
-        tiids_aliases_map = item_module.create_tiids_from_aliases(request.json["aliases"], myredis)
+        analytics_credentials = {}
+        tiids_aliases_map = item_module.create_tiids_from_aliases(request.json["aliases"], analytics_credentials, myredis)
         products_dict = format_into_products_dict(tiids_aliases_map)
         response = make_response(json.dumps({"products": products_dict}, sort_keys=True, indent=4), 200)
         return response

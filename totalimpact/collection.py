@@ -74,11 +74,11 @@ def add_items_to_collection_object(cid, tiids, alias_tuples=[]):
 
 
 
-def add_items_to_collection(cid, aliases, myredis, mydao=None):
+def add_items_to_collection(cid, aliases, analytics_credentials, myredis, mydao=None):
     logger.debug(u"in add_items_to_collection for {cid}".format(
         cid=cid))        
 
-    tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, myredis)
+    tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, analytics_credentials, myredis)
 
     logger.debug(u"in add_items_to_collection with {tiids_aliases_map}".format(
         tiids_aliases_map=tiids_aliases_map)) 
@@ -146,7 +146,8 @@ def create_new_collection(cid, title, aliases, ip_address, refset_metadata, myre
     logger.debug(u"in create_new_collection for {cid}".format(
         cid=cid))        
 
-    tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, myredis)
+    analytics_credentials = {}
+    tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, analytics_credentials, myredis)
 
     logger.debug(u"in add_items_to_collection with {tiids_aliases_map}".format(
         tiids_aliases_map=tiids_aliases_map)) 
