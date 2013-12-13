@@ -98,7 +98,7 @@ def get_num_providers_currently_updating(self, item_id):
         now = datetime.datetime.utcnow()
         # from http://stackoverflow.com/questions/796008/cant-subtract-offset-naive-and-offset-aware-datetimes
         elapsed = now - last_update_time.replace(tzinfo=None)
-        if elapsed < datetime.timedelta(hours=0, minutes=1):
+        if elapsed < datetime.timedelta(hours=0, minutes=5):
             num_currently_updating += 1 
             # logger.warning(u"In get_num_providers_currently_updating, elapsed time still short, set currently_updating=True for {tiid}{provider}".format(
             #     tiid=item_id, provider=provider))
