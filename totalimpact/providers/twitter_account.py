@@ -56,7 +56,6 @@ class Twitter_Account(Provider):
     def provides_metrics(self):
          return True
 
-
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
         try:
@@ -123,6 +122,9 @@ class Twitter_Account(Provider):
         biblio_dict["authors"] = data["name"]
         biblio_dict["description"] = data["description"]
         biblio_dict["created_at"] = data["created_at"]
+        twitter_username = data["screen_name"].replace("@", "")
+        biblio_dict["url"] = u"http://twitter.com/{twitter_username}".format(
+            twitter_username=data["screen_name"].replace("@", ""))
 
         biblio_dict["is_account"] = True  # special key to tell webapp to render as genre heading
         biblio_dict["account"] = u"@{screen_name}".format(

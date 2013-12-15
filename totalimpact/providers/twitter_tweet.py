@@ -34,14 +34,14 @@ class Twitter_Tweet(Provider):
         return False
 
 
-    def screen_name(self, nid):
+    def screen_name(self, tweet_url):
         #regex from http://stackoverflow.com/questions/4424179/how-to-validate-a-twitter-username-using-regex
-        match = re.findall("twitter.com/([A-Za-z0-9_]{1,15})/", nid)
+        match = re.findall("twitter.com/([A-Za-z0-9_]{1,15})/", tweet_url)
         return match[0]
 
 
-    def tweet_id(self, nid):
-        match = re.findall("twitter.com/.*/status/(\d+)", nid)
+    def tweet_id(self, tweet_url):
+        match = re.findall("twitter.com/.*/status/(\d+)", tweet_url)
         return match[0]
 
 
@@ -52,13 +52,14 @@ class Twitter_Tweet(Provider):
             provider_url_template=None,
             cache_enabled=True):
 
-        nid = self.get_best_id(aliases)
-        url = self.biblio_template_url % (self.tweet_id(nid))
-        response = self.http_get(url)
+        tweet_url = self.get_best_id(aliases)
+        biblio_embed_url = self.biblio_template_url % (self.tweet_id(tweet_url))
+        response = self.http_get(biblio_embed_url)
         data = provider._load_json(response.text)
 
         biblio_dict = {}
         biblio_dict["repository"] = "Twitter"
+        biblio_dict["url"] = tweet_url
 
         if not data:
             return biblio_dict
@@ -66,7 +67,7 @@ class Twitter_Tweet(Provider):
         biblio_dict["title"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
         biblio_dict["authors"] = data["author_name"]
         biblio_dict["embed"] = data["html"]
-        biblio_dict["url"] = url
+        biblio_dict["embed_url"] = biblio_embed_url
         biblio_dict["account"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
         try:
             tweet_match = re.findall(u'<p>(.*?)</p>.*statuses/\d+">(.*?)</a></blockquote>', biblio_dict["embed"])
