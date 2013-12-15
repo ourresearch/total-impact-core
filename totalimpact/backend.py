@@ -379,9 +379,8 @@ class Backend(Worker):
         alias_message = None
         # go through alias_queues, with highest priority first
         for alias_queue in self.alias_queues:
-            alias_message = alias_queue.pop()
-            if alias_message:
-                continue
+            if not alias_message:
+                alias_message = alias_queue.pop()
 
         if alias_message:
             logger.info(u"/biblio_print, ALIAS_MESSAGE said {alias_message}".format(
