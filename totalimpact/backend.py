@@ -153,7 +153,7 @@ class ProviderWorker(Worker):
         method = getattr(provider, method_name)
 
         try:
-            if (method_name=="metrics") and (provider_name=="wordpresscom"):
+            if provider.uses_analytics_credentials(method_name):
                 method_response = method(input_alias_tuples, analytics_credentials=analytics_credentials)
             else:
                 method_response = method(input_alias_tuples)
