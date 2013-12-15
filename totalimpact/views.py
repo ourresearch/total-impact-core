@@ -489,14 +489,14 @@ def add_items_to_collection(cid=""):
 
 
 
-def refresh_from_tiids(tiids, analytics_credentials, myredis):
+def refresh_from_tiids(tiids, analytics_credentials, priority, myredis):
     item_objects = item_module.Item.query.filter(item_module.Item.tiid.in_(tiids)).all()
 
     for item_obj in item_objects:
         try:
             tiid = item_obj.tiid
             alias_dict = item_module.alias_dict_from_tuples(item_obj.alias_tuples)       
-            item_module.start_item_update(tiid, alias_dict, analytics_credentials, myredis)
+            item_module.start_item_update(tiid, alias_dict, analytics_credentials, priority, myredis)
         except AttributeError:
             logger.debug(u"couldn't find tiid {tiid} so not refreshing its metrics".format(
                 tiid=tiid))
@@ -504,6 +504,7 @@ def refresh_from_tiids(tiids, analytics_credentials, myredis):
 
 
 """ Refreshes all the items from tiids
+    Depricate this one
 """
 @app.route("/v1/products/<tiids_string>", methods=["POST"])
 # not officially supported in api
@@ -511,9 +512,15 @@ def products_refresh_post_inline(tiids_string):
     tiids = tiids_string.split(",")
     try:
         analytics_credentials = request.json["analytics_credentials"]
-    except (KeyError):
+    except KeyError:
         analytics_credentials = {}
-    refresh_from_tiids(tiids, analytics_credentials, myredis)
+
+    try:
+        priority = request.json["priority"]
+    except KeyError:
+        priority = "high"
+
+    refresh_from_tiids(tiids, analytics_credentials, priority, myredis)
     resp = make_response("true", 200)
     return resp
 
@@ -525,9 +532,15 @@ def products_refresh_post():
     tiids = request.json["tiids"]
     try:
         analytics_credentials = request.json["analytics_credentials"]
-    except (KeyError):
+    except KeyError:
         analytics_credentials = {}
-    refresh_from_tiids(tiids, analytics_credentials, myredis)
+
+    try:
+        priority = request.json["priority"]
+    except KeyError:
+        priority = "high"
+
+    refresh_from_tiids(tiids, analytics_credentials, priority, myredis)
     resp = make_response("true", 200)    
     return resp
 
@@ -557,7 +570,7 @@ def collection_metrics_refresh(cid=""):
         ))
         abort_custom(500, "Error doing collection_update")
 
-    refresh_from_tiids(tiids, myredis)
+    refresh_from_tiids(tiids, "low", myredis)
 
     resp = make_response("true", 200)
     return resp

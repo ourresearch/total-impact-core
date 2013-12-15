@@ -31,8 +31,8 @@ class RedisQueue(object):
         if received:
             queue, message_json = received
             try:
-                # logger.debug(u"{:20}: <<<POPPED from redis: starts {message_json}".format(
-                #     self.name, message_json=message_json[0:50]))        
+                logger.debug(u"{:20}: <<<POPPED from redis: starts {message_json}".format(
+                    self.name, message_json=message_json[0:50]))        
                 message = json.loads(message_json) 
             except (TypeError, KeyError):
                 logger.info(u"{:20}: ERROR processing redis message {message_json}".format(
@@ -73,19 +73,25 @@ class Worker(object):
         t.start()    
 
 class ProviderWorker(Worker):
-    def __init__(self, provider, polling_interval, alias_queue, provider_queue, couch_queues, wrapper, myredis):
+    def __init__(self, provider, polling_interval, alias_queues, provider_queue, couch_queues, wrapper, myredis):
         self.provider = provider
         self.provider_name = provider.provider_name
         self.polling_interval = polling_interval 
         self.provider_queue = provider_queue
-        self.alias_queue = alias_queue
+        self.alias_queues = alias_queues
         self.couch_queues = couch_queues
         self.wrapper = wrapper
         self.myredis = myredis
         self.name = self.provider_name+"_worker"
 
     # last variable is an artifact so it has same call signature as other callbacks
-    def add_to_couch_queue_if_nonzero(self, tiid, new_content, method_name, analytics_credentials, dummy=None):
+    def add_to_couch_queue_if_nonzero(self, 
+            tiid, 
+            new_content, 
+            method_name, 
+            analytics_credentials, 
+            dummy_priority=None,
+            dummy_already_run=None):
         # logger.info(u"In add_to_couch_queue_if_nonzero with {tiid}, {method_name}, {provider_name}".format(
         #    method_name=method_name, tiid=tiid, provider_name=self.provider_name))
 
@@ -111,7 +117,12 @@ class ProviderWorker(Worker):
             selected_couch_queue.push(couch_message)
 
 
-    def add_to_alias_and_couch_queues(self, tiid, aliases_dict, method_name, analytics_credentials, alias_providers_already_run):
+    def add_to_alias_and_couch_queues(self, 
+                tiid, 
+                aliases_dict, 
+                method_name, 
+                analytics_credentials, 
+                alias_providers_already_run):
 
         self.add_to_couch_queue_if_nonzero(tiid, aliases_dict, method_name, analytics_credentials)
 
@@ -126,7 +137,8 @@ class ProviderWorker(Worker):
             alias_message=alias_message, 
             provider_name=self.provider_name))     
 
-        self.alias_queue.push(alias_message)
+        # always push to highest priority queue if we're already going
+        self.alias_queues[0].push(alias_message)
 
 
     @classmethod
@@ -312,8 +324,8 @@ class CouchWorker(Worker):
 
 
 class Backend(Worker):
-    def __init__(self, alias_queue, provider_queues, couch_queues, myredis):
-        self.alias_queue = alias_queue
+    def __init__(self, alias_queues, provider_queues, couch_queues, myredis):
+        self.alias_queues = alias_queues
         self.provider_queues = provider_queues
         self.couch_queues = couch_queues
         self.myredis = myredis
@@ -364,7 +376,13 @@ class Backend(Worker):
             "metrics":metrics_providers})
 
     def run(self):
-        alias_message = self.alias_queue.pop()
+        alias_message = None
+        # go through alias_queues, with highest priority first
+        for alias_queue in self.alias_queues:
+            alias_message = alias_queue.pop()
+            if alias_message:
+                continue
+
         if alias_message:
             logger.info(u"/biblio_print, ALIAS_MESSAGE said {alias_message}".format(
                alias_message=alias_message))
@@ -401,7 +419,9 @@ def main():
     mydao = None
 
     myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
-    alias_queue = RedisQueue("aliasqueue", myredis)
+
+    # list alias_queues, with highest priority first
+    alias_queues = [RedisQueue("aliasqueue_high", myredis), RedisQueue("aliasqueue_low", myredis)]
     # to clear alias_queue:
     #import redis, os
     #myredis = redis.from_url(os.getenv("REDISTOGO_URL"))
@@ -426,14 +446,14 @@ def main():
         provider_worker = ProviderWorker(
             provider, 
             polling_interval, 
-            alias_queue,
+            alias_queues,
             provider_queues[provider.provider_name], 
             couch_queues,
             ProviderWorker.wrapper,
             myredis)
         provider_worker.spawn_and_loop()
 
-    backend = Backend(alias_queue, provider_queues, couch_queues, myredis)
+    backend = Backend(alias_queues, provider_queues, couch_queues, myredis)
     try:
         backend.run_in_loop() # don't need to spawn this one
     except (KeyboardInterrupt, SystemExit): 

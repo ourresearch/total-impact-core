@@ -109,7 +109,7 @@ def get_num_providers_currently_updating(self, item_id):
     return num_currently_updating
 
 
-def add_to_alias_queue(self, tiid, aliases_dict, analytics_credentials, alias_providers_already_run=[]):
+def add_to_alias_queue(self, tiid, aliases_dict, analytics_credentials, priority="high", alias_providers_already_run=[]):
     message = json.dumps({
             "tiid": tiid, 
             "aliases_dict": aliases_dict,
@@ -118,7 +118,8 @@ def add_to_alias_queue(self, tiid, aliases_dict, analytics_credentials, alias_pr
         })
     logger.debug(u"Adding to alias_queue: /biblio_print {message}".format(
         message=message))
-    self.lpush("aliasqueue", message)
+    queue_name = "aliasqueue_" + priority
+    self.lpush(queue_name, message)
 
 
 def set_value(self, key, value, time_to_expire):
