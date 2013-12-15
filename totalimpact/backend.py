@@ -138,7 +138,7 @@ class ProviderWorker(Worker):
             provider_name=self.provider_name))     
 
         # always push to highest priority queue if we're already going
-        self.alias_queues[0].push(alias_message)
+        self.alias_queues["high"].push(alias_message)
 
 
     @classmethod
@@ -375,12 +375,18 @@ class Backend(Worker):
             "biblio":biblio_providers,
             "metrics":metrics_providers})
 
+    def providers_too_busy(self, max_requests=10):
+        for provider_name in thread_count:
+            num_active_threads_for_this_provider = len(thread_count[provider_name])
+            if num_active_threads_for_this_provider >= max_requests:
+                return True
+        return False
+
     def run(self):
-        alias_message = None
         # go through alias_queues, with highest priority first
-        for alias_queue in self.alias_queues:
-            if not alias_message:
-                alias_message = alias_queue.pop()
+        alias_message = self.alias_queues["high"].pop()
+        if not alias_message and not self.providers_too_busy():
+            alias_message = self.alias_queues["low"].pop()
 
         if alias_message:
             logger.info(u"/biblio_print, ALIAS_MESSAGE said {alias_message}".format(
@@ -419,12 +425,14 @@ def main():
 
     myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
 
-    # list alias_queues, with highest priority first
-    alias_queues = [RedisQueue("aliasqueue_high", myredis), RedisQueue("aliasqueue_low", myredis)]
+    alias_queues = {
+        "high": RedisQueue("aliasqueue_high", myredis), 
+        "low": RedisQueue("aliasqueue_low", myredis)
+        }
     # to clear alias_queue:
     #import redis, os
     #myredis = redis.from_url(os.getenv("REDISTOGO_URL"))
-    #myredis.delete(["aliasqueue"])
+    #myredis.delete("aliasqueue_high")
 
 
     # these need to match the tiid alphabet defined in models:
