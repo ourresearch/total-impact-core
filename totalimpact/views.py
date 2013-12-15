@@ -300,6 +300,12 @@ def importer_post(provider_name):
     """
 
     try:
+        analytics_credentials = request.json["analytics_credentials"]
+        del request.json["analytics_credentials"]
+    except KeyError:
+        analytics_credentials = {}
+
+    try:
         aliases = provider_module.import_products(provider_name, request.json)
     except ImportError:
         abort_custom(404, "an importer for provider '{provider_name}' is not found".format(
@@ -310,11 +316,6 @@ def importer_post(provider_name):
         abort_custom(503, "timeout error, might be transient")
     except ProviderError:
         abort(500, "internal error from provider")
-
-    try:
-        analytics_credentials = request.json["analytics_credentials"]
-    except (KeyError):
-        analytics_credentials = {}
 
     tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, analytics_credentials, myredis)
     logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
