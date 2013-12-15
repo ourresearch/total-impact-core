@@ -64,11 +64,11 @@ class Twitter_Tweet(Provider):
         if not data:
             return biblio_dict
 
-        biblio_dict["title"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
+        biblio_dict["title"] = u"@{screen_name}".format(screen_name=self.screen_name(tweet_url))
         biblio_dict["authors"] = data["author_name"]
         biblio_dict["embed"] = data["html"]
         biblio_dict["embed_url"] = biblio_embed_url
-        biblio_dict["account"] = u"@{screen_name}".format(screen_name=self.screen_name(nid))
+        biblio_dict["account"] = u"@{screen_name}".format(screen_name=self.screen_name(tweet_url))
         try:
             tweet_match = re.findall(u'<p>(.*?)</p>.*statuses/\d+">(.*?)</a></blockquote>', biblio_dict["embed"])
             biblio_dict["tweet_text"] = tweet_match[0][0]
