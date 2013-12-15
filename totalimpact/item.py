@@ -307,6 +307,13 @@ class Item(db.Model):
         return [alias.alias_tuple for alias in self.aliases]
 
     @property
+    def biblio_dict(self):
+        response = {}
+        for biblio in self.biblios:
+            response[biblio.biblio_name] = biblio.biblio_value
+        return response
+
+    @property
     def publication_date(self):
         publication_date = None
         for biblio in self.biblios:
@@ -979,10 +986,17 @@ def build_duplicates_list(tiids):
     for item in items:
         is_distinct_item = True
 
-        for alias in item.aliases:
-            if alias.alias_tuple in duplication_list:
+        alias_tuples = []
+        if item.aliases:
+            alias_tuples = [alias.alias_tuple for alias in item.aliases]
+        else:
+            biblios_as_string = json.dumps(item.biblio_dict, sort_keys=True)
+            if biblios_as_string:
+                alias_tuples = [("biblio", biblios_as_string.lower())]
+        for alias in alias_tuples:
+            if alias in duplication_list:
                 # we already have one of the aliase
-                distinct_item_id =  duplication_list[alias.alias_tuple] 
+                distinct_item_id =  duplication_list[alias] 
                 is_distinct_item = False  
 
         if is_distinct_item:
@@ -992,8 +1006,8 @@ def build_duplicates_list(tiids):
         # whether distinct or not,
         # add this to the group, and add all its aliases too    
         distinct_groups[distinct_item_id] += [item.tiid]
-        for alias in item.aliases:
-            duplication_list[alias.alias_tuple] = distinct_item_id
+        for alias in alias_tuples:
+            duplication_list[alias] = distinct_item_id
 
     return distinct_groups.values()
 

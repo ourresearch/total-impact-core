@@ -537,6 +537,14 @@ class TestItem():
                 "aliases": {"url":["111"]}}
             ,{"_id": "f3",  "last_modified": "now",
                 "aliases": {"doi":["333"], "url":["333"]}}
+            ,{"_id": "g4",  "last_modified": "now",
+                "aliases": {
+                    "biblio": [{"title": "my paper", "authors": "smith"}]
+                }}
+            ,{"_id": "h4",  "last_modified": "now",
+                "aliases": {
+                    "biblio": [{"title": "My paper", "authors": "Smith"}]
+                }}
             ]
 
         item_objs = [item_module.create_objects_from_item_doc(item_doc) for item_doc in item_docs]
@@ -544,7 +552,7 @@ class TestItem():
 
         response = item_module.build_duplicates_list(tiids)
         print response
-        expected = [[u'a1', u'e1'], [u'b2', u'c2', u'd2'], [u'f3']]
+        expected = [[u'a1', u'e1'], [u'b2', u'c2', u'd2'], [u'f3'], [u'g4', u'h4']]
         assert_equals(response, expected)
        
 
