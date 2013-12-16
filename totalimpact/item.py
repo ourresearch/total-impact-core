@@ -972,8 +972,8 @@ def get_tiid_by_alias(ns, nid, mydao=None):
 
 
 def start_item_update(tiid, aliases_dict, analytics_credentials, priority, myredis):
-    logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
-        tiid=tiid, priority=priority, aliases_dict=aliases_dict))
+    # logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
+    #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
     myredis.init_currently_updating_status(tiid,
         ProviderFactory.providers_with_metrics(default_settings.PROVIDERS))
     myredis.add_to_alias_queue(tiid, aliases_dict, analytics_credentials, priority)

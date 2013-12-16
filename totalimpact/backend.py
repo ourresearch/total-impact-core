@@ -31,8 +31,8 @@ class RedisQueue(object):
         if received:
             queue, message_json = received
             try:
-                logger.debug(u"{:20}: <<<POPPED from redis: starts {message_json}".format(
-                    self.name, message_json=message_json[0:50]))        
+                # logger.debug(u"{:20}: <<<POPPED from redis: starts {message_json}".format(
+                #     self.name, message_json=message_json[0:50]))        
                 message = json.loads(message_json) 
             except (TypeError, KeyError):
                 logger.info(u"{:20}: ERROR processing redis message {message_json}".format(
