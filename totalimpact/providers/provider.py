@@ -277,6 +277,9 @@ class Provider(object):
     def provides_static_meta(self):
          return ("static_meta_dict" in dir(self))
 
+    # default method; providers that use analytics credentials should override
+    def uses_analytics_credentials(self, method_name):
+         return False
 
     # default method; providers can override    
     def metric_names(self):

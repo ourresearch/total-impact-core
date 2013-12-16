@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import logging, os, sys, random, datetime, time
+import requests
 from sqlalchemy.sql import text    
 
 from totalimpact import tiredis
@@ -23,7 +24,7 @@ def update_by_tiids(all_tiids, number_to_update, myredis):
     for tiid in tiids_to_update:
         item_obj = item_module.Item.query.get(tiid)  # can use this method because don't need metrics
         item_doc = item_obj.as_old_doc()
-        item_module.start_item_update(tiid, item_doc["aliases"], myredis)
+        item_module.start_item_update(tiid, item_doc["aliases"], {}, "low", myredis)
         item_obj.last_update_run = now
         db.session.add(item_obj)
         time.sleep(QUEUE_DELAY_IN_SECONDS)
@@ -76,16 +77,18 @@ def gold_update(number_to_update, myredis, now=datetime.datetime.utcnow()):
                 tiids_to_update = update_by_tiids(tiids, number_still_avail, myredis)
     return all_tiids
 
+
+
 def main(action_type, number_to_update=35, specific_publisher=None):
     #35 every 10 minutes is 35*6perhour*24hours=5040 per day
 
     redis_url = os.getenv("REDIS_URL")
 
     myredis = tiredis.from_url(redis_url)
+    print "running " + action_type
 
     try:
         if action_type == "gold_update":
-            print "running " + action_type
             tiids = gold_update(number_to_update, myredis)
     except (KeyboardInterrupt, SystemExit): 
         # this approach is per http://stackoverflow.com/questions/2564137/python-how-to-terminate-a-thread-when-main-program-ends

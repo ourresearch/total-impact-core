@@ -853,7 +853,7 @@ def create_item(namespace, nid, myredis, mydao):
     logger.debug(json.dumps(item_doc, sort_keys=True, indent=4))
 
     analytics_credentials = {}
-    start_item_update(item_doc["_id"], item_doc["aliases"], analytics_credentials, myredis)
+    start_item_update(item_doc["_id"], item_doc["aliases"], analytics_credentials, "low", myredis)
 
     logger.info(u"Created new item '{tiid}' with alias '{alias}'".format(
         tiid=item_doc["_id"],
@@ -907,7 +907,7 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
 
         tiid_alias_mapping[tiid] = alias
 
-        start_item_update(tiid, item_doc["aliases"], analytics_credentials, myredis)
+        start_item_update(tiid, item_doc["aliases"], analytics_credentials, "high", myredis)
 
     try:
         db.session.commit()
@@ -971,12 +971,12 @@ def get_tiid_by_alias(ns, nid, mydao=None):
     return tiid
 
 
-def start_item_update(tiid, aliases_dict, analytics_credentials, myredis):
-    logger.debug(u"In start_item_update with {tiid}, /biblio_print {aliases_dict}".format(
-        tiid=tiid, aliases_dict=aliases_dict))
+def start_item_update(tiid, aliases_dict, analytics_credentials, priority, myredis):
+    logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
+        tiid=tiid, priority=priority, aliases_dict=aliases_dict))
     myredis.init_currently_updating_status(tiid,
         ProviderFactory.providers_with_metrics(default_settings.PROVIDERS))
-    myredis.add_to_alias_queue(tiid, aliases_dict, analytics_credentials)
+    myredis.add_to_alias_queue(tiid, aliases_dict, analytics_credentials, priority)
 
 
 def build_duplicates_list(tiids):

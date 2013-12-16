@@ -74,6 +74,15 @@ class Wordpresscom(Provider):
     def provides_metrics(self):
         return True
 
+    # overriding
+    def uses_analytics_credentials(self, method_name):
+        if method_name == "metrics":
+            return True
+        else:
+            return False
+
+
+
     #override because need to break strip http
     def _get_templated_url(self, template, nid, method=None):
         if method in ["metrics", "biblio", "aliases"]:
