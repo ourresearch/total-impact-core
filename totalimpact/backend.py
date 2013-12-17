@@ -347,7 +347,7 @@ class Backend(Worker):
             if ("doi" in item_aliases):
                 has_enough_alias_urls = (len([url for url in item_aliases["url"] if url.startswith("http://dx.doi.org")]) > 0)
 
-        if (genre == "article"):
+        if (genre == "article") and (host != "arxiv"):
             if not "mendeley" in aliases_providers_run:
                 aliases_providers = ["mendeley"]
             elif not "crossref" in aliases_providers_run:

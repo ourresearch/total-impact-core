@@ -654,6 +654,10 @@ def decide_genre(alias_dict):
     elif "pmid" in alias_dict:
         genre = "article"
 
+    elif "arxiv" in alias_dict:
+        genre = "article"
+        host = "arxiv"
+
     elif "blog" in alias_dict:
         genre = "blog"
         host = "wordpresscom"

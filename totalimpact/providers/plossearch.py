@@ -20,7 +20,7 @@ class Plossearch(Provider):
             "display_name": "mentions",
             "provider": "PLOS",
             "provider_url": "http://www.plos.org/",
-            "description": "the number of times the doi was mentioned in the full-text of PLOS papers",
+            "description": "the number of times the research product was mentioned in the full-text of PLOS papers",
             "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg" ,
         }
     } 
@@ -31,7 +31,7 @@ class Plossearch(Provider):
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
         if namespace in ["url", "doi"]:
-            for host in ["dryad", "figshare", "github", "youtube", "vimeo"]:
+            for host in ["dryad", "figshare", "github", "youtube", "vimeo", "arxiv"]:
                 if host in nid:
                     return True
         return False

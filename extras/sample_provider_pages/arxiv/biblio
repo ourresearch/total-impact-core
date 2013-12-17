@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <link href="http://arxiv.org/api/query?search_query%3D%26id_list%3D1203.4745%26start%3D0%26max_results%3D10" rel="self" type="application/atom+xml"/>
+  <title type="html">ArXiv Query: search_query=&amp;id_list=1203.4745&amp;start=0&amp;max_results=10</title>
+  <id>http://arxiv.org/api/SGasgWPErTq8jNlba1YI1Jsn4UM</id>
+  <updated>2013-12-16T00:00:00-05:00</updated>
+  <opensearch:totalResults xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">1</opensearch:totalResults>
+  <opensearch:startIndex xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">0</opensearch:startIndex>
+  <opensearch:itemsPerPage xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">10</opensearch:itemsPerPage>
+  <entry>
+    <id>http://arxiv.org/abs/1203.4745v1</id>
+    <updated>2012-03-20T19:46:25Z</updated>
+    <published>2012-03-20T19:46:25Z</published>
+    <title>Altmetrics in the wild: Using social media to explore scholarly impact</title>
+    <summary>  In growing numbers, scholars are integrating social media tools like blogs,
+Twitter, and Mendeley into their professional communications. The online,
+public nature of these tools exposes and reifies scholarly processes once
+hidden and ephemeral. Metrics based on this activities could inform broader,
+faster measures of impact, complementing traditional citation metrics. This
+study explores the properties of these social media-based metrics or
+"altmetrics", sampling 24,331 articles published by the Public Library of
+Science.
+  We find that that different indicators vary greatly in activity. Around 5% of
+sampled articles are cited in Wikipedia, while close to 80% have been included
+in at least one Mendeley library. There is, however, an encouraging diversity;
+a quarter of articles have nonzero data from five or more different sources.
+Correlation and factor analysis suggest citation and altmetrics indicators
+track related but distinct impacts, with neither able to describe the complete
+picture of scholarly use alone. There are moderate correlations between
+Mendeley and Web of Science citation, but many altmetric indicators seem to
+measure impact mostly orthogonal to citation. Articles cluster in ways that
+suggest five different impact "flavors", capturing impacts of different types
+on different audiences; for instance, some articles may be heavily read and
+saved by scholars but seldom cited. Together, these findings encourage more
+research into altmetrics as complements to traditional citation measures.
+</summary>
+    <author>
+      <name>Jason Priem</name>
+    </author>
+    <author>
+      <name>Heather A. Piwowar</name>
+    </author>
+    <author>
+      <name>Bradley M. Hemminger</name>
+    </author>
+    <arxiv:comment xmlns:arxiv="http://arxiv.org/schemas/atom">5 tables, 13 figures</arxiv:comment>
+    <link href="http://arxiv.org/abs/1203.4745v1" rel="alternate" type="text/html"/>
+    <link title="pdf" href="http://arxiv.org/pdf/1203.4745v1" rel="related" type="application/pdf"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.DL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.DL" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+</feed>

@@ -15,6 +15,7 @@ PROVIDERS = [
     ("pubmed", {}),
 
     # best biblio providers go here, in order with best first
+    ("arxiv", {}),
     ("blog_post", {}),
     ("crossref", {}),
     ("dryad", {}),            

@@ -58,13 +58,6 @@ class Blog_Post(Provider):
             url = template % (nid)
         elif method=="provenance":
             url = self.post_url_from_nid(nid)
-        # elif method=="metrics":
-        #     if not not self.wordpress_post_id_from_nid(nid):
-        #         return None
-
-        #     url = template % (self.api_key_from_nid(nid), 
-        #                         self.blog_url_from_nid(nid), 
-        #                         self.wordpress_post_id_from_nid(nid))
         else:
             url = template % (nid)
         return(url)
