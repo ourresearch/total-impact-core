@@ -87,6 +87,14 @@ class TestMendeley(ProviderTestCase):
         # can't tell more about dicsciplines etc because they are percentages and may go up or down
 
     @http
+    def test_metrics_arxiv(self):
+        # at the moment this item 
+        metrics = self.provider.metrics([("arxiv", "1203.4745")])
+        print metrics
+        expected = {'mendeley:discipline': ([{u'id': 6, u'value': 35, u'name': u'Computer and Information Science'}, {u'id': 23, u'value': 23, u'name': u'Social Sciences'}, {u'id': 19, u'value': 10, u'name': u'Medicine'}], u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), 'mendeley:country': ([{u'name': u'United States', u'value': 16}, {u'name': u'United Kingdom', u'value': 9}, {u'name': u'Germany', u'value': 5}], u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), 'mendeley:career_stage': ([{u'name': u'Librarian', u'value': 26}, {u'name': u'Ph.D. Student', u'value': 15}, {u'name': u'Other Professional', u'value': 13}], u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), 'mendeley:readers': (151, u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/')}
+        assert_equals(metrics, expected)
+
+    @http
     def test_aliases_pmid(self):
         # at the moment this item 
         new_aliases = self.provider.aliases([self.testitem_aliases_biblio_no_doi])
@@ -95,7 +103,7 @@ class TestMendeley(ProviderTestCase):
         assert_equals(new_aliases, expected)
 
     @http
-    def test_aliases_arxiv(self):
+    def test_aliases_biblio(self):
         # at the moment this item 
         alias = (u'biblio', {u'title': u'Altmetrics in the wild: Using social media to explore scholarly impact', u'first_author': u'Priem', u'journal': u'arXiv preprint arXiv:1203.4745', u'authors': u'Priem, Piwowar, Hemminger', u'number': u'', u'volume': u'', u'first_page': u'', u'year': u'2012'})
         new_aliases = self.provider.aliases([alias])

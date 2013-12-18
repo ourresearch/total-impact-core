@@ -16,6 +16,7 @@ class Mendeley(Provider):
     metrics_from_uuid_template = "http://api.mendeley.com/oapi/documents/details/%s?consumer_key=" + os.environ["MENDELEY_KEY"]
     metrics_from_doi_template = "http://api.mendeley.com/oapi/documents/details/%s?type=doi&consumer_key=" + os.environ["MENDELEY_KEY"]
     metrics_from_pmid_template = "http://api.mendeley.com/oapi/documents/details/%s?type=pmid&consumer_key=" + os.environ["MENDELEY_KEY"]
+    metrics_from_arxiv_template = "http://api.mendeley.com/oapi/documents/details/%s?type=arxiv&consumer_key=" + os.environ["MENDELEY_KEY"]
     aliases_url_template = uuid_from_title_template
 
     static_meta_dict = {
@@ -223,6 +224,12 @@ class Mendeley(Provider):
         if not metrics_page:
             try:
                 metrics_page = self._get_metrics_lookup_page(self.metrics_from_pmid_template, aliases_dict["pmid"][0], cache_enabled)
+            except KeyError:
+                pass
+        # try lookup by arxiv
+        if not metrics_page:
+            try:
+                metrics_page = self._get_metrics_lookup_page(self.metrics_from_arxiv_template, aliases_dict["arxiv"][0], cache_enabled)
             except KeyError:
                 pass
         # try lookup by title
