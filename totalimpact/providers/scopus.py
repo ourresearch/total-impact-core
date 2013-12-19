@@ -1,5 +1,5 @@
 from totalimpact.providers import provider
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderServerError
 
 import simplejson, re, os, random, string, urllib
 
@@ -96,21 +96,33 @@ class Scopus(Provider):
         headers = {}
         headers["accept"] = "application/json"
 
-        page = self._get_page(url, headers)
+        try:
+            page = self._get_page(url, headers)
+        except ProviderServerError:
+            logger.info(u"error getting page with id {url}".format(url=url))
+            return None
+
         if not page:
-            logger.info(u"empty page with id {id}".format(id=id))
+            logger.info(u"empty page with id {url}".format(url=url))
             return None
         if "Result set was empty" in page:
-            #logger.warning(u"empty result set with doi {id}".format(id=id))
+            #logger.warning(u"empty result set with doi {url}".format(url=url))
             return None
         return page
 
 
-    def _get_relevant_record_with_doi(self, id):
+    def _get_relevant_record_with_doi(self, doi):
         # pick a new random string so don't time out.  Unfort, url now can't cache.
         random_string = "".join(random.sample(string.letters, 10))
-        url_template = "https://api.elsevier.com/content/search/index:SCOPUS?query=DOI(%s)&field=citedby-count&apiKey="+os.environ["SCOPUS_KEY"]+"&insttoken="+os.environ["SCOPUS_INSTTOKEN"]
-        url = self._get_templated_url(url_template, id)
+
+        # this is how scopus wants us to escape special characters
+        # http://help.scopus.com/Content/h_specialchars.htm
+        # what scopus considers a special character and can appear in a DOI is a little unknown
+        # but definitely includes parens.
+        doi = doi.replace("(", "{(}")
+        doi = doi.replace(")", "{)}")
+        url_template = "https://api.elsevier.com/content/search/index:SCOPUS?query=DOI({doi})&field=citedby-count&apiKey="+os.environ["SCOPUS_KEY"]+"&insttoken="+os.environ["SCOPUS_INSTTOKEN"]
+        url = url_template.format(doi=doi)
 
         page = self._get_scopus_page(url)
 
@@ -177,13 +189,17 @@ class Scopus(Provider):
             cache_enabled=True):
 
         aliases_dict = provider.alias_dict_from_tuples(aliases)
-        (namespace, nid) = self.get_best_alias(aliases_dict)
-        if not nid:
-            #self.logger.debug(u"%s not checking metrics, no relevant alias" % (self.provider_name))
-            return {}
 
-        metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(provider_url_template, 
-                namespace=namespace, 
-                id=nid)
+        metrics_and_drilldown = {}
+        if "doi" in aliases_dict:
+            nid = aliases_dict["doi"][0]
+            metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(provider_url_template, 
+                    namespace="doi", 
+                    id=nid)
+        if not metrics_and_drilldown and "biblio" in aliases_dict:
+            nid = aliases_dict["biblio"][0]
+            metrics_and_drilldown = self._get_metrics_and_drilldown_from_metrics_page(provider_url_template, 
+                    namespace="biblio", 
+                    id=nid)
 
         return metrics_and_drilldown

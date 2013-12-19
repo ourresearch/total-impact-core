@@ -106,15 +106,33 @@ class TestScopus(ProviderTestCase):
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
-    @nottest
     @http
     def test_metrics_from_strange_doi(self):
         metrics_dict = self.provider.metrics([("doi", "10.1175/1520-0450(1994)033<0140:astmfm>2.0.co;2")])
-        expected = "hi"
+        expected = {}
+        print metrics_dict
+        assert_equals(metrics_dict, expected)
+
+    @http
+    def test_metrics_from_strange_doi2(self):
+        metrics_dict = self.provider.metrics([
+            ("doi", "10.1670/0022-1511(2007)41[483:ADOECD]2.0.CO;2"), 
+            ("biblio", {
+                    "authors": "McCallum", 
+                    "first_author": "McCallum", 
+                    "first_page": "483", 
+                    "genre": "article", 
+                    "journal": "Journal of Herpetology", 
+                    "number": "3", 
+                    "title": "Amphibian decline or extinction? Current declines dwarf background extinction rate", 
+                    "volume": "41", 
+                    "year": "2007"
+                })])
+        expected = {'scopus:citations': (62, 'http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=35148813206')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
-            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]            
 
     @http
     def test_metrics_many_citations_from_biblio(self):
@@ -131,4 +149,8 @@ class TestScopus(ProviderTestCase):
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+
+    def test_provider_metrics_500(self):
+        pass
+
 
