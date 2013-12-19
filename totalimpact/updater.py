@@ -32,51 +32,33 @@ def update_by_tiids(all_tiids, number_to_update, myredis):
     return tiids_to_update
 
 
-def get_tiids_not_updated_since(schedule, number_to_update, now=datetime.datetime.utcnow()):
+# create table registered_tiid as (select tiid, api_key
+# from alias, registered_item
+# where alias.nid=registered_item.nid and alias.namespace=registered_item.namespace
+# )
 
-    if schedule["exclude_old"]:
-        raw_sql = text("""SELECT tiid FROM item i
-                            WHERE created > now()::date - :max_days_since_created
-                            AND last_update_run < now()::date - :max_days_since_updated
-                            AND NOT EXISTS (select * from biblio where tiid = i.tiid and biblio_name='year' and replace(biblio_value, '"', '') < '2013')
-                            ORDER BY last_update_run DESC
-                            LIMIT :number_to_update""")
-    else:
-        raw_sql = text("""SELECT tiid FROM item i
-                            WHERE created > now()::date - :max_days_since_created
-                            AND last_update_run < now()::date - :max_days_since_updated
-                            ORDER BY last_update_run DESC
-                            LIMIT :number_to_update""")
+def get_tiids_not_updated_since(number_to_update, now=datetime.datetime.utcnow()):
+
+    raw_sql = text("""SELECT tiid FROM item i
+        WHERE last_update_run < now()::date - 7
+        and tiid in 
+        (select tiid
+        from registered_tiid where api_key not in ('vanwijikc233acaa'))
+        ORDER BY last_update_run DESC
+        LIMIT :number_to_update""")
 
     result = db.session.execute(raw_sql, params={
-        "max_days_since_created": schedule["max_days_since_created"], 
-        "max_days_since_updated": schedule["max_days_since_updated"], 
         "number_to_update": number_to_update
         })
     tiids = [row["tiid"] for row in result]
 
     return tiids
 
-gold_update_schedule = [
-    {"group":"A", "max_days_since_created": 7, "max_days_since_updated": 1, "exclude_old": True},
-    {"group":"B", "max_days_since_created": 30, "max_days_since_updated": 7 , "exclude_old": True},
-    {"group":"C", "max_days_since_created": 365*100, "max_days_since_updated": 30, "exclude_old": False}] #everything else once a month
 
 def gold_update(number_to_update, myredis, now=datetime.datetime.utcnow()):
-    all_tiids = []
-    tiids_to_update = []
-    # do magic
-    for schedule in gold_update_schedule:
-        if (len(all_tiids) < number_to_update):
-            number_still_avail = number_to_update-len(all_tiids)
-            tiids = get_tiids_not_updated_since(schedule, number_still_avail, now)
-            print "got", len(tiids), "for update schedule", schedule
-            all_tiids += tiids
-            if tiids:
-                print tiids
-                tiids_to_update = update_by_tiids(tiids, number_still_avail, myredis)
-    return all_tiids
-
+    tiids = get_tiids_not_updated_since(number_to_update, now)
+    tiids_to_update = update_by_tiids(tiids, number_still_avail, myredis)
+    return tiids
 
 
 def main(action_type, number_to_update=35, specific_publisher=None):
