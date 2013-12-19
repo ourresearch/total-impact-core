@@ -57,7 +57,7 @@ def get_tiids_not_updated_since(number_to_update, now=datetime.datetime.utcnow()
 
 def gold_update(number_to_update, myredis, now=datetime.datetime.utcnow()):
     tiids = get_tiids_not_updated_since(number_to_update, now)
-    tiids_to_update = update_by_tiids(tiids, number_still_avail, myredis)
+    tiids_to_update = update_by_tiids(tiids, number_to_update, myredis)
     return tiids
 
 
