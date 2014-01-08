@@ -90,8 +90,9 @@ class Dryad(Provider):
         if not biblio:
             return {}
         if "authors_literal" in biblio:
-            lnames = [author.split(",")[0] for author in biblio["authors_literal"].split(";")]
-            biblio["authors"] = ",".join(lnames)
+            print biblio["authors_literal"]
+            lnames = [author.split(u",")[0] for author in biblio["authors_literal"].split(u";")]
+            biblio["authors"] = u",".join(lnames)
             del biblio["authors_literal"]
         return biblio
 

@@ -1,6 +1,6 @@
  # -*- coding: utf-8 -*-  # need this line because test utf-8 strings later
 
-from totalimpact.cache import Cache
+from totalimpact import cache as cache_module
 from totalimpact import providers
 from totalimpact import default_settings
 from totalimpact import utils
@@ -583,7 +583,7 @@ class Provider(object):
         # use the cache if the config parameter is set and the arg allows it
         use_cache = app.config["CACHE_ENABLED"] and cache_enabled
         if use_cache:
-            cache = Cache(self.max_cache_duration)
+            cache = cache_module.Cache(self.max_cache_duration)
             cached_response = get_page_from_cache(url, headers, allow_redirects, cache)
             if cached_response:
                 return cached_response
@@ -593,6 +593,8 @@ class Provider(object):
                 context={ "providers": { 'Mixpanel': False } })
             self.logger.info(u"%s LIVE GET on %s" %(self.provider_name, url))
             r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=allow_redirects, verify=False)
+            if r and not r.encoding:
+                r.encoding = "utf-8"     
             if r and use_cache:
                 store_page_in_cache(url, headers, allow_redirects, r, cache)
 
@@ -608,8 +610,6 @@ class Provider(object):
                 {"provider": self.provider_name, "url": url})
             raise ProviderHttpError("RequestException during GET on: " + url, e)
 
-        if not r.encoding:
-            r.encoding = "utf-8"     
         return r
 
 
@@ -622,7 +622,7 @@ class Provider(object):
         # use the cache if the config parameter is set and the arg allows it
         use_cache = app.config["CACHE_ENABLED"] and cache_enabled
         if use_cache:
-            cache = Cache(self.max_cache_duration)
+            cache = cache_module.Cache(self.max_cache_duration)
 
         responses = {}
         for url in urls:
@@ -644,7 +644,10 @@ class Provider(object):
             fresh_responses_dict = dict(zip(uncached_urls, fresh_responses))
             if use_cache:
                 for url in fresh_responses_dict:
-                    store_page_in_cache(url, headers, allow_redirects, fresh_responses_dict[url], cache)
+                    r = fresh_responses_dict[url]
+                    if r and not r.encoding:
+                        r.encoding = "utf-8"     
+                    store_page_in_cache(url, headers, allow_redirects, r, cache)
         responses.update(fresh_responses_dict)
         return responses
 

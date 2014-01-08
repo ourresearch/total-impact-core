@@ -95,7 +95,6 @@ class Crossref(Provider):
 
         # extract the aliases
         try:
-            response.encoding = "utf-8"
             biblio_dict = self._extract_biblio(response.text, id)
         except (AttributeError, TypeError):
             biblio_dict = {}
@@ -117,13 +116,13 @@ class Crossref(Provider):
         try:
             surname_list = [author["family"] for author in biblio_dict["authors_literal"]]
             if surname_list:
-                biblio_dict["authors"] = ", ".join(surname_list)
+                biblio_dict["authors"] = u", ".join(surname_list)
                 del biblio_dict["authors_literal"]
         except (IndexError, KeyError):
             try:
                 literal_list = [author["literal"] for author in biblio_dict["authors_literal"]]
                 if literal_list:
-                    biblio_dict["authors_literal"] = "; ".join(literal_list)
+                    biblio_dict["authors_literal"] = u"; ".join(literal_list)
             except (IndexError, KeyError):
                 pass
 
@@ -201,7 +200,7 @@ class Crossref(Provider):
                 logger.info(u"%20s /biblio_print NO DOI because no journal in %s" % (
                     self.provider_name, biblio))
                 return []
-            query_string =  ("|%s|%s|%s|%s|%s|%s||%s|" % (
+            query_string =  (u"|%s|%s|%s|%s|%s|%s||%s|" % (
                 biblio.get("journal", ""),
                 biblio.get("first_author", biblio.get("authors", "").split(",")[0].strip()),
                 biblio.get("volume", ""),

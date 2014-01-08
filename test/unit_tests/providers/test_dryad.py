@@ -69,6 +69,13 @@ class TestDryad(ProviderTestCase):
         assert_equals(biblio_dict, expected)
 
     @http
+    def test_biblio_unicode(self):
+        biblio_dict = self.provider.biblio([("doi", "10.5061/dryad.6qh25")])
+        print biblio_dict
+        expected = {'title': u'Data from: Electrophoretic mobility confirms reassortment bias among geographic isolates of segmented RNA phages', 'authors': u'D\xedaz-Mu\xf1oz, Tenaillon, Goldhill, Brao, Turner, Chao', 'repository': u'Dryad Digital Repository', 'year': '2013'}
+        assert_equals(biblio_dict, expected)
+
+    @http
     def test_alias(self):
         aliases = self.provider.aliases([self.testitem_aliases])
         print aliases
