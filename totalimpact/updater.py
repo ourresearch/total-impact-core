@@ -19,7 +19,7 @@ def update_by_tiids(all_tiids, number_to_update, myredis):
     tiids_to_update = all_tiids[0:min(number_to_update, len(all_tiids))]
     now = datetime.datetime.utcnow().isoformat()
 
-    print "updating {number_to_update} of them now".format(number_to_update=number_to_update)
+    print u"updating {number_to_update} of them now".format(number_to_update=number_to_update)
     QUEUE_DELAY_IN_SECONDS = 0.25
     for tiid in tiids_to_update:
         item_obj = item_module.Item.query.get(tiid)  # can use this method because don't need metrics
@@ -67,7 +67,7 @@ def main(action_type, number_to_update=35, specific_publisher=None):
     redis_url = os.getenv("REDIS_URL")
 
     myredis = tiredis.from_url(redis_url)
-    print "running " + action_type
+    print u"running " + action_type
 
     try:
         if action_type == "gold_update":

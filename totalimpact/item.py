@@ -98,8 +98,8 @@ def create_alias_objects(old_style_alias_dict, collected_date=datetime.datetime.
 def create_objects_from_item_doc(item_doc, skip_if_exists=False):
     tiid = item_doc["_id"]
 
-    logger.debug(u"in create_objects_from_item_doc for {tiid}".format(
-        tiid=item_doc["_id"]))        
+    # logger.debug(u"in create_objects_from_item_doc for {tiid}".format(
+    #     tiid=item_doc["_id"]))        
 
     new_item_object = Item.from_tiid(item_doc["_id"])
     if new_item_object and skip_if_exists:
@@ -333,8 +333,8 @@ class Item(db.Model):
 
     @classmethod
     def create_from_old_doc(cls, doc):
-        logger.debug(u"in create_from_old_doc for {tiid}".format(
-            tiid=doc["_id"]))
+        # logger.debug(u"in create_from_old_doc for {tiid}".format(
+        #     tiid=doc["_id"]))
 
         doc_copy = copy.deepcopy(doc)
         doc_copy["tiid"] = doc_copy["_id"]
@@ -911,7 +911,7 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
 
         tiid_alias_mapping[tiid] = alias
 
-        start_item_update(tiid, item_doc["aliases"], analytics_credentials, "high", myredis)
+        # start_item_update(tiid, item_doc["aliases"], analytics_credentials, "high", myredis)
 
     try:
         db.session.commit()

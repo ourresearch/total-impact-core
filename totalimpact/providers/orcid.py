@@ -13,6 +13,7 @@ class Orcid(Provider):
     member_items_url_template = "http://pub.orcid.org/%s/orcid-works"
         
     def __init__(self):
+        self.bibtex_parser = bibtex.Bibtex()
         super(Orcid, self).__init__()
         
     def _parse_orcid_work(self, work):
@@ -20,10 +21,11 @@ class Orcid(Provider):
             return {}
 
         biblio = {}
+        logger.debug(u"%20s parsing orcid work" % (self.provider_name))
 
         try:
             if work["work-citation"]["work-citation-type"]=="BIBTEX":
-                biblio = bibtex.Bibtex().parse(work["work-cition"]["citation"])
+                biblio = self.bibtex_parser.parse(work["work-cition"]["citation"])
             
         except (KeyError, TypeError):
 
@@ -88,15 +90,21 @@ class Orcid(Provider):
                 pass
 
             if not new_member:
-                logger.info(u"no external identifiers, try saving whole citation")
+                logger.info(u"no external identifiers, try saving whole citation for {orcid}".format(
+                    orcid=query_string))
                 biblio = self._parse_orcid_work(work)
                 new_member = ("biblio", biblio)
+                logger.info(u"no external identifiers, got a new member for {orcid}".format(
+                    orcid=query_string))
 
             if new_member:
                 members += [new_member]    
 
         if not members:
             raise ProviderItemNotFoundError
+
+        logger.info(u"returning {n} members for {orcid}".format(
+            n=len(members), orcid=query_string))
 
         return(members)
 
