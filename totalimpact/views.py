@@ -497,11 +497,11 @@ def refresh_from_tiids(tiids, analytics_credentials, priority, myredis):
         try:
             tiid = item_obj.tiid
             alias_dict = item_module.alias_dict_from_tuples(item_obj.alias_tuples)       
-            dicts_to_refresh += [{"tiid":tiid, "aliases_dict": item_doc["alias_dict"]}]
+            dicts_to_refresh += [{"tiid":tiid, "aliases_dict": alias_dict}]
         except AttributeError:
             logger.debug(u"couldn't find tiid {tiid} so not refreshing its metrics".format(
                 tiid=tiid))
-            
+
     item_module.start_item_update(dicts_to_refresh, analytics_credentials, priority, myredis)
     return tiids
 
