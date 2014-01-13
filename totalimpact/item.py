@@ -690,7 +690,6 @@ def decide_genre(alias_dict):
             host = "vimeo"
         else:
             genre = "webpage"
-            host = "webpage"
 
     # override if it came in with a genre, or call it an "article" if it has a journal
     if (host=="unknown" and ("biblio" in alias_dict)):
