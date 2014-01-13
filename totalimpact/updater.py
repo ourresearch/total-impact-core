@@ -24,7 +24,7 @@ def update_by_tiids(all_tiids, number_to_update, myredis):
     for tiid in tiids_to_update:
         item_obj = item_module.Item.query.get(tiid)  # can use this method because don't need metrics
         item_doc = item_obj.as_old_doc()
-        item_module.start_item_update(tiid, item_doc["aliases"], {}, "low", myredis)
+        item_module.start_item_update([{"tiid": item_doc["_id"], "aliases_dict":item_doc["aliases"]}], {}, "low", myredis)
         item_obj.last_update_run = now
         db.session.add(item_obj)
         time.sleep(QUEUE_DELAY_IN_SECONDS)

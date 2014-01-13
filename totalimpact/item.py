@@ -857,7 +857,7 @@ def create_item(namespace, nid, myredis, mydao):
     logger.debug(json.dumps(item_doc, sort_keys=True, indent=4))
 
     analytics_credentials = {}
-    start_item_update(item_doc["_id"], item_doc["aliases"], analytics_credentials, "low", myredis)
+    start_item_update([{"tiid": item_doc["_id"], "aliases_dict":item_doc["aliases"]}], analytics_credentials, "low", myredis)
 
     logger.info(u"Created new item '{tiid}' with alias '{alias}'".format(
         tiid=item_doc["_id"],
@@ -894,7 +894,8 @@ def get_tiids_from_aliases(aliases):
 
 def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
     tiid_alias_mapping = {}
-    clean_aliases = [canonical_alias_tuple((ns, nid)) for (ns, nid) in aliases]    
+    clean_aliases = [canonical_alias_tuple((ns, nid)) for (ns, nid) in aliases]  
+    dicts_to_update = []  
     for alias in clean_aliases:
         (ns, nid) = alias
         item_doc = make()
@@ -910,8 +911,9 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
         db.session.merge(item_obj)
 
         tiid_alias_mapping[tiid] = alias
+        dicts_to_update += [{"tiid":tiid, "aliases_dict": item_doc["aliases"]}]
 
-        # start_item_update(tiid, item_doc["aliases"], analytics_credentials, "high", myredis)
+    start_item_update(dicts_to_update, analytics_credentials, "high", myredis)
 
     try:
         db.session.commit()
@@ -975,12 +977,13 @@ def get_tiid_by_alias(ns, nid, mydao=None):
     return tiid
 
 
-def start_item_update(tiid, aliases_dict, analytics_credentials, priority, myredis):
+def start_item_update(dicts_to_add, analytics_credentials, priority, myredis):
     # logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
     #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
-    myredis.init_currently_updating_status(tiid,
+    tiids = [d["tiid"] for d in dicts_to_add]
+    myredis.init_currently_updating_status(tiids,
         ProviderFactory.providers_with_metrics(default_settings.PROVIDERS))
-    myredis.add_to_alias_queue(tiid, aliases_dict, analytics_credentials, priority)
+    myredis.add_to_alias_queue(dicts_to_add, analytics_credentials, priority)
 
 
 def build_duplicates_list(tiids):

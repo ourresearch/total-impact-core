@@ -10,10 +10,12 @@ def from_url(url, db=0):
     r = redis.from_url(url, db)
     return r
 
-def set_hash_value(self, key, hash_key, value, time_to_expire):
+def set_hash_value(self, key, hash_key, value, time_to_expire, pipe=None):
+    if not pipe:
+        pipe = self
     json_value = json.dumps(value)
-    self.hset(key, hash_key, json_value)
-    self.expire(key, time_to_expire)
+    pipe.hset(key, hash_key, json_value)
+    pipe.expire(key, time_to_expire)
 
 def get_hash_value(self, key, hash_key):
     try:
@@ -38,11 +40,14 @@ def clear_currently_updating_status(self):
     for key in currently_updating_keys:
         self.delete(key)
 
-def set_currently_updating(self, tiid, provider_name, value):
+def set_currently_updating(self, tiid, provider_name, value, pipe=None):
+    if not pipe:
+        pipe = self
+
     key = "currently_updating:{tiid}".format(
         tiid=tiid)
     expire = 60*60*24  # for a day    
-    self.set_hash_value(key, provider_name, value, expire)
+    pipe.set_hash_value(key, provider_name, value, expire, pipe)
 
 def get_currently_updating(self, tiid, provider_name):
     key = "currently_updating:{tiid}".format(
@@ -55,13 +60,17 @@ def delete_currently_updating(self, tiid, provider_name):
     return self.delete_hash_key(key, provider_name)
 
 
-def init_currently_updating_status(self, item_id, providers):
-    logger.debug(u"set_all_providers for '{tiid}'.".format(
-        tiid=item_id))
-    now = datetime.datetime.utcnow().isoformat()
-    for provider_name in providers:
-        currently_updating_status = {now: "in queue"}
-        self.set_currently_updating(item_id, provider_name, currently_updating_status)
+def init_currently_updating_status(self, tiids, providers):
+    pipe = self.pipeline()    
+
+    for tiid in tiids:
+        logger.debug(u"set_all_providers for '{tiid}'.".format(
+            tiid=tiid))
+        now = datetime.datetime.utcnow().isoformat()
+        for provider_name in providers:
+            currently_updating_status = {now: "in queue"}
+            self.set_currently_updating(tiid, provider_name, currently_updating_status)
+    pipe.execute()
 
 
 def set_provider_started(self, item_id, provider_name):
@@ -109,17 +118,20 @@ def get_num_providers_currently_updating(self, item_id):
     return num_currently_updating
 
 
-def add_to_alias_queue(self, tiid, aliases_dict, analytics_credentials, priority="high", alias_providers_already_run=[]):
-    message = json.dumps({
-            "tiid": tiid, 
-            "aliases_dict": aliases_dict,
-            "analytics_credentials": analytics_credentials,
-            "alias_providers_already_run": alias_providers_already_run
-        })
-    logger.debug(u"Adding to alias_queue: /biblio_print {message}".format(
-        message=message))
-    queue_name = "aliasqueue_" + priority
-    self.lpush(queue_name, message)
+def add_to_alias_queue(self, dicts_to_add, analytics_credentials={}, priority="high", alias_providers_already_run=[]):
+    pipe = self.pipeline()    
+    for message_dict in dicts_to_add:
+        message = json.dumps({
+                "tiid": message_dict["tiid"], 
+                "aliases_dict": message_dict["aliases_dict"],
+                "analytics_credentials": analytics_credentials,
+                "alias_providers_already_run": alias_providers_already_run
+            })
+        logger.debug(u"Adding to alias_queue: /biblio_print {message}".format(
+            message=message))
+        queue_name = "aliasqueue_" + priority
+        pipe.lpush(queue_name, message)
+    pipe.execute()
 
 
 def set_value(self, key, value, time_to_expire):

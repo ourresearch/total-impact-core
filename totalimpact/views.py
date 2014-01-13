@@ -491,15 +491,18 @@ def add_items_to_collection(cid=""):
 
 def refresh_from_tiids(tiids, analytics_credentials, priority, myredis):
     item_objects = item_module.Item.query.filter(item_module.Item.tiid.in_(tiids)).all()
+    dicts_to_refresh = []  
 
     for item_obj in item_objects:
         try:
             tiid = item_obj.tiid
             alias_dict = item_module.alias_dict_from_tuples(item_obj.alias_tuples)       
-            item_module.start_item_update(tiid, alias_dict, analytics_credentials, priority, myredis)
+            dicts_to_refresh += [{"tiid":tiid, "aliases_dict": item_doc["alias_dict"]}]
         except AttributeError:
             logger.debug(u"couldn't find tiid {tiid} so not refreshing its metrics".format(
                 tiid=tiid))
+            
+    item_module.start_item_update(dicts_to_refresh, analytics_credentials, priority, myredis)
     return tiids
 
 
