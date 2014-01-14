@@ -133,8 +133,8 @@ class ProviderWorker(Worker):
                 "alias_providers_already_run": alias_providers_already_run
             }        
 
-        logger.info(u"Adding to alias queue {alias_message} for {provider_name}".format(
-            alias_message=alias_message, 
+        logger.info(u"Adding to alias queue tiid:{tiid} for {provider_name}".format(
+            tiid=tiid, 
             provider_name=self.provider_name))     
 
         # always push to highest priority queue if we're already going
