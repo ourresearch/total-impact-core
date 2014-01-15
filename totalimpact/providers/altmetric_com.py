@@ -69,14 +69,11 @@ class Altmetric_Com(Provider):
             cache_enabled=True):            
 
         aliases_dict = provider.alias_dict_from_tuples(aliases)
-        print "looking for aliases for", aliases
 
         if "altmetric_com" in aliases_dict:
-            print "already have one"
             return []  # nothing new to add
 
         nid = self.get_best_id(aliases)
-        print "best nid", nid
         if not nid:
             return []
 

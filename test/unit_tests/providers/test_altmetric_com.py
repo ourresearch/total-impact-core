@@ -60,13 +60,6 @@ class TestAltmetric_Com(ProviderTestCase):
         assert_equals(aliases, expected)
 
     @http
-    def test_aliases(self):
-        aliases = self.provider.aliases([self.testitem_aliases])
-        print aliases
-        expected = [('altmetric_com', '1870595')]
-        assert_equals(aliases, expected)
-
-    @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics, ("altmetric_com", "1870595")])
         expected = {'altmetric_com:tweets': (55, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org')}

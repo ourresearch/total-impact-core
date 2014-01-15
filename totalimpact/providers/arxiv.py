@@ -83,8 +83,6 @@ class Arxiv(Provider):
         biblio_dict = provider._extract_from_xml(page, dict_of_keylists)
         dom_authors = provider._find_all_in_xml(page, "name")
 
-        print dom_authors
-
         try:
             authors = [author.firstChild.data for author in dom_authors]
             biblio_dict["authors"] = ", ".join([author.split(" ")[-1] for author in authors])
