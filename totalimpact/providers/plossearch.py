@@ -21,7 +21,7 @@ class Plossearch(Provider):
             "provider": "PLOS",
             "provider_url": "http://www.plos.org/",
             "description": "the number of times the research product was mentioned in the full-text of PLOS papers",
-            "icon": "http://a0.twimg.com/profile_images/67542107/Globe_normal.jpg" ,
+            "icon": "http://www.plos.org/wp-content/themes/plos_new/favicon.ico" ,
         }
     } 
 

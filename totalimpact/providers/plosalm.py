@@ -15,7 +15,7 @@ class Plosalm(Provider):
     metrics_url_template = "http://alm.plos.org/api/v3/articles?ids=%s&source=citations,counter&api_key=" + os.environ["PLOS_KEY_V3"]
     provenance_url_template = "http://dx.doi.org/%s"
 
-    PLOS_ICON = "http://www.plos.org/wp-content/themes/plos/images/favicon.ico"
+    PLOS_ICON = "http://www.plos.org/wp-content/themes/plos_new/favicon.ico"
 
     static_meta_dict =  {
         "html_views": {
