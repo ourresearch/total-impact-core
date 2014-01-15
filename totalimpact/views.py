@@ -559,9 +559,10 @@ def products_duplicates_post():
 
 
 """ Refreshes all the items in a given collection.
+    Still useful for refsets!
 """
 @app.route("/v1/collection/<cid>", methods=["POST"])
-# not officially supported in api
+# not officially supported in api, though still useful for refsets
 def collection_metrics_refresh(cid=""):
     # first, get the tiids in this collection:
     try:
@@ -573,7 +574,7 @@ def collection_metrics_refresh(cid=""):
         ))
         abort_custom(500, "Error doing collection_update")
 
-    refresh_from_tiids(tiids, "low", myredis)
+    refresh_from_tiids(tiids, {}, "low", myredis)
 
     resp = make_response("true", 200)
     return resp
