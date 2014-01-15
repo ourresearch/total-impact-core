@@ -359,6 +359,15 @@ class Backend(Worker):
             else:
                 metrics_providers = all_metrics_providers
                 biblio_providers = ["crossref", "pubmed", "webpage"]
+        elif ("doi" in item_aliases) or (host == "arxiv"):
+            if (set([host, "altmetric_com"]) == set(aliases_providers_run)):
+                metrics_providers = all_metrics_providers
+                biblio_providers = [host]
+            else:     
+                if not "altmetric_com" in aliases_providers_run:
+                    aliases_providers = ["altmetric_com"]
+                else:
+                    aliases_providers = [host]
         else:
             # relevant alias and biblio providers are always the same
             relevant_providers = [host]
