@@ -354,6 +354,8 @@ class Backend(Worker):
                 aliases_providers = ["crossref"]  # do this before pubmed because might tease doi from url
             elif not "pubmed" in aliases_providers_run:
                 aliases_providers = ["pubmed"]
+            elif not "altmetric_com" in aliases_providers_run:
+                aliases_providers = ["altmetric_com"]
             else:
                 metrics_providers = all_metrics_providers
                 biblio_providers = ["crossref", "pubmed", "webpage"]

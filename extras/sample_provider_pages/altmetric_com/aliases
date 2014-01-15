@@ -1,0 +1,1223 @@
+{
+    "altmetric_id": 1870595,
+    "counts": {
+        "total": {
+            "posts_count": 59
+        },
+        "twitter": {
+            "unique_users_count": 49,
+            "unique_users": [
+                "drbachinsky",
+                "4130chromo",
+                "nutrigenomics",
+                "tsucheta",
+                "juliovegaunam",
+                "gencodegenes",
+                "drferdowsi",
+                "genomigence",
+                "pvanbaarlen",
+                "morganmarcos",
+                "alfons_valencia",
+                "genomicslabiicb",
+                "pinin4fjords",
+                "matthewbstocks",
+                "nextgenseek",
+                "claufresearch",
+                "rnomics",
+                "animesh1977",
+                "nucdiv",
+                "ggsimpsonrna",
+                "lpachter",
+                "dgermain21",
+                "pronovusbio",
+                "davetang31",
+                "ryuichironakato",
+                "drchriscole",
+                "manuelcorpas",
+                "4a6a5a",
+                "stevelaurie42",
+                "valeryah79",
+                "pabliskodelia",
+                "katherinemejia",
+                "moorejh",
+                "harpersnotes",
+                "razz0r",
+                "tkr_nak",
+                "anshul",
+                "timtriche",
+                "genetiksc",
+                "ge_parada",
+                "janis3_14159",
+                "edueyras",
+                "heathermvincent",
+                "genetics_blog",
+                "tothur",
+                "the_prbb",
+                "leucinerichbio",
+                "xiaoyuns",
+                "genequan"
+            ],
+            "posts_count": 55
+        }
+    },
+    "selected_quotes": [
+        "An excellent new article on transcriptomes and genome annotation",
+        "Missed this interesting paper on GENCODE",
+        "concept of gene is undergoing identity crisis",
+        "Functional #transcriptomics in the post-ENCODE era: to what proportion is transcript complexity functional?"
+    ],
+    "citation": {
+        "title": "Functional transcriptomics in the post-ENCODE era",
+        "authors": [
+            "Jonathan M. Mudge",
+            "Adam Frankish",
+            "Jennifer Harrow"
+        ],
+        "doi": "10.1101/gr.161315.113",
+        "journal": "Genome Research",
+        "altmetric_jid": "4f6fa4ec3cf058f610002944",
+        "publisher": "Cold Spring Harbor Lab",
+        "links": [
+            "http://genome.cshlp.org/content/early/2013/10/29/gr.161315.113.long",
+            "http://genome.cshlp.org/content/early/2013/10/29/gr.161315.113.abstract",
+            "http://genome.cshlp.org/content/early/2013/10/29/gr.161315.113.full.pdf+html",
+            "http://genome.cshlp.org/content/early/2013/10/29/gr.161315.113.full.pdf+html?rss=1",
+            "http://genome.cshlp.org/content/early/2013/10/29/gr.161315.113.abstract?papetoc",
+            "http://genome.cshlp.org/content/early/2013/10/29/gr.161315.113",
+            "http://www.ncbi.nlm.nih.gov/pubmed/24172201",
+            "http://genome.cshlp.org/content/early/2013/10/29/gr.161315.113.full.pdf",
+            "http://dx.doi.org/10.1101/gr.161315.113",
+            "http://genome.cshlp.org/content/23/12/1961.full?rss=1&utm_source=dlvr.it&utm_medium=twitter",
+            "http://genome.cshlp.org/content/23/12/1961.full?rss=1",
+            "http://genome.cshlp.org/content/23/12/1961.full.pdf+html",
+            "http://genome.cshlp.org/content/23/12/1961.long",
+            "http://genome.cshlp.org/content/23/12/1961.full"
+        ],
+        "first_seen_on": "2013-10-30T17:23:34+00:00",
+        "pdf_url": "http://genome.cshlp.org/content/early/2013/10/29/gr.161315.113.full.pdf"
+    },
+    "altmetric_score": {
+        "score": 40.466,
+        "score_history": {
+            "1d": 0,
+            "2d": 0,
+            "3d": 0,
+            "4d": 0,
+            "5d": 0,
+            "6d": 0,
+            "1w": 0,
+            "1m": 3.5,
+            "3m": 40.466,
+            "6m": 40.466,
+            "1y": 40.466,
+            "at": 40.466
+        },
+        "context_for_score": {
+            "all": {
+                "rank": 843,
+                "mean": 4.5208056245757,
+                "median": 1,
+                "sample_size": 49976,
+                "sparkline": [
+                    3368.85,
+                    9,
+                    4.25,
+                    2,
+                    1.25,
+                    1,
+                    1,
+                    0.5,
+                    0.25,
+                    0.25
+                ],
+                "total_number_of_other_articles": 1786517,
+                "this_scored_higher_than": 49134,
+                "this_scored_higher_than_pct": 99,
+                "percentile": 98,
+                "rank_type": "approximate"
+            },
+            "similar_age_3m": {
+                "rank": 384,
+                "mean": 7.9362759683276,
+                "median": 1,
+                "sample_size": 9996,
+                "sparkline": [
+                    1185.206,
+                    11,
+                    5,
+                    2.5,
+                    1.5,
+                    1,
+                    1,
+                    1,
+                    0.5,
+                    0.25
+                ],
+                "total_number_of_other_articles": 74639,
+                "this_scored_higher_than": 9613,
+                "this_scored_higher_than_pct": 97,
+                "percentile": 96,
+                "rank_type": "approximate"
+            },
+            "this_journal": {
+                "rank": 27,
+                "mean": 7.0203965811966,
+                "median": 2.35,
+                "sample_size": 1170,
+                "sparkline": [
+                    116.994,
+                    17.3,
+                    10.11,
+                    6.616,
+                    4.5,
+                    2.35,
+                    1.25,
+                    1,
+                    1,
+                    0.5
+                ],
+                "total_number_of_other_articles": 1170,
+                "this_scored_higher_than": 1144,
+                "this_scored_higher_than_pct": 98,
+                "percentile": 97,
+                "rank_type": "exact"
+            },
+            "similar_age_this_journal_3m": null
+        }
+    },
+    "demographics": {
+        "geo": {
+            "twitter": {
+                "US": 10,
+                "GB": 4,
+                "NL": 2,
+                "IN": 2,
+                "ES": 4,
+                "IT": 1,
+                "NO": 1,
+                "SE": 1,
+                "CL": 1,
+                "JP": 1,
+                "FR": 1,
+                "HU": 1,
+                "DE": 2
+            }
+        }
+    },
+    "posts": {
+        "twitter": [
+            {
+                "url": "http://twitter.com/drbachinsky/status/395601794346147840",
+                "posted_on": "2013-10-30T17:23:12+00:00",
+                "license": "public",
+                "author": {
+                    "name": "David R. Bachinsky",
+                    "image": "http://a0.twimg.com/profile_images/1415439640/6822_1147392528923_1350846122_30401298_8082523_n_normal.jpg",
+                    "description": "Scientist interested in human genetics, genomics, biochemistry and health related areas.",
+                    "id_on_source": "drbachinsky",
+                    "geo": {
+                        "lt": 42.358635,
+                        "ln": -71.056699,
+                        "country": "US"
+                    },
+                    "followers": 1702
+                },
+                "tweet_id": "395601794346147840"
+            },
+            {
+                "url": "http://twitter.com/DrFerdowsi/status/395602628048326657",
+                "posted_on": "2013-10-30T17:26:31+00:00",
+                "license": "public",
+                "rt": [
+                    "drbachinsky"
+                ],
+                "author": {
+                    "name": "Conciergedoc",
+                    "url": "http://t.co/19O7mDnpuS",
+                    "image": "http://a0.twimg.com/profile_images/1773207404/sahba-ferdowsi-do--8db9f814-f594-4b55-b142-eeca6b4617a6large_normal.jpg",
+                    "description": "Unwavering Commitment To Excellence In Patient Services™ Concierge physician serving South Florida. Co-founder @medicast @healthtap",
+                    "id_on_source": "DrFerdowsi",
+                    "followers": 2162
+                },
+                "tweet_id": "395602628048326657"
+            },
+            {
+                "url": "http://twitter.com/4130chromo/status/395660710287392768",
+                "posted_on": "2013-10-30T21:17:19+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Jonathan Coxhead",
+                    "image": "http://a0.twimg.com/profile_images/1278510664/9a7ff286-1933-44bb-91b3-ab0ab066501d_normal.png",
+                    "description": "Next-Generation Sequencing - MTBing - Dad & Husband | Translational Genomics - Personalized Medicine - MDx - Biotech - mtDNA - Heteroplasmy - #NGS",
+                    "id_on_source": "4130chromo",
+                    "geo": {
+                        "lt": 54.939356,
+                        "ln": -1.599285,
+                        "country": "GB"
+                    },
+                    "followers": 738
+                },
+                "tweet_id": "395660710287392768"
+            },
+            {
+                "url": "http://twitter.com/pvanbaarlen/status/395815974294654976",
+                "posted_on": "2013-10-31T07:34:16+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Peter van Baarlen",
+                    "image": "http://a0.twimg.com/profile_images/1113907924/cthulhu_recht_normal.jpg",
+                    "description": "PvB is into functional genomics, host-microbe interactions, pathway analysis, systems biology data visualisation, and Music! and Bass guitar!!",
+                    "id_on_source": "pvanbaarlen",
+                    "geo": {
+                        "lt": 52.152355,
+                        "ln": 5.29297,
+                        "country": "NL"
+                    },
+                    "followers": 308
+                },
+                "tweet_id": "395815974294654976"
+            },
+            {
+                "url": "http://twitter.com/nutrigenomics/status/395823662546579456",
+                "posted_on": "2013-10-31T08:04:49+00:00",
+                "license": "public",
+                "rt": [
+                    "pvanbaarlen"
+                ],
+                "author": {
+                    "name": "Michael Müller",
+                    "url": "http://t.co/0onRGpcAbo",
+                    "image": "http://a0.twimg.com/profile_images/3059469408/1360572e7ad9df33bc7cfc6a567e6953_normal.jpeg",
+                    "description": "Professor Wageningen University (Molecular Nutrition, Nutrigenomics, Gut & Liver Health, Nutritional Science 2.0) loves family & pottery & running & good foods",
+                    "id_on_source": "nutrigenomics",
+                    "geo": {
+                        "lt": 51.96685,
+                        "ln": 5.66229,
+                        "country": "NL"
+                    },
+                    "followers": 5049
+                },
+                "tweet_id": "395823662546579456"
+            },
+            {
+                "url": "http://twitter.com/nutrigenomics/status/395824566523551744",
+                "posted_on": "2013-10-31T08:08:25+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Michael Müller",
+                    "url": "http://t.co/0onRGpcAbo",
+                    "image": "http://a0.twimg.com/profile_images/3059469408/1360572e7ad9df33bc7cfc6a567e6953_normal.jpeg",
+                    "description": "Professor Wageningen University (Molecular Nutrition, Nutrigenomics, Gut & Liver Health, Nutritional Science 2.0) loves family & pottery & running & good foods",
+                    "id_on_source": "nutrigenomics",
+                    "geo": {
+                        "lt": 51.96685,
+                        "ln": 5.66229,
+                        "country": "NL"
+                    },
+                    "followers": 5049
+                },
+                "tweet_id": "395824566523551744"
+            },
+            {
+                "url": "http://twitter.com/tsucheta/status/395865026474827776",
+                "posted_on": "2013-10-31T10:49:11+00:00",
+                "license": "public",
+                "rt": [
+                    "genomigence"
+                ],
+                "author": {
+                    "name": "Sucheta Tripathy",
+                    "url": "http://t.co/YT1OHfNi06",
+                    "image": "http://a0.twimg.com/profile_images/378800000052195144/81ff8737a2dfc0eb078ce350c26b0a08_normal.jpeg",
+                    "description": "Patho-genomicist, programmer, biologist, nextgen sequencing, data visualization and tera data handling enthusiast.",
+                    "id_on_source": "tsucheta",
+                    "geo": {
+                        "lt": 22.52667,
+                        "ln": 88.34616,
+                        "country": "IN"
+                    },
+                    "followers": 257
+                },
+                "tweet_id": "395865026474827776"
+            },
+            {
+                "url": "http://twitter.com/tsucheta/status/395865717041418241",
+                "posted_on": "2013-10-31T10:51:56+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Sucheta Tripathy",
+                    "url": "http://t.co/YT1OHfNi06",
+                    "image": "http://a0.twimg.com/profile_images/378800000052195144/81ff8737a2dfc0eb078ce350c26b0a08_normal.jpeg",
+                    "description": "Patho-genomicist, programmer, biologist, nextgen sequencing, data visualization and tera data handling enthusiast.",
+                    "id_on_source": "tsucheta",
+                    "geo": {
+                        "lt": 22.52667,
+                        "ln": 88.34616,
+                        "country": "IN"
+                    },
+                    "followers": 257
+                },
+                "tweet_id": "395865717041418241"
+            },
+            {
+                "url": "http://twitter.com/JulioVegaUNAM/status/395952047029096450",
+                "posted_on": "2013-10-31T16:34:59+00:00",
+                "license": "public",
+                "rt": [
+                    "tsucheta"
+                ],
+                "author": {
+                    "name": "Julio Vega Arreguín",
+                    "image": "http://a0.twimg.com/profile_images/2875181736/2528a824b806a1fe2a77f30467e4c098_normal.jpeg",
+                    "description": "Laboratorio de Ciencias Agrogenómicas, UNAM, ENES-León",
+                    "id_on_source": "JulioVegaUNAM",
+                    "followers": 40
+                },
+                "tweet_id": "395952047029096450"
+            },
+            {
+                "url": "http://twitter.com/GencodeGenes/status/396296132881416195",
+                "posted_on": "2013-11-01T15:22:15+00:00",
+                "license": "public",
+                "author": {
+                    "id_on_source": "GencodeGenes"
+                },
+                "tweet_id": "396296132881416195"
+            },
+            {
+                "url": "http://twitter.com/Alfons_Valencia/status/396300262429966336",
+                "posted_on": "2013-11-01T15:38:40+00:00",
+                "license": "public",
+                "rt": [
+                    "GencodeGenes"
+                ],
+                "author": {
+                    "name": "AlfonsoValencia",
+                    "url": "http://t.co/hK1Erj8fbH",
+                    "image": "http://a0.twimg.com/profile_images/2539653657/charla_barna_redes_2_normal.jpg",
+                    "description": "Bioinformatics, Comp biol,  cancer genomes, text mining, strucutral bioinfo.\nbut also: \nScience publishing, science policy, genome & ethics, science & art",
+                    "id_on_source": "Alfons_Valencia",
+                    "geo": {
+                        "lt": 40.4203,
+                        "ln": -3.705774,
+                        "country": "ES"
+                    },
+                    "followers": 435
+                },
+                "tweet_id": "396300262429966336"
+            },
+            {
+                "url": "http://twitter.com/genomigence/status/395795456120213504",
+                "posted_on": "2013-10-31T06:12:44+00:00",
+                "license": "public",
+                "author": {
+                    "name": "genomigence",
+                    "image": "http://a0.twimg.com/profile_images/570906209/tree_normal.png",
+                    "description": "Genome news and information from various sources.",
+                    "id_on_source": "genomigence",
+                    "geo": {
+                        "lt": 40.767979,
+                        "ln": -119.435722,
+                        "country": "US"
+                    },
+                    "followers": 398
+                },
+                "tweet_id": "395795456120213504"
+            },
+            {
+                "url": "http://twitter.com/MorganMarcos/status/395824772774625280",
+                "posted_on": "2013-10-31T08:09:14+00:00",
+                "license": "public",
+                "rt": [
+                    "pvanbaarlen"
+                ],
+                "author": {
+                    "name": "Marcos Morgan",
+                    "url": "http://t.co/BFfVzeF3Wy",
+                    "image": "http://a0.twimg.com/sticky/default_profile_images/default_profile_6_normal.png",
+                    "description": "Postdoc at EMBL Italy & European Bioinformatics Institute (EBI) (Opinions are my own).  Working on RNA biology. Worked on genome annotation and evolution.",
+                    "id_on_source": "MorganMarcos",
+                    "geo": {
+                        "lt": 41.90311,
+                        "ln": 12.49576,
+                        "country": "IT"
+                    },
+                    "followers": 25
+                },
+                "tweet_id": "395824772774625280"
+            },
+            {
+                "url": "http://twitter.com/genomicsLabIICB/status/397011804322537472",
+                "posted_on": "2013-11-03T14:46:04+00:00",
+                "license": "public",
+                "rt": [
+                    "tsucheta"
+                ],
+                "author": {
+                    "name": "Genomics Lab IICB",
+                    "url": "https://t.co/pFd7KyWXc1",
+                    "image": "http://a0.twimg.com/sticky/default_profile_images/default_profile_6_normal.png",
+                    "description": "Computational Genomics Lab at Indian Institute of Chemical Biology",
+                    "id_on_source": "genomicsLabIICB",
+                    "followers": 8
+                },
+                "tweet_id": "397011804322537472"
+            },
+            {
+                "url": "http://twitter.com/GencodeGenes/status/397295779439591424",
+                "posted_on": "2013-11-04T09:34:29+00:00",
+                "license": "public",
+                "author": {
+                    "id_on_source": "GencodeGenes"
+                },
+                "tweet_id": "397295779439591424"
+            },
+            {
+                "url": "http://twitter.com/pinin4fjords/status/403114667067076608",
+                "posted_on": "2013-11-20T10:56:40+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Jonathan Manning",
+                    "url": "http://t.co/j0fO81TFIR",
+                    "image": "http://a0.twimg.com/profile_images/1370321978/IMG_5888_normal.JPG",
+                    "description": "Atheist/skeptic bioinformatician w/ specialisms in microarrays, next-gen sequencing and protein seq / structure. Sidelines in sci-comm, Drupal web dev",
+                    "id_on_source": "pinin4fjords",
+                    "geo": {
+                        "lt": 55.954155,
+                        "ln": -3.202774,
+                        "country": "GB"
+                    },
+                    "followers": 113
+                },
+                "tweet_id": "403114667067076608"
+            },
+            {
+                "url": "http://twitter.com/MatthewBStocks/status/403140499730874368",
+                "posted_on": "2013-11-20T12:39:19+00:00",
+                "license": "public",
+                "rt": [
+                    "pinin4fjords"
+                ],
+                "author": {
+                    "name": "Matthew Stocks",
+                    "url": "http://t.co/oQvJX7sL8X",
+                    "image": "http://a0.twimg.com/profile_images/378800000142578087/984a755b043776bc0e4fcf731911eb18_normal.jpeg",
+                    "description": "Bioinformatics research in the Comp-Bio lab, UEA. Lead developer on the UEA sRNA Workbench. Avid Gamer. Occasionally serious. RT not always = agreement!",
+                    "id_on_source": "MatthewBStocks",
+                    "geo": {
+                        "lt": 41.526564,
+                        "ln": -72.075709,
+                        "country": "US"
+                    },
+                    "followers": 110
+                },
+                "tweet_id": "403140499730874368"
+            },
+            {
+                "url": "http://twitter.com/nextgenseek/status/406119514829369344",
+                "posted_on": "2013-11-28T17:56:52+00:00",
+                "license": "public",
+                "author": {
+                    "name": "nextgenseek",
+                    "url": "http://t.co/68Ji7PY061",
+                    "image": "http://a0.twimg.com/profile_images/2538708602/9a3cxp94du7z0jbbjqkq_normal.jpeg",
+                    "description": "Making Sense of Next-Gen Sequencing Revolution. Well.. Trying Hard.",
+                    "id_on_source": "nextgenseek",
+                    "followers": 1138
+                },
+                "tweet_id": "406119514829369344"
+            },
+            {
+                "url": "http://twitter.com/claufresearch/status/406120352763641856",
+                "posted_on": "2013-11-28T18:00:12+00:00",
+                "license": "public",
+                "rt": [
+                    "nextgenseek"
+                ],
+                "author": {
+                    "name": "Claudia de Bauer",
+                    "url": "http://t.co/iFueIu9aSs",
+                    "image": "http://a0.twimg.com/profile_images/1712152998/CF_ARI_normal.jpg",
+                    "description": "Mother + NeuroHealth Researcher(CINQ)+ Love Maker + Books Lover + Quantum Spirit & in the next future we ll see + about her...:)",
+                    "id_on_source": "claufresearch",
+                    "followers": 404
+                },
+                "tweet_id": "406120352763641856"
+            },
+            {
+                "url": "http://twitter.com/anshul/status/406259551323693056",
+                "posted_on": "2013-11-29T03:13:19+00:00",
+                "license": "public",
+                "rt": [
+                    "nextgenseek"
+                ],
+                "author": {
+                    "name": "ANSHUL KUNDAJE",
+                    "url": "http://t.co/foRCWO1SBW",
+                    "image": "http://a0.twimg.com/profile_images/3001862173/4dc86f565ba23454ec1c9760228b3d60_normal.jpeg",
+                    "id_on_source": "anshul",
+                    "geo": {
+                        "lt": 37.43137,
+                        "ln": -122.168924,
+                        "country": "US"
+                    },
+                    "followers": 244
+                },
+                "tweet_id": "406259551323693056"
+            },
+            {
+                "url": "http://twitter.com/timtriche/status/406266797365538816",
+                "posted_on": "2013-11-29T03:42:07+00:00",
+                "license": "public",
+                "rt": [
+                    "nextgenseek"
+                ],
+                "author": {
+                    "name": "Tim Triche, Jr.",
+                    "image": "http://a0.twimg.com/profile_images/378800000221433880/5c477e6d822ca8f877d26730e9799394_normal.jpeg",
+                    "id_on_source": "timtriche",
+                    "followers": 7
+                },
+                "tweet_id": "406266797365538816"
+            },
+            {
+                "url": "http://twitter.com/animesh1977/status/407788234073473024",
+                "posted_on": "2013-12-03T08:27:46+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Animesh Sharma",
+                    "url": "https://t.co/L66pgSrveu",
+                    "image": "http://a0.twimg.com/profile_images/1174472172/30836_437160525399_533710399_6191521_2115685_n_normal.jpg",
+                    "description": "I am a Medical graduate from Delhi University who  has specialised in Computational Biology from Jawaharlal Nehru University.",
+                    "id_on_source": "animesh1977",
+                    "geo": {
+                        "lt": 60.390705,
+                        "ln": 5.33275,
+                        "country": "NO"
+                    },
+                    "followers": 546
+                },
+                "tweet_id": "407788234073473024"
+            },
+            {
+                "url": "http://twitter.com/NucDiv/status/407937408697901056",
+                "posted_on": "2013-12-03T18:20:31+00:00",
+                "license": "datasift",
+                "author": {
+                    "name": "Thomas",
+                    "url": "http://t.co/VJbLrUa5Ta",
+                    "image": "http://a0.twimg.com/profile_images/931766141/Gregor_Mendel_normal.png",
+                    "description": "Researcher at Uppsala University. Working mainly with population genetics of forest trees",
+                    "id_on_source": "NucDiv",
+                    "geo": {
+                        "lt": 62.198448,
+                        "ln": 17.56622,
+                        "country": "SE"
+                    },
+                    "followers": 259
+                },
+                "tweet_id": "407937408697901056"
+            },
+            {
+                "url": "http://twitter.com/ge_parada/status/408038537012191232",
+                "posted_on": "2013-12-04T01:02:22+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Guillermo Parada",
+                    "image": "http://a0.twimg.com/profile_images/1528380893/1_normal.jpg",
+                    "description": "I'm a biochemist interested in genetics, genomics and new high-throughput sequencing data. Nowadays I'm processing RNA-seq data to study splicing,",
+                    "id_on_source": "ge_parada",
+                    "geo": {
+                        "lt": -37.020664,
+                        "ln": -87.946239,
+                        "country": "CL"
+                    },
+                    "followers": 93
+                },
+                "tweet_id": "408038537012191232"
+            },
+            {
+                "url": "http://twitter.com/dgermain21/status/408096322055458816",
+                "posted_on": "2013-12-04T04:51:59+00:00",
+                "license": "public",
+                "rt": [
+                    "lpachter"
+                ],
+                "author": {
+                    "name": "D. Russler-Germain",
+                    "url": "http://t.co/gBZpCczg7u",
+                    "image": "http://a0.twimg.com/profile_images/759437286/david_headshot_normal.png",
+                    "description": "I'm an MD/PhD student working on AML genomics and pathogenesis. Amateur chef, golfer, and cyclist.",
+                    "id_on_source": "dgermain21",
+                    "geo": {
+                        "lt": 38.62774,
+                        "ln": -90.199514,
+                        "country": "US"
+                    },
+                    "followers": 360
+                },
+                "tweet_id": "408096322055458816"
+            },
+            {
+                "url": "http://twitter.com/ProNovusBio/status/408096721076359168",
+                "posted_on": "2013-12-04T04:53:35+00:00",
+                "license": "public",
+                "rt": [
+                    "lpachter"
+                ],
+                "author": {
+                    "id_on_source": "ProNovusBio"
+                },
+                "tweet_id": "408096721076359168"
+            },
+            {
+                "url": "http://twitter.com/Janis3_14159/status/408104276956028928",
+                "posted_on": "2013-12-04T05:23:36+00:00",
+                "license": "public",
+                "rt": [
+                    "lpachter"
+                ],
+                "author": {
+                    "name": "Janis Pi",
+                    "image": "http://a0.twimg.com/profile_images/3641301517/c8c7cb14b83615bb077ac54ad2805a05_normal.png",
+                    "description": "*****",
+                    "id_on_source": "Janis3_14159",
+                    "geo": {
+                        "lt": 41.385589,
+                        "ln": 2.168745,
+                        "country": "ES"
+                    },
+                    "followers": 71
+                },
+                "tweet_id": "408104276956028928"
+            },
+            {
+                "url": "http://twitter.com/davetang31/status/408110807231127552",
+                "posted_on": "2013-12-04T05:49:33+00:00",
+                "license": "public",
+                "rt": [
+                    "lpachter"
+                ],
+                "author": {
+                    "name": "Dave Tang",
+                    "url": "http://t.co/SPuEr6Wu1s",
+                    "image": "http://a0.twimg.com/profile_images/2601487658/ndev8ruzpidopb6eivo7_normal.jpeg",
+                    "description": "An Australian (Queenslander) who grew up in Papua New Guinea and now undertaking his PhD in #bioinformatics in RIKEN Yokohama Japan. Student of @carninci.",
+                    "id_on_source": "davetang31",
+                    "geo": {
+                        "lt": 32.991405,
+                        "ln": 138.460247,
+                        "country": "JP"
+                    },
+                    "followers": 195
+                },
+                "tweet_id": "408110807231127552"
+            },
+            {
+                "url": "http://twitter.com/RyuichiroNakato/status/408111465464229888",
+                "posted_on": "2013-12-04T05:52:10+00:00",
+                "license": "datasift",
+                "rt": [
+                    "lpachter"
+                ],
+                "author": {
+                    "id_on_source": "RyuichiroNakato"
+                },
+                "tweet_id": "408111465464229888"
+            },
+            {
+                "url": "http://twitter.com/drchriscole/status/408152741102747648",
+                "posted_on": "2013-12-04T08:36:11+00:00",
+                "license": "public",
+                "rt": [
+                    "lpachter"
+                ],
+                "author": {
+                    "name": "Chris Cole",
+                    "image": "http://a0.twimg.com/profile_images/1704178663/calvin_normal.gif",
+                    "description": "A Scotland based bioinformatician",
+                    "id_on_source": "drchriscole",
+                    "followers": 263
+                },
+                "tweet_id": "408152741102747648"
+            },
+            {
+                "url": "http://twitter.com/manuelcorpas/status/408164443781357568",
+                "posted_on": "2013-12-04T09:22:41+00:00",
+                "license": "public",
+                "rt": [
+                    "lpachter"
+                ],
+                "author": {
+                    "name": "Manuel Corpas",
+                    "url": "http://t.co/TWKEBqFoA2",
+                    "image": "http://a0.twimg.com/profile_images/378800000118891564/85007b95da270e964e4662fd3a685d47_normal.jpeg",
+                    "description": "Bioinformatician, Genome Analyst, Personal Genomics Activist, Blogger, Director of Web Services Startup Company. Tweets my own.",
+                    "id_on_source": "manuelcorpas",
+                    "geo": {
+                        "lt": 55.00839,
+                        "ln": -5.822485,
+                        "country": "GB"
+                    },
+                    "followers": 1050
+                },
+                "tweet_id": "408164443781357568"
+            },
+            {
+                "url": "http://twitter.com/SteveLaurie42/status/408177996546453504",
+                "posted_on": "2013-12-04T10:16:32+00:00",
+                "license": "public",
+                "rt": [
+                    "lpachter"
+                ],
+                "author": {
+                    "name": "Steve Laurie",
+                    "image": "http://a0.twimg.com/sticky/default_profile_images/default_profile_6_normal.png",
+                    "id_on_source": "SteveLaurie42",
+                    "followers": 41
+                },
+                "tweet_id": "408177996546453504"
+            },
+            {
+                "url": "http://twitter.com/EduEyras/status/408197021590638593",
+                "posted_on": "2013-12-04T11:32:08+00:00",
+                "license": "public",
+                "rt": [
+                    "lpachter"
+                ],
+                "author": {
+                    "name": "Eduardo Eyras",
+                    "url": "http://t.co/4SMEuWkosL",
+                    "image": "http://a0.twimg.com/profile_images/3651010181/f5c22de348949fb415f3eb4331824ee8_normal.jpeg",
+                    "description": "Recycled physicist working in computational genomics. ICREA & UPF. When not playing the piano, I study non-coding RNAs and epigenetics in cancer",
+                    "id_on_source": "EduEyras",
+                    "geo": {
+                        "lt": 41.385589,
+                        "ln": 2.168745,
+                        "country": "ES"
+                    },
+                    "followers": 230
+                },
+                "tweet_id": "408197021590638593"
+            },
+            {
+                "url": "http://twitter.com/genetics_blog/status/408254734009913344",
+                "posted_on": "2013-12-04T15:21:28+00:00",
+                "license": "public",
+                "rt": [
+                    "kbradnam"
+                ],
+                "author": {
+                    "name": "Stephen Turner",
+                    "url": "http://t.co/lw5kEGNwdq",
+                    "image": "http://a0.twimg.com/profile_images/1356990961/pic2-square-cropped-350x350_normal.jpg",
+                    "description": "#Bioinformatics Core Director at @UVA. Blogger at http://t.co/3kEjsra8wh, biologist, statistician, patent agent, brewer, runner, guitar noise-maker.",
+                    "id_on_source": "genetics_blog",
+                    "geo": {
+                        "lt": 38.03213,
+                        "ln": -78.477529,
+                        "country": "US"
+                    },
+                    "followers": 4597
+                },
+                "tweet_id": "408254734009913344"
+            },
+            {
+                "url": "http://twitter.com/valeryah79/status/408285996547973120",
+                "posted_on": "2013-12-04T17:25:41+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Valeria Montis",
+                    "image": "http://a0.twimg.com/profile_images/2551648901/bp47n6xws8bw7bnxf5mb_normal.jpeg",
+                    "description": "Regulation of secondary metabolism in filamentous fungi\r\nPlant-microbe interactions",
+                    "id_on_source": "valeryah79",
+                    "followers": 23
+                },
+                "tweet_id": "408285996547973120"
+            },
+            {
+                "url": "http://twitter.com/Pabliskodelia/status/408308348761935872",
+                "posted_on": "2013-12-04T18:54:31+00:00",
+                "license": "public",
+                "rt": [
+                    "genetics_blog",
+                    "kbradnam"
+                ],
+                "author": {
+                    "name": "Paul Muffin Smith",
+                    "image": "http://a0.twimg.com/profile_images/2104170090/IMG000006_normal.jpg",
+                    "description": "Estudiante de Bioquimica, nombrador de British people, escalador matao, amontonalibros inacabados y rockstar.",
+                    "id_on_source": "Pabliskodelia",
+                    "geo": {
+                        "lt": 37.271875,
+                        "ln": -119.270229,
+                        "country": "US"
+                    },
+                    "followers": 78
+                },
+                "tweet_id": "408308348761935872"
+            },
+            {
+                "url": "http://twitter.com/rnomics/status/408380190646366208",
+                "posted_on": "2013-12-04T23:39:59+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Fabrice Leclerc",
+                    "url": "http://t.co/sawdHIuXjL",
+                    "image": "http://a0.twimg.com/profile_images/378800000101960845/c7172294faced6e1b8ea46e633945095_normal.png",
+                    "description": "#RNomics, #RNA biology, RNA #bioinformatics, #RNA_World & #evolution, technologies & resources, daily: http://t.co/R0GoOpUtQH & trends: http://t.co/WptDjA5r6B",
+                    "id_on_source": "rnomics",
+                    "geo": {
+                        "lt": 46.211401,
+                        "ln": 2.20936,
+                        "country": "FR"
+                    },
+                    "followers": 677
+                },
+                "tweet_id": "408380190646366208"
+            },
+            {
+                "url": "http://twitter.com/KatherineMejia/status/408589256542539776",
+                "posted_on": "2013-12-05T13:30:44+00:00",
+                "license": "public",
+                "rt": [
+                    "moorejh",
+                    "genetics_blog"
+                ],
+                "author": {
+                    "name": "Katherine Mejia-Guer",
+                    "url": "http://t.co/Al6OHzfUju",
+                    "image": "http://a0.twimg.com/profile_images/378800000237693295/bb6230a834091d7021fd73fa48086e17_normal.jpeg",
+                    "description": "Biology, Bioinformatics, Language DBs agnostic, TFs, cis-elements, Promoters, Networks, Gene Regulation",
+                    "id_on_source": "KatherineMejia",
+                    "geo": {
+                        "lt": 39.96196,
+                        "ln": -83.002984,
+                        "country": "US"
+                    },
+                    "followers": 895
+                },
+                "tweet_id": "408589256542539776"
+            },
+            {
+                "url": "https://twitter.com/moorejh/status/408566552850464770",
+                "posted_on": "2013-12-05T12:00:31+00:00",
+                "license": "public",
+                "rt": [
+                    "genetics_blog"
+                ],
+                "author": {
+                    "name": "Jason H. Moore, Ph.D",
+                    "url": "http://t.co/nv7N55pXOq",
+                    "image": "http://a0.twimg.com/profile_images/289160272/Jason-Science-resized_normal.jpg",
+                    "description": "Third Century Professor, Director of http://t.co/T6QDpKaBQ4 at Dartmouth College, Bioinformatics, Genetics, Genomics, Epistasis, Complexity, BigData",
+                    "id_on_source": "moorejh",
+                    "followers": 4830
+                },
+                "tweet_id": "408566552850464770"
+            },
+            {
+                "url": "http://twitter.com/harpersnotes/status/409652710351183873",
+                "posted_on": "2013-12-08T11:56:31+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Richard Harper",
+                    "image": "http://a0.twimg.com/profile_images/1591460992/rjh_photo_2011_1010_normal.jpg",
+                    "description": "I want to invent inventors! - Said to an older brother describing the many things he would invent by age 21.",
+                    "id_on_source": "harpersnotes",
+                    "geo": {
+                        "lt": 35.08418,
+                        "ln": -106.648639,
+                        "country": "US"
+                    },
+                    "followers": 918
+                },
+                "tweet_id": "409652710351183873"
+            },
+            {
+                "url": "http://twitter.com/razZ0r/status/409815094541811712",
+                "posted_on": "2013-12-08T22:41:47+00:00",
+                "license": "public",
+                "author": {
+                    "name": "razor",
+                    "url": "http://t.co/MuM7swqHDE",
+                    "image": "http://a0.twimg.com/profile_images/1369601363/cosplay_g02_normal.jpg",
+                    "description": "prying open my third eye",
+                    "id_on_source": "razZ0r",
+                    "followers": 768
+                },
+                "tweet_id": "409815094541811712"
+            },
+            {
+                "url": "http://twitter.com/tothur/status/409816517258534912",
+                "posted_on": "2013-12-08T22:47:26+00:00",
+                "license": "datasift",
+                "rt": [
+                    "razZ0r"
+                ],
+                "author": {
+                    "name": "Andras Toth",
+                    "image": "http://a0.twimg.com/profile_images/689198610/DSCF0085_normal.jpg",
+                    "description": "Undergraduate in biology at Eotvos Lorand University in Budapest, Hungary. Meetup organizer.",
+                    "id_on_source": "tothur",
+                    "geo": {
+                        "lt": 47.506225,
+                        "ln": 19.06482,
+                        "country": "HU"
+                    },
+                    "followers": 919
+                },
+                "tweet_id": "409816517258534912"
+            },
+            {
+                "url": "http://twitter.com/tkr_nak/status/409913633078923264",
+                "posted_on": "2013-12-09T05:13:20+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Takeru Nakazato",
+                    "url": "http://t.co/PcdSC4y0VI",
+                    "image": "http://a0.twimg.com/profile_images/2583636838/researchmap_normal.jpg",
+                    "description": "English account for @chalkless . Try to tweet during other than conferences... NGS, text-mining, annotation, ...",
+                    "id_on_source": "tkr_nak",
+                    "followers": 30
+                },
+                "tweet_id": "409913633078923264"
+            },
+            {
+                "url": "https://twitter.com/rnomics/status/407538244406886400",
+                "posted_on": "2013-12-02T15:54:23+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Fabrice Leclerc",
+                    "url": "http://t.co/sawdHIuXjL",
+                    "image": "http://a0.twimg.com/profile_images/378800000101960845/c7172294faced6e1b8ea46e633945095_normal.png",
+                    "description": "#RNomics, #RNA biology, RNA #bioinformatics, #RNA_World & #evolution, technologies & resources, daily: http://t.co/R0GoOpUtQH & trends: http://t.co/WptDjA5r6B",
+                    "id_on_source": "rnomics",
+                    "geo": {
+                        "lt": 46.211401,
+                        "ln": 2.20936,
+                        "country": "FR"
+                    },
+                    "followers": 677
+                },
+                "tweet_id": "407538244406886400"
+            },
+            {
+                "url": "http://twitter.com/GenetikSC/status/407938362491035648",
+                "posted_on": "2013-12-03T18:24:19+00:00",
+                "license": "datasift",
+                "rt": [
+                    "NucDiv"
+                ],
+                "author": {
+                    "name": "Oktay",
+                    "image": "http://a0.twimg.com/profile_images/1271198975/images_normal.jpg",
+                    "description": "An EMBO fellow working on Cellular Reprogramming and Epigenetics at MDC, Berlin, Germany. Can we cure Alzheimer and Diabetis ? Tweets are in English or Turkish.",
+                    "id_on_source": "GenetikSC",
+                    "geo": {
+                        "lt": 52.516074,
+                        "ln": 13.376987,
+                        "country": "DE"
+                    },
+                    "followers": 570
+                },
+                "tweet_id": "407938362491035648"
+            },
+            {
+                "url": "http://twitter.com/ggsimpsonrna/status/407950070043410432",
+                "posted_on": "2013-12-03T19:10:50+00:00",
+                "license": "datasift",
+                "rt": [
+                    "NucDiv"
+                ],
+                "author": {
+                    "name": "Gordon Simpson",
+                    "url": "http://t.co/E6FJ8p0iS3",
+                    "image": "http://a0.twimg.com/profile_images/378800000209347421/05654f542fc655a63ded433c7389ce2f_normal.jpeg",
+                    "description": "Reader, writer, reviewer, Arabidopsis RNA researcher ...",
+                    "id_on_source": "ggsimpsonrna",
+                    "followers": 36
+                },
+                "tweet_id": "407950070043410432"
+            },
+            {
+                "url": "http://twitter.com/lpachter/status/408094645076238337",
+                "posted_on": "2013-12-04T04:45:20+00:00",
+                "license": "public",
+                "author": {
+                    "id_on_source": "lpachter"
+                },
+                "tweet_id": "408094645076238337"
+            },
+            {
+                "url": "http://twitter.com/anshul/status/408128569156460544",
+                "posted_on": "2013-12-04T07:00:08+00:00",
+                "license": "public",
+                "rt": [
+                    "lpachter"
+                ],
+                "author": {
+                    "name": "ANSHUL KUNDAJE",
+                    "url": "http://t.co/foRCWO1SBW",
+                    "image": "http://a0.twimg.com/profile_images/3001862173/4dc86f565ba23454ec1c9760228b3d60_normal.jpeg",
+                    "id_on_source": "anshul",
+                    "geo": {
+                        "lt": 37.43137,
+                        "ln": -122.168924,
+                        "country": "US"
+                    },
+                    "followers": 244
+                },
+                "tweet_id": "408128569156460544"
+            },
+            {
+                "url": "http://twitter.com/4a6a5a/status/408169272259919872",
+                "posted_on": "2013-12-04T09:41:52+00:00",
+                "license": "public",
+                "rt": [
+                    "lpachter"
+                ],
+                "author": {
+                    "name": "Botond Sipos",
+                    "url": "http://t.co/WB5xejAcnO",
+                    "image": "http://a0.twimg.com/profile_images/2190093417/4a6a5a_normal.png",
+                    "id_on_source": "4a6a5a",
+                    "geo": {
+                        "lt": 44.572195,
+                        "ln": -116.676054,
+                        "country": "US"
+                    },
+                    "followers": 71
+                },
+                "tweet_id": "408169272259919872"
+            },
+            {
+                "url": "http://twitter.com/heathermvincent/status/408211766531719168",
+                "posted_on": "2013-12-04T12:30:44+00:00",
+                "license": "public",
+                "rt": [
+                    "manuelcorpas",
+                    "lpachter"
+                ],
+                "author": {
+                    "name": "Heather Vincent",
+                    "url": "http://t.co/mUi48seSyJ",
+                    "image": "http://a0.twimg.com/profile_images/2845532414/f0919c3448b451ce76200ff697e394cb_normal.png",
+                    "description": "bioinformatics, transcriptomics, systems biology, network biology, distance courses, opera (all round nerd really ... )",
+                    "id_on_source": "heathermvincent",
+                    "geo": {
+                        "lt": 53.479605,
+                        "ln": -2.248818,
+                        "country": "GB"
+                    },
+                    "followers": 78
+                },
+                "tweet_id": "408211766531719168"
+            },
+            {
+                "url": "http://twitter.com/davetang31/status/410416609312780289",
+                "posted_on": "2013-12-10T14:31:59+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Dave Tang",
+                    "url": "http://t.co/SPuEr6Wu1s",
+                    "image": "http://a0.twimg.com/profile_images/2601487658/ndev8ruzpidopb6eivo7_normal.jpeg",
+                    "description": "An Australian (Queenslander) who grew up in Papua New Guinea and now undertaking his PhD in #bioinformatics in RIKEN Yokohama Japan. Student of @carninci.",
+                    "id_on_source": "davetang31",
+                    "geo": {
+                        "lt": 32.991405,
+                        "ln": 138.460247,
+                        "country": "JP"
+                    },
+                    "followers": 195
+                },
+                "tweet_id": "410416609312780289"
+            },
+            {
+                "url": "http://twitter.com/the_prbb/status/410752285409837056",
+                "posted_on": "2013-12-11T12:45:50+00:00",
+                "license": "public",
+                "rt": [
+                    "EduardoEyras",
+                    "lpachter"
+                ],
+                "author": {
+                    "name": "Biomedicina BCN",
+                    "url": "http://t.co/qxyysJzlej",
+                    "image": "http://a0.twimg.com/profile_images/3059960034/b7fe4825477ea90119e6e5635f7dc486_normal.png",
+                    "description": "Noticias del Parc de Recerca Biomèdica de Barcelona // News from the Barcelona Biomedical Research Park // http://t.co/q2EzG6Gqxg // cat-cas-eng",
+                    "id_on_source": "the_prbb",
+                    "geo": {
+                        "lt": 41.385589,
+                        "ln": 2.168745,
+                        "country": "ES"
+                    },
+                    "followers": 2162
+                },
+                "tweet_id": "410752285409837056"
+            },
+            {
+                "url": "http://twitter.com/GeneQuan/status/411603979374981120",
+                "posted_on": "2013-12-13T21:10:10+00:00",
+                "license": "public",
+                "rt": [
+                    "nextgenseek"
+                ],
+                "author": {
+                    "name": "Michael W. Pfaffl",
+                    "url": "http://t.co/JB7dS52Crm",
+                    "image": "http://a0.twimg.com/profile_images/541592413/gq-logo-small_normal.png",
+                    "description": "http://t.co/cx1M0MRwqU page describes & summarises all technical aspects involved in gene quantification & expression analysis by real-time qPCR & RT-qPCR",
+                    "id_on_source": "GeneQuan",
+                    "geo": {
+                        "lt": 48.400795,
+                        "ln": 11.743765,
+                        "country": "DE"
+                    },
+                    "followers": 619
+                },
+                "tweet_id": "411603979374981120"
+            },
+            {
+                "url": "http://twitter.com/LeucineRichBio/status/412045664080904193",
+                "posted_on": "2013-12-15T02:25:16+00:00",
+                "license": "public",
+                "author": {
+                    "name": "Leucine Rich Bio",
+                    "url": "http://t.co/MueIEwvzJS",
+                    "image": "http://a0.twimg.com/profile_images/378800000278863237/334998dd45c047cddc24b410c5f81c57_normal.png",
+                    "description": "Leucine Rich Bio offers analytic solutions for NGS Data. We help Biologists, Clinicians & Drug Discovery Companies generate value from NGS & OMICs Data.",
+                    "id_on_source": "LeucineRichBio",
+                    "geo": {
+                        "lt": 12.97092,
+                        "ln": 77.60482,
+                        "country": "IN"
+                    },
+                    "followers": 258
+                },
+                "tweet_id": "412045664080904193"
+            },
+            {
+                "url": "http://twitter.com/XiaoyunS/status/412202602743345152",
+                "posted_on": "2013-12-15T12:48:53+00:00",
+                "license": "datasift",
+                "rt": [
+                    "LeucineRichBio"
+                ],
+                "author": {
+                    "name": "xiaoyun shang",
+                    "image": "http://a0.twimg.com/profile_images/2541492438/image_normal.jpg",
+                    "id_on_source": "XiaoyunS",
+                    "followers": 4
+                },
+                "tweet_id": "412202602743345152"
+            }
+        ]
+    },
+    "score": 40.466,
+    "images": {
+        "small": "https://altmetric-badges.a.ssl.fastly.net/?size=64&score=41&types=tttttttt",
+        "medium": "https://altmetric-badges.a.ssl.fastly.net/?size=100&score=41&types=tttttttt",
+        "large": "https://altmetric-badges.a.ssl.fastly.net/?size=180&score=41&types=tttttttt"
+    }
+}
