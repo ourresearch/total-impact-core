@@ -87,7 +87,7 @@ def get_altmetric_ids_from_nids(nids):
     r = requests.post("http://api.altmetric.com/v1/translate?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
                         data="ids="+nid_string, 
                         headers=headers)
-    data = r.json()
+    data = r.json
     print data
     return data
 
@@ -101,7 +101,7 @@ def altmetric_com_ids_to_update(altmetric_ids):
     r = requests.post("http://api.altmetric.com/v1/citations/1y?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
                         data="citation_ids="+altmetric_ids_string, 
                         headers=headers)
-    data = r.json()
+    data = r.json
     ids_with_changes = [str(entry["altmetric_id"]) for entry in data["results"]]    
     return ids_with_changes
 
