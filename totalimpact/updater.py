@@ -87,9 +87,11 @@ def get_altmetric_ids_from_nids(nids):
     r = requests.post("http://api.altmetric.com/v1/translate?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
                         data="ids="+nid_string, 
                         headers=headers)
-    data = r.json
-    print data
-    return data
+    altmetric_ids_dict = r.json()
+
+    nids_by_altmetric_id = dict((str(altmetric_ids_dict[nid]), nid) for nid in altmetric_ids_dict)
+    print nids_by_altmetric_id
+    return nids_by_altmetric_id
 
 
 def altmetric_com_ids_to_update(altmetric_ids):
@@ -117,8 +119,7 @@ def altmetric_com_update(number_to_update, myredis):
     if not nids:
         logger.info("no items to update")
         return []
-    altmetric_ids_dict = get_altmetric_ids_from_nids(nids)
-    nids_by_altmetric_id = dict((altmetric_ids_dict[nid], nid) for nid in altmetric_ids_dict)
+    nids_by_altmetric_id = get_altmetric_ids_from_nids(nids)
     print nids_by_altmetric_id
 
     altmetric_ids = nids_by_altmetric_id.keys()
@@ -129,7 +130,7 @@ def altmetric_com_update(number_to_update, myredis):
         print altmetric_ids
         altmetric_ids_with_changes = altmetric_com_ids_to_update(altmetric_ids)
         print altmetric_ids_with_changes
-        nids_with_changes = [nids_by_altmetric_id[str(id)] for id in altmetric_ids_with_changes]
+        nids_with_changes = [nids_by_altmetric_id[id] for id in altmetric_ids_with_changes]
         tiids_with_changes = [tiids_by_nids[nid] for nid in nids_with_changes]
         updated_tiids = update_by_tiids(tiids_with_changes, myredis)
 
