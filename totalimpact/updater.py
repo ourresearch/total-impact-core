@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse
-import logging, os, sys, random, datetime, time
+import logging, os, sys, random, datetime, time, collections
 import requests
 from sqlalchemy.sql import text    
 
@@ -15,21 +15,27 @@ logger.setLevel(logging.DEBUG)
 # heroku run python totalimpact/updater.py
 
 
-def update_by_tiids(all_tiids, number_to_update, myredis):
-    tiids_to_update = all_tiids[0:min(number_to_update, len(all_tiids))]
-    now = datetime.datetime.utcnow().isoformat()
-
-    print u"updating {number_to_update} of them now".format(number_to_update=number_to_update)
-    QUEUE_DELAY_IN_SECONDS = 0.25
-    for tiid in tiids_to_update:
+def update_by_tiids(all_tiids, myredis):
+    for tiid in all_tiids:
         item_obj = item_module.Item.query.get(tiid)  # can use this method because don't need metrics
         item_doc = item_obj.as_old_doc()
         item_module.start_item_update([{"tiid": item_doc["_id"], "aliases_dict":item_doc["aliases"]}], {}, "low", myredis)
-        item_obj.last_update_run = now
-        db.session.add(item_obj)
-        time.sleep(QUEUE_DELAY_IN_SECONDS)
+    return all_tiids
+
+
+def set_last_update_run(all_tiids):
+    now = datetime.datetime.utcnow().isoformat()
+    for tiid in all_tiids:
+        item_obj = item_module.Item.query.get(tiid)  # can use this method because don't need metrics
+        try:
+            item_obj.last_update_run = now
+            db.session.add(item_obj)
+        except AttributeError:
+            logger.warning(u"no object found for tiid {tiid} when updating last_update_run".format(
+                tiid=tiid))
+
     db.session.commit()
-    return tiids_to_update
+    return all_tiids
 
 
 # create table registered_tiid as (select tiid, api_key
@@ -37,7 +43,7 @@ def update_by_tiids(all_tiids, number_to_update, myredis):
 # where alias.nid=registered_item.nid and alias.namespace=registered_item.namespace
 # )
 
-def get_tiids_not_updated_since(number_to_update, now=datetime.datetime.utcnow()):
+def get_registered_tiids_not_updated_since(number_to_update, now=datetime.datetime.utcnow()):
 
     raw_sql = text("""SELECT tiid FROM item i
         WHERE last_update_run < now()::date - 7
@@ -54,11 +60,88 @@ def get_tiids_not_updated_since(number_to_update, now=datetime.datetime.utcnow()
 
     return tiids
 
+def get_nids_for_altmetric_com_to_update(number_to_update):
+
+    raw_sql = text("""SELECT i.tiid, namespace, nid, last_update_run 
+        FROM item i, alias a
+        WHERE last_update_run < now()::date - 1
+        AND i.tiid = a.tiid
+        AND namespace in ('doi', 'arxiv', 'pmid')
+        ORDER BY last_update_run DESC
+        LIMIT :number_to_update""")
+
+    result = db.session.execute(raw_sql, params={
+        "number_to_update": number_to_update
+        })
+    #tiids = [row["tiid"] for row in result]
+
+    return result.fetchall()
+
+
+def get_altmetric_ids_from_nids(nids):
+    nid_string = "|".join(nids)
+
+    print nid_string
+    headers = {u'content-type': u'application/x-www-form-urlencoded', 
+                u'accept': u'application/json'}
+    r = requests.post("http://api.altmetric.com/v1/translate?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
+                        data="ids="+nid_string, 
+                        headers=headers)
+    data = r.json()
+    print data
+    return data
+
+
+def altmetric_com_ids_to_update(altmetric_ids):
+    altmetric_ids_string = ",".join(altmetric_ids)
+    print altmetric_ids_string
+    headers = {u'content-type': u'application/x-www-form-urlencoded',
+                u'accept': u'application/json'}
+
+    r = requests.post("http://api.altmetric.com/v1/citations/1y?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
+                        data="citation_ids="+altmetric_ids_string, 
+                        headers=headers)
+    data = r.json()
+    ids_with_changes = [str(entry["altmetric_id"]) for entry in data["results"]]    
+    return ids_with_changes
+
+
+def altmetric_com_update(number_to_update, myredis):
+    candidate_tiid_rows = get_nids_for_altmetric_com_to_update(number_to_update)
+    tiids_by_nids = collections.defaultdict(list)
+    for row in candidate_tiid_rows:
+        tiids_by_nids[row["nid"]] += [row["tiid"]]
+    all_tiids = [row["tiid"] for row in candidate_tiid_rows]
+
+    nids = tiids_by_nids.keys()
+    if not nids:
+        logger.info("no items to update")
+        return []
+    altmetric_ids_dict = get_altmetric_ids_from_nids(nids)
+    nids_by_altmetric_id = dict((altmetric_ids_dict[nid], nid) for nid in altmetric_ids_dict)
+    print nids_by_altmetric_id
+
+    altmetric_ids = nids_by_altmetric_id.keys()
+
+    tiids_with_changes = []
+
+    if altmetric_ids:
+        print altmetric_ids
+        altmetric_ids_with_changes = altmetric_com_ids_to_update(altmetric_ids)
+        print altmetric_ids_with_changes
+        nids_with_changes = [nids_by_altmetric_id[str(id)] for id in altmetric_ids_with_changes]
+        tiids_with_changes = [tiids_by_nids[nid] for nid in nids_with_changes]
+        updated_tiids = update_by_tiids(tiids_with_changes, myredis)
+
+    if all_tiids:
+        set_last_update_run(all_tiids)
+    return tiids_with_changes
+
 
 def gold_update(number_to_update, myredis, now=datetime.datetime.utcnow()):
-    tiids = get_tiids_not_updated_since(number_to_update, now)
-    tiids_to_update = update_by_tiids(tiids, number_to_update, myredis)
-    return tiids
+    tiids = get_registered_tiids_not_updated_since(number_to_update, now)
+    updated_tiids = update_by_tiids(tiids, myredis)
+    return updated_tiids
 
 
 def main(action_type, number_to_update=35, specific_publisher=None):
@@ -72,6 +155,8 @@ def main(action_type, number_to_update=35, specific_publisher=None):
     try:
         if action_type == "gold_update":
             tiids = gold_update(number_to_update, myredis)
+        elif action_type == "altmetric_com":
+            tiids = altmetric_com_update(number_to_update, myredis)
     except (KeyboardInterrupt, SystemExit): 
         # this approach is per http://stackoverflow.com/questions/2564137/python-how-to-terminate-a-thread-when-main-program-ends
         sys.exit()
