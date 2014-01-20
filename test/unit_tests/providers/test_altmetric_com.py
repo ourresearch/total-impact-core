@@ -34,10 +34,10 @@ class TestAltmetric_Com(ProviderTestCase):
         expected = [('altmetric_com', '1870595')]
         assert_equals(aliases_list, expected)
 
-    def test_extract_metrics_success(self):
+    def test_extract_metrics_success_twitter(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         good_page = f.read()
-        metrics_dict = self.provider._extract_metrics(good_page)
+        metrics_dict = self.provider._extract_metrics_twitter(good_page)
         expected = {'altmetric_com:tweets': 55}
         assert_equals(metrics_dict, expected)
 
@@ -61,11 +61,27 @@ class TestAltmetric_Com(ProviderTestCase):
 
     @http
     def test_metrics(self):
-        metrics_dict = self.provider.metrics([self.testitem_metrics, ("altmetric_com", "1870595")])
-        expected = {'altmetric_com:tweets': (55, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org')}
+        metrics_dict = self.provider.metrics([("altmetric_com", "1870595")])
+        expected = {'altmetric_com:gplus_posts': (1, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org'), 'altmetric_com:facebook_posts': (1, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org'), 'altmetric_com:tweets': (55, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org'), 'altmetric_com:blog_posts': (59, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+
+    def test_provider_aliases_400(self):
+        pass
+    def test_provider_aliases_500(self):
+        pass
+
+    def test_provider_metrics_400(self):
+        pass
+    def test_provider_metrics_500(self):
+        pass
+    def test_provider_metrics_empty(self):
+        pass
+    def test_provider_metrics_nonsense_txt(self):
+        pass
+    def test_provider_metrics_nonsense_xml(self):
+        pass
 
 
