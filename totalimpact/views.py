@@ -700,6 +700,11 @@ def collection_create():
     return resp
 
 
+@app.route("/v1/product/<tiid>/biblio", methods=["PATCH"])
+def product_biblio_modify(tiid):
+
+    response = {"tiid": tiid}
+    return make_response(json.dumps({"product":tiid}, indent=4), 200)
 
 
 
