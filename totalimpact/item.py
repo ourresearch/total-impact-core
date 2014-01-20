@@ -345,6 +345,14 @@ class Item(db.Model):
 
         return new_item_object
 
+    @property
+    def biblio_dict(self):
+        biblio_dict = {}
+        for biblio_obj in self.biblios:
+            if (biblio_obj.biblio_name not in biblio_dict) or (biblio_obj.provider == "user_provided"):
+                    biblio_dict[biblio_obj.biblio_name] = biblio_obj.biblio_value    
+        return biblio_dict
+
     def as_old_doc(self):
         # logger.debug(u"in as_old_doc for {tiid}".format(
         #     tiid=self.tiid))
@@ -355,9 +363,7 @@ class Item(db.Model):
         item_doc["created"] = self.created.isoformat()
         item_doc["type"] = "item"
 
-        item_doc["biblio"] = {}
-        for biblio in self.biblios:
-            item_doc["biblio"][biblio.biblio_name] = biblio.biblio_value    
+        item_doc["biblio"] = self.biblio_dict
 
         item_doc["aliases"] = alias_dict_from_tuples(self.alias_tuples)
         if item_doc["biblio"]:
@@ -555,6 +561,45 @@ def add_aliases_to_item_object(aliases_dict, item_doc):
             tiid=tiid, 
             message=e.message)) 
     return item_obj
+
+
+def add_biblio(tiid, biblio_name, biblio_value, provider_name="user_provided", collected_date=datetime.datetime.utcnow()):
+
+    logger.debug(u"in add_biblio for {tiid} {biblio_name}".format(
+        tiid=tiid, biblio_name=biblio_name))
+
+    biblio_object = Biblio.query.filter_by(tiid=tiid, provider=provider_name, biblio_name=biblio_name).first()
+    if biblio_object:
+        logger.debug(u"found a previous row in add_biblio for {tiid} {biblio_name}, so removing it".format(
+            tiid=tiid, biblio_name=biblio_name))
+        biblio_object.biblio_value = biblio_value
+        biblio_object.collected_date = collected_date
+    else:
+        biblio_object = Biblio(tiid=tiid, 
+                biblio_name=biblio_name, 
+                biblio_value=biblio_value, 
+                provider=provider_name, 
+                collected_date=collected_date)
+        db.session.add(biblio_object)
+
+    try:
+        db.session.commit()
+    except (IntegrityError, FlushError) as e:
+        db.session.rollback()
+        logger.warning(u"Fails Integrity check in add_biblio for {tiid}, rolling back.  Message: {message}".format(
+            tiid=tiid, 
+            message=e.message)) 
+
+    logger.debug(u"finished saving add_biblio for {tiid} {biblio_name}".format(
+        tiid=tiid, biblio_name=biblio_name))
+
+    item_obj = Item.from_tiid(tiid)
+
+    logger.debug(u"got object for add_biblio for {tiid} {biblio_name}".format(
+        tiid=tiid, biblio_name=biblio_name))
+
+    return item_obj
+
 
 def add_biblio_to_item_object(new_biblio_dict, item_doc):
     tiid = item_doc["_id"]

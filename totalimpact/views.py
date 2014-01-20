@@ -702,9 +702,11 @@ def collection_create():
 
 @app.route("/v1/product/<tiid>/biblio", methods=["PATCH"])
 def product_biblio_modify(tiid):
-
-    response = {"tiid": tiid}
-    return make_response(json.dumps({"product":tiid}, indent=4), 200)
+    data = request.json
+    for biblio_field_name in data:
+        item = item_module.add_biblio(tiid, biblio_field_name, data[biblio_field_name])
+    response = {"product": item.as_old_doc()}
+    return make_response(json.dumps(response, indent=4), 200)
 
 
 
