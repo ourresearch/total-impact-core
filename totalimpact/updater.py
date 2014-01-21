@@ -131,7 +131,8 @@ def altmetric_com_update(number_to_update, myredis):
         altmetric_ids_with_changes = altmetric_com_ids_to_update(altmetric_ids)
         print altmetric_ids_with_changes
         nids_with_changes = [nids_by_altmetric_id[id] for id in altmetric_ids_with_changes]
-        tiids_with_changes = [tiids_by_nids[nid] for nid in nids_with_changes]
+        tiids_with_changes_nested = [tiids_by_nids[nid] for nid in nids_with_changes]
+        tiids_with_changes = [tiid for inner_list in tiids_with_changes_nested for tiid in inner_list]
         updated_tiids = update_by_tiids(tiids_with_changes, myredis)
 
     if all_tiids:
