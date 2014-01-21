@@ -112,6 +112,16 @@ def altmetric_com_ids_to_update(altmetric_ids):
     return ids_with_changes
 
 
+def tiids_from_altmetric_ids(altmetric_ids, nids_by_altmetric_id, tiids_by_nids):
+    print "altmetric_ids", altmetric_ids
+    nids = [nids_by_altmetric_id[id] for id in altmetric_ids]
+    tiids_nested = [tiids_by_nids[nid] for nid in nids]
+    print "tiids_nested", tiids_nested
+    tiids = [tiid for inner_list in tiids_nested for tiid in inner_list]
+    print "tiids", tiids
+    return tiids
+
+
 def altmetric_com_update(number_to_update, myredis):
     candidate_tiid_rows = get_nids_for_altmetric_com_to_update(number_to_update)
     tiids_by_nids = collections.defaultdict(list)
@@ -133,14 +143,13 @@ def altmetric_com_update(number_to_update, myredis):
     print "altmetric_ids", altmetric_ids
 
     if altmetric_ids:
-        altmetric_ids_with_changes = altmetric_com_ids_to_update(altmetric_ids)
-        print "altmetric_ids_with_changes", altmetric_ids_with_changes
-        nids_with_changes = [nids_by_altmetric_id[id] for id in altmetric_ids_with_changes]
-        tiids_with_changes_nested = [tiids_by_nids[nid] for nid in nids_with_changes]
-        print "tiids_with_changes_nested", tiids_with_changes_nested
-        tiids_with_changes = [tiid for inner_list in tiids_with_changes_nested for tiid in inner_list]
-        print "tiids_with_changes", tiids_with_changes
-        updated_tiids = update_by_tiids(tiids_with_changes, myredis)
+        tiids_with_altmetric_ids = tiids_from_altmetric_ids(altmetric_ids, nids_by_altmetric_id, tiids_by_nids)
+        updated_tiids = update_by_tiids(tiids_with_altmetric_ids, myredis)
+
+        # altmetric_ids_with_changes = altmetric_com_ids_to_update(altmetric_ids, nids_by_altmetric_id, tiids_by_nids)
+        # tiids_with_changes = tiids_from_altmetric_ids(altmetric_ids_with_changes)
+        # updated_tiids = update_by_tiids(tiids_with_changes, myredis)
+
     else:
         tiids_with_changes = []
 
