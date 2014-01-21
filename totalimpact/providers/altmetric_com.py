@@ -30,21 +30,21 @@ class Altmetric_Com(Provider):
             "display_name": "Facebook public posts",
             "provider": "Altmetric.com",
             "provider_url": "http://facebook.com",
-            "description": "Number of posts mentioning the product on a public Facebook wall.",
+            "description": "Number of posts mentioning the product on a public Facebook wall",
             "icon": "http://facebook.com/favicon.ico",
         },
         "gplus_posts": {
             "display_name": "Google+ posts",
             "provider": "Altmetric.com",
             "provider_url": "http://plus.google.com",
-            "description": "Number of posts mentioning the product on Google+.",
+            "description": "Number of posts mentioning the product on Google+",
             "icon": "http://plus.google.com/favicon.ico",
         },
         "blog_posts": {
             "display_name": "blog posts",
             "provider": "Altmetric.com",
             "provider_url": "http://plus.google.com",
-            "description": "Number of blog posts mentioning the product.",
+            "description": "Number of blog posts mentioning the product",
             "icon": "http://www.altmetric.com/favicon.ico",
         }                           
     }

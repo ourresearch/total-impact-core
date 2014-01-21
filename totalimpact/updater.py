@@ -103,8 +103,12 @@ def altmetric_com_ids_to_update(altmetric_ids):
     r = requests.post("http://api.altmetric.com/v1/citations/1y?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
                         data="citation_ids="+altmetric_ids_string, 
                         headers=headers)
-    data = r.json()
-    ids_with_changes = [str(entry["altmetric_id"]) for entry in data["results"]]    
+    try:
+        data = r.json()
+        ids_with_changes = [str(entry["altmetric_id"]) for entry in data["results"]]    
+    except:
+        # says "Not Found" not in JSON if nothing found
+        ids_with_changes = []
     return ids_with_changes
 
 
