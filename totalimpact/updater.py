@@ -150,12 +150,10 @@ def altmetric_com_update(number_to_update, myredis):
         # tiids_with_changes = tiids_from_altmetric_ids(altmetric_ids_with_changes)
         # updated_tiids = update_by_tiids(tiids_with_changes, myredis)
 
-    else:
-        tiids_with_changes = []
 
     if all_tiids:
         set_last_update_run(all_tiids)
-    return tiids_with_changes
+    return
 
 
 def gold_update(number_to_update, myredis, now=datetime.datetime.utcnow()):
