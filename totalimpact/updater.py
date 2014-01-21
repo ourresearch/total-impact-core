@@ -113,6 +113,7 @@ def altmetric_com_update(number_to_update, myredis):
     tiids_by_nids = collections.defaultdict(list)
     for row in candidate_tiid_rows:
         tiids_by_nids[row["nid"]] += [row["tiid"]]
+    print "tiids_by_nids", tiids_by_nids
     all_tiids = [row["tiid"] for row in candidate_tiid_rows]
     print "all_tiids", all_tiids
 
@@ -136,6 +137,8 @@ def altmetric_com_update(number_to_update, myredis):
         tiids_with_changes = [tiid for inner_list in tiids_with_changes_nested for tiid in inner_list]
         print "tiids_with_changes", tiids_with_changes
         updated_tiids = update_by_tiids(tiids_with_changes, myredis)
+    else:
+        tiids_with_changes = []
 
     if all_tiids:
         set_last_update_run(all_tiids)
