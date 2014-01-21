@@ -80,8 +80,8 @@ def get_nids_for_altmetric_com_to_update(number_to_update):
 
 def get_altmetric_ids_from_nids(nids):
     nid_string = "|".join(nids)
+    print "nid_string", nid_string
 
-    print nid_string
     headers = {u'content-type': u'application/x-www-form-urlencoded', 
                 u'accept': u'application/json'}
     r = requests.post("http://api.altmetric.com/v1/translate?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
@@ -90,13 +90,13 @@ def get_altmetric_ids_from_nids(nids):
     altmetric_ids_dict = r.json()
 
     nids_by_altmetric_id = dict((str(altmetric_ids_dict[nid]), nid) for nid in altmetric_ids_dict)
-    print nids_by_altmetric_id
     return nids_by_altmetric_id
 
 
 def altmetric_com_ids_to_update(altmetric_ids):
     altmetric_ids_string = ",".join(altmetric_ids)
-    print altmetric_ids_string
+    print "altmetric_ids_string", altmetric_ids_string
+
     headers = {u'content-type': u'application/x-www-form-urlencoded',
                 u'accept': u'application/json'}
 
@@ -114,25 +114,27 @@ def altmetric_com_update(number_to_update, myredis):
     for row in candidate_tiid_rows:
         tiids_by_nids[row["nid"]] += [row["tiid"]]
     all_tiids = [row["tiid"] for row in candidate_tiid_rows]
+    print "all_tiids", all_tiids
 
     nids = tiids_by_nids.keys()
     if not nids:
         logger.info("no items to update")
         return []
+    print "nids", nids
     nids_by_altmetric_id = get_altmetric_ids_from_nids(nids)
-    print nids_by_altmetric_id
+    print "nids_by_altmetric_id", nids_by_altmetric_id
 
     altmetric_ids = nids_by_altmetric_id.keys()
-
-    tiids_with_changes = []
+    print "altmetric_ids", altmetric_ids
 
     if altmetric_ids:
-        print altmetric_ids
         altmetric_ids_with_changes = altmetric_com_ids_to_update(altmetric_ids)
-        print altmetric_ids_with_changes
+        print "altmetric_ids_with_changes", altmetric_ids_with_changes
         nids_with_changes = [nids_by_altmetric_id[id] for id in altmetric_ids_with_changes]
         tiids_with_changes_nested = [tiids_by_nids[nid] for nid in nids_with_changes]
+        print "tiids_with_changes_nested", tiids_with_changes_nested
         tiids_with_changes = [tiid for inner_list in tiids_with_changes_nested for tiid in inner_list]
+        print "tiids_with_changes", tiids_with_changes
         updated_tiids = update_by_tiids(tiids_with_changes, myredis)
 
     if all_tiids:
