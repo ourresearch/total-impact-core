@@ -119,6 +119,7 @@ def get_num_providers_currently_updating(self, item_id):
 
 
 def add_to_alias_queue(self, dicts_to_add, analytics_credentials={}, priority="high", alias_providers_already_run=[]):
+    queue_name = "aliasqueue_" + priority
     pipe = self.pipeline()    
     for message_dict in dicts_to_add:
         message = json.dumps({
@@ -127,11 +128,14 @@ def add_to_alias_queue(self, dicts_to_add, analytics_credentials={}, priority="h
                 "analytics_credentials": analytics_credentials,
                 "alias_providers_already_run": alias_providers_already_run
             })
-        logger.debug(u"Adding to alias_queue: /biblio_print {message}".format(
-            message=message))
-        queue_name = "aliasqueue_" + priority
+        logger.debug(u"Adding to alias_queue {queue_name}: /biblio_print {message}".format(
+            queue_name=queue_name, message=message))
         pipe.lpush(queue_name, message)
     pipe.execute()
+    queue_length = self.llen(queue_name)       
+    logger.info(u">>>PUSHING to redis queue {queue_name}, current length {queue_length}".format(
+        queue_name=queue_name, queue_length=queue_length)) 
+
 
 
 def set_value(self, key, value, time_to_expire):
