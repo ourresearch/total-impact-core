@@ -179,8 +179,8 @@ def main(action_type, number_to_update=35, number_loops=400):
                 print "another loop of altmetric_com_update", i
                 resp = altmetric_com_update(number_to_update, myredis)
                 print "updating", resp["len_altmetric_ids"]
-                print "sleeping to pause, for", 5 * resp["len_altmetric_ids"], "seconds"
-                time.sleep(5 * resp["len_altmetric_ids"])
+                print "sleeping to pause, for", 10 * resp["len_altmetric_ids"], "seconds"
+                time.sleep(10 * resp["len_altmetric_ids"])
                 if not resp["len_candidate_tiid_rows"]:
                     raise SystemExit
     except (KeyboardInterrupt, SystemExit): 
