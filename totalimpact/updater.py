@@ -63,9 +63,10 @@ def get_registered_tiids_not_updated_since(number_to_update, now=datetime.dateti
 def get_nids_for_altmetric_com_to_update(number_to_update):
 
     raw_sql = text("""SELECT i.tiid, namespace, nid, last_update_run 
-        FROM item i, alias a
+        FROM item i, alias a, user_tiids_valid_users u
         WHERE last_update_run < now()::date - 1
         AND i.tiid = a.tiid
+        AND i.tiid = u.tiid
         AND namespace in ('doi', 'arxiv', 'pmid')
         ORDER BY last_update_run DESC
         LIMIT :number_to_update""")
