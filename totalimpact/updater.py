@@ -154,7 +154,7 @@ def altmetric_com_update(number_to_update, myredis):
 
     if all_tiids:
         set_last_update_run(all_tiids)
-    return
+    return len(candidate_tiid_rows)
 
 
 def gold_update(number_to_update, myredis, now=datetime.datetime.utcnow()):
@@ -163,7 +163,7 @@ def gold_update(number_to_update, myredis, now=datetime.datetime.utcnow()):
     return updated_tiids
 
 
-def main(action_type, number_to_update=35, specific_publisher=None):
+def main(action_type, number_to_update=35, number_loops=400):
     #35 every 10 minutes is 35*6perhour*24hours=5040 per day
 
     redis_url = os.getenv("REDIS_URL")
@@ -175,7 +175,13 @@ def main(action_type, number_to_update=35, specific_publisher=None):
         if action_type == "gold_update":
             tiids = gold_update(number_to_update, myredis)
         elif action_type == "altmetric_com":
-            tiids = altmetric_com_update(number_to_update, myredis)
+            for i in range(0, number_loops):
+                print "another loop of altmetric_com_update", i
+                len_candidate_tiid_rows = altmetric_com_update(number_to_update, myredis)
+                print "sleeping for pause"
+                time.sleep(10)
+                if not len_candidate_tiid_rows:
+                    raise SystemExit
     except (KeyboardInterrupt, SystemExit): 
         # this approach is per http://stackoverflow.com/questions/2564137/python-how-to-terminate-a-thread-when-main-program-ends
         sys.exit()
@@ -186,7 +192,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run periodic metrics updating from the command line")
     parser.add_argument("action_type", type=str, help="The action to test; available actions are 'gold_update' (that's all right now)")
     parser.add_argument('--number_to_update', default='35', type=int, help="Number to update.")
+    parser.add_argument('--number_loops', default='1', type=int, help="Number loops.")
     args = vars(parser.parse_args())
     print args
     print "updater.py starting."
-    main(args["action_type"], args["number_to_update"])
+    main(args["action_type"], args["number_to_update"], number_loops=args["number_loops"])
+
+
