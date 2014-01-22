@@ -333,58 +333,76 @@ class Backend(Worker):
 
     @classmethod
     def sniffer(cls, item_aliases, aliases_providers_run, provider_config=default_settings.PROVIDERS):
+
         # default to nothing
         aliases_providers = []
         biblio_providers = []
         metrics_providers = []
 
-        all_metrics_providers = [provider.provider_name for provider in 
-                        ProviderFactory.get_providers(provider_config, "metrics")]
-        (genre, host) = item_module.decide_genre(item_aliases)
 
-        has_enough_alias_urls = ("url" in item_aliases)
-        if has_enough_alias_urls:
-            if ("doi" in item_aliases):
-                has_enough_alias_urls = (len([url for url in item_aliases["url"] if url.startswith("http://dx.doi.org")]) > 0)
+        if os.getenv("RUN_ONLY_ALTMETRIC", "0") == "1":
+            logger.info(u"running only altmetric.com")
 
-        if (genre == "article") and (host != "arxiv"):
-            if not "mendeley" in aliases_providers_run:
-                aliases_providers = ["mendeley"]
-            elif not "crossref" in aliases_providers_run:
-                aliases_providers = ["crossref"]  # do this before pubmed because might tease doi from url
-            elif not "pubmed" in aliases_providers_run:
-                aliases_providers = ["pubmed"]
-            elif not "altmetric_com" in aliases_providers_run:
-                aliases_providers = ["altmetric_com"]
-            else:
-                metrics_providers = all_metrics_providers
-                biblio_providers = ["crossref", "pubmed", "webpage"]
-        elif ("doi" in item_aliases) or (host == "arxiv"):
-            if (set([host, "altmetric_com"]) == set(aliases_providers_run)):
-                metrics_providers = all_metrics_providers
-                biblio_providers = [host]
-            else:     
+            if (genre == "article") and (host != "arxiv"):
                 if not "altmetric_com" in aliases_providers_run:
                     aliases_providers = ["altmetric_com"]
                 else:
-                    aliases_providers = [host]
-        else:
-            # relevant alias and biblio providers are always the same
-            relevant_providers = [host]
-            if relevant_providers == ["unknown"]:
-                relevant_providers = ["webpage"]
-            # if all the relevant providers have already run, then all the aliases are done
-            # or if it already has urls
-            if has_enough_alias_urls or (set(relevant_providers) == set(aliases_providers_run)):
-                metrics_providers = all_metrics_providers
-                biblio_providers = relevant_providers
-            else:
-                aliases_providers = relevant_providers
+                    metrics_providers = ["altmetric_com"]
+            return({
+                "aliases": aliases_providers,
+                "biblio": biblio_providers,
+                "metrics": metrics_providers})
 
-        return({
-            "aliases":aliases_providers,
-            "biblio":biblio_providers,
-            "metrics":metrics_providers})
+
+
+        else:
+            all_metrics_providers = [provider.provider_name for provider in 
+                            ProviderFactory.get_providers(provider_config, "metrics")]
+            (genre, host) = item_module.decide_genre(item_aliases)
+
+            has_enough_alias_urls = ("url" in item_aliases)
+            if has_enough_alias_urls:
+                if ("doi" in item_aliases):
+                    has_enough_alias_urls = (len([url for url in item_aliases["url"] if url.startswith("http://dx.doi.org")]) > 0)
+
+            if (genre == "article") and (host != "arxiv"):
+                if not "mendeley" in aliases_providers_run:
+                    aliases_providers = ["mendeley"]
+                elif not "crossref" in aliases_providers_run:
+                    aliases_providers = ["crossref"]  # do this before pubmed because might tease doi from url
+                elif not "pubmed" in aliases_providers_run:
+                    aliases_providers = ["pubmed"]
+                elif not "altmetric_com" in aliases_providers_run:
+                    aliases_providers = ["altmetric_com"]
+                else:
+                    metrics_providers = all_metrics_providers
+                    biblio_providers = ["crossref", "pubmed", "webpage"]
+            elif ("doi" in item_aliases) or (host == "arxiv"):
+                if (set([host, "altmetric_com"]) == set(aliases_providers_run)):
+                    metrics_providers = all_metrics_providers
+                    biblio_providers = [host]
+                else:     
+                    if not "altmetric_com" in aliases_providers_run:
+                        aliases_providers = ["altmetric_com"]
+                    else:
+                        aliases_providers = [host]
+            else:
+                # relevant alias and biblio providers are always the same
+                relevant_providers = [host]
+                if relevant_providers == ["unknown"]:
+                    relevant_providers = ["webpage"]
+                # if all the relevant providers have already run, then all the aliases are done
+                # or if it already has urls
+                if has_enough_alias_urls or (set(relevant_providers) == set(aliases_providers_run)):
+                    metrics_providers = all_metrics_providers
+                    biblio_providers = relevant_providers
+                else:
+                    aliases_providers = relevant_providers
+
+            return({
+                "aliases":aliases_providers,
+                "biblio":biblio_providers,
+                "metrics":metrics_providers})
 
     def providers_too_busy(self, max_requests=10):
         for provider_name in thread_count:

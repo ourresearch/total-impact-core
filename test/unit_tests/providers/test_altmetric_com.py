@@ -62,7 +62,7 @@ class TestAltmetric_Com(ProviderTestCase):
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([("altmetric_com", "1870595")])
-        expected = {'altmetric_com:gplus_posts': (1, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org'), 'altmetric_com:facebook_posts': (1, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org'), 'altmetric_com:tweets': (55, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org'), 'altmetric_com:blog_posts': (59, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org')}
+        expected = {'altmetric_com:gplus_posts': (1, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org'), 'altmetric_com:facebook_posts': (1, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org'), 'altmetric_com:tweets': (55, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org'), 'altmetric_com:blog_posts': (2, 'http://www.altmetric.com/details.php?citation_id=1870595&src=impactstory.org')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
