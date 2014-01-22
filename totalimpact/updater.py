@@ -154,7 +154,7 @@ def altmetric_com_update(number_to_update, myredis):
 
     if all_tiids:
         set_last_update_run(all_tiids)
-    return len(candidate_tiid_rows)
+    return({"len_candidate_tiid_rows":len(candidate_tiid_rows), "len_altmetric_ids":len(altmetric_ids)})
 
 
 def gold_update(number_to_update, myredis, now=datetime.datetime.utcnow()):
@@ -177,10 +177,11 @@ def main(action_type, number_to_update=35, number_loops=400):
         elif action_type == "altmetric_com":
             for i in range(0, number_loops):
                 print "another loop of altmetric_com_update", i
-                len_candidate_tiid_rows = altmetric_com_update(number_to_update, myredis)
-                print "sleeping for pause"
-                time.sleep(10)
-                if not len_candidate_tiid_rows:
+                resp = altmetric_com_update(number_to_update, myredis)
+                print "updating", resp["len_altmetric_ids"]
+                print "sleeping to pause, for", 5 * resp["len_altmetric_ids"], "seconds"
+                time.sleep(5 * resp["len_altmetric_ids"])
+                if not resp["len_candidate_tiid_rows"]:
                     raise SystemExit
     except (KeyboardInterrupt, SystemExit): 
         # this approach is per http://stackoverflow.com/questions/2564137/python-how-to-terminate-a-thread-when-main-program-ends
