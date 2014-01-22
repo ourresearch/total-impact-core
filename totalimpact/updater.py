@@ -81,7 +81,7 @@ def get_nids_for_altmetric_com_to_update(number_to_update):
 
 def get_altmetric_ids_from_nids(nids):
     nid_string = "|".join(nids)
-    print "nid_string", nid_string
+    #print "nid_string", nid_string
 
     headers = {u'content-type': u'application/x-www-form-urlencoded', 
                 u'accept': u'application/json'}
@@ -96,7 +96,7 @@ def get_altmetric_ids_from_nids(nids):
 
 def altmetric_com_ids_to_update(altmetric_ids):
     altmetric_ids_string = ",".join(altmetric_ids)
-    print "altmetric_ids_string", altmetric_ids_string
+    #print "altmetric_ids_string", altmetric_ids_string
 
     headers = {u'content-type': u'application/x-www-form-urlencoded',
                 u'accept': u'application/json'}
@@ -114,12 +114,12 @@ def altmetric_com_ids_to_update(altmetric_ids):
 
 
 def tiids_from_altmetric_ids(altmetric_ids, nids_by_altmetric_id, tiids_by_nids):
-    print "altmetric_ids", altmetric_ids
+    #print "altmetric_ids", altmetric_ids
     nids = [nids_by_altmetric_id[id] for id in altmetric_ids]
     tiids_nested = [tiids_by_nids[nid] for nid in nids]
-    print "tiids_nested", tiids_nested
+    #print "tiids_nested", tiids_nested
     tiids = [tiid for inner_list in tiids_nested for tiid in inner_list]
-    print "tiids", tiids
+    #print "tiids", tiids
     return tiids
 
 
@@ -130,18 +130,18 @@ def altmetric_com_update(number_to_update, myredis):
         tiids_by_nids[row["nid"]] += [row["tiid"]]
     print "tiids_by_nids", tiids_by_nids
     all_tiids = [row["tiid"] for row in candidate_tiid_rows]
-    print "all_tiids", all_tiids
+    #print "all_tiids", all_tiids
 
     nids = tiids_by_nids.keys()
     if not nids:
         logger.info("no items to update")
         return []
-    print "nids", nids
+    #print "nids", nids
     nids_by_altmetric_id = get_altmetric_ids_from_nids(nids)
     print "nids_by_altmetric_id", nids_by_altmetric_id
 
     altmetric_ids = nids_by_altmetric_id.keys()
-    print "altmetric_ids", altmetric_ids
+    #print "altmetric_ids", altmetric_ids
 
     if altmetric_ids:
         tiids_with_altmetric_ids = tiids_from_altmetric_ids(altmetric_ids, nids_by_altmetric_id, tiids_by_nids)
