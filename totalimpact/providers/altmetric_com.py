@@ -161,22 +161,22 @@ class Altmetric_Com(Provider):
         r = requests.post(self.metrics_url_other_metrics, 
                         data="citation_ids="+id, 
                         headers=headers)
-        data = r.json()
 
         # extract the metrics
         try:
+            data = r.json() 
             metrics_dict = self._extract_metrics_other_metrics(data)
         except socket.timeout, e:  # can apparently be thrown here
             self.logger.info(u"%s Provider timed out *after* GET in socket" %(self.provider_name))        
             raise ProviderTimeout("Provider timed out *after* GET in socket", e)        
-        except (AttributeError, TypeError):  # throws type error if response.text is none
+        except (AttributeError, TypeError, ValueError):  # ValueError includes simplejson.decoder.JSONDecodeError
+            # expected response if nothing found
             metrics_dict = {}
 
         return metrics_dict
 
 
 
-    # default method; providers can override
     def metrics(self, 
             aliases,
             provider_url_template=None, 

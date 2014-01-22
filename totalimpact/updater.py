@@ -106,7 +106,7 @@ def altmetric_com_ids_to_update(altmetric_ids):
     try:
         data = r.json()
         ids_with_changes = [str(entry["altmetric_id"]) for entry in data["results"]]    
-    except:
+    except ValueError:
         # says "Not Found" not in JSON if nothing found
         ids_with_changes = []
     return ids_with_changes
