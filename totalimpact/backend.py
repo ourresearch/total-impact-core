@@ -338,9 +338,10 @@ class Backend(Worker):
         aliases_providers = []
         biblio_providers = []
         metrics_providers = []
+       (genre, host) = item_module.decide_genre(item_aliases)
 
 
-        if os.getenv("RUN_ONLY_ALTMETRIC", "0") == "1":
+        if os.getenv("RUN_ONLY_ALTMETRIC_COM", "0") == "1":
             logger.info(u"running only altmetric.com")
 
             if (genre == "article") and (host != "arxiv"):
@@ -358,7 +359,6 @@ class Backend(Worker):
         else:
             all_metrics_providers = [provider.provider_name for provider in 
                             ProviderFactory.get_providers(provider_config, "metrics")]
-            (genre, host) = item_module.decide_genre(item_aliases)
 
             has_enough_alias_urls = ("url" in item_aliases)
             if has_enough_alias_urls:
