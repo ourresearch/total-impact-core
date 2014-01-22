@@ -338,7 +338,7 @@ class Backend(Worker):
         aliases_providers = []
         biblio_providers = []
         metrics_providers = []
-       (genre, host) = item_module.decide_genre(item_aliases)
+        (genre, host) = item_module.decide_genre(item_aliases)
 
 
         if os.getenv("RUN_ONLY_ALTMETRIC_COM", "0") == "1":
