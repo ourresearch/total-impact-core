@@ -18,6 +18,7 @@ class Mendeley(Provider):
     metrics_from_pmid_template = "http://api.mendeley.com/oapi/documents/details/%s?type=pmid&consumer_key=" + os.environ["MENDELEY_KEY"]
     metrics_from_arxiv_template = "http://api.mendeley.com/oapi/documents/details/%s?type=arxiv&consumer_key=" + os.environ["MENDELEY_KEY"]
     aliases_url_template = uuid_from_title_template
+    biblio_url_template = metrics_from_doi_template
 
     static_meta_dict = {
         "readers": {
@@ -303,4 +304,11 @@ class Mendeley(Provider):
             aliases_list = []
         return aliases_list
 
+
+    def _extract_biblio(self, page, id=None):
+        dict_of_keylists = {
+            'is_oa_journal' : ['oa_journal']
+        }
+        biblio_dict = provider._extract_from_json(page, dict_of_keylists, include_falses=True)
+        return biblio_dict 
 

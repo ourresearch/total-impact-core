@@ -12,6 +12,7 @@ SAMPLE_EXTRACT_UUID_PAGE = os.path.join(datadir, "uuidlookup")
 SAMPLE_EXTRACT_UUID_PAGE_NO_DOI = os.path.join(datadir, "uuidlookup_no_doi")
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
 SAMPLE_EXTRACT_PROVENANCE_URL_PAGE = SAMPLE_EXTRACT_METRICS_PAGE
+SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
 
 TEST_DOI = "10.1038/nature10658"  # matches UUID sample page
 
@@ -35,6 +36,12 @@ class TestMendeley(ProviderTestCase):
 
         assert_equals(self.provider.is_relevant_alias(("github", "egonw,cdk")), False)
   
+    def test_extract_biblio_success(self):
+        f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
+        metrics_dict = self.provider._extract_biblio(f.read())
+        expected = {'is_oa_journal': False}
+        assert_equals(metrics_dict, expected)
+
     def test_extract_metrics_success(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
         metrics_dict = self.provider._extract_metrics(f.read())
@@ -91,7 +98,7 @@ class TestMendeley(ProviderTestCase):
         # at the moment this item 
         metrics = self.provider.metrics([("arxiv", "1203.4745")])
         print metrics
-        expected = {'mendeley:discipline': ([{u'id': 6, u'value': 35, u'name': u'Computer and Information Science'}, {u'id': 23, u'value': 23, u'name': u'Social Sciences'}, {u'id': 19, u'value': 10, u'name': u'Medicine'}], u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), 'mendeley:country': ([{u'name': u'United States', u'value': 16}, {u'name': u'United Kingdom', u'value': 9}, {u'name': u'Germany', u'value': 5}], u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), 'mendeley:career_stage': ([{u'name': u'Librarian', u'value': 26}, {u'name': u'Ph.D. Student', u'value': 15}, {u'name': u'Other Professional', u'value': 13}], u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), 'mendeley:readers': (151, u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/')}
+        expected = {'mendeley:discipline': ([{u'id': 6, u'value': 34, u'name': u'Computer and Information Science'}, {u'id': 23, u'value': 23, u'name': u'Social Sciences'}, {u'id': 19, u'value': 10, u'name': u'Medicine'}], u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), 'mendeley:country': ([{u'name': u'United States', u'value': 16}, {u'name': u'United Kingdom', u'value': 9}, {u'name': u'Germany', u'value': 5}], u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), 'mendeley:career_stage': ([{u'name': u'Librarian', u'value': 26}, {u'name': u'Ph.D. Student', u'value': 14}, {u'name': u'Other Professional', u'value': 14}], u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), 'mendeley:readers': (153, u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/')}
         assert_equals(metrics, expected)
 
     @http
@@ -108,7 +115,7 @@ class TestMendeley(ProviderTestCase):
         alias = (u'biblio', {u'title': u'Altmetrics in the wild: Using social media to explore scholarly impact', u'first_author': u'Priem', u'journal': u'arXiv preprint arXiv:1203.4745', u'authors': u'Priem, Piwowar, Hemminger', u'number': u'', u'volume': u'', u'first_page': u'', u'year': u'2012'})
         new_aliases = self.provider.aliases([alias])
         print new_aliases
-        expected = [('url', u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), ('uuid', u'ea6244c0-7dca-11e1-ac31-0024e8453de6')]
+        expected = [('doi', u'http://arxiv.org/abs/1203.4745v1'), ('url', u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), ('uuid', u'920cf7e1-02c1-3c40-bd52-18552089248e')]
         assert_equals(new_aliases, expected)
 
     # override common tests
@@ -146,4 +153,9 @@ class TestMendeley(ProviderTestCase):
     def test_provider_metrics_nonsense_xml(self):
         Provider.http_get = common.get_nonsense_xml
         metrics = self.provider.metrics(self.testitem_metrics)
+
+    def test_provider_biblio_400(self):
+        pass
+    def test_provider_biblio_500(self):
+        pass
 

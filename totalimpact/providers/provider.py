@@ -721,23 +721,23 @@ def _lookup_json(data, keylist):
             return None
     return(data)
 
-def _extract_from_data_dict(data, dict_of_keylists):
+def _extract_from_data_dict(data, dict_of_keylists, include_falses=False):
     return_dict = {}
     if dict_of_keylists:
         for (metric, keylist) in dict_of_keylists.iteritems():
             value = _lookup_json(data, keylist)
 
-            # only set metrics for non-zero and non-null metrics
-            if value and (value != "0"):
+            # unless include_falses, only set metrics for non-zero and non-null metrics
+            if include_falses or (value and (value != "0")):
                 return_dict[metric] = value
     return return_dict
 
 
-def _extract_from_json(page, dict_of_keylists):
+def _extract_from_json(page, dict_of_keylists, include_falses=False):
     data = _load_json(page)
     if not data:
         return {}
-    return_dict = _extract_from_data_dict(data, dict_of_keylists)
+    return_dict = _extract_from_data_dict(data, dict_of_keylists, include_falses)
     return return_dict
 
 def _get_doc_from_xml(page):
