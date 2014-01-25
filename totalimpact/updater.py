@@ -163,7 +163,7 @@ def gold_update(number_to_update, myredis, now=datetime.datetime.utcnow()):
     return updated_tiids
 
 
-def main(action_type, number_to_update=35, number_loops=400):
+def main(action_type, number_to_update=35, number_loops=400, seconds_wait=10):
     #35 every 10 minutes is 35*6perhour*24hours=5040 per day
 
     redis_url = os.getenv("REDIS_URL")
@@ -179,8 +179,8 @@ def main(action_type, number_to_update=35, number_loops=400):
                 print "another loop of altmetric_com_update", i
                 resp = altmetric_com_update(number_to_update, myredis)
                 print "updating", resp["len_altmetric_ids"]
-                print "sleeping to pause, for", 10 * resp["len_altmetric_ids"], "seconds"
-                time.sleep(10 * resp["len_altmetric_ids"])
+                print "sleeping to pause, for", seconds_wait * resp["len_altmetric_ids"], "seconds"
+                time.sleep(seconds_wait * resp["len_altmetric_ids"])
                 if not resp["len_candidate_tiid_rows"]:
                     raise SystemExit
     except (KeyboardInterrupt, SystemExit): 
@@ -194,9 +194,10 @@ if __name__ == "__main__":
     parser.add_argument("action_type", type=str, help="The action to test; available actions are 'gold_update' (that's all right now)")
     parser.add_argument('--number_to_update', default='35', type=int, help="Number to update.")
     parser.add_argument('--number_loops', default='1', type=int, help="Number loops.")
+    parser.add_argument('--seconds_wait', default='10', type=int, help="Number seconds wait per altmetrics_id.")
     args = vars(parser.parse_args())
     print args
     print "updater.py starting."
-    main(args["action_type"], args["number_to_update"], number_loops=args["number_loops"])
+    main(args["action_type"], args["number_to_update"], number_loops=args["number_loops"], seconds_wait=args["seconds_wait"])
 
 
