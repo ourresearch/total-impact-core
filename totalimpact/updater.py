@@ -85,10 +85,14 @@ def get_altmetric_ids_from_nids(nids):
 
     headers = {u'content-type': u'application/x-www-form-urlencoded', 
                 u'accept': u'application/json'}
-    r = requests.post(u"http://api.altmetric.com/v1/translate?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
-                        data=u"ids="+nid_string, 
-                        headers=headers)
-    altmetric_ids_dict = r.json()
+    try:
+        r = requests.post(u"http://api.altmetric.com/v1/translate?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
+                            data=u"ids="+nid_string, 
+                            headers=headers)
+        altmetric_ids_dict = r.json()
+    except UnicodeEncodeError:
+        print "UnicodeEncodeError on", nid_string
+        altmetric_ids_dict = []
 
     nids_by_altmetric_id = dict((str(altmetric_ids_dict[nid]), nid) for nid in altmetric_ids_dict)
     return nids_by_altmetric_id
