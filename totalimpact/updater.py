@@ -80,13 +80,13 @@ def get_nids_for_altmetric_com_to_update(number_to_update):
 
 
 def get_altmetric_ids_from_nids(nids):
-    nid_string = "|".join(nids)
+    nid_string = u"|".join(nids)
     #print "nid_string", nid_string
 
     headers = {u'content-type': u'application/x-www-form-urlencoded', 
                 u'accept': u'application/json'}
-    r = requests.post("http://api.altmetric.com/v1/translate?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
-                        data="ids="+nid_string, 
+    r = requests.post(u"http://api.altmetric.com/v1/translate?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
+                        data=u"ids="+nid_string, 
                         headers=headers)
     altmetric_ids_dict = r.json()
 
@@ -95,14 +95,14 @@ def get_altmetric_ids_from_nids(nids):
 
 
 def altmetric_com_ids_to_update(altmetric_ids):
-    altmetric_ids_string = ",".join(altmetric_ids)
+    altmetric_ids_string = u",".join(altmetric_ids)
     #print "altmetric_ids_string", altmetric_ids_string
 
     headers = {u'content-type': u'application/x-www-form-urlencoded',
                 u'accept': u'application/json'}
 
-    r = requests.post("http://api.altmetric.com/v1/citations/1y?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
-                        data="citation_ids="+altmetric_ids_string, 
+    r = requests.post(u"http://api.altmetric.com/v1/citations/1y?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
+                        data=u"citation_ids="+altmetric_ids_string, 
                         headers=headers)
     try:
         data = r.json()
