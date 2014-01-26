@@ -91,7 +91,7 @@ def get_altmetric_ids_from_nids(nids):
                             headers=headers)
         altmetric_ids_dict = r.json()
     except UnicodeEncodeError:
-        print "UnicodeEncodeError on", nid_string
+        print "UnicodeEncodeError"
         altmetric_ids_dict = []
 
     nids_by_altmetric_id = dict((str(altmetric_ids_dict[nid]), nid) for nid in altmetric_ids_dict)
