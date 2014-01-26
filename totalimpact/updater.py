@@ -68,7 +68,7 @@ def get_nids_for_altmetric_com_to_update(number_to_update):
         AND i.tiid = a.tiid
         AND i.tiid = u.tiid
         AND namespace in ('doi', 'arxiv', 'pmid')
-        ORDER BY last_update_run DESC
+        ORDER BY last_update_run ASC
         LIMIT :number_to_update""")
 
     result = db.session.execute(raw_sql, params={
