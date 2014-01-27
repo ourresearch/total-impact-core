@@ -64,7 +64,7 @@ def get_nids_for_altmetric_com_to_update(number_to_update):
 
     raw_sql = text("""SELECT i.tiid, namespace, nid, last_update_run 
         FROM item i, alias a, user_tiids_valid_users u
-        WHERE last_update_run < now()::date - 1
+        WHERE last_update_run < now()::date - 2
         AND i.tiid = a.tiid
         AND i.tiid = u.tiid
         AND namespace in ('doi', 'arxiv', 'pmid')
