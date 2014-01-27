@@ -361,6 +361,7 @@ class Item(db.Model):
         item_doc["_id"] = self.tiid
         item_doc["last_modified"] = self.last_modified.isoformat()
         item_doc["created"] = self.created.isoformat()
+        item_doc["last_update_run"] = self.last_update_run.isoformat()
         item_doc["type"] = "item"
 
         item_doc["biblio"] = self.biblio_dict
