@@ -30,7 +30,6 @@ python-dateutil==1.5
 python-memcached==1.48
 pytz==2012c
 redis==2.4.13
-rednose==0.3.3
 requests==2.0.1
 requests-oauthlib==0.4.0
 rsa==3.0.1
