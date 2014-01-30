@@ -45,7 +45,7 @@ class Altmetric_Com(Provider):
             "provider": "Altmetric.com",
             "provider_url": "http://plus.google.com",
             "description": "Number of blog posts mentioning the product",
-            "icon": "http://www.altmetric.com/favicon.ico",
+            "icon": "http://impactstory.org/static/img/blogs-icon.png",
         }                           
     }
     

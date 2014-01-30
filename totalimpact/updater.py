@@ -64,11 +64,11 @@ def get_nids_for_altmetric_com_to_update(number_to_update):
 
     raw_sql = text("""SELECT i.tiid, namespace, nid, last_update_run 
         FROM item i, alias a, user_tiids_valid_users u
-        WHERE last_update_run < now()::date - 1
+        WHERE last_update_run < now()::date - 2
         AND i.tiid = a.tiid
         AND i.tiid = u.tiid
         AND namespace in ('doi', 'arxiv', 'pmid')
-        ORDER BY last_update_run DESC
+        ORDER BY last_update_run ASC
         LIMIT :number_to_update""")
 
     result = db.session.execute(raw_sql, params={
@@ -80,29 +80,33 @@ def get_nids_for_altmetric_com_to_update(number_to_update):
 
 
 def get_altmetric_ids_from_nids(nids):
-    nid_string = "|".join(nids)
+    nid_string = u"|".join(nids)
     #print "nid_string", nid_string
 
     headers = {u'content-type': u'application/x-www-form-urlencoded', 
                 u'accept': u'application/json'}
-    r = requests.post("http://api.altmetric.com/v1/translate?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
-                        data="ids="+nid_string, 
-                        headers=headers)
-    altmetric_ids_dict = r.json()
+    try:
+        r = requests.post(u"http://api.altmetric.com/v1/translate?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
+                            data=u"ids="+nid_string, 
+                            headers=headers)
+        altmetric_ids_dict = r.json()
+    except UnicodeEncodeError:
+        print "UnicodeEncodeError"
+        altmetric_ids_dict = []
 
     nids_by_altmetric_id = dict((str(altmetric_ids_dict[nid]), nid) for nid in altmetric_ids_dict)
     return nids_by_altmetric_id
 
 
 def altmetric_com_ids_to_update(altmetric_ids):
-    altmetric_ids_string = ",".join(altmetric_ids)
+    altmetric_ids_string = u",".join(altmetric_ids)
     #print "altmetric_ids_string", altmetric_ids_string
 
     headers = {u'content-type': u'application/x-www-form-urlencoded',
                 u'accept': u'application/json'}
 
-    r = requests.post("http://api.altmetric.com/v1/citations/1y?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
-                        data="citation_ids="+altmetric_ids_string, 
+    r = requests.post(u"http://api.altmetric.com/v1/citations/1y?key=" + os.getenv("ALTMETRIC_COM_KEY"), 
+                        data=u"citation_ids="+altmetric_ids_string, 
                         headers=headers)
     try:
         data = r.json()
@@ -163,7 +167,7 @@ def gold_update(number_to_update, myredis, now=datetime.datetime.utcnow()):
     return updated_tiids
 
 
-def main(action_type, number_to_update=35, number_loops=400):
+def main(action_type, number_to_update=35, number_loops=400, seconds_wait=10):
     #35 every 10 minutes is 35*6perhour*24hours=5040 per day
 
     redis_url = os.getenv("REDIS_URL")
@@ -179,8 +183,8 @@ def main(action_type, number_to_update=35, number_loops=400):
                 print "another loop of altmetric_com_update", i
                 resp = altmetric_com_update(number_to_update, myredis)
                 print "updating", resp["len_altmetric_ids"]
-                print "sleeping to pause, for", 10 * resp["len_altmetric_ids"], "seconds"
-                time.sleep(10 * resp["len_altmetric_ids"])
+                print "sleeping to pause, for", seconds_wait * resp["len_altmetric_ids"], "seconds"
+                time.sleep(seconds_wait * resp["len_altmetric_ids"])
                 if not resp["len_candidate_tiid_rows"]:
                     raise SystemExit
     except (KeyboardInterrupt, SystemExit): 
@@ -194,9 +198,10 @@ if __name__ == "__main__":
     parser.add_argument("action_type", type=str, help="The action to test; available actions are 'gold_update' (that's all right now)")
     parser.add_argument('--number_to_update', default='35', type=int, help="Number to update.")
     parser.add_argument('--number_loops', default='1', type=int, help="Number loops.")
+    parser.add_argument('--seconds_wait', default='10', type=int, help="Number seconds wait per altmetrics_id.")
     args = vars(parser.parse_args())
     print args
     print "updater.py starting."
-    main(args["action_type"], args["number_to_update"], number_loops=args["number_loops"])
+    main(args["action_type"], args["number_to_update"], number_loops=args["number_loops"], seconds_wait=args["seconds_wait"])
 
 
