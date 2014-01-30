@@ -28,14 +28,12 @@ class RedisQueue(object):
         self.myredis.lpush(self.queue_name, message_json)
 
     def pop(self):
-        #blocking pop
         message = None
-        received = self.myredis.brpop([self.queue_name], timeout=0.1) #maybe timeout not necessary
-        if received:
+        message_json = self.myredis.rpop(self.queue_name) 
+        if message_json:
             queue_length = self.myredis.llen(self.queue_name)                   
             logger.debug(u"{:20}: <<<POPPED from redis, current length {queue_length}, now to parse message".format(
                 self.name, queue_length=queue_length))
-            queue, message_json = received
             try:
                 logger.debug(u"{:20}: <<<POPPED from redis: starts {message_json}".format(
                     self.name, message_json=message_json[0:50]))        
