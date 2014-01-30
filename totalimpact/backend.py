@@ -30,7 +30,7 @@ class RedisQueue(object):
     def pop(self):
         #blocking pop
         message = None
-        received = self.myredis.brpop([self.queue_name], timeout=5) #maybe timeout not necessary
+        received = self.myredis.brpop([self.queue_name], timeout=1) #maybe timeout not necessary
         if received:
             queue_length = self.myredis.llen(self.queue_name)                   
             logger.debug(u"{:20}: <<<POPPED from redis, current length {queue_length}, now to parse message".format(
