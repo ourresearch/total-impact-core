@@ -400,7 +400,7 @@ class Backend(Worker):
         for provider_name in thread_count:
             num_active_threads_for_this_provider = len(thread_count[provider_name])
             if num_active_threads_for_this_provider >= max_requests:
-                logger.info(u"providers_too_busy for {provider} at {num_active_threads_for_this_provider} threads".format(
+                logger.info(u"providers_too_busy for {provider_name} at {num_active_threads_for_this_provider} threads".format(
                    provider_name=provider_name, num_active_threads_for_this_provider=num_active_threads_for_this_provider))
                 return True
         return False
