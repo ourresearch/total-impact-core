@@ -35,8 +35,8 @@ class RedisQueue(object):
             logger.debug(u"{:20}: <<<POPPED from redis, current length {queue_length}, now to parse message".format(
                 self.name, queue_length=queue_length))
             try:
-                logger.debug(u"{:20}: <<<POPPED from redis: starts {message_json}".format(
-                    self.name, message_json=message_json[0:50]))        
+                # logger.debug(u"{:20}: <<<POPPED from redis: starts {message_json}".format(
+                #     self.name, message_json=message_json[0:50]))        
                 message = json.loads(message_json) 
             except (TypeError, KeyError):
                 logger.info(u"{:20}: ERROR processing redis message {message_json}".format(
@@ -414,8 +414,8 @@ class Backend(Worker):
             queue = "low"
 
         if alias_message:
-            logger.info(u"/biblio_print, ALIAS_MESSAGE from {queue} said {alias_message}".format(
-               queue=queue, alias_message=alias_message))
+            # logger.info(u"/biblio_print, ALIAS_MESSAGE from {queue} said {alias_message}".format(
+            #    queue=queue, alias_message=alias_message))
             tiid = alias_message["tiid"]
             aliases_dict = alias_message["aliases_dict"]
             analytics_credentials = alias_message["analytics_credentials"]
