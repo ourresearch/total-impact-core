@@ -398,9 +398,10 @@ class Backend(Worker):
 
     def providers_too_busy(self, max_requests=10):
         for provider_name in thread_count:
-            num_active_threads_for_this_provider = len(thread_count[provider_name])
-            if num_active_threads_for_this_provider >= max_requests:
-                return provider_name
+            if provider_name != "webpage":
+                num_active_threads_for_this_provider = len(thread_count[provider_name])
+                if num_active_threads_for_this_provider >= max_requests:
+                    return provider_name
         return None
 
     def run(self):
