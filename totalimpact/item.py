@@ -629,15 +629,20 @@ def add_biblio_to_item_object(new_biblio_dict, item_doc):
 
 
 def get_biblio_to_update(old_biblio, new_biblio):
-    response = None
-    if old_biblio:
-        try:
-            if old_biblio["title"] == "AOP":
-                response = new_biblio
-        except KeyError:
-            response = new_biblio
-    else:
-        response = new_biblio
+    if not old_biblio:
+        return new_biblio
+
+    response = {}
+    for biblio_name in new_biblio:
+        if not biblio_name in old_biblio:
+            response[biblio_name] = new_biblio[biblio_name]
+
+        if biblio_name=="title":
+            try:
+                if old_biblio["title"] == "AOP":
+                    response["title"] = new_biblio["title"]
+            except KeyError:
+                pass
 
     return response
 
