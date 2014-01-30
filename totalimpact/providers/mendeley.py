@@ -305,6 +305,26 @@ class Mendeley(Provider):
         return aliases_list
 
 
+    def get_biblio_for_id(self, 
+            id,
+            provider_url_template=None, 
+            cache_enabled=True):
+
+        self.logger.debug(u"%s getting biblio for %s" % (self.provider_name, id))
+
+        if not provider_url_template:
+            provider_url_template = self.biblio_url_template
+        page = self._get_metrics_lookup_page(provider_url_template, id, cache_enabled)
+        
+        # extract the aliases
+        try:
+            biblio_dict = self._extract_biblio(page, id)
+        except (AttributeError, TypeError):
+            biblio_dict = {}
+
+        return biblio_dict
+
+
     def _extract_biblio(self, page, id=None):
         dict_of_keylists = {
             'is_oa_journal' : ['oa_journal']
