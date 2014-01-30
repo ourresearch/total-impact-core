@@ -310,5 +310,7 @@ class Mendeley(Provider):
             'is_oa_journal' : ['oa_journal']
         }
         biblio_dict = provider._extract_from_json(page, dict_of_keylists, include_falses=True)
+        if biblio_dict and "is_oa_journal" in biblio_dict:
+            biblio_dict["is_oa_journal"] = str(biblio_dict["is_oa_journal"]) # cast boolean to string
         return biblio_dict 
 
