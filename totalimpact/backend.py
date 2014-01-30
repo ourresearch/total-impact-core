@@ -400,18 +400,22 @@ class Backend(Worker):
         for provider_name in thread_count:
             num_active_threads_for_this_provider = len(thread_count[provider_name])
             if num_active_threads_for_this_provider >= max_requests:
-                logger.info(u"providers_too_busy for {provider_name} at {num_active_threads_for_this_provider} threads".format(
-                   provider_name=provider_name, num_active_threads_for_this_provider=num_active_threads_for_this_provider))
-                return True
-        return False
+                return provider_name
+        return None
 
     def run(self):
         # go through alias_queues, with highest priority first
         alias_message = self.alias_queues["high"].pop()
         queue = "high"
-        if not alias_message and not self.providers_too_busy():
-            alias_message = self.alias_queues["low"].pop()
-            queue = "low"
+        if not alias_message:
+            too_busy_provider_name = self.providers_too_busy()
+            if too_busy_provider_name:
+                logger.info(u"providers_too_busy for {provider_name}".format(
+                   provider_name=too_busy_provider_name))
+                time.sleep(0.5)
+            else:
+                alias_message = self.alias_queues["low"].pop()
+                queue = "low"
 
         if alias_message:
             # logger.info(u"/biblio_print, ALIAS_MESSAGE from {queue} said {alias_message}".format(
