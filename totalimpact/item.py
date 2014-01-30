@@ -637,12 +637,13 @@ def get_biblio_to_update(old_biblio, new_biblio):
         if not biblio_name in old_biblio:
             response[biblio_name] = new_biblio[biblio_name]
 
-        if biblio_name=="title":
-            try:
-                if old_biblio["title"] == "AOP":
-                    response["title"] = new_biblio["title"]
-            except KeyError:
-                pass
+        # a few things should get overwritten no matter what
+        if (biblio_name=="title") and ("title" in old_biblio):
+            if old_biblio["title"] == "AOP":
+                response[biblio_name] = new_biblio[biblio_name]
+
+        if (biblio_name=="oa_journal"):
+            response[biblio_name] = new_biblio[biblio_name]
 
     return response
 
