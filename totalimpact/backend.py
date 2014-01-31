@@ -396,7 +396,7 @@ class Backend(Worker):
             "metrics":metrics_providers})
 
 
-    def providers_too_busy(self, max_requests=10):
+    def providers_too_busy(self, max_requests=15):
         for provider_name in thread_count:
             if provider_name != "webpage":
                 num_active_threads_for_this_provider = len(thread_count[provider_name])
@@ -411,8 +411,9 @@ class Backend(Worker):
         if not alias_message:
             too_busy_provider_name = self.providers_too_busy()
             if too_busy_provider_name:
-                logger.info(u"providers_too_busy for {provider_name}".format(
-                   provider_name=too_busy_provider_name))
+                thread_count = len(thread_count[provider_name])
+                logger.info(u"providers_too_busy for {provider_name}, threads = {thread_count}".format(
+                   provider_name=too_busy_provider_name, thread_count=thread_count))
                 time.sleep(0.5)
             else:
                 alias_message = self.alias_queues["low"].pop()
