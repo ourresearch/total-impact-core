@@ -151,6 +151,8 @@ class ProviderWorker(Worker):
 
     @classmethod
     def wrapper(cls, tiid, input_aliases_dict, provider, method_name, analytics_credentials, aliases_providers_run, callback):
+        global thread_count
+
         #logger.info(u"{:20}: **Starting {tiid} {provider_name} {method_name} with {aliases}".format(
         #    "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=aliases))
 
@@ -197,6 +199,8 @@ class ProviderWorker(Worker):
 
 
     def run(self):
+        global thread_count
+        
         num_active_threads_for_this_provider = len(thread_count[self.provider.provider_name])
 
         if num_active_threads_for_this_provider >= self.provider.max_simultaneous_requests:
@@ -397,6 +401,8 @@ class Backend(Worker):
 
 
     def providers_too_busy(self, max_requests=15):
+        global thread_count
+
         for provider_name in thread_count:
             if provider_name != "webpage":
                 num_active_threads_for_this_provider = len(thread_count[provider_name])
@@ -405,15 +411,17 @@ class Backend(Worker):
         return None
 
     def run(self):
+        global thread_count
+
         # go through alias_queues, with highest priority first
         alias_message = self.alias_queues["high"].pop()
         queue = "high"
         if not alias_message:
             too_busy_provider_name = self.providers_too_busy()
             if too_busy_provider_name:
-                thread_count = len(thread_count[provider_name])
-                logger.info(u"providers_too_busy for {provider_name}, threads = {thread_count}".format(
-                   provider_name=too_busy_provider_name, thread_count=thread_count))
+                count = len(thread_count[provider_name])
+                logger.info(u"providers_too_busy for {provider_name}, threads = {count}".format(
+                   provider_name=too_busy_provider_name, count=count))
                 time.sleep(0.5)
             else:
                 alias_message = self.alias_queues["low"].pop()
