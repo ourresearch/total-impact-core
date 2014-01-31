@@ -68,13 +68,14 @@ def create_metric_objects(old_style_metric_dict):
     return new_metric_objects
 
 
-def create_biblio_objects(list_of_old_style_biblio_dicts, collected_date=datetime.datetime.utcnow()):
+def create_biblio_objects(list_of_old_style_biblio_dicts, provider=None, collected_date=datetime.datetime.utcnow()):
     new_biblio_objects = []
 
     provider_number = 0
     for biblio_dict in list_of_old_style_biblio_dicts:
         provider_number += 1
-        provider = "unknown" + str(provider_number)
+        if not provider:
+            provider = "unknown" + str(provider_number)
         for biblio_name in biblio_dict:
             biblio_object = Biblio(biblio_name=biblio_name, 
                     biblio_value=biblio_dict[biblio_name], 
@@ -114,7 +115,7 @@ def create_objects_from_item_doc(item_doc, skip_if_exists=False):
 
     # biblio within aliases, skip just the biblio section
     if "biblio" in alias_dict:
-        new_biblio_objects = create_biblio_objects(alias_dict["biblio"], item_doc["last_modified"]) 
+        new_biblio_objects = create_biblio_objects(alias_dict["biblio"], provider=None, collected_date=item_doc["last_modified"]) 
         new_item_object.biblios = new_biblio_objects
 
     new_metric_objects = None
@@ -602,10 +603,11 @@ def add_biblio(tiid, biblio_name, biblio_value, provider_name="user_provided", c
     return item_obj
 
 
-def add_biblio_to_item_object(new_biblio_dict, item_doc):
+def add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name):
     tiid = item_doc["_id"]
-    logger.debug(u"in add_biblio_to_item_object for {tiid}, /biblio_print {new_biblio_dict}".format(
+    logger.debug(u"in add_biblio_to_item_object for {tiid} {provider_name}, /biblio_print {new_biblio_dict}".format(
         tiid=tiid, 
+        provider_name=provider_name,
         new_biblio_dict=new_biblio_dict))        
 
     item_obj = Item.from_tiid(tiid)
@@ -614,7 +616,8 @@ def add_biblio_to_item_object(new_biblio_dict, item_doc):
     item_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(item_obj)
 
-    item_obj.biblios += create_biblio_objects([new_biblio_dict])
+    new_biblio_dict["provider"] = provider_name
+    item_obj.biblios += create_biblio_objects([new_biblio_dict], provider=provider_name)
 
     try:
         db.session.commit()

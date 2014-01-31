@@ -1,4 +1,4 @@
-from nose.tools import raises, assert_equals, assert_true, assert_greater, nottest
+from nose.tools import raises, assert_equals, assert_true, assert_greater, assert_items_equal, nottest
 import os, unittest, hashlib, json, pprint, datetime
 from time import sleep
 from werkzeug.security import generate_password_hash
@@ -78,6 +78,7 @@ class TestItem():
             "_id": "test",
             "created": '2012-08-23T14:40:16.399932',
             "last_modified": '2012-08-23T14:40:16.399932',
+            "last_update_run": '2012-08-23T14:40:16.399932',
             "aliases": self.ALIAS_DATA,
             "metrics": {
                 "wikipedia:mentions": METRICS_DATA,
@@ -293,7 +294,6 @@ class TestItem():
         '''create an item from scratch.'''
         item = item_module.make()
         assert_equals(len(item["_id"]), 24)
-        assert item["created"] < datetime.datetime.now().isoformat()
         assert_equals(item["aliases"], {})
 
     def test_adds_genre(self):
@@ -301,7 +301,7 @@ class TestItem():
         self.db.session.add(self.TEST_OBJECT)
         self.db.session.commit()
 
-        item = item_module.get_item("test", self.myrefsets, self.d)
+        item = item_module.get_item("test", self.myrefsets, self.r)
         assert_equals(item["biblio"]['genre'], "article")
 
     def test_get_metric_names(self):
@@ -366,10 +366,11 @@ class TestItem():
         assert_equals(response, first_biblio)
 
         response = item_module.get_biblio_to_update(first_biblio, other_biblio)
-        assert_equals(response, None)
+        assert_equals(response, {})
 
         response = item_module.get_biblio_to_update(aop_biblio, other_biblio)
-        assert_equals(response, other_biblio)
+        print response
+        assert_equals(response, {'title': 'A different title'})
 
 
 
@@ -400,29 +401,13 @@ class TestItem():
 
     def test_build_item_for_client(self):
         item = {'created': '2012-08-23T14:40:16.399932', '_rev': '6-3e0ede6e797af40860e9dadfb39056ce', 'last_modified': '2012-08-23T14:40:16.399932', 'biblio': {'title': 'Perceptual training strongly improves visual motion perception in schizophrenia', 'journal': 'Brain and Cognition', 'year': 2011, 'authors': u'Norton, McBain, \xd6ng\xfcr, Chen'}, '_id': '4mlln04q1rxy6l9oeb3t7ftv', 'type': 'item', 'aliases': {'url': ['http://linkinghub.elsevier.com/retrieve/pii/S0278262611001308', 'http://www.ncbi.nlm.nih.gov/pubmed/21872380'], 'pmid': ['21872380'], 'doi': ['10.1016/j.bandc.2011.08.003'], 'title': ['Perceptual training strongly improves visual motion perception in schizophrenia']}}
-        response = item_module.build_item_for_client(item, self.myrefsets, self.d, False)
-        assert_equals(set(response.keys()), set(['created', '_rev', 'metrics', 'last_modified', 'biblio', '_id', 'type', 'aliases']))
+        response = item_module.build_item_for_client(item, self.myrefsets, self.r)
+        assert_equals(set(response.keys()), set(['currently_updating', 'created', '_rev', 'metrics', 'last_modified', 'biblio', '_id', 'type', 'aliases']))
 
     def test_build_item_for_client_excludes_history_by_default(self):
-        response = item_module.build_item_for_client(self.ITEM_DATA, self.myrefsets, self.d)
+        response = item_module.build_item_for_client(self.ITEM_DATA, self.myrefsets, self.r)
         assert_equals(response["metrics"]["wikipedia:mentions"]["values"].keys(), ["raw"])
         assert_equals(response["metrics"]["topsy:tweets"]["values"].keys(), ["raw"])
-
-    def test_build_item_for_client_includes_history_with_arg(self):
-        response = item_module.build_item_for_client(
-            self.ITEM_DATA,
-            self.myrefsets,
-            self.d,
-            include_history=True
-        )
-        assert_equals(
-            response["metrics"]["wikipedia:mentions"]["values"]["raw_history"][self.KEY1],
-            self.VAL1
-        )
-        assert_equals(
-            response["metrics"]["wikipedia:mentions"]["values"]["raw_history"][self.KEY2],
-            self.VAL2
-        )
 
 
     def test_add_metrics_data(self):
@@ -434,24 +419,10 @@ class TestItem():
         assert_equals(response["metrics"]["mendeley:readers"]["values"]["raw_history"].values(), [2])
         assert_equals(response["metrics"]["mendeley:readers"]["provenance_url"], 'http://api.mendeley.com/research/perceptual-training-strongly-improves-visual-motion-perception-schizophrenia/')
 
-    def test_is_currently_updating_unknown(self):
-        response = item_module.is_currently_updating("tiidnotinredis", self.r)
-        assert_equals(response, False)
-
-    def test_is_currently_updating_yes(self):
-        self.r.set_num_providers_left("tiidthatisnotdone", 10)
-        response = item_module.is_currently_updating("tiidthatisnotdone", self.r)
-        assert_equals(response, True)
-
-    def test_is_currently_updating_no(self):
-        self.r.set_num_providers_left("tiidthatisnotdone", 0)        
-        response = item_module.is_currently_updating("tiidthatisdone", self.r)
-        assert_equals(response, False)
-
     def test_clean_for_export_no_key(self):
         self.save_test_item()
 
-        item = item_module.get_item("test", self.myrefsets, self.d)
+        item = item_module.get_item("test", self.myrefsets, self.r)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
         item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = item_module.clean_for_export(item)
@@ -462,7 +433,7 @@ class TestItem():
     def test_clean_for_export_given_correct_secret_key(self):
         self.save_test_item()
 
-        item = item_module.get_item("test", self.myrefsets, self.d)
+        item = item_module.get_item("test", self.myrefsets, self.r)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
         item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = item_module.clean_for_export(item, "SECRET", "SECRET")
@@ -473,7 +444,7 @@ class TestItem():
     def test_clean_for_export_given_wrong_secret_key(self):
         self.save_test_item()
 
-        item = item_module.get_item("test", self.myrefsets, self.d)
+        item = item_module.get_item("test", self.myrefsets, self.r)
         item["metrics"]["scopus:citations"] = {"values":{"raw": 22}}
         item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = item_module.clean_for_export(item, "WRONG", "SECRET")
@@ -487,40 +458,31 @@ class TestItem():
 
         aliases = [ ("doi", "10.1371/journal.pmed.0020124"), 
                     ("doi", "not_a_doi_in_our_db"), 
-                    ("url", self.ALIAS_DATA["url"][0]),
-                    ("biblio", json.dumps(self.ALIAS_DATA["biblio"][0]))
+                    ("url", self.ALIAS_DATA["url"][0])
                     ]
         response = item_module.get_tiids_from_aliases(aliases)
         print response
-        expected = {('doi', 'not_a_doi_in_our_db'): None, ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124'): u'test', ('doi', '10.1371/journal.pmed.0020124'): u'test', ('biblio', '{"volume": "10", "authors": "Pitman", "title": "An extension of de Finetti\'s theorem", "journal": "Advances in Applied Probability", "author": ["Pitman, J"], "year": "1978", "id": "p78", "collection": "pitnoid", "pages": "268 to 270"}'): u'test'}
+        expected = {('doi', 'not_a_doi_in_our_db'): None, ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124'): u'test', ('doi', '10.1371/journal.pmed.0020124'): u'test'}
         assert_equals(response, expected)
-
-    def test_create_missing_tiids_from_aliases(self):
-
-        aliases_tiids_map = {('url', 'http://starbucks.com'): None, ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124'): u'test'}
-
-        response = item_module.create_missing_tiids_from_aliases(aliases_tiids_map, self.r)
-        print response
-        assert_greater(len(aliases_tiids_map[('url', 'http://starbucks.com')]), 10)
 
 
     def test_create_tiids_from_aliases(self):
 
         aliases = [('url', 'http://starbucks.com'), ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124')]
 
-        response = item_module.create_tiids_from_aliases(aliases, self.r)
+        response = item_module.create_tiids_from_aliases(aliases, {}, self.r)
         print response
-        assert_greater(len(response.keys()))
+        assert_equals(len(response.keys()), 2)
 
 
     def test_get_items_from_tiids(self):
-        aliases_tiids_map = {('url', 'http://starbucks.com'): None, ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124'): u'test'}
-        aliases_tiids_map = item_module.create_missing_tiids_from_aliases(aliases_tiids_map, self.r)
-        tiids = aliases_tiids_map.values()
-        response = item_module.get_items_from_tiids(tiids)
-        print response
-        expected = "hi"
-        assert_greater(len(aliases_tiids_map[('url', 'http://starbucks.com')]), 10)
+        aliases = [('url', 'http://starbucks.com'), ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124')]
+        response = item_module.create_tiids_from_aliases(aliases, {}, self.r)
+        tiids = response.keys()
+        items = item_module.get_items_from_tiids(tiids)
+        print [item.alias_tuples for item in items]
+        expected = [[(u'url', u'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124')], [(u'url', u'http://starbucks.com')]]
+        assert_items_equal([item.alias_tuples for item in items], expected)
 
 
     def test_duplicates_list(self):

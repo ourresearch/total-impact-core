@@ -260,14 +260,14 @@ class CouchWorker(Worker):
         return(item_doc)
 
     @classmethod
-    def update_item_with_new_biblio(cls, new_biblio_dict, item_doc):
+    def update_item_with_new_biblio(cls, new_biblio_dict, item_doc, provider_name=None):
         # return None if no changes
-        # don't change if biblio already there
+        # don't change if biblio already there, except in special cases
 
         response = item_module.get_biblio_to_update(item_doc["biblio"], new_biblio_dict)
         if response:
             item_doc["biblio"] = response
-            item_obj = item_module.add_biblio_to_item_object(new_biblio_dict, item_doc)
+            item_obj = item_module.add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name)
         else:
             item_doc = None
 
@@ -307,7 +307,7 @@ class CouchWorker(Worker):
                 if method_name=="aliases":
                     updated_item = self.update_item_with_new_aliases(new_content, item)
                 elif method_name=="biblio":
-                    updated_item = self.update_item_with_new_biblio(new_content, item)
+                    updated_item = self.update_item_with_new_biblio(new_content, item, provider_name)
                 elif method_name=="metrics":
                     updated_item = item
                     for metric_name in new_content:

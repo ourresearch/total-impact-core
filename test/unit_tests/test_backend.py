@@ -70,7 +70,7 @@ class TestProviderWorker(TestBackend):
 
         # test that it put it on the queue
         in_queue = test_couch_queue.pop()
-        expected = ('aaatiid', {'doi': ['10.5061/dryad.3td2f']}, 'aliases')
+        expected = {'method_name': 'aliases', 'tiid': 'aaatiid', 'provider_name': 'myfakeprovider', 'analytics_credentials': 'dummy', 'new_content': {'doi': ['10.5061/dryad.3td2f']}}
         assert_equals(in_queue, expected)
 
     def test_add_to_couch_queue_if_nonzero_given_metrics(self):    
@@ -87,13 +87,13 @@ class TestProviderWorker(TestBackend):
 
         # test that it put it on the queue
         in_queue = test_couch_queue.pop()
-        expected = ('aaatiid', metrics_method_response, "metrics")
+        expected = {'method_name': 'metrics', 'tiid': 'aaatiid', 'provider_name': 'myfakeprovider', 'analytics_credentials': 'dummy', 'new_content': metrics_method_response}
         print in_queue
         assert_equals(in_queue, expected)        
 
         # check nothing in redis since it had a value
-        response = num_left = self.r.get_num_providers_left("aaatiid")
-        assert_equals(response, None)
+        response = self.r.get_num_providers_currently_updating("aaatiid")
+        assert_equals(response, 0)
 
     def test_add_to_couch_queue_if_nonzero_given_empty_metrics_response(self):    
         test_couch_queue = backend.PythonQueue("test_couch_queue")
@@ -111,17 +111,18 @@ class TestProviderWorker(TestBackend):
         assert_equals(in_queue, expected)        
 
         # check decremented in redis since the payload was null
-        response = num_left = self.r.get_num_providers_left("aaatiid")
-        assert_equals(response, -1)
+        response = num_left = self.r.get_num_providers_currently_updating("aaatiid")
+        assert_equals(response, 0)
 
     def test_wrapper(self):     
-        def fake_callback(tiid, new_content, method_name, aliases_providers_run):
+        def fake_callback(tiid, new_content, method_name, analytics_credentials, aliases_providers_run):
             pass
 
         response = backend.ProviderWorker.wrapper("123", 
                 {'url': ['http://somewhere'], 'doi': ['10.123']}, 
                 mocks.ProviderMock("myfakeprovider"), 
                 "aliases", 
+                {}, # credentials
                 [], # aliases previously run
                 fake_callback)
         print response
@@ -152,8 +153,8 @@ class TestCouchWorker(TestBackend):
         item_with_some_biblio["biblio"] = {"title":"Different title"}
         new_biblio_dict = {"title":"A very good paper", "authors":"Smith, Lee, Khun"}
         response = backend.CouchWorker.update_item_with_new_biblio(new_biblio_dict, item_with_some_biblio)
-        expected = None # return None if item already has aliases in it
-        assert_equals(response, expected)
+        expected = {"authors": new_biblio_dict["authors"]}
+        assert_equals(response["biblio"], expected)
 
     def test_update_item_with_new_metrics(self):
         response = backend.CouchWorker.update_item_with_new_metrics("mendeley:groups", (3, "http://provenance"), self.fake_item)
@@ -194,7 +195,7 @@ class TestCouchWorker(TestBackend):
         assert_equals(response, expected)
 
         # check couch_queue has value after
-        response = item_module.get_item(self.fake_item["_id"])
+        response = item_module.get_item(self.fake_item["_id"], {}, self.r)
         print response
         expected = {'pmid': ['111'], 'doi': ['10.5061/dryad.3td2f']}
         assert_equals(response["aliases"], expected)
@@ -226,7 +227,7 @@ class TestCouchWorker(TestBackend):
         couch_worker.run()
             
         # check couch_queue has value after
-        response = item_module.get_item(self.fake_item["_id"])
+        response = item_module.get_item(self.fake_item["_id"], {}, self.r)
         print response
         expected = 361
         assert_equals(response["metrics"]['dryad:package_views']['values']["raw"], expected)
@@ -281,7 +282,7 @@ class TestBackendClass(TestBackend):
 
     def test_decide_who_to_call_next_dryad_no_url(self):
         aliases_dict = {"doi":["10.5061/dryad.3td2f"]}
-        prev_aliases = []
+        prev_aliases = ["altmetric_com"]
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to resolve the dryad doi before can go get metrics
@@ -291,7 +292,7 @@ class TestBackendClass(TestBackend):
     def test_decide_who_to_call_next_dryad_with_url(self):
         aliases_dict = {   "doi":["10.5061/dryad.3td2f"],
                                     "url":["http://dryadsomewhere"]}
-        prev_aliases = []
+        prev_aliases = ["altmetric_com"]
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # still need the dx.doi.org url
@@ -301,11 +302,11 @@ class TestBackendClass(TestBackend):
     def test_decide_who_to_call_next_dryad_with_doi_url(self):
         aliases_dict = {   "doi":["10.5061/dryad.3td2f"],
                                     "url":["http://dx.doi.org/10.dryadsomewhere"]}
-        prev_aliases = []
+        prev_aliases = ["altmetric_com", "dryad"]
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # have url so now can go get all the metrics
-        expected = {'aliases': [], 'biblio': ['dryad'], 'metrics': ['wikipedia']}
+        expected = {'metrics': ['wikipedia'], 'biblio': ['dryad', 'mendeley'], 'aliases': []}
         assert_equals(response, expected)
 
     def test_decide_who_to_call_next_crossref_not_run(self):
@@ -359,21 +360,21 @@ class TestBackendClass(TestBackend):
     def test_decide_who_to_call_next_doi_crossref_pubmed_mendeley_prev_called(self):
         aliases_dict = { "doi":["10.234/345345"],
                         "url":["http://journalsomewhere"]}
-        prev_aliases = ["crossref", "pubmed", "mendeley"]                        
+        prev_aliases = ["crossref", "pubmed", "mendeley", "altmetric_com"]                        
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics, no biblio
-        expected = {'metrics': ['wikipedia'], 'biblio': ['crossref', 'pubmed', 'webpage'], 'aliases': []}
+        expected = {'metrics': ['wikipedia'], 'biblio': ['crossref', 'pubmed', 'mendeley', 'webpage'], 'aliases': []}
         assert_equals(response, expected)   
 
     def test_decide_who_to_call_next_pmid_crossref_pubmed_prev_called(self):
         aliases_dict = { "pmid":["1111"],
                         "url":["http://journalsomewhere"]}
-        prev_aliases = ["crossref", "pubmed", "mendeley"]                        
+        prev_aliases = ["crossref", "pubmed", "mendeley", "altmetric_com"]                        
         response = backend.Backend.sniffer(aliases_dict, prev_aliases, self.TEST_PROVIDER_CONFIG)
         print response
         # expect need to get metrics, no biblio
-        expected = {'metrics': ['wikipedia'], 'biblio': ['crossref', 'pubmed', 'webpage'], 'aliases': []}
+        expected = {'metrics': ['wikipedia'], 'biblio': ['crossref', 'pubmed', 'mendeley', 'webpage'], 'aliases': []}
         assert_equals(response, expected)   
 
 
