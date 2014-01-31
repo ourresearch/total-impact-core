@@ -419,7 +419,7 @@ class Backend(Worker):
         if not alias_message:
             too_busy_provider_name = self.providers_too_busy()
             if too_busy_provider_name:
-                count = len(thread_count[provider_name])
+                count = len(thread_count[too_busy_provider_name])
                 logger.info(u"providers_too_busy for {provider_name}, threads = {count}".format(
                    provider_name=too_busy_provider_name, count=count))
                 time.sleep(0.5)
