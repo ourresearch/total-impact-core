@@ -200,7 +200,7 @@ class ProviderWorker(Worker):
 
     def run(self):
         global thread_count
-        
+
         num_active_threads_for_this_provider = len(thread_count[self.provider.provider_name])
 
         if num_active_threads_for_this_provider >= self.provider.max_simultaneous_requests:
@@ -400,7 +400,7 @@ class Backend(Worker):
             "metrics":metrics_providers})
 
 
-    def providers_too_busy(self, max_requests=15):
+    def providers_too_busy(self, max_requests=50):
         global thread_count
 
         for provider_name in thread_count:
