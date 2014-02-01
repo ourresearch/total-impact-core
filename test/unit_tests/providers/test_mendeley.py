@@ -125,6 +125,15 @@ class TestMendeley(ProviderTestCase):
         expected = [('doi', u'http://arxiv.org/abs/1203.4745v1'), ('url', u'http://www.mendeley.com/catalog/altmetrics-wild-using-social-media-explore-scholarly-impact/'), ('uuid', u'920cf7e1-02c1-3c40-bd52-18552089248e')]
         assert_equals(new_aliases, expected)
 
+    @http
+    def test_biblio_oai_id(self):
+        # at the moment this item 
+        alias = ("doi", "10.1086/508600")
+        new_biblio = self.provider.biblio([alias])
+        print new_biblio
+        expected = {'oai_id': u'oai:arXiv.org:astro-ph/0603060', 'is_oa_journal': 'None'}
+        assert_equals(new_biblio, expected)        
+
     # override common tests
     @raises(ProviderClientError, ProviderServerError)
     def test_provider_metrics_400(self):
