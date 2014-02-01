@@ -645,7 +645,7 @@ def get_biblio_to_update(old_biblio, new_biblio):
             if old_biblio["title"] == "AOP":
                 response[biblio_name] = new_biblio[biblio_name]
 
-        if (biblio_name=="oa_journal"):
+        if (biblio_name in ["is_oa_journal", "oai_id"]):
             response[biblio_name] = new_biblio[biblio_name]
 
     return response
