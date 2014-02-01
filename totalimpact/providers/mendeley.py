@@ -326,10 +326,17 @@ class Mendeley(Provider):
 
 
     def _extract_biblio(self, page, id=None):
+        biblio_dict = {}
+
+        dict_of_keylists = {
+            'oai_id' : ['identifiers', 'oai_id']
+        }
+        biblio_dict = provider._extract_from_json(page, dict_of_keylists, include_falses=False)
+
         dict_of_keylists = {
             'is_oa_journal' : ['oa_journal']
         }
-        biblio_dict = provider._extract_from_json(page, dict_of_keylists, include_falses=True)
+        biblio_dict.update(provider._extract_from_json(page, dict_of_keylists, include_falses=True))
         if biblio_dict and "is_oa_journal" in biblio_dict:
             biblio_dict["is_oa_journal"] = str(biblio_dict["is_oa_journal"]) # cast boolean to string
         return biblio_dict 

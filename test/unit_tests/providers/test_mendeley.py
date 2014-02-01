@@ -13,6 +13,7 @@ SAMPLE_EXTRACT_UUID_PAGE_NO_DOI = os.path.join(datadir, "uuidlookup_no_doi")
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
 SAMPLE_EXTRACT_PROVENANCE_URL_PAGE = SAMPLE_EXTRACT_METRICS_PAGE
 SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
+SAMPLE_EXTRACT_BIBLIO_PAGE_OAI = os.path.join(datadir, "biblio_oai")
 
 TEST_DOI = "10.1038/nature10658"  # matches UUID sample page
 
@@ -21,7 +22,7 @@ class TestMendeley(ProviderTestCase):
     provider_name = "mendeley"
 
     testitem_aliases = ("doi", TEST_DOI)
-    testitem_aliases_biblio_no_doi =  ("biblio", {'title': 'Scientometrics 2.0: New metrics of scholarly impact on the social Web', 'first_author': 'Priem', 'journal': 'First Monday', 'number': '7', 'volume': '15', 'first_page': '', 'authors': 'Priem, Hemminger', 'year': '2010'})
+    testitem_aliases_biblio_no_doi =  ("biblio", {'title': 'Scientometrics 2.0: Toward new metrics of scholarly impact on the social Web', 'first_author': 'Priem', 'journal': 'First Monday', 'number': '7', 'volume': '15', 'first_page': '', 'authors': 'Priem, Hemminger', 'year': '2010'})
     testitem_metrics_dict = {"biblio":[{"year":2011, "authors":"sdf", "title": "Mutations causing syndromic autism define an axis of synaptic pathophysiology"}],"doi":[TEST_DOI]}
     testitem_metrics = [(k, v[0]) for (k, v) in testitem_metrics_dict.items()]
     testitem_metrics_dict_wrong_year = {"biblio":[{"year":9999, "authors":"sdf", "title": "Mutations causing syndromic autism define an axis of synaptic pathophysiology"}],"doi":[TEST_DOI]}
@@ -39,7 +40,13 @@ class TestMendeley(ProviderTestCase):
     def test_extract_biblio_success(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
         metrics_dict = self.provider._extract_biblio(f.read())
-        expected = {'is_oa_journal': False}
+        expected = {'is_oa_journal': 'False'}
+        assert_equals(metrics_dict, expected)
+
+    def test_extract_biblio_oai_success(self):
+        f = open(SAMPLE_EXTRACT_BIBLIO_PAGE_OAI, "r")
+        metrics_dict = self.provider._extract_biblio(f.read())
+        expected = {'oai_id': 'oai:arXiv.org:1012.4872', 'is_oa_journal': 'None'}
         assert_equals(metrics_dict, expected)
 
     def test_extract_metrics_success(self):
@@ -102,11 +109,11 @@ class TestMendeley(ProviderTestCase):
         assert_equals(metrics, expected)
 
     @http
-    def test_aliases_pmid(self):
+    def test_aliases_no_doi(self):
         # at the moment this item 
         new_aliases = self.provider.aliases([self.testitem_aliases_biblio_no_doi])
         print new_aliases
-        expected = [('url', u'http://www.mendeley.com/catalog/scientometrics-2-0-new-metrics-scholarly-impact-social-web-3/'), ('uuid', u'c81ce3f0-cea0-11df-922b-0024e8453de6')]
+        expected = [('doi', u'10.5210/fm.v15i7.2874'), ('url', u'http://www.mendeley.com/catalog/scientometrics-20-toward-new-metrics-scholarly-impact-social-web/'), ('uuid', u'f3018369-0eb4-3dbe-a3cc-9ee0bbc4e59e')]
         assert_equals(new_aliases, expected)
 
     @http
