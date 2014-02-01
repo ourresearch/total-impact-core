@@ -139,11 +139,14 @@ class Pubmed(Provider):
     def _extract_aliases_from_pmid(self, page, pmid):
         (doc, lookup_function) = provider._get_doc_from_xml(page)
         doi = None
+        pmc = None
         try:
             articleidlist = doc.getElementsByTagName("ArticleIdList")[0]
             for articleid in articleidlist.getElementsByTagName("ArticleId"):
                 if (articleid.getAttribute("IdType") == u"doi"):
                     doi = articleid.firstChild.data
+                if (articleid.getAttribute("IdType") == u"pmc"):
+                    pmc = articleid.firstChild.data
 
             if not doi:
                 #give it another try, in another part of the xml 
@@ -161,7 +164,10 @@ class Pubmed(Provider):
         aliases_list = []
         if doi:
             if "10." in doi:  
-                aliases_list = [("doi", doi), ("url", "http://dx.doi.org/"+doi)]
+                aliases_list += [("doi", doi), ("url", "http://dx.doi.org/"+doi)]
+        if pmc:
+            aliases_list += [("pmc", pmc), ("url", "http://www.ncbi.nlm.nih.gov/pmc/articles/"+pmc)]
+
         return aliases_list
 
     def _get_eutils_page(self, id, url, cache_enabled=True):

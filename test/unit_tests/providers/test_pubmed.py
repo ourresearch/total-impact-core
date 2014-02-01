@@ -48,7 +48,7 @@ class TestPubmed(ProviderTestCase):
         f = open(SAMPLE_EXTRACT_ALIASES_FROM_PMID_PAGE, "r")
         aliases = self.provider._extract_aliases_from_pmid(f.read(), "17593900")
         print aliases
-        expected = [('doi', u'10.1371/journal.pmed.0040215'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0040215')]
+        expected = [('doi', u'10.1371/journal.pmed.0040215'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0040215'), ('pmc', u'PMC1896210'), ('url', u'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1896210')]
         assert_equals(aliases, expected)
 
     # override default because returns url even if pmid api page is empty
@@ -95,7 +95,7 @@ class TestPubmed(ProviderTestCase):
     def test_aliases_from_pmid(self):
         aliases = self.provider.aliases([self.testitem_aliases])
         print aliases
-        expected = [('biblio', {'title': u'Why most published research findings are false.', 'journal': u'PLoS medicine', 'year': "2005", 'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00'}), ('doi', u'10.1371/journal.pmed.0020124'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0020124'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/16060722')]
+        expected = [('biblio', {'title': u'Why most published research findings are false.', 'journal': u'PLoS medicine', 'year': '2005', 'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00'}), ('doi', u'10.1371/journal.pmed.0020124'), ('pmc', u'PMC1182327'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0020124'), ('url', u'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1182327'), ('url', 'http://www.ncbi.nlm.nih.gov/pubmed/16060722')]
         assert_equals(aliases, expected)
 
     @http
