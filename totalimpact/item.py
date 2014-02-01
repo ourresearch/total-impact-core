@@ -73,8 +73,8 @@ def create_biblio_objects(list_of_old_style_biblio_dicts, provider=None, collect
 
     provider_number = 0
     for biblio_dict in list_of_old_style_biblio_dicts:
-        provider_number += 1
         if not provider:
+            provider_number += 1
             provider = "unknown" + str(provider_number)
         for biblio_name in biblio_dict:
             biblio_object = Biblio(biblio_name=biblio_name, 
@@ -616,7 +616,6 @@ def add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name):
     item_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(item_obj)
 
-    new_biblio_dict["provider"] = provider_name
     item_obj.biblios += create_biblio_objects([new_biblio_dict], provider=provider_name)
 
     try:

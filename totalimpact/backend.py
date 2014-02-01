@@ -269,9 +269,10 @@ class CouchWorker(Worker):
         # don't change if biblio already there, except in special cases
 
         response = item_module.get_biblio_to_update(item_doc["biblio"], new_biblio_dict)
+
         if response:
             item_doc["biblio"] = response
-            item_obj = item_module.add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name)
+            item_obj = item_module.add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name=provider_name)
         else:
             item_doc = None
 
