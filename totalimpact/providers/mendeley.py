@@ -329,9 +329,12 @@ class Mendeley(Provider):
         biblio_dict = {}
 
         dict_of_keylists = {
+            'issn' : ['identifiers', 'issn'],
             'oai_id' : ['identifiers', 'oai_id']
         }
         biblio_dict = provider._extract_from_json(page, dict_of_keylists, include_falses=False)
+        if "issn" in biblio_dict:
+            biblio_dict["issn"] = biblio_dict["issn"].replace("-", "")
 
         dict_of_keylists = {
             'is_oa_journal' : ['oa_journal']

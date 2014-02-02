@@ -40,14 +40,15 @@ class TestMendeley(ProviderTestCase):
     def test_extract_biblio_success(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
         metrics_dict = self.provider._extract_biblio(f.read())
-        expected = {'is_oa_journal': 'False'}
+        expected = {'is_oa_journal': 'False', 'issn': '00280836'}
         assert_equals(metrics_dict, expected)
 
     def test_extract_biblio_oai_success(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE_OAI, "r")
-        metrics_dict = self.provider._extract_biblio(f.read())
-        expected = {'oai_id': 'oai:arXiv.org:1012.4872', 'is_oa_journal': 'None'}
-        assert_equals(metrics_dict, expected)
+        biblio_dict = self.provider._extract_biblio(f.read())
+        print biblio_dict
+        expected = {'oai_id': 'oai:arXiv.org:1012.4872', 'issn': '15322882', 'is_oa_journal': 'None'}
+        assert_equals(biblio_dict, expected)
 
     def test_extract_metrics_success(self):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
@@ -131,7 +132,7 @@ class TestMendeley(ProviderTestCase):
         alias = ("doi", "10.1086/508600")
         new_biblio = self.provider.biblio([alias])
         print new_biblio
-        expected = {'oai_id': u'oai:arXiv.org:astro-ph/0603060', 'is_oa_journal': 'None'}
+        expected = {'oai_id': u'oai:arXiv.org:astro-ph/0603060', 'issn': u'0004637X', 'is_oa_journal': 'None'}
         assert_equals(new_biblio, expected)        
 
     # override common tests

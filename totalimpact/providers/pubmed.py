@@ -98,6 +98,7 @@ class Pubmed(Provider):
                                 "month": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Month"],
                                 "day": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Day"],
                                 "title": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleTitle"],
+                                "issn": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "ISSN"],
                                 "journal": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "Title"],
                                 }
         else:
@@ -105,6 +106,7 @@ class Pubmed(Provider):
                                 "month": ["PubmedArticleSet", "MedlineCitation", "Article", "PubDate", "Month"],
                                 "day": ["PubmedArticleSet", "MedlineCitation", "Article", "PubDate", "Day"],
                                 "title": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleTitle"],
+                                "issn": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "ISSN"],
                                 "journal": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "Title"],
                                 }            
         biblio_dict = provider._extract_from_xml(page, dict_of_keylists)
@@ -112,6 +114,11 @@ class Pubmed(Provider):
         try:
             biblio_dict["authors"] = ", ".join([author.firstChild.data for author in dom_authors])
         except (AttributeError, TypeError):
+            pass
+
+        try:
+            biblio_dict["issn"] = biblio_dict["issn"].replace("-", "")
+        except (AttributeError, KeyError):
             pass
 
         try:
