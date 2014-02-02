@@ -650,8 +650,6 @@ def get_biblio_to_update(old_biblio, new_biblio):
         if (biblio_name in ["is_oa_journal", "oai_id", "free_fulltext_url"]):
             response[biblio_name] = new_biblio[biblio_name]
 
-        print "\n\n****", response
-
     return response
 
 
