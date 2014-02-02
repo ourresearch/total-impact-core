@@ -84,7 +84,6 @@ class Figshare(Provider):
         biblio_dict = provider._extract_from_data_dict(item, dict_of_keylists)
 
         biblio_dict["repository"] = "figshare"
-        biblio_dict["free_fulltext_url"] = self._get_templated_url(self.provenance_url_template, id, "provenance")
         
         try:
             biblio_dict["year"] = int(biblio_dict["published_date"][-4:])
@@ -105,6 +104,9 @@ class Figshare(Provider):
             else:
                 genre = "dataset"  #includes fileset 
             biblio_dict["genre"] = genre        
+
+            if biblio_dict["genre"] == "article":
+                biblio_dict["free_fulltext_url"] = self._get_templated_url(self.provenance_url_template, id, "provenance")
 
         # the authors data is messy, so just give up for now
         # if "authors_literal" in biblio_dict:
