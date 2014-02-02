@@ -84,6 +84,7 @@ class Figshare(Provider):
         biblio_dict = provider._extract_from_data_dict(item, dict_of_keylists)
 
         biblio_dict["repository"] = "figshare"
+        biblio_dict["free_fulltext_url"] = self._get_templated_url(self.provenance_url_template, id, "provenance")
         
         try:
             biblio_dict["year"] = int(biblio_dict["published_date"][-4:])
