@@ -12,6 +12,7 @@ SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
 SAMPLE_EXTRACT_ALIASES_FROM_DOI_PAGE = os.path.join(datadir, "aliases_from_doi")
 SAMPLE_EXTRACT_ALIASES_FROM_PMID_PAGE = os.path.join(datadir, "aliases_from_pmid")
 SAMPLE_EXTRACT_BIBLIO_PAGE = os.path.join(datadir, "biblio")
+SAMPLE_EXTRACT_BIBLIO_ELINK_PAGE = os.path.join(datadir, "biblio_elink")
 SAMPLE_EXTRACT_PROVENANCE_URL_PAGE = SAMPLE_EXTRACT_METRICS_PAGE
 
 TEST_DOI = "10.1371/journal.pcbi.1000361"
@@ -63,10 +64,16 @@ class TestPubmed(ProviderTestCase):
         pmcids = self.provider._extract_citing_pmcids(f.read())
         assert_equals(len(pmcids), 149)
 
-    def test_extract_biblio(self):
+    def test_extract_biblio_efetch(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
-        ret = self.provider._extract_biblio(f.read())
+        ret = self.provider._extract_biblio_efetch(f.read())
         expected = {'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00', 'journal': u'PLoS medicine', 'year': "2005", 'title': u'Why most published research findings are false.'}
+        assert_equals(ret, expected)
+
+    def test_extract_biblio_elink(self):
+        f = open(SAMPLE_EXTRACT_BIBLIO_ELINK_PAGE, "r")
+        ret = self.provider._extract_biblio_elink(f.read())
+        expected = {'free_fulltext_url': 'http://www.nejm.org/doi/abs/10.1056/NEJMp1314561?url_ver=Z39.88-2003&rfr_id=ori:rid:crossref.org&rfr_dat=cr_pub%3dwww.ncbi.nlm.nih.gov'}
         assert_equals(ret, expected)
 
     def test_member_items(self):
@@ -88,8 +95,23 @@ class TestPubmed(ProviderTestCase):
     @http
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
-        expected = {'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00', 'journal': u'PLoS medicine', 'year': "2005", 'title': u'Why most published research findings are false.'}
+        print biblio_dict
+        expected = {'free_fulltext_url': 'http://dx.plos.org/10.1371/journal.pmed.0020124', 'authors': u'Ioannidis', 'date': '2005-08-30T00:00:00', 'title': u'Why most published research findings are false.', 'journal': u'PLoS medicine', 'year': '2005'}
         assert_equals(biblio_dict, expected)
+
+    @http
+    def test_biblio_free_full_text(self):
+        biblio_dict = self.provider.biblio([("pmid", "24251383")])
+        print biblio_dict
+        expected = {'free_fulltext_url': 'http://www.nejm.org/doi/abs/10.1056/NEJMp1314561?url_ver=Z39.88-2003&rfr_id=ori:rid:crossref.org&rfr_dat=cr_pub%3dwww.ncbi.nlm.nih.gov', 'authors': u'Collins, Hamburg', 'date': '2013-11-19T00:00:00', 'title': u'First FDA authorization for next-generation sequencer.', 'journal': u'The New England journal of medicine', 'year': '2013'}
+        assert_equals(biblio_dict, expected)        
+
+    @http
+    def test_biblio_no_free_full_text(self):
+        biblio_dict = self.provider.biblio([("pmid", "20150669")])
+        print biblio_dict
+        expected =  {'journal': u'IEEE/ACM transactions on computational biology and bioinformatics / IEEE, ACM', 'title': u'Integrating data clustering and visualization for the analysis of 3D gene expression data.', 'authors': u'R\xfcbel, Weber, Huang, Bethel, Biggin, Fowlkes, Luengo Hendriks, Ker\xe4nen, Eisen, Knowles, Malik, Hagen, Hamann'}
+        assert_equals(biblio_dict, expected)        
 
     @http
     def test_aliases_from_pmid(self):

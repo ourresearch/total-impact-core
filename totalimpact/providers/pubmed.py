@@ -2,6 +2,8 @@ from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
 import simplejson, urllib, os, itertools, datetime, re
+from StringIO import StringIO
+from lxml import etree
 
 import logging
 logger = logging.getLogger('ti.providers.pubmed')
@@ -19,14 +21,16 @@ class Pubmed(Provider):
     metrics_url_template = None # have specific metrics urls instead
     metrics_pmc_citations_url_template = "http://www.pubmedcentral.nih.gov/utils/entrez2pmcciting.cgi?view=xml&id=%s&email=team@total-impact.org&tool=total-impact"
     metrics_pmc_filter_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=(%s)&email=team@total-impact.org&tool=total-impact"
-    metrics_f1000_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=%s&cmd=llinks&email=team@total-impact.org&tool=total-impact"
+    elink_url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=%s&cmd=llinks&email=team@total-impact.org&tool=total-impact"
+    metrics_f1000_url_template = elink_url
 
     aliases_from_doi_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?term=%s&email=team@total-impact.org&tool=total-impact" 
     aliases_from_pmid_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml&email=team@total-impact.org&tool=total-impact" 
 
     aliases_pubmed_url_template = "http://www.ncbi.nlm.nih.gov/pubmed/%s"
 
-    biblio_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml&email=team@total-impact.org&tool=total-impact" 
+    biblio_url_efetch_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml&email=team@total-impact.org&tool=total-impact" 
+    biblio_url_elink_template = elink_url
 
     static_meta_dict = {
         "pmc_citations": {
@@ -73,6 +77,11 @@ class Pubmed(Provider):
     def provides_aliases(self):
         return True
 
+    # overriding default because overriding biblio method
+    @property
+    def provides_biblio(self):
+        return True
+
     # overriding default because overriding metrics method
     @property
     def provides_metrics(self):
@@ -83,7 +92,7 @@ class Pubmed(Provider):
     def provides_members(self):
         return True
 
-    def _extract_biblio(self, page, id=None):
+    def _extract_biblio_efetch(self, page, id=None):
         if "ArticleDate" in page:
             dict_of_keylists = {"year": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Year"], 
                                 "month": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Month"],
@@ -123,6 +132,46 @@ class Pubmed(Provider):
             pass
 
         return biblio_dict  
+
+
+    def _extract_biblio_elink(self, page, id=None):
+
+        biblio_dict = {}
+
+        tree = etree.parse(StringIO(page))
+        obj_urls = tree.xpath("//ObjUrl[Attribute='full-text online' and Attribute='free resource']/Url")
+        if obj_urls:
+            biblio_dict = {"free_fulltext_url": obj_urls[0].text}
+
+        return biblio_dict 
+
+
+    def biblio(self, 
+            aliases,
+            provider_url_template=None,
+            cache_enabled=True):
+
+        aliases_dict = provider.alias_dict_from_tuples(aliases)
+        if not "pmid" in aliases_dict:
+            return None
+        id = aliases_dict["pmid"][0]
+
+        self.logger.debug(u"%s getting biblio for %s" % (self.provider_name, id))
+        biblio_dict = {}
+
+        efetch_url = self._get_templated_url(self.biblio_url_efetch_template, id, "biblio")
+        efetch_page = self._get_eutils_page(efetch_url, id, cache_enabled=cache_enabled)
+        biblio_dict.update(self._extract_biblio_efetch(efetch_page, id))
+
+        elink_url = self._get_templated_url(self.biblio_url_elink_template, id, "biblio")
+        elink_page = self._get_eutils_page(elink_url, id, cache_enabled=cache_enabled)
+        biblio_dict.update(self._extract_biblio_elink(elink_page, id))
+
+        if "pmc" in aliases_dict:
+            biblio_dict["full_text_url"] = aliases_dict["pmc"][0]
+
+        return biblio_dict
+
 
     def _extract_aliases_from_doi(self, page, doi):
         dict_of_keylists = {"pmid": ["eSearchResult", "IdList", "Id"], 
@@ -170,7 +219,7 @@ class Pubmed(Provider):
 
         return aliases_list
 
-    def _get_eutils_page(self, id, url, cache_enabled=True):
+    def _get_eutils_page(self, url, id, cache_enabled=True):
         logger.debug(u"%20s getting eutils page for %s" % (self.provider_name, id))
 
         response = self.http_get(url, cache_enabled=cache_enabled)
@@ -197,16 +246,16 @@ class Pubmed(Provider):
             (namespace, nid) = alias
             if (namespace == "doi"):
                 aliases_from_doi_url = self.aliases_from_doi_url_template %nid
-                page = self._get_eutils_page(nid, aliases_from_doi_url, cache_enabled)
+                page = self._get_eutils_page(aliases_from_doi_url, nid, cache_enabled)
                 if page:
                     new_aliases += self._extract_aliases_from_doi(page, nid)
             if (namespace == "pmid"):
                 # look up doi and other things on pubmed page
                 aliases_from_pmid_url = self.aliases_from_pmid_url_template %nid
-                page = self._get_eutils_page(nid, aliases_from_pmid_url, cache_enabled)
+                page = self._get_eutils_page(aliases_from_pmid_url, nid, cache_enabled)
                 if page:
                     new_aliases += self._extract_aliases_from_pmid(page, nid)
-                    biblio = self._extract_biblio(page, nid)
+                    biblio = self._extract_biblio_efetch(page, nid)
                     if biblio:
                         new_aliases += [("biblio", biblio)]
                 # also, add link to paper on pubmed
@@ -221,7 +270,7 @@ class Pubmed(Provider):
         pmcids_string = " OR ".join(["PMC"+pmcid for pmcid in citing_pmcids])
         query_string = filter_ptype + "[ptyp] AND (" + pmcids_string + ")"
         pmcid_filter_url = self.metrics_pmc_filter_url_template %query_string
-        page = self._get_eutils_page(id, pmcid_filter_url)
+        page = self._get_eutils_page(pmcid_filter_url, id)
         (doc, lookup_function) = provider._get_doc_from_xml(page)  
         try:    
             id_docs = doc.getElementsByTagName("Id")
@@ -233,7 +282,7 @@ class Pubmed(Provider):
 
     def _check_reviewed_by_f1000(self, id, cache_enabled):
         metrics_f1000_url = self.metrics_f1000_url_template %id
-        page = self._get_eutils_page(id, metrics_f1000_url)
+        page = self._get_eutils_page(metrics_f1000_url, id)
         f1000_url = "http://f1000.com/pubmed/%s" %id
         if (f1000_url in page):
             reviewed_by_f1000 = "Yes"
@@ -286,7 +335,7 @@ class Pubmed(Provider):
     # could take multiple PMC IDs
     def _get_citing_pmcids(self, id, cache_enabled=True):
         pmc_citations_url = self.metrics_pmc_citations_url_template %id
-        page = self._get_eutils_page(id, pmc_citations_url, cache_enabled)
+        page = self._get_eutils_page(pmc_citations_url, id, cache_enabled)
         pmcids = self._extract_citing_pmcids(page)
         return pmcids
 
