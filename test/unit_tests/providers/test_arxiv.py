@@ -31,7 +31,7 @@ class TestArxiv(ProviderTestCase):
         assert_equals(self.provider.is_relevant_alias(("doi", "NOT A GITHUB ID")), False)
   
     def test_members(self):
-        members = self.provider.member_items(self.testitem_members)
+        members = self.provider.member_items({"arxiv_id_input": self.testitem_members})
         print members
         expected = [('arxiv', '1305.3328')]
         assert_equals(members, expected)
@@ -44,8 +44,8 @@ class TestArxiv(ProviderTestCase):
 
     def test_extract_biblio(self):
         f = open(SAMPLE_EXTRACT_BIBLIO_PAGE, "r")
-        biblio = self.provider._extract_biblio(f.read())
-        expected = {'date': u'2013-05-15T00:46:53Z', 'authors': u'Lapinski, Piwowar, Priem', 'year': u'2013', 'title': u'Riding the crest of the altmetrics wave: How librarians can help prepare\n  faculty for the next generation of research impact metrics'}
+        biblio = self.provider._extract_biblio(f.read(), "1305.3328")
+        expected = {'repository': 'arXiv', 'title': u'Altmetrics in the wild: Using social media to explore scholarly impact', 'year': u'2012', 'free_fulltext_url': 'http://arxiv.org/abs/1305.3328', 'authors': u'Priem, Piwowar, Hemminger', 'date': u'2012-03-20T19:46:25Z'}
         print biblio
         assert_items_equal(biblio, expected)
 
@@ -53,7 +53,7 @@ class TestArxiv(ProviderTestCase):
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'date': u'2012-03-20T19:46:25Z', 'authors': u'Priem, Piwowar, Hemminger', 'year': u'2012', 'title': u'Altmetrics in the wild: Using social media to explore scholarly impact'}
+        expected = {'repository': 'arXiv', 'title': u'Riding the crest of the altmetrics wave: How librarians can help prepare\n  faculty for the next generation of research impact metrics', 'year': u'2013', 'free_fulltext_url': 'http://arxiv.org/abs/1305.3328', 'authors': u'Lapinski, Piwowar, Priem', 'date': u'2013-05-15T00:46:53Z'}
         assert_items_equal(biblio_dict.keys(), expected.keys())
 
 

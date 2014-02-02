@@ -95,6 +95,7 @@ class Arxiv(Provider):
             pass
 
         biblio_dict["repository"] = "arXiv"
+        biblio_dict["free_fulltext_url"] = self._get_templated_url(self.aliases_url_template, id, "aliases")
 
         return biblio_dict    
        
