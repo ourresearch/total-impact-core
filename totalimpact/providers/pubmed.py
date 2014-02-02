@@ -32,6 +32,8 @@ class Pubmed(Provider):
     biblio_url_efetch_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml&email=team@total-impact.org&tool=total-impact" 
     biblio_url_elink_template = elink_url
 
+    pmc_article_template = "http://www.ncbi.nlm.nih.gov/pmc/articles/%s"
+
     static_meta_dict = {
         "pmc_citations": {
             "display_name": "citations",
@@ -175,7 +177,7 @@ class Pubmed(Provider):
         biblio_dict.update(self._extract_biblio_elink(elink_page, id))
 
         if "pmc" in aliases_dict:
-            biblio_dict["full_text_url"] = aliases_dict["pmc"][0]
+            biblio_dict["free_fulltext_url"] = self.pmc_article_template % aliases_dict["pmc"][0]
 
         return biblio_dict
 
