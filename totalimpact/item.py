@@ -616,7 +616,10 @@ def add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name):
     item_obj.last_modified = datetime.datetime.utcnow()
     db.session.merge(item_obj)
 
-    item_obj.biblios += create_biblio_objects([new_biblio_dict], provider=provider_name)
+    new_biblio_objects = create_biblio_objects([new_biblio_dict], provider=provider_name)
+    for new_biblio_obj in new_biblio_objects:
+        if not Biblio.query.get((tiid, provider_name, new_biblio_obj.biblio_name)):
+            item_obj.biblios += [new_biblio_obj]    
 
     try:
         db.session.commit()
@@ -644,8 +647,10 @@ def get_biblio_to_update(old_biblio, new_biblio):
             if old_biblio["title"] == "AOP":
                 response[biblio_name] = new_biblio[biblio_name]
 
-        if (biblio_name in ["is_oa_journal", "oai_id"]):
+        if (biblio_name in ["is_oa_journal", "oai_id", "free_fulltext_url"]):
             response[biblio_name] = new_biblio[biblio_name]
+
+        print "\n\n****", response
 
     return response
 
