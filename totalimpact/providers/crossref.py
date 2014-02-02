@@ -192,13 +192,16 @@ class Crossref(Provider):
             logger.info(u"/biblio_print could not parse year {biblio_dict}".format(
                 biblio_dict=biblio_dict))
             del biblio_dict["year"]
-            pass
 
         # replace many white spaces and \n with just one space
         try:
             biblio_dict["title"] = re.sub(u"\s+", u" ", biblio_dict["title"])
         except KeyError:
             pass
+
+        free_fulltext_fragments = ["/npre.", ".figshare.", "/peerj.preprints"]
+        if any(doi_fragment in id for doi_fragment in free_fulltext_fragments):
+            biblio_dict["free_fulltext_url"] = url
 
         return biblio_dict  
 
