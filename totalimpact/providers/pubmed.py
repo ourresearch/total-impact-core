@@ -139,7 +139,7 @@ class Pubmed(Provider):
         biblio_dict = {}
 
         tree = etree.parse(StringIO(page))
-        obj_urls = tree.xpath("//ObjUrl[Attribute='full-text online' and Attribute='free resource']/Url")
+        obj_urls = tree.xpath("//ObjUrl[Category='Full Text Sources' and Attribute='free resource']/Url")
         if obj_urls:
             biblio_dict = {"free_fulltext_url": obj_urls[0].text}
 
