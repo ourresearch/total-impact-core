@@ -52,6 +52,10 @@ class Crossref(Provider):
     def provides_aliases(self):
          return True
 
+    @property
+    def provides_biblio(self):
+         return True
+
     # overriding default because overriding member_items method
     @property
     def provides_members(self):
@@ -70,8 +74,57 @@ class Crossref(Provider):
         url = provider_url_template % id
 
         biblio_dict = self._lookup_biblio_from_doi(id, url, cache_enabled)
+        biblio_dict.update(self._lookup_issn_from_doi(id, url, cache_enabled))
 
         return biblio_dict
+
+
+    def _lookup_issn_from_doi(self, id, url, cache_enabled):
+        # try to get a response from the data provider        
+        response = self.http_get(url, 
+            cache_enabled=cache_enabled, 
+            allow_redirects=True,
+            headers={"Accept": "application/json"})
+
+        if response.status_code != 200:
+            self.logger.info(u"%s status_code=%i" 
+                % (self.provider_name, response.status_code))            
+            if response.status_code == 404: #not found
+                return {}
+            elif response.status_code == 403: #forbidden
+                return {}
+            elif response.status_code == 406: #this call isn't supported for datacite dois
+                return {}
+            elif ((response.status_code >= 300) and (response.status_code < 400)): #redirect
+                return {}
+            else:
+                self._get_error(response.status_code, response)
+
+        # extract the aliases
+        try:
+            biblio_dict = self._extract_biblio_issn(response.text, id)
+        except (AttributeError, TypeError):
+            biblio_dict = {}
+
+        return biblio_dict
+
+
+    def _extract_biblio_issn(self, page, id=None):
+        dict_of_keylists = {
+            'issn' : ['feed', 'entry', 'pam:message', 'pam:article', 'prism:issn'],
+            'eissn' : ['feed', 'entry', 'pam:message', 'pam:article', 'prism:eIssn']
+        }
+        biblio_dict = provider._extract_from_json(page, dict_of_keylists)
+        if not biblio_dict:
+          return {}
+
+        if "eissn" in biblio_dict:
+            biblio_dict["issn"] = biblio_dict["eissn"]
+            del biblio_dict["eissn"]
+        if "issn" in biblio_dict:
+            biblio_dict["issn"] = biblio_dict["issn"].replace("-", "")
+
+        return biblio_dict  
 
 
     def _lookup_biblio_from_doi(self, id, url, cache_enabled):
@@ -98,6 +151,7 @@ class Crossref(Provider):
             biblio_dict = self._extract_biblio(response.text, id)
         except (AttributeError, TypeError):
             biblio_dict = {}
+
         return biblio_dict
 
 

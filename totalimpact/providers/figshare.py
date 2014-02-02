@@ -1,5 +1,4 @@
 from totalimpact.providers import provider
-from totalimpact.providers import crossref
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
 import re
@@ -46,7 +45,6 @@ class Figshare(Provider):
 
     def __init__(self):
         super(Figshare, self).__init__()
-        self.crossref = crossref.Crossref()
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
