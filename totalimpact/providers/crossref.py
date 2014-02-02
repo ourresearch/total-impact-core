@@ -76,6 +76,10 @@ class Crossref(Provider):
         biblio_dict = self._lookup_biblio_from_doi(id, url, cache_enabled)
         biblio_dict.update(self._lookup_issn_from_doi(id, url, cache_enabled))
 
+        free_fulltext_fragments = ["/npre.", ".figshare.", "/peerj.preprints"]
+        if any(doi_fragment in id for doi_fragment in free_fulltext_fragments):
+            biblio_dict["free_fulltext_url"] = url
+
         return biblio_dict
 
 
@@ -198,10 +202,6 @@ class Crossref(Provider):
             biblio_dict["title"] = re.sub(u"\s+", u" ", biblio_dict["title"])
         except KeyError:
             pass
-
-        free_fulltext_fragments = ["/npre.", ".figshare.", "/peerj.preprints"]
-        if any(doi_fragment in id for doi_fragment in free_fulltext_fragments):
-            biblio_dict["free_fulltext_url"] = url
 
         return biblio_dict  
 
