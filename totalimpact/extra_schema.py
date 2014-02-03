@@ -22,8 +22,7 @@ def create_view_min_biblio():
 
 def create_doaj_table():
     doaj_setup_sql = """
-        drop table if exists doaj cascade;
-        CREATE TABLE doaj (
+        CREATE TABLE if not exists doaj (
             title varchar(250),
             publisher varchar(250),
             issn varchar(25) NOT NULL,
