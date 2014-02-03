@@ -2,6 +2,9 @@ from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from test.utils import http
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact import app, db
+from totalimpact.providers import provider
+from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
 
 import os
 import collections
@@ -29,7 +32,12 @@ class TestPubmed(ProviderTestCase):
     testitem_members = "123\n456\n789"
 
     def setUp(self):
+        self.db = setup_postgres_for_unittests(db, app)
+        provider.is_issn_in_doaj("boo")
         ProviderTestCase.setUp(self)
+        
+    def tearDown(self):
+        teardown_postgres_for_unittests(self.db)
 
     def test_is_relevant_alias(self):
         # ensure that it matches an appropriate ids

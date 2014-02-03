@@ -178,6 +178,8 @@ class Pubmed(Provider):
 
         if "pmc" in aliases_dict:
             biblio_dict["free_fulltext_url"] = self.pmc_article_template % aliases_dict["pmc"][0]
+        elif ("issn" in biblio_dict) and provider.is_issn_in_doaj(biblio_dict["issn"]):
+            biblio_dict["free_fulltext_url"] = self.aliases_pubmed_url_template %id
 
         return biblio_dict
 
