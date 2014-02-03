@@ -79,6 +79,8 @@ class Crossref(Provider):
         free_fulltext_fragments = ["/npre.", ".figshare.", "/peerj.preprints"]
         if any(doi_fragment in id for doi_fragment in free_fulltext_fragments):
             biblio_dict["free_fulltext_url"] = url
+        elif ("issn" in biblio_dict) and provider.is_issn_in_doaj(biblio_dict["issn"]):
+            biblio_dict["free_fulltext_url"] = url
 
         return biblio_dict
 

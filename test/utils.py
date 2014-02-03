@@ -1,4 +1,5 @@
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.sql import text    
 
 def slow(f):
     f.slow = True
@@ -60,15 +61,28 @@ def drop_everything(db, app):
 
 
 def setup_postgres_for_unittests(db, app):
+
     if not "localhost" in app.config["SQLALCHEMY_DATABASE_URI"]:
         assert(False), "Not running this unittest because SQLALCHEMY_DATABASE_URI is not on localhost"
 
+    result = db.session.execute("drop view if exists doaj_issn_lookup; drop table if exists doaj cascade")
+    db.session.commit()
+
     drop_everything(db, app)
+
     db.create_all()
 
     from totalimpact import extra_schema 
     extra_schema.create_view_min_biblio()
+    extra_schema.create_doaj_table()
+    extra_schema.create_doaj_view()
 
+    doaj_setup_sql = """
+        INSERT INTO doaj(title, publisher, issn, eissn, "cc license") VALUES ('ZooKeys', 'Pensoft Publishers', '1313-2989', '1313-2970', 'by');
+        INSERT INTO doaj(title, publisher, issn, eissn, "cc license") VALUES ('PLOS comp bio', 'PLOS', '1553-7358', '', 'by');
+    """
+    raw_sql = text(doaj_setup_sql)
+    result = db.session.execute(raw_sql)
     return db
 
 

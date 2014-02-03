@@ -1,7 +1,11 @@
 from test.unit_tests.providers import common
 from test.unit_tests.providers.common import ProviderTestCase
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderClientError, ProviderServerError
+from totalimpact.providers import provider
+
 from test.utils import http
+from totalimpact import app, db
+from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
 
 import os
 import collections
@@ -29,7 +33,12 @@ class TestMendeley(ProviderTestCase):
     testitem_metrics_wrong_year = [(k, v[0]) for (k, v) in testitem_metrics_dict_wrong_year.items()]
 
     def setUp(self):
+        self.db = setup_postgres_for_unittests(db, app)
+        provider.is_issn_in_doaj("boo")
         ProviderTestCase.setUp(self)
+        
+    def tearDown(self):
+        teardown_postgres_for_unittests(self.db)
 
     def test_is_relevant_alias(self):
         # ensure that it matches an appropriate ids
@@ -134,6 +143,15 @@ class TestMendeley(ProviderTestCase):
         print new_biblio
         expected = {'oai_id': u'oai:arXiv.org:astro-ph/0603060', 'issn': u'0004637X', 'is_oa_journal': 'None'}
         assert_equals(new_biblio, expected)        
+
+    @http
+    def test_biblio_issn(self):
+        # at the moment this item 
+        alias = ("doi", "10.1371/journal.pcbi.1000361")
+        new_biblio = self.provider.biblio([alias])
+        print new_biblio
+        expected = {'oai_id': u'oai:pubmedcentral.nih.gov:2663789', 'issn': u'15537358', 'free_fulltext_url': 'http://dx.doi.org/10.1371/journal.pcbi.1000361', 'is_oa_journal': 'True'}
+        assert_equals(new_biblio, expected) 
 
     # override common tests
     @raises(ProviderClientError, ProviderServerError)

@@ -5,15 +5,17 @@ from totalimpact import providers
 from totalimpact import default_settings
 from totalimpact import utils
 from totalimpact import app
+from totalimpact import db
 
 import requests, os, time, threading, sys, traceback, importlib, urllib, logging, itertools
 import simplejson
 import BeautifulSoup
 import socket
 import analytics
+import re
 from xml.dom import minidom 
 from xml.parsers.expat import ExpatError
-import re
+from sqlalchemy.sql import text    
 
 logger = logging.getLogger("ti.provider")
 
@@ -83,7 +85,13 @@ def import_products(provider_name, input_dict):
 
     return(aliases)
 
-
+def is_issn_in_doaj(issn):
+    raw_sql = text("""SELECT issn from doaj_issn_lookup where issn=:issn""")
+    result = db.session.execute(raw_sql, params={
+        "issn": issn
+        })
+    is_in_doaj = result.first() != None
+    return is_in_doaj
 
 class ProviderFactory(object):
 

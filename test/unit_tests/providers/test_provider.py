@@ -1,10 +1,13 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderFactory
+from totalimpact import app, db
 from nose.tools import assert_equals, nottest
 from xml.dom import minidom 
+from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
 
 import simplejson, BeautifulSoup
 import os
+from sqlalchemy.sql import text    
 
 sampledir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/")
 
@@ -19,6 +22,12 @@ class Test_Provider():
     TEST_JSON = """{"repository":{"homepage":"","watchers":7,"has_downloads":true,"fork":false,"language":"Java","has_issues":true,"has_wiki":true,"forks":0,"size":4480,"private":false,"created_at":"2008/09/29 04:26:42 -0700","name":"gtd","owner":"egonw","description":"Git-based ToDo tool.","open_issues":2,"url":"https://github.com/egonw/gtd","pushed_at":"2012/02/28 10:21:26 -0800"}}"""
 
     TEST_XML = open(os.path.join(sampledir, "facebook", "metrics")).read()
+
+    def setUp(self):
+        self.db = setup_postgres_for_unittests(db, app)
+        
+    def tearDown(self):
+        teardown_postgres_for_unittests(self.db)
 
     def test_get_provider(self):
         provider = ProviderFactory.get_provider("wikipedia")
@@ -38,7 +47,7 @@ class Test_Provider():
     def test_get_providers_filters_by_biblio(self):
         providers = ProviderFactory.get_providers(self.TEST_PROVIDER_CONFIG, "biblio")
         provider_names = [provider.__class__.__name__ for provider in providers]
-        assert_equals(set(provider_names), set(['Pubmed']))
+        assert_equals(set(provider_names), set(['Pubmed', 'Mendeley']))
 
     def test_get_providers_filters_by_aliases(self):
         providers = ProviderFactory.get_providers(self.TEST_PROVIDER_CONFIG, "aliases")
@@ -85,6 +94,16 @@ class Test_Provider():
         expected = "10.5063/AA/nrs.373.1"
         response = provider.doi_from_url_string(test_url)
         assert_equals(response, expected)
+
+    def test_is_issn_in_doaj(self):
+        response = provider.is_issn_in_doaj("invalidissn")
+        assert_equals(response, False)
+
+        zookeys_issn = "13132989"
+        response = provider.is_issn_in_doaj(zookeys_issn)
+        assert_equals(response, True)
+
+
 
 class TestProviderFactory():
 

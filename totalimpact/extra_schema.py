@@ -19,4 +19,31 @@ def create_view_min_biblio():
                 )""")
     db.session.commit()
 
+
+def create_doaj_table():
+    doaj_setup_sql = """
+        drop table if exists doaj cascade;
+        CREATE TABLE doaj (
+            title varchar(250),
+            publisher varchar(250),
+            issn varchar(25) NOT NULL,
+            eissn varchar(25),
+            "cc license" varchar(25),
+            PRIMARY KEY (issn)
+        );"""    
+    result = db.session.execute(doaj_setup_sql)
+    db.session.commit()
+
+def create_doaj_view():
+    doaj_setup_sql = """
+        CREATE or replace VIEW doaj_issn_lookup (issn) AS          
+            SELECT replace((doaj.issn)::text, '-'::text, ''::text) AS issn FROM doaj
+                UNION
+            SELECT replace((doaj.eissn)::text, '-'::text, ''::text) AS issn FROM doaj;
+        """    
+    result = db.session.execute(doaj_setup_sql)
+    db.session.commit()
+
 create_view_min_biblio()    
+create_doaj_table()    
+create_doaj_view()    

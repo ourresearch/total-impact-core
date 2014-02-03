@@ -19,6 +19,7 @@ class Mendeley(Provider):
     metrics_from_arxiv_template = "http://api.mendeley.com/oapi/documents/details/%s?type=arxiv&consumer_key=" + os.environ["MENDELEY_KEY"]
     aliases_url_template = uuid_from_title_template
     biblio_url_template = metrics_from_doi_template
+    doi_url_template = "http://dx.doi.org/%s"
 
     static_meta_dict = {
         "readers": {
@@ -321,6 +322,11 @@ class Mendeley(Provider):
             biblio_dict = self._extract_biblio(page, id)
         except (AttributeError, TypeError):
             biblio_dict = {}
+
+        if biblio_dict and ("is_oa_journal" in biblio_dict) and (biblio_dict["is_oa_journal"]=='True'):
+            biblio_dict["free_fulltext_url"] = self.doi_url_template %id
+        elif biblio_dict and ("issn" in biblio_dict) and provider.is_issn_in_doaj(biblio_dict["issn"]):
+            biblio_dict["free_fulltext_url"] = self.doi_url_template %id
 
         return biblio_dict
 
