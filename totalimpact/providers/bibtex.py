@@ -141,6 +141,13 @@ class Bibtex(Provider):
 
         parsed_bibtex = self.parse(bibtex_contents)
 
-        aliases = [("biblio", entry) for entry in parsed_bibtex]
+        aliases = []
+        for entry in parsed_bibtex:
+            if ("journal" in entry) and "arXiv preprint" in entry["journal"]:
+                arxiv_id = entry["journal"].replace("arXiv preprint", "")
+                arxiv_id = arxiv_id.replace("arXiv:", "").strip()
+                aliases += [("arxiv", arxiv_id)]
+            else:                
+                aliases += [("biblio", entry)]
 
         return(aliases)
