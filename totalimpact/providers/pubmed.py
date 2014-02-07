@@ -146,11 +146,17 @@ class Pubmed(Provider):
     def _extract_biblio_elink(self, page, id=None):
 
         biblio_dict = {}
-
-        tree = etree.parse(StringIO(page))
-        obj_urls = tree.xpath("//ObjUrl[Category='Full Text Sources' and Attribute='free resource']/Url")
-        if obj_urls:
-            biblio_dict = {"free_fulltext_url": obj_urls[0].text}
+        if not page:
+            return biblio_dict
+            
+        try:
+            tree = etree.parse(StringIO(page))
+            obj_urls = tree.xpath("//ObjUrl[Category='Full Text Sources' and Attribute='free resource']/Url")
+            if obj_urls:
+                biblio_dict = {"free_fulltext_url": obj_urls[0].text}
+        except etree.XMLSyntaxError:
+            self.logger.warning(u"{provider_name} _extract_biblio_elink XMLSyntaxError on {id}".format(
+                provider_name=self.provider_name, id=id))
 
         return biblio_dict 
 
