@@ -51,9 +51,10 @@ class Webpage(Provider):
             biblio = aliases_dict["biblio"][0]
         elif "url" in aliases_dict:
             url = aliases_dict["url"][0]
-            if not provider_url_template:
-                provider_url_template = self.biblio_url_template
-            biblio = self.get_biblio_for_id(url, provider_url_template, cache_enabled)
+            if url and ("http://www.scopus.com/inward" not in url):
+                if not provider_url_template:
+                    provider_url_template = self.biblio_url_template
+                biblio = self.get_biblio_for_id(url, provider_url_template, cache_enabled)
 
         return biblio
 
