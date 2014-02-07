@@ -452,7 +452,12 @@ class Backend(Worker):
                         "method_name": method_name, 
                         "analytics_credentials": analytics_credentials,
                         "alias_providers_already_run": alias_providers_already_run}
-                    self.provider_queues[provider_name].push(provider_message)
+                    try:
+                        self.provider_queues[provider_name].push(provider_message)
+                    except KeyError:
+                        #removed a provider?
+                        logger.warning(u"KeyError in backend for {tiid} on {provider_name}".format(
+                            tiid=tiid, provider_name=provider_name))
         else:
             #time.sleep(0.1)  # is this necessary?
             pass
