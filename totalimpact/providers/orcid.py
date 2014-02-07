@@ -1,7 +1,7 @@
 import re, json
 from totalimpact.providers import bibtex
 from totalimpact.providers import provider
-from totalimpact.providers import bibtex
+from totalimpact.providers import crossref
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderItemNotFoundError
 
 import logging
@@ -83,7 +83,9 @@ class Orcid(Provider):
 
                 for myid in ids:
                     if myid['work-external-identifier-type'] == "DOI":
-                        new_member = ("doi", myid['work-external-identifier-id']['value'])
+                        doi = myid['work-external-identifier-id']['value']
+                        doi = crossref.clean_doi(doi)
+                        new_member = ("doi", doi)
                     if myid['work-external-identifier-type'] == "PMID":
                         new_member = ("pmid", myid['work-external-identifier-id']['value'])
             except KeyError:
