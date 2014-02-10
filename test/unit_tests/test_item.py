@@ -510,11 +510,12 @@ class TestItem():
             ]
 
         item_objs = [item_module.create_objects_from_item_doc(item_doc) for item_doc in item_docs]
+        item_objs[-1].biblios[0].provider = "user_provided"
         tiids = [item.tiid for item in item_objs]
 
         response = item_module.build_duplicates_list(tiids)
         print response
-        expected = [[u'a1', u'e1'], [u'b2', u'c2', u'd2'], [u'f3'], [u'g4', u'h4']]
+        expected = [[{'tiid': u'a1', 'has_user_provided_biblio': False}, {'tiid': u'e1', 'has_user_provided_biblio': False}], [{'tiid': u'b2', 'has_user_provided_biblio': False}, {'tiid': u'c2', 'has_user_provided_biblio': False}, {'tiid': u'd2', 'has_user_provided_biblio': False}], [{'tiid': u'f3', 'has_user_provided_biblio': False}], [{'tiid': u'g4', 'has_user_provided_biblio': False}, {'tiid': u'h4', 'has_user_provided_biblio': True}]]
         assert_equals(response, expected)
        
 

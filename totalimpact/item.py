@@ -332,6 +332,9 @@ class Item(db.Model):
     def published_before(self, mydate):
         return (self.publication_date < mydate.isoformat())
 
+    def has_user_provided_biblio(self):
+        return any([biblio.provider=='user_provided' for biblio in self.biblios])
+
     @classmethod
     def create_from_old_doc(cls, doc):
         # logger.debug(u"in create_from_old_doc for {tiid}".format(
@@ -1067,8 +1070,9 @@ def build_duplicates_list(tiids):
             distinct_item_id = len(distinct_groups)
 
         # whether distinct or not,
-        # add this to the group, and add all its aliases too    
-        distinct_groups[distinct_item_id] += [item.tiid]
+        # add this to the group, and add all its aliases too   
+        distinct_groups[distinct_item_id] += [{ "tiid":item.tiid, 
+                                                "has_user_provided_biblio":item.has_user_provided_biblio()}]
         for alias in alias_tuples:
             duplication_list[alias] = distinct_item_id
 
