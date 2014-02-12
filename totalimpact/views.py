@@ -9,7 +9,7 @@ import shortuuid
 import analytics
 import requests
 
-from totalimpact import app, tiredis, collection, api_user, incoming_email
+from totalimpact import app, tiredis, collection, incoming_email
 from totalimpact import item as item_module
 from totalimpact.models import MemberItems, NotAuthenticatedError
 from totalimpact.providers import provider as provider_module
@@ -49,13 +49,17 @@ def set_redis(url, db):
     return myredis
 
 
+def is_valid_key(key):
+    internal_keys = ["yourkey", "samplekey", "item-report-page", "api-docs", os.getenv("API_KEY").lower(), os.getenv("API_ADMIN_KEY").lower()]
+    is_valid_internal_key = key.lower() in internal_keys
+    return is_valid_internal_key
 
 def check_key():
     if "/v1/" in request.url:
         api_key = request.values.get('key', '')
         if not api_key:
             api_key = request.args.get("api_admin_key", "")
-        if not api_user.is_valid_key(api_key):
+        if not is_valid_key(api_key):
             abort_custom(403, "You must include key=YOURKEY in your query.  Contact team@impactstory.org for a valid api key.")
     return # if success don't return any content
 
@@ -85,30 +89,10 @@ def check_mimetype():
         g.return_as_html = True
         request.path = request.path.replace(".html", "")
 
-def stop_user_who_is_swamping_us():
-    ip = request.remote_addr
-    key = request.values.get('key', '')
-    if ip in ["91.121.68.140"]:
-        logger.debug(u"got a call from {ip}; aborting with 403.".format(ip=ip) )
-        abort_custom(403, """Sorry, we're blocking your IP address {ip} because \
-            we can't handle requests as quickly as you're sending them, and so
-            they're swamping our system. Please email us at \
-            team@impactstory.org for details and possible workarounds.
-        """.format(ip=ip))
-
-    # if key  in ["VANWIJIKc233acaa"]:
-    #     logger.debug(u"got a call from {key}; aborting with 403.".format(key=key) )
-    #     abort(403, """Sorry, we're blocking your api key '{key}' because \
-    #             we can't handle requests as quickly as you're sending them, and so
-    #             they're swamping our system. Please email us at \
-    #             team@impactstory.org for details and possible workarounds.
-    #         """.format(key=key))
 
 
 @app.before_request
 def before_request():
-    stop_user_who_is_swamping_us()
-    track_api_event()
     check_key()
     check_mimetype()
 
@@ -145,34 +129,6 @@ def set_mimetype_and_encoding(resp):
     return resp
 
 
-def track_api_event():
-    api_key = request.values.get('key')
-    if not api_key:
-        api_key = request.args.get("api_admin_key", "")
-
-    if not api_user.is_internal_key(api_key):
-        if request.path not in ["/favicon.ico"]:
-            requested_to_create_item = False
-            requested_to_view_item = False
-            if ("/v1/item" in request.url):
-                if (request.method == "POST"):
-                    requested_to_create_item = True
-                elif (request.method == "GET"):
-                    requested_to_view_item = True
-                    if (request.args.get("register", 0) in ["1", "true", "True"]):
-                        requested_to_create_item = True
-
-            analytics.track("CORE", "Received API request from external", {
-                "path": request.path, 
-                "url": request.url, 
-                "method": request.method, 
-                "requested_to_create_item": requested_to_create_item, 
-                "requested_to_view_item": requested_to_view_item, 
-                "user_agent": request.user_agent.string,
-                "api_key": api_key
-                }, 
-                context={ "providers": { 'Mixpanel': False } })
-
 # adding a simple route to confirm working API
 @app.route('/')
 @app.route('/v1')
@@ -190,20 +146,7 @@ def hello():
 
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
-    namespace = item_module.clean_id(namespace)
-    nid = item_module.clean_id(nid)
-
-    api_key = request.values.get('key')
-    try:
-        api_user.register_item((namespace, nid), api_key, myredis, mydao)
-        response_code = 201 # Created
-    except api_user.ItemAlreadyRegisteredToThisKey:
-        response_code = 200
-    except api_user.ApiLimitExceededException:
-        abort_custom(403, "Registration limit exceeded. Contact team@impactstory.org to discuss options.")
-
-    resp = make_response(json.dumps("ok"), response_code)
-    return resp
+    abort_custom(410)
 
 
 @app.route('/v1/item/<tiid>', methods=['GET'])
@@ -245,34 +188,7 @@ def get_tiid_from_namespace_nid(namespace, nid):
 
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
 def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
-    namespace = item_module.clean_id(namespace)
-    nid = item_module.clean_id(nid)
-
-    include_history = request.args.get("include_history", 0) in ["1", "true", "True"]
-    register = request.args.get("register", 0) in ["1", "true", "True"]
-    callback_name = request.args.get("callback", None)
-    api_key = request.values.get('key')
-
-    debug_message = ""
-    if register:
-        try:
-            api_user.register_item((namespace, nid), api_key, myredis, mydao)
-        except api_user.ItemAlreadyRegisteredToThisKey:
-            debug_message = u"ItemAlreadyRegisteredToThisKey for key {api_key}".format(
-                api_key=api_key)
-            logger.debug(debug_message)
-        except api_user.ApiLimitExceededException:
-            debug_message = u"ApiLimitExceededException for key {api_key}".format(
-                api_key=api_key)
-            logger.debug(debug_message)
-
-    tiid = item_module.get_tiid_by_alias(namespace, nid, mydao)
-    if not tiid:
-        if not debug_message:
-            debug_message = "Item not in database. Call POST to register it"
-        # if registration failure, report that info. Else suggest they register.
-        abort_custom(404, debug_message)
-    return get_item_from_tiid(tiid, format, include_history, callback_name)
+    abort_custom(410)
 
 
 
@@ -768,19 +684,6 @@ def reference_sets_histograms():
     #resp.headers.add("Content-Encoding", "UTF-8")
     return resp
 
-@app.route("/v1/key", methods=["POST"])
-def key():
-    """ Generate a new api key and store api key info in a db doc """
-    meta = request.json
-    if meta["password"] != os.getenv("API_KEY"):
-        abort_custom(403, "password not correct")
-    del meta["password"]
-
-    new_api_user = api_user.save_api_user(**meta)
-    new_api_key = new_api_user.api_key
-
-    resp = make_response(json.dumps({"api_key":new_api_key}, indent=4), 200)
-    return resp
 
 
 
