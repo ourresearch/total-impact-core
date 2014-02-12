@@ -525,7 +525,7 @@ class Provider(object):
         if not extract_metrics_method:
             extract_metrics_method = self._extract_metrics
 
-        self.logger.debug(u"%s getting metrics for %s" % (self.provider_name, id))
+        # self.logger.debug(u"%s getting metrics for %s" % (self.provider_name, id))
 
         if url_override:
             url = url_override

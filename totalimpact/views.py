@@ -140,7 +140,7 @@ def set_mimetype_and_encoding(resp):
     except AttributeError:
         pass
 
-    logger.info(u"rendering output as json")
+    # logger.info(u"rendering output as json")
     resp.mimetype = "application/json"
     return resp
 

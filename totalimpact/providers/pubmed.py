@@ -313,7 +313,7 @@ class Pubmed(Provider):
             provider_url_template=None, 
             cache_enabled=True):
 
-        logger.debug(u"%20s getting metrics for %s" % (self.provider_name, id))
+        # logger.debug(u"%20s getting metrics for %s" % (self.provider_name, id))
         metrics_dict = {}
 
         reviewed_by_f1000 = self._check_reviewed_by_f1000(id, cache_enabled)

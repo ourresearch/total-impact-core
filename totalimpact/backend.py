@@ -23,8 +23,8 @@ class RedisQueue(object):
         # logger.info(u"{:20}: /biblio_print >>>PUSHING to redis {message_json}".format(
         #     self.name, message_json=message_json)) 
         queue_length = self.myredis.llen(self.queue_name)       
-        logger.info(u">>>PUSHING to redis queue {queue_name}, current length {queue_length}".format(
-            queue_name=self.name, queue_length=queue_length)) 
+        # logger.info(u">>>PUSHING to redis queue {queue_name}, current length {queue_length}".format(
+        #     queue_name=self.name, queue_length=queue_length)) 
         self.myredis.lpush(self.queue_name, message_json)
 
     def pop(self):
@@ -52,8 +52,9 @@ class PythonQueue(object):
     def push(self, message):
         self.queue.put(copy.deepcopy(message))
         queue_length = self.queue.qsize()
-        logger.info(u">>>PUSHING to python queue {queue_name}, current length approx {queue_length}".format(
-            queue_name=self.queue_name, queue_length=queue_length)) 
+        if queue_length >= 10:
+            logger.info(u">>>PUSHING to python queue {queue_name}, current length approx {queue_length}".format(
+                queue_name=self.queue_name, queue_length=queue_length)) 
 
         #logger.info(u"{:20}: >>>PUSHED".format(
         #        self.queue_name))
@@ -233,10 +234,11 @@ class ProviderWorker(Worker):
 
             thread_count[self.provider.provider_name][tiid+method_name] = 1
 
-            logger.info(u"{num_total} total threads, {num_provider} threads for {provider}".format(
-                num_provider=num_active_threads_for_this_provider,
-                num_total=threading.active_count(),
-                provider=self.provider.provider_name.upper()))
+            if threading.active_count() >= 10:
+                logger.info(u"{num_total} total threads, {num_provider} threads for {provider}".format(
+                    num_provider=num_active_threads_for_this_provider,
+                    num_total=threading.active_count(),
+                    provider=self.provider.provider_name.upper()))
 
             t = threading.Thread(target=ProviderWorker.wrapper, 
                 args=(tiid, aliases_dict, self.provider, method_name, analytics_credentials, alias_providers_already_run, callback), 

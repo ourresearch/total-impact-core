@@ -153,7 +153,7 @@ class Altmetric_Com(Provider):
             provider_url_template=None, 
             cache_enabled=True):
 
-        self.logger.debug(u"%s getting metrics for %s" % (self.provider_name, id))
+        # self.logger.debug(u"%s getting metrics for %s" % (self.provider_name, id))
 
         headers = {u'content-type': u'application/x-www-form-urlencoded',
                     u'accept': u'application/json'}
