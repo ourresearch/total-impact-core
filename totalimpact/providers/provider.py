@@ -600,7 +600,8 @@ class Provider(object):
         try:
             analytics.track("CORE", "Sent GET to Provider", {"provider": self.provider_name, "url": url}, 
                 context={ "providers": { 'Mixpanel': False } })
-            self.logger.info(u"%s LIVE GET on %s" %(self.provider_name, url))
+            self.logger.info(u"{provider_name} LIVE GET on {url}".format(
+                provider_name=self.provider_name, url=url))
             r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=allow_redirects, verify=False)
             if r and not r.encoding:
                 r.encoding = "utf-8"     
@@ -608,13 +609,15 @@ class Provider(object):
                 store_page_in_cache(url, headers, allow_redirects, r, cache)
 
         except requests.exceptions.Timeout as e:
-            self.logger.info(u"%s Provider timed out during GET on %s" %(self.provider_name, url))
+            self.logger.info(u"{provider_name} provider timed out on GET on {url}".format(
+                provider_name=self.provider_name, url=url))
             analytics.track("CORE", "Received no response from Provider (timeout)", 
                 {"provider": self.provider_name, "url": url})
             raise ProviderTimeout("Provider timed out during GET on " + url, e)
 
         except requests.exceptions.RequestException as e:
-            self.logger.info(u"%s RequestException during GET on %s" %(self.provider_name, url))
+            self.logger.info(u"{provider_name} RequestException on GET on {url}".format(
+                provider_name=self.provider_name, url=url))
             analytics.track("CORE", "Received RequestException from Provider", 
                 {"provider": self.provider_name, "url": url})
             raise ProviderHttpError("RequestException during GET on: " + url, e)
