@@ -234,7 +234,7 @@ class ProviderWorker(Worker):
 
             thread_count[self.provider.provider_name][tiid+method_name] = 1
 
-            if threading.active_count() >= 10:
+            if num_active_threads_for_this_provider >= 10:
                 logger.info(u"{num_total} total threads, {num_provider} threads for {provider}".format(
                     num_provider=num_active_threads_for_this_provider,
                     num_total=threading.active_count(),

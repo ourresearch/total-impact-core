@@ -146,7 +146,7 @@ def hello():
 
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['POST'])
 def item_namespace_post(namespace, nid):
-    abort_custom(410)
+    abort_custom(410, "no longer supported")
 
 
 @app.route('/v1/item/<tiid>', methods=['GET'])
@@ -188,7 +188,7 @@ def get_tiid_from_namespace_nid(namespace, nid):
 
 @app.route('/v1/item/<namespace>/<path:nid>', methods=['GET'])
 def get_item_from_namespace_nid(namespace, nid, format=None, include_history=False):
-    abort_custom(410)
+    abort_custom(410, "no longer supported")
 
 
 

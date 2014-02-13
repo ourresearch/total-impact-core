@@ -64,8 +64,8 @@ def init_currently_updating_status(self, tiids, providers):
     pipe = self.pipeline()    
 
     for tiid in tiids:
-        logger.debug(u"set_all_providers for '{tiid}'.".format(
-            tiid=tiid))
+        # logger.debug(u"set_all_providers for '{tiid}'.".format(
+        #     tiid=tiid))
         now = datetime.datetime.utcnow().isoformat()
         for provider_name in providers:
             currently_updating_status = {now: "in queue"}
