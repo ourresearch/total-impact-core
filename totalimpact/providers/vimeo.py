@@ -52,7 +52,10 @@ class Vimeo(Provider):
             return False
 
     def _get_video_id(self, video_url):
-        nid_as_vimeo_id = re.findall("vimeo.com\/(\d+)", video_url)[0]
+        try:
+            nid_as_vimeo_id = re.findall("vimeo.com\/(\d+)", video_url)[0]
+        except IndexError:
+            raise ProviderContentMalformedError("No recognizable vimeo id")
         return nid_as_vimeo_id
 
     #override because need to break up id

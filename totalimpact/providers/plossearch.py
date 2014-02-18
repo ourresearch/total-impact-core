@@ -60,7 +60,10 @@ class Plossearch(Provider):
     # need to override to url encode for metrics
     def _get_templated_url(self, template, id, method=None):
         id = re.sub('^http(s?)://', '', id)
-        id = urllib.quote(id, safe="")
+        try:
+            id = urllib.quote(id, safe="")
+        except KeyError:  # thrown if bad characters
+            pass
         url = template % id
         return(url)
 
