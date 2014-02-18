@@ -545,7 +545,7 @@ class Provider(object):
         # extract the metrics
         try:
             metrics_dict = extract_metrics_method(response.text, response.status_code, id=id)
-        except socket.timeout, e:  # can apparently be thrown here
+        except (requests.exceptions.Timeout, socket.timeout) as e:  # can apparently be thrown here
             self.logger.info(u"%s Provider timed out *after* GET in socket" %(self.provider_name))        
             raise ProviderTimeout("Provider timed out *after* GET in socket", e)        
         except (AttributeError, TypeError):  # throws type error if response.text is none
@@ -600,15 +600,20 @@ class Provider(object):
         try:
             analytics.track("CORE", "Sent GET to Provider", {"provider": self.provider_name, "url": url}, 
                 context={ "providers": { 'Mixpanel': False } })
-            self.logger.info(u"{provider_name} LIVE GET on {url}".format(
-                provider_name=self.provider_name, url=url))
+            try:
+                self.logger.info(u"{provider_name} LIVE GET on {url}".format(
+                    provider_name=self.provider_name, url=url))
+            except UnicodeDecodeError:
+                self.logger.info(u"{provider_name} LIVE GET on an url that throws UnicodeDecodeError".format(
+                    provider_name=self.provider_name))
+
             r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=allow_redirects, verify=False)
             if r and not r.encoding:
                 r.encoding = "utf-8"     
             if r and use_cache:
                 store_page_in_cache(url, headers, allow_redirects, r, cache)
 
-        except requests.exceptions.Timeout as e:
+        except (requests.exceptions.Timeout, socket.timeout) as e:
             self.logger.info(u"{provider_name} provider timed out on GET on {url}".format(
                 provider_name=self.provider_name, url=url))
             analytics.track("CORE", "Received no response from Provider (timeout)", 
