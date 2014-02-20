@@ -217,12 +217,12 @@ class Provider(object):
         else:
             url = None
 
-        analytics.track("CORE", "Received error response from Provider", {
-            "provider": self.provider_name, 
-            "url": url,
-            "text": text,
-            "status_code": status_code
-            })
+        # analytics.track("CORE", "Received error response from Provider", {
+        #     "provider": self.provider_name, 
+        #     "url": url,
+        #     "text": text,
+        #     "status_code": status_code
+        #     })
 
         if status_code >= 500:
             error = ProviderServerError(response)
@@ -598,8 +598,8 @@ class Provider(object):
                 return cached_response
             
         try:
-            analytics.track("CORE", "Sent GET to Provider", {"provider": self.provider_name, "url": url}, 
-                context={ "providers": { 'Mixpanel': False } })
+            # analytics.track("CORE", "Sent GET to Provider", {"provider": self.provider_name, "url": url}, 
+            #     context={ "providers": { 'Mixpanel': False } })
             try:
                 self.logger.info(u"{provider_name} LIVE GET on {url}".format(
                     provider_name=self.provider_name, url=url))
@@ -616,15 +616,15 @@ class Provider(object):
         except (requests.exceptions.Timeout, socket.timeout) as e:
             self.logger.info(u"{provider_name} provider timed out on GET on {url}".format(
                 provider_name=self.provider_name, url=url))
-            analytics.track("CORE", "Received no response from Provider (timeout)", 
-                {"provider": self.provider_name, "url": url})
+            # analytics.track("CORE", "Received no response from Provider (timeout)", 
+            #     {"provider": self.provider_name, "url": url})
             raise ProviderTimeout("Provider timed out during GET on " + url, e)
 
         except requests.exceptions.RequestException as e:
             self.logger.info(u"{provider_name} RequestException on GET on {url}".format(
                 provider_name=self.provider_name, url=url))
-            analytics.track("CORE", "Received RequestException from Provider", 
-                {"provider": self.provider_name, "url": url})
+            # analytics.track("CORE", "Received RequestException from Provider", 
+            #     {"provider": self.provider_name, "url": url})
             raise ProviderHttpError("RequestException during GET on: " + url, e)
 
         return r
