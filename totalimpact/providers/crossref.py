@@ -86,9 +86,9 @@ class Crossref(Provider):
 
 
     def _lookup_issn_from_doi(self, id, url, cache_enabled):
-        # try to get a response from the data provider        
+        # try to get a response from the data provider      
         response = self.http_get(url, 
-            cache_enabled=cache_enabled, 
+            cache_enabled=True, 
             allow_redirects=True,
             headers={"Accept": "application/json"})
 
@@ -117,18 +117,14 @@ class Crossref(Provider):
 
     def _extract_biblio_issn(self, page, id=None):
         dict_of_keylists = {
-            'issn' : ['feed', 'entry', 'pam:message', 'pam:article', 'prism:issn'],
-            'eissn' : ['feed', 'entry', 'pam:message', 'pam:article', 'prism:eIssn']
+            'issn' : ['ISSN']
         }
         biblio_dict = provider._extract_from_json(page, dict_of_keylists)
         if not biblio_dict:
           return {}
 
-        if "eissn" in biblio_dict:
-            biblio_dict["issn"] = biblio_dict["eissn"]
-            del biblio_dict["eissn"]
         if "issn" in biblio_dict:
-            biblio_dict["issn"] = biblio_dict["issn"].replace("-", "")
+            biblio_dict["issn"] = biblio_dict["issn"][0].replace("-", "")
 
         return biblio_dict  
 
@@ -193,6 +189,8 @@ class Crossref(Provider):
                 elif "date-parts" in biblio_dict["year"]:
                     biblio_dict["year"] = str(biblio_dict["year"]["date-parts"][0][0])
                 biblio_dict["year"] = re.sub("\D", "", biblio_dict["year"])
+                if not biblio_dict["year"]:
+                    del biblio_dict["year"]
 
         except IndexError:
             logger.info(u"/biblio_print could not parse year {biblio_dict}".format(
