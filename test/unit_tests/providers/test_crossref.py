@@ -26,9 +26,8 @@ class TestCrossRef(ProviderTestCase):
     testitem_members = "10.123/example\ndoi:10.456/example2\nhttp://doi.org/10.2342/example3"
 
     def setUp(self):
-        self.db = setup_postgres_for_unittests(db, app)
-        provider.is_issn_in_doaj("boo")
         ProviderTestCase.setUp(self)
+        self.db = setup_postgres_for_unittests(db, app)
         
     def tearDown(self):
         teardown_postgres_for_unittests(self.db)
@@ -64,9 +63,10 @@ class TestCrossRef(ProviderTestCase):
 
     @http
     def test_get_aliases_for_id(self):
+        self.db = setup_postgres_for_unittests(db, app)
         new_aliases = self.provider.aliases([self.testitem_aliases])
         print new_aliases
-        expected = [('biblio', {'issn': u'15537358', 'repository': u'Public Library of Science', 'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': '2009', 'free_fulltext_url': 'http://dx.doi.org/10.1371/journal.pcbi.1000361', 'authors': u'Shotton, Portwin, Klyne, Miles'}), ('url', 'http://dx.doi.org/10.1371/journal.pcbi.1000361'), ('url', u'http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1000361')]
+        expected = [('biblio', {'issn': u'15537358', 'repository': u'Public Library of Science (PLoS)', 'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': '2009', 'free_fulltext_url': 'http://dx.doi.org/10.1371/journal.pcbi.1000361', 'authors': u'Shotton, Portwin, Klyne, Miles'}), ('url', 'http://dx.doi.org/10.1371/journal.pcbi.1000361'), ('url', u'http://www.ploscompbiol.org/article/info%3Adoi%2F10.1371%2Fjournal.pcbi.1000361')]
         assert_equals(sorted(new_aliases), sorted(expected))
 
     @http
@@ -76,13 +76,6 @@ class TestCrossRef(ProviderTestCase):
 
         print biblio
         assert_equals(biblio, expected)        
-
-    @http
-    def test_biblio_figshare(self):
-        biblio = self.provider.biblio([("doi", "10.6084/m9.figshare.134")])
-        expected = {'title': u'Leave One Out N15 Prediction Analysis', 'authors_literal': u'Antony Williams', 'free_fulltext_url': 'http://dx.doi.org/10.6084/m9.figshare.134', 'repository': u'Figshare', 'year': '2011'}
-        print biblio
-        assert_equals(biblio, expected) 
 
     @http
     def test_biblio_dryad(self):
@@ -101,14 +94,15 @@ class TestCrossRef(ProviderTestCase):
     @http
     def test_biblio_science(self):
         biblio = self.provider.biblio([("doi", "10.1126/science.169.3946.635")])
-        expected = {'issn': u'10959203', 'repository': u'American Association for the Advancement of Science (AAAS)', 'title': u'The Structure of Ordinary Water: New data and interpretations are yielding new insights into this fascinating substance', 'journal': u'Science', 'year': '1970', 'authors': u'Frank'}
+        expected = {'issn': u'00368075', 'repository': u'American Association for the Advancement of Science (AAAS)', 'title': u'The Structure of Ordinary Water: New data and interpretations are yielding new insights into this fascinating substance', 'journal': u'Science', 'year': '1970', 'authors': u'Frank'}
         print biblio
         assert_equals(biblio, expected) 
 
     @http
     def test_biblio(self):
+        #setup_postgres_for_unittests(self.db, app)
         biblio = self.provider.biblio([self.testitem_biblio])
-        expected = {'issn': u'15537358', 'repository': u'Public Library of Science', 'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': '2009', 'free_fulltext_url': 'http://dx.doi.org/10.1371/journal.pcbi.1000361', 'authors': u'Shotton, Portwin, Klyne, Miles'}
+        expected = {'issn': u'15537358', 'repository': u'Public Library of Science (PLoS)', 'title': u'Adventures in Semantic Publishing: Exemplar Semantic Enhancements of a Research Article', 'journal': u'PLoS Computational Biology', 'year': '2009', 'free_fulltext_url': 'http://dx.doi.org/10.1371/journal.pcbi.1000361', 'authors': u'Shotton, Portwin, Klyne, Miles'}
         print biblio
         assert_equals(biblio, expected)        
 
@@ -128,15 +122,15 @@ class TestCrossRef(ProviderTestCase):
 
     @http
     def test_aliases_from_url(self):
-        aliases = self.provider.aliases([("url", "http://dx.doi.org/10.6084/m9.figshare.710636")])
-        expected = [('biblio', {'title': u'An Analysis of Issues Against the Adoption of Dynamic Carpooling', 'authors_literal': u'Daniel Graziotin', 'free_fulltext_url': 'http://dx.doi.org/10.6084/m9.figshare.710636', 'repository': u'Figshare', 'year': '2013'}), ('doi', '10.6084/m9.figshare.710636'), ('url', 'http://dx.doi.org/10.6084/m9.figshare.710636'), ('url', u'http://figshare.com/articles/An_Analysis_of_Issues_Against_the_Adoption_of_Dynamic_Carpooling/710636')]
+        aliases = self.provider.aliases([("url", "http://dx.doi.org/10.7554/eLife.00048.020")])
+        expected = [('biblio', {'repository': u'eLife Sciences Publications, Ltd.'}), ('doi', '10.7554/eLife.00048.020'), ('url', 'http://dx.doi.org/10.7554/eLife.00048.020'), ('url', u'http://elife.elifesciences.org/content/1/e00048/T1')]
         print aliases
         assert_equals(sorted(aliases), sorted(expected))
 
     @http
     def test_aliases_bad_title(self):
         aliases = self.provider.aliases([("doi", "10.1021/np070361t")])
-        expected = [('biblio', {'issn': u'15206025', 'repository': u'American Chemical Society', 'title': u' 13 C\u2212 15 N Correlation via Unsymmetrical Indirect Covariance NMR: Application to Vinblastine ', 'journal': u'Journal of Natural Products', 'year': '2007', 'authors': u'Martin, Hilton, Blinov, Williams'}), ('url', 'http://dx.doi.org/10.1021/np070361t'), ('url', u'http://pubs.acs.org/doi/abs/10.1021/np070361t')]
+        expected = [('biblio', {'issn': u'01633864', 'repository': u'American Chemical Society (ACS)', 'title': u' 13 C\u2212 15 N Correlation via Unsymmetrical Indirect Covariance NMR: Application to Vinblastine ', 'journal': u'J. Nat. Prod.', 'year': '2007', 'authors': u'Martin, Hilton, Blinov, Williams'}), ('url', 'http://dx.doi.org/10.1021/np070361t'), ('url', u'http://pubs.acs.org/doi/abs/10.1021/np070361t')]
         print aliases
         assert_equals(sorted(aliases), sorted(expected))  
 
@@ -151,7 +145,7 @@ class TestCrossRef(ProviderTestCase):
         biblio = {"first_author": "Piwowar", "journal": "PLoS medicine", "number": "9", "volume": "5", "first_page": "e183", "key": "piwowar2008towards", "year": "2008"}
         response = self.provider.aliases([("biblio", biblio)])
         print response
-        expected = [('biblio', {'issn': u'15491676', 'repository': u'Public Library of Science', 'title': u'Towards a Data Sharing Culture: Recommendations for Leadership from Academic Health Centers', 'journal': u'PLoS Medicine', 'year': '2008', 'authors': u'Piwowar, Becich, Bilofsky, Crowley'}), ('doi', u'10.1371/journal.pmed.0050183'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0050183'), ('url', u'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0050183')]
+        expected = [('biblio', {'issn': u'15491277', 'repository': u'Public Library of Science (PLoS)', 'title': u'Towards a Data Sharing Culture: Recommendations for Leadership from Academic Health Centers', 'journal': u'Plos Med', 'year': '2008', 'authors': u'Piwowar, Becich, Bilofsky, Crowley'}), ('doi', u'10.1371/journal.pmed.0050183'), ('url', u'http://dx.doi.org/10.1371/journal.pmed.0050183'), ('url', u'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0050183')]
         assert_equals(response, expected)
 
     @http
@@ -159,7 +153,7 @@ class TestCrossRef(ProviderTestCase):
         biblio = {'title': 'Evaluating data citation and sharing policies in the environmental sciences', 'first_author': 'Weber', 'journal': 'Proceedings of the American Society for Information Science and Technology', 'year': '2010', 'number': '1', 'volume': '47', 'first_page': '1', 'authors': 'Weber, Piwowar, Vision'}
         response = self.provider.aliases([("biblio", biblio)])
         print response
-        expected = [('biblio', {'issn': u'00447870', 'repository': u'Wiley Blackwell (John Wiley &amp; Sons)', 'title': u'Evaluating data citation and sharing policies in the environmental sciences', 'journal': u'Proceedings of the American Society for Information Science and Technology', 'year': '2010', 'authors': u'Weber, Piwowar, Vision'}), ('doi', u'10.1002/meet.14504701445'), ('url', u'http://dx.doi.org/10.1002/meet.14504701445'), ('url', u'http://onlinelibrary.wiley.com/doi/10.1002/meet.14504701445/abstract')]
+        expected = [('biblio', {'issn': u'00447870', 'repository': u'Wiley-Blackwell', 'title': u'Evaluating data citation and sharing policies in the environmental sciences', 'journal': u'Proc. Am. Soc. Info. Sci. Tech.', 'year': '2010', 'authors': u'Weber, Piwowar, Vision'}), ('doi', u'10.1002/meet.14504701445'), ('url', u'http://dx.doi.org/10.1002/meet.14504701445'), ('url', u'http://onlinelibrary.wiley.com/doi/10.1002/meet.14504701445/abstract')]
         assert_equals(response, expected)
 
     @http

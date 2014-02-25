@@ -34,7 +34,6 @@ class TestMendeley(ProviderTestCase):
 
     def setUp(self):
         self.db = setup_postgres_for_unittests(db, app)
-        provider.is_issn_in_doaj("boo")
         ProviderTestCase.setUp(self)
         
     def tearDown(self):

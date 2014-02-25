@@ -88,9 +88,10 @@ def import_products(provider_name, input_dict):
 def is_issn_in_doaj(issn):
     raw_sql = text("""SELECT issn from doaj_issn_lookup where issn=:issn""")
     result = db.session.execute(raw_sql, params={
-        "issn": issn
+         "issn": issn
         })
-    is_in_doaj = result.first() != None
+    first_result = result.first()
+    is_in_doaj = first_result != None
     db.session.remove()
     return is_in_doaj
 
