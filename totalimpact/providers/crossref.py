@@ -90,7 +90,7 @@ class Crossref(Provider):
         response = self.http_get(url, 
             cache_enabled=True, 
             allow_redirects=True,
-            headers={"Accept": "application/json"})
+            headers={"Accept": "application/json", "User-Agent": "impactstory.org"})
 
         if response.status_code != 200:
             self.logger.info(u"%s status_code=%i" 
@@ -99,7 +99,7 @@ class Crossref(Provider):
                 return {}
             elif response.status_code == 403: #forbidden
                 return {}
-            elif response.status_code == 406: #this call isn't supported for datacite dois
+            elif (response.status_code == 406) or (response.status_code == 500): #this call isn't supported for datacite dois
                 return {}
             elif ((response.status_code >= 300) and (response.status_code < 400)): #redirect
                 return {}
@@ -134,7 +134,7 @@ class Crossref(Provider):
         response = self.http_get(url, 
             cache_enabled=cache_enabled, 
             allow_redirects=True,
-            headers={"Accept": "application/vnd.citationstyles.csl+json"})
+            headers={"Accept": "application/vnd.citationstyles.csl+json", "User-Agent": "impactstory.org"})
 
         if response.status_code != 200:
             self.logger.info(u"%s status_code=%i" 
