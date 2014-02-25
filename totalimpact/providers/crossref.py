@@ -73,9 +73,14 @@ class Crossref(Provider):
             provider_url_template = self.biblio_url_template
         url = provider_url_template % id
 
+        self.logger.debug(u"%s /biblio_print _lookup_biblio_from_doi for %s" % (self.provider_name, id))
         biblio_dict = self._lookup_biblio_from_doi(id, url, cache_enabled)
+
+        self.logger.debug(u"%s /biblio_print _lookup_issn_from_doi for %s" % (self.provider_name, id))
         biblio_dict.update(self._lookup_issn_from_doi(id, url, cache_enabled))
 
+        self.logger.debug(u"%s /biblio_print free_fulltext_fragments for %s" % (self.provider_name, id))
+        
         free_fulltext_fragments = ["/npre.", "/peerj.preprints"]
         if any(doi_fragment in id for doi_fragment in free_fulltext_fragments):
             biblio_dict["free_fulltext_url"] = url
@@ -88,7 +93,7 @@ class Crossref(Provider):
     def _lookup_issn_from_doi(self, id, url, cache_enabled):
         # try to get a response from the data provider      
         response = self.http_get(url, 
-            cache_enabled=True, 
+            cache_enabled=cache_enabled, 
             allow_redirects=True,
             headers={"Accept": "application/json", "User-Agent": "impactstory.org"})
 
