@@ -48,9 +48,10 @@ class Orcid(Provider):
         try:
             biblio["url"] = work["url"]["value"]
             if biblio["url"].startswith("http://www.scopus.com/inward"):
-                biblio["url"]  = ""    
+                del biblio["url"]
         except (KeyError, TypeError):
-            biblio["url"]  = ""
+            if "url" in biblio:
+                del biblio["genre"]
 
         if not "authors" in biblio:
             biblio["authors"]  = ""
