@@ -1,2080 +1,1967 @@
 {
-    "message-version": "1.0.14",
-    "orcid-profile": {
-        "orcid": {
-            "value": "0000-0003-1613-5981"
-        },
-        "orcid-id": "http://orcid.org/0000-0003-1613-5981",
-        "orcid-history": {
-            "creation-method": "WEBSITE",
-            "completion-date": {
-                "value": 1350153883683
-            },
-            "submission-date": {
-                "value": 1350148532021
-            },
-            "last-modified-date": {
-                "value": 1361900988732
-            },
-            "claimed": {
-                "value": true
-            },
-            "source": null,
-            "visibility": null
-        },
-        "orcid-activities": {
-            "orcid-works": {
-                "orcid-work": [
-                    {
-                        "put-code": "4718306",
-                        "work-title": {
-                            "title": {
-                                "value": "Altmetrics: Value all research products"
-                            },
-                            "subtitle": {
-                                "value": "Nature"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2013,\n\ttitle = {Altmetrics: Value all research products},\n\tjournal = {Nature},\n\tyear = {2013},\n\tvolume = {493},\n\tnumber = {7431},\n\tauthor = {Piwowar, H.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2013"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1038/493159a"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84872161506&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718307",
-                        "work-title": {
-                            "title": {
-                                "value": "Altmetrics: Value all research products"
-                            },
-                            "subtitle": {
-                                "value": "Nature"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2013,\n\ttitle = {Altmetrics: Value all research products},\n\tjournal = {Nature},\n\tyear = {2013},\n\tvolume = {493},\n\tnumber = {7431},\n\tauthor = {Piwowar, H.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2013"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1038/493159a"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84872161506&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718338",
-                        "work-title": {
-                            "title": {
-                                "value": "Probability of observed third-party data reuse"
-                            },
-                            "subtitle": null
-                        },
-                        "work-citation": {
-                            "work-citation-type": "FORMATTED_UNSPECIFIED",
-                            "citation": "Probability of observed third-party data reuse. Heather Piwowar. figshare.\n16 Jul 2012\nhttp://dx.doi.org/10.6084/m9.figshare.92959"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2012"
-                            },
-                            "month": {
-                                "value": "07"
-                            },
-                            "day": {
-                                "value": "16"
-                            },
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.6084/m9.figshare.92959"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": null,
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "contributor-attributes": {
-                                        "contributor-sequence": "FIRST",
-                                        "contributor-role": "AUTHOR"
-                                    }
-                                }
-                            ]
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718317",
-                        "work-title": {
-                            "title": {
-                                "value": "Data archiving is a good investment"
-                            },
-                            "subtitle": null
-                        },
-                        "work-citation": {
-                            "work-citation-type": "FORMATTED_UNSPECIFIED",
-                            "citation": "Piwowar, H, Vision, T & Whitlock, M, 2011, 'Data archiving is a good investment', <i>Nature</i>, vol. 473, no. 7347, p. 285."
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": {
-                                "value": "05"
-                            },
-                            "day": {
-                                "value": "19"
-                            },
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1038/473285a"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": null,
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "contributor-attributes": {
-                                        "contributor-sequence": "FIRST",
-                                        "contributor-role": "AUTHOR"
-                                    }
-                                }
-                            ]
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718330",
-                        "work-title": {
-                            "title": {
-                                "value": "Expediting medical literature coding with query-building"
-                            },
-                            "subtitle": null
-                        },
-                        "work-citation": {
-                            "work-citation-type": "FORMATTED_UNSPECIFIED",
-                            "citation": "Garnett, A, Piwowar, H, Rasmussen, E & Illes, J, 2011, 'Expediting medical literature coding with query-building', <i>Proceedings of the American Society for Information Science and Technology</i>, vol. 94, no. 2, pp. 1-2."
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": {
-                                "value": "02"
-                            },
-                            "day": {
-                                "value": "03"
-                            },
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.14504701421"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": null,
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "contributor-attributes": {
-                                        "contributor-sequence": "FIRST",
-                                        "contributor-role": "AUTHOR"
-                                    }
-                                }
-                            ]
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718363",
-                        "work-title": {
-                            "title": {
-                                "value": "Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets"
-                            },
-                            "subtitle": null
-                        },
-                        "work-citation": {
-                            "work-citation-type": "FORMATTED_UNSPECIFIED",
-                            "citation": "Piwowar, H, 2011, 'Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets', <i>Proceedings of the American Society for Information Science and Technology</i>, vol. 3, no. 3, pp. 7-2."
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": {
-                                "value": "02"
-                            },
-                            "day": {
-                                "value": "03"
-                            },
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.14504701413"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": null,
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "contributor-attributes": {
-                                        "contributor-sequence": "FIRST",
-                                        "contributor-role": "AUTHOR"
-                                    }
-                                }
-                            ]
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718308",
-                        "work-title": {
-                            "title": {
-                                "value": "Beginning to track 1000 datasets from public repositories into the published literature"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Beginning to track 1000 datasets from public repositories into the published literature},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Piwowar, H.A. and Carlson, J.D. and Vision, T.J.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.2011.14504801337"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861424888&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718310",
-                        "work-title": {
-                            "title": {
-                                "value": "Beginning to track 1000 datasets from public repositories into the published literature"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Beginning to track 1000 datasets from public repositories into the published literature},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Piwowar, H.A. and Carlson, J.D. and Vision, T.J.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.2011.14504801337"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861424888&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718311",
-                        "work-title": {
-                            "title": {
-                                "value": "Biology needs a modern assessment system for professional productivity"
-                            },
-                            "subtitle": {
-                                "value": "BioScience"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Biology needs a modern assessment system for professional productivity},\n\tjournal = {BioScience},\n\tyear = {2011},\n\tvolume = {61},\n\tnumber = {8},\n\tpages = {619-625},\n\tauthor = {McDade, L.A. and Maddison, D.R. and Guralnick, R. and Piwowar, H.A. and Jameson, M.L. and Helgen, K.M. and Herendeen, P.S. and Hill, A. and Vis, M.L.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1525/bio.2011.61.8.8"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-80051778482&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718313",
-                        "work-title": {
-                            "title": {
-                                "value": "Biology needs a modern assessment system for professional productivity"
-                            },
-                            "subtitle": {
-                                "value": "BioScience"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Biology needs a modern assessment system for professional productivity},\n\tjournal = {BioScience},\n\tyear = {2011},\n\tvolume = {61},\n\tnumber = {8},\n\tpages = {619-625},\n\tauthor = {McDade, L.A. and Maddison, D.R. and Guralnick, R. and Piwowar, H.A. and Jameson, M.L. and Helgen, K.M. and Herendeen, P.S. and Hill, A. and Vis, M.L.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1525/bio.2011.61.8.8"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-80051778482&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718314",
-                        "work-title": {
-                            "title": {
-                                "value": "Data archiving is a good investment"
-                            },
-                            "subtitle": {
-                                "value": "Nature"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Data archiving is a good investment},\n\tjournal = {Nature},\n\tyear = {2011},\n\tvolume = {473},\n\tnumber = {7347},\n\tauthor = {Piwowar, H.A. and Vision, T.J. and Whitlock, M.C.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1038/473285a"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-79956297138&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718316",
-                        "work-title": {
-                            "title": {
-                                "value": "Data archiving is a good investment"
-                            },
-                            "subtitle": {
-                                "value": "Nature"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Data archiving is a good investment},\n\tjournal = {Nature},\n\tyear = {2011},\n\tvolume = {473},\n\tnumber = {7347},\n\tauthor = {Piwowar, H.A. and Vision, T.J. and Whitlock, M.C.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1038/473285a"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-79956297138&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718319",
-                        "work-title": {
-                            "title": {
-                                "value": "Data from: Data archiving is a good investment"
-                            },
-                            "subtitle": null
-                        },
-                        "work-citation": {
-                            "work-citation-type": "FORMATTED_UNSPECIFIED",
-                            "citation": "Piwowar HA, Vision TJ, Whitlock MC (2011) Data from: Data archiving is a good investment. Dryad Digital Repository. doi:10.5061/dryad.j1fd7"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.5061/dryad.j1fd7"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": null,
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "contributor-attributes": {
-                                        "contributor-sequence": "FIRST",
-                                        "contributor-role": "AUTHOR"
-                                    }
-                                }
-                            ]
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718335",
-                        "work-title": {
-                            "title": {
-                                "value": "Neuroethics and FMRI: Mapping a fledgling relationship"
-                            },
-                            "subtitle": {
-                                "value": "PLoS ONE"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Neuroethics and FMRI: Mapping a fledgling relationship},\n\tjournal = {PLoS ONE},\n\tyear = {2011},\n\tvolume = {6},\n\tnumber = {4},\n\tauthor = {Garnett, A. and Whiteley, L. and Piwowar, H. and Rasmussen, E. and Illes, J.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1371/journal.pone.0018537"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-79955527670&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718337",
-                        "work-title": {
-                            "title": {
-                                "value": "Neuroethics and FMRI: Mapping a fledgling relationship"
-                            },
-                            "subtitle": {
-                                "value": "PLoS ONE"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Neuroethics and FMRI: Mapping a fledgling relationship},\n\tjournal = {PLoS ONE},\n\tyear = {2011},\n\tvolume = {6},\n\tnumber = {4},\n\tauthor = {Garnett, A. and Whiteley, L. and Piwowar, H. and Rasmussen, E. and Illes, J.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1371/journal.pone.0018537"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-79955527670&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718343",
-                        "work-title": {
-                            "title": {
-                                "value": "Shaken and stirred: ASIS&T 2011 attendee reactions to shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Shaken and stirred: ASIS\\&T 2011 attendee reactions to shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Garnett, A. and Holmberg, K. and Pikas, C.K. and Piwowar, H. and Priem, J. and Weber, N.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.2011.14504801327"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861448169&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718345",
-                        "work-title": {
-                            "title": {
-                                "value": "Shaken and stirred: ASIS&T 2011 attendee reactions to shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Shaken and stirred: ASIS\\&T 2011 attendee reactions to shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Garnett, A. and Holmberg, K. and Pikas, C.K. and Piwowar, H. and Priem, J. and Weber, N.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.2011.14504801327"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861448169&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718346",
-                        "work-title": {
-                            "title": {
-                                "value": "Shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Garnett, A. and Holmberg, K. and Pikas, C.K. and Piwowar, H. and Priem, J. and Weber, N.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.2011.14504801205"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861419514&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718348",
-                        "work-title": {
-                            "title": {
-                                "value": "Shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Garnett, A. and Holmberg, K. and Pikas, C.K. and Piwowar, H. and Priem, J. and Weber, N.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.2011.14504801205"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861419514&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718364",
-                        "work-title": {
-                            "title": {
-                                "value": "Who shares? Who doesn't? Factors associated with openly archiving raw research data"
-                            },
-                            "subtitle": {
-                                "value": "PLoS ONE"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Who shares? Who doesn't? Factors associated with openly archiving raw research data},\n\tjournal = {PLoS ONE},\n\tyear = {2011},\n\tvolume = {6},\n\tnumber = {7},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1371/journal.pone.0018657"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-79960224550&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718366",
-                        "work-title": {
-                            "title": {
-                                "value": "Who shares? Who doesn't? Factors associated with openly archiving raw research data"
-                            },
-                            "subtitle": {
-                                "value": "PLoS ONE"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2011,\n\ttitle = {Who shares? Who doesn't? Factors associated with openly archiving raw research data},\n\tjournal = {PLoS ONE},\n\tyear = {2011},\n\tvolume = {6},\n\tnumber = {7},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2011"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1371/journal.pone.0018657"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-79960224550&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718318",
-                        "work-title": {
-                            "title": {
-                                "value": "Data citation in the wild"
-                            },
-                            "subtitle": null
-                        },
-                        "work-citation": {
-                            "work-citation-type": "FORMATTED_UNSPECIFIED",
-                            "citation": "Enriquez, V, Walker Judson, S, Walker, N, Allard, S, Cook, R, Piwowar, H, Sandusky, R, Vision, T & Wilson, B, 2010, 'Data citation in the wild', <i>Nature Precedings</i>."
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": {
-                                "value": "12"
-                            },
-                            "day": {
-                                "value": "29"
-                            },
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1038/npre.2010.5452.1"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": null,
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "contributor-attributes": {
-                                        "contributor-sequence": "FIRST",
-                                        "contributor-role": "AUTHOR"
-                                    }
-                                }
-                            ]
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718342",
-                        "work-title": {
-                            "title": {
-                                "value": "Public sharing of research datasets: A pilot study of associations"
-                            },
-                            "subtitle": null
-                        },
-                        "work-citation": {
-                            "work-citation-type": "FORMATTED_UNSPECIFIED",
-                            "citation": "Piwowar, H & Chapman, W, 2010, 'Public sharing of research datasets: A pilot study of associations', <i>Journal of Informetrics</i>, vol. 4, no. 1, pp. 1-156."
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": {
-                                "value": "04"
-                            },
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1016/j.joi.2009.11.010"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": null,
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "contributor-attributes": {
-                                        "contributor-sequence": "FIRST",
-                                        "contributor-role": "AUTHOR"
-                                    }
-                                }
-                            ]
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718359",
-                        "work-title": {
-                            "title": {
-                                "value": "Using open access literature to guide full-text query formulation"
-                            },
-                            "subtitle": null
-                        },
-                        "work-citation": {
-                            "work-citation-type": "FORMATTED_UNSPECIFIED",
-                            "citation": "Piwowar, H, Piwowar, H & Chapman, W, 2010, 'Using open access literature to guide full-text query formulation', <i>Nature Precedings</i>."
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": {
-                                "value": "03"
-                            },
-                            "day": {
-                                "value": "09"
-                            },
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1038/npre.2010.4267.1"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": null,
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "contributor-attributes": {
-                                        "contributor-sequence": "FIRST",
-                                        "contributor-role": "AUTHOR"
-                                    }
-                                }
-                            ]
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718301",
-                        "work-title": {
-                            "title": {
-                                "value": "A method to track dataset reuse in biomedicine: Filtered GEO accession numbers in PubMed Central"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2010,\n\ttitle = {A method to track dataset reuse in biomedicine: Filtered GEO accession numbers in PubMed Central},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.14504701450"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861452475&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718303",
-                        "work-title": {
-                            "title": {
-                                "value": "A method to track dataset reuse in biomedicine: Filtered GEO accession numbers in PubMed Central"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2010,\n\ttitle = {A method to track dataset reuse in biomedicine: Filtered GEO accession numbers in PubMed Central},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.14504701450"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861452475&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718324",
-                        "work-title": {
-                            "title": {
-                                "value": "Evaluating data citation and sharing policies in the environmental sciences"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2010,\n\ttitle = {Evaluating data citation and sharing policies in the environmental sciences},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Weber, N.M. and Piwowar, H.A. and Vision, T.J.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.14504701445"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861449129&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718326",
-                        "work-title": {
-                            "title": {
-                                "value": "Evaluating data citation and sharing policies in the environmental sciences"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2010,\n\ttitle = {Evaluating data citation and sharing policies in the environmental sciences},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Weber, N.M. and Piwowar, H.A. and Vision, T.J.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.14504701445"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861449129&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718328",
-                        "work-title": {
-                            "title": {
-                                "value": "Expediting medical literature coding with query-building"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2010,\n\ttitle = {Expediting medical literature coding with query-building},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Garnett, A. and Piwowar, H. and Rasmussen, E. and Illes, J.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.14504701421"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861450263&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718331",
-                        "work-title": {
-                            "title": {
-                                "value": "Expediting medical literature coding with query-building"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2010,\n\ttitle = {Expediting medical literature coding with query-building},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Garnett, A. and Piwowar, H. and Rasmussen, E. and Illes, J.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.14504701421"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861450263&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718339",
-                        "work-title": {
-                            "title": {
-                                "value": "Public sharing of research datasets: A pilot study of associations"
-                            },
-                            "subtitle": {
-                                "value": "Journal of Informetrics"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2010,\n\ttitle = {Public sharing of research datasets: A pilot study of associations},\n\tjournal = {Journal of Informetrics},\n\tyear = {2010},\n\tvolume = {4},\n\tnumber = {2},\n\tpages = {148-156},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1016/j.joi.2009.11.010"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-77649233500&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718341",
-                        "work-title": {
-                            "title": {
-                                "value": "Public sharing of research datasets: A pilot study of associations"
-                            },
-                            "subtitle": {
-                                "value": "Journal of Informetrics"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2010,\n\ttitle = {Public sharing of research datasets: A pilot study of associations},\n\tjournal = {Journal of Informetrics},\n\tyear = {2010},\n\tvolume = {4},\n\tnumber = {2},\n\tpages = {148-156},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1016/j.joi.2009.11.010"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-77649233500&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718360",
-                        "work-title": {
-                            "title": {
-                                "value": "Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2010,\n\ttitle = {Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.14504701413"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861422083&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718362",
-                        "work-title": {
-                            "title": {
-                                "value": "Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets"
-                            },
-                            "subtitle": {
-                                "value": "Proceedings of the ASIST Annual Meeting"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2010,\n\ttitle = {Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2010"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1002/meet.14504701413"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84861422083&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718323",
-                        "work-title": {
-                            "title": {
-                                "value": "Envisioning a data reuse registry"
-                            },
-                            "subtitle": null
-                        },
-                        "work-citation": {
-                            "work-citation-type": "FORMATTED_UNSPECIFIED",
-                            "citation": "Piwowar, H & Chapman, W, 2008, 'Envisioning a data reuse registry', <i>Nature Precedings</i>."
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2008"
-                            },
-                            "month": {
-                                "value": "08"
-                            },
-                            "day": {
-                                "value": "04"
-                            },
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1038/npre.2008.2152.1"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": null,
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "contributor-attributes": {
-                                        "contributor-sequence": "FIRST",
-                                        "contributor-role": "AUTHOR"
-                                    }
-                                }
-                            ]
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718304",
-                        "work-title": {
-                            "title": {
-                                "value": "A review of journal policies for sharing research data"
-                            },
-                            "subtitle": {
-                                "value": "Open Scholarship: Authority, Community, and Sustainability in the Age of Web 2.0 - Proceedings of the 12th International Conference on Electronic Publishing, ELPUB 2008"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2008,\n\ttitle = {A review of journal policies for sharing research data},\n\tjournal = {Open Scholarship: Authority, Community, and Sustainability in the Age of Web 2.0 - Proceedings of the 12th International Conference on Electronic Publishing, ELPUB 2008},\n\tyear = {2008},\n\tpages = {1-14},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2008"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84869099458&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718305",
-                        "work-title": {
-                            "title": {
-                                "value": "A review of journal policies for sharing research data"
-                            },
-                            "subtitle": {
-                                "value": "Open Scholarship: Authority, Community, and Sustainability in the Age of Web 2.0 - Proceedings of the 12th International Conference on Electronic Publishing, ELPUB 2008"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2008,\n\ttitle = {A review of journal policies for sharing research data},\n\tjournal = {Open Scholarship: Authority, Community, and Sustainability in the Age of Web 2.0 - Proceedings of the 12th International Conference on Electronic Publishing, ELPUB 2008},\n\tyear = {2008},\n\tpages = {1-14},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2008"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-84869099458&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718320",
-                        "work-title": {
-                            "title": {
-                                "value": "Envisioning a biomedical data reuse registry."
-                            },
-                            "subtitle": {
-                                "value": "AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2008,\n\ttitle = {Envisioning a biomedical data reuse registry.},\n\tjournal = {AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium},\n\tyear = {2008},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2008"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-73949123492&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718322",
-                        "work-title": {
-                            "title": {
-                                "value": "Envisioning a biomedical data reuse registry."
-                            },
-                            "subtitle": {
-                                "value": "AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2008,\n\ttitle = {Envisioning a biomedical data reuse registry.},\n\tjournal = {AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium},\n\tyear = {2008},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2008"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-73949123492&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718332",
-                        "work-title": {
-                            "title": {
-                                "value": "Identifying data sharing in biomedical literature."
-                            },
-                            "subtitle": {
-                                "value": "AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2008,\n\ttitle = {Identifying data sharing in biomedical literature.},\n\tjournal = {AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium},\n\tyear = {2008},\n\tpages = {596-600},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2008"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-73949156475&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718334",
-                        "work-title": {
-                            "title": {
-                                "value": "Identifying data sharing in biomedical literature."
-                            },
-                            "subtitle": {
-                                "value": "AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2008,\n\ttitle = {Identifying data sharing in biomedical literature.},\n\tjournal = {AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium},\n\tyear = {2008},\n\tpages = {596-600},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2008"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-73949156475&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718353",
-                        "work-title": {
-                            "title": {
-                                "value": "Towards a data sharing culture: Recommendations for leadership from academic health centers"
-                            },
-                            "subtitle": {
-                                "value": "PLoS Medicine"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2008,\n\ttitle = {Towards a data sharing culture: Recommendations for leadership from academic health centers},\n\tjournal = {PLoS Medicine},\n\tyear = {2008},\n\tvolume = {5},\n\tnumber = {9},\n\tpages = {1315-1319},\n\tauthor = {Piwowar, H.A. and Becich, M.J. and Bilofsky, H. and Crowley, R.S.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2008"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1371/journal.pmed.0050183"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-53149145726&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718355",
-                        "work-title": {
-                            "title": {
-                                "value": "Towards a data sharing culture: Recommendations for leadership from academic health centers"
-                            },
-                            "subtitle": {
-                                "value": "PLoS Medicine"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2008,\n\ttitle = {Towards a data sharing culture: Recommendations for leadership from academic health centers},\n\tjournal = {PLoS Medicine},\n\tyear = {2008},\n\tvolume = {5},\n\tnumber = {9},\n\tpages = {1315-1319},\n\tauthor = {Piwowar, H.A. and Becich, M.J. and Bilofsky, H. and Crowley, R.S.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2008"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1371/journal.pmed.0050183"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-53149145726&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718356",
-                        "work-title": {
-                            "title": {
-                                "value": "Towards a data sharing culture: recommendations for leadership from academic health centers."
-                            },
-                            "subtitle": {
-                                "value": "PLoS medicine"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2008,\n\ttitle = {Towards a data sharing culture: recommendations for leadership from academic health centers.},\n\tjournal = {PLoS medicine},\n\tyear = {2008},\n\tvolume = {5},\n\tnumber = {9},\n\tauthor = {Piwowar, H.A. and Becich, M.J. and Bilofsky, H. and Crowley, R.S.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2008"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-70449710463&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718358",
-                        "work-title": {
-                            "title": {
-                                "value": "Towards a data sharing culture: recommendations for leadership from academic health centers."
-                            },
-                            "subtitle": {
-                                "value": "PLoS medicine"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2008,\n\ttitle = {Towards a data sharing culture: recommendations for leadership from academic health centers.},\n\tjournal = {PLoS medicine},\n\tyear = {2008},\n\tvolume = {5},\n\tnumber = {9},\n\tauthor = {Piwowar, H.A. and Becich, M.J. and Bilofsky, H. and Crowley, R.S.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2008"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-70449710463&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718327",
-                        "work-title": {
-                            "title": {
-                                "value": "Examining the uses of shared data"
-                            },
-                            "subtitle": null
-                        },
-                        "work-citation": {
-                            "work-citation-type": "FORMATTED_UNSPECIFIED",
-                            "citation": "Piwowar, H, Piwowar, H & Fridsma, D, 2007, 'Examining the uses of shared data', <i>Nature Precedings</i>."
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2007"
-                            },
-                            "month": {
-                                "value": "07"
-                            },
-                            "day": {
-                                "value": "17"
-                            },
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1038/npre.2007.425.2"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": null,
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "contributor-attributes": {
-                                        "contributor-sequence": "FIRST",
-                                        "contributor-role": "AUTHOR"
-                                    }
-                                }
-                            ]
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718349",
-                        "work-title": {
-                            "title": {
-                                "value": "Sharing Detailed Research Data Is Associated with Increased Citation Rate"
-                            },
-                            "subtitle": null
-                        },
-                        "work-citation": {
-                            "work-citation-type": "FORMATTED_UNSPECIFIED",
-                            "citation": "Piwowar, H & Piwowar, H, 2007, 'Sharing Detailed Research Data Is Associated with Increased Citation Rate', <i>Nature Precedings</i>."
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2007"
-                            },
-                            "month": {
-                                "value": "07"
-                            },
-                            "day": {
-                                "value": "05"
-                            },
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1038/npre.2007.361"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": null,
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "contributor-attributes": {
-                                        "contributor-sequence": "FIRST",
-                                        "contributor-role": "AUTHOR"
-                                    }
-                                }
-                            ]
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718350",
-                        "work-title": {
-                            "title": {
-                                "value": "Sharing detailed research data is associated with increased citation rate"
-                            },
-                            "subtitle": {
-                                "value": "PLoS ONE"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2007,\n\ttitle = {Sharing detailed research data is associated with increased citation rate},\n\tjournal = {PLoS ONE},\n\tyear = {2007},\n\tvolume = {2},\n\tnumber = {3},\n\tauthor = {Piwowar, H.A. and Day, R.S. and Fridsma, D.B.}\n}\n\n"
-                        },
-                        "work-type": "JOURNAL_ARTICLE",
-                        "publication-date": {
-                            "year": {
-                                "value": "2007"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1371/journal.pone.0000308"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-36248970413&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    },
-                    {
-                        "put-code": "4718352",
-                        "work-title": {
-                            "title": {
-                                "value": "Sharing detailed research data is associated with increased citation rate"
-                            },
-                            "subtitle": {
-                                "value": "PLoS ONE"
-                            }
-                        },
-                        "work-citation": {
-                            "work-citation-type": "BIBTEX",
-                            "citation": "@article { piwowar2007,\n\ttitle = {Sharing detailed research data is associated with increased citation rate},\n\tjournal = {PLoS ONE},\n\tyear = {2007},\n\tvolume = {2},\n\tnumber = {3},\n\tauthor = {Piwowar, H.A. and Day, R.S. and Fridsma, D.B.}\n}\n\n"
-                        },
-                        "publication-date": {
-                            "year": {
-                                "value": "2007"
-                            },
-                            "month": null,
-                            "day": null,
-                            "media-type": null
-                        },
-                        "work-external-identifiers": {
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-type": "DOI",
-                                    "work-external-identifier-id": {
-                                        "value": "10.1371/journal.pone.0000308"
-                                    }
-                                }
-                            ],
-                            "scope": null
-                        },
-                        "url": {
-                            "value": "http://www.scopus.com/inward/record.url?eid=2-s2.0-36248970413&partnerID=MN8TOARS"
-                        },
-                        "work-source": {
-                            "value": "NOT_DEFINED"
-                        },
-                        "visibility": null
-                    }
-                ],
-                "scope": null
-            }
-        },
-        "type": "USER"
-    }
+   "message-version":"1.0.23",
+   "orcid-profile":{
+      "orcid":{
+         "value":"0000-0003-1613-5981"
+      },
+      "orcid-id":"http://orcid.org/0000-0003-1613-5981",
+      "orcid-preferences":{
+         "locale":"EN"
+      },
+      "orcid-history":{
+         "creation-method":"WEBSITE",
+         "completion-date":{
+            "value":1350153883683
+         },
+         "submission-date":{
+            "value":1350148532021
+         },
+         "last-modified-date":{
+            "value":1385464577233
+         },
+         "claimed":{
+            "value":true
+         },
+         "source":null,
+         "visibility":null
+      },
+      "orcid-activities":{
+         "affiliations":null,
+         "orcid-works":{
+            "orcid-work":[
+               {
+                  "put-code":"4718306",
+                  "work-title":{
+                     "title":{
+                        "value":"Altmetrics: Value all research products"
+                     },
+                     "subtitle":{
+                        "value":"Nature"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2013,\n\ttitle = {Altmetrics: Value all research products},\n\tjournal = {Nature},\n\tyear = {2013},\n\tvolume = {493},\n\tnumber = {7431},\n\tauthor = {Piwowar, H.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2013"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1038/493159a"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84872161506&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718307",
+                  "work-title":{
+                     "title":{
+                        "value":"Altmetrics: Value all research products"
+                     },
+                     "subtitle":{
+                        "value":"Nature"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2013,\n\ttitle = {Altmetrics: Value all research products},\n\tjournal = {Nature},\n\tyear = {2013},\n\tvolume = {493},\n\tnumber = {7431},\n\tauthor = {Piwowar, H.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2013"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1038/493159a"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84872161506&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718338",
+                  "work-title":{
+                     "title":{
+                        "value":"Probability of observed third-party data reuse"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"FORMATTED_UNSPECIFIED",
+                     "citation":"Probability of observed third-party data reuse. Heather Piwowar. figshare.\n16 Jul 2012\nhttp://dx.doi.org/10.6084/m9.figshare.92959"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2012"
+                     },
+                     "month":{
+                        "value":"07"
+                     },
+                     "day":{
+                        "value":"16"
+                     },
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.6084/m9.figshare.92959"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "contributor-attributes":{
+                              "contributor-sequence":"FIRST",
+                              "contributor-role":"AUTHOR"
+                           }
+                        }
+                     ]
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718317",
+                  "work-title":{
+                     "title":{
+                        "value":"Data archiving is a good investment"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"FORMATTED_UNSPECIFIED",
+                     "citation":"Piwowar, H, Vision, T & Whitlock, M, 2011, 'Data archiving is a good investment', <i>Nature</i>, vol. 473, no. 7347, p. 285."
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":{
+                        "value":"05"
+                     },
+                     "day":{
+                        "value":"19"
+                     },
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1038/473285a"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "contributor-attributes":{
+                              "contributor-sequence":"FIRST",
+                              "contributor-role":"AUTHOR"
+                           }
+                        }
+                     ]
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718330",
+                  "work-title":{
+                     "title":{
+                        "value":"Expediting medical literature coding with query-building"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"FORMATTED_UNSPECIFIED",
+                     "citation":"Garnett, A, Piwowar, H, Rasmussen, E & Illes, J, 2011, 'Expediting medical literature coding with query-building', <i>Proceedings of the American Society for Information Science and Technology</i>, vol. 94, no. 2, pp. 1-2."
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":{
+                        "value":"02"
+                     },
+                     "day":{
+                        "value":"03"
+                     },
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.14504701421"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "contributor-attributes":{
+                              "contributor-sequence":"FIRST",
+                              "contributor-role":"AUTHOR"
+                           }
+                        }
+                     ]
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718363",
+                  "work-title":{
+                     "title":{
+                        "value":"Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"FORMATTED_UNSPECIFIED",
+                     "citation":"Piwowar, H, 2011, 'Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets', <i>Proceedings of the American Society for Information Science and Technology</i>, vol. 3, no. 3, pp. 7-2."
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":{
+                        "value":"02"
+                     },
+                     "day":{
+                        "value":"03"
+                     },
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.14504701413"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "contributor-attributes":{
+                              "contributor-sequence":"FIRST",
+                              "contributor-role":"AUTHOR"
+                           }
+                        }
+                     ]
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718308",
+                  "work-title":{
+                     "title":{
+                        "value":"Beginning to track 1000 datasets from public repositories into the published literature"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Beginning to track 1000 datasets from public repositories into the published literature},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Piwowar, H.A. and Carlson, J.D. and Vision, T.J.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.2011.14504801337"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861424888&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718310",
+                  "work-title":{
+                     "title":{
+                        "value":"Beginning to track 1000 datasets from public repositories into the published literature"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Beginning to track 1000 datasets from public repositories into the published literature},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Piwowar, H.A. and Carlson, J.D. and Vision, T.J.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.2011.14504801337"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861424888&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718311",
+                  "work-title":{
+                     "title":{
+                        "value":"Biology needs a modern assessment system for professional productivity"
+                     },
+                     "subtitle":{
+                        "value":"BioScience"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Biology needs a modern assessment system for professional productivity},\n\tjournal = {BioScience},\n\tyear = {2011},\n\tvolume = {61},\n\tnumber = {8},\n\tpages = {619-625},\n\tauthor = {McDade, L.A. and Maddison, D.R. and Guralnick, R. and Piwowar, H.A. and Jameson, M.L. and Helgen, K.M. and Herendeen, P.S. and Hill, A. and Vis, M.L.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1525/bio.2011.61.8.8"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-80051778482&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718313",
+                  "work-title":{
+                     "title":{
+                        "value":"Biology needs a modern assessment system for professional productivity"
+                     },
+                     "subtitle":{
+                        "value":"BioScience"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Biology needs a modern assessment system for professional productivity},\n\tjournal = {BioScience},\n\tyear = {2011},\n\tvolume = {61},\n\tnumber = {8},\n\tpages = {619-625},\n\tauthor = {McDade, L.A. and Maddison, D.R. and Guralnick, R. and Piwowar, H.A. and Jameson, M.L. and Helgen, K.M. and Herendeen, P.S. and Hill, A. and Vis, M.L.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1525/bio.2011.61.8.8"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-80051778482&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718314",
+                  "work-title":{
+                     "title":{
+                        "value":"Data archiving is a good investment"
+                     },
+                     "subtitle":{
+                        "value":"Nature"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Data archiving is a good investment},\n\tjournal = {Nature},\n\tyear = {2011},\n\tvolume = {473},\n\tnumber = {7347},\n\tauthor = {Piwowar, H.A. and Vision, T.J. and Whitlock, M.C.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1038/473285a"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-79956297138&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718316",
+                  "work-title":{
+                     "title":{
+                        "value":"Data archiving is a good investment"
+                     },
+                     "subtitle":{
+                        "value":"Nature"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Data archiving is a good investment},\n\tjournal = {Nature},\n\tyear = {2011},\n\tvolume = {473},\n\tnumber = {7347},\n\tauthor = {Piwowar, H.A. and Vision, T.J. and Whitlock, M.C.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1038/473285a"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-79956297138&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718319",
+                  "work-title":{
+                     "title":{
+                        "value":"Data from: Data archiving is a good investment"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"FORMATTED_UNSPECIFIED",
+                     "citation":"Piwowar HA, Vision TJ, Whitlock MC (2011) Data from: Data archiving is a good investment. Dryad Digital Repository. doi:10.5061/dryad.j1fd7"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.5061/dryad.j1fd7"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "contributor-attributes":{
+                              "contributor-sequence":"FIRST",
+                              "contributor-role":"AUTHOR"
+                           }
+                        }
+                     ]
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718335",
+                  "work-title":{
+                     "title":{
+                        "value":"Neuroethics and FMRI: Mapping a fledgling relationship"
+                     },
+                     "subtitle":{
+                        "value":"PLoS ONE"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Neuroethics and FMRI: Mapping a fledgling relationship},\n\tjournal = {PLoS ONE},\n\tyear = {2011},\n\tvolume = {6},\n\tnumber = {4},\n\tauthor = {Garnett, A. and Whiteley, L. and Piwowar, H. and Rasmussen, E. and Illes, J.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1371/journal.pone.0018537"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-79955527670&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718337",
+                  "work-title":{
+                     "title":{
+                        "value":"Neuroethics and FMRI: Mapping a fledgling relationship"
+                     },
+                     "subtitle":{
+                        "value":"PLoS ONE"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Neuroethics and FMRI: Mapping a fledgling relationship},\n\tjournal = {PLoS ONE},\n\tyear = {2011},\n\tvolume = {6},\n\tnumber = {4},\n\tauthor = {Garnett, A. and Whiteley, L. and Piwowar, H. and Rasmussen, E. and Illes, J.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1371/journal.pone.0018537"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-79955527670&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718343",
+                  "work-title":{
+                     "title":{
+                        "value":"Shaken and stirred: ASIS&T 2011 attendee reactions to shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Shaken and stirred: ASIS\\&T 2011 attendee reactions to shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Garnett, A. and Holmberg, K. and Pikas, C.K. and Piwowar, H. and Priem, J. and Weber, N.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.2011.14504801327"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861448169&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718345",
+                  "work-title":{
+                     "title":{
+                        "value":"Shaken and stirred: ASIS&T 2011 attendee reactions to shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Shaken and stirred: ASIS\\&T 2011 attendee reactions to shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Garnett, A. and Holmberg, K. and Pikas, C.K. and Piwowar, H. and Priem, J. and Weber, N.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.2011.14504801327"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861448169&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718346",
+                  "work-title":{
+                     "title":{
+                        "value":"Shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Garnett, A. and Holmberg, K. and Pikas, C.K. and Piwowar, H. and Priem, J. and Weber, N.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.2011.14504801205"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861419514&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718348",
+                  "work-title":{
+                     "title":{
+                        "value":"Shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Shaking it up: Embracing new methods for publishing, finding, discussing, and measuring our research output},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2011},\n\tvolume = {48},\n\tauthor = {Garnett, A. and Holmberg, K. and Pikas, C.K. and Piwowar, H. and Priem, J. and Weber, N.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.2011.14504801205"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861419514&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718364",
+                  "work-title":{
+                     "title":{
+                        "value":"Who shares? Who doesn't? Factors associated with openly archiving raw research data"
+                     },
+                     "subtitle":{
+                        "value":"PLoS ONE"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Who shares? Who doesn't? Factors associated with openly archiving raw research data},\n\tjournal = {PLoS ONE},\n\tyear = {2011},\n\tvolume = {6},\n\tnumber = {7},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1371/journal.pone.0018657"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-79960224550&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718366",
+                  "work-title":{
+                     "title":{
+                        "value":"Who shares? Who doesn't? Factors associated with openly archiving raw research data"
+                     },
+                     "subtitle":{
+                        "value":"PLoS ONE"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2011,\n\ttitle = {Who shares? Who doesn't? Factors associated with openly archiving raw research data},\n\tjournal = {PLoS ONE},\n\tyear = {2011},\n\tvolume = {6},\n\tnumber = {7},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2011"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1371/journal.pone.0018657"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-79960224550&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718318",
+                  "work-title":{
+                     "title":{
+                        "value":"Data citation in the wild"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"FORMATTED_UNSPECIFIED",
+                     "citation":"Enriquez, V, Walker Judson, S, Walker, N, Allard, S, Cook, R, Piwowar, H, Sandusky, R, Vision, T & Wilson, B, 2010, 'Data citation in the wild', <i>Nature Precedings</i>."
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":{
+                        "value":"12"
+                     },
+                     "day":{
+                        "value":"29"
+                     },
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1038/npre.2010.5452.1"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "contributor-attributes":{
+                              "contributor-sequence":"FIRST",
+                              "contributor-role":"AUTHOR"
+                           }
+                        }
+                     ]
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718342",
+                  "work-title":{
+                     "title":{
+                        "value":"Public sharing of research datasets: A pilot study of associations"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"FORMATTED_UNSPECIFIED",
+                     "citation":"Piwowar, H & Chapman, W, 2010, 'Public sharing of research datasets: A pilot study of associations', <i>Journal of Informetrics</i>, vol. 4, no. 1, pp. 1-156."
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":{
+                        "value":"04"
+                     },
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1016/j.joi.2009.11.010"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "contributor-attributes":{
+                              "contributor-sequence":"FIRST",
+                              "contributor-role":"AUTHOR"
+                           }
+                        }
+                     ]
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718359",
+                  "work-title":{
+                     "title":{
+                        "value":"Using open access literature to guide full-text query formulation"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"FORMATTED_UNSPECIFIED",
+                     "citation":"Piwowar, H, Piwowar, H & Chapman, W, 2010, 'Using open access literature to guide full-text query formulation', <i>Nature Precedings</i>."
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":{
+                        "value":"03"
+                     },
+                     "day":{
+                        "value":"09"
+                     },
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1038/npre.2010.4267.1"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "contributor-attributes":{
+                              "contributor-sequence":"FIRST",
+                              "contributor-role":"AUTHOR"
+                           }
+                        }
+                     ]
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718301",
+                  "work-title":{
+                     "title":{
+                        "value":"A method to track dataset reuse in biomedicine: Filtered GEO accession numbers in PubMed Central"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2010,\n\ttitle = {A method to track dataset reuse in biomedicine: Filtered GEO accession numbers in PubMed Central},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.14504701450"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861452475&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718303",
+                  "work-title":{
+                     "title":{
+                        "value":"A method to track dataset reuse in biomedicine: Filtered GEO accession numbers in PubMed Central"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2010,\n\ttitle = {A method to track dataset reuse in biomedicine: Filtered GEO accession numbers in PubMed Central},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.14504701450"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861452475&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718324",
+                  "work-title":{
+                     "title":{
+                        "value":"Evaluating data citation and sharing policies in the environmental sciences"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2010,\n\ttitle = {Evaluating data citation and sharing policies in the environmental sciences},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Weber, N.M. and Piwowar, H.A. and Vision, T.J.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.14504701445"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861449129&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718326",
+                  "work-title":{
+                     "title":{
+                        "value":"Evaluating data citation and sharing policies in the environmental sciences"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2010,\n\ttitle = {Evaluating data citation and sharing policies in the environmental sciences},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Weber, N.M. and Piwowar, H.A. and Vision, T.J.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.14504701445"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861449129&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718328",
+                  "work-title":{
+                     "title":{
+                        "value":"Expediting medical literature coding with query-building"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2010,\n\ttitle = {Expediting medical literature coding with query-building},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Garnett, A. and Piwowar, H. and Rasmussen, E. and Illes, J.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.14504701421"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861450263&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718331",
+                  "work-title":{
+                     "title":{
+                        "value":"Expediting medical literature coding with query-building"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2010,\n\ttitle = {Expediting medical literature coding with query-building},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Garnett, A. and Piwowar, H. and Rasmussen, E. and Illes, J.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.14504701421"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861450263&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718339",
+                  "work-title":{
+                     "title":{
+                        "value":"Public sharing of research datasets: A pilot study of associations"
+                     },
+                     "subtitle":{
+                        "value":"Journal of Informetrics"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2010,\n\ttitle = {Public sharing of research datasets: A pilot study of associations},\n\tjournal = {Journal of Informetrics},\n\tyear = {2010},\n\tvolume = {4},\n\tnumber = {2},\n\tpages = {148-156},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1016/j.joi.2009.11.010"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-77649233500&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718341",
+                  "work-title":{
+                     "title":{
+                        "value":"Public sharing of research datasets: A pilot study of associations"
+                     },
+                     "subtitle":{
+                        "value":"Journal of Informetrics"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2010,\n\ttitle = {Public sharing of research datasets: A pilot study of associations},\n\tjournal = {Journal of Informetrics},\n\tyear = {2010},\n\tvolume = {4},\n\tnumber = {2},\n\tpages = {148-156},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1016/j.joi.2009.11.010"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-77649233500&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718360",
+                  "work-title":{
+                     "title":{
+                        "value":"Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2010,\n\ttitle = {Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.14504701413"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861422083&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718362",
+                  "work-title":{
+                     "title":{
+                        "value":"Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets"
+                     },
+                     "subtitle":{
+                        "value":"Proceedings of the ASIST Annual Meeting"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2010,\n\ttitle = {Who shares? Who doesn't? Bibliometric factors associated with open archiving of biomedical datasets},\n\tjournal = {Proceedings of the ASIST Annual Meeting},\n\tyear = {2010},\n\tvolume = {47},\n\tauthor = {Piwowar, H.A.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1002/meet.14504701413"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84861422083&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718323",
+                  "work-title":{
+                     "title":{
+                        "value":"Envisioning a data reuse registry"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"FORMATTED_UNSPECIFIED",
+                     "citation":"Piwowar, H & Chapman, W, 2008, 'Envisioning a data reuse registry', <i>Nature Precedings</i>."
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":{
+                        "value":"08"
+                     },
+                     "day":{
+                        "value":"04"
+                     },
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1038/npre.2008.2152.1"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "contributor-attributes":{
+                              "contributor-sequence":"FIRST",
+                              "contributor-role":"AUTHOR"
+                           }
+                        }
+                     ]
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718304",
+                  "work-title":{
+                     "title":{
+                        "value":"A review of journal policies for sharing research data"
+                     },
+                     "subtitle":{
+                        "value":"Open Scholarship: Authority, Community, and Sustainability in the Age of Web 2.0 - Proceedings of the 12th International Conference on Electronic Publishing, ELPUB 2008"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2008,\n\ttitle = {A review of journal policies for sharing research data},\n\tjournal = {Open Scholarship: Authority, Community, and Sustainability in the Age of Web 2.0 - Proceedings of the 12th International Conference on Electronic Publishing, ELPUB 2008},\n\tyear = {2008},\n\tpages = {1-14},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84869099458&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718305",
+                  "work-title":{
+                     "title":{
+                        "value":"A review of journal policies for sharing research data"
+                     },
+                     "subtitle":{
+                        "value":"Open Scholarship: Authority, Community, and Sustainability in the Age of Web 2.0 - Proceedings of the 12th International Conference on Electronic Publishing, ELPUB 2008"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2008,\n\ttitle = {A review of journal policies for sharing research data},\n\tjournal = {Open Scholarship: Authority, Community, and Sustainability in the Age of Web 2.0 - Proceedings of the 12th International Conference on Electronic Publishing, ELPUB 2008},\n\tyear = {2008},\n\tpages = {1-14},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-84869099458&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718320",
+                  "work-title":{
+                     "title":{
+                        "value":"Envisioning a biomedical data reuse registry."
+                     },
+                     "subtitle":{
+                        "value":"AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2008,\n\ttitle = {Envisioning a biomedical data reuse registry.},\n\tjournal = {AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium},\n\tyear = {2008},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-73949123492&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718322",
+                  "work-title":{
+                     "title":{
+                        "value":"Envisioning a biomedical data reuse registry."
+                     },
+                     "subtitle":{
+                        "value":"AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2008,\n\ttitle = {Envisioning a biomedical data reuse registry.},\n\tjournal = {AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium},\n\tyear = {2008},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-73949123492&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718332",
+                  "work-title":{
+                     "title":{
+                        "value":"Identifying data sharing in biomedical literature."
+                     },
+                     "subtitle":{
+                        "value":"AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2008,\n\ttitle = {Identifying data sharing in biomedical literature.},\n\tjournal = {AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium},\n\tyear = {2008},\n\tpages = {596-600},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-73949156475&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718334",
+                  "work-title":{
+                     "title":{
+                        "value":"Identifying data sharing in biomedical literature."
+                     },
+                     "subtitle":{
+                        "value":"AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2008,\n\ttitle = {Identifying data sharing in biomedical literature.},\n\tjournal = {AMIA ... Annual Symposium proceedings / AMIA Symposium. AMIA Symposium},\n\tyear = {2008},\n\tpages = {596-600},\n\tauthor = {Piwowar, H.A. and Chapman, W.W.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-73949156475&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718353",
+                  "work-title":{
+                     "title":{
+                        "value":"Towards a data sharing culture: Recommendations for leadership from academic health centers"
+                     },
+                     "subtitle":{
+                        "value":"PLoS Medicine"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2008,\n\ttitle = {Towards a data sharing culture: Recommendations for leadership from academic health centers},\n\tjournal = {PLoS Medicine},\n\tyear = {2008},\n\tvolume = {5},\n\tnumber = {9},\n\tpages = {1315-1319},\n\tauthor = {Piwowar, H.A. and Becich, M.J. and Bilofsky, H. and Crowley, R.S.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1371/journal.pmed.0050183"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-53149145726&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718355",
+                  "work-title":{
+                     "title":{
+                        "value":"Towards a data sharing culture: Recommendations for leadership from academic health centers"
+                     },
+                     "subtitle":{
+                        "value":"PLoS Medicine"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2008,\n\ttitle = {Towards a data sharing culture: Recommendations for leadership from academic health centers},\n\tjournal = {PLoS Medicine},\n\tyear = {2008},\n\tvolume = {5},\n\tnumber = {9},\n\tpages = {1315-1319},\n\tauthor = {Piwowar, H.A. and Becich, M.J. and Bilofsky, H. and Crowley, R.S.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1371/journal.pmed.0050183"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-53149145726&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718356",
+                  "work-title":{
+                     "title":{
+                        "value":"Towards a data sharing culture: recommendations for leadership from academic health centers."
+                     },
+                     "subtitle":{
+                        "value":"PLoS medicine"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2008,\n\ttitle = {Towards a data sharing culture: recommendations for leadership from academic health centers.},\n\tjournal = {PLoS medicine},\n\tyear = {2008},\n\tvolume = {5},\n\tnumber = {9},\n\tauthor = {Piwowar, H.A. and Becich, M.J. and Bilofsky, H. and Crowley, R.S.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-70449710463&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718358",
+                  "work-title":{
+                     "title":{
+                        "value":"Towards a data sharing culture: recommendations for leadership from academic health centers."
+                     },
+                     "subtitle":{
+                        "value":"PLoS medicine"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2008,\n\ttitle = {Towards a data sharing culture: recommendations for leadership from academic health centers.},\n\tjournal = {PLoS medicine},\n\tyear = {2008},\n\tvolume = {5},\n\tnumber = {9},\n\tauthor = {Piwowar, H.A. and Becich, M.J. and Bilofsky, H. and Crowley, R.S.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-70449710463&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718327",
+                  "work-title":{
+                     "title":{
+                        "value":"Examining the uses of shared data"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"FORMATTED_UNSPECIFIED",
+                     "citation":"Piwowar, H, Piwowar, H & Fridsma, D, 2007, 'Examining the uses of shared data', <i>Nature Precedings</i>."
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2007"
+                     },
+                     "month":{
+                        "value":"07"
+                     },
+                     "day":{
+                        "value":"17"
+                     },
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1038/npre.2007.425.2"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "contributor-attributes":{
+                              "contributor-sequence":"FIRST",
+                              "contributor-role":"AUTHOR"
+                           }
+                        }
+                     ]
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718349",
+                  "work-title":{
+                     "title":{
+                        "value":"Sharing Detailed Research Data Is Associated with Increased Citation Rate"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"FORMATTED_UNSPECIFIED",
+                     "citation":"Piwowar, H & Piwowar, H, 2007, 'Sharing Detailed Research Data Is Associated with Increased Citation Rate', <i>Nature Precedings</i>."
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2007"
+                     },
+                     "month":{
+                        "value":"07"
+                     },
+                     "day":{
+                        "value":"05"
+                     },
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1038/npre.2007.361"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "contributor-attributes":{
+                              "contributor-sequence":"FIRST",
+                              "contributor-role":"AUTHOR"
+                           }
+                        }
+                     ]
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718350",
+                  "work-title":{
+                     "title":{
+                        "value":"Sharing detailed research data is associated with increased citation rate"
+                     },
+                     "subtitle":{
+                        "value":"PLoS ONE"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2007,\n\ttitle = {Sharing detailed research data is associated with increased citation rate},\n\tjournal = {PLoS ONE},\n\tyear = {2007},\n\tvolume = {2},\n\tnumber = {3},\n\tauthor = {Piwowar, H.A. and Day, R.S. and Fridsma, D.B.}\n}\n\n"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2007"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1371/journal.pone.0000308"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-36248970413&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"4718352",
+                  "work-title":{
+                     "title":{
+                        "value":"Sharing detailed research data is associated with increased citation rate"
+                     },
+                     "subtitle":{
+                        "value":"PLoS ONE"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article { piwowar2007,\n\ttitle = {Sharing detailed research data is associated with increased citation rate},\n\tjournal = {PLoS ONE},\n\tyear = {2007},\n\tvolume = {2},\n\tnumber = {3},\n\tauthor = {Piwowar, H.A. and Day, R.S. and Fridsma, D.B.}\n}\n\n"
+                  },
+                  "work-type":"UNDEFINED",
+                  "publication-date":{
+                     "year":{
+                        "value":"2007"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1371/journal.pone.0000308"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":{
+                     "value":"http://www.scopus.com/inward/record.url?eid=2-s2.0-36248970413&partnerID=MN8TOARS"
+                  },
+                  "visibility":null
+               }
+            ],
+            "scope":null
+         }
+      },
+      "type":"USER",
+      "group-type":null,
+      "client-type":null
+   }
 }

@@ -1,784 +1,784 @@
 {
-    "message-version": "1.0.23", 
-    "orcid-profile": {
-        "orcid-activities": {
-            "affiliations": null, 
-            "orcid-works": {
-                "scope": null, 
-                "orcid-work": [
-                    {
-                        "work-type": "BOOK", 
-                        "put-code": "11024516", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "0702251879"
-                                    }, 
-                                    "work-external-identifier-type": "ISBN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": null, 
-                            "title": {
-                                "value": "Moving Among Strangers: Randolph Stow and My Family"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@book{RID:1202132010973-11,\ntitle = {Moving Among Strangers: Randolph Stow and My Family},\npublisher = {},\nyear = {2013},\nauthor = {Carey, Gabrielle},\neditor = {}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "2013"
-                            }, 
-                            "day": null, 
-                            "month": null
+   "message-version":"1.0.23",
+   "orcid-profile":{
+      "orcid":{
+         "value":"0000-0002-3127-3891"
+      },
+      "orcid-id":"http://orcid.org/0000-0002-3127-3891",
+      "orcid-preferences":{
+         "locale":"EN"
+      },
+      "orcid-history":{
+         "creation-method":"WEBSITE",
+         "submission-date":{
+            "value":1386032846918
+         },
+         "last-modified-date":{
+            "value":1386637953890
+         },
+         "claimed":{
+            "value":true
+         },
+         "source":null,
+         "visibility":null
+      },
+      "orcid-activities":{
+         "affiliations":null,
+         "orcid-works":{
+            "orcid-work":[
+               {
+                  "put-code":"11024516",
+                  "work-title":{
+                     "title":{
+                        "value":"Moving Among Strangers: Randolph Stow and My Family"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@book{RID:1202132010973-11,\ntitle = {Moving Among Strangers: Randolph Stow and My Family},\npublisher = {},\nyear = {2013},\nauthor = {Carey, Gabrielle},\neditor = {}\n}"
+                  },
+                  "work-type":"BOOK",
+                  "publication-date":{
+                     "year":{
+                        "value":"2013"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISBN",
+                           "work-external-identifier-id":{
+                              "value":"0702251879"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "JOURNAL_ARTICLE", 
-                        "put-code": "11024517", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-title": {
-                            "subtitle": {
-                                "value": "Kill Your Darlings"
-                            }, 
-                            "title": {
-                                "value": "Randolph Stow: An Ambivalent Australian"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@article{RID:1202132010973-13,\ntitle = {Randolph Stow: An Ambivalent Australian},\njournal = {Kill Your Darlings},\nyear = {2013},\nauthor = {Carey, Gabrielle},\nnumber = {12},\npages = {27}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "2013"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "BOOK", 
-                        "put-code": "11024518", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Lette, Kathy", 
-                                        "visibility": null
-                                    }
-                                }, 
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "1742759297"
-                                    }, 
-                                    "work-external-identifier-type": "ISBN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": null, 
-                            "title": {
-                                "value": "Puberty blues"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@book{RID:1202132010974-1,\ntitle = {Puberty blues},\npublisher = {},\nyear = {2012},\nauthor = {Lette, Kathy and  Carey, Gabrielle},\neditor = {}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "2012"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024517",
+                  "work-title":{
+                     "title":{
+                        "value":"Randolph Stow: An Ambivalent Australian"
+                     },
+                     "subtitle":{
+                        "value":"Kill Your Darlings"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article{RID:1202132010973-13,\ntitle = {Randolph Stow: An Ambivalent Australian},\njournal = {Kill Your Darlings},\nyear = {2013},\nauthor = {Carey, Gabrielle},\nnumber = {12},\npages = {27}\n}"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2013"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "JOURNAL_ARTICLE", 
-                        "put-code": "11024519", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Gabrielle, Carey", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "0043-342X"
-                                    }, 
-                                    "work-external-identifier-type": "ISSN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": null, 
-                            "title": {
-                                "value": "Moving Among Strangers, Darkly"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@article{RID:1202132010974-15,\ntitle = {Moving Among Strangers, Darkly},\njournal = {},\nyear = {2010},\nauthor = {Gabrielle, Carey}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "2010"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024518",
+                  "work-title":{
+                     "title":{
+                        "value":"Puberty blues"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@book{RID:1202132010974-1,\ntitle = {Puberty blues},\npublisher = {},\nyear = {2012},\nauthor = {Lette, Kathy and  Carey, Gabrielle},\neditor = {}\n}"
+                  },
+                  "work-type":"BOOK",
+                  "publication-date":{
+                     "year":{
+                        "value":"2012"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISBN",
+                           "work-external-identifier-id":{
+                              "value":"1742759297"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "JOURNAL_ARTICLE", 
-                        "put-code": "11024520", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Aylward, David", 
-                                        "visibility": null
-                                    }
-                                }, 
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "1468-4322"
-                                    }, 
-                                    "work-external-identifier-type": "ISSN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": {
-                                "value": "International journal of technology, policy and management"
-                            }, 
-                            "title": {
-                                "value": "High-value niche production: what Australian wineries might learn from a Bordeaux first growth"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@article{RID:1202132010974-9,\ntitle = {High-value niche production: what Australian wineries might learn from a Bordeaux first growth},\njournal = {International journal of technology, policy and management},\nyear = {2009},\nauthor = {Aylward, David and  Carey, Gabrielle},\nvolume = {9},\nnumber = {4},\npages = {342-357}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "2009"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Lette, Kathy",
+                              "visibility":"PUBLIC"
+                           }
+                        },
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "BOOK", 
-                        "put-code": "11024521", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "1921372621"
-                                    }, 
-                                    "work-external-identifier-type": "ISBN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": null, 
-                            "title": {
-                                "value": "Waiting Room: A Memoir"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@book{RID:1202132010974-12,\ntitle = {Waiting Room: A Memoir},\npublisher = {},\nyear = {2009},\nauthor = {Carey, Gabrielle},\neditor = {}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "2009"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024519",
+                  "work-title":{
+                     "title":{
+                        "value":"Moving Among Strangers, Darkly"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article{RID:1202132010974-15,\ntitle = {Moving Among Strangers, Darkly},\njournal = {},\nyear = {2010},\nauthor = {Gabrielle, Carey}\n}"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2010"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISSN",
+                           "work-external-identifier-id":{
+                              "value":"0043-342X"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "JOURNAL_ARTICLE", 
-                        "put-code": "11024522", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "1444-5158"
-                                    }, 
-                                    "work-external-identifier-type": "ISSN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": {
-                                "value": "Sydney Studies in Religion"
-                            }, 
-                            "title": {
-                                "value": "Literature and Religion as Rivals"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@article{RID:1202132010974-10,\ntitle = {Literature and Religion as Rivals},\njournal = {Sydney Studies in Religion},\nyear = {2008},\nauthor = {Carey, Gabrielle}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "2008"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Gabrielle, Carey",
+                              "visibility":"PUBLIC"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "JOURNAL_ARTICLE", 
-                        "put-code": "11024523", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Gabrielle, Carey", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "10.1162/daed.2006.135.4.60"
-                                    }, 
-                                    "work-external-identifier-type": "DOI"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": null, 
-                            "title": {
-                                "value": "So Many Selves"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@article{RID:1202132010974-14,\ntitle = {So Many Selves},\njournal = {},\nyear = {2006},\nauthor = {Gabrielle, Carey}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "2006"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024520",
+                  "work-title":{
+                     "title":{
+                        "value":"High-value niche production: what Australian wineries might learn from a Bordeaux first growth"
+                     },
+                     "subtitle":{
+                        "value":"International journal of technology, policy and management"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article{RID:1202132010974-9,\ntitle = {High-value niche production: what Australian wineries might learn from a Bordeaux first growth},\njournal = {International journal of technology, policy and management},\nyear = {2009},\nauthor = {Aylward, David and  Carey, Gabrielle},\nvolume = {9},\nnumber = {4},\npages = {342-357}\n}"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2009"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISSN",
+                           "work-external-identifier-id":{
+                              "value":"1468-4322"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "BOOK", 
-                        "put-code": "11024524", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "0733305741"
-                                    }, 
-                                    "work-external-identifier-type": "ISBN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": null, 
-                            "title": {
-                                "value": "Australian Story: Australian Lives"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@book{RID:1202132010974-7,\ntitle = {Australian Story: Australian Lives},\npublisher = {},\nyear = {1997},\nauthor = {Carey, Gabrielle},\neditor = {}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "1997"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Aylward, David",
+                              "visibility":"PUBLIC"
+                           }
+                        },
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "BOOK", 
-                        "put-code": "11024525", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }, 
-                                {
-                                    "credit-name": {
-                                        "value": "Sorensen, Rosemary Lee", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "0140259384"
-                                    }, 
-                                    "work-external-identifier-type": "ISBN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": null, 
-                            "title": {
-                                "value": "The Penguin Book of Death"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@book{RID:1202132010975-8,\ntitle = {The Penguin Book of Death},\npublisher = {},\nyear = {1997},\nauthor = {Carey, Gabrielle and  Sorensen, Rosemary Lee},\neditor = {}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "1997"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024521",
+                  "work-title":{
+                     "title":{
+                        "value":"Waiting Room: A Memoir"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@book{RID:1202132010974-12,\ntitle = {Waiting Room: A Memoir},\npublisher = {},\nyear = {2009},\nauthor = {Carey, Gabrielle},\neditor = {}\n}"
+                  },
+                  "work-type":"BOOK",
+                  "publication-date":{
+                     "year":{
+                        "value":"2009"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISBN",
+                           "work-external-identifier-id":{
+                              "value":"1921372621"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "JOURNAL_ARTICLE", 
-                        "put-code": "11024526", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "0091831318"
-                                    }, 
-                                    "work-external-identifier-type": "ISSN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": {
-                                "value": "Mother love: stories about births, babies & beyond"
-                            }, 
-                            "title": {
-                                "value": "Prenatal Depression, Postmodern World"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@article{RID:1202132010975-6,\ntitle = {Prenatal Depression, Postmodern World},\njournal = {Mother love: stories about births, babies & beyond},\nyear = {1996},\nauthor = {Carey, Gabrielle},\npages = {179}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "1996"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "BOOK", 
-                        "put-code": "11024527", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "0330355988"
-                                    }, 
-                                    "work-external-identifier-type": "ISBN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": null, 
-                            "title": {
-                                "value": "The Borrowed Girl"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@book{RID:1202132010975-5,\ntitle = {The Borrowed Girl},\npublisher = {},\nyear = {1994},\nauthor = {Carey, Gabrielle},\neditor = {}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "1994"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024522",
+                  "work-title":{
+                     "title":{
+                        "value":"Literature and Religion as Rivals"
+                     },
+                     "subtitle":{
+                        "value":"Sydney Studies in Religion"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article{RID:1202132010974-10,\ntitle = {Literature and Religion as Rivals},\njournal = {Sydney Studies in Religion},\nyear = {2008},\nauthor = {Carey, Gabrielle}\n}"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2008"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISSN",
+                           "work-external-identifier-id":{
+                              "value":"1444-5158"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "BOOK", 
-                        "put-code": "11024528", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }, 
-                                {
-                                    "credit-name": {
-                                        "value": "Hudson, Elaine", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "0330272942"
-                                    }, 
-                                    "work-external-identifier-type": "ISBN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": null, 
-                            "title": {
-                                "value": "In My Father's House"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@book{RID:1202132010975-4,\ntitle = {In My Father's House},\npublisher = {},\nyear = {1992},\nauthor = {Carey, Gabrielle and  Hudson, Elaine},\neditor = {}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "1992"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "BOOK", 
-                        "put-code": "11024529", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "0140074252"
-                                    }, 
-                                    "work-external-identifier-type": "ISBN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": null, 
-                            "title": {
-                                "value": "Just Us"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@book{RID:1202132010975-3,\ntitle = {Just Us},\npublisher = {},\nyear = {1984},\nauthor = {Carey, Gabrielle},\neditor = {}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "1984"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024523",
+                  "work-title":{
+                     "title":{
+                        "value":"So Many Selves"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article{RID:1202132010974-14,\ntitle = {So Many Selves},\njournal = {},\nyear = {2006},\nauthor = {Gabrielle, Carey}\n}"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"2006"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"DOI",
+                           "work-external-identifier-id":{
+                              "value":"10.1162/daed.2006.135.4.60"
+                           }
                         }
-                    }, 
-                    {
-                        "work-type": "BOOK", 
-                        "put-code": "11024530", 
-                        "work-contributors": {
-                            "contributor": [
-                                {
-                                    "credit-name": {
-                                        "value": "Carey, Gabrielle", 
-                                        "visibility": null
-                                    }
-                                }, 
-                                {
-                                    "credit-name": {
-                                        "value": "Lette, Kathy", 
-                                        "visibility": null
-                                    }
-                                }
-                            ]
-                        }, 
-                        "visibility": null, 
-                        "work-external-identifiers": {
-                            "scope": null, 
-                            "work-external-identifier": [
-                                {
-                                    "work-external-identifier-id": {
-                                        "value": "0872237680"
-                                    }, 
-                                    "work-external-identifier-type": "ISBN"
-                                }
-                            ]
-                        }, 
-                        "work-title": {
-                            "subtitle": null, 
-                            "title": {
-                                "value": "Puberty blues"
-                            }
-                        }, 
-                        "url": null, 
-                        "work-source": {
-                            "value": "0000-0003-1377-5676"
-                        }, 
-                        "work-citation": {
-                            "citation": "@book{RID:1202132010975-2,\ntitle = {Puberty blues},\npublisher = {},\nyear = {1982},\nauthor = {Carey, Gabrielle and  Lette, Kathy},\neditor = {}\n}", 
-                            "work-citation-type": "BIBTEX"
-                        }, 
-                        "publication-date": {
-                            "media-type": null, 
-                            "year": {
-                                "value": "1982"
-                            }, 
-                            "day": null, 
-                            "month": null
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Gabrielle, Carey",
+                              "visibility":"PUBLIC"
+                           }
                         }
-                    }
-                ]
-            }
-        }, 
-        "group-type": null, 
-        "orcid-id": "http://orcid.org/0000-0002-3127-3891", 
-        "orcid": {
-            "value": "0000-0002-3127-3891"
-        }, 
-        "client-type": null, 
-        "type": "USER", 
-        "orcid-preferences": {
-            "locale": "EN"
-        }, 
-        "orcid-history": {
-            "last-modified-date": {
-                "value": 1386047110675
-            }, 
-            "creation-method": "WEBSITE", 
-            "submission-date": {
-                "value": 1386032846918
-            }, 
-            "visibility": null, 
-            "source": null, 
-            "claimed": {
-                "value": true
-            }
-        }
-    }
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024524",
+                  "work-title":{
+                     "title":{
+                        "value":"Australian Story: Australian Lives"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@book{RID:1202132010974-7,\ntitle = {Australian Story: Australian Lives},\npublisher = {},\nyear = {1997},\nauthor = {Carey, Gabrielle},\neditor = {}\n}"
+                  },
+                  "work-type":"BOOK",
+                  "publication-date":{
+                     "year":{
+                        "value":"1997"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISBN",
+                           "work-external-identifier-id":{
+                              "value":"0733305741"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
+                        }
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024525",
+                  "work-title":{
+                     "title":{
+                        "value":"The Penguin Book of Death"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@book{RID:1202132010975-8,\ntitle = {The Penguin Book of Death},\npublisher = {},\nyear = {1997},\nauthor = {Carey, Gabrielle and  Sorensen, Rosemary Lee},\neditor = {}\n}"
+                  },
+                  "work-type":"BOOK",
+                  "publication-date":{
+                     "year":{
+                        "value":"1997"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISBN",
+                           "work-external-identifier-id":{
+                              "value":"0140259384"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
+                        },
+                        {
+                           "credit-name":{
+                              "value":"Sorensen, Rosemary Lee",
+                              "visibility":"PUBLIC"
+                           }
+                        }
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024526",
+                  "work-title":{
+                     "title":{
+                        "value":"Prenatal Depression, Postmodern World"
+                     },
+                     "subtitle":{
+                        "value":"Mother love: stories about births, babies & beyond"
+                     }
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@article{RID:1202132010975-6,\ntitle = {Prenatal Depression, Postmodern World},\njournal = {Mother love: stories about births, babies & beyond},\nyear = {1996},\nauthor = {Carey, Gabrielle},\npages = {179}\n}"
+                  },
+                  "work-type":"JOURNAL_ARTICLE",
+                  "publication-date":{
+                     "year":{
+                        "value":"1996"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISSN",
+                           "work-external-identifier-id":{
+                              "value":"0091831318"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
+                        }
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024527",
+                  "work-title":{
+                     "title":{
+                        "value":"The Borrowed Girl"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@book{RID:1202132010975-5,\ntitle = {The Borrowed Girl},\npublisher = {},\nyear = {1994},\nauthor = {Carey, Gabrielle},\neditor = {}\n}"
+                  },
+                  "work-type":"BOOK",
+                  "publication-date":{
+                     "year":{
+                        "value":"1994"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISBN",
+                           "work-external-identifier-id":{
+                              "value":"0330355988"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
+                        }
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024528",
+                  "work-title":{
+                     "title":{
+                        "value":"In My Father's House"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@book{RID:1202132010975-4,\ntitle = {In My Father's House},\npublisher = {},\nyear = {1992},\nauthor = {Carey, Gabrielle and  Hudson, Elaine},\neditor = {}\n}"
+                  },
+                  "work-type":"BOOK",
+                  "publication-date":{
+                     "year":{
+                        "value":"1992"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISBN",
+                           "work-external-identifier-id":{
+                              "value":"0330272942"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
+                        },
+                        {
+                           "credit-name":{
+                              "value":"Hudson, Elaine",
+                              "visibility":"PUBLIC"
+                           }
+                        }
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024529",
+                  "work-title":{
+                     "title":{
+                        "value":"Just Us"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@book{RID:1202132010975-3,\ntitle = {Just Us},\npublisher = {},\nyear = {1984},\nauthor = {Carey, Gabrielle},\neditor = {}\n}"
+                  },
+                  "work-type":"BOOK",
+                  "publication-date":{
+                     "year":{
+                        "value":"1984"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISBN",
+                           "work-external-identifier-id":{
+                              "value":"0140074252"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
+                        }
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               },
+               {
+                  "put-code":"11024530",
+                  "work-title":{
+                     "title":{
+                        "value":"Puberty blues"
+                     },
+                     "subtitle":null
+                  },
+                  "work-citation":{
+                     "work-citation-type":"BIBTEX",
+                     "citation":"@book{RID:1202132010975-2,\ntitle = {Puberty blues},\npublisher = {},\nyear = {1982},\nauthor = {Carey, Gabrielle and  Lette, Kathy},\neditor = {}\n}"
+                  },
+                  "work-type":"BOOK",
+                  "publication-date":{
+                     "year":{
+                        "value":"1982"
+                     },
+                     "month":null,
+                     "day":null,
+                     "media-type":null
+                  },
+                  "work-external-identifiers":{
+                     "work-external-identifier":[
+                        {
+                           "work-external-identifier-type":"ISBN",
+                           "work-external-identifier-id":{
+                              "value":"0872237680"
+                           }
+                        }
+                     ],
+                     "scope":null
+                  },
+                  "url":null,
+                  "work-contributors":{
+                     "contributor":[
+                        {
+                           "credit-name":{
+                              "value":"Carey, Gabrielle",
+                              "visibility":"PUBLIC"
+                           }
+                        },
+                        {
+                           "credit-name":{
+                              "value":"Lette, Kathy",
+                              "visibility":"PUBLIC"
+                           }
+                        }
+                     ]
+                  },
+                  "work-source":{
+                     "value":"0000-0003-1377-5676"
+                  },
+                  "visibility":null
+               }
+            ],
+            "scope":null
+         }
+      },
+      "type":"USER",
+      "group-type":null,
+      "client-type":null
+   }
 }

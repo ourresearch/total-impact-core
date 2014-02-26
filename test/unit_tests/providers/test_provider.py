@@ -95,11 +95,12 @@ class Test_Provider():
         response = provider.doi_from_url_string(test_url)
         assert_equals(response, expected)
 
-    def test_is_issn_in_doaj(self):
+    def test_is_issn_in_doaj_false(self):
         response = provider.is_issn_in_doaj("invalidissn")
         assert_equals(response, False)
 
-        zookeys_issn = "13132989"
+    def test_is_issn_in_doaj_true(self):
+        zookeys_issn = "13132989"  #this one is in test setup
         response = provider.is_issn_in_doaj(zookeys_issn)
         assert_equals(response, True)
 
