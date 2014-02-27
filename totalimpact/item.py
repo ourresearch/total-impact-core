@@ -273,6 +273,7 @@ class Item(db.Model):
         if "tiid" in kwargs:
             self.tiid = kwargs["tiid"]
         else:
+            shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
             self.tiid = shortuuid.uuid()[0:24]
        
         now = datetime.datetime.utcnow()

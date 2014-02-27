@@ -1,5 +1,5 @@
 from werkzeug import generate_password_hash, check_password_hash
-import shortuuid, datetime, hashlib, threading, json, time, copy, re
+import datetime, hashlib, threading, json, time, copy, re
 
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact.providers.provider import ProviderTimeout, ProviderServerError

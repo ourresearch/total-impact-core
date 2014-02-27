@@ -354,6 +354,7 @@ class Collection(db.Model):
 
 #delete when we move to postgres
 def make(collection_id=None):
+    shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
     key = shortuuid.uuid()[0:10]
 
     if collection_id is None:

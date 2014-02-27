@@ -5,7 +5,6 @@ import datetime, re, copy
 from werkzeug.security import check_password_hash
 from collections import defaultdict
 import redis
-import shortuuid
 import analytics
 import requests
 
