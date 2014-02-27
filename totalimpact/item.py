@@ -986,9 +986,6 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider=
         tiid_alias_mapping[tiid] = alias_tuple
         dicts_to_update += [{"tiid":tiid, "aliases_dict": alias_dict_from_tuples([alias_tuple])}]
 
-    logger.debug(u"in create_tiids_from_aliases, starting start_item_update")
-    start_item_update(dicts_to_update, analytics_credentials, "high", myredis)
-
     logger.debug(u"in create_tiids_from_aliases, starting commit")
     try:
         db.session.commit()
@@ -997,6 +994,10 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider=
         logger.warning(u"Fails Integrity check in create_tiids_from_aliases for {tiid}, rolling back.  Message: {message}".format(
             tiid=tiid, 
             message=e.message)) 
+
+    # has to be after commits to database
+    logger.debug(u"in create_tiids_from_aliases, starting start_item_update")
+    start_item_update(dicts_to_update, analytics_credentials, "high", myredis)
 
     logger.debug(u"in create_tiids_from_aliases, finished")
     return tiid_alias_mapping
