@@ -1047,9 +1047,12 @@ def start_item_update(dicts_to_add, analytics_credentials, priority, myredis):
     # logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
     #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
     tiids = [d["tiid"] for d in dicts_to_add]
+    logger.debug(u"in start_item_update, starting init_currently_updating_status")
     myredis.init_currently_updating_status(tiids,
         ProviderFactory.providers_with_metrics(default_settings.PROVIDERS))
+    logger.debug(u"in start_item_update, starting add_to_alias_queue")
     myredis.add_to_alias_queue(dicts_to_add, analytics_credentials, priority)
+    logger.debug(u"in start_item_update, finished")
 
 
 def build_duplicates_list(tiids):

@@ -27,7 +27,7 @@ SAMPLE_EXTRACT_MEMBER_ITEMS_UNICODE = r"""
 """
 
 SAMPLE_EXTRACT_MEMBER_ITEMS_BROKEN = """
-@999{test1,
+@article{test1,
   year={2009},
 },
 @article{test2,
@@ -126,7 +126,9 @@ class TestBibtex(ProviderTestCase):
     def test_paginate_broken(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_BROKEN
         response = self.provider.parse(file_contents)
-        #print 1/0
+        print response
+        expected = [{'title': '', 'first_author': '', 'journal': '', 'year': '2009', 'number': '', 'volume': '', 'first_page': '', 'authors': ''}]
+        assert_equals(response, expected)
 
     def test_member_items_arxiv(self):
         file_contents = SAMPLE_EXTRACT_MEMBER_ITEMS_ARXIV
