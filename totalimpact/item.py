@@ -975,13 +975,13 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider=
     logger.debug(u"in create_tiids_from_aliases, starting alias loop")
 
     for alias_tuple in clean_aliases:
-        logger.debug(u"in create_tiids_from_aliases, with alias_tuple {alias_tuple}".format(
-            alias_tuple=alias_tuple))
+        # logger.debug(u"in create_tiids_from_aliases, with alias_tuple {alias_tuple}".format(
+        #     alias_tuple=alias_tuple))
         item_obj = add_alias_to_new_item(alias_tuple, provider)
         tiid = item_obj.tiid
         db.session.add(item_obj)
-        logger.debug(u"in create_tiids_from_aliases, made item {item_obj}".format(
-            item_obj=item_obj))
+        # logger.debug(u"in create_tiids_from_aliases, made item {item_obj}".format(
+        #     item_obj=item_obj))
 
         tiid_alias_mapping[tiid] = alias_tuple
         dicts_to_update += [{"tiid":tiid, "aliases_dict": alias_dict_from_tuples([alias_tuple])}]
