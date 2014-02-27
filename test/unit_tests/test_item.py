@@ -82,7 +82,7 @@ class TestItem():
             "aliases": self.ALIAS_DATA,
             "metrics": {
                 "wikipedia:mentions": METRICS_DATA,
-                "topsy:tweets": METRICS_DATA2
+                "altmetric_com:tweets": METRICS_DATA2
             },
             "biblio": self.BIBLIO_DATA,
             "type": "item"
@@ -192,7 +192,7 @@ class TestItem():
 
     def test_add_metrics(self):
         test_metrics = {
-            "topsy:tweets": {
+            "altmetric_com:tweets": {
                 "provenance_url": "http://topsy.com/trackback?url=http%3A//elife.elifesciences.org/content/2/e00646",
                 "values": {
                     "raw_history": {
@@ -219,7 +219,7 @@ class TestItem():
         expected = "hi"
         assert_equals(len(found_item.metrics), 3)
         assert_equals(found_item.metrics[0].tiid, tiid)
-        assert_equals(found_item.metrics[0].provider, "topsy")
+        assert_equals(found_item.metrics[0].provider, "altmetric_com")
         assert_equals(found_item.metrics[0].raw_value, 1)
         
         test_metrics2 =  {
@@ -407,7 +407,7 @@ class TestItem():
     def test_build_item_for_client_excludes_history_by_default(self):
         response = item_module.build_item_for_client(self.ITEM_DATA, self.myrefsets, self.r)
         assert_equals(response["metrics"]["wikipedia:mentions"]["values"].keys(), ["raw"])
-        assert_equals(response["metrics"]["topsy:tweets"]["values"].keys(), ["raw"])
+        assert_equals(response["metrics"]["altmetric_com:tweets"]["values"].keys(), ["raw"])
 
 
     def test_add_metrics_data(self):
@@ -427,8 +427,8 @@ class TestItem():
         item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = item_module.clean_for_export(item)
         print response["metrics"].keys()
-        expected = ['topsy:tweets', 'wikipedia:mentions']
-        assert_equals(response["metrics"].keys(), expected)
+        expected = ['altmetric_com:tweets', 'wikipedia:mentions']
+        assert_items_equal(response["metrics"].keys(), expected)
 
     def test_clean_for_export_given_correct_secret_key(self):
         self.save_test_item()
@@ -438,7 +438,7 @@ class TestItem():
         item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = item_module.clean_for_export(item, "SECRET", "SECRET")
         print response["metrics"].keys()
-        expected = ['topsy:tweets', 'wikipedia:mentions', 'scopus:citations', 'citeulike:bookmarks']
+        expected = ['altmetric_com:tweets', 'wikipedia:mentions', 'scopus:citations', 'citeulike:bookmarks']
         assert_equals(sorted(response["metrics"].keys()), sorted(expected))
 
     def test_clean_for_export_given_wrong_secret_key(self):
@@ -449,8 +449,8 @@ class TestItem():
         item["metrics"]["citeulike:bookmarks"] = {"values":{"raw": 33}}
         response = item_module.clean_for_export(item, "WRONG", "SECRET")
         print response["metrics"].keys()
-        expected = ['topsy:tweets', 'wikipedia:mentions']
-        assert_equals(response["metrics"].keys(), expected)
+        expected = ['altmetric_com:tweets', 'wikipedia:mentions']
+        assert_items_equal(response["metrics"].keys(), expected)
 
     def test_get_tiids_from_aliases(self):
 
