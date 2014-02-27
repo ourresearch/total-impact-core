@@ -14,6 +14,13 @@ TEST_ID = "10.1371/journal.pone.0000308"
 TEST_BIBLIO = {"title":"Scientometrics 2.0: Toward new metrics of scholarly impact on the social Web", 
                 "journal":"First Monday", 
                 "first_author":"Priem"}
+TEST_BIBLIO2 = {
+                    "authors": "Quezada IM, Gianoli E", 
+                    "genre": "article", 
+                    "journal": "Polish Journal of Ecology", 
+                    "title": "Simulated herbivory limits phenotypic responses to drought in Convolvulus demissus choisy (Convolvulaceae)", 
+                    "year": "2006"
+                }
 
 class TestScopus(ProviderTestCase):
 
@@ -81,6 +88,15 @@ class TestScopus(ProviderTestCase):
     def test_metrics_with_biblio(self):
         metrics_dict = self.provider.metrics([("biblio", TEST_BIBLIO)])
         expected = {'scopus:citations': (20, u'http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=77956197364')}
+        print metrics_dict
+        for key in expected:
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+            assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+
+    @http
+    def test_metrics_with_biblio2(self):
+        metrics_dict = self.provider.metrics([("biblio", TEST_BIBLIO2)])
+        expected = {'scopus:citations': (7, 'http://www.scopus.com/inward/record.url?partnerID=HzOxMe3b&scp=33750324740')}
         print metrics_dict
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]

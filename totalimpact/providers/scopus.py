@@ -141,10 +141,16 @@ class Scopus(Provider):
                 biblio_dict["first_author"] = biblio_dict["authors"].split(" ")[0]
             if not biblio_dict["first_author"]:
                 return None
+            if not biblio_dict["title"] and biblio_dict["journal"] and biblio_dict["first_author"]:
+                logger.debug("not enough info in _get_relevant_record_with_biblio to look up citations")
+
+            title = biblio_dict["title"].replace("(", "{(}").replace(")", "{)}")
+            journal = biblio_dict["journal"].replace("(", "{(}").replace(")", "{)}")
+
             url = url_template.format(
                     first_author=urllib.quote(biblio_dict["first_author"]), 
-                    title=urllib.quote(biblio_dict["title"]), 
-                    journal=urllib.quote(biblio_dict["journal"]))
+                    title=urllib.quote(title), 
+                    journal=urllib.quote(journal))
         except KeyError:
             logger.debug("tried _get_relevant_record_with_biblio but leaving because KeyError")
             return None
