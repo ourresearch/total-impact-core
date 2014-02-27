@@ -69,7 +69,7 @@ def init_currently_updating_status(self, tiids, providers):
         now = datetime.datetime.utcnow().isoformat()
         for provider_name in providers:
             currently_updating_status = {now: "in queue"}
-            self.set_currently_updating(tiid, provider_name, currently_updating_status)
+            self.set_currently_updating(tiid, provider_name, currently_updating_status, pipe)
     pipe.execute()
 
 
