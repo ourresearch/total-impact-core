@@ -473,6 +473,8 @@ class TestItem():
         response = item_module.create_tiids_from_aliases(aliases, {}, self.r)
         print response
         assert_equals(len(response.keys()), 2)
+        expected = [('url', 'http://starbucks.com'), ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124')]
+        assert_items_equal(response.values(), expected)
 
 
     def test_get_items_from_tiids(self):

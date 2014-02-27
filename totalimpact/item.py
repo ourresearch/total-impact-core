@@ -950,6 +950,7 @@ def get_tiids_from_aliases(aliases):
 
 
 
+
 def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
     tiid_alias_mapping = {}
     clean_aliases = [canonical_alias_tuple((ns, nid)) for (ns, nid) in aliases]  
@@ -957,28 +958,19 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
 
     logger.debug(u"in create_tiids_from_aliases, starting alias loop")
 
-    for alias in clean_aliases:
-        (ns, nid) = alias
-        item_doc = make()
-        if ns=="biblio":
-            item_doc["aliases"][ns] = [nid]
-        else:
-            item_doc["aliases"][ns] = [nid]
-        tiid = item_doc["_id"]
+    for alias_tuple in clean_aliases:
+        item_obj = Item()
+        item_obj.aliases = [Alias(alias_tuple=alias_tuple)]
+        tiid = item_obj.tiid
+        db.session.add(item_obj)
 
-        # logger.debug(u"in create_tiids_from_aliases for {tiid}, now to postgres".format(
-        #     tiid=tiid))   
-        item_obj = create_objects_from_item_doc(item_doc, commit=False)
-
-        tiid_alias_mapping[tiid] = alias
-        dicts_to_update += [{"tiid":tiid, "aliases_dict": item_doc["aliases"]}]
+        tiid_alias_mapping[tiid] = alias_tuple
+        dicts_to_update += [{"tiid":tiid, "aliases_dict": alias_dict_from_tuples([alias_tuple])}]
 
     logger.debug(u"in create_tiids_from_aliases, starting start_item_update")
-
     start_item_update(dicts_to_update, analytics_credentials, "high", myredis)
 
     logger.debug(u"in create_tiids_from_aliases, starting commit")
-
     try:
         db.session.commit()
     except (IntegrityError, FlushError) as e:
@@ -988,7 +980,6 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
             message=e.message)) 
 
     logger.debug(u"in create_tiids_from_aliases, finished")
-
     return tiid_alias_mapping
 
 
