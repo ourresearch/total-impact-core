@@ -950,9 +950,24 @@ def get_tiids_from_aliases(aliases):
     return aliases_tiid_mapping
 
 
+# forgoes some checks for speed because only used for just-created items
+def add_alias_to_new_item(alias_tuple, provider=None):
+    item_obj = Item()
+    (namespace, nid) = alias_tuple
+    if namespace=="biblio":
+        if not provider:
+            provider = "unknown1"
+        for biblio_name in nid:
+                biblio_object = Biblio(biblio_name=biblio_name, 
+                        biblio_value=nid[biblio_name], 
+                        provider=provider)
+                item_obj.biblios += [biblio_object]
+    else:
+        item_obj.aliases = [Alias(alias_tuple=alias_tuple)]
+    return item_obj  
 
 
-def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
+def create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider=None):
     tiid_alias_mapping = {}
     clean_aliases = [canonical_alias_tuple((ns, nid)) for (ns, nid) in aliases]  
     dicts_to_update = []  
@@ -962,12 +977,11 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
     for alias_tuple in clean_aliases:
         logger.debug(u"in create_tiids_from_aliases, with alias_tuple {alias_tuple}".format(
             alias_tuple=alias_tuple))
-        item_obj = Item()
-        item_obj.aliases = [Alias(alias_tuple=alias_tuple)]
+        item_obj = add_alias_to_new_item(alias_tuple, provider)
         tiid = item_obj.tiid
         db.session.add(item_obj)
-        logger.debug(u"in create_tiids_from_aliases, made item {item}".format(
-            item=item))
+        logger.debug(u"in create_tiids_from_aliases, made item {item_obj}".format(
+            item_obj=item_obj))
 
         tiid_alias_mapping[tiid] = alias_tuple
         dicts_to_update += [{"tiid":tiid, "aliases_dict": alias_dict_from_tuples([alias_tuple])}]

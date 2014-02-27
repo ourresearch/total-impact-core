@@ -232,7 +232,7 @@ def importer_post(provider_name):
     except ProviderError:
         abort(500, "internal error from provider")
 
-    tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, analytics_credentials, myredis)
+    tiids_aliases_map = item_module.create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider_name)
     logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
         tiids_aliases_map=tiids_aliases_map))
 

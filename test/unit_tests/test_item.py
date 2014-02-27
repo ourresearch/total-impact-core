@@ -477,6 +477,17 @@ class TestItem():
         assert_items_equal(response.values(), expected)
 
 
+    def test_create_tiids_from_aliases_biblio(self):
+
+        aliases = [('biblio', self.BIBLIO_DATA)]
+
+        response = item_module.create_tiids_from_aliases(aliases, {}, self.r)
+        print response
+        assert_equals(len(response.keys()), 1)
+        expected = [("biblio", self.BIBLIO_DATA)]
+        assert_items_equal(response.values(), expected)
+
+
     def test_get_items_from_tiids(self):
         aliases = [('url', 'http://starbucks.com'), ('url', 'http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124')]
         response = item_module.create_tiids_from_aliases(aliases, {}, self.r)
