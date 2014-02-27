@@ -54,7 +54,7 @@ def store_page_in_cache(url, headers, allow_redirects, response, cache):
 def import_products(provider_name, input_dict):
     if provider_name == "bibtex":
         logger.debug(u"in import_products with {provider_name}".format(
-            provider_name=provider_name)
+            provider_name=provider_name))
     else:
         logger.debug(u"in import_products with {provider_name}: {input_val}".format(
             provider_name=provider_name, input_val=input_dict))
