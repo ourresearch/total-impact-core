@@ -112,8 +112,9 @@ def get_num_providers_currently_updating(self, item_id):
             # logger.warning(u"In get_num_providers_currently_updating, elapsed time still short, set currently_updating=True for {tiid}{provider}".format(
             #     tiid=item_id, provider=provider))
         else:
-            logger.warning(u"In get_num_providers_currently_updating, elapsed time is too long, set currently_updating=False for {tiid}{provider}".format(
-                tiid=item_id, provider=provider))
+            # logger.warning(u"In get_num_providers_currently_updating, elapsed time is too long, set currently_updating=False for {tiid}{provider}".format(
+            #     tiid=item_id, provider=provider))
+            pass
 
     return num_currently_updating
 
