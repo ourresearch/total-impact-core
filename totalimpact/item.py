@@ -96,7 +96,7 @@ def create_alias_objects(old_style_alias_dict, collected_date=datetime.datetime.
     return new_alias_objects
 
 
-def create_objects_from_item_doc(item_doc, skip_if_exists=False):
+def create_objects_from_item_doc(item_doc, skip_if_exists=False, commit=True):
     tiid = item_doc["_id"]
 
     # logger.debug(u"in create_objects_from_item_doc for {tiid}".format(
@@ -125,13 +125,14 @@ def create_objects_from_item_doc(item_doc, skip_if_exists=False):
             metric.tiid = item_doc["_id"]
             db.session.add(metric)
 
-    try:
-        db.session.commit()
-    except (IntegrityError, FlushError) as e:
-        db.session.rollback()
-        logger.warning(u"Fails Integrity check in create_objects_from_item_doc for {tiid}, rolling back.  Message: {message}".format(
-            tiid=tiid, 
-            message=e.message))   
+    if commit:
+        try:
+            db.session.commit()
+        except (IntegrityError, FlushError) as e:
+            db.session.rollback()
+            logger.warning(u"Fails Integrity check in create_objects_from_item_doc for {tiid}, rolling back.  Message: {message}".format(
+                tiid=tiid, 
+                message=e.message))   
 
     # have to set it because after the commit the metrics aren't set any more
     if new_metric_objects:
@@ -548,10 +549,9 @@ def add_aliases_to_item_object(aliases_dict, item_doc):
 
     item_obj = Item.from_tiid(tiid)
     if not item_obj:
-        item_obj = create_objects_from_item_doc(item_doc)
+        item_obj = create_objects_from_item_doc(item_doc, commit=False)
 
     item_obj.last_modified = datetime.datetime.utcnow()
-    db.session.merge(item_obj)
 
     alias_objects = create_alias_objects(aliases_dict)
     for alias_obj in alias_objects:
@@ -615,9 +615,8 @@ def add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name):
 
     item_obj = Item.from_tiid(tiid)
     if not item_obj:
-        item_obj = create_objects_from_item_doc(item_doc)
+        item_obj = create_objects_from_item_doc(item_doc, commit=False)
     item_obj.last_modified = datetime.datetime.utcnow()
-    db.session.merge(item_obj)
 
     new_biblio_objects = create_biblio_objects([new_biblio_dict], provider=provider_name)
     for new_biblio_obj in new_biblio_objects:
@@ -955,6 +954,9 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
     tiid_alias_mapping = {}
     clean_aliases = [canonical_alias_tuple((ns, nid)) for (ns, nid) in aliases]  
     dicts_to_update = []  
+
+    logger.debug(u"in create_tiids_from_aliases, starting alias loop")
+
     for alias in clean_aliases:
         (ns, nid) = alias
         item_doc = make()
@@ -964,15 +966,18 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
             item_doc["aliases"][ns] = [nid]
         tiid = item_doc["_id"]
 
-        logger.debug(u"in create_tiids_from_aliases for {tiid}, now to postgres".format(
-            tiid=tiid))   
-        item_obj = create_objects_from_item_doc(item_doc)
-        db.session.merge(item_obj)
+        # logger.debug(u"in create_tiids_from_aliases for {tiid}, now to postgres".format(
+        #     tiid=tiid))   
+        item_obj = create_objects_from_item_doc(item_doc, commit=False)
 
         tiid_alias_mapping[tiid] = alias
         dicts_to_update += [{"tiid":tiid, "aliases_dict": item_doc["aliases"]}]
 
+    logger.debug(u"in create_tiids_from_aliases, starting start_item_update")
+
     start_item_update(dicts_to_update, analytics_credentials, "high", myredis)
+
+    logger.debug(u"in create_tiids_from_aliases, starting commit")
 
     try:
         db.session.commit()
@@ -981,6 +986,8 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis):
         logger.warning(u"Fails Integrity check in create_tiids_from_aliases for {tiid}, rolling back.  Message: {message}".format(
             tiid=tiid, 
             message=e.message)) 
+
+    logger.debug(u"in create_tiids_from_aliases, finished")
 
     return tiid_alias_mapping
 
