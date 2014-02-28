@@ -173,3 +173,16 @@ class TestPubmed(ProviderTestCase):
             if (key != "pubmed:pmc_citations_editorials") and (key != "pubmed:pmc_citations_reviews"):
                 assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
 
+    @http
+    def test_metrics_with_dup_pmids(self):
+        metrics_dict = self.provider.metrics([("pmid", "22198174")])
+        print metrics_dict
+        expected = {'pubmed:pmc_citations': (6, 'http://www.ncbi.nlm.nih.gov/pubmed?linkname=pubmed_pubmed_citedin&from_uid=22198174'), 'pubmed:pmc_citations_reviews': (2, 'http://www.ncbi.nlm.nih.gov/pubmed?term=22886409%2520OR%252022732550&cmd=DetailsSearch')}
+        for key in expected:
+            assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
+
+            # the drilldown url changes with the metrics for some pubmed metrics, so don't check those
+            if (key != "pubmed:pmc_citations_editorials") and (key != "pubmed:pmc_citations_reviews"):
+                assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]
+
+

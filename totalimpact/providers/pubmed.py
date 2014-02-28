@@ -320,7 +320,8 @@ class Pubmed(Provider):
         if reviewed_by_f1000:
             metrics_dict["pubmed:f1000"] = reviewed_by_f1000
 
-        citing_pmcids = self._get_citing_pmcids(id, cache_enabled)
+        # they sometimes contain duples, so uniquify
+        citing_pmcids = list(set(self._get_citing_pmcids(id, cache_enabled)))
         if (citing_pmcids):
             metrics_dict["pubmed:pmc_citations"] = len(citing_pmcids)
     
