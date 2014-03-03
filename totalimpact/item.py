@@ -771,7 +771,10 @@ def canonical_alias_tuple(alias):
     nid = clean_id(nid)
     namespace = namespace.lower()
     if namespace=="doi":
-        nid = nid.lower()
+        try:
+            nid = nid.lower()
+        except AttributeError:
+            pass
     return(namespace, nid)
 
 def canonical_aliases(orig_aliases_dict):
