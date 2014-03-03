@@ -303,14 +303,15 @@ class CouchWorker(Worker):
             else:
                 # don't need it with metrics for this purpose
                 item_obj = item_module.Item.query.get(tiid)
-                item = item_obj.as_old_doc()
 
-                if not item:
+                if not item_obj:
                     if method_name=="metrics":
                         self.myredis.set_provider_finished(tiid, provider_name)
                     logger.error(u"Empty item from couch for tiid {tiid}, can't save {method_name}".format(
                         tiid=tiid, method_name=method_name))
                     return
+
+                item = item_obj.as_old_doc()
                 if method_name=="aliases":
                     updated_item = self.update_item_with_new_aliases(new_content, item)
                 elif method_name=="biblio":
