@@ -17,27 +17,12 @@ TEST_ORCID_ID2 = "0000-0001-9107-0714"
 TEST_ORCID_ID3 = "0000-0002-3127-3891"
 # test curl -H "Accept: application/orcid+json" htid.org/0000-0001-9107-0714/orcid-works
 
-SAMPLE_EXTRACT_MEMBER_ITEMS_SHORT = """
-<orcid-work put-code="5177473">
-                    <work-title>
-                        <title>The Bioperl toolkit: Perl modules for the life sciences</title>
-                        <subtitle>Genome Research</subtitle>
-                    </work-title>
-                    <work-citation>
-                        <work-citation-type>bibtex</work-citation-type>
-                        <citation>@article{lapp2002,
-    volume  = {12},
-    number  = {10},
-    pages   = {1611-1618},
-}
-</citation>
-                    </work-citation>
-                    <publication-date>
-                        <year>2002</year>
-                    </publication-date>
-                    <url>http://www.scopus.com/inward/record.url?eid=2-s2.0-18644368714&amp;partnerID=MN8TOARS</url>
-                    <work-source>NOT_DEFINED</work-source>
-                </orcid-work>
+SAMPLE_EXTRACT_MEMBER_ITEMS_SHORT = u"""
+{"message-version":"1.0.23","orcid-profile":{"orcid":{"value":"0000-0003-2447-0448"},"orcid-id":"http://orcid.org/0000-0003-2447-0448","orcid-preferences":{"locale":"EN"},"orcid-history":{"creation-method":"WEBSITE","completion-date":{"value":1357696486670},"submission-date":{"value":1357696486670},"last-modified-date":{"value":1393873446463},"claimed":{"value":true},"source":null,"visibility":null},"orcid-activities":{"affiliations":null,"orcid-works":{"orcid-work":[
+{"put-code":"11614995","work-title":{"title":{"value":"Review of Karl Clausberg, Zwischen den Sternen: Lichtbildarchive: Was Einstein und Uexkll, Benjamin und das Kino der Astronomie des 19. Jahrhunderts verdanken. Berlin: Akademie Verlag, 2006"},"subtitle":null},"journal-title":{"value":"Isis"},"short-description":"Book review","work-citation":{"work-citation-type":"FORMATTED_CHICAGO","citation":"Review of Karl Clausberg, Zwischen den Sternen: Lichtbildarchive: Was Einstein und Uexkll, Benjamin und das Kino der Astronomie des 19. Jahrhunderts verdanken. Berlin: Akademie Verlag, 2006. Isis 100, no. 1 (March 2009): 171."},"work-type":"JOURNAL_ARTICLE","publication-date":{"year":{"value":"2009"},"month":{"value":"03"},"day":null,"media-type":null},
+    "work-external-identifiers":{"work-external-identifier":[{"work-external-identifier-type":"DOI","work-external-identifier-id":{"value":"DOI:10.1086/599671"}}],"scope":null},
+        "url":null,"work-contributors":{"contributor":[{"contributor-attributes":{"contributor-role":"AUTHOR"}}]},"work-source":{"value":"0000-0003-2447-0448"},"language-code":"en","country":{"value":"US","visibility":null},"visibility":null}],
+"scope":null}},"type":"USER","group-type":null,"client-type":null}}
 """
 
 class TestOrcid(ProviderTestCase):
@@ -71,6 +56,11 @@ class TestOrcid(ProviderTestCase):
         print expected
         assert_items_equal(members, expected)
 
+    def test_extract_members4(self):
+        members = self.provider._extract_members(SAMPLE_EXTRACT_MEMBER_ITEMS_SHORT, TEST_ORCID_ID)
+        print members
+        expected = [('doi', u'10.1086/599671')]
+        assert_items_equal(members, expected)
 
     def test_extract_members_zero_items(self):
         page = """{"message-version":"1.0.6","orcid-profile":{"orcid":{"value":"0000-0003-1613-5981"}}}"""

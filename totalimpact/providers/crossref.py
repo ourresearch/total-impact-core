@@ -12,6 +12,7 @@ logger = logging.getLogger('ti.providers.crossref')
 def clean_doi(input_doi):
     input_doi = remove_nonprinting_characters(input_doi)
     try:
+        input_doi = input_doi.lower()
         if input_doi.startswith("http"):
             match = re.match("^https*://(dx\.)*doi.org/(10\..+)", input_doi)
             doi = match.group(2)
