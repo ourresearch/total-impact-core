@@ -104,6 +104,11 @@ class Test_Provider():
         response = provider.is_issn_in_doaj(zookeys_issn)
         assert_equals(response, True)
 
+    def test_import_products(self):
+        response = provider.import_products("product_id_strings", 
+                {"product_id_strings": ["123456", "HTTPS://starbucks.com", "arXiv:1305.3328", "http://doi.org/10.123/ABC"]})
+        expected = [('pmid', '123456'), ('url', 'HTTPS://starbucks.com'), ('arxiv', '1305.3328'), ('doi', '10.123/abc')]
+        assert_equals(response, expected)
 
 
 class TestProviderFactory():

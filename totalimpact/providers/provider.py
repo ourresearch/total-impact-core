@@ -50,44 +50,61 @@ def store_page_in_cache(url, headers, allow_redirects, response, cache):
         'url':              response.url}
     cache.set_cache_entry(cache_key, cache_data)
 
+def is_doi(nid):
+    nid = nid.lower()
+    if nid.startswith("doi:") or nid.startswith("10.") or "doi.org/" in nid:
+        return True
+    return False
 
-def import_products(provider_name, input_dict):
-    if provider_name == "bibtex":
+def is_pmid(nid):
+    if nid.startswith("pmid") or (len(nid)>2 and len(nid)<8 and re.search("\d+", nid)):
+        return True
+    return False
+
+def is_url(nid):
+    if nid.lower().startswith("http://") or nid.lower().startswith("https://"):
+        return True
+    return False
+
+def is_arxiv(nid):
+    if nid.lower().startswith("arxiv:") or "arxiv.org/" in nid:
+        return True
+    return False
+
+def get_aliases_from_product_id_strings(product_id_strings):
+    aliases = []
+    for nid in product_id_strings:
+        if is_doi(nid):
+            aliases += providers.crossref.Crossref().member_items(nid)
+        elif is_pmid(nid):
+            aliases += providers.pubmed.Pubmed().member_items(nid)
+        elif is_arxiv(nid):
+            aliases += providers.arxiv.Arxiv().member_items(nid)
+        elif is_url(nid):
+            aliases += providers.webpage.Webpage().member_items(nid)
+    print aliases
+    return aliases
+
+
+def import_products(provider_name, import_input):
+    if provider_name in ["bibtex", "product_id_strings"]:
         logger.debug(u"in import_products with {provider_name}".format(
             provider_name=provider_name))
     else:
-        logger.debug(u"in import_products with {provider_name}: {input_val}".format(
-            provider_name=provider_name, input_val=input_dict))
+        logger.debug(u"in import_products with {provider_name}: {import_input}".format(
+            provider_name=provider_name, import_input=import_input))
 
     aliases = []
 
     # pull in standard items, if we were passed any of these
-    if "standard_dois_input" in input_dict:
-        aliases += providers.crossref.Crossref().member_items(input_dict["standard_dois_input"])
-        del input_dict["standard_dois_input"]
-    if "standard_pmids_input" in input_dict:
-        aliases += providers.pubmed.Pubmed().member_items(input_dict["standard_pmids_input"])
-        del input_dict["standard_pmids_input"]
-    if "standard_urls_input" in input_dict:
-        aliases += providers.webpage.Webpage().member_items(input_dict["standard_urls_input"])
-        del input_dict["standard_urls_input"]
-
-    # if that's all we had, return
-    if not input_dict.keys():
-        return aliases
-
-    # pass in just the string if only one key (for backwards compatibility), otherwise dict
-    if input_dict.keys() == ["primary"]:
-        input_val = input_dict["primary"]
-    elif input_dict.keys() == ["account_name"]:
-        input_val = input_dict["account_name"]
-    else: 
-        input_val = input_dict
-
-    provider = ProviderFactory.get_provider(provider_name)
-    aliases += provider.member_items(input_val)
+    if provider_name=="product_id_strings":
+        aliases = get_aliases_from_product_id_strings(import_input["product_id_strings"])
+    else:
+        provider = ProviderFactory.get_provider(provider_name)
+        aliases = provider.member_items(import_input["account_name"])
 
     return(aliases)
+
 
 def is_issn_in_doaj(issn):
     raw_sql = text("""SELECT issn from doaj_issn_lookup where issn=:issn""")
