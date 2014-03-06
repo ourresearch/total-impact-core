@@ -27,20 +27,23 @@ class RedisQueue(object):
         #     queue_name=self.name, queue_length=queue_length)) 
         self.myredis.lpush(self.queue_name, message_json)
 
-    def pop(self):
+    @classmethod
+    def pop(cls, redis_queues, myredis):
         message = None
-        message_json = self.myredis.rpop(self.queue_name) 
+        logger.debug(u"about to pop from redis".format())
+
+        (popped_queue_name, message_json) = myredis.brpop([queue.queue_name for queue in redis_queues]) 
         if message_json:
-            queue_length = self.myredis.llen(self.queue_name)                   
+            queue_length = myredis.llen(popped_queue_name)                   
             logger.debug(u"{:20}: <<<POPPED from redis, current length {queue_length}, now to parse message".format(
-                self.name, queue_length=queue_length))
+                popped_queue_name, queue_length=queue_length))
             try:
                 # logger.debug(u"{:20}: <<<POPPED from redis: starts {message_json}".format(
                 #     self.name, message_json=message_json[0:50]))        
                 message = json.loads(message_json) 
             except (TypeError, KeyError):
                 logger.info(u"{:20}: ERROR processing redis message {message_json}".format(
-                    self.name, message_json=message_json))
+                    popped_queue_name, message_json=message_json))
         return message
 
 
@@ -418,22 +421,9 @@ class Backend(Worker):
         global thread_count
 
         # go through alias_queues, with highest priority first
-        alias_message = self.alias_queues["high"].pop()
-        queue = "high"
-        if not alias_message:
-            too_busy_provider_name = self.providers_too_busy()
-            if too_busy_provider_name:
-                count = len(thread_count[too_busy_provider_name])
-                logger.info(u"providers_too_busy for {provider_name}, threads = {count}".format(
-                   provider_name=too_busy_provider_name, count=count))
-                time.sleep(0.5)
-            else:
-                alias_message = self.alias_queues["low"].pop()
-                queue = "low"
+        alias_message = RedisQueue.pop([self.alias_queues["high"], self.alias_queues["low"]], self.myredis)
 
         if alias_message:
-            # logger.info(u"/biblio_print, ALIAS_MESSAGE from {queue} said {alias_message}".format(
-            #    queue=queue, alias_message=alias_message))
             tiid = alias_message["tiid"]
             aliases_dict = alias_message["aliases_dict"]
             analytics_credentials = alias_message["analytics_credentials"]
