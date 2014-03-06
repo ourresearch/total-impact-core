@@ -110,6 +110,12 @@ class Test_Provider():
         expected = [('pmid', '123456'), ('url', 'HTTPS://starbucks.com'), ('arxiv', '1305.3328'), ('doi', '10.123/abc')]
         assert_equals(response, expected)
 
+    def test_import_products_bad_providername(self):
+        response = provider.import_products("nonexistant", {})
+        expected = []
+        assert_equals(response, expected)
+
+
 
 class TestProviderFactory():
 

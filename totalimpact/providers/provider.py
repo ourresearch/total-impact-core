@@ -100,8 +100,11 @@ def import_products(provider_name, import_input):
     if provider_name=="product_id_strings":
         aliases = get_aliases_from_product_id_strings(import_input["product_id_strings"])
     else:
-        provider = ProviderFactory.get_provider(provider_name)
-        aliases = provider.member_items(import_input["account_name"])
+        try:
+            provider = ProviderFactory.get_provider(provider_name)
+            aliases = provider.member_items(import_input["account_name"])
+        except ImportError:
+            pass
 
     return(aliases)
 
