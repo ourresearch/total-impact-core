@@ -44,9 +44,9 @@ class Twitter_Account(Provider):
                             os.getenv("TWITTER_ACCESS_TOKEN"))
 
     # overriding default because overriding member_items method
-    @property
-    def provides_members(self):
-        return True
+    # @property
+    # def provides_members(self):
+    #     return True
 
     @property
     def provides_biblio(self):
@@ -74,20 +74,20 @@ class Twitter_Account(Provider):
         return match[0]
 
 
-    def member_items(self, 
-            query_string, 
-            provider_url_template=None, 
-            cache_enabled=True):
+    # def member_items(self, 
+    #         query_string, 
+    #         provider_url_template=None, 
+    #         cache_enabled=True):
 
-        twitter_username = query_string.replace("@", "")
-        url = self._get_templated_url(self.member_items_url_template, twitter_username, "members")
-        members = [("url", url)]
+    #     twitter_username = query_string.replace("@", "")
+    #     url = self._get_templated_url(self.member_items_url_template, twitter_username, "members")
+    #     members = [("url", url)]
 
-        # import top tweets
-        for tweet_url in topsy.Topsy().top_tweeted_urls(twitter_username, "twitter_account", number_to_return=10):
-            members += [("url", tweet_url)] 
+    #     # import top tweets
+    #     for tweet_url in topsy.Topsy().top_tweeted_urls(twitter_username, "twitter_account", number_to_return=10):
+    #         members += [("url", tweet_url)] 
 
-        return(members)
+    #     return(members)
 
 
     def get_account_data(self, aliases):
