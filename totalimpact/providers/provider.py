@@ -99,6 +99,9 @@ def import_products(provider_name, import_input):
     # pull in standard items, if we were passed any of these
     if provider_name=="product_id_strings":
         aliases = get_aliases_from_product_id_strings(import_input["product_id_strings"])
+    elif provider_name=="bibtex":
+        provider = ProviderFactory.get_provider("bibtex")
+        aliases = provider.member_items(import_input["bibtex"])
     else:
         try:
             provider = ProviderFactory.get_provider(provider_name)
