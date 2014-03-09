@@ -97,7 +97,8 @@ class Orcid(Provider):
                     if myid['work-external-identifier-type'] == "DOI":
                         doi = myid['work-external-identifier-id']['value']
                         doi = crossref.clean_doi(doi)
-                        new_member = ("doi", doi)
+                        if doi:
+                            new_member = ("doi", doi)
                     if myid['work-external-identifier-type'] == "PMID":
                         new_member = ("pmid", myid['work-external-identifier-id']['value'])
             except KeyError:
@@ -108,8 +109,6 @@ class Orcid(Provider):
                     orcid=query_string))
                 biblio = self._parse_orcid_work(work)
                 new_member = ("biblio", biblio)
-                logger.info(u"no external identifiers, got a new member for {orcid}".format(
-                    orcid=query_string))
 
             if new_member:
                 members += [new_member]    

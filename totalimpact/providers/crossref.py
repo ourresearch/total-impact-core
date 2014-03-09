@@ -24,8 +24,13 @@ def clean_doi(input_doi):
             doi = match.group(1)
         elif input_doi.startswith("10."):
             doi = input_doi
+        elif "10." in input_doi:
+            match = re.match(".*(10\.\d+.+)", input_doi, re.DOTALL)
+            doi = match.group(1)
         else:
             doi = None
+            self.logger.debug(u"%s MALFORMED DOI %s" % (self.provider_name, input_doi))
+
     except AttributeError:
         doi = None
 
