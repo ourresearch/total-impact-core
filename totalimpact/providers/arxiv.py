@@ -51,7 +51,7 @@ class Arxiv(Provider):
 
         self.logger.debug(u"%s getting member_items for %s" % (self.provider_name, query_dict))
 
-        arxiv_ids = query_dict["arxiv_id_input"].lower().split("\n")
+        arxiv_ids = query_dict.lower().split("\n")
         arxiv_ids = [id.replace("arxiv:", "").replace("http://arxiv.org/abs/", "") for id in arxiv_ids]
         aliases_tuples = [("arxiv", arxiv_id) for arxiv_id in arxiv_ids if arxiv_id]
 

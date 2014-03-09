@@ -208,12 +208,9 @@ def format_into_products_dict(tiids_aliases_map):
     return products_dict
 
 
+
 @app.route("/v1/importer/<provider_name>", methods=['POST'])
 def importer_post(provider_name):
-    """
-    Gets aliases associated with a query from a given provider.
-    """
-
     try:
         analytics_credentials = request.json["analytics_credentials"]
         del request.json["analytics_credentials"]
