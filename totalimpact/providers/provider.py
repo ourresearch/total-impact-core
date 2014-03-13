@@ -57,7 +57,7 @@ def is_doi(nid):
     return False
 
 def is_pmid(nid):
-    if nid.startswith("pmid") or (len(nid)>2 and len(nid)<8 and re.search("\d+", nid)):
+    if nid.startswith("pmid") or (len(nid)>2 and len(nid)<=8 and re.search("\d+", nid)):
         return True
     return False
 
