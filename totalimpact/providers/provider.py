@@ -6,6 +6,7 @@ from totalimpact import default_settings
 from totalimpact import utils
 from totalimpact import app
 from totalimpact import db
+from totalimpact.unicode_helpers import remove_nonprinting_characters
 
 import requests, os, time, threading, sys, traceback, importlib, urllib, logging, itertools
 import simplejson
@@ -74,6 +75,8 @@ def is_arxiv(nid):
 def get_aliases_from_product_id_strings(product_id_strings):
     aliases = []
     for nid in product_id_strings:
+        nid = remove_nonprinting_characters(nid)
+        nid = nid.strip()  # also remove spaces
         if is_doi(nid):
             aliases += providers.crossref.Crossref().member_items(nid)
         elif is_pmid(nid):
