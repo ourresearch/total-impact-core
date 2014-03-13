@@ -133,9 +133,32 @@ class Scopus(Provider):
         return relevant_record
 
 
+    def _get_scopus_url(self, biblio_dict):
+        url_template_one_journal = "https://api.elsevier.com/content/search/index:SCOPUS?query=AUTHOR-NAME({first_author})%20AND%20TITLE({title})%20AND%20SRCTITLE({journal})&field=citedby-count&apiKey="+os.environ["SCOPUS_KEY"]+"&insttoken="+os.environ["SCOPUS_INSTTOKEN"]            
+        url_template_two_journals = "https://api.elsevier.com/content/search/index:SCOPUS?query=AUTHOR-NAME({first_author})%20AND%20TITLE({title})%20AND%20(SRCTITLE({journal1})%20OR%20SRCTITLE({journal2}))&field=citedby-count&apiKey="+os.environ["SCOPUS_KEY"]+"&insttoken="+os.environ["SCOPUS_INSTTOKEN"]
+        alt_journal_names = {"BMJ": "British Medical Journal"}
+
+        title = biblio_dict["title"].replace("(", "{(}").replace(")", "{)}")
+        journal = biblio_dict["journal"].replace("(", "{(}").replace(")", "{)}")
+
+        if journal in alt_journal_names.keys():
+            journal1 = journal
+            journal2 = alt_journal_names[journal]
+            url = url_template_two_journals.format(
+                    first_author=urllib.quote(biblio_dict["first_author"]), 
+                    title=urllib.quote(title), 
+                    journal1=urllib.quote(journal1), 
+                    journal2=urllib.quote(journal2))
+        else:
+            url = url_template_one_journal.format(
+                    first_author=urllib.quote(biblio_dict["first_author"]), 
+                    title=urllib.quote(title), 
+                    journal=urllib.quote(journal))
+        return url
+
+
+
     def _get_relevant_record_with_biblio(self, biblio_dict):
-        random_string = "".join(random.sample(string.letters, 10))
-        url_template = "https://api.elsevier.com/content/search/index:SCOPUS?query=AUTHOR-NAME({first_author})%20AND%20TITLE({title})%20AND%20SRCTITLE({journal})&field=citedby-count&apiKey="+os.environ["SCOPUS_KEY"]+"&insttoken="+os.environ["SCOPUS_INSTTOKEN"]
         try:        
             if not "first_author" in biblio_dict:
                 biblio_dict["first_author"] = biblio_dict["authors"].split(" ")[0]
@@ -143,18 +166,14 @@ class Scopus(Provider):
                 return None
             if not biblio_dict["title"] and biblio_dict["journal"] and biblio_dict["first_author"]:
                 logger.debug("not enough info in _get_relevant_record_with_biblio to look up citations")
+            url = self._get_scopus_url(biblio_dict)
 
-            title = biblio_dict["title"].replace("(", "{(}").replace(")", "{)}")
-            journal = biblio_dict["journal"].replace("(", "{(}").replace(")", "{)}")
-
-            url = url_template.format(
-                    first_author=urllib.quote(biblio_dict["first_author"]), 
-                    title=urllib.quote(title), 
-                    journal=urllib.quote(journal))
         except KeyError:
             logger.debug("tried _get_relevant_record_with_biblio but leaving because KeyError")
             return None
+
         page = self._get_scopus_page(url)
+
         if not page:
             return None  # empty result set
 
