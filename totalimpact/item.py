@@ -459,6 +459,7 @@ def build_item_for_client(item, myrefsets, myredis):
             # add static data
 
             metrics[metric_name]["static_meta"] = all_static_meta[metric_name]            
+            metrics[metric_name]["historical_values"] = {"raw_diff_30_days": 2}
 
             # add normalization values
             # need year to calculate normalization below
@@ -475,7 +476,7 @@ def build_item_for_client(item, myrefsets, myredis):
                 pass
 
     # ditch metrics we don't have static_meta for:
-    item["metrics"] = {k:v for k, v in item["metrics"].iteritems() if "static_meta"  in v}
+    item["metrics"] = {k:v for k, v in item["metrics"].iteritems() if "static_meta" in v}
 
     item["currently_updating"] = is_currently_updating(item["_id"], myredis)
 
