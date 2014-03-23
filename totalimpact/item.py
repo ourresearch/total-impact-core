@@ -141,7 +141,6 @@ def create_objects_from_item_doc(item_doc, skip_if_exists=False, commit=True):
     return new_item_object
 
 
-
 class Metric(db.Model):
     tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True, index=True)
     provider = db.Column(db.Text, primary_key=True)
@@ -149,18 +148,24 @@ class Metric(db.Model):
     collected_date = db.Column(db.DateTime(), primary_key=True)
     raw_value = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
     drilldown_url = db.Column(db.Text)
+    query_type = None
 
     def __init__(self, **kwargs):
         if "collected_date" in kwargs:
             self.collected_date = kwargs["collected_date"]
         else:
             self.collected_date = datetime.datetime.utcnow()
+        if "query_type" in kwargs:
+            self.query_type = kwargs["query_type"]
         super(Metric, self).__init__(**kwargs)
 
     def __repr__(self):
-        return '<Metric {tiid} {provider}:{metric_name}>'.format(
+        return '<Metric {tiid} {provider}:{metric_name}={raw_value} on {collected_date} via {query_type}>'.format(
             provider=self.provider, 
             metric_name=self.metric_name, 
+            raw_value=self.raw_value, 
+            collected_date=self.collected_date, 
+            query_type=self.query_type,
             tiid=self.tiid)
 
 
@@ -337,6 +342,21 @@ class Item(db.Model):
     def has_user_provided_biblio(self):
         return any([biblio.provider=='user_provided' for biblio in self.biblios])
 
+    def get_most_recent_metric(self, metric_name):
+        for metric in self.metrics:
+            if metric.metric_name == metric_name:
+                if metric.query_type == "most_recent":
+                    return metric
+        return None
+
+    def get_last_weeks_metric(self, metric_name):
+        for metric in self.metrics:
+            if metric.metric_name == metric_name:
+                if metric.query_type == "last_7_days":
+                    return metric
+        return None
+
+
     @classmethod
     def create_from_old_doc(cls, doc):
         # logger.debug(u"in create_from_old_doc for {tiid}".format(
@@ -414,11 +434,10 @@ def clean_id(nid):
 def get_item(tiid, myrefsets, myredis):
     item_obj = Item.from_tiid(tiid)
 
-    item_doc = item_obj.as_old_doc()
-    if not item_doc:
+    if not item_obj:
         return None
     try:
-        item_for_client = build_item_for_client(item_doc, myrefsets, myredis)
+        item_for_client = build_item_for_client(item_obj, myrefsets, myredis)
     except Exception, e:
         item_for_client = None
         logger.error(u"Exception %s: Skipping item, unable to build %s, %s" % (e.__repr__(), tiid, str(item_for_client)))
@@ -426,7 +445,9 @@ def get_item(tiid, myrefsets, myredis):
 
 
 
-def build_item_for_client(item, myrefsets, myredis):
+def build_item_for_client(item_obj, myrefsets, myredis):
+    item = item_obj.as_old_doc()
+
     # logger.debug(u"in build_item_for_client {tiid}".format(
     #     tiid=item["_id"]))
 
@@ -459,18 +480,22 @@ def build_item_for_client(item, myrefsets, myredis):
             # add static data
 
             metrics[metric_name]["static_meta"] = all_static_meta[metric_name]            
-            metrics[metric_name]["historical_values"] = {"raw_diff_30_days": 2}
 
-            # add normalization values
-            # need year to calculate normalization below
             try:
+                metric_name_specific = metric_name.split(":")[1]
+                raw = item_obj.get_most_recent_metric(metric_name_specific).raw_value
+                raw_7_days = item_obj.get_last_weeks_metric(metric_name_specific).raw_value
+                raw_diff_7_days = as_int_or_float_if_possible(raw) - as_int_or_float_if_possible(raw_7_days)
+                metrics[metric_name]["historical_values"] = {"raw_diff_7_days": raw_diff_7_days}
+
+                # add normalization values
+                # need year to calculate normalization below
                 year = int(item["biblio"]["year"])
                 if year < 2002:
                     year = 2002
-                raw = metrics[metric_name]["values"]["raw"]
                 normalized_values = get_normalized_values(genre, host, year, metric_name, raw, myrefsets)
                 metrics[metric_name]["values"].update(normalized_values)
-            except (KeyError, ValueError):
+            except (KeyError, ValueError, AttributeError):
                 #logger.error(u"No good year in biblio for item {tiid}, no normalization".format(
                 #    tiid=item["_id"]))
                 pass
