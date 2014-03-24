@@ -496,10 +496,10 @@ def get_readonly_item_objects_with_metrics(tiids):
     db.session.expunge_all()
 
     metric_objects_recent = get_most_recent(tiids)
-    # print "metric_objects_recent", "\n".join([str(m) for m in metric_objects_recent])
+    print "metric_objects_recent", "\n".join([str(m) for m in metric_objects_recent])
 
     metric_objects_7_days_ago = get_previous(tiids, 7)
-    # print "metric_objects_7_days_ago", "\n".join([str(m) for m in metric_objects_7_days_ago])
+    print "metric_objects_7_days_ago", "\n".join([str(m) for m in metric_objects_7_days_ago])
 
     for metric_object in metric_objects_recent + metric_objects_7_days_ago:
         item_obj = items_by_tiid[metric_object.tiid]
