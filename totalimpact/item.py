@@ -481,16 +481,17 @@ def build_item_for_client(item_obj, myrefsets, myredis):
 
             metrics[metric_name]["static_meta"] = all_static_meta[metric_name]            
 
+            metric_name_specific = metric_name.split(":")[1]
+            raw = item_obj.get_most_recent_metric(metric_name_specific).raw_value
+
             try:
-                metric_name_specific = metric_name.split(":")[1]
-                raw = item_obj.get_most_recent_metric(metric_name_specific).raw_value
                 raw_7_days = item_obj.get_last_weeks_metric(metric_name_specific).raw_value
                 raw_diff_7_days = as_int_or_float_if_possible(raw) - as_int_or_float_if_possible(raw_7_days)
-                metrics[metric_name]["historical_values"] = {"raw_diff_7_days": raw_diff_7_days}
             except (KeyError, ValueError, AttributeError):
-                logger.error(u"No raw data for item {tiid} {metric_name}".format(
+                logger.warning(u"MISSING weekly historical data for item {tiid} {metric_name}".format(
                    tiid=item["_id"], metric_name=metric_name))
-                pass
+                raw_diff_7_days = None
+            metrics[metric_name]["historical_values"] = {"raw_diff_7_days": raw_diff_7_days}
 
             try:
                 # add normalization values
