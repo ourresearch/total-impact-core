@@ -85,7 +85,7 @@ class Webpage(Provider):
 
         if response.status_code != 200:
             logger.info(u"%20s status_code=%i getting %s so giving up on webpage biblio" 
-                % (self.provider_name, response.status_code, url))            
+                % (self.provider_name, response.status_code, id))            
             return {}
         
         # extract the aliases
