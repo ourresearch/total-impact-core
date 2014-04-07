@@ -435,54 +435,7 @@ def get_items_for_client(tiids, myrefsets, myredis):
     
     return dict_of_item_docs
 
-def get_most_recent(tiids):
-    # we use string concatination below because haven't figured out bind params yet
-    # abort if anything suspicious in tiids
-    for tiid in tiids:
-        for e in tiid:
-            if not e.isalnum():
-                return {}
 
-    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
-    metric_objects = item_module.Metric.query.from_statement("""
-        WITH max_collect AS 
-            (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
-                FROM metric
-                WHERE tiid in ({tiid_string})
-                GROUP BY tiid, provider, metric_name)
-            SELECT max_collect.*, m.raw_value, m.drilldown_url
-                FROM metric m
-                NATURAL JOIN max_collect""".format(
-                    tiid_string=tiid_string)).all()
-    for metric in metric_objects:
-        metric.query_type = "most_recent"
-
-    return metric_objects
-
-
-def get_previous(tiids, elapsed_days):
-    # we use string concatination below because haven't figured out bind params yet
-    # abort if anything suspicious in tiids
-    for tiid in tiids:
-        for e in tiid:
-            if not e.isalnum():
-                return {}
-
-    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
-    metric_objects = item_module.Metric.query.from_statement("""
-        WITH min_collect AS 
-            (SELECT tiid, provider, metric_name, min(collected_date) AS collected_date
-                FROM metric
-                WHERE tiid in ({tiid_string})
-                AND collected_date > now()::date - {elapsed_days}
-                GROUP BY tiid, provider, metric_name)
-        SELECT min_collect.*, m.raw_value, m.drilldown_url
-            FROM metric m
-            NATURAL JOIN min_collect""".format(
-                tiid_string=tiid_string, elapsed_days=elapsed_days)).all()
-    for metric in metric_objects:
-        metric.query_type = "last_7_days"
-    return metric_objects
 
 
 def get_readonly_item_objects_with_metrics(tiids):
@@ -495,17 +448,39 @@ def get_readonly_item_objects_with_metrics(tiids):
 
     db.session.expunge_all()
 
-    metric_objects_recent = get_most_recent(tiids)
-    print "metric_objects_recent", "\n".join([str(m) for m in metric_objects_recent])
+    # print "."
+    # print "."
+    # print "items_by_tiid", items_by_tiid
 
-    metric_objects_7_days_ago = get_previous(tiids, 7)
-    print "metric_objects_7_days_ago", "\n".join([str(m) for m in metric_objects_7_days_ago])
+    # metric_objects_recent = get_most_recent(tiids)
+    # # print "metric_objects_recent", "\n".join([str(m) for m in metric_objects_recent])
+    # for metric_object in metric_objects_recent:
+    #     print "recent", metric_object.tiid, metric_object.provider, metric_object.metric_name, metric_object.raw_value
+    #     item_obj = copy.copy(items_by_tiid[metric_object.tiid])
+    #     item_obj.metrics_summaries[metric_object.fully_qualified_name]["most_recent"] = copy.copy(metric_object)
+    #     print "hi heather"
+    #     print item_obj.metrics_summaries
+    #     items_by_tiid[item_obj.tiid] = copy.copy(item_obj)
 
-    for metric_object in metric_objects_recent + metric_objects_7_days_ago:
-        item_obj = items_by_tiid[metric_object.tiid]
-        item_obj.metrics += [metric_object]
+    # metric_objects_7_days_ago = get_previous(tiids, 7)
+    # # print "metric_objects_7_days_ago", "\n".join([str(m) for m in metric_objects_7_days_ago])    
+    # for metric_object in metric_objects_7_days_ago:
+    #     print "prev", metric_object.tiid, metric_object.provider, metric_object.metric_name, metric_object.raw_value
+    #     item_obj = copy.copy(items_by_tiid[metric_object.tiid])
+    #     item_obj.metrics_summaries[metric_object.fully_qualified_name]["7_days_ago"] = copy.copy(metric_object)
+    #     items_by_tiid[item_obj.tiid] = copy.copy(item_obj)
 
-    return item_objects
+    for tiid in items_by_tiid:
+        print "TEST."
+        print "TEST."
+
+        print "item_obj tiid", tiid
+        item_obj = items_by_tiid[tiid]
+        for name in item_obj.metrics_summaries:
+            metric_object = item_obj.metrics_summaries[name]["most_recent"]
+            print metric_object.tiid, name, "recent", metric_object.provider, metric_object.metric_name, metric_object.raw_value
+
+    return items_by_tiid.values()
 
 
 def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):

@@ -35,6 +35,52 @@ all_static_meta = ProviderFactory.get_all_static_meta()
 class NotAuthenticatedError(Exception):
     pass
 
+def get_most_recent_metrics(tiids):
+    # we use string concatination below because haven't figured out bind params yet
+    # abort if anything suspicious in tiids
+    for tiid in tiids:
+        for e in tiid:
+            if not e.isalnum():
+                return {}
+
+    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
+    metric_objects = Metric.query.from_statement("""
+        WITH max_collect AS 
+            (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
+                FROM metric
+                WHERE tiid in ({tiid_string})
+                GROUP BY tiid, provider, metric_name
+                ORDER by tiid, provider)
+            SELECT max_collect.*, m.raw_value, m.drilldown_url
+                FROM metric m
+                NATURAL JOIN max_collect""".format(
+                    tiid_string=tiid_string)).all()
+    return metric_objects
+
+
+def get_previous_metrics(tiids, elapsed_days):
+    # we use string concatination below because haven't figured out bind params yet
+    # abort if anything suspicious in tiids
+    for tiid in tiids:
+        for e in tiid:
+            if not e.isalnum():
+                return {}
+
+    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
+    metric_objects = Metric.query.from_statement("""
+        WITH min_collect AS 
+            (SELECT tiid, provider, metric_name, min(collected_date) AS collected_date
+                FROM metric
+                WHERE tiid in ({tiid_string})
+                AND collected_date > now()::date - {elapsed_days}
+                GROUP BY tiid, provider, metric_name
+                ORDER by tiid, provider)
+        SELECT min_collect.*, m.raw_value, m.drilldown_url
+            FROM metric m
+            NATURAL JOIN min_collect""".format(
+                tiid_string=tiid_string, elapsed_days=elapsed_days)).all()
+    return metric_objects
+
 def delete_item(tiid):
     item_object = Item.from_tiid(tiid)
     db.session.delete(item_object)
@@ -141,6 +187,7 @@ def create_objects_from_item_doc(item_doc, skip_if_exists=False, commit=True):
     return new_item_object
 
 
+
 class Metric(db.Model):
     tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True, index=True)
     provider = db.Column(db.Text, primary_key=True)
@@ -158,6 +205,11 @@ class Metric(db.Model):
         if "query_type" in kwargs:
             self.query_type = kwargs["query_type"]
         super(Metric, self).__init__(**kwargs)
+
+    @property
+    def fully_qualified_name(self):
+        return "{provider}:{metric_name}".format(
+            provider=self.provider, metric_name=self.metric_name)
 
     def __repr__(self):
         return '<Metric {tiid} {provider}:{metric_name}={raw_value} on {collected_date} via {query_type}>'.format(
@@ -311,6 +363,24 @@ class Item(db.Model):
         return item
 
     @property
+    def metrics_summaries(self):
+        ms = defaultdict(dict)
+
+        metric_objects_recent = get_most_recent_metrics([self.tiid])
+        # print "metric_objects_recent", "\n".join([str(m) for m in metric_objects_recent])
+        for metric_object in metric_objects_recent:
+            print "recent", metric_object.tiid, metric_object.provider, metric_object.metric_name, metric_object.raw_value
+            ms[metric_object.fully_qualified_name]["most_recent"] = copy.copy(metric_object)
+
+        metric_objects_7_days_ago = get_previous_metrics([self.tiid], 7)
+        # print "metric_objects_7_days_ago", "\n".join([str(m) for m in metric_objects_7_days_ago])    
+        for metric_object in metric_objects_7_days_ago:
+            print "prev", metric_object.tiid, metric_object.provider, metric_object.metric_name, metric_object.raw_value
+            ms[metric_object.fully_qualified_name]["7_days_ago"] = copy.copy(metric_object)
+
+        return ms
+
+    @property
     def alias_tuples(self):
         return [alias.alias_tuple for alias in self.aliases]
 
@@ -320,6 +390,18 @@ class Item(db.Model):
         for biblio in self.biblios:
             response[biblio.biblio_name] = biblio.biblio_value
         return response
+
+    def query_for_recent_metrics(self):
+        metric_objects_recent = get_most_recent(self.tiids)
+        return metric_objects_recent
+
+    def query_for_previous_metrics(self):
+        metric_objects_7_days_ago = get_previous(self.tiids, 7)
+        return metric_objects_7_days_ago
+
+    def query_for_recent_and_previous_metrics(self):
+        return self.query_for_recent_metrics() + self.query_for_previous_metrics()
+
 
     @property
     def publication_date(self):
@@ -341,21 +423,6 @@ class Item(db.Model):
 
     def has_user_provided_biblio(self):
         return any([biblio.provider=='user_provided' for biblio in self.biblios])
-
-    def get_most_recent_metric(self, metric_name):
-        for metric in self.metrics:
-            if metric.metric_name == metric_name:
-                if metric.query_type == "most_recent":
-                    return metric
-        return None
-
-    def get_last_weeks_metric(self, metric_name):
-        for metric in self.metrics:
-            if metric.metric_name == metric_name:
-                if metric.query_type == "last_7_days":
-                    return metric
-        return None
-
 
     @classmethod
     def create_from_old_doc(cls, doc):
@@ -448,8 +515,8 @@ def get_item(tiid, myrefsets, myredis):
 def build_item_for_client(item_obj, myrefsets, myredis):
     item = item_obj.as_old_doc()
 
-    # logger.debug(u"in build_item_for_client {tiid}".format(
-    #     tiid=item["_id"]))
+    logger.debug(u"in build_item_for_client {tiid}".format(
+        tiid=item["_id"]))
 
     try:
         (genre, host) = decide_genre(item['aliases'])
@@ -464,11 +531,13 @@ def build_item_for_client(item_obj, myrefsets, myredis):
     except (KeyError, TypeError):
         pass    
 
-    metrics = item.setdefault("metrics", {})
-    for metric_name in metrics:
+    metrics = defaultdict(dict)
 
-        # logger.debug(u"in build_item_for_client, working on {metric_name}".format(
-        #     metric_name=metric_name))
+    for fully_qualified_metric_name in item_obj.metrics_summaries:
+
+        most_recent_metric_obj = item_obj.metrics_summaries[fully_qualified_metric_name]["most_recent"]
+        metric_name = fully_qualified_metric_name
+        metrics[metric_name]["provenance_url"] = most_recent_metric_obj.drilldown_url
 
         #delete the raw history from what we return to the client for now
         try:
@@ -476,39 +545,47 @@ def build_item_for_client(item_obj, myrefsets, myredis):
         except KeyError:
             pass
 
+
         if metric_name in all_static_meta.keys():  # make sure we still support this metrics type
             # add static data
 
             metrics[metric_name]["static_meta"] = all_static_meta[metric_name]            
 
-            metric_name_specific = metric_name.split(":")[1]
-            raw = item_obj.get_most_recent_metric(metric_name_specific).raw_value
+            if most_recent_metric_obj:
+                raw = as_int_or_float_if_possible(most_recent_metric_obj.raw_value)
 
-            try:
-                raw_7_days = item_obj.get_last_weeks_metric(metric_name_specific).raw_value
-                raw_diff_7_days = as_int_or_float_if_possible(raw) - as_int_or_float_if_possible(raw_7_days)
-            except (KeyError, ValueError, AttributeError):
-                logger.warning(u"MISSING weekly historical data for item {tiid} {metric_name}".format(
-                   tiid=item["_id"], metric_name=metric_name))
-                raw_diff_7_days = None
-            metrics[metric_name]["historical_values"] = {"raw_diff_7_days": raw_diff_7_days}
+                metrics[metric_name]["values"] = {"raw": raw}
 
-            try:
-                # add normalization values
-                # need year to calculate normalization below
-                year = int(item["biblio"]["year"])
-                if year < 2002:
-                    year = 2002
-                normalized_values = get_normalized_values(genre, host, year, metric_name, raw, myrefsets)
-                metrics[metric_name]["values"].update(normalized_values)
-            except (KeyError, ValueError, AttributeError):
-                #logger.error(u"No good year in biblio for item {tiid}, no normalization".format(
-                #    tiid=item["_id"]))
-                pass
+                try:
+                    earlier_metric_obj = item_obj.metrics_summaries[fully_qualified_metric_name]["7_days_ago"]
+                    print "earlier_metric_obj", earlier_metric_obj
+                    raw_7_days = as_int_or_float_if_possible(earlier_metric_obj.raw_value)
+                    raw_diff_7_days = raw - raw_7_days
+                    logger.warning(u"******GOT weekly historical data for item {tiid} {metric_name}".format(
+                       tiid=item["_id"], metric_name=metric_name))
+                except (KeyError, ValueError, AttributeError, TypeError):
+                    logger.warning(u"MISSING weekly historical data for item {tiid} {metric_name}".format(
+                       tiid=item["_id"], metric_name=metric_name))
+                    raw_diff_7_days = None
+                metrics[metric_name]["historical_values"] = {"raw_diff_7_days": raw_diff_7_days}
+
+                try:
+                    # add normalization values
+                    # need year to calculate normalization below
+                    year = int(item["biblio"]["year"])
+                    if year < 2002:
+                        year = 2002
+                    normalized_values = get_normalized_values(genre, host, year, metric_name, raw, myrefsets)
+                    metrics[metric_name]["values"].update(normalized_values)
+                except (KeyError, ValueError, AttributeError):
+                    #logger.error(u"No good year in biblio for item {tiid}, no normalization".format(
+                    #    tiid=item["_id"]))
+                    pass
+
 
     # ditch metrics we don't have static_meta for:
-    item["metrics"] = {k:v for k, v in item["metrics"].iteritems() if "static_meta" in v}
 
+    item["metrics"] = {k:v for k, v in metrics.iteritems() if "static_meta" in v}
     item["currently_updating"] = is_currently_updating(item["_id"], myredis)
 
     return item

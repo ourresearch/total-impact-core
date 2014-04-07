@@ -224,6 +224,8 @@ def importer_post(provider_name):
             provider_name=provider_name))        
     except ProviderItemNotFoundError:
         abort_custom(404, "item not found")
+    except ProviderItemNotFoundError:
+        abort_custom(404, "item not found")
     except (ProviderTimeout, ProviderServerError):
         abort_custom(503, "timeout error, might be transient")
     except ProviderError:
