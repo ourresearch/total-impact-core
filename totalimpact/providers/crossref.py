@@ -29,7 +29,12 @@ def clean_doi(input_doi):
             doi = match.group(1)
         else:
             doi = None
-            self.logger.debug(u"%s MALFORMED DOI %s" % (self.provider_name, input_doi))
+            try:
+                self.logger.debug(u"MALFORMED DOI {input_doi}".format(
+                    input_doi=input_doi))
+            except:
+                self.logger.debug(u"MALFORMED DOI, can't print doi")
+
 
     except AttributeError:
         doi = None

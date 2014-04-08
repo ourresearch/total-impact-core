@@ -26,30 +26,31 @@ class Orcid(Provider):
         try:
             if work["work-citation"]["work-citation-type"].lower()=="bibtex":
                 biblio = self.bibtex_parser.parse(work["work-citation"]["citation"])[0]
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
+            logger.debug(u"%20s error getting work citation type" % (self.provider_name))
             pass
 
         try:
             biblio["year"] = work["publication-date"]["year"]["value"]
             biblio["year"] = re.sub("\D", "", biblio["year"])           
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
             biblio["year"]  = ""
 
         try:
             biblio["title"] = work["work-title"]["title"]["value"]
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
             biblio["title"]  = ""
 
         try:
             biblio["journal"] = work["work-title"]["subtitle"]["value"]
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
             biblio["journal"]  = ""
 
         try:
             biblio["url"] = work["url"]["value"]
             if biblio["url"].startswith("http://www.scopus.com/inward"):
                 del biblio["url"]
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
             if "url" in biblio:
                 del biblio["genre"]
 
@@ -59,20 +60,20 @@ class Orcid(Provider):
         try:
             if work["work-external-identifiers"]["work-external-identifier"][0]['work-external-identifier-type'] == "ISBN":
                 biblio["isbn"] = work["work-external-identifiers"]["work-external-identifier"][0]["work-external-identifier-id"]['value']
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
             pass
 
         try:
             biblio["genre"] = work["work-type"].lower().replace("_", " ")
             if biblio["genre"] == "undefined":
                 del biblio["genre"]
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
             pass
 
         try:
             biblio["full_citation"] = work["work-citation"]["citation"]
             biblio["full_citation_type"] = work["work-citation"]["work-citation-type"].lower()
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
             pass
 
         return biblio
