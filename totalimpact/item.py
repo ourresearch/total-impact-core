@@ -1186,7 +1186,9 @@ def build_duplicates_list(tiids):
         # whether distinct or not,
         # add this to the group, and add all its aliases too   
         distinct_groups[distinct_item_id] += [{ "tiid":item.tiid, 
-                                                "has_user_provided_biblio":item.has_user_provided_biblio()}]
+                                                "has_user_provided_biblio":item.has_user_provided_biblio(), 
+                                                "created":item.created
+                                                }]
         for alias in alias_tuples:
             duplication_list[alias] = distinct_item_id
 
