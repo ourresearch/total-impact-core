@@ -363,24 +363,6 @@ class Item(db.Model):
         return item
 
     @property
-    def metrics_summaries(self):
-        ms = defaultdict(dict)
-
-        metric_objects_recent = get_most_recent_metrics([self.tiid])
-        # print "metric_objects_recent", "\n".join([str(m) for m in metric_objects_recent])
-        for metric_object in metric_objects_recent:
-            print "recent", metric_object.tiid, metric_object.provider, metric_object.metric_name, metric_object.raw_value
-            ms[metric_object.fully_qualified_name]["most_recent"] = copy.copy(metric_object)
-
-        metric_objects_7_days_ago = get_previous_metrics([self.tiid], 7)
-        # print "metric_objects_7_days_ago", "\n".join([str(m) for m in metric_objects_7_days_ago])    
-        for metric_object in metric_objects_7_days_ago:
-            print "prev", metric_object.tiid, metric_object.provider, metric_object.metric_name, metric_object.raw_value
-            ms[metric_object.fully_qualified_name]["7_days_ago"] = copy.copy(metric_object)
-
-        return ms
-
-    @property
     def alias_tuples(self):
         return [alias.alias_tuple for alias in self.aliases]
 
@@ -512,11 +494,13 @@ def get_item(tiid, myrefsets, myredis):
 
 
 
-def build_item_for_client(item_obj, myrefsets, myredis):
+def build_item_for_client(item_metrics_dict, myrefsets, myredis):
+    item_obj = item_metrics_dict["item_obj"]
+    metrics_summaries = item_metrics_dict["metrics_summaries"]
     item = item_obj.as_old_doc()
 
-    logger.debug(u"in build_item_for_client {tiid}".format(
-        tiid=item["_id"]))
+    # logger.debug(u"in build_item_for_client {tiid}".format(
+    #     tiid=item["_id"]))
 
     try:
         (genre, host) = decide_genre(item['aliases'])
@@ -533,9 +517,9 @@ def build_item_for_client(item_obj, myrefsets, myredis):
 
     metrics = defaultdict(dict)
 
-    for fully_qualified_metric_name in item_obj.metrics_summaries:
+    for fully_qualified_metric_name in metrics_summaries:
 
-        most_recent_metric_obj = item_obj.metrics_summaries[fully_qualified_metric_name]["most_recent"]
+        most_recent_metric_obj = metrics_summaries[fully_qualified_metric_name]["most_recent"]
         metric_name = fully_qualified_metric_name
         metrics[metric_name]["provenance_url"] = most_recent_metric_obj.drilldown_url
 
@@ -557,12 +541,9 @@ def build_item_for_client(item_obj, myrefsets, myredis):
                 metrics[metric_name]["values"] = {"raw": raw}
 
                 try:
-                    earlier_metric_obj = item_obj.metrics_summaries[fully_qualified_metric_name]["7_days_ago"]
-                    print "earlier_metric_obj", earlier_metric_obj
+                    earlier_metric_obj = metrics_summaries[fully_qualified_metric_name]["7_days_ago"]
                     raw_7_days = as_int_or_float_if_possible(earlier_metric_obj.raw_value)
                     raw_diff_7_days = raw - raw_7_days
-                    logger.warning(u"******GOT weekly historical data for item {tiid} {metric_name}".format(
-                       tiid=item["_id"], metric_name=metric_name))
                 except (KeyError, ValueError, AttributeError, TypeError):
                     logger.warning(u"MISSING weekly historical data for item {tiid} {metric_name}".format(
                        tiid=item["_id"], metric_name=metric_name))
