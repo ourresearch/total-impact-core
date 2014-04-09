@@ -491,7 +491,7 @@ def get_readonly_item_metric_dicts(tiids):
     for item_obj in item_objects:
         items_by_tiid[item_obj.tiid] = {
             "item_obj": item_obj, 
-            "metrics_summaries":defaultdict(dict)}
+            "metrics_summaries": defaultdict(dict)}
 
     db.session.expunge_all()
 
@@ -502,10 +502,6 @@ def get_readonly_item_metric_dicts(tiids):
     metric_objects_7_days_ago = get_previous_metrics(tiids, 7)
     for metric_object in metric_objects_7_days_ago:
         items_by_tiid[metric_object.tiid]["metrics_summaries"][metric_object.fully_qualified_name]["7_days_ago"] = copy.copy(metric_object)
-
-    for tiid in items_by_tiid:
-        for name in items_by_tiid[tiid]["metrics_summaries"]:
-            metric_object = items_by_tiid[tiid]["metrics_summaries"][name]["most_recent"]
 
     return items_by_tiid
 

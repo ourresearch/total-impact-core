@@ -519,18 +519,14 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
 
     for fully_qualified_metric_name in metrics_summaries:
 
-        most_recent_metric_obj = metrics_summaries[fully_qualified_metric_name]["most_recent"]
-        metric_name = fully_qualified_metric_name
-        metrics[metric_name]["provenance_url"] = most_recent_metric_obj.drilldown_url
-
-        #delete the raw history from what we return to the client for now
         try:
-            del metrics[metric_name]["values"]["raw_history"]
-        except KeyError:
-            pass
+            most_recent_metric_obj = metrics_summaries[fully_qualified_metric_name]["most_recent"]
+            metric_name = fully_qualified_metric_name
+            metrics[metric_name]["provenance_url"] = most_recent_metric_obj.drilldown_url
+        except (KeyError, ValueError, AttributeError, TypeError):
+            metric_name = None
 
-
-        if metric_name in all_static_meta.keys():  # make sure we still support this metrics type
+        if metric_name and metric_name in all_static_meta.keys():  # make sure we still support this metrics type
             # add static data
 
             metrics[metric_name]["static_meta"] = all_static_meta[metric_name]            
