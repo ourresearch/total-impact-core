@@ -503,7 +503,8 @@ def delete_collection(cid=None):
 
 # creates products from aliases or returns items from tiids
 @app.route('/v1/products', methods=['POST'])
-def products_post():
+@app.route('/v1/products.<format>', methods=['POST'])
+def products_post(format="json"):
     if "aliases" in request.json:
         analytics_credentials = {}
         tiids_aliases_map = item_module.create_tiids_from_aliases(request.json["aliases"], analytics_credentials, myredis)
@@ -515,7 +516,7 @@ def products_post():
         logger.debug(u"in products_post with tiids, so getting products to return")
         tiids = request.json["tiids"]
         tiids_string = ",".join(tiids)
-        return products_get(tiids_string)
+        return products_get(tiids_string, format)
     else:
         abort_custom(400, "bad arguments")
 
