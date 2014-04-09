@@ -541,8 +541,8 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
                     raw_7_days = as_int_or_float_if_possible(earlier_metric_obj.raw_value)
                     raw_diff_7_days = raw - raw_7_days
                 except (KeyError, ValueError, AttributeError, TypeError):
-                    logger.warning(u"MISSING weekly historical data for item {tiid} {metric_name}".format(
-                       tiid=item["_id"], metric_name=metric_name))
+                    # logger.warning(u"can't calculate diff for item {tiid} {metric_name}".format(
+                    #    tiid=item["_id"], metric_name=metric_name))
                     raw_diff_7_days = None
                 metrics[metric_name]["historical_values"] = {"raw_diff_7_days": raw_diff_7_days}
 
