@@ -1009,7 +1009,9 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider=
 def get_items_from_tiids(tiids, with_metrics=True):
     items = []
     for tiid in tiids:
-        items += [Item.from_tiid(tiid, with_metrics)]
+        item = Item.from_tiid(tiid, with_metrics)
+        if item:
+            items += [item]
     return items
 
 
