@@ -373,6 +373,13 @@ class Item(db.Model):
             response[biblio.biblio_name] = biblio.biblio_value
         return response
 
+    @property
+    def biblio_dicts_per_provider(self):
+        response = defaultdict(dict)
+        for biblio in self.biblios:
+            response[biblio.provider][biblio.biblio_name] = biblio.biblio_value
+        return response        
+
     def query_for_recent_metrics(self):
         metric_objects_recent = get_most_recent(self.tiids)
         return metric_objects_recent
@@ -1120,7 +1127,7 @@ def get_tiid_by_biblio(biblio_dict):
         db.session.commit()
         tiid = biblio.tiid
     except AttributeError:
-        logger.error(u"AttributeError in  get_tiid_by_biblio with {biblio_dict}".format(
+        logger.error(u"AttributeError in get_tiid_by_biblio with {biblio_dict}".format(
             biblio_dict=biblio_dict))
         tiid = None
 
@@ -1153,12 +1160,75 @@ def start_item_update(dicts_to_add, analytics_credentials, priority, myredis):
     # logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
     #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
     tiids = [d["tiid"] for d in dicts_to_add]
-    logger.debug(u"in start_item_update, starting init_currently_updating_status")
     myredis.init_currently_updating_status(tiids,
         ProviderFactory.providers_with_metrics(default_settings.PROVIDERS))
-    logger.debug(u"in start_item_update, starting add_to_alias_queue")
     myredis.add_to_alias_queue(dicts_to_add, analytics_credentials, priority)
-    logger.debug(u"in start_item_update, finished")
+
+def is_equivalent_alias_tuple_in_list(query_tuple, tuple_list):
+    return (clean_alias_tuple_for_deduplication(query_tuple) in tuple_list)
+
+def clean_alias_tuple_for_deduplication(alias_tuple):
+    (ns, nid) = alias_tuple
+    if ns == "biblio":
+        keys_to_compare = ["full_citation", "title", "first_author", "authors", "number", "volume", "journal", "year"]
+        try:
+            biblio_dict_for_deduplication = dict([(k, v) for (k, v) in nid.iteritems() if k in keys_to_compare])
+        except AttributeError:
+            nid = json.loads(nid)
+            biblio_dict_for_deduplication = dict([(k, v) for (k, v) in nid.iteritems() if k in keys_to_compare])
+
+        biblios_as_string = json.dumps(biblio_dict_for_deduplication, sort_keys=True, indent=0, separators=(',', ':'))
+        if biblios_as_string:
+            return ("biblio", biblios_as_string.lower())
+    else:
+        return (ns.lower(), nid.lower())
+
+def alias_tuples_for_deduplication(item):
+    # include biblio, but only if no other aliases
+    alias_tuples = []
+    if item.aliases:
+        alias_tuples = [alias.alias_tuple for alias in item.aliases]
+    biblio_dicts_per_provider = item.biblio_dicts_per_provider
+    for provider in biblio_dicts_per_provider:
+        alias_tuples += [("biblio", biblio_dicts_per_provider[provider])]
+    cleaned_tuples = [clean_alias_tuple_for_deduplication(alias_tuple) for alias_tuple in alias_tuples]
+    return cleaned_tuples
+
+def aliases_not_in_existing_tiids(retrieved_aliases, existing_tiids):
+    new_aliases = []
+    if not existing_tiids:
+        return retrieved_aliases
+    existing_items = Item.query.filter(Item.tiid.in_(existing_tiids)).all()
+
+    aliases_from_all_items = []
+    for item in existing_items:
+        aliases_from_all_items += alias_tuples_for_deduplication(item)
+
+    for alias_tuple in retrieved_aliases:
+        if is_equivalent_alias_tuple_in_list(alias_tuple, aliases_from_all_items):
+            logger.debug(u"already have alias {alias_tuple}".format(
+                alias_tuple=alias_tuple))
+        else:
+            new_aliases += [alias_tuple]
+            logger.debug(u"is a new alias {alias_tuple}".format(
+                alias_tuple=alias_tuple))
+    return new_aliases
+
+
+def tiids_to_remove_from_duplicates_list(duplicates_list):
+    tiids_to_remove = []    
+    for duplicate_group in duplicates_list:
+        tiid_to_keep = None
+        for tiid_dict in duplicate_group:
+            if (tiid_to_keep==None) and tiid_dict["has_user_provided_biblio"]:
+                tiid_to_keep = tiid_dict["tiid"]
+            else:
+                tiids_to_remove += [tiid_dict]
+        if not tiid_to_keep:
+            # don't delete last tiid added even if it had user supplied stuff, because multiple do
+            earliest_created_date = min([tiid_dict["created"] for tiid_dict in duplicate_group])
+            tiids_to_remove = [tiid_dict for tiid_dict in tiids_to_remove if tiid_dict["created"] != earliest_created_date]
+    return [tiid_dict["tiid"] for tiid_dict in tiids_to_remove]
 
 
 def build_duplicates_list(tiids):
@@ -1168,15 +1238,9 @@ def build_duplicates_list(tiids):
     for item in items:
         is_distinct_item = True
 
-        alias_tuples = []
-        if item.aliases:
-            alias_tuples = [alias.alias_tuple for alias in item.aliases]
-        else:
-            biblios_as_string = json.dumps(item.biblio_dict, sort_keys=True)
-            if biblios_as_string:
-                alias_tuples = [("biblio", biblios_as_string.lower())]
+        alias_tuples = alias_tuples_for_deduplication(item)
         for alias in alias_tuples:
-            if alias in duplication_list:
+            if is_equivalent_alias_tuple_in_list(alias, duplication_list):
                 # we already have one of the aliase
                 distinct_item_id =  duplication_list[alias] 
                 is_distinct_item = False  
