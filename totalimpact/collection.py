@@ -422,31 +422,20 @@ def is_something_currently_updating(items_dict, myredis):
 
 
 def get_items_for_client(tiids, myrefsets, myredis):
-    item_objects = get_readonly_item_objects_with_metrics(tiids)
+    item_metric_dicts = get_readonly_item_metric_dicts(tiids)
 
     dict_of_item_docs = {}
-    for item_obj in item_objects:
+    for tiid in item_metric_dicts:
         try:
-            item_doc = item_obj.as_old_doc()
-            item_doc_for_client = item_module.build_item_for_client(item_doc, myrefsets, myredis)
-            dict_of_item_docs[item_obj.tiid] = item_doc_for_client
+            item_doc_for_client = item_module.build_item_for_client(item_metric_dicts[tiid], myrefsets, myredis)
+            dict_of_item_docs[tiid] = item_doc_for_client
         except (KeyError, TypeError, AttributeError):
-            logger.info(u"Couldn't build item {tiid}".format(tiid=item_obj.tiid))
+            logger.info(u"Couldn't build item {tiid}".format(tiid=tiid))
             raise
     
     return dict_of_item_docs
 
-
-def get_readonly_item_objects_with_metrics(tiids):
-    logger.info(u"in get_readonly_item_objects_with_metrics")
-
-    item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
-    items_by_tiid = {}
-    for item_obj in item_objects:
-        items_by_tiid[item_obj.tiid] = item_obj            
-
-    db.session.expunge_all()
-
+def get_most_recent_metrics(tiids):
     # we use string concatination below because haven't figured out bind params yet
     # abort if anything suspicious in tiids
     for tiid in tiids:
@@ -454,22 +443,67 @@ def get_readonly_item_objects_with_metrics(tiids):
             if not e.isalnum():
                 return {}
 
-    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])
+    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
     metric_objects = item_module.Metric.query.from_statement("""
         WITH max_collect AS 
             (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
                 FROM metric
                 WHERE tiid in ({tiid_string})
-                GROUP BY tiid, provider, metric_name)
+                GROUP BY tiid, provider, metric_name
+                ORDER by tiid, provider)
             SELECT max_collect.*, m.raw_value, m.drilldown_url
                 FROM metric m
-                NATURAL JOIN max_collect""".format(tiid_string=tiid_string)).all()
+                NATURAL JOIN max_collect""".format(
+                    tiid_string=tiid_string)).all()
+    return metric_objects
 
-    for metric_object in metric_objects:
-        item_obj = items_by_tiid[metric_object.tiid]
-        item_obj.metrics += [metric_object]
 
-    return item_objects
+def get_previous_metrics(tiids, elapsed_days):
+    # we use string concatination below because haven't figured out bind params yet
+    # abort if anything suspicious in tiids
+    for tiid in tiids:
+        for e in tiid:
+            if not e.isalnum():
+                return {}
+
+    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
+    metric_objects = item_module.Metric.query.from_statement("""
+        WITH min_collect AS 
+            (SELECT tiid, provider, metric_name, min(collected_date) AS collected_date
+                FROM metric
+                WHERE tiid in ({tiid_string})
+                AND collected_date > now()::date - {elapsed_days}
+                GROUP BY tiid, provider, metric_name
+                ORDER by tiid, provider)
+        SELECT min_collect.*, m.raw_value, m.drilldown_url
+            FROM metric m
+            NATURAL JOIN min_collect""".format(
+                tiid_string=tiid_string, elapsed_days=elapsed_days)).all()
+    return metric_objects
+
+
+def get_readonly_item_metric_dicts(tiids):
+    logger.info(u"in get_readonly_item_objects_with_metrics")
+
+    item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
+    items_by_tiid = {}
+    metrics_summaries = {}
+    for item_obj in item_objects:
+        items_by_tiid[item_obj.tiid] = {
+            "item_obj": item_obj, 
+            "metrics_summaries": defaultdict(dict)}
+
+    db.session.expunge_all()
+
+    metric_objects_recent = get_most_recent_metrics(tiids)
+    for metric_object in metric_objects_recent:
+        items_by_tiid[metric_object.tiid]["metrics_summaries"][metric_object.fully_qualified_name]["most_recent"] = copy.copy(metric_object)
+
+    metric_objects_7_days_ago = get_previous_metrics(tiids, 7)
+    for metric_object in metric_objects_7_days_ago:
+        items_by_tiid[metric_object.tiid]["metrics_summaries"][metric_object.fully_qualified_name]["7_days_ago"] = copy.copy(metric_object)
+
+    return items_by_tiid
 
 
 def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include_history=False):
@@ -482,17 +516,16 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
     tiids = collection_obj.tiids
 
     if tiids:
-        item_objects = get_readonly_item_objects_with_metrics(tiids)
+        item_metric_dicts = get_readonly_item_metric_dicts(tiids)
 
-        for item_obj in item_objects:
+        for tiid in item_metric_dicts:
             #logger.info(u"got item {tiid} for {cid}".format(
             #    tiid=item_obj.tiid, cid=cid))
             try:
-                item_doc = item_obj.as_old_doc()
-                item_for_client = item_module.build_item_for_client(item_doc, myrefsets, myredis)
+                item_for_client = item_module.build_item_for_client(item_metric_dicts[tiid], myrefsets, myredis)
             except (KeyError, TypeError, AttributeError):
                 logger.info(u"Couldn't build item {tiid}, excluding it from the returned collection {cid}".format(
-                    tiid=item_obj.tiid, cid=cid))
+                    tiid=tiid, cid=cid))
                 item_for_client = None
                 raise
             if item_for_client:
