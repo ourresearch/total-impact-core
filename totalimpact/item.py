@@ -1012,6 +1012,10 @@ def get_items_from_tiids(tiids, with_metrics=True):
         item = Item.from_tiid(tiid, with_metrics)
         if item:
             items += [item]
+        else:
+            logger.warning(u"no item found for tiid {tiid}".format(
+                tiid=tiid))
+
     return items
 
 
