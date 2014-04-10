@@ -521,14 +521,14 @@ def products_post(format="json"):
         abort_custom(400, "bad arguments")
 
 
-def cleaned_items(tiids, myredis):
+def cleaned_items(tiids, myredis, override_export_clean=False):
     items_dict = collection.get_items_for_client(tiids, myrefsets, myredis)
 
     secret_key = os.getenv("API_ADMIN_KEY")
     supplied_key = request.args.get("api_admin_key", "")
     cleaned_items_dict = {}
     for tiid in items_dict:
-        cleaned_items_dict[tiid] = item_module.clean_for_export(items_dict[tiid], supplied_key, secret_key)
+        cleaned_items_dict[tiid] = item_module.clean_for_export(items_dict[tiid], supplied_key, secret_key, override_export_clean)
     return cleaned_items_dict
 
 
@@ -556,7 +556,8 @@ def single_product_get(tiid):
 @app.route('/v1/products.<format>/<tiids_string>', methods=['GET'])
 def products_get(tiids_string, format="json"):
     tiids = tiids_string.split(",")
-    cleaned_items_dict = cleaned_items(tiids, myredis)
+    override_export_clean = (format=="csv")
+    cleaned_items_dict = cleaned_items(tiids, myredis, override_export_clean)
 
     response_code = 200
     if collection.is_something_currently_updating(cleaned_items_dict, myredis):
