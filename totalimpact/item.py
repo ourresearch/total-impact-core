@@ -764,10 +764,9 @@ def make():
     return item
 
 
-def clean_for_export(item, supplied_key=None, secret_key=None):
-    if supplied_key:
-        if supplied_key == secret_key:
-            return(item)
+def clean_for_export(item, supplied_key=None, secret_key=None, override_export_clean=False):
+    if not override_export_clean and supplied_key and (supplied_key==secret_key):
+        return(item)
 
     # if still here, then need to remove sensitive data
     cleaned_item = copy.deepcopy(item)
