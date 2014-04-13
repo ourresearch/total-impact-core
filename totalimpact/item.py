@@ -35,51 +35,6 @@ all_static_meta = ProviderFactory.get_all_static_meta()
 class NotAuthenticatedError(Exception):
     pass
 
-def get_most_recent_metrics(tiids):
-    # we use string concatination below because haven't figured out bind params yet
-    # abort if anything suspicious in tiids
-    for tiid in tiids:
-        for e in tiid:
-            if not e.isalnum():
-                return {}
-
-    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
-    metric_objects = Metric.query.from_statement("""
-        WITH max_collect AS 
-            (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
-                FROM metric
-                WHERE tiid in ({tiid_string})
-                GROUP BY tiid, provider, metric_name
-                ORDER by tiid, provider)
-            SELECT max_collect.*, m.raw_value, m.drilldown_url
-                FROM metric m
-                NATURAL JOIN max_collect""".format(
-                    tiid_string=tiid_string)).all()
-    return metric_objects
-
-
-def get_previous_metrics(tiids, elapsed_days):
-    # we use string concatination below because haven't figured out bind params yet
-    # abort if anything suspicious in tiids
-    for tiid in tiids:
-        for e in tiid:
-            if not e.isalnum():
-                return {}
-
-    tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
-    metric_objects = Metric.query.from_statement("""
-        WITH min_collect AS 
-            (SELECT tiid, provider, metric_name, min(collected_date) AS collected_date
-                FROM metric
-                WHERE tiid in ({tiid_string})
-                AND collected_date > now()::date - {elapsed_days}
-                GROUP BY tiid, provider, metric_name
-                ORDER by tiid, provider)
-        SELECT min_collect.*, m.raw_value, m.drilldown_url
-            FROM metric m
-            NATURAL JOIN min_collect""".format(
-                tiid_string=tiid_string, elapsed_days=elapsed_days)).all()
-    return metric_objects
 
 def delete_item(tiid):
     item_object = Item.from_tiid(tiid)
@@ -373,18 +328,6 @@ class Item(db.Model):
             response[biblio.biblio_name] = biblio.biblio_value
         return response
 
-    def query_for_recent_metrics(self):
-        metric_objects_recent = get_most_recent(self.tiids)
-        return metric_objects_recent
-
-    def query_for_previous_metrics(self):
-        metric_objects_7_days_ago = get_previous(self.tiids, 7)
-        return metric_objects_7_days_ago
-
-    def query_for_recent_and_previous_metrics(self):
-        return self.query_for_recent_metrics() + self.query_for_previous_metrics()
-
-
     @property
     def publication_date(self):
         publication_date = None
@@ -518,7 +461,6 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
     metrics = defaultdict(dict)
 
     for fully_qualified_metric_name in metrics_summaries:
-
         try:
             most_recent_metric_obj = metrics_summaries[fully_qualified_metric_name]["most_recent"]
             metric_name = fully_qualified_metric_name
@@ -526,10 +468,10 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
         except (KeyError, ValueError, AttributeError, TypeError):
             metric_name = None
 
-        if metric_name and metric_name in all_static_meta.keys():  # make sure we still support this metrics type
+        if metric_name and (metric_name in all_static_meta.keys()):  # make sure we still support this metrics type
             # add static data
 
-            metrics[metric_name]["static_meta"] = all_static_meta[metric_name]            
+            metrics[metric_name]["static_meta"] = all_static_meta[metric_name]  
 
             if most_recent_metric_obj:
                 raw = as_int_or_float_if_possible(most_recent_metric_obj.raw_value)
