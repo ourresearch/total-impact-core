@@ -67,6 +67,7 @@ class PythonQueue(object):
             # blocking pop
             message = copy.deepcopy(self.queue.get(block=True)) #maybe timeout isn't necessary
             self.queue.task_done()
+            queue_length = self.queue.qsize()
             logger.info(u"<<<POPPED from python queue {queue_name}, current length approx {queue_length}".format(
                 queue_name=self.queue_name, queue_length=queue_length)) 
         except Queue.Empty:
