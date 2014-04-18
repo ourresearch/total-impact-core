@@ -30,10 +30,10 @@ def clean_doi(input_doi):
         else:
             doi = None
             try:
-                self.logger.debug(u"MALFORMED DOI {input_doi}".format(
+                logger.debug(u"MALFORMED DOI {input_doi}".format(
                     input_doi=input_doi))
             except:
-                self.logger.debug(u"MALFORMED DOI, can't print doi")
+                logger.debug(u"MALFORMED DOI, can't print doi")
 
 
     except AttributeError:

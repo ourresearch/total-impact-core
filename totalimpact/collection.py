@@ -472,7 +472,7 @@ def get_previous_metrics(tiids, elapsed_days):
             (SELECT tiid, provider, metric_name, min(collected_date) AS collected_date
                 FROM metric
                 WHERE tiid in ({tiid_string})
-                AND collected_date > now()::date - {elapsed_days}
+                AND collected_date < now()::date - INTERVAL '{elapsed_days} days'
                 GROUP BY tiid, provider, metric_name
                 ORDER by tiid, provider)
         SELECT min_collect.*, m.raw_value, m.drilldown_url
