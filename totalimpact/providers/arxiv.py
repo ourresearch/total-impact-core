@@ -1,10 +1,17 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.unicode_helpers import remove_nonprinting_characters
 
 import os, re
 
 import logging
 logger = logging.getLogger('ti.providers.arxiv')
+
+def clean_arxiv_id(arxiv_id):
+    arxiv_id = remove_nonprinting_characters(arxiv_id)    
+    arxiv_id = arxiv_id.lower().replace("arxiv:", "").replace("http://arxiv.org/abs/", "")
+    return arxiv_id
+
 
 class Arxiv(Provider):  
 
@@ -51,9 +58,8 @@ class Arxiv(Provider):
 
         self.logger.debug(u"%s getting member_items for %s" % (self.provider_name, query_dict))
 
-        arxiv_ids = query_dict.lower().split("\n")
-        arxiv_ids = [id.replace("arxiv:", "").replace("http://arxiv.org/abs/", "") for id in arxiv_ids]
-        aliases_tuples = [("arxiv", arxiv_id) for arxiv_id in arxiv_ids if arxiv_id]
+        arxiv_ids = query_dict.split("\n")
+        aliases_tuples = [("arxiv", clean_arxiv_id(arxiv_id)) for arxiv_id in arxiv_ids if arxiv_id]
 
         return(aliases_tuples)
 

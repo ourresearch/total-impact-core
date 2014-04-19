@@ -1,6 +1,7 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from totalimpact import unicode_helpers
+from totalimpact.unicode_helpers import remove_nonprinting_characters
 
 import lxml.html
 import lxml.etree
@@ -11,7 +12,7 @@ logger = logging.getLogger('ti.providers.webpage')
 
 
 def clean_url(input_url):
-    url = unicode_helpers.remove_nonprinting_characters(input_url)
+    url = remove_nonprinting_characters(input_url)
     return url
 
 

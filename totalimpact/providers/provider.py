@@ -72,6 +72,25 @@ def is_arxiv(nid):
         return True
     return False
 
+def normalize_alias(alias):
+    (ns, nid) = alias
+    if ns == "biblio":
+        return (ns, nid)
+
+    nid = remove_nonprinting_characters(nid)
+    nid = nid.strip()  # also remove spaces
+    if is_doi(nid):
+        nid = providers.crossref.clean_doi(nid)
+    elif is_pmid(nid):
+        nid = providers.pubmed.clean_pmid(nid)
+    elif is_arxiv(nid):
+        nid = providers.arxiv.clean_arxiv_id(nid)
+    elif is_url(nid):
+        nid = providers.webpage.clean_url(nid)
+
+    return (ns, nid)
+
+
 def get_aliases_from_product_id_strings(product_id_strings):
     aliases = []
     for nid in product_id_strings:

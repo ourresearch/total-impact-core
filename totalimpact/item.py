@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact.providers.provider import ProviderTimeout, ProviderServerError
+from totalimpact.providers.provider import normalize_alias
 from totalimpact import unicode_helpers
 
 from totalimpact import default_settings
@@ -1106,7 +1107,8 @@ def start_item_update(dicts_to_add, analytics_credentials, priority, myredis):
     myredis.add_to_alias_queue(dicts_to_add, analytics_credentials, priority)
 
 def is_equivalent_alias_tuple_in_list(query_tuple, tuple_list):
-    return (clean_alias_tuple_for_deduplication(query_tuple) in tuple_list)
+    is_equivalent = (clean_alias_tuple_for_deduplication(query_tuple) in tuple_list)
+    return is_equivalent
 
 def clean_alias_tuple_for_deduplication(alias_tuple):
     (ns, nid) = alias_tuple
@@ -1122,6 +1124,7 @@ def clean_alias_tuple_for_deduplication(alias_tuple):
         if biblios_as_string:
             return ("biblio", biblios_as_string.lower())
     else:
+        (ns, nid) = normalize_alias((ns, nid))
         return (ns.lower(), nid.lower())
 
 def alias_tuples_for_deduplication(item):

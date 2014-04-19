@@ -1,5 +1,6 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.unicode_helpers import remove_nonprinting_characters
 
 import simplejson, urllib, os, itertools, datetime, re
 from StringIO import StringIO
@@ -7,6 +8,12 @@ from lxml import etree
 
 import logging
 logger = logging.getLogger('ti.providers.pubmed')
+
+def clean_pmid(pmid):
+    pmid = remove_nonprinting_characters(pmid)
+    pmid = pmid.lower().replace("pmid:", "")
+    return pmid
+
 
 class Pubmed(Provider):  
 
@@ -399,7 +406,7 @@ class Pubmed(Provider):
         self.logger.debug(u"%s getting member_items for %s" % (self.provider_name, query_string))
 
         pmids = re.findall("\d+", query_string)
-        aliases_tuples = [("pmid", pmid) for pmid in pmids if pmid]
+        aliases_tuples = [provider.normalize_alias("pmid", pmid) for pmid in pmids if pmid]
 
         return(aliases_tuples)
 
