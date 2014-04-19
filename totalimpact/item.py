@@ -1113,7 +1113,7 @@ def is_equivalent_alias_tuple_in_list(query_tuple, tuple_list):
 def clean_alias_tuple_for_deduplication(alias_tuple):
     (ns, nid) = alias_tuple
     if ns == "biblio":
-        keys_to_compare = ["full_citation", "title", "first_author", "authors", "number", "volume", "journal", "year"]
+        keys_to_compare = ["full_citation", "title", "authors", "journal", "year"]
         try:
             biblio_dict_for_deduplication = dict([(k, v) for (k, v) in nid.iteritems() if k in keys_to_compare])
         except AttributeError:
