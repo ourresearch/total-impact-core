@@ -1131,14 +1131,19 @@ def clean_alias_tuple_for_deduplication(alias_tuple):
         return (ns.lower(), nid.lower())
 
 def alias_tuples_for_deduplication(item):
-    # include biblio, but only if no other aliases
     alias_tuples = []
     if item.aliases:
         alias_tuples = [alias.alias_tuple for alias in item.aliases]
     biblio_dicts_per_provider = item.biblio_dicts_per_provider
     for provider in biblio_dicts_per_provider:
-        alias_tuples += [("biblio", biblio_dicts_per_provider[provider])]
+        alias_tuple = ("biblio", biblio_dicts_per_provider[provider])
+        alias_tuples += [alias_tuple]
+        logger.debug(u"tiid={tiid}, for provider {provider} is a new alias {alias_tuple}".format(
+            tiid=item.tiid, provider=provider, alias_tuple=alias_tuple))
+
     cleaned_tuples = [clean_alias_tuple_for_deduplication(alias_tuple) for alias_tuple in alias_tuples]
+    logger.debug(u"tiid={tiid}, cleaned_tuples {cleaned_tuples}".format(
+        tiid=item.tiid, cleaned_tuples=cleaned_tuples))
     return cleaned_tuples
 
 def aliases_not_in_existing_tiids(retrieved_aliases, existing_tiids):
