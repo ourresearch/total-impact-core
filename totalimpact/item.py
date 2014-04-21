@@ -357,6 +357,9 @@ class Item(db.Model):
     def has_user_provided_biblio(self):
         return any([biblio.provider=='user_provided' for biblio in self.biblios])
 
+    def has_free_fulltext_url(self):
+        return any([biblio.biblio_name=='free_fulltext_url' for biblio in self.biblios])
+
     @classmethod
     def create_from_old_doc(cls, doc):
         # logger.debug(u"in create_from_old_doc for {tiid}".format(
@@ -1159,22 +1162,6 @@ def aliases_not_in_existing_tiids(retrieved_aliases, existing_tiids):
     return new_aliases
 
 
-def tiids_to_remove_from_duplicates_list(duplicates_list):
-    tiids_to_remove = []    
-    for duplicate_group in duplicates_list:
-        tiid_to_keep = None
-        for tiid_dict in duplicate_group:
-            if (tiid_to_keep==None) and tiid_dict["has_user_provided_biblio"]:
-                tiid_to_keep = tiid_dict["tiid"]
-            else:
-                tiids_to_remove += [tiid_dict]
-        if not tiid_to_keep:
-            # don't delete last tiid added even if it had user supplied stuff, because multiple do
-            earliest_created_date = min([tiid_dict["created"] for tiid_dict in duplicate_group])
-            tiids_to_remove = [tiid_dict for tiid_dict in tiids_to_remove if tiid_dict["created"] != earliest_created_date]
-    return [tiid_dict["tiid"] for tiid_dict in tiids_to_remove]
-
-
 def build_duplicates_list(tiids):
     items = get_items_from_tiids(tiids, with_metrics=False)
     distinct_groups = defaultdict(list)
@@ -1197,6 +1184,7 @@ def build_duplicates_list(tiids):
         # add this to the group, and add all its aliases too   
         distinct_groups[distinct_item_id] += [{ "tiid":item.tiid, 
                                                 "has_user_provided_biblio":item.has_user_provided_biblio(), 
+                                                "has_free_fulltext_url":item.has_free_fulltext_url(), 
                                                 "created":item.created
                                                 }]
         for alias in alias_tuples:
