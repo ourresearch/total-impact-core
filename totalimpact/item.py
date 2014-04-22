@@ -1127,8 +1127,7 @@ def clean_alias_tuple_for_deduplication(alias_tuple):
             biblio_dict_for_deduplication = dict([(k, v) for (k, v) in nid.iteritems() if k.lower() in keys_to_compare])
 
         biblios_as_string = json.dumps(biblio_dict_for_deduplication, sort_keys=True, indent=0, separators=(',', ':'))
-        if biblios_as_string:
-            return ("biblio", biblios_as_string.lower())
+        return ("biblio", biblios_as_string.lower())
     else:
         (ns, nid) = normalize_alias((ns, nid))
         return (ns.lower(), nid.lower())
@@ -1139,13 +1138,13 @@ def alias_tuples_for_deduplication(item):
         alias_tuples = [alias.alias_tuple for alias in item.aliases]
     biblio_dicts_per_provider = item.biblio_dicts_per_provider
     for provider in biblio_dicts_per_provider:
-        if biblio_dicts_per_provider[provider]:
-            alias_tuple = ("biblio", biblio_dicts_per_provider[provider])
-            alias_tuples += [alias_tuple]
-            logger.debug(u"tiid={tiid}, for provider {provider} is a new alias {alias_tuple}".format(
-                tiid=item.tiid, provider=provider, alias_tuple=alias_tuple))
+        alias_tuple = ("biblio", biblio_dicts_per_provider[provider])
+        alias_tuples += [alias_tuple]
+        logger.debug(u"tiid={tiid}, for provider {provider} is a new alias {alias_tuple}".format(
+            tiid=item.tiid, provider=provider, alias_tuple=alias_tuple))
 
     cleaned_tuples = [clean_alias_tuple_for_deduplication(alias_tuple) for alias_tuple in alias_tuples]
+    cleaned_tuples = [alias_tuple for alias_tuple in cleaned_tuples if alias_tuple != ("biblio", '{}')]
     logger.debug(u"tiid={tiid}, cleaned_tuples {cleaned_tuples}".format(
         tiid=item.tiid, cleaned_tuples=cleaned_tuples))
     return cleaned_tuples
