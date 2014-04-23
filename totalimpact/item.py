@@ -1127,7 +1127,14 @@ def clean_alias_tuple_for_deduplication(alias_tuple):
         return ("biblio", biblios_as_string.lower())
     else:
         (ns, nid) = normalize_alias((ns, nid))
-        return (ns.lower(), nid.lower())
+        try:
+            cleaned_alias = (ns.lower(), nid.lower())
+        except AttributeError:
+            logger.debug(u"problem cleaning {alias_tuple}".format(
+                alias_tuple=alias_tuple))
+            cleaned_alias = alias_tuple
+        return cleaned_alias
+
 
 def alias_tuples_for_deduplication(item):
     alias_tuples = []
@@ -1155,6 +1162,8 @@ def aliases_not_in_existing_tiids(retrieved_aliases, existing_tiids):
 
     aliases_from_all_items = []
     for item in existing_items:
+        logger.debug(u"getting alias_tuples_for_deduplication for tiid={tiid}".format(
+             tiid=item.tiid))
         aliases_from_all_items += alias_tuples_for_deduplication(item)
 
     for alias_tuple in retrieved_aliases:
