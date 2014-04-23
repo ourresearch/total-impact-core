@@ -1111,20 +1111,17 @@ def start_item_update(dicts_to_add, analytics_credentials, priority, myredis):
 
 def is_equivalent_alias_tuple_in_list(query_tuple, tuple_list):
     is_equivalent = (clean_alias_tuple_for_deduplication(query_tuple) in tuple_list)
-    if not is_equivalent:
-        logger.debug(u"not equivalent: {a} and {b}".format(
-            a=clean_alias_tuple_for_deduplication(query_tuple), b=tuple_list))
     return is_equivalent
 
 def clean_alias_tuple_for_deduplication(alias_tuple):
     (ns, nid) = alias_tuple
     if ns == "biblio":
         keys_to_compare = ["full_citation", "title", "authors", "journal", "year"]
-        try:
-            biblio_dict_for_deduplication = dict([(k, v) for (k, v) in nid.iteritems() if k.lower() in keys_to_compare])
-        except AttributeError:
+        if not isinstance(nid, dict):
             nid = json.loads(nid)
-            biblio_dict_for_deduplication = dict([(k, v) for (k, v) in nid.iteritems() if k.lower() in keys_to_compare])
+        if "year" in nid:
+            nid["year"] = str(nid["year"])
+        biblio_dict_for_deduplication = dict([(k, v) for (k, v) in nid.iteritems() if k.lower() in keys_to_compare])
 
         biblios_as_string = json.dumps(biblio_dict_for_deduplication, sort_keys=True, indent=0, separators=(',', ':'))
         return ("biblio", biblios_as_string.lower())
@@ -1140,13 +1137,14 @@ def alias_tuples_for_deduplication(item):
     for provider in biblio_dicts_per_provider:
         alias_tuple = ("biblio", biblio_dicts_per_provider[provider])
         alias_tuples += [alias_tuple]
-        logger.debug(u"tiid={tiid}, for provider {provider} is a new alias {alias_tuple}".format(
-            tiid=item.tiid, provider=provider, alias_tuple=alias_tuple))
+        # logger.debug(u"tiid={tiid}, for provider {provider} is a new alias {alias_tuple}".format(
+        #     tiid=item.tiid, provider=provider, alias_tuple=alias_tuple))
 
     cleaned_tuples = [clean_alias_tuple_for_deduplication(alias_tuple) for alias_tuple in alias_tuples]
     cleaned_tuples = [alias_tuple for alias_tuple in cleaned_tuples if alias_tuple != ("biblio", '{}')]
-    logger.debug(u"tiid={tiid}, cleaned_tuples {cleaned_tuples}".format(
-        tiid=item.tiid, cleaned_tuples=cleaned_tuples))
+
+    # logger.debug(u"tiid={tiid}, cleaned_tuples {cleaned_tuples}".format(
+    #     tiid=item.tiid, cleaned_tuples=cleaned_tuples))
     return cleaned_tuples
 
 def aliases_not_in_existing_tiids(retrieved_aliases, existing_tiids):
@@ -1161,12 +1159,13 @@ def aliases_not_in_existing_tiids(retrieved_aliases, existing_tiids):
 
     for alias_tuple in retrieved_aliases:
         if is_equivalent_alias_tuple_in_list(alias_tuple, aliases_from_all_items):
-            logger.debug(u"already have alias {alias_tuple}".format(
-                alias_tuple=alias_tuple))
+            # logger.debug(u"already have alias {alias_tuple}".format(
+            #     alias_tuple=alias_tuple))
+            pass
         else:
             new_aliases += [alias_tuple]
-            logger.debug(u"is a new alias {alias_tuple}".format(
-                alias_tuple=alias_tuple))
+            # logger.debug(u"is a new alias {alias_tuple}".format(
+            #     alias_tuple=alias_tuple))
     return new_aliases
 
 
@@ -1178,25 +1177,32 @@ def build_duplicates_list(tiids):
         is_distinct_item = True
 
         alias_tuples = alias_tuples_for_deduplication(item)
+
         for alias in alias_tuples:
+
             if is_equivalent_alias_tuple_in_list(alias, duplication_list):
                 # we already have one of the aliase
                 distinct_item_id = duplication_list[clean_alias_tuple_for_deduplication(alias)] 
                 is_distinct_item = False  
 
         if is_distinct_item:
-            # we went through all the aliases and don't have any that match, so make a new entry
             distinct_item_id = len(distinct_groups)
+            for alias in alias_tuples:
+                # we went through all the aliases and don't have any that match, so make a new entries
+                duplication_list[clean_alias_tuple_for_deduplication(alias)] = distinct_item_id
 
         # whether distinct or not,
-        # add this to the group, and add all its aliases too   
+        # add this to the group, and add all its aliases too
+        if item.created:
+            created_date = item.created.isoformat()
+        else:
+            created_date = "1999-01-01T14:42:49.818393"   
         distinct_groups[distinct_item_id] += [{ "tiid":item.tiid, 
                                                 "has_user_provided_biblio":item.has_user_provided_biblio(), 
                                                 "has_free_fulltext_url":item.has_free_fulltext_url(), 
-                                                "created":item.created
+                                                "created":created_date
                                                 }]
-        for alias in alias_tuples:
-            duplication_list[clean_alias_tuple_for_deduplication(alias)] = distinct_item_id
 
-    return distinct_groups.values()
+    distinct_groups_values = [group for group in distinct_groups.values() if group]
+    return distinct_groups_values
 
