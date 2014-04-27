@@ -523,13 +523,15 @@ def products_post(format="json"):
         logger.debug(u"in products_post with tiids, so getting products to return")
         tiids = request.json["tiids"]
         tiids_string = ",".join(tiids)
-        return products_get(tiids_string, format)
+        most_recent_metric_date = request.json["most_recent_metric_date"]
+        most_recent_diff_metric_date = request.json["most_recent_diff_metric_date"]
+        return products_get(tiids_string, format, most_recent_metric_date, most_recent_diff_metric_date)
     else:
         abort_custom(400, "bad arguments")
 
 
-def cleaned_items(tiids, myredis, override_export_clean=False):
-    items_dict = collection.get_items_for_client(tiids, myrefsets, myredis)
+def cleaned_items(tiids, myredis, override_export_clean=False, most_recent_metric_date=None, most_recent_diff_metric_date=None):
+    items_dict = collection.get_items_for_client(tiids, myrefsets, myredis, most_recent_metric_date, most_recent_diff_metric_date)
 
     secret_key = os.getenv("API_ADMIN_KEY")
     supplied_key = request.args.get("api_admin_key", "")
@@ -561,10 +563,10 @@ def single_product_get(tiid):
 # returns products from tiids
 @app.route('/v1/products/<tiids_string>', methods=['GET'])
 @app.route('/v1/products.<format>/<tiids_string>', methods=['GET'])
-def products_get(tiids_string, format="json"):
+def products_get(tiids_string, format="json", most_recent_metric_date=None, most_recent_diff_metric_date=None):
     tiids = tiids_string.split(",")
     override_export_clean = (format=="csv")
-    cleaned_items_dict = cleaned_items(tiids, myredis, override_export_clean)
+    cleaned_items_dict = cleaned_items(tiids, myredis, override_export_clean, most_recent_metric_date, most_recent_diff_metric_date)
 
     response_code = 200
     if collection.is_something_currently_updating(cleaned_items_dict, myredis):

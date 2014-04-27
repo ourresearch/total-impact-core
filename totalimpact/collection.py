@@ -421,8 +421,8 @@ def is_something_currently_updating(items_dict, myredis):
     return something_currently_updating
 
 
-def get_items_for_client(tiids, myrefsets, myredis):
-    item_metric_dicts = get_readonly_item_metric_dicts(tiids)
+def get_items_for_client(tiids, myrefsets, myredis, most_recent_metric_date=None, most_recent_diff_metric_date=None):
+    item_metric_dicts = get_readonly_item_metric_dicts(tiids, most_recent_metric_date, most_recent_diff_metric_date)
 
     dict_of_item_docs = {}
     for tiid in item_metric_dicts:
@@ -435,13 +435,16 @@ def get_items_for_client(tiids, myrefsets, myredis):
     
     return dict_of_item_docs
 
-def get_most_recent_metrics(tiids):
+def get_most_recent_metrics(tiids, most_recent_metric_date=None):
     # we use string concatination below because haven't figured out bind params yet
     # abort if anything suspicious in tiids
     for tiid in tiids:
         for e in tiid:
             if not e.isalnum():
                 return {}
+
+    if not most_recent_metric_date:
+        most_recent_metric_date = datetime.datetime.utcnow().isoformat()
 
     tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
     metric_objects = item_module.Metric.query.from_statement("""
@@ -449,16 +452,17 @@ def get_most_recent_metrics(tiids):
             (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
                 FROM metric
                 WHERE tiid in ({tiid_string})
+                AND collected_date < '{most_recent_metric_date}'::date                
                 GROUP BY tiid, provider, metric_name
                 ORDER by tiid, provider)
             SELECT max_collect.*, m.raw_value, m.drilldown_url
                 FROM metric m
                 NATURAL JOIN max_collect""".format(
-                    tiid_string=tiid_string)).all()
+                    tiid_string=tiid_string, most_recent_metric_date=most_recent_metric_date)).all()
     return metric_objects
 
 
-def get_previous_metrics(tiids, elapsed_days):
+def get_previous_metrics(tiids, most_recent_diff_metric_date=None):
     # we use string concatination below because haven't figured out bind params yet
     # abort if anything suspicious in tiids
     for tiid in tiids:
@@ -466,23 +470,26 @@ def get_previous_metrics(tiids, elapsed_days):
             if not e.isalnum():
                 return {}
 
+    if not most_recent_diff_metric_date:
+        most_recent_diff_metric_date = (datetime.datetime.utcnow() - datetime.timedelta(days=7)).isoformat()
+
     tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
     metric_objects = item_module.Metric.query.from_statement("""
-        WITH min_collect AS 
-            (SELECT tiid, provider, metric_name, min(collected_date) AS collected_date
+        WITH max_collect AS 
+            (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
                 FROM metric
                 WHERE tiid in ({tiid_string})
-                AND collected_date < now()::date - INTERVAL '{elapsed_days} days'
+                AND collected_date < '{most_recent_diff_metric_date}'::date
                 GROUP BY tiid, provider, metric_name
                 ORDER by tiid, provider)
-        SELECT min_collect.*, m.raw_value, m.drilldown_url
+        SELECT max_collect.*, m.raw_value, m.drilldown_url
             FROM metric m
-            NATURAL JOIN min_collect""".format(
-                tiid_string=tiid_string, elapsed_days=elapsed_days)).all()
+            NATURAL JOIN max_collect""".format(
+                tiid_string=tiid_string, most_recent_diff_metric_date=most_recent_diff_metric_date)).all()
     return metric_objects
 
 
-def get_readonly_item_metric_dicts(tiids):
+def get_readonly_item_metric_dicts(tiids, most_recent_metric_date=None, most_recent_diff_metric_date=None):
     logger.info(u"in get_readonly_item_objects_with_metrics")
 
     item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
@@ -495,11 +502,11 @@ def get_readonly_item_metric_dicts(tiids):
 
     db.session.expunge_all()
 
-    metric_objects_recent = get_most_recent_metrics(tiids)
+    metric_objects_recent = get_most_recent_metrics(tiids, most_recent_metric_date)
     for metric_object in metric_objects_recent:
         items_by_tiid[metric_object.tiid]["metrics_summaries"][metric_object.fully_qualified_name]["most_recent"] = copy.copy(metric_object)
 
-    metric_objects_7_days_ago = get_previous_metrics(tiids, 7)
+    metric_objects_7_days_ago = get_previous_metrics(tiids, most_recent_diff_metric_date)
     for metric_object in metric_objects_7_days_ago:
         items_by_tiid[metric_object.tiid]["metrics_summaries"][metric_object.fully_qualified_name]["7_days_ago"] = copy.copy(metric_object)
 

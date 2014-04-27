@@ -485,20 +485,27 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
             metrics[metric_name]["static_meta"] = all_static_meta[metric_name]  
 
             if most_recent_metric_obj:
+                metrics[metric_name]["historical_values"] = {}
                 raw = as_int_or_float_if_possible(most_recent_metric_obj.raw_value)
+                metrics[metric_name]["historical_values"][most_recent_metric_obj.collected_date.isoformat()] = raw
 
                 metrics[metric_name]["values"] = {"raw": raw}
-
+                earlier_metric_raw = None
+                
                 try:
                     earlier_metric_obj = metrics_summaries[fully_qualified_metric_name]["7_days_ago"]
-                    raw_7_days = as_int_or_float_if_possible(earlier_metric_obj.raw_value)
-                    raw_diff_7_days = raw - raw_7_days
+                    earlier_metric_raw = as_int_or_float_if_possible(earlier_metric_obj.raw_value)
+                    metrics[metric_name]["historical_values"][earlier_metric_obj.collected_date.isoformat()] = earlier_metric_raw
+                    raw_diff = raw - earlier_metric_raw
                 except (KeyError, ValueError, AttributeError, TypeError):
                     # logger.warning(u"can't calculate diff for item {tiid} {metric_name}".format(
                     #    tiid=item["_id"], metric_name=metric_name))
-                    raw_diff_7_days = None
-                metrics[metric_name]["historical_values"] = {"raw_diff_7_days": raw_diff_7_days}
-
+                    if earlier_metric_raw:
+                        raw_diff = [earlier_metric_raw, raw]
+                    else:
+                        raw_diff = None
+                metrics[metric_name]["historical_values"]["raw_diff_7_days"] = raw_diff
+    
                 try:
                     # add normalization values
                     # need year to calculate normalization below
