@@ -459,6 +459,10 @@ def get_most_recent_metrics(tiids, most_recent_metric_date=None):
                 FROM metric m
                 NATURAL JOIN max_collect""".format(
                     tiid_string=tiid_string, most_recent_metric_date=most_recent_metric_date)).all()
+
+    # logger.debug("*** get_previous_metrics {most_recent_metric_date} metric_objects = {metric_objects}".format(
+    #     most_recent_metric_date=most_recent_metric_date, metric_objects=metric_objects))
+
     return metric_objects
 
 
@@ -486,6 +490,10 @@ def get_previous_metrics(tiids, most_recent_diff_metric_date=None):
             FROM metric m
             NATURAL JOIN max_collect""".format(
                 tiid_string=tiid_string, most_recent_diff_metric_date=most_recent_diff_metric_date)).all()
+
+    # logger.debug("*** get_previous_metrics {most_recent_diff_metric_date} metric_objects = {metric_objects}".format(
+    #     most_recent_diff_metric_date=most_recent_diff_metric_date, metric_objects=metric_objects))
+
     return metric_objects
 
 
