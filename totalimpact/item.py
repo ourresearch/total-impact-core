@@ -448,6 +448,21 @@ def get_item(tiid, myrefsets, myredis):
 
 
 
+def diff_for_dict_metrics(previous_json, current_json):
+    previous = json.loads(previous_json)
+    current = json.loads(current_json)
+    diff = []
+    min_value_previous = min([entry["value"] for entry in previous])
+    previous_dict = dict((entry["name"], entry["value"]) for entry in previous)
+    for entry in current:
+        if entry["name"] in previous_dict:
+            previous_value = previous_dict[entry["name"]]
+        else:
+            previous_value = min_value_previous
+        diff += [{"name": entry["name"], "value": entry["value"] - previous_value}]
+    return json.dumps(diff)
+
+
 def build_item_for_client(item_metrics_dict, myrefsets, myredis):
     item_obj = item_metrics_dict["item_obj"]
     metrics_summaries = item_metrics_dict["metrics_summaries"]
@@ -493,8 +508,8 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
                         }
 
                 metrics[metric_name]["values"] = {"raw": raw}
-                earlier_metric_raw = None
-                raw_diff_days = None
+                earlier_metric_obj = None
+                raw_diff = None
 
                 try:
                     earlier_metric_obj = metrics_summaries[fully_qualified_metric_name]["7_days_ago"]
@@ -504,15 +519,17 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
                             "raw": earlier_metric_raw
                             }
                     raw_diff = raw - earlier_metric_raw
+                except (KeyError, ValueError, AttributeError, TypeError):
+                    try:
+                        raw_diff = diff_for_dict_metrics(earlier_metric_obj.raw_value, most_recent_metric_obj.raw_value)
+                    except (KeyError, ValueError, AttributeError, TypeError):
+                        pass
+
+                try:
                     raw_diff_days = (most_recent_metric_obj.collected_date - earlier_metric_obj.collected_date).days
                 except (KeyError, ValueError, AttributeError, TypeError):
-                    logger.warning(u"can't calculate diff for item {tiid} {metric_name}".format(
-                       tiid=item["_id"], metric_name=metric_name))
-                    if earlier_metric_raw:
-                        raw_diff = [earlier_metric_raw, raw]
-                        raw_diff_days = (most_recent_metric_obj.collected_date - earlier_metric_obj.collected_date).days
-                    else:
-                        raw_diff = None
+                    raw_diff_days = None
+
                 metrics[metric_name]["historical_values"]["diff"] = {
                     "days": raw_diff_days,
                     "raw": raw_diff
