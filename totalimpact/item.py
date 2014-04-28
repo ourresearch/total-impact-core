@@ -460,7 +460,10 @@ def diff_for_dict_metrics(previous_json, current_json):
         else:
             previous_value = min_value_previous
         diff += [{"name": entry["name"], "value": entry["value"] - previous_value}]
-    return json.dumps(diff)
+    if max([entry["value"] for entry in diff]) == 0:
+        return None
+    else:
+        return json.dumps(diff)
 
 
 def build_item_for_client(item_metrics_dict, myrefsets, myredis):
