@@ -452,7 +452,7 @@ def get_most_recent_metrics(tiids, most_recent_metric_date=None):
             (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
                 FROM metric
                 WHERE tiid in ({tiid_string})
-                AND collected_date < '{most_recent_metric_date}'::date                
+                AND collected_date <= '{most_recent_metric_date}'::date                
                 GROUP BY tiid, provider, metric_name
                 ORDER by tiid, provider)
             SELECT max_collect.*, m.raw_value, m.drilldown_url
@@ -483,7 +483,7 @@ def get_previous_metrics(tiids, most_recent_diff_metric_date=None):
             (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
                 FROM metric
                 WHERE tiid in ({tiid_string})
-                AND collected_date < '{most_recent_diff_metric_date}'::date
+                AND collected_date <= '{most_recent_diff_metric_date}'::date
                 GROUP BY tiid, provider, metric_name
                 ORDER by tiid, provider)
         SELECT max_collect.*, m.raw_value, m.drilldown_url
