@@ -463,7 +463,7 @@ def diff_for_dict_metrics(previous_json, current_json):
     if max([entry["value"] for entry in diff]) == 0:
         return None
     else:
-        return json.dumps(diff)
+        return diff
 
 
 def build_item_for_client(item_metrics_dict, myrefsets, myredis):
@@ -505,6 +505,12 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
             if most_recent_metric_obj:
                 metrics[metric_name]["historical_values"] = {}
                 raw = as_int_or_float_if_possible(most_recent_metric_obj.raw_value)
+                if isinstance(raw, basestring):
+                    try:
+                        raw = json.loads(raw)
+                    except ValueError:
+                        pass
+
                 metrics[metric_name]["historical_values"]["current"] = {
                         "collected_date": most_recent_metric_obj.collected_date.isoformat(),
                         "raw": raw
