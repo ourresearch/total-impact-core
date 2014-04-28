@@ -494,6 +494,7 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
 
                 metrics[metric_name]["values"] = {"raw": raw}
                 earlier_metric_raw = None
+                raw_diff_days = None
 
                 try:
                     earlier_metric_obj = metrics_summaries[fully_qualified_metric_name]["7_days_ago"]
@@ -503,15 +504,17 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
                             "raw": earlier_metric_raw
                             }
                     raw_diff = raw - earlier_metric_raw
+                    raw_diff_days = (most_recent_metric_obj.collected_date - earlier_metric_obj.collected_date).days
                 except (KeyError, ValueError, AttributeError, TypeError):
                     logger.warning(u"can't calculate diff for item {tiid} {metric_name}".format(
                        tiid=item["_id"], metric_name=metric_name))
                     if earlier_metric_raw:
                         raw_diff = [earlier_metric_raw, raw]
+                        raw_diff_days = (most_recent_metric_obj.collected_date - earlier_metric_obj.collected_date).days
                     else:
                         raw_diff = None
                 metrics[metric_name]["historical_values"]["diff"] = {
-                    "days": 7,
+                    "days": raw_diff_days,
                     "raw": raw_diff
                     }
     
