@@ -535,7 +535,11 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
                         pass
 
                 try:
-                    raw_diff_days = (most_recent_metric_obj.collected_date - earlier_metric_obj.collected_date).days
+                    # need to round the dates because python difference returns number of full days between
+                    rounded_recent_date = most_recent_metric_obj.collected_date.replace(hour = 0, minute = 0, second = 0, microsecond = 0)
+                    rounded_earlier_date = earlier_metric_obj.collected_date.replace(hour = 0, minute = 0, second = 0, microsecond = 0)
+
+                    raw_diff_days = (rounded_recent_date - rounded_earlier_date).days
                 except (KeyError, ValueError, AttributeError, TypeError):
                     raw_diff_days = None
 
