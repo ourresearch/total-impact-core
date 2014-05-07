@@ -700,6 +700,7 @@ def reference_sets_medians():
         if not genre in refset_medians:
             refset_medians[genre] = {}
         for refset in myrefsets_histograms[genre]:
+            refset = refset.lower()
             if not refset in refset_medians[genre]:
                 refset_medians[genre][refset] = {}
             for year in myrefsets_histograms[genre][refset]:
