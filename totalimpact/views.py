@@ -693,7 +693,24 @@ def reference_sets_histograms():
     #resp.headers.add("Content-Encoding", "UTF-8")
     return resp
 
+@app.route("/collections/reference-sets-medians")
+def reference_sets_medians():
+    refset_medians = defaultdict(dict)
+    for genre in myrefsets_histograms:
+        if not genre in refset_medians:
+            refset_medians[genre] = {}
+        for refset in myrefsets_histograms[genre]:
+            if not refset in refset_medians[genre]:
+                refset_medians[genre][refset] = {}
+            for year in myrefsets_histograms[genre][refset]:
+                if not year in refset_medians[genre][refset]:
+                    refset_medians[genre][refset][year] = {}
+                for metric_name in myrefsets_histograms[genre][refset][year]:
+                    median = myrefsets_histograms[genre][refset][year][metric_name][50]
+                    refset_medians[genre][refset][year][metric_name] = median
+    resp = make_response(json.dumps(refset_medians, indent=4), 200)
 
+    return resp
 
 
 # route to receive email
