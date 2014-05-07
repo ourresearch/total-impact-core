@@ -529,10 +529,11 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
                             }
                     raw_diff = raw - earlier_metric_raw
                 except (KeyError, ValueError, AttributeError, TypeError):
-                    try:
-                        raw_diff = diff_for_dict_metrics(earlier_metric_obj.raw_value, most_recent_metric_obj.raw_value)
-                    except (KeyError, ValueError, AttributeError, TypeError):
-                        pass
+                    # try:
+                    #     raw_diff = diff_for_dict_metrics(earlier_metric_obj.raw_value, most_recent_metric_obj.raw_value)
+                    # except (KeyError, ValueError, AttributeError, TypeError):
+                    #     pass
+                    pass
 
                 try:
                     # need to round the dates because python difference returns number of full days between
