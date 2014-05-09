@@ -542,7 +542,12 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
 
                     raw_diff_days = (rounded_recent_date - rounded_earlier_date).days
                 except (KeyError, ValueError, AttributeError, TypeError):
-                    raw_diff_days = None
+                    item_created_date = item_obj.created.replace(hour = 0, minute = 0, second = 0, microsecond = 0)
+                    raw_diff_days = (rounded_recent_date - item_created_date).days
+
+                    if raw_diff_days > 7:
+                        raw_diff = raw
+                        raw_diff_days = 7.2  # special value, assumes that things are updated once a week and this is first metric
 
                 metrics[metric_name]["historical_values"]["diff"] = {
                     "days": raw_diff_days,
