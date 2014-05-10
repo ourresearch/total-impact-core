@@ -523,8 +523,13 @@ def products_post(format="json"):
         logger.debug(u"in products_post with tiids, so getting products to return")
         tiids = request.json["tiids"]
         tiids_string = ",".join(tiids)
-        most_recent_metric_date = request.json["most_recent_metric_date"]
-        most_recent_diff_metric_date = request.json["most_recent_diff_metric_date"]
+        try:
+            most_recent_metric_date = request.json["most_recent_metric_date"]
+            most_recent_diff_metric_date = request.json["most_recent_diff_metric_date"]
+        except KeyError:
+            most_recent_metric_date = None
+            most_recent_diff_metric_date = None
+
         return products_get(tiids_string, format, most_recent_metric_date, most_recent_diff_metric_date)
     else:
         abort_custom(400, "bad arguments")
