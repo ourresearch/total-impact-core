@@ -1,10 +1,65 @@
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact import tiredis
 
 import simplejson, urllib, os, string, itertools
+import requests
+import requests.auth
+import redis
 
 import logging
 logger = logging.getLogger('ti.providers.mendeley')
+shared_redis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)
+
+
+# from https://gist.github.com/jalperin/8b3367b65012291fe23f
+def get_token():
+    client_auth = requests.auth.HTTPBasicAuth(os.getenv("MENDELEY_OAUTH2_CLIENT_ID"), os.getenv("MENDELEY_OAUTH2_SECRET"))
+    post_data = {"grant_type": "authorization_code",
+                 "code": os.getenv("MENDELEY_OAUTH2_GENERAGED_CODE"),
+                 "redirect_uri": "http://impactstory.org"}
+    token_url = 'https://api-oauth2.mendeley.com/oauth/token'
+    response = requests.post(token_url,
+                             auth=client_auth,
+                             data=post_data)
+    token_json = response.json()
+    return token_json
+
+def renew_token(access_token, refresh_token):
+    client_auth = requests.auth.HTTPBasicAuth(os.getenv("MENDELEY_OAUTH2_CLIENT_ID"), os.getenv("MENDELEY_OAUTH2_SECRET"))
+    headers = {"Authorization": "bearer " + access_token}
+    post_data = {"grant_type": "refresh_token",
+                 "refresh_token": refresh_token}
+    token_url = 'https://api-oauth2.mendeley.com/oauth/token'
+    response = requests.post(token_url,
+                             auth=client_auth,
+                             data=post_data)
+    token_json = response.json()
+    return token_json
+
+def get_access_token():
+    access_token = shared_redis.get("MENDELEY_OAUTH2_ACCESS_TOKEN")
+    is_valid = shared_redis.get("MENDELEY_OAUTH2_IS_VALID_TOKEN")
+    if access_token and is_valid:
+        return access_token
+
+    if not access_token:
+        token_response = get_token()
+
+    elif not is_valid:
+        previous_refresh_token = shared_redis.get("MENDELEY_OAUTH2_REFRESH_TOKEN")
+        token_response = renew_token(access_token, previous_refresh_token)
+
+    access_token = token_response["access_token"]
+    refresh_token = token_response["refresh_token"]
+    expires_in = token_response["expires_in"] - 120  # remove two minutes for forgiveness slush
+    shared_redis.set("MENDELEY_OAUTH2_ACCESS_TOKEN", access_token)
+    shared_redis.set("MENDELEY_OAUTH2_REFRESH_TOKEN", refresh_token)
+    shared_redis.set("MENDELEY_OAUTH2_IS_VALID_TOKEN", access_token, expires_in)
+
+    return access_token
+
+
 
 class Mendeley(Provider):  
 
@@ -12,11 +67,11 @@ class Mendeley(Provider):
 
     url = "http://www.mendeley.com"
     descr = " A research management tool for desktop and web."
-    uuid_from_title_template = 'http://api.mendeley.com/oapi/documents/search/"%s"/?consumer_key=' + os.environ["MENDELEY_KEY"]
-    metrics_from_uuid_template = "http://api.mendeley.com/oapi/documents/details/%s?consumer_key=" + os.environ["MENDELEY_KEY"]
-    metrics_from_doi_template = "http://api.mendeley.com/oapi/documents/details/%s?type=doi&consumer_key=" + os.environ["MENDELEY_KEY"]
-    metrics_from_pmid_template = "http://api.mendeley.com/oapi/documents/details/%s?type=pmid&consumer_key=" + os.environ["MENDELEY_KEY"]
-    metrics_from_arxiv_template = "http://api.mendeley.com/oapi/documents/details/%s?type=arxiv&consumer_key=" + os.environ["MENDELEY_KEY"]
+    uuid_from_title_template = 'https://api-oauth2.mendeley.com/oapi/documents/search/"%s"/?access_token=%s'
+    metrics_from_uuid_template = "https://api-oauth2.mendeley.com/oapi/documents/details/%s?access_token=%s"
+    metrics_from_doi_template = "https://api-oauth2.mendeley.com/oapi/documents/details/%s?type=doi&access_token=%s"
+    metrics_from_pmid_template = "https://api-oauth2.mendeley.com/oapi/documents/details/%s?type=pmid&access_token=%s"
+    metrics_from_arxiv_template = "https://api-oauth2.mendeley.com/oapi/documents/details/%s?type=arxiv&access_token=%s"
     aliases_url_template = uuid_from_title_template
     biblio_url_template = metrics_from_doi_template
     doi_url_template = "http://dx.doi.org/%s"
@@ -110,7 +165,7 @@ class Mendeley(Provider):
         return response.text
          
     def _get_uuid_lookup_page(self, title, cache_enabled=True):
-        uuid_from_title_url = self.uuid_from_title_template % urllib.quote(title.encode("utf-8"))
+        uuid_from_title_url = self.uuid_from_title_template % (urllib.quote(title.encode("utf-8")), get_access_token())
         page = self._get_page(uuid_from_title_url, cache_enabled)
         if not page:
             raise ProviderContentMalformedError()            
@@ -120,7 +175,7 @@ class Mendeley(Provider):
 
     def _get_metrics_lookup_page(self, template, id, cache_enabled=True):
         double_encoded_id = urllib.quote(urllib.quote(id, safe=""), safe="")
-        metrics_url = template %double_encoded_id
+        metrics_url = template %(double_encoded_id, get_access_token())
         page = self._get_page(metrics_url, cache_enabled)
         if page:
             if not "identifiers" in page:
