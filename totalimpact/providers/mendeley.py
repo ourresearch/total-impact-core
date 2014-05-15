@@ -29,6 +29,7 @@ def get_token():
     return token_json
 
 def renew_token(access_token, refresh_token):
+    logger.debug(u"Mendeley: renewing access token")
     client_auth = requests.auth.HTTPBasicAuth(os.getenv("MENDELEY_OAUTH2_CLIENT_ID"), os.getenv("MENDELEY_OAUTH2_SECRET"))
     headers = {"Authorization": "bearer " + access_token}
     post_data = {"grant_type": "refresh_token",
@@ -47,7 +48,7 @@ def store_access_cred(token_response):
     shared_redis.set("MENDELEY_OAUTH2_REFRESH_TOKEN", refresh_token)
     return (access_token, refresh_token)
 
-def get_access_token(force_renew=True):
+def get_access_token(force_renew=False):
     access_token = shared_redis.get("MENDELEY_OAUTH2_ACCESS_TOKEN")
     if force_renew:
         previous_refresh_token = shared_redis.get("MENDELEY_OAUTH2_REFRESH_TOKEN")
@@ -180,6 +181,7 @@ class Mendeley(Provider):
             if response.status_code == 404:
                 return None
             elif response.status_code == 401:
+                logger.debug(u"got status 401 so going to try renewing access token")
                 get_access_token(force_renew=True)
                 raise ProviderAuthenticationError("not authenticated")
             else:
