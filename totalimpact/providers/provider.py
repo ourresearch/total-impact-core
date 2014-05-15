@@ -772,6 +772,9 @@ class ProviderValidationFailedError(ProviderError):
 class ProviderRateLimitError(ProviderError):
     pass
 
+class ProviderAuthenticationError(ProviderError):
+    pass
+
 def _load_json(page):
     try:
         data = simplejson.loads(page) 
