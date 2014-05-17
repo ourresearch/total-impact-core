@@ -13,34 +13,8 @@ logger.setLevel(logging.DEBUG)
 thread_count = defaultdict(dict)
 
 
-def update_item_with_new_aliases(alias_dict, item_doc):
-    if alias_dict == item_doc["aliases"]:
-        item_doc = None
-    else:
-        item_obj = item_module.add_aliases_to_item_object(alias_dict, item_doc)
-
-        merged_aliases = item_module.merge_alias_dicts(alias_dict, item_doc["aliases"])
-        item_doc["aliases"] = merged_aliases
-    return(item_doc)
 
 
-def update_item_with_new_biblio(new_biblio_dict, item_doc, provider_name=None):
-    # return None if no changes
-    # don't change if biblio already there, except in special cases
-
-    response = item_module.get_biblio_to_update(item_doc["biblio"], new_biblio_dict)
-    if response:
-        item_doc["biblio"] = response
-        item_obj = item_module.add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name=provider_name)
-    else:
-        item_doc = None
-    return(item_doc)
-
-
-def update_item_with_new_metrics(metric_name, metrics_method_response, item_doc):
-    item_doc = item_module.add_metrics_data(metric_name, metrics_method_response, item_doc)
-    item_obj = item_module.add_metric_to_item_object(metric_name, metrics_method_response, item_doc)
-    return(item_doc)
 
 
 
@@ -131,6 +105,7 @@ class ProviderWorker(Worker):
         self.myredis = myredis
         self.name = self.provider_name+"_worker"
 
+
     # last variable is an artifact so it has same call signature as other callbacks
     def add_to_couch_queue_if_nonzero(self, 
             tiid, 
@@ -139,32 +114,22 @@ class ProviderWorker(Worker):
             analytics_credentials, 
             dummy_already_run=None):
 
-        if new_content:
-            # don't need item with metrics for this purpose, so don't bother getting metrics from db
-            item_obj = item_module.Item.query.get(tiid)
+        try:
+            if new_content:
+                # don't need item with metrics for this purpose, so don't bother getting metrics from db
+                item_obj = item_module.Item.query.get(tiid)
 
-            if item_obj:
-                item_doc = item_obj.as_old_doc()
-
-                if method_name=="aliases":
-                    updated_item_doc = update_item_with_new_aliases(new_content, item_doc)
-                elif method_name=="biblio":
-                    updated_item_doc = update_item_with_new_biblio(new_content, item_doc, self.provider_name)
-                elif method_name=="metrics":
-                    updated_item_doc = item_doc
-                    for metric_name in new_content:
-                        updated_item_doc = update_item_with_new_metrics(metric_name, new_content[metric_name], updated_item_doc)
-                else:
-                    logger.warning(u"ack, supposed to save something i don't know about: " + str(new_content))
-                    updated_item_doc = None
-
-                # now that is has been updated it, change last_modified and save
-                if updated_item_doc:
-                    item_obj.last_modified = datetime.datetime.utcnow()
-                    logger.info(u"{:20}: added {method_name}, saved item {tiid}".format(
-                        self.name, method_name=method_name, tiid=tiid))
-                    db.session.merge(item_obj)
-                    db.session.commit()
+                if item_obj:
+                    if method_name=="aliases":
+                        item_obj = item_module.add_aliases_to_item_object(alias_dict, item_obj)
+                    elif method_name=="biblio":
+                        updated_item_doc = item_module.update_item_with_new_biblio(new_content, item_obj, self.provider_name)
+                    elif method_name=="metrics":
+                        for metric_name in new_content:
+                            item_obj = item_module.add_metric_to_item_object(metric_name, new_content[metric_name], item_obj)
+                    else:
+                        logger.warning(u"ack, supposed to save something i don't know about: " + str(new_content))
+        finally:
             db.session.remove()
 
         # do this no matter what, but as last thing

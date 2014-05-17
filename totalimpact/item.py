@@ -590,37 +590,19 @@ def as_int_or_float_if_possible(input_value):
     return(value)
 
 
-def add_metrics_data(metric_name, metrics_method_response, item, timestamp=None):
-    metrics = item.setdefault("metrics", {})
-    
-    (metric_value, provenance_url) = metrics_method_response
-
-    this_metric = metrics.setdefault(metric_name, {})
-    this_metric["provenance_url"] = provenance_url
-
-    this_metric_values = this_metric.setdefault("values", {})
-    this_metric_values["raw"] = as_int_or_float_if_possible(metric_value)
-
-    this_metric_values_raw_history = this_metric_values.setdefault("raw_history", {})
-    if not timestamp:
-        timestamp = datetime.datetime.utcnow().isoformat()
-    this_metric_values_raw_history[timestamp] = as_int_or_float_if_possible(metric_value)
-    return item
 
 
-def add_metric_to_item_object(full_metric_name, metrics_method_response, item_doc):
-    tiid = item_doc["_id"]
-    # logger.debug(u"in add_metrics_to_item_object for {tiid}".format(
-    #     tiid=tiid))
+def add_metric_to_item_object(full_metric_name, metrics_method_response, item_obj):
+    tiid = item_obj.tiid
 
     (metric_value, provenance_url) = metrics_method_response
     (provider, metric_name) = full_metric_name.split(":")
 
     new_style_metric_dict = {
-        "tiid": item_doc["_id"],
+        "tiid": tiid,
         "metric_name": metric_name, 
         "provider": provider, 
-        "raw_value": metric_value,
+        "raw_value": as_int_or_float_if_possible(metric_value),
         "drilldown_url": provenance_url,
         "collected_date": datetime.datetime.utcnow()
     }    
@@ -635,23 +617,17 @@ def add_metric_to_item_object(full_metric_name, metrics_method_response, item_do
             tiid=tiid, 
             message=e.message)) 
 
-    item_obj = Item.from_tiid(tiid)
-
     return item_obj
 
 
-def add_aliases_to_item_object(aliases_dict, item_doc):
-    tiid = item_doc["_id"]
+
+
+def add_aliases_to_item_object(aliases_dict, item_obj):
     logger.debug(u"in add_aliases_to_item_object for {tiid}".format(
-        tiid=tiid))        
-
-    item_obj = Item.from_tiid(tiid)
-    if not item_obj:
-        item_obj = create_objects_from_item_doc(item_doc, commit=False)
-
-    item_obj.last_modified = datetime.datetime.utcnow()
+        tiid=item_obj.tiid))        
 
     alias_objects = create_alias_objects(aliases_dict)
+
     for alias_obj in alias_objects:
         if not alias_obj.alias_tuple in item_obj.alias_tuples:
             item_obj.aliases.append(alias_obj)    
@@ -704,17 +680,15 @@ def add_biblio(tiid, biblio_name, biblio_value, provider_name="user_provided", c
     return item_obj
 
 
+
 def add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name):
     tiid = item_doc["_id"]
+    item_obj = Item.from_tiid(tiid)
+
     logger.debug(u"in add_biblio_to_item_object for {tiid} {provider_name}, /biblio_print {new_biblio_dict}".format(
         tiid=tiid, 
         provider_name=provider_name,
         new_biblio_dict=new_biblio_dict))        
-
-    item_obj = Item.from_tiid(tiid)
-    if not item_obj:
-        item_obj = create_objects_from_item_doc(item_doc, commit=False)
-    item_obj.last_modified = datetime.datetime.utcnow()
 
     new_biblio_objects = create_biblio_objects([new_biblio_dict], provider=provider_name)
     for new_biblio_obj in new_biblio_objects:
@@ -751,6 +725,20 @@ def get_biblio_to_update(old_biblio, new_biblio):
             response[biblio_name] = new_biblio[biblio_name]
 
     return response
+
+
+
+def update_item_with_new_biblio(new_biblio_dict, item_obj, provider_name=None):
+    item_doc = item_obj.as_old_doc()
+
+    # return None if no changes
+    # don't change if biblio already there, except in special cases
+
+    response = get_biblio_to_update(item_doc["biblio"], new_biblio_dict)
+    if response:
+        item_doc["biblio"] = response
+        item_obj = add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name=provider_name)
+    return(item_obj)
 
 
 def make():
