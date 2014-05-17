@@ -744,7 +744,7 @@ class ProviderError(Exception):
 class ProviderConfigurationError(ProviderError):
     pass
 
-class ProviderTimeout(ProviderError):
+class ProviderTimeout(ProviderServerError):
     pass
 
 class ProviderHttpError(ProviderError):
@@ -760,19 +760,19 @@ class ProviderServerError(ProviderError):
         super(ProviderServerError, self).__init__(message, inner)
         self.response = response
 
-class ProviderContentMalformedError(ProviderError):
+class ProviderContentMalformedError(ProviderClientError):
     pass
 
-class ProviderItemNotFoundError(ProviderError):
+class ProviderItemNotFoundError(ProviderClientError):
     pass
     
-class ProviderValidationFailedError(ProviderError):
+class ProviderValidationFailedError(ProviderClientError):
     pass
 
-class ProviderRateLimitError(ProviderError):
+class ProviderRateLimitError(ProviderClientError):
     pass
 
-class ProviderAuthenticationError(ProviderError):
+class ProviderAuthenticationError(ProviderClientError):
     pass
 
 def _load_json(page):
