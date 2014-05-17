@@ -12,6 +12,39 @@ logger.setLevel(logging.DEBUG)
 
 thread_count = defaultdict(dict)
 
+
+def update_item_with_new_aliases(alias_dict, item_doc):
+    if alias_dict == item_doc["aliases"]:
+        item_doc = None
+    else:
+        item_obj = item_module.add_aliases_to_item_object(alias_dict, item_doc)
+
+        merged_aliases = item_module.merge_alias_dicts(alias_dict, item_doc["aliases"])
+        item_doc["aliases"] = merged_aliases
+    return(item_doc)
+
+
+def update_item_with_new_biblio(new_biblio_dict, item_doc, provider_name=None):
+    # return None if no changes
+    # don't change if biblio already there, except in special cases
+
+    response = item_module.get_biblio_to_update(item_doc["biblio"], new_biblio_dict)
+    if response:
+        item_doc["biblio"] = response
+        item_obj = item_module.add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name=provider_name)
+    else:
+        item_doc = None
+    return(item_doc)
+
+
+def update_item_with_new_metrics(metric_name, metrics_method_response, item_doc):
+    item_doc = item_module.add_metrics_data(metric_name, metrics_method_response, item_doc)
+    item_obj = item_module.add_metric_to_item_object(metric_name, metrics_method_response, item_doc)
+    return(item_doc)
+
+
+
+
 class RedisQueue(object):
     def __init__(self, queue_name, myredis):
         self.queue_name = queue_name
@@ -88,13 +121,12 @@ class Worker(object):
         t.start()    
 
 class ProviderWorker(Worker):
-    def __init__(self, provider, polling_interval, alias_queues, provider_queue, couch_queues, wrapper, myredis):
+    def __init__(self, provider, polling_interval, alias_queues, provider_queue, wrapper, myredis):
         self.provider = provider
         self.provider_name = provider.provider_name
         self.polling_interval = polling_interval 
         self.provider_queue = provider_queue
         self.alias_queues = alias_queues
-        self.couch_queues = couch_queues
         self.wrapper = wrapper
         self.myredis = myredis
         self.name = self.provider_name+"_worker"
@@ -105,31 +137,41 @@ class ProviderWorker(Worker):
             new_content, 
             method_name, 
             analytics_credentials, 
-            dummy_priority=None,
             dummy_already_run=None):
-        # logger.info(u"In add_to_couch_queue_if_nonzero with {tiid}, {method_name}, {provider_name}".format(
-        #    method_name=method_name, tiid=tiid, provider_name=self.provider_name))
 
-        if not new_content:
-            #logger.info(u"{:20}: Not writing to couch: empty {method_name} from {tiid} for {provider_name}".format(
-            #    "provider_worker", method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
-            if method_name=="metrics":
-                self.myredis.set_provider_finished(tiid, self.provider_name)
-            return
-        else:
-            # logger.info(u"ADDING to couch queue {method_name} from {tiid} for {provider_name}".format(
-            #     method_name=method_name, tiid=tiid, provider_name=self.provider_name))     
-            couch_message = {
-                "tiid": tiid, 
-                "new_content": new_content, 
-                "method_name": method_name,
-                "analytics_credentials": analytics_credentials,                
-                "provider_name": self.provider_name
-            }
+        if new_content:
+            # don't need item with metrics for this purpose, so don't bother getting metrics from db
+            item_obj = item_module.Item.query.get(tiid)
 
-            couch_queue_index = tiid[0] #index them by the first letter in the tiid
-            selected_couch_queue = self.couch_queues[couch_queue_index] 
-            selected_couch_queue.push(couch_message)
+            if item_obj:
+                item_doc = item_obj.as_old_doc()
+
+                if method_name=="aliases":
+                    updated_item_doc = update_item_with_new_aliases(new_content, item_doc)
+                elif method_name=="biblio":
+                    updated_item_doc = update_item_with_new_biblio(new_content, item_doc, self.provider_name)
+                elif method_name=="metrics":
+                    updated_item_doc = item_doc
+                    for metric_name in new_content:
+                        updated_item_doc = update_item_with_new_metrics(metric_name, new_content[metric_name], updated_item_doc)
+                else:
+                    logger.warning(u"ack, supposed to save something i don't know about: " + str(new_content))
+                    updated_item_doc = None
+
+                # now that is has been updated it, change last_modified and save
+                if updated_item_doc:
+                    item_obj.last_modified = datetime.datetime.utcnow()
+                    logger.info(u"{:20}: added {method_name}, saved item {tiid}".format(
+                        self.name, method_name=method_name, tiid=tiid))
+                    db.session.merge(item_obj)
+                    db.session.commit()
+            db.session.remove()
+
+        # do this no matter what, but as last thing
+        if method_name=="metrics":
+            self.myredis.set_provider_finished(tiid, self.provider_name)
+        return
+
 
 
     def add_to_alias_and_couch_queues(self, 
@@ -253,103 +295,11 @@ class ProviderWorker(Worker):
             return
 
 
-class CouchWorker(Worker):
-    def __init__(self, couch_queue, myredis, mydao):
-        self.couch_queue = couch_queue
-        self.myredis = myredis
-        self.mydao = mydao
-        self.name = self.couch_queue.queue_name + "_worker"
-
-    @classmethod
-    def update_item_with_new_aliases(cls, alias_dict, item_doc):
-        if alias_dict == item_doc["aliases"]:
-            item_doc = None
-        else:
-            item_obj = item_module.add_aliases_to_item_object(alias_dict, item_doc)
-
-            merged_aliases = item_module.merge_alias_dicts(alias_dict, item_doc["aliases"])
-            item_doc["aliases"] = merged_aliases
-        return(item_doc)
-
-    @classmethod
-    def update_item_with_new_biblio(cls, new_biblio_dict, item_doc, provider_name=None):
-        # return None if no changes
-        # don't change if biblio already there, except in special cases
-
-        response = item_module.get_biblio_to_update(item_doc["biblio"], new_biblio_dict)
-
-        if response:
-            item_doc["biblio"] = response
-            item_obj = item_module.add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name=provider_name)
-        else:
-            item_doc = None
-
-        return(item_doc)
-
-
-    @classmethod
-    def update_item_with_new_metrics(cls, metric_name, metrics_method_response, item_doc):
-        item_doc = item_module.add_metrics_data(metric_name, metrics_method_response, item_doc)
-        item_obj = item_module.add_metric_to_item_object(metric_name, metrics_method_response, item_doc)
-        return(item_doc)        
-
-
-    def run(self):
-        couch_message = self.couch_queue.pop()
-        if couch_message:
-            tiid = couch_message["tiid"]
-            new_content = couch_message["new_content"]
-            method_name = couch_message["method_name"]
-            analytics_credentials = couch_message["analytics_credentials"]
-            provider_name = couch_message["provider_name"]
-
-            if not new_content:
-                logger.info(u"{:20}: blank doc, nothing to save".format(
-                    self.name))
-            else:
-                # don't need it with metrics for this purpose
-                item_obj = item_module.Item.query.get(tiid)
-
-                if not item_obj:
-                    if method_name=="metrics":
-                        self.myredis.set_provider_finished(tiid, provider_name)
-                    logger.error(u"Empty item from couch for tiid {tiid}, can't save {method_name}".format(
-                        tiid=tiid, method_name=method_name))
-                    return
-
-                item = item_obj.as_old_doc()
-                if method_name=="aliases":
-                    updated_item = self.update_item_with_new_aliases(new_content, item)
-                elif method_name=="biblio":
-                    updated_item = self.update_item_with_new_biblio(new_content, item, provider_name)
-                elif method_name=="metrics":
-                    updated_item = item
-                    for metric_name in new_content:
-                        updated_item = self.update_item_with_new_metrics(metric_name, new_content[metric_name], updated_item)
-                else:
-                    logger.warning(u"ack, supposed to save something i don't know about: " + str(new_content))
-                    updated_item = None
-
-                # now that is has been updated it, change last_modified and save
-                if updated_item:
-                    updated_item["last_modified"] = datetime.datetime.utcnow().isoformat()
-                    logger.info(u"{:20}: added {method_name}, saving item {tiid}".format(
-                        self.name, method_name=method_name, tiid=tiid))
-                    db.session.merge(item_obj)
-
-                if method_name=="metrics":
-                    self.myredis.set_provider_finished(tiid, provider_name) # have to do this after the item save
-                db.session.remove()
-        else:
-            #time.sleep(0.1)  # is this necessary?
-            pass
-
 
 class Backend(Worker):
-    def __init__(self, alias_queues, provider_queues, couch_queues, myredis):
+    def __init__(self, alias_queues, provider_queues, myredis):
         self.alias_queues = alias_queues
         self.provider_queues = provider_queues
-        self.couch_queues = couch_queues
         self.myredis = myredis
         self.name = "Backend"
 
@@ -476,16 +426,6 @@ def main():
     #myredis.delete("aliasqueue_high")
 
 
-    # these need to match the tiid alphabet defined in models:
-    couch_queues = {}
-    for i in "abcdefghijklmnopqrstuvwxyz1234567890":
-        couch_queues[i] = PythonQueue(i+"_couch_queue")
-        couch_worker = CouchWorker(couch_queues[i], myredis, mydao)
-        couch_worker.spawn_and_loop() 
-        logger.info(u"launched backend couch worker with {i}_couch_queue".format(
-            i=i))
-
-
     polling_interval = 0.1   # how many seconds between polling to talk to provider
     provider_queues = {}
     providers = ProviderFactory.get_providers(default_settings.PROVIDERS)
@@ -496,12 +436,11 @@ def main():
             polling_interval, 
             alias_queues,
             provider_queues[provider.provider_name], 
-            couch_queues,
             ProviderWorker.wrapper,
             myredis)
         provider_worker.spawn_and_loop()
 
-    backend = Backend(alias_queues, provider_queues, couch_queues, myredis)
+    backend = Backend(alias_queues, provider_queues, myredis)
     try:
         backend.run_in_loop() # don't need to spawn this one
     except (KeyboardInterrupt, SystemExit): 
