@@ -121,7 +121,7 @@ class ProviderWorker(Worker):
 
                 if item_obj:
                     if method_name=="aliases":
-                        item_obj = item_module.add_aliases_to_item_object(alias_dict, item_obj)
+                        item_obj = item_module.add_aliases_to_item_object(new_content, item_obj)
                     elif method_name=="biblio":
                         updated_item_doc = item_module.update_item_with_new_biblio(new_content, item_obj, self.provider_name)
                     elif method_name=="metrics":
