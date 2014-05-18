@@ -93,14 +93,3 @@ except exc.ProgrammingError:
 
 
 
-# import os
-# import redis
-
-# os.system("heroku config --app total-impact-core | grep REDISTOGO")
-# production_redis_url = "PUT URL HERE"
-
-# production_r = redis.from_url(production_redis_url)
-# local_r = redis.from_url("redis://localhost:6379")
-
-# local_r.set("MENDELEY_OAUTH2_REFRESH_TOKEN", production_r.get("MENDELEY_OAUTH2_REFRESH_TOKEN"))
-# local_r.set("MENDELEY_OAUTH2_ACCESS_TOKEN", production_r.get("MENDELEY_OAUTH2_ACCESS_TOKEN"))
