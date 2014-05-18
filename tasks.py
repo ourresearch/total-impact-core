@@ -168,9 +168,9 @@ def provider_run(provider_message, provider_name):
     else:
         callback = add_to_database_if_nonzero
 
-    provider_method_wrapper(tiid, aliases_dict, provider, method_name, analytics_credentials, myredis, alias_providers_already_run, callback)
+    response = provider_method_wrapper(tiid, aliases_dict, provider, method_name, analytics_credentials, myredis, alias_providers_already_run, callback)
 
-
+    return response
 
 
 
