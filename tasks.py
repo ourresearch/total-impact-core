@@ -1,6 +1,7 @@
 import logging
 import celery
 import os
+import json
 
 from totalimpact import item as item_module
 from totalimpact import db
@@ -53,10 +54,6 @@ def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name, ana
         logger.info(u"{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
             worker_name, tiid=tiid, provider_name=provider_name.upper(), method_name=method_name.upper()))
 
-
-    logger.info(u"{:20}: AFTER METHOD in provider_method_wrapper with {tiid} {provider_name} {method_name} with {aliases}".format(
-       "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=input_aliases_dict))
-
     if method_name == "aliases":
         # update aliases to include the old ones too
         aliases_providers_run += [provider_name]
@@ -73,14 +70,9 @@ def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name, ana
         worker_name, tiid=tiid, method_name=method_name.upper(), 
         provider_name=provider_name.upper(), response=response))
 
-    logger.info(u"{:20}: BEFORE CALLBACK in provider_method_wrapper with {tiid} {provider_name} {method_name} with {aliases}".format(
-       "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=input_aliases_dict))
-
 
     callback(tiid, response, method_name, analytics_credentials, myredis, provider_name, aliases_providers_run)
 
-    logger.info(u"{:20}: AFTER CALLBACK in provider_method_wrapper with {tiid} {provider_name} {method_name} with {aliases}".format(
-       "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=input_aliases_dict))
 
     return response
 
