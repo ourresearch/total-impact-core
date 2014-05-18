@@ -134,7 +134,7 @@ def add_to_alias_queue_and_database(
             provider_name,
             alias_providers_already_run):
 
-    add_to_database_if_nonzero(tiid, aliases_dict, method_name, analytics_credentials)
+    add_to_database_if_nonzero(tiid, aliases_dict, method_name, analytics_credentials, myredis, provider_name, alias_providers_already_run)
 
     alias_message = {
             "tiid": tiid, 
