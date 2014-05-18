@@ -760,7 +760,6 @@ class ProviderTimeout(ProviderServerError):
 class ProviderHttpError(ProviderError):
     pass
 
-
 class ProviderContentMalformedError(ProviderClientError):
     pass
 

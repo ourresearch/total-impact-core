@@ -15,6 +15,11 @@ logger = logging.getLogger('ti.providers.mendeley')
 shared_redis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)
 
 
+### NOTE:  TO GET MENDELEY PROVIDER WORKING
+# you need to bootstrap the access and refresh tokens into REDISTOGO_URL from production redis.
+# instructions on how to do that are in repo total-impact-deploy/instructions.md
+
+
 # from https://gist.github.com/jalperin/8b3367b65012291fe23f
 def get_token():
     client_auth = requests.auth.HTTPBasicAuth(os.getenv("MENDELEY_OAUTH2_CLIENT_ID"), os.getenv("MENDELEY_OAUTH2_SECRET"))
