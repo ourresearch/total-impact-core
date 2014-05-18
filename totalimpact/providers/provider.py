@@ -741,15 +741,6 @@ class ProviderError(Exception):
         return repr(self._message)
 
 
-class ProviderConfigurationError(ProviderError):
-    pass
-
-class ProviderTimeout(ProviderServerError):
-    pass
-
-class ProviderHttpError(ProviderError):
-    pass
-
 class ProviderClientError(ProviderError):
     def __init__(self, response, message="", inner=None):
         super(ProviderClientError, self).__init__(message, inner)
@@ -759,6 +750,15 @@ class ProviderServerError(ProviderError):
     def __init__(self, response, message="", inner=None):
         super(ProviderServerError, self).__init__(message, inner)
         self.response = response
+
+class ProviderConfigurationError(ProviderError):
+    pass
+
+class ProviderTimeout(ProviderServerError):
+    pass
+
+class ProviderHttpError(ProviderError):
+    pass
 
 class ProviderContentMalformedError(ProviderClientError):
     pass
