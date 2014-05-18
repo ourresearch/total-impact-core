@@ -167,7 +167,6 @@ class Backend(Worker):
                         "analytics_credentials": analytics_credentials,
                         "alias_providers_already_run": alias_providers_already_run}
                     try:
-                        print "ADDING TO CELERY"
                         tasks.provider_run.delay(provider_message, provider_name)
                     except KeyError:
                         #removed a provider?

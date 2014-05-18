@@ -143,15 +143,18 @@ def add_to_alias_queue_and_database(
             "alias_providers_already_run": alias_providers_already_run
         }        
 
+    def push_to_alias_queue(priority, message):
+        message_json = json.dumps(message)
+        myredis.lpush("aliasqueue_"+priority, message_json)
+
     # always push to highest priority queue if we're already going
-    alias_queues["high"].push(alias_message)
+    push_to_alias_queue("high", alias_message)
 
 
 
 
 @celery_app.task(base=TaskAlertIfFail)
 def provider_run(provider_message, provider_name):
-    print "GOT A MESSAGE"
 
     global myredis
 
@@ -175,7 +178,6 @@ def provider_run(provider_message, provider_name):
 
     provider_method_wrapper(tiid, aliases_dict, provider, method_name, analytics_credentials, myredis, alias_providers_already_run, callback)
 
-    print "FINISHED MESSAGE"
 
 
 
