@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-import os, time, json, logging, threading, Queue, copy, sys, datetime
+import os, time, json, logging, Queue, copy, sys, datetime
 from collections import defaultdict
 
 from totalimpact import tiredis, default_settings, db
 from totalimpact import item as item_module
+import tasks
 from totalimpact.providers.provider import ProviderFactory, ProviderError
 
 logger = logging.getLogger('ti.backend')
@@ -50,35 +51,6 @@ class RedisQueue(object):
         return message
 
 
-class PythonQueue(object):
-    def __init__(self, queue_name):
-        self.queue_name = queue_name
-        self.queue = Queue.Queue()
-
-    def push(self, message):
-        self.queue.put(copy.deepcopy(message))
-        queue_length = self.queue.qsize()
-        if queue_length >= 10:
-            logger.info(u">>>PUSHING to python queue {queue_name}, current length approx {queue_length}".format(
-                queue_name=self.queue_name, queue_length=queue_length)) 
-
-        #logger.info(u"{:20}: >>>PUSHED".format(
-        #        self.queue_name))
-
-    def pop(self):
-        try:
-            # blocking pop
-            message = copy.deepcopy(self.queue.get(block=True)) #maybe timeout isn't necessary
-            self.queue.task_done()
-            # queue_length = self.queue.qsize()
-            # logger.info(u"<<<POPPED from python queue {queue_name}, current length approx {queue_length}".format(
-            #     queue_name=self.queue_name, queue_length=queue_length)) 
-        except Queue.Empty:
-            logger.warning(u"{:20}: Queue.Empty... not expecting to get here".format(
-               self.queue_name))            
-            message = None
-        return message
-
 
 class Worker(object):
     def run_in_loop(self):
@@ -86,181 +58,16 @@ class Worker(object):
             self.run()
 
     def spawn_and_loop(self):
-        t = threading.Thread(target=self.run_in_loop, name=self.name+"_thread")
-        t.daemon = True
-        t.start()    
-
-class ProviderWorker(Worker):
-    def __init__(self, provider, polling_interval, alias_queues, provider_queue, wrapper, myredis):
-        self.provider = provider
-        self.provider_name = provider.provider_name
-        self.polling_interval = polling_interval 
-        self.provider_queue = provider_queue
-        self.alias_queues = alias_queues
-        self.wrapper = wrapper
-        self.myredis = myredis
-        self.name = self.provider_name+"_worker"
-
-
-    # last variable is an artifact so it has same call signature as other callbacks
-    def add_to_database_if_nonzero(self, 
-            tiid, 
-            new_content, 
-            method_name, 
-            analytics_credentials, 
-            dummy_already_run=None):
-
-        try:
-            if new_content:
-                # don't need item with metrics for this purpose, so don't bother getting metrics from db
-                item_obj = item_module.Item.query.get(tiid)
-
-                if item_obj:
-                    if method_name=="aliases":
-                        item_obj = item_module.add_aliases_to_item_object(new_content, item_obj)
-                    elif method_name=="biblio":
-                        updated_item_doc = item_module.update_item_with_new_biblio(new_content, item_obj, self.provider_name)
-                    elif method_name=="metrics":
-                        for metric_name in new_content:
-                            item_obj = item_module.add_metric_to_item_object(metric_name, new_content[metric_name], item_obj)
-                    else:
-                        logger.warning(u"ack, supposed to save something i don't know about: " + str(new_content))
-        finally:
-            db.session.remove()
-
-        # do this no matter what, but as last thing
-        if method_name=="metrics":
-            self.myredis.set_provider_finished(tiid, self.provider_name)
-        return
-
-
-
-    def add_to_alias_queue_and_database(self, 
-                tiid, 
-                aliases_dict, 
-                method_name, 
-                analytics_credentials, 
-                alias_providers_already_run):
-
-        self.add_to_database_if_nonzero(tiid, aliases_dict, method_name, analytics_credentials)
-
-        alias_message = {
-                "tiid": tiid, 
-                "aliases_dict": aliases_dict,
-                "analytics_credentials": analytics_credentials,
-                "alias_providers_already_run": alias_providers_already_run
-            }        
-
-        logger.info(u"Adding to alias queue tiid:{tiid} for {provider_name}".format(
-            tiid=tiid, 
-            provider_name=self.provider_name))     
-
-        # always push to highest priority queue if we're already going
-        self.alias_queues["high"].push(alias_message)
-
-
-    @classmethod
-    def wrapper(cls, tiid, input_aliases_dict, provider, method_name, analytics_credentials, aliases_providers_run, callback):
-        global thread_count
-
-        #logger.info(u"{:20}: **Starting {tiid} {provider_name} {method_name} with {aliases}".format(
-        #    "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=aliases))
-
-        provider_name = provider.provider_name
-        worker_name = provider_name+"_worker"
-
-        input_alias_tuples = item_module.alias_tuples_from_dict(input_aliases_dict)
-        method = getattr(provider, method_name)
-
-        try:
-            if provider.uses_analytics_credentials(method_name):
-                method_response = method(input_alias_tuples, analytics_credentials=analytics_credentials)
-            else:
-                method_response = method(input_alias_tuples)
-        except ProviderError:
-            method_response = None
-            logger.info(u"{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
-                worker_name, tiid=tiid, provider_name=provider_name.upper(), method_name=method_name.upper()))
-
-        if method_name == "aliases":
-            # update aliases to include the old ones too
-            aliases_providers_run += [provider_name]
-            if method_response:
-                new_aliases_dict = item_module.alias_dict_from_tuples(method_response)
-                new_canonical_aliases_dict = item_module.canonical_aliases(new_aliases_dict)
-                response = item_module.merge_alias_dicts(new_canonical_aliases_dict, input_aliases_dict)
-            else:
-                response = input_aliases_dict
-        else:
-            response = method_response
-
-        logger.info(u"{:20}: /biblio_print, RETURNED {tiid} {method_name} {provider_name} : {response}".format(
-            worker_name, tiid=tiid, method_name=method_name.upper(), 
-            provider_name=provider_name.upper(), response=response))
-
-        callback(tiid, response, method_name, analytics_credentials, aliases_providers_run)
-
-        try:
-            del thread_count[provider_name][tiid+method_name]
-        except KeyError:  # thread isn't there when we call wrapper in unit tests
-            pass
-
-        return response
-
-
-    def run(self):
-        global thread_count
-
-        num_active_threads_for_this_provider = len(thread_count[self.provider.provider_name])
-
-        if num_active_threads_for_this_provider >= self.provider.max_simultaneous_requests:
-            logger.info(u"{provider} has {num_provider} threads, so not spawning another yet".format(
-                num_provider=num_active_threads_for_this_provider, provider=self.provider.provider_name.upper()))
-            time.sleep(self.polling_interval) # let the provider catch up
-            return
-
-        provider_message = self.provider_queue.pop()
-        if provider_message:
-            #logger.info(u"POPPED from queue for {provider}".format(
-            #    provider=self.provider_name))
-            tiid = provider_message["tiid"]
-            aliases_dict = provider_message["aliases_dict"]
-            method_name = provider_message["method_name"]
-            analytics_credentials = provider_message["analytics_credentials"]
-            alias_providers_already_run = provider_message["alias_providers_already_run"]
-
-            if (method_name == "metrics") and self.provider.provides_metrics:
-                self.myredis.set_provider_started(tiid, self.provider.provider_name)
-
-            if method_name == "aliases":
-                callback = self.add_to_alias_queue_and_database
-            else:
-                callback = self.add_to_database_if_nonzero
-
-            #logger.info(u"BEFORE STARTING thread for {tiid} {method_name} {provider}".format(
-            #    method_name=method_name.upper(), tiid=tiid, num=len(thread_count[self.provider.provider_name].keys()),
-            #    provider=self.provider.provider_name.upper()))
-
-            thread_count[self.provider.provider_name][tiid+method_name] = 1
-
-            if num_active_threads_for_this_provider >= 10:
-                logger.info(u"{num_total} total threads, {num_provider} threads for {provider}".format(
-                    num_provider=num_active_threads_for_this_provider,
-                    num_total=threading.active_count(),
-                    provider=self.provider.provider_name.upper()))
-
-            t = threading.Thread(target=ProviderWorker.wrapper, 
-                args=(tiid, aliases_dict, self.provider, method_name, analytics_credentials, alias_providers_already_run, callback), 
-                name=self.provider_name+"-"+method_name.upper()+"-"+tiid[0:4])
-            t.start()
-            return
+        # t = threading.Thread(target=self.run_in_loop, name=self.name+"_thread")
+        # t.daemon = True
+        # t.start()    
+        run_in_loop()
 
 
 
 class Backend(Worker):
-    def __init__(self, alias_queues, provider_queues, myredis):
+    def __init__(self, alias_queues, myredis):
         self.alias_queues = alias_queues
-        self.provider_queues = provider_queues
         self.myredis = myredis
         self.name = "Backend"
 
@@ -360,7 +167,8 @@ class Backend(Worker):
                         "analytics_credentials": analytics_credentials,
                         "alias_providers_already_run": alias_providers_already_run}
                     try:
-                        self.provider_queues[provider_name].push(provider_message)
+                        print "ADDING TO CELERY"
+                        tasks.provider_run.delay(provider_message, provider_name)
                     except KeyError:
                         #removed a provider?
                         logger.warning(u"KeyError in backend for {tiid} on {provider_name}".format(
@@ -387,21 +195,7 @@ def main():
     #myredis.delete("aliasqueue_high")
 
 
-    polling_interval = 0.1   # how many seconds between polling to talk to provider
-    provider_queues = {}
-    providers = ProviderFactory.get_providers(default_settings.PROVIDERS)
-    for provider in providers:
-        provider_queues[provider.provider_name] = PythonQueue(provider.provider_name+"_queue")
-        provider_worker = ProviderWorker(
-            provider, 
-            polling_interval, 
-            alias_queues,
-            provider_queues[provider.provider_name], 
-            ProviderWorker.wrapper,
-            myredis)
-        provider_worker.spawn_and_loop()
-
-    backend = Backend(alias_queues, provider_queues, myredis)
+    backend = Backend(alias_queues, myredis)
     try:
         backend.run_in_loop() # don't need to spawn this one
     except (KeyboardInterrupt, SystemExit): 
