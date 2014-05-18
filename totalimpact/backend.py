@@ -15,10 +15,6 @@ thread_count = defaultdict(dict)
 
 
 
-
-
-
-
 class RedisQueue(object):
     def __init__(self, queue_name, myredis):
         self.queue_name = queue_name
@@ -107,7 +103,7 @@ class ProviderWorker(Worker):
 
 
     # last variable is an artifact so it has same call signature as other callbacks
-    def add_to_couch_queue_if_nonzero(self, 
+    def add_to_database_if_nonzero(self, 
             tiid, 
             new_content, 
             method_name, 
@@ -139,14 +135,14 @@ class ProviderWorker(Worker):
 
 
 
-    def add_to_alias_and_couch_queues(self, 
+    def add_to_alias_queue_and_database(self, 
                 tiid, 
                 aliases_dict, 
                 method_name, 
                 analytics_credentials, 
                 alias_providers_already_run):
 
-        self.add_to_couch_queue_if_nonzero(tiid, aliases_dict, method_name, analytics_credentials)
+        self.add_to_database_if_nonzero(tiid, aliases_dict, method_name, analytics_credentials)
 
         alias_message = {
                 "tiid": tiid, 
@@ -237,9 +233,9 @@ class ProviderWorker(Worker):
                 self.myredis.set_provider_started(tiid, self.provider.provider_name)
 
             if method_name == "aliases":
-                callback = self.add_to_alias_and_couch_queues
+                callback = self.add_to_alias_queue_and_database
             else:
-                callback = self.add_to_couch_queue_if_nonzero
+                callback = self.add_to_database_if_nonzero
 
             #logger.info(u"BEFORE STARTING thread for {tiid} {method_name} {provider}".format(
             #    method_name=method_name.upper(), tiid=tiid, num=len(thread_count[self.provider.provider_name].keys()),

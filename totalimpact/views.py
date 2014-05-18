@@ -281,7 +281,6 @@ returns a collection object and the items
 def collection_get(cid='', format="json", include_history=False):
     logger.info(u"in collection_get".format(cid=cid))
 
-    # if not include items, then just return the collection straight from couch
     if (request.args.get("include_items") in ["0", "false", "False"]):
         coll = collection.get_collection_doc(cid)
         if not coll:

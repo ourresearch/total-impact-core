@@ -743,7 +743,6 @@ def update_item_with_new_biblio(new_biblio_dict, item_obj, provider_name=None):
 
 def make():
     now = datetime.datetime.utcnow().isoformat()
-    # if the alphabet below changes, need to update couch queue lookups
     shortuuid.set_alphabet('abcdefghijklmnopqrstuvwxyz1234567890')
 
     item = {}
