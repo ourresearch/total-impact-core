@@ -1,5 +1,6 @@
 BeautifulSoup==3.2.1
 Flask==0.10.1
+Flask-Compress==1.0.0
 Flask-DebugToolbar==0.8.0
 Flask-Login==0.1.2
 Flask-SQLAlchemy==0.16
@@ -11,6 +12,7 @@ WTForms==1.0.1
 Werkzeug==0.8.3
 analytics-python==0.4.2
 birdy==0.1
+celery==3.1.11
 certifi==0.0.8
 chardet==1.0.1
 distribute==0.6.10
