@@ -1,5 +1,6 @@
 import logging
 import celery
+from celery.decorators import task
 import os
 import json
 
@@ -7,12 +8,30 @@ from totalimpact import item as item_module
 from totalimpact import db
 from totalimpact import tiredis
 from totalimpact.providers.provider import ProviderFactory, ProviderError
+# import celeryconfig
 
 logger = logging.getLogger("core.tasks")
 
-celery_app = celery.Celery('tasks', 
-    broker=os.getenv("CLOUDAMQP_URL", "amqp://guest@localhost//")
-    )
+# celery_app = celery.Celery()
+# celery_app.config_from_object(celeryconfig)
+
+# celery_app = celery.Celery('tasks', 
+#     broker=os.getenv("CLOUDAMQP_URL", "amqp://guest@localhost//")
+#     )
+
+# celery_app.config_from_object('celeryconfig')
+
+# celery_app.conf.update(
+#     # CELERY_TASK_SERIALIZER='json',
+#     # CELERY_ACCEPT_CONTENT=['json'],  # Ignore other content
+#     # CELERY_RESULT_SERIALIZER='json',
+#     CELERY_ACCEPT_CONTENT = ['pickle', 'json'],
+#     CELERY_IGNORE_RESULT=False,
+#     CELERY_ENABLE_UTC=True,
+#     CELERY_TASK_RESULT_EXPIRES = 18000  # 5 hours
+# )
+
+# print celery_app.conf.humanize(with_defaults=False)
 
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
 
@@ -145,14 +164,14 @@ def add_to_alias_queue_and_database(
 
 
 
-@celery_app.task(base=TaskAlertIfFail)
+@task(base=TaskAlertIfFail)
 def provider_run(provider_message, provider_name):
 
     global myredis
 
     provider = ProviderFactory.get_provider(provider_name)
 
-    logger.info(u"POPPED from queue for {provider}".format(
+    logger.info(u"in provider_run for {provider}".format(
        provider=provider.provider_name))
     tiid = provider_message["tiid"]
     aliases_dict = provider_message["aliases_dict"]
@@ -169,6 +188,9 @@ def provider_run(provider_message, provider_name):
         callback = add_to_database_if_nonzero
 
     response = provider_method_wrapper(tiid, aliases_dict, provider, method_name, analytics_credentials, myredis, alias_providers_already_run, callback)
+
+    print "DONE!"
+    print response
 
     return response
 

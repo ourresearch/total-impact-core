@@ -2,11 +2,13 @@
 
 import os, time, json, logging, Queue, copy, sys, datetime
 from collections import defaultdict
+from celery import group, chain
 
 from totalimpact import tiredis, default_settings, db
 from totalimpact import item as item_module
-import tasks
 from totalimpact.providers.provider import ProviderFactory, ProviderError
+import tasks
+
 
 logger = logging.getLogger('ti.backend')
 logger.setLevel(logging.DEBUG)
@@ -158,6 +160,8 @@ class Backend(Worker):
 
             # list out the method names so they are run in that priority, biblio before metrics
             for method_name in ["aliases", "biblio", "metrics"]:
+                group_list = []
+
                 for provider_name in relevant_provider_names[method_name]:
 
                     provider_message = {
@@ -167,11 +171,27 @@ class Backend(Worker):
                         "analytics_credentials": analytics_credentials,
                         "alias_providers_already_run": alias_providers_already_run}
                     try:
-                        tasks.provider_run.delay(provider_message, provider_name)
+                        group_list.append(tasks.provider_run.si(provider_message, provider_name))
                     except KeyError:
                         #removed a provider?
                         logger.warning(u"KeyError in backend for {tiid} on {provider_name}".format(
                             tiid=tiid, provider_name=provider_name))
+
+                print "****"
+                print method_name
+                print group_list
+                if group_list:
+                    if method_name=="aliases":
+                        job = chain(group_list)
+                    else:
+                        job = group(group_list)
+                    result = job.apply_async()
+                    print result.ready()
+                    print result.successful()
+                    print result.get()
+                    print result.ready()
+                    print result.successful()
+
         else:
             #time.sleep(0.1)  # is this necessary?
             pass
