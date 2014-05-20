@@ -10,15 +10,15 @@ sys.path.append('.')
 
 
 redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/')  # include trailing /
-redis_url_parsed = urlparse.urlparse(redis_url)
+# redis_url_parsed = urlparse.urlparse(redis_url)
 
 BROKER_URL = redis_url + "0"
-REDIS_HOST = redis_url_parsed.hostname
-REDIS_PORT = redis_url_parsed.port
-REDIS_PASSWORD = redis_url_parsed.password
-REDIS_DB = 0
+# REDIS_HOST = redis_url_parsed.hostname
+# REDIS_PORT = redis_url_parsed.port
+# REDIS_PASSWORD = redis_url_parsed.password
+# REDIS_DB = 0
 REDIS_CONNECT_RETRY = True
-CELERY_RESULT_BACKEND = "redis"
+CELERY_RESULT_BACKEND = redis_url + "0"
 
 # these options will be defaults in future as per http://celery.readthedocs.org/en/latest/getting-started/brokers/redis.html
 BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True}
