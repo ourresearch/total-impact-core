@@ -14,7 +14,7 @@ from totalimpact import tiredis, default_settings
 from totalimpact.providers.provider import ProviderFactory, ProviderError
 
 logger = logging.getLogger("core.tasks")
-myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
+myredis = tiredis.from_url(os.getenv("REDIS_URL"))
 
 @task_prerun.connect()
 def task_starting_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, **kwds):    
