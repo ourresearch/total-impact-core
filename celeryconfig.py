@@ -1,5 +1,6 @@
 import os
 import sys
+import urlparse
 
 sys.path.append('.')
 
@@ -7,12 +8,11 @@ sys.path.append('.')
 # BROKER_URL = os.getenv("CLOUDAMQP_URL", "amqp://guest@localhost//")
 # CELERY_RESULT_BACKEND = "amqp"
 
-import urlparse
 
-redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6959/0')
+redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/')  # include trailing /
 redis_url_parsed = urlparse.urlparse(redis_url)
 
-BROKER_URL = redis_url
+BROKER_URL = redis_url + "0"
 CELERY_RESULT_BACKEND = "redis"
 REDIS_HOST = redis_url_parsed.hostname
 REDIS_PORT = redis_url_parsed.port
