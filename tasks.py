@@ -206,3 +206,19 @@ def refresh_tiid(tiid, aliases_dict):
 
     res = workflow.delay()
     return tiid
+
+
+def put_on_celery_queue(tiid, aliases_dict):
+    logger.info(u"put_on_celery_queue {tiid}".format(
+        tiid=tiid))
+
+    res = refresh_tiid.delay(tiid, aliases_dict)
+
+    print res
+    print res.ready()
+    print res.successful()
+    # print res.get()
+    # print res.result
+    # print res.ready()
+    # print res.successful()
+    return res    

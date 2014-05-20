@@ -422,7 +422,7 @@ def refresh_from_tiids(tiids, analytics_credentials, priority, myredis):
             logger.debug(u"couldn't find tiid {tiid} so not refreshing its metrics".format(
                 tiid=tiid))
 
-    item_module.start_item_update(dicts_to_refresh, analytics_credentials, priority, myredis)
+    item_module.start_item_update(dicts_to_refresh, priority, myredis)
     return tiids
 
 

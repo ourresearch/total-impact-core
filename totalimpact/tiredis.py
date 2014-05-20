@@ -119,25 +119,6 @@ def get_num_providers_currently_updating(self, item_id):
     return num_currently_updating
 
 
-def add_to_alias_queue(self, dicts_to_add, analytics_credentials={}, priority="high", alias_providers_already_run=[]):
-    queue_name = "aliasqueue_" + priority
-    pipe = self.pipeline()    
-    for message_dict in dicts_to_add:
-        message = json.dumps({
-                "tiid": message_dict["tiid"], 
-                "aliases_dict": message_dict["aliases_dict"],
-                "analytics_credentials": analytics_credentials,
-                "alias_providers_already_run": alias_providers_already_run
-            })
-        logger.debug(u"Adding to alias_queue {queue_name}: /biblio_print {message}".format(
-            queue_name=queue_name, message=message))
-        pipe.lpush(queue_name, message)
-    pipe.execute()
-    queue_length = self.llen(queue_name)       
-    logger.info(u">>>PUSHING to redis queue {queue_name}, current length {queue_length}".format(
-        queue_name=queue_name, queue_length=queue_length)) 
-
-
 
 def set_value(self, key, value, time_to_expire):
     json_value = json.dumps(value)
@@ -218,7 +199,6 @@ redis.Redis.set_provider_started = set_provider_started
 redis.Redis.set_provider_finished = set_provider_finished
 redis.Redis.get_providers_currently_updating = get_providers_currently_updating
 redis.Redis.get_num_providers_currently_updating = get_num_providers_currently_updating
-redis.Redis.add_to_alias_queue = add_to_alias_queue
 redis.Redis.set_memberitems_status = set_memberitems_status
 redis.Redis.get_memberitems_status = get_memberitems_status
 redis.Redis.set_confidence_interval_table = set_confidence_interval_table
