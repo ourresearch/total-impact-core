@@ -22,7 +22,7 @@ logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 
 mydao = None
-myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)  # main app is on DB 0
+myredis = tiredis.from_url(os.getenv("REDIS_URL"), db=0)  # main app is on DB 0
 
 logger.debug(u"Building reference sets")
 myrefsets = None

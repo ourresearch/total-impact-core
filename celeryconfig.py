@@ -4,8 +4,25 @@ import sys
 sys.path.append('.')
 
 ## Broker settings.
-BROKER_URL = os.getenv("CLOUDAMQP_URL", "amqp://guest@localhost//")
-CELERY_RESULT_BACKEND = "amqp"
+# BROKER_URL = os.getenv("CLOUDAMQP_URL", "amqp://guest@localhost//")
+# CELERY_RESULT_BACKEND = "amqp"
+
+import urlparse
+
+redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6959/0')
+redis_url_parsed = urlparse.urlparse(redis_url)
+
+BROKER_URL = redis_url
+CELERY_RESULT_BACKEND = "redis"
+REDIS_HOST = redis_url_parsed.hostname
+REDIS_PORT = redis_url_parsed.port
+REDIS_PASSWORD = redis_url_parsed.password
+REDIS_DB = 0
+REDIS_CONNECT_RETRY = True
+
+# these options will be defaults in future as per http://celery.readthedocs.org/en/latest/getting-started/brokers/redis.html
+BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True}
+BROKER_TRANSPORT_OPTIONS = {'fanout_patterns': True}
 
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 CELERY_ENABLE_UTC=True

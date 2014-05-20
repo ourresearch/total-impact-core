@@ -217,8 +217,8 @@ def put_on_celery_queue(tiid, aliases_dict):
     print res
     print res.ready()
     print res.successful()
-    # print res.get()
-    # print res.result
-    # print res.ready()
-    # print res.successful()
+    print res.get()
+    print res.result
+    print res.ready()
+    print res.successful()
     return res    

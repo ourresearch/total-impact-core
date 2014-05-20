@@ -30,9 +30,8 @@ pylibmc==1.2.2
 pyparsing==1.5.0
 python-dateutil==1.5
 python-memcached==1.48
-pytz==2012c
-redis==2.4.13
-requests==2.0.1
+pytz==2014.3
+redis==2.9.1
 requests-oauthlib==0.4.0
 rsa==3.0.1
 shortuuid==0.2
