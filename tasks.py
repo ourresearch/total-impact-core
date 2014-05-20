@@ -1,58 +1,57 @@
+import time 
+import os
+import json
 import logging
 import celery
 from celery.decorators import task
-import os
-import json
+from celery.signals import task_postrun, task_prerun, task_failure
+from celery import group, chain, chord
+
 
 from totalimpact import item as item_module
 from totalimpact import db
-from totalimpact import tiredis
+from totalimpact import tiredis, default_settings
 from totalimpact.providers.provider import ProviderFactory, ProviderError
-# import celeryconfig
 
 logger = logging.getLogger("core.tasks")
-
-# celery_app = celery.Celery()
-# celery_app.config_from_object(celeryconfig)
-
-# celery_app = celery.Celery('tasks', 
-#     broker=os.getenv("CLOUDAMQP_URL", "amqp://guest@localhost//")
-#     )
-
-# celery_app.config_from_object('celeryconfig')
-
-# celery_app.conf.update(
-#     # CELERY_TASK_SERIALIZER='json',
-#     # CELERY_ACCEPT_CONTENT=['json'],  # Ignore other content
-#     # CELERY_RESULT_SERIALIZER='json',
-#     CELERY_ACCEPT_CONTENT = ['pickle', 'json'],
-#     CELERY_IGNORE_RESULT=False,
-#     CELERY_ENABLE_UTC=True,
-#     CELERY_TASK_RESULT_EXPIRES = 18000  # 5 hours
-# )
-
-# print celery_app.conf.humanize(with_defaults=False)
-
 myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
 
+@task_prerun.connect()
+def task_starting_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, **kwds):    
+    try:
+        if "chain_dummy" in task.name:
+            logging.info(">>>STARTED: {task}".format(
+                task_id=task_id, task=task, args=args, kwargs=kwargs))
+        else:
+            logging.info(">>>STARTED: {task} {args}".format(
+                task_id=task_id, task=task, args=args, kwargs=kwargs))
+    except KeyError:
+        pass
 
-class TaskAlertIfFail(celery.Task):
-    def __call__(self, *args, **kwargs):
-        """In celery task this function call the run method, here you can
-        set some environment variable before the run of the task"""
-        # logger.info(u"Starting to run")
-        return self.run(*args, **kwargs)
+@task_postrun.connect()
+def task_finished_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds):
+    try:    
+        if "chain_dummy" in task.name:
+            logging.info("<<<FINISHED: {task}".format(
+                task_id=task_id, task=task, args=args, kwargs=kwargs, retval=retval, state=state))
+        else:
+            logging.info("<<<FINISHED: {task} {args}".format(
+                task_id=task_id, task=task, args=args, kwargs=kwargs, retval=retval, state=state))
+    except KeyError:
+        pass
 
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        url_slug="unknown"
-        # for arg in args:
-        #     if isinstance(arg, User):
-        #         url_slug = arg.url_slug
-        logger.error(u"Celery task failed on {task_name}, task_id={task_id}".format(
-            task_name=self.name, task_id=task_id))
+@task_failure.connect
+def task_failure_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds):
+    try:
+        logger.error(u"Celery task FAILED on task_id={task_id}, {args}".format(
+            task_id=task_id, args=args))
+    except KeyError:
+        pass
 
 
-def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name, analytics_credentials, myredis, aliases_providers_run, callback):
+
+
+def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name, myredis):
 
     logger.info(u"{:20}: in provider_method_wrapper with {tiid} {provider_name} {method_name} with {aliases}".format(
        "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=input_aliases_dict))
@@ -60,40 +59,33 @@ def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name, ana
     provider_name = provider.provider_name
     worker_name = provider_name+"_worker"
 
+    if isinstance(input_aliases_dict, list):
+        input_aliases_dict = item_module.alias_dict_from_tuples(input_aliases_dict)    
+
     input_alias_tuples = item_module.alias_tuples_from_dict(input_aliases_dict)
     method = getattr(provider, method_name)
 
     try:
-        if provider.uses_analytics_credentials(method_name):
-            method_response = method(input_alias_tuples, analytics_credentials=analytics_credentials)
-        else:
-            method_response = method(input_alias_tuples)
+        method_response = method(input_alias_tuples)
     except ProviderError:
         method_response = None
         logger.info(u"{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
             worker_name, tiid=tiid, provider_name=provider_name.upper(), method_name=method_name.upper()))
 
-    if method_name == "aliases":
-        # update aliases to include the old ones too
-        aliases_providers_run += [provider_name]
-        if method_response:
-            new_aliases_dict = item_module.alias_dict_from_tuples(method_response)
-            new_canonical_aliases_dict = item_module.canonical_aliases(new_aliases_dict)
-            response = item_module.merge_alias_dicts(new_canonical_aliases_dict, input_aliases_dict)
-        else:
-            response = input_aliases_dict
-    else:
-        response = method_response
-
-    logger.info(u"{:20}: /biblio_print, RETURNED {tiid} {method_name} {provider_name} : {response}".format(
+    logger.info(u"{:20}: /biblio_print, RETURNED {tiid} {method_name} {provider_name} : {method_response}".format(
         worker_name, tiid=tiid, method_name=method_name.upper(), 
-        provider_name=provider_name.upper(), response=response))
+        provider_name=provider_name.upper(), method_response=method_response))
 
+    if method_name == "aliases" and method_response:
+        initial_alias_dict = item_module.alias_dict_from_tuples(method_response)
+        new_canonical_aliases_dict = item_module.canonical_aliases(initial_alias_dict)
+        full_aliases_dict = item_module.merge_alias_dicts(new_canonical_aliases_dict, input_aliases_dict)
+    else:
+        full_aliases_dict = input_aliases_dict
 
-    callback(tiid, response, method_name, analytics_credentials, myredis, provider_name, aliases_providers_run)
+    add_to_database_if_nonzero(tiid, method_response, method_name, myredis, provider_name)
 
-
-    return response
+    return full_aliases_dict
 
 
 
@@ -103,20 +95,17 @@ def add_to_database_if_nonzero(
         tiid, 
         new_content, 
         method_name, 
-        analytics_credentials, 
         myredis,
-        provider_name,
-        dummy_already_run=None):
-
+        provider_name):
     try:
         if new_content:
             # don't need item with metrics for this purpose, so don't bother getting metrics from db
-            print tiid, new_content
-
             item_obj = item_module.Item.query.get(tiid)
 
             if item_obj:
                 if method_name=="aliases":
+                    if isinstance(new_content, list):
+                        new_content = item_module.alias_dict_from_tuples(new_content)    
                     item_obj = item_module.add_aliases_to_item_object(new_content, item_obj)
                 elif method_name=="biblio":
                     updated_item_doc = item_module.update_item_with_new_biblio(new_content, item_obj, provider_name)
@@ -128,44 +117,29 @@ def add_to_database_if_nonzero(
     finally:
         db.session.remove()
 
-    # do this no matter what, but as last thing
-    if method_name=="metrics":
-        myredis.set_provider_finished(tiid, provider_name)
+        # do this no matter what, but as last thing
+        if method_name=="metrics":
+            myredis.set_provider_finished(tiid, provider_name)
 
     return
 
 
+# @task
+# def chordfinisher(group_result, **kwargs):
+#     return group_result[0]
 
-def add_to_alias_queue_and_database( 
-            tiid, 
-            aliases_dict, 
-            method_name, 
-            analytics_credentials, 
-            myredis,
-            provider_name,
-            alias_providers_already_run):
-
-    add_to_database_if_nonzero(tiid, aliases_dict, method_name, analytics_credentials, myredis, provider_name, alias_providers_already_run)
-
-    alias_message = {
-            "tiid": tiid, 
-            "aliases_dict": aliases_dict,
-            "analytics_credentials": analytics_credentials,
-            "alias_providers_already_run": alias_providers_already_run
-        }        
-
-    def push_to_alias_queue(priority, message):
-        message_json = json.dumps(message)
-        myredis.lpush("aliasqueue_"+priority, message_json)
-
-    # always push to highest priority queue if we're already going
-    push_to_alias_queue("high", alias_message)
+@task
+def chain_dummy(first_arg, **kwargs):
+    # print "sleeping"
+    # time.sleep(3)
+    try:
+        return first_arg[0]
+    except KeyError:
+        return first_arg
 
 
-
-
-@task(base=TaskAlertIfFail)
-def provider_run(provider_message, provider_name):
+@task
+def provider_run(aliases_dict, tiid, method_name, provider_name):
 
     global myredis
 
@@ -173,26 +147,62 @@ def provider_run(provider_message, provider_name):
 
     logger.info(u"in provider_run for {provider}".format(
        provider=provider.provider_name))
-    tiid = provider_message["tiid"]
-    aliases_dict = provider_message["aliases_dict"]
-    method_name = provider_message["method_name"]
-    analytics_credentials = provider_message["analytics_credentials"]
-    alias_providers_already_run = provider_message["alias_providers_already_run"]
 
     if (method_name == "metrics") and provider.provides_metrics:
         myredis.set_provider_started(tiid, provider.provider_name)
 
-    if method_name == "aliases":
-        callback = add_to_alias_queue_and_database
-    else:
-        callback = add_to_database_if_nonzero
-
-    response = provider_method_wrapper(tiid, aliases_dict, provider, method_name, analytics_credentials, myredis, alias_providers_already_run, callback)
-
-    print "DONE!"
-    print response
+    response = provider_method_wrapper(tiid, aliases_dict, provider, method_name, myredis)
 
     return response
 
 
 
+def sniffer(item_aliases, provider_config=default_settings.PROVIDERS):
+
+    (genre, host) = item_module.decide_genre(item_aliases)
+
+    all_metrics_providers = [provider.provider_name for provider in 
+                    ProviderFactory.get_providers(provider_config, "metrics")]
+
+    if (genre == "article") and (host != "arxiv"):
+        run = [[("aliases", provider)] for provider in ["mendeley", "crossref", "pubmed", "altmetric_com"]]
+        run += [[("biblio", provider) for provider in ["crossref", "pubmed", "mendeley", "webpage"]]]
+        run += [[("metrics", provider) for provider in all_metrics_providers]]
+    elif (host == "arxiv") or ("doi" in item_aliases):
+        run = [[("aliases", provider)] for provider in [host, "altmetric_com"]]
+        run += [[("biblio", provider) for provider in [host, "mendeley"]]]
+        run += [[("metrics", provider) for provider in all_metrics_providers]]
+    else:
+        # relevant alias and biblio providers are always the same
+        relevant_providers = [host]
+        if relevant_providers == ["unknown"]:
+            relevant_providers = ["webpage"]
+        run = [[("aliases", provider)] for provider in relevant_providers]
+        run += [[("biblio", provider) for provider in relevant_providers]]
+        run += [[("metrics", provider) for provider in all_metrics_providers]]
+
+    return(run)
+
+
+@task
+def refresh_tiid(tiid, aliases_dict):
+
+    pipeline = sniffer(aliases_dict)
+    chain_list = []
+    for step_config in pipeline:
+        group_list = []
+        for (method_name, provider_name) in step_config:
+            if not chain_list:
+                # pass the alias dict in to the first one in the whole chain
+                group_list.append(provider_run.si(aliases_dict, tiid, method_name, provider_name))
+            else:
+                group_list.append(provider_run.s(tiid, method_name, provider_name))
+        if group_list:
+            chain_list.append(group(group_list))
+            chain_list.append(chain_dummy.s(dummy="DUMMY_{method_name}_{provider_name}".format(
+                method_name=method_name, provider_name=provider_name)))
+
+    workflow = chain(chain_list)
+
+    res = workflow.delay()
+    return tiid

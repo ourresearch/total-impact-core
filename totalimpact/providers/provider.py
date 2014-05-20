@@ -104,7 +104,6 @@ def get_aliases_from_product_id_strings(product_id_strings):
             aliases += providers.arxiv.Arxiv().member_items(nid)
         elif is_url(nid):
             aliases += providers.webpage.Webpage().member_items(nid)
-    print aliases
     return aliases
 
 
