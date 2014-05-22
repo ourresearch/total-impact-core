@@ -6,7 +6,7 @@ import celery
 from celery.decorators import task
 from celery.signals import task_postrun, task_prerun, task_failure
 from celery import group, chain, chord
-from celery.app import default_app as celery_app
+# from celery.app import default_app as celery_app
 
 from totalimpact import item as item_module
 from totalimpact import db
@@ -214,8 +214,8 @@ def refresh_tiid(tiid, aliases_dict):
 
     workflow = chain(chain_list)
 
-    celery_app.control.time_limit('tasks.provider_run',
-                               soft=60, hard=120, reply=True)
+    # celery_app.control.time_limit('tasks.provider_run',
+    #                            soft=60, hard=120, reply=True)
 
     res = workflow.delay()
     return tiid
