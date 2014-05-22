@@ -6,6 +6,7 @@ import celery
 from celery.decorators import task
 from celery.signals import task_postrun, task_prerun, task_failure
 from celery import group, chain, chord
+from celery import Celery
 
 
 from totalimpact import item as item_module
@@ -15,6 +16,9 @@ from totalimpact.providers.provider import ProviderFactory, ProviderError
 
 logger = logging.getLogger("core.tasks")
 myredis = tiredis.from_url(os.getenv("REDIS_URL"))
+
+celery_app = Celery()
+celery_app.config_from_object('celeryconfig')
 
 @task_prerun.connect()
 def task_starting_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, **kwds):    
@@ -195,14 +199,19 @@ def refresh_tiid(tiid, aliases_dict):
             if not chain_list:
                 # pass the alias dict in to the first one in the whole chain
                 group_list.append(provider_run.si(aliases_dict, tiid, method_name, provider_name))
+                # group_list.append(provider_run.si(aliases_dict, tiid, method_name, provider_name).set(queue=provider_name))
             else:
                 group_list.append(provider_run.s(tiid, method_name, provider_name))
+                # group_list.append(provider_run.s(tiid, method_name, provider_name).set(queue=provider_name))
         if group_list:
             chain_list.append(group(group_list))
             chain_list.append(chain_dummy.s(dummy="DUMMY_{method_name}_{provider_name}".format(
                 method_name=method_name, provider_name=provider_name)))
 
     workflow = chain(chain_list)
+
+    app.control.time_limit('tasks.crawl_the_web',
+                               soft=60, hard=120, reply=True)
 
     res = workflow.delay()
     return tiid
