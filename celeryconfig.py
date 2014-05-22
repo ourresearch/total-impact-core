@@ -10,7 +10,7 @@ sys.path.append('.')
 # CELERY_RESULT_BACKEND = "amqp"
 
 
-redis_url = os.environ.get('REDIS_URL')
+redis_url = os.environ.get('REDIS_URL', "redis://localhost:6379/")
 if not redis_url.endswith("/"):
     redis_url += "/"
 

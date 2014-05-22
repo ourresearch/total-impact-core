@@ -6,19 +6,15 @@ import celery
 from celery.decorators import task
 from celery.signals import task_postrun, task_prerun, task_failure
 from celery import group, chain, chord
-from celery import Celery
-
+from celery.app import default_app as celery_app
 
 from totalimpact import item as item_module
 from totalimpact import db
 from totalimpact import tiredis, default_settings
-from totalimpact.providers.provider import ProviderFactory, ProviderError
+from totalimpact.providers.provider import ProviderFactory, ProviderError, ProviderTimeout
 
 logger = logging.getLogger("core.tasks")
 myredis = tiredis.from_url(os.getenv("REDIS_URL"))
-
-celery_app = Celery()
-celery_app.config_from_object('celeryconfig')
 
 @task_prerun.connect()
 def task_starting_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, **kwds):    
@@ -89,6 +85,10 @@ def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name, myr
 
     add_to_database_if_nonzero(tiid, method_response, method_name, myredis, provider_name)
 
+    # do this no matter what, but as last thing
+    if method_name=="metrics"  and provider.provides_metrics:
+        myredis.set_provider_finished(tiid, provider_name)
+
     return full_aliases_dict
 
 
@@ -101,64 +101,26 @@ def add_to_database_if_nonzero(
         method_name, 
         myredis,
         provider_name):
-    try:
-        if new_content:
-            # don't need item with metrics for this purpose, so don't bother getting metrics from db
-            item_obj = item_module.Item.query.get(tiid)
 
-            if item_obj:
-                if method_name=="aliases":
-                    if isinstance(new_content, list):
-                        new_content = item_module.alias_dict_from_tuples(new_content)    
-                    item_obj = item_module.add_aliases_to_item_object(new_content, item_obj)
-                elif method_name=="biblio":
-                    updated_item_doc = item_module.update_item_with_new_biblio(new_content, item_obj, provider_name)
-                elif method_name=="metrics":
-                    for metric_name in new_content:
-                        item_obj = item_module.add_metric_to_item_object(metric_name, new_content[metric_name], item_obj)
-                else:
-                    logger.warning(u"ack, supposed to save something i don't know about: " + str(new_content))
-    finally:
-        db.session.remove()
+    if new_content:
+        # don't need item with metrics for this purpose, so don't bother getting metrics from db
+        item_obj = item_module.Item.query.get(tiid)
 
-        # do this no matter what, but as last thing
-        if method_name=="metrics":
-            myredis.set_provider_finished(tiid, provider_name)
+        if item_obj:
+            if method_name=="aliases":
+                if isinstance(new_content, list):
+                    new_content = item_module.alias_dict_from_tuples(new_content)    
+                item_obj = item_module.add_aliases_to_item_object(new_content, item_obj)
+            elif method_name=="biblio":
+                updated_item_doc = item_module.update_item_with_new_biblio(new_content, item_obj, provider_name)
+            elif method_name=="metrics":
+                for metric_name in new_content:
+                    item_obj = item_module.add_metric_to_item_object(metric_name, new_content[metric_name], item_obj)
+            else:
+                logger.warning(u"ack, supposed to save something i don't know about: " + str(new_content))
+        # db.session.remove()
 
     return
-
-
-# @task
-# def chordfinisher(group_result, **kwargs):
-#     return group_result[0]
-
-@task
-def chain_dummy(first_arg, **kwargs):
-    # print "sleeping"
-    # time.sleep(3)
-    try:
-        return first_arg[0]
-    except KeyError:
-        return first_arg
-
-
-@task
-def provider_run(aliases_dict, tiid, method_name, provider_name):
-
-    global myredis
-
-    provider = ProviderFactory.get_provider(provider_name)
-
-    logger.info(u"in provider_run for {provider}".format(
-       provider=provider.provider_name))
-
-    if (method_name == "metrics") and provider.provides_metrics:
-        myredis.set_provider_started(tiid, provider.provider_name)
-
-    response = provider_method_wrapper(tiid, aliases_dict, provider, method_name, myredis)
-
-    return response
-
 
 
 def sniffer(item_aliases, provider_config=default_settings.PROVIDERS):
@@ -188,7 +150,49 @@ def sniffer(item_aliases, provider_config=default_settings.PROVIDERS):
     return(run)
 
 
-@task
+# @task
+# def chordfinisher(group_result, **kwargs):
+#     return group_result[0]
+
+@task(time_limit=10)
+def chain_dummy(first_arg, **kwargs):
+    # print "sleeping"
+    # time.sleep(3)
+    try:
+        return first_arg[0]
+    except KeyError:
+        return first_arg
+
+
+@task()
+def provider_run(aliases_dict, tiid, method_name, provider_name):
+
+    try:
+        global myredis
+
+        provider = ProviderFactory.get_provider(provider_name)
+
+        logger.info(u"in provider_run for {provider}".format(
+           provider=provider.provider_name))
+
+        if (method_name == "metrics") and provider.provides_metrics:
+            myredis.set_provider_started(tiid, provider.provider_name)
+
+        response = provider_method_wrapper(tiid, aliases_dict, provider, method_name, myredis)
+
+    except celery.exceptions.SoftTimeLimitExceeded:
+        logger.info(u"TIMEOUT in provider_run for {provider}".format(
+           provider=provider.provider_name))
+        raise ProviderTimeout("celery timeout on {provider_name}".format(
+            provider_name=provider_name))
+
+    return response
+
+
+
+
+
+@task(time_limit=60)
 def refresh_tiid(tiid, aliases_dict):
 
     pipeline = sniffer(aliases_dict)
@@ -210,7 +214,7 @@ def refresh_tiid(tiid, aliases_dict):
 
     workflow = chain(chain_list)
 
-    app.control.time_limit('tasks.crawl_the_web',
+    celery_app.control.time_limit('tasks.provider_run',
                                soft=60, hard=120, reply=True)
 
     res = workflow.delay()
@@ -221,6 +225,7 @@ def put_on_celery_queue(tiid, aliases_dict):
     logger.info(u"put_on_celery_queue {tiid}".format(
         tiid=tiid))
 
+    # celery_app = celery.app.app_or_default()
     res = refresh_tiid.delay(tiid, aliases_dict)
 
     print res
