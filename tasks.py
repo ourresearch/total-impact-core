@@ -53,41 +53,43 @@ def task_failure_handler(sender=None, task_id=None, task=None, args=None, kwargs
 
 def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name, myredis):
 
-    logger.info(u"{:20}: in provider_method_wrapper with {tiid} {provider_name} {method_name} with {aliases}".format(
-       "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=input_aliases_dict))
-
-    provider_name = provider.provider_name
-    worker_name = provider_name+"_worker"
-
-    if isinstance(input_aliases_dict, list):
-        input_aliases_dict = item_module.alias_dict_from_tuples(input_aliases_dict)    
-
-    input_alias_tuples = item_module.alias_tuples_from_dict(input_aliases_dict)
-    method = getattr(provider, method_name)
-
     try:
-        method_response = method(input_alias_tuples)
-    except ProviderError:
-        method_response = None
-        logger.info(u"{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
-            worker_name, tiid=tiid, provider_name=provider_name.upper(), method_name=method_name.upper()))
+        logger.info(u"{:20}: in provider_method_wrapper with {tiid} {provider_name} {method_name} with {aliases}".format(
+           "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=input_aliases_dict))
 
-    logger.info(u"{:20}: /biblio_print, RETURNED {tiid} {method_name} {provider_name} : {method_response}".format(
-        worker_name, tiid=tiid, method_name=method_name.upper(), 
-        provider_name=provider_name.upper(), method_response=method_response))
+        provider_name = provider.provider_name
+        worker_name = provider_name+"_worker"
 
-    if method_name == "aliases" and method_response:
-        initial_alias_dict = item_module.alias_dict_from_tuples(method_response)
-        new_canonical_aliases_dict = item_module.canonical_aliases(initial_alias_dict)
-        full_aliases_dict = item_module.merge_alias_dicts(new_canonical_aliases_dict, input_aliases_dict)
-    else:
-        full_aliases_dict = input_aliases_dict
+        if isinstance(input_aliases_dict, list):
+            input_aliases_dict = item_module.alias_dict_from_tuples(input_aliases_dict)    
 
-    add_to_database_if_nonzero(tiid, method_response, method_name, myredis, provider_name)
+        input_alias_tuples = item_module.alias_tuples_from_dict(input_aliases_dict)
+        method = getattr(provider, method_name)
 
-    # do this no matter what, but as last thing
-    if method_name=="metrics"  and provider.provides_metrics:
-        myredis.set_provider_finished(tiid, provider_name)
+        try:
+            method_response = method(input_alias_tuples)
+        except ProviderError:
+            method_response = None
+            logger.info(u"{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
+                worker_name, tiid=tiid, provider_name=provider_name.upper(), method_name=method_name.upper()))
+
+        logger.info(u"{:20}: /biblio_print, RETURNED {tiid} {method_name} {provider_name} : {method_response}".format(
+            worker_name, tiid=tiid, method_name=method_name.upper(), 
+            provider_name=provider_name.upper(), method_response=method_response))
+
+        if method_name == "aliases" and method_response:
+            initial_alias_dict = item_module.alias_dict_from_tuples(method_response)
+            new_canonical_aliases_dict = item_module.canonical_aliases(initial_alias_dict)
+            full_aliases_dict = item_module.merge_alias_dicts(new_canonical_aliases_dict, input_aliases_dict)
+        else:
+            full_aliases_dict = input_aliases_dict
+
+        add_to_database_if_nonzero(tiid, method_response, method_name, myredis, provider_name)
+
+    finally:
+        # do this no matter what, but as last thing
+        if method_name=="metrics" and provider.provides_metrics:
+            myredis.set_provider_finished(tiid, provider.provider_name)
 
     return full_aliases_dict
 
@@ -162,6 +164,17 @@ def chain_dummy(first_arg, **kwargs):
         return first_arg[0]
     except KeyError:
         return first_arg
+
+
+# @app.task
+# def provider_run_error_handler(uuid):
+#     result = AsyncResult(uuid)
+#     exc = result.get(propagate=False)
+#     print('Task {0} raised exception: {1!r}\n{2!r}'.format(
+#           uuid, exc, result.traceback))
+
+#     if (method_name=="metrics") and provider.provides_metrics:
+#         myredis.set_provider_finished(tiid, provider_name)
 
 
 @task()
