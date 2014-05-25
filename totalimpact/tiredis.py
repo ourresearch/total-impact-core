@@ -66,7 +66,6 @@ def get_tiid_task_ids(self, tiids):
     for tiid in tiids:
         tiid_task_ids[tiid] = self.get_task_id(tiid, pipe)
     pipe.execute()  
-    print "******** got tasks", tiid_task_ids
 
     return tiid_task_ids
 
