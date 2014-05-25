@@ -12,11 +12,11 @@ from urlparse import parse_qs, urlsplit, urlunsplit
 
 import logging
 logger = logging.getLogger('ti.providers.mendeley')
-shared_redis = tiredis.from_url(os.getenv("REDISTOGO_URL"), db=0)
+shared_redis = tiredis.from_url(os.getenv("REDIS_URL"), db=0)
 
 
 ### NOTE:  TO GET MENDELEY PROVIDER WORKING
-# you need to bootstrap the access and refresh tokens into REDISTOGO_URL from production redis.
+# you need to bootstrap the access and refresh tokens into REDIS_URL from production redis.
 # instructions on how to do that are in repo total-impact-deploy/instructions.md
 
 
