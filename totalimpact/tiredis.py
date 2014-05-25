@@ -10,12 +10,12 @@ def from_url(url, db=0):
     r = redis.from_url(url, db)
     return r
 
-def set_hash_value(self, key, hash_key, value, time_to_expire, pipe=None):
+def set_hash_value(self, key, hash_key, value, expire, pipe=None):
     if not pipe:
         pipe = self
     json_value = json.dumps(value)
     pipe.hset(key, hash_key, json_value)
-    pipe.expire(key, time_to_expire)
+    pipe.expire(key, expire)
 
 def get_hash_value(self, key, hash_key):
     try:
@@ -34,14 +34,13 @@ def delete_hash_key(self, key, hash_key):
 
 
 
-def set_task_id(self, tiid, task_id, pipe=None):
+def set_task_id(self, tiid, task_id, expire=60*60*24, pipe=None):
     if not pipe:
         pipe = self
 
     key = "tiid_task_id:{tiid}".format(
         tiid=tiid)
-    expire = 60*60*24  # for a day    
-    pipe.set_value(key, task_id, expire, pipe)    
+    pipe.set_value(key, task_id, expire, pipe=pipe)    
 
 
 def get_task_id(self, tiid, pipe=None):
@@ -53,12 +52,12 @@ def get_task_id(self, tiid, pipe=None):
     return self.get_value(key, pipe)
 
 
-def set_tiid_task_ids(self, tiid_task_ids):
+def set_tiid_task_ids(self, tiid_task_ids, expire=60*60*24):
     print "******** setting tasks", tiid_task_ids
     pipe = self.pipeline()    
 
     for (tiid, task_id) in tiid_task_ids.iteritems():
-        self.set_task_id(tiid, task_id, pipe)
+        self.set_task_id(tiid, task_id, expire=expire, pipe=pipe)
     pipe.execute()    
 
 def get_tiid_task_ids(self, tiids):
@@ -73,13 +72,13 @@ def get_tiid_task_ids(self, tiids):
     return tiid_task_ids
 
 
-def set_value(self, key, value, time_to_expire, pipe=None):
+def set_value(self, key, value, expire, pipe=None):
     if not pipe:
         pipe = self
 
     json_value = json.dumps(value)
     pipe.set(key, json_value)
-    pipe.expire(key, time_to_expire)
+    pipe.expire(key, expire)
 
 def get_value(self, key, pipe=None):
     if not pipe:

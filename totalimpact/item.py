@@ -1153,6 +1153,7 @@ def get_tiid_by_alias(ns, nid, mydao=None):
 def start_item_update(dicts_to_add, priority, myredis):
     # logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
     #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
+    myredis.set_tiid_task_ids(dict((d["tiid"], "STARTING") for d in dicts_to_add), expire=60*5) # five minutes
     tiid_task_ids = {}
     for d in dicts_to_add:
         from tasks import put_on_celery_queue
