@@ -375,7 +375,7 @@ def main():
 
     mydao = None
 
-    myredis = tiredis.from_url(os.getenv("REDISTOGO_URL"))
+    myredis = tiredis.from_url(os.getenv("REDIS_URL"))
 
     alias_queues = {
         "high": RedisQueue("aliasqueue_high", myredis), 
@@ -383,7 +383,7 @@ def main():
         }
     # to clear alias_queue:
     #import redis, os
-    #myredis = redis.from_url(os.getenv("REDISTOGO_URL"))
+    #myredis = redis.from_url(os.getenv("REDIS_URL"))
     #myredis.delete("aliasqueue_high")
 
 
