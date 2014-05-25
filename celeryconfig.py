@@ -5,17 +5,12 @@ from kombu import Exchange, Queue
 
 sys.path.append('.')
 
-## Broker settings.
-# BROKER_URL = os.getenv("CLOUDAMQP_URL", "amqp://guest@localhost//")
-# CELERY_RESULT_BACKEND = "amqp"
-
-
 redis_url = os.environ.get('REDIS_URL', "redis://localhost:6379/")
 if not redis_url.endswith("/"):
     redis_url += "/"
 
-BROKER_URL = redis_url + "0"
-CELERY_RESULT_BACKEND = redis_url + "0"
+BROKER_URL = redis_url + "1"
+CELERY_RESULT_BACKEND = redis_url + "1"
 REDIS_CONNECT_RETRY = True
 
 
@@ -25,9 +20,15 @@ BROKER_TRANSPORT_OPTIONS = {'fanout_patterns': True}
 
 CELERY_DEFAULT_QUEUE = 'core_main'
 CELERY_QUEUES = (
-    Queue('core_main', Exchange('core_main'), routing_key='core_main'),
+    Queue('core_main', routing_key='core_main'),
+    Queue('refresh_tiid', routing_key='refresh_tiid'),
+    Queue('provider_run', routing_key='provider_run'),
 )
 
+CELERY_ROUTES = {
+    'tasks.refresh_tiid': {'queue': 'refresh_tiid'},
+    'tasks.provider_run': {'queue': 'provider_run'},
+}
 
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 CELERY_ENABLE_UTC=True
@@ -37,5 +38,5 @@ CELERY_TASK_RESULT_EXPIRES = 60*60  # 1 hour
 CELERY_IMPORTS = ("tasks",)
 
 CELERY_ANNOTATIONS = {
-    'celery.chord_unlock': {'soft_time_limit': 60*5},  # five minutes
+    'celery.chord_unlock': {'soft_time_limit': 60*60*8},  # 8 hours
 }
