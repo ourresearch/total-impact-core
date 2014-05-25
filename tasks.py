@@ -213,9 +213,11 @@ def refresh_tiid(tiid, aliases_dict):
         for (method_name, provider_name) in step_config:
             if not chain_list:
                 # pass the alias dict in to the first one in the whole chain
-                group_list.append(provider_run.si(aliases_dict, tiid, method_name, provider_name))
+                # group_list.append(provider_run.si(aliases_dict, tiid, method_name, provider_name).set())
+                group_list.append(provider_run.si(aliases_dict, tiid, method_name, provider_name).set(queue="provider."+provider_name))
             else:
-                group_list.append(provider_run.s(tiid, method_name, provider_name))
+                # group_list.append(provider_run.s(tiid, method_name, provider_name).set())
+                group_list.append(provider_run.s(tiid, method_name, provider_name).set(queue="provider."+"provider_name"))
         if group_list:
             chain_list.append(group(group_list))
             chain_list.append(chain_dummy.s(dummy="DUMMY_{method_name}_{provider_name}".format(
@@ -223,7 +225,7 @@ def refresh_tiid(tiid, aliases_dict):
 
     workflow = chain(chain_list)
 
-    workflow_tasks_task = workflow.delay()
+    workflow_tasks_task = workflow.apply_async()
 
     myredis.set_task_id(tiid, workflow_tasks_task.task_id)
 
