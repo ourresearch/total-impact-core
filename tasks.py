@@ -110,7 +110,6 @@ def add_to_database_if_nonzero(
 
     if new_content:
         # don't need item with metrics for this purpose, so don't bother getting metrics from db
-        print "NEW CONTENT:", tiid
         item_obj = item_module.Item.query.get(tiid)
 
         if item_obj:
@@ -211,8 +210,6 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
 @task(base=SqlAlchemyTask, time_limit=60)
 def refresh_tiid(tiid, aliases_dict):
 
-    print "in refresh_tiid"
-
     pipeline = sniffer(aliases_dict)
     chain_list = []
     for step_config in pipeline:
@@ -221,10 +218,8 @@ def refresh_tiid(tiid, aliases_dict):
             if not chain_list:
                 # pass the alias dict in to the first one in the whole chain
                 group_list.append(provider_run.si(aliases_dict, tiid, method_name, provider_name))
-                # group_list.append(provider_run.si(aliases_dict, tiid, method_name, provider_name).set(queue=provider_name))
             else:
                 group_list.append(provider_run.s(tiid, method_name, provider_name))
-                # group_list.append(provider_run.s(tiid, method_name, provider_name).set(queue=provider_name))
         if group_list:
             chain_list.append(group(group_list))
             chain_list.append(chain_dummy.s(dummy="DUMMY_{method_name}_{provider_name}".format(
@@ -232,9 +227,7 @@ def refresh_tiid(tiid, aliases_dict):
 
     workflow = chain(chain_list)
 
-    print "start workflow"
     workflow_tasks_task = workflow.delay()
-    print "after workflow delay"
 
     return workflow_tasks_task
 
@@ -245,17 +238,13 @@ def put_on_celery_queue(tiid, aliases_dict):
 
     # celery_app = celery.app.app_or_default()
     refresh_tiid_task = refresh_tiid.delay(tiid, aliases_dict)
-    print "waiting for refresh_tiid_task", tiid
 
     wait_till_refresh_queuing_done = refresh_tiid_task.get()
-    print "done wait_till_refresh_queuing_done", tiid
     workflow_tasks_task = refresh_tiid_task.result
     # wait_till_workflow_done = workflow_tasks_task.get()
     # print "done wait_till_workflow_done", tiid
     # workflow_tasks_task.successful()
     # return workflow_tasks_task.successful()
-
-    print "HERE IS YOUR TASK ID", workflow_tasks_task.task_id
 
     return workflow_tasks_task.task_id
 
