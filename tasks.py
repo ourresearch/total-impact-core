@@ -16,6 +16,16 @@ from totalimpact.providers.provider import ProviderFactory, ProviderError, Provi
 logger = logging.getLogger("core.tasks")
 myredis = tiredis.from_url(os.getenv("REDIS_URL"))
 
+
+class SqlAlchemyTask(celery.Task):
+    """An abstract Celery Task that ensures that the connection the the
+    database is closed on task completion"""
+    abstract = True
+
+    def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        db.session.remove()
+
+
 @task_prerun.connect()
 def task_starting_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, **kwds):    
     try:
@@ -106,6 +116,7 @@ def add_to_database_if_nonzero(
 
     if new_content:
         # don't need item with metrics for this purpose, so don't bother getting metrics from db
+        print "NEW CONTENT:", tiid
         item_obj = item_module.Item.query.get(tiid)
 
         if item_obj:
@@ -120,7 +131,6 @@ def add_to_database_if_nonzero(
                     item_obj = item_module.add_metric_to_item_object(metric_name, new_content[metric_name], item_obj)
             else:
                 logger.warning(u"ack, supposed to save something i don't know about: " + str(new_content))
-        # db.session.remove()
 
     return
 
@@ -156,14 +166,16 @@ def sniffer(item_aliases, provider_config=default_settings.PROVIDERS):
 # def chordfinisher(group_result, **kwargs):
 #     return group_result[0]
 
-@task(time_limit=10)
+@task(base=SqlAlchemyTask, time_limit=10)
 def chain_dummy(first_arg, **kwargs):
     # print "sleeping"
     # time.sleep(3)
     try:
-        return first_arg[0]
+        response = first_arg[0]
     except KeyError:
-        return first_arg
+        response = first_arg
+
+    return response
 
 
 # @app.task
@@ -177,7 +189,7 @@ def chain_dummy(first_arg, **kwargs):
 #         myredis.set_provider_finished(tiid, provider_name)
 
 
-@task()
+@task(base=SqlAlchemyTask)
 def provider_run(aliases_dict, tiid, method_name, provider_name):
 
     try:
@@ -205,9 +217,11 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
 
 
 
-@task(time_limit=60)
+@task(base=SqlAlchemyTask, time_limit=60)
 def refresh_tiid(tiid, aliases_dict):
 
+    print "in refresh_tiid"
+    
     pipeline = sniffer(aliases_dict)
     chain_list = []
     for step_config in pipeline:
@@ -227,11 +241,11 @@ def refresh_tiid(tiid, aliases_dict):
 
     workflow = chain(chain_list)
 
-    # celery_app.control.time_limit('tasks.provider_run',
-    #                            soft=60, hard=120, reply=True)
-
+    print "start workflow"
     res = workflow.delay()
-    return tiid
+    print "after workflow delay"
+
+    return res
 
 
 def put_on_celery_queue(tiid, aliases_dict):
@@ -239,13 +253,14 @@ def put_on_celery_queue(tiid, aliases_dict):
         tiid=tiid))
 
     # celery_app = celery.app.app_or_default()
-    res = refresh_tiid.delay(tiid, aliases_dict)
+    refresh_tiid_task = refresh_tiid.delay(tiid, aliases_dict)
+    print "waiting for refresh_tiid_task", tiid
 
-    print res
-    print res.ready()
-    print res.successful()
-    print res.get()
-    print res.result
-    print res.ready()
-    print res.successful()
-    return res    
+    wait_till_refresh_queuing_done = refresh_tiid_task.get()
+    print "done wait_till_refresh_queuing_done", tiid
+    workflow_tasks = refresh_tiid_task.result
+    wait_till_workflow_done = workflow_tasks.get()
+    print "done wait_till_workflow_done", tiid
+    workflow_tasks.successful()
+    return workflow_tasks.successful()
+

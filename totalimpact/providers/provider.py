@@ -140,7 +140,7 @@ def is_issn_in_doaj(issn):
         })
     first_result = result.first()
     is_in_doaj = first_result != None
-    db.session.remove()
+    # db.session.remove()
     return is_in_doaj
 
 class ProviderFactory(object):
