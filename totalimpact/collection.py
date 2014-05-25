@@ -5,6 +5,7 @@ from collections import OrderedDict, defaultdict
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import FlushError
 from sqlalchemy.ext.hybrid import hybrid_property
+from celery.result import AsyncResult
 
 from totalimpact import db
 from totalimpact import item as item_module
@@ -414,11 +415,14 @@ def get_collection_doc(cid):
 
 
 def is_something_currently_updating(items_dict, myredis):
-    something_currently_updating = False
-    for tiid in items_dict:
-        this_item_updating = item_module.is_currently_updating(tiid, myredis)
-        something_currently_updating = something_currently_updating or this_item_updating
-    return something_currently_updating
+    tiids = items_dict.keys()
+    tiid_task_ids = myredis.get_tiid_task_ids(tiids)
+    try:
+        readys = [AsyncResult(task_id).ready() for task_id in tiid_task_ids.values()]
+        currently_updating = any([ready != True for ready in readys])
+    except TypeError:
+        currently_updating = False
+    return currently_updating
 
 
 def get_items_for_client(tiids, myrefsets, myredis, most_recent_metric_date=None, most_recent_diff_metric_date=None):

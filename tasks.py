@@ -63,43 +63,37 @@ def task_failure_handler(sender=None, task_id=None, task=None, args=None, kwargs
 
 def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name, myredis):
 
+    logger.info(u"{:20}: in provider_method_wrapper with {tiid} {provider_name} {method_name} with {aliases}".format(
+       "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=input_aliases_dict))
+
+    provider_name = provider.provider_name
+    worker_name = provider_name+"_worker"
+
+    if isinstance(input_aliases_dict, list):
+        input_aliases_dict = item_module.alias_dict_from_tuples(input_aliases_dict)    
+
+    input_alias_tuples = item_module.alias_tuples_from_dict(input_aliases_dict)
+    method = getattr(provider, method_name)
+
     try:
-        logger.info(u"{:20}: in provider_method_wrapper with {tiid} {provider_name} {method_name} with {aliases}".format(
-           "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=input_aliases_dict))
+        method_response = method(input_alias_tuples)
+    except ProviderError:
+        method_response = None
+        logger.info(u"{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
+            worker_name, tiid=tiid, provider_name=provider_name.upper(), method_name=method_name.upper()))
 
-        provider_name = provider.provider_name
-        worker_name = provider_name+"_worker"
+    logger.info(u"{:20}: /biblio_print, RETURNED {tiid} {method_name} {provider_name} : {method_response}".format(
+        worker_name, tiid=tiid, method_name=method_name.upper(), 
+        provider_name=provider_name.upper(), method_response=method_response))
 
-        if isinstance(input_aliases_dict, list):
-            input_aliases_dict = item_module.alias_dict_from_tuples(input_aliases_dict)    
+    if method_name == "aliases" and method_response:
+        initial_alias_dict = item_module.alias_dict_from_tuples(method_response)
+        new_canonical_aliases_dict = item_module.canonical_aliases(initial_alias_dict)
+        full_aliases_dict = item_module.merge_alias_dicts(new_canonical_aliases_dict, input_aliases_dict)
+    else:
+        full_aliases_dict = input_aliases_dict
 
-        input_alias_tuples = item_module.alias_tuples_from_dict(input_aliases_dict)
-        method = getattr(provider, method_name)
-
-        try:
-            method_response = method(input_alias_tuples)
-        except ProviderError:
-            method_response = None
-            logger.info(u"{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
-                worker_name, tiid=tiid, provider_name=provider_name.upper(), method_name=method_name.upper()))
-
-        logger.info(u"{:20}: /biblio_print, RETURNED {tiid} {method_name} {provider_name} : {method_response}".format(
-            worker_name, tiid=tiid, method_name=method_name.upper(), 
-            provider_name=provider_name.upper(), method_response=method_response))
-
-        if method_name == "aliases" and method_response:
-            initial_alias_dict = item_module.alias_dict_from_tuples(method_response)
-            new_canonical_aliases_dict = item_module.canonical_aliases(initial_alias_dict)
-            full_aliases_dict = item_module.merge_alias_dicts(new_canonical_aliases_dict, input_aliases_dict)
-        else:
-            full_aliases_dict = input_aliases_dict
-
-        add_to_database_if_nonzero(tiid, method_response, method_name, myredis, provider_name)
-
-    finally:
-        # do this no matter what, but as last thing
-        if method_name=="metrics" and provider.provides_metrics:
-            myredis.set_provider_finished(tiid, provider.provider_name)
+    add_to_database_if_nonzero(tiid, method_response, method_name, myredis, provider_name)
 
     return full_aliases_dict
 
@@ -200,9 +194,6 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
         logger.info(u"in provider_run for {provider}".format(
            provider=provider.provider_name))
 
-        if (method_name == "metrics") and provider.provides_metrics:
-            myredis.set_provider_started(tiid, provider.provider_name)
-
         response = provider_method_wrapper(tiid, aliases_dict, provider, method_name, myredis)
 
     except celery.exceptions.SoftTimeLimitExceeded:
@@ -221,7 +212,7 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
 def refresh_tiid(tiid, aliases_dict):
 
     print "in refresh_tiid"
-    
+
     pipeline = sniffer(aliases_dict)
     chain_list = []
     for step_config in pipeline:
@@ -242,10 +233,10 @@ def refresh_tiid(tiid, aliases_dict):
     workflow = chain(chain_list)
 
     print "start workflow"
-    res = workflow.delay()
+    workflow_tasks_task = workflow.delay()
     print "after workflow delay"
 
-    return res
+    return workflow_tasks_task
 
 
 def put_on_celery_queue(tiid, aliases_dict):
@@ -258,9 +249,14 @@ def put_on_celery_queue(tiid, aliases_dict):
 
     wait_till_refresh_queuing_done = refresh_tiid_task.get()
     print "done wait_till_refresh_queuing_done", tiid
-    workflow_tasks = refresh_tiid_task.result
-    wait_till_workflow_done = workflow_tasks.get()
-    print "done wait_till_workflow_done", tiid
-    workflow_tasks.successful()
-    return workflow_tasks.successful()
+    workflow_tasks_task = refresh_tiid_task.result
+    # wait_till_workflow_done = workflow_tasks_task.get()
+    # print "done wait_till_workflow_done", tiid
+    # workflow_tasks_task.successful()
+    # return workflow_tasks_task.successful()
+
+    print "HERE IS YOUR TASK ID", workflow_tasks_task.task_id
+
+    return workflow_tasks_task.task_id
+
 

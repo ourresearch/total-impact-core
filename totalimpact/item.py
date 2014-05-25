@@ -1,6 +1,7 @@
 from werkzeug import generate_password_hash, check_password_hash
 import shortuuid, datetime, hashlib, threading, json, time, copy, re
 from collections import defaultdict
+from celery.result import AsyncResult
 
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact.providers.provider import ProviderTimeout, ProviderServerError
@@ -981,9 +982,13 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
     return (items, something_currently_updating)
 
 def is_currently_updating(tiid, myredis):
-    num_providers_currently_updating = myredis.get_num_providers_currently_updating(tiid)
-    currently_updating = num_providers_currently_updating > 0
-    return currently_updating
+    try:
+        task_id = myredis.get_task_id(tiid)
+        res = AsyncResult(task_id)
+        still_updating = res.ready() != True
+    except TypeError:
+        still_updating = False
+    return still_updating
 
    
 def create_item(namespace, nid, myredis, mydao):
@@ -1148,12 +1153,14 @@ def get_tiid_by_alias(ns, nid, mydao=None):
 def start_item_update(dicts_to_add, priority, myredis):
     # logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
     #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
-    tiids = [d["tiid"] for d in dicts_to_add]
-    myredis.init_currently_updating_status(tiids,
-        ProviderFactory.providers_with_metrics(default_settings.PROVIDERS))
+    tiid_task_ids = {}
     for d in dicts_to_add:
         from tasks import put_on_celery_queue
-        put_on_celery_queue(d["tiid"], d["aliases_dict"])
+        workflow_tasks_task_id = put_on_celery_queue(d["tiid"], d["aliases_dict"])
+        tiid_task_ids[d["tiid"]] = workflow_tasks_task_id
+    myredis.set_tiid_task_ids(tiid_task_ids)
+    
+
 
 def is_equivalent_alias_tuple_in_list(query_tuple, tuple_list):
     is_equivalent = (clean_alias_tuple_for_deduplication(query_tuple) in tuple_list)
