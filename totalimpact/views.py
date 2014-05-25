@@ -555,7 +555,7 @@ def single_product_get(tiid):
         abort_custom(404, "No product found with that tiid")
 
     response_code = 200
-    if collection.is_something_currently_updating(cleaned_items_dict, myredis):
+    if not collection.is_all_ready([tiid], myredis):
         response_code = 210 # update is not complete yet
 
     resp = make_response(json.dumps(single_item, sort_keys=True, indent=4),
@@ -573,7 +573,7 @@ def products_get(tiids_string, format="json", most_recent_metric_date=None, most
     cleaned_items_dict = cleaned_items(tiids, myredis, override_export_clean, most_recent_metric_date, most_recent_diff_metric_date)
 
     response_code = 200
-    if collection.is_something_currently_updating(cleaned_items_dict, myredis):
+    if not collection.is_all_ready(tiids, myredis):
         response_code = 210 # update is not complete yet
 
     if format == "csv":

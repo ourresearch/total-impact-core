@@ -53,7 +53,6 @@ def get_task_id(self, tiid, pipe=None):
 
 
 def set_tiid_task_ids(self, tiid_task_ids, expire=60*60*24):
-    print "******** setting tasks", tiid_task_ids
     pipe = self.pipeline()    
 
     for (tiid, task_id) in tiid_task_ids.iteritems():

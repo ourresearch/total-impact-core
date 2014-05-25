@@ -61,7 +61,7 @@ def task_failure_handler(sender=None, task_id=None, task=None, args=None, kwargs
 
 
 
-def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name, myredis):
+def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name):
 
     logger.info(u"{:20}: in provider_method_wrapper with {tiid} {provider_name} {method_name} with {aliases}".format(
        "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=input_aliases_dict))
@@ -93,7 +93,7 @@ def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name, myr
     else:
         full_aliases_dict = input_aliases_dict
 
-    add_to_database_if_nonzero(tiid, method_response, method_name, myredis, provider_name)
+    add_to_database_if_nonzero(tiid, method_response, method_name, provider_name)
 
     return full_aliases_dict
 
@@ -105,7 +105,6 @@ def add_to_database_if_nonzero(
         tiid, 
         new_content, 
         method_name, 
-        myredis,
         provider_name):
 
     if new_content:
@@ -186,14 +185,12 @@ def chain_dummy(first_arg, **kwargs):
 def provider_run(aliases_dict, tiid, method_name, provider_name):
 
     try:
-        global myredis
-
         provider = ProviderFactory.get_provider(provider_name)
 
         logger.info(u"in provider_run for {provider}".format(
            provider=provider.provider_name))
 
-        response = provider_method_wrapper(tiid, aliases_dict, provider, method_name, myredis)
+        response = provider_method_wrapper(tiid, aliases_dict, provider, method_name)
 
     except celery.exceptions.SoftTimeLimitExceeded:
         logger.info(u"TIMEOUT in provider_run for {provider}".format(
@@ -209,7 +206,6 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
 
 @task(base=SqlAlchemyTask, time_limit=60)
 def refresh_tiid(tiid, aliases_dict):
-
     pipeline = sniffer(aliases_dict)
     chain_list = []
     for step_config in pipeline:
@@ -229,6 +225,8 @@ def refresh_tiid(tiid, aliases_dict):
 
     workflow_tasks_task = workflow.delay()
 
+    myredis.set_task_id(tiid, workflow_tasks_task.task_id)
+
     return workflow_tasks_task
 
 
@@ -239,13 +237,14 @@ def put_on_celery_queue(tiid, aliases_dict):
     # celery_app = celery.app.app_or_default()
     refresh_tiid_task = refresh_tiid.delay(tiid, aliases_dict)
 
-    wait_till_refresh_queuing_done = refresh_tiid_task.get()
-    workflow_tasks_task = refresh_tiid_task.result
+    # wait_till_refresh_queuing_done = refresh_tiid_task.get()
+    # workflow_tasks_task = refresh_tiid_task.result
+
     # wait_till_workflow_done = workflow_tasks_task.get()
     # print "done wait_till_workflow_done", tiid
     # workflow_tasks_task.successful()
     # return workflow_tasks_task.successful()
 
-    return workflow_tasks_task.task_id
+    return refresh_tiid_task
 
 

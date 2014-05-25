@@ -414,15 +414,18 @@ def get_collection_doc(cid):
     return get_collection_doc_from_object(collection_obj)
 
 
-def is_something_currently_updating(items_dict, myredis):
-    tiids = items_dict.keys()
+def is_all_ready(tiids, myredis):
+    all_ready = False
     tiid_task_ids = myredis.get_tiid_task_ids(tiids)
+    task_ids = tiid_task_ids.values()
+    # if any of them have task IDs, they all have to be ready to say ready
     try:
-        readys = [AsyncResult(task_id).ready() for task_id in tiid_task_ids.values()]
-        currently_updating = any([ready != True for ready in readys])
+        if any([len(task_id)>1 for task_id in task_ids]):
+            readys = [AsyncResult(task_id).ready() for task_id in task_ids]
+            all_ready = all(readys)
     except TypeError:
-        currently_updating = False
-    return currently_updating
+        pass
+    return all_ready
 
 
 def get_items_for_client(tiids, myrefsets, myredis, most_recent_metric_date=None, most_recent_diff_metric_date=None):
@@ -550,10 +553,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
             if item_for_client:
                 collection_doc["items"] += [item_for_client]
     
-    something_currently_updating = False
-    for item in collection_doc["items"]:
-        item["currently_updating"] = item_module.is_currently_updating(item["_id"], myredis)
-        something_currently_updating = something_currently_updating or item["currently_updating"]
+    something_currently_updating = not is_all_ready(tiids, myredis)
 
     logger.debug(u"Got items for collection_doc %s" %cid)
 
