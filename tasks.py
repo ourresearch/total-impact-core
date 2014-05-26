@@ -2,6 +2,7 @@ import time
 import os
 import json
 import logging
+import datetime
 import celery
 from celery.decorators import task
 from celery.signals import task_postrun, task_prerun, task_failure
@@ -17,38 +18,23 @@ logger = logging.getLogger("core.tasks")
 myredis = tiredis.from_url(os.getenv("REDIS_URL"))
 
 
+
+
 class SqlAlchemyTask(celery.Task):
     """An abstract Celery Task that ensures that the connection the the
     database is closed on task completion"""
     abstract = True
 
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        db.session.remove()
+    # def after_return(self, status, retval, task_id, args, kwargs, einfo):
+    #     db.session.remove()
+
 
 
 @task_prerun.connect()
 def task_starting_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, **kwds):    
-    try:
-        if "chain_dummy" in task.name:
-            logging.info(">>>STARTED: {task}".format(
-                task_id=task_id, task=task, args=args, kwargs=kwargs))
-        else:
-            logging.info(">>>STARTED: {task} {args}".format(
-                task_id=task_id, task=task, args=args, kwargs=kwargs))
-    except KeyError:
-        pass
+    # start with a new db session
+    db.session.remove()
 
-@task_postrun.connect()
-def task_finished_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds):
-    try:    
-        if "chain_dummy" in task.name:
-            logging.info("<<<FINISHED: {task}".format(
-                task_id=task_id, task=task, args=args, kwargs=kwargs, retval=retval, state=state))
-        else:
-            logging.info("<<<FINISHED: {task} {args}".format(
-                task_id=task_id, task=task, args=args, kwargs=kwargs, retval=retval, state=state))
-    except KeyError:
-        pass
 
 @task_failure.connect
 def task_failure_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds):
@@ -109,7 +95,12 @@ def add_to_database_if_nonzero(
 
     if new_content:
         # don't need item with metrics for this purpose, so don't bother getting metrics from db
-        item_obj = item_module.Item.query.get(tiid)
+
+        try:
+            item_obj = item_module.Item.query.get(tiid)
+        except:
+            db.session.remove()
+            item_obj = item_module.Item.query.get(tiid)
 
         if item_obj:
             if method_name=="aliases":
@@ -154,31 +145,15 @@ def sniffer(item_aliases, provider_config=default_settings.PROVIDERS):
     return(run)
 
 
-# @task
-# def chordfinisher(group_result, **kwargs):
-#     return group_result[0]
 
 @task(base=SqlAlchemyTask, time_limit=10)
 def chain_dummy(first_arg, **kwargs):
-    # print "sleeping"
-    # time.sleep(3)
     try:
         response = first_arg[0]
     except KeyError:
         response = first_arg
 
     return response
-
-
-# @app.task
-# def provider_run_error_handler(uuid):
-#     result = AsyncResult(uuid)
-#     exc = result.get(propagate=False)
-#     print('Task {0} raised exception: {1!r}\n{2!r}'.format(
-#           uuid, exc, result.traceback))
-
-#     if (method_name=="metrics") and provider.provides_metrics:
-#         myredis.set_provider_finished(tiid, provider_name)
 
 
 @task(base=SqlAlchemyTask)
@@ -232,20 +207,17 @@ def refresh_tiid(tiid, aliases_dict):
     return workflow_tasks_task
 
 
-def put_on_celery_queue(tiid, aliases_dict):
+def put_on_celery_queue(tiid, aliases_dict, priority="high"):
     logger.info(u"put_on_celery_queue {tiid}".format(
         tiid=tiid))
 
-    # celery_app = celery.app.app_or_default()
-    refresh_tiid_task = refresh_tiid.delay(tiid, aliases_dict)
+    #see http://stackoverflow.com/questions/15239880/task-priority-in-celery-with-redis
+    if "priority"=="high":
+        priority = 0
+    else:
+        priority = 9
 
-    # wait_till_refresh_queuing_done = refresh_tiid_task.get()
-    # workflow_tasks_task = refresh_tiid_task.result
-
-    # wait_till_workflow_done = workflow_tasks_task.get()
-    # print "done wait_till_workflow_done", tiid
-    # workflow_tasks_task.successful()
-    # return workflow_tasks_task.successful()
+    refresh_tiid_task = refresh_tiid.apply_async(args=(tiid, aliases_dict), priority=priority)
 
     return refresh_tiid_task
 

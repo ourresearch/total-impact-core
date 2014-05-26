@@ -1168,8 +1168,9 @@ def start_item_update(dicts_to_add, priority, myredis):
     #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
     myredis.set_tiid_task_ids(dict((d["tiid"], "START") for d in dicts_to_add))
     for d in dicts_to_add:
+        # this import here to avoid circular dependancies
         from tasks import put_on_celery_queue
-        task_id = put_on_celery_queue(d["tiid"], d["aliases_dict"])
+        task_id = put_on_celery_queue(d["tiid"], d["aliases_dict"], priority)
     
 
 

@@ -26,6 +26,9 @@ CELERY_QUEUES = [
     # Queue('provider.mendeley', routing_key='#.mendeley'),
 ]
 
+BROKER_TRANSPORT_OPTIONS = {
+    'priority_steps': [0,9],
+}
 
 CELERY_CREATE_MISSING_QUEUES = True
 
