@@ -981,14 +981,27 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
         items.append(item)
     return (items, something_currently_updating)
 
+def is_task_id_ready(task_id):
+    is_ready = True    
+    if task_id:
+        if task_id.lower() == "start":
+            is_ready = False
+        else:
+            task_result = AsyncResult(task_id)
+            try:
+                is_ready = task_result.ready()
+            except AttributeError:
+                # no such task, so assume is ready
+                pass
+    return is_ready
+
 def is_currently_updating(tiid, myredis):
-    try:
-        task_id = myredis.get_task_id(tiid)
-        res = AsyncResult(task_id)
-        still_updating = res.ready() != True
-    except TypeError:
-        still_updating = False
-    return still_updating
+    task_id = myredis.get_task_id(tiid)
+    currently_updating = not is_task_id_ready(task_id)
+    if currently_updating:
+        logger.debug(u"Still updating: tiid:{tiid}, task_id:{task_id}".format(
+                tiid=tiid, task_id=task_id))
+    return currently_updating
 
    
 def create_item(namespace, nid, myredis, mydao):
@@ -1153,13 +1166,10 @@ def get_tiid_by_alias(ns, nid, mydao=None):
 def start_item_update(dicts_to_add, priority, myredis):
     # logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
     #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
-    myredis.set_tiid_task_ids(dict((d["tiid"], "STARTING") for d in dicts_to_add), expire=60*5) # five minutes
-    # tiid_task_ids = {}
+    myredis.set_tiid_task_ids(dict((d["tiid"], "START") for d in dicts_to_add), expire=60*5) # five minutes
     for d in dicts_to_add:
         from tasks import put_on_celery_queue
         task_id = put_on_celery_queue(d["tiid"], d["aliases_dict"])
-    #     tiid_task_ids[d["tiid"]] = workflow_tasks_task_id
-    # myredis.set_tiid_task_ids(tiid_task_ids)
     
 
 

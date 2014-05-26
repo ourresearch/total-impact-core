@@ -415,16 +415,8 @@ def get_collection_doc(cid):
 
 
 def is_all_ready(tiids, myredis):
-    all_ready = False
     tiid_task_ids = myredis.get_tiid_task_ids(tiids)
-    task_ids = tiid_task_ids.values()
-    # if any of them have task IDs, they all have to be ready to say ready
-    try:
-        if any([len(task_id)>1 for task_id in task_ids]):
-            readys = [AsyncResult(task_id).ready() for task_id in task_ids]
-            all_ready = all(readys)
-    except TypeError:
-        pass
+    all_ready = all([item_module.is_task_id_ready(task_id) for task_id in tiid_task_ids.values()])
     return all_ready
 
 
