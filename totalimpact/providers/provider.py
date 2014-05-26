@@ -104,7 +104,6 @@ def get_aliases_from_product_id_strings(product_id_strings):
             aliases += providers.arxiv.Arxiv().member_items(nid)
         elif is_url(nid):
             aliases += providers.webpage.Webpage().member_items(nid)
-    print aliases
     return aliases
 
 
@@ -141,7 +140,6 @@ def is_issn_in_doaj(issn):
         })
     first_result = result.first()
     is_in_doaj = first_result != None
-    db.session.remove()
     return is_in_doaj
 
 class ProviderFactory(object):

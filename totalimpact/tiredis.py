@@ -10,12 +10,12 @@ def from_url(url, db=0):
     r = redis.from_url(url, db)
     return r
 
-def set_hash_value(self, key, hash_key, value, time_to_expire, pipe=None):
+def set_hash_value(self, key, hash_key, value, expire, pipe=None):
     if not pipe:
         pipe = self
     json_value = json.dumps(value)
     pipe.hset(key, hash_key, json_value)
-    pipe.expire(key, time_to_expire)
+    pipe.expire(key, expire)
 
 def get_hash_value(self, key, hash_key):
     try:
@@ -33,120 +33,57 @@ def delete_hash_key(self, key, hash_key):
     return self.hdel(key, hash_key)
 
 
-# don't use in production
-def clear_currently_updating_status(self):
-    # delete currently updating things, to start fresh
-    currently_updating_keys = self.keys("currently_updating:*")
-    for key in currently_updating_keys:
-        self.delete(key)
 
-def set_currently_updating(self, tiid, provider_name, value, pipe=None):
+def set_task_id(self, tiid, task_id, expire=60*2, pipe=None):
     if not pipe:
         pipe = self
 
-    key = "currently_updating:{tiid}".format(
+    key = "tiid_task_id:{tiid}".format(
         tiid=tiid)
-    expire = 60*60*24  # for a day    
-    pipe.set_hash_value(key, provider_name, value, expire, pipe)
+    pipe.set_value(key, task_id, expire, pipe=pipe)    
 
-def get_currently_updating(self, tiid, provider_name):
-    key = "currently_updating:{tiid}".format(
+
+def get_task_id(self, tiid, pipe=None):
+    if not pipe:
+        pipe = self
+
+    key = "tiid_task_id:{tiid}".format(
         tiid=tiid)
-    return self.get_hash_value(key, provider_name)
-
-def delete_currently_updating(self, tiid, provider_name):
-    key = "currently_updating:{tiid}".format(
-        tiid=tiid)
-    return self.delete_hash_key(key, provider_name)
+    return self.get_value(key, pipe)
 
 
-def init_currently_updating_status(self, tiids, providers):
+def set_tiid_task_ids(self, tiid_task_ids, expire=60*2):
     pipe = self.pipeline()    
+
+    for (tiid, task_id) in tiid_task_ids.iteritems():
+        self.set_task_id(tiid, task_id, expire, pipe=pipe)
+    pipe.execute()    
+
+def get_tiid_task_ids(self, tiids):
+    pipe = self.pipeline()    
+    tiid_task_ids = {}
 
     for tiid in tiids:
-        # logger.debug(u"set_all_providers for '{tiid}'.".format(
-        #     tiid=tiid))
-        now = datetime.datetime.utcnow().isoformat()
-        for provider_name in providers:
-            currently_updating_status = {now: "in queue"}
-            self.set_currently_updating(tiid, provider_name, currently_updating_status, pipe)
-    pipe.execute()
+        tiid_task_ids[tiid] = self.get_task_id(tiid, pipe)
+    pipe.execute()  
+
+    return tiid_task_ids
 
 
-def set_provider_started(self, item_id, provider_name):
-    now = datetime.datetime.utcnow().isoformat()
-    currently_updating_status = {now: "started"}
-    self.set_currently_updating(item_id, provider_name, currently_updating_status)
-    # logger.info(u"set_provider_started for %s %s" % (
-    #     item_id, provider_name))
+def set_value(self, key, value, expire, pipe=None):
+    if not pipe:
+        pipe = self
 
-
-def set_provider_finished(self, item_id, provider_name):
-    self.delete_currently_updating(item_id, provider_name)
-    # logger.info(u"set_provider_finished for {tiid} {provider_name}".format(
-    #     tiid=item_id, provider_name=provider_name))
-
-
-def get_providers_currently_updating(self, item_id):
-    key = "currently_updating:{tiid}".format(
-        tiid=item_id)
-    providers_currently_updating = self.get_all_hash_values(key)
-    return providers_currently_updating
-
-
-def get_num_providers_currently_updating(self, item_id):
-    providers_currently_updating = self.get_providers_currently_updating(item_id)
-    num_currently_updating = 0
-    if not providers_currently_updating:
-        # logger.info(u"In get_num_providers_currently_updating, no providers_currently_updating for {tiid}".format(
-        #     tiid=item_id))
-        pass
-    for provider in providers_currently_updating:
-        value = json.loads(providers_currently_updating[provider])
-        last_update_time = iso8601.parse_date(value.keys()[0])
-        now = datetime.datetime.utcnow()
-        # from http://stackoverflow.com/questions/796008/cant-subtract-offset-naive-and-offset-aware-datetimes
-        elapsed = now - last_update_time.replace(tzinfo=None)
-        if elapsed < datetime.timedelta(hours=0, minutes=5):
-            num_currently_updating += 1 
-            # logger.warning(u"In get_num_providers_currently_updating, elapsed time still short, set currently_updating=True for {tiid}{provider}".format(
-            #     tiid=item_id, provider=provider))
-        else:
-            # logger.warning(u"In get_num_providers_currently_updating, elapsed time is too long, set currently_updating=False for {tiid}{provider}".format(
-            #     tiid=item_id, provider=provider))
-            pass
-
-    return num_currently_updating
-
-
-def add_to_alias_queue(self, dicts_to_add, analytics_credentials={}, priority="high", alias_providers_already_run=[]):
-    queue_name = "aliasqueue_" + priority
-    pipe = self.pipeline()    
-    for message_dict in dicts_to_add:
-        message = json.dumps({
-                "tiid": message_dict["tiid"], 
-                "aliases_dict": message_dict["aliases_dict"],
-                "analytics_credentials": analytics_credentials,
-                "alias_providers_already_run": alias_providers_already_run
-            })
-        logger.debug(u"Adding to alias_queue {queue_name}: /biblio_print {message}".format(
-            queue_name=queue_name, message=message))
-        pipe.lpush(queue_name, message)
-    pipe.execute()
-    queue_length = self.llen(queue_name)       
-    logger.info(u">>>PUSHING to redis queue {queue_name}, current length {queue_length}".format(
-        queue_name=queue_name, queue_length=queue_length)) 
-
-
-
-def set_value(self, key, value, time_to_expire):
     json_value = json.dumps(value)
-    self.set(key, json_value)
-    self.expire(key, time_to_expire)
+    pipe.set(key, json_value)
+    pipe.expire(key, expire)
 
-def get_value(self, key):
+def get_value(self, key, pipe=None):
+    if not pipe:
+        pipe = self
+
     try:
-        json_value = self.get(key)
+        json_value = pipe.get(key)
         value = json.loads(json_value)
     except TypeError:
         value = None
@@ -209,16 +146,6 @@ redis.Redis.delete_hash_key = delete_hash_key
 
 redis.Redis.set_value = set_value
 redis.Redis.get_value = get_value
-redis.Redis.set_currently_updating = set_currently_updating
-redis.Redis.get_currently_updating = get_currently_updating
-redis.Redis.delete_currently_updating = delete_currently_updating
-redis.Redis.clear_currently_updating_status = clear_currently_updating_status
-redis.Redis.init_currently_updating_status = init_currently_updating_status
-redis.Redis.set_provider_started = set_provider_started
-redis.Redis.set_provider_finished = set_provider_finished
-redis.Redis.get_providers_currently_updating = get_providers_currently_updating
-redis.Redis.get_num_providers_currently_updating = get_num_providers_currently_updating
-redis.Redis.add_to_alias_queue = add_to_alias_queue
 redis.Redis.set_memberitems_status = set_memberitems_status
 redis.Redis.get_memberitems_status = get_memberitems_status
 redis.Redis.set_confidence_interval_table = set_confidence_interval_table
@@ -227,5 +154,9 @@ redis.Redis.set_reference_histogram_dict = set_reference_histogram_dict
 redis.Redis.get_reference_histogram_dict = get_reference_histogram_dict
 redis.Redis.set_reference_lookup_dict = set_reference_lookup_dict
 redis.Redis.get_reference_lookup_dict = get_reference_lookup_dict
+redis.Redis.set_tiid_task_ids = set_tiid_task_ids
+redis.Redis.get_tiid_task_ids = get_tiid_task_ids
+redis.Redis.get_task_id = get_task_id
+redis.Redis.set_task_id = set_task_id
 
 

@@ -1,6 +1,7 @@
 from werkzeug import generate_password_hash, check_password_hash
 import shortuuid, datetime, hashlib, threading, json, time, copy, re
 from collections import defaultdict
+from celery.result import AsyncResult
 
 from totalimpact.providers.provider import ProviderFactory
 from totalimpact.providers.provider import ProviderTimeout, ProviderServerError
@@ -980,9 +981,26 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
         items.append(item)
     return (items, something_currently_updating)
 
+def is_task_id_ready(task_id):
+    is_ready = True    
+    if task_id:
+        if task_id.lower() == "start":
+            is_ready = False
+        else:
+            task_result = AsyncResult(task_id)
+            try:
+                is_ready = task_result.ready()
+            except AttributeError:
+                # no such task, so assume is ready
+                pass
+    if not is_ready:
+        logger.debug(u"Still updating: task_id={task_id}".format(
+            task_id=task_id))
+    return is_ready
+
 def is_currently_updating(tiid, myredis):
-    num_providers_currently_updating = myredis.get_num_providers_currently_updating(tiid)
-    currently_updating = num_providers_currently_updating > 0
+    task_id = myredis.get_task_id(tiid)
+    currently_updating = not is_task_id_ready(task_id)
     return currently_updating
 
    
@@ -1001,8 +1019,7 @@ def create_item(namespace, nid, myredis, mydao):
 
     logger.debug(json.dumps(item_doc, sort_keys=True, indent=4))
 
-    analytics_credentials = {}
-    start_item_update([{"tiid": item_doc["_id"], "aliases_dict":item_doc["aliases"]}], analytics_credentials, "low", myredis)
+    start_item_update([{"tiid":item_doc["_id"], "aliases_dict":item_doc["aliases"]}], "low", myredis)
 
     logger.info(u"Created new item '{tiid}' with alias '{alias}'".format(
         tiid=item_doc["_id"],
@@ -1083,7 +1100,7 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider=
 
     # has to be after commits to database
     logger.debug(u"in create_tiids_from_aliases, starting start_item_update")
-    start_item_update(dicts_to_update, analytics_credentials, "high", myredis)
+    start_item_update(dicts_to_update, "high", myredis)
 
     logger.debug(u"in create_tiids_from_aliases, finished")
     return tiid_alias_mapping
@@ -1146,13 +1163,16 @@ def get_tiid_by_alias(ns, nid, mydao=None):
     return tiid
 
 
-def start_item_update(dicts_to_add, analytics_credentials, priority, myredis):
+def start_item_update(dicts_to_add, priority, myredis):
     # logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
     #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
-    tiids = [d["tiid"] for d in dicts_to_add]
-    myredis.init_currently_updating_status(tiids,
-        ProviderFactory.providers_with_metrics(default_settings.PROVIDERS))
-    myredis.add_to_alias_queue(dicts_to_add, analytics_credentials, priority)
+    myredis.set_tiid_task_ids(dict((d["tiid"], "START") for d in dicts_to_add))
+    for d in dicts_to_add:
+        # this import here to avoid circular dependancies
+        from tasks import put_on_celery_queue
+        task_id = put_on_celery_queue(d["tiid"], d["aliases_dict"], priority)
+    
+
 
 def is_equivalent_alias_tuple_in_list(query_tuple, tuple_list):
     is_equivalent = (clean_alias_tuple_for_deduplication(query_tuple) in tuple_list)

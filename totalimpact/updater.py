@@ -19,7 +19,7 @@ def update_by_tiids(all_tiids, myredis):
     for tiid in all_tiids:
         item_obj = item_module.Item.query.get(tiid)  # can use this method because don't need metrics
         item_doc = item_obj.as_old_doc()
-        item_module.start_item_update([{"tiid": item_doc["_id"], "aliases_dict":item_doc["aliases"]}], {}, "low", myredis)
+        item_module.start_item_update([{"tiid": item_doc["_id"], "aliases_dict":item_doc["aliases"]}], "low", myredis)
     return all_tiids
 
 

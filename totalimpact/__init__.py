@@ -5,6 +5,7 @@ from sqlalchemy import exc
 from sqlalchemy import event
 from sqlalchemy.pool import Pool
 from flask import Flask
+from flask.ext.compress import Compress
 from flask_sqlalchemy import SQLAlchemy
 from flask_debugtoolbar import DebugToolbarExtension
 
@@ -23,6 +24,9 @@ logger = logging.getLogger("ti")
 # set up application
 app = Flask(__name__)
 app.config.from_object(default_settings)
+# gzip responses and make it similar on staging and production
+Compress(app)
+app.config["COMPRESS_DEBUG"] = os.getenv("COMPRESS_DEBUG", "False")=="True"
 
 
 # database stuff

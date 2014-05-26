@@ -5,6 +5,7 @@ from collections import OrderedDict, defaultdict
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import FlushError
 from sqlalchemy.ext.hybrid import hybrid_property
+from celery.result import AsyncResult
 
 from totalimpact import db
 from totalimpact import item as item_module
@@ -413,12 +414,10 @@ def get_collection_doc(cid):
     return get_collection_doc_from_object(collection_obj)
 
 
-def is_something_currently_updating(items_dict, myredis):
-    something_currently_updating = False
-    for tiid in items_dict:
-        this_item_updating = item_module.is_currently_updating(tiid, myredis)
-        something_currently_updating = something_currently_updating or this_item_updating
-    return something_currently_updating
+def is_all_ready(tiids, myredis):
+    tiid_task_ids = myredis.get_tiid_task_ids(tiids)
+    all_ready = all([item_module.is_task_id_ready(task_id) for task_id in tiid_task_ids.values()])
+    return all_ready
 
 
 def get_items_for_client(tiids, myrefsets, myredis, most_recent_metric_date=None, most_recent_diff_metric_date=None):
@@ -546,10 +545,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
             if item_for_client:
                 collection_doc["items"] += [item_for_client]
     
-    something_currently_updating = False
-    for item in collection_doc["items"]:
-        item["currently_updating"] = item_module.is_currently_updating(item["_id"], myredis)
-        something_currently_updating = something_currently_updating or item["currently_updating"]
+    something_currently_updating = not is_all_ready(tiids, myredis)
 
     logger.debug(u"Got items for collection_doc %s" %cid)
 
