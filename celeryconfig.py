@@ -39,6 +39,7 @@ CELERY_ROUTES = {
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 CELERY_ENABLE_UTC=True
 CELERY_TASK_RESULT_EXPIRES = 60*60  # 1 hour
+CELERYD_MAX_TASKS_PER_CHILD = 100
 
 # List of modules to import when celery starts.
 CELERY_IMPORTS = ("tasks",)
