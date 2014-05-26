@@ -26,39 +26,6 @@ CELERY_QUEUES = [
     # Queue('provider.mendeley', routing_key='#.mendeley'),
 ]
 
-PROVIDERS = [
-    # this is up here because it can produce dois
-    ("pubmed", {}),
-
-    # best biblio providers go here, in order with best first
-    ("arxiv", {}),
-    ("crossref", {}),
-    ("dryad", {}),            
-    ("figshare", {}),            
-    ("github", {}),
-    ("slideshare", {}),
-    ("vimeo", {}),
-    ("youtube", {}),
-
-    # if-need-be biblio providers go here, in order with best first
-    ("mendeley", {}),
-    ("bibtex", {}),
-    ("webpage", {}),
-
-    # don't-have-biblio providers go here, alphabetical order
-    ("altmetric_com", {}),    
-    ("citeulike", {}),   
-    ("delicious", {}),   
-    ("plosalm", {}),
-    ("plossearch", {}),
-    ("scopus", {}),
-    ("wikipedia", {}),
-]
-
-for (provider, provider_dict) in PROVIDERS:
-    new_queue = Queue('provider.'+provider, routing_key='#.'+provider)
-    CELERY_QUEUES.append(new_queue)
-
 
 CELERY_CREATE_MISSING_QUEUES = True
 
