@@ -23,7 +23,6 @@ CELERY_QUEUES = [
     Queue('core_main', routing_key='core_main'),
     Queue('refresh_tiid', routing_key='refresh_tiid'),
     Queue('provider_run', routing_key='provider_run'),
-    # Queue('provider.mendeley', routing_key='#.mendeley'),
 ]
 
 BROKER_TRANSPORT_OPTIONS = {
