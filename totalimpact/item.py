@@ -993,14 +993,14 @@ def is_task_id_ready(task_id):
             except AttributeError:
                 # no such task, so assume is ready
                 pass
+    if not is_ready:
+        logger.debug(u"Still updating: task_id={task_id}".format(
+            task_id=task_id))
     return is_ready
 
 def is_currently_updating(tiid, myredis):
     task_id = myredis.get_task_id(tiid)
     currently_updating = not is_task_id_ready(task_id)
-    if currently_updating:
-        logger.debug(u"Still updating: tiid:{tiid}, task_id:{task_id}".format(
-                tiid=tiid, task_id=task_id))
     return currently_updating
 
    
@@ -1166,7 +1166,7 @@ def get_tiid_by_alias(ns, nid, mydao=None):
 def start_item_update(dicts_to_add, priority, myredis):
     # logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
     #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
-    myredis.set_tiid_task_ids(dict((d["tiid"], "START") for d in dicts_to_add), expire=60*5) # five minutes
+    myredis.set_tiid_task_ids(dict((d["tiid"], "START") for d in dicts_to_add))
     for d in dicts_to_add:
         from tasks import put_on_celery_queue
         task_id = put_on_celery_queue(d["tiid"], d["aliases_dict"])
