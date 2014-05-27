@@ -575,7 +575,7 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
     # ditch metrics we don't have static_meta for:
 
     item["metrics"] = {k:v for k, v in metrics.iteritems() if "static_meta" in v}
-    item["currently_updating"] = is_currently_updating(item["_id"], myredis)
+    item["update_status"] = update_status(item["_id"], myredis)
 
     return item
 
@@ -975,33 +975,35 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
                     tiid=tiid))
             raise LookupError
             
-        item["currently_updating"] = is_currently_updating(tiid, myredis)
-        something_currently_updating = something_currently_updating or item["currently_updating"]
+        item["update_status"] = update_status(tiid, myredis)
+        something_currently_updating = something_currently_updating or (item["update_status"] != "SUCCESS")
 
         items.append(item)
     return (items, something_currently_updating)
 
-def is_task_id_ready(task_id):
-    is_ready = True    
+def update_status_from_task_id(task_id, tiid=None):
+    update_status = "SUCCESS: no recent update"
     if task_id:
         if task_id.lower() == "start":
-            is_ready = False
+            update_status = "start_queueing"
         else:
             task_result = AsyncResult(task_id)
             try:
-                is_ready = task_result.ready()
+                if task_result.ready():
+                    update_status = task_result.state
+                else:
+                    update_status = task_result.state
             except AttributeError:
-                # no such task, so assume is ready
+                update_status = "WAITING" # tasks's task not done yet
                 pass
-    if not is_ready:
-        logger.debug(u"Still updating: task_id={task_id}".format(
-            task_id=task_id))
-    return is_ready
+    if not update_status.startswith("SUCCESS"):
+        logger.debug(u"update_status: task_id={task_id}, update_status={update_status}, tiid={tiid}".format(
+            task_id=task_id, update_status=update_status, tiid=tiid))
+    return update_status
 
-def is_currently_updating(tiid, myredis):
+def update_status(tiid, myredis):
     task_id = myredis.get_task_id(tiid)
-    currently_updating = not is_task_id_ready(task_id)
-    return currently_updating
+    return update_status_from_task_id(task_id, tiid)
 
    
 def create_item(namespace, nid, myredis, mydao):

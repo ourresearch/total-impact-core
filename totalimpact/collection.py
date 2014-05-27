@@ -414,10 +414,11 @@ def get_collection_doc(cid):
     return get_collection_doc_from_object(collection_obj)
 
 
-def is_all_ready(tiids, myredis):
+def is_all_done(tiids, myredis):
     tiid_task_ids = myredis.get_tiid_task_ids(tiids)
-    all_ready = all([item_module.is_task_id_ready(task_id) for task_id in tiid_task_ids.values()])
-    return all_ready
+    statuses = [item_module.update_status_from_task_id(task_id, tiid) for (tiid, task_id) in tiid_task_ids.iteritems()]
+    all_done = all([status=="SUCCESS" for status in statuses])
+    return all_done
 
 
 def get_items_for_client(tiids, myrefsets, myredis, most_recent_metric_date=None, most_recent_diff_metric_date=None):
@@ -497,7 +498,7 @@ def get_previous_metrics(tiids, most_recent_diff_metric_date=None):
 
 
 def get_readonly_item_metric_dicts(tiids, most_recent_metric_date=None, most_recent_diff_metric_date=None):
-    logger.info(u"in get_readonly_item_objects_with_metrics")
+    logger.info(u"in get_readonly_item_metric_dicts")
 
     item_objects = Item.query.filter(Item.tiid.in_(tiids)).all()
     items_by_tiid = {}
@@ -545,7 +546,7 @@ def get_collection_with_items_for_client(cid, myrefsets, myredis, mydao, include
             if item_for_client:
                 collection_doc["items"] += [item_for_client]
     
-    something_currently_updating = not is_all_ready(tiids, myredis)
+    something_currently_updating = not is_all_done(tiids, myredis)
 
     logger.debug(u"Got items for collection_doc %s" %cid)
 

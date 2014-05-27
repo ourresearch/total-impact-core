@@ -158,12 +158,11 @@ def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=N
     if not item:
         abort_custom(404, "item does not exist")
 
-    if item_module.is_currently_updating(tiid, myredis):
+    item["update_status"] = item_module.update_status(tiid, myredis)
+    if item["update_status"] != "SUCCESS":
         response_code = 210 # not complete yet
-        item["currently_updating"] = True
     else:
         response_code = 200
-        item["currently_updating"] = False
 
     api_key = request.args.get("key", None)
     clean_item = item_module.clean_for_export(item, api_key, os.getenv("API_ADMIN_KEY"))
@@ -555,7 +554,7 @@ def single_product_get(tiid):
         abort_custom(404, "No product found with that tiid")
 
     response_code = 200
-    if not collection.is_all_ready([tiid], myredis):
+    if not collection.is_all_done([tiid], myredis):
         response_code = 210 # update is not complete yet
 
     resp = make_response(json.dumps(single_item, sort_keys=True, indent=4),
@@ -573,7 +572,7 @@ def products_get(tiids_string, format="json", most_recent_metric_date=None, most
     cleaned_items_dict = cleaned_items(tiids, myredis, override_export_clean, most_recent_metric_date, most_recent_diff_metric_date)
 
     response_code = 200
-    if not collection.is_all_ready(tiids, myredis):
+    if not collection.is_all_done(tiids, myredis):
         response_code = 210 # update is not complete yet
 
     if format == "csv":
