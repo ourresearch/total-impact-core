@@ -267,6 +267,24 @@ class Alias(db.Model):
         return response
 
 
+def add_metrics_data(metric_name, metrics_method_response, item_doc, timestamp=None):
+    metrics = item_doc.setdefault("metrics", {})
+    
+    (metric_value, provenance_url) = metrics_method_response
+
+    this_metric = metrics.setdefault(metric_name, {})
+    this_metric["provenance_url"] = provenance_url
+
+    this_metric_values = this_metric.setdefault("values", {})
+    this_metric_values["raw"] = as_int_or_float_if_possible(metric_value)
+
+    this_metric_values_raw_history = this_metric_values.setdefault("raw_history", {})
+    if not timestamp:
+        timestamp = datetime.datetime.utcnow().isoformat()
+    this_metric_values_raw_history[timestamp] = as_int_or_float_if_possible(metric_value)
+    return item_doc
+
+
 class Item(db.Model):
     tiid = db.Column(db.Text, primary_key=True)
     created = db.Column(db.DateTime())
