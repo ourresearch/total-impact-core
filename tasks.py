@@ -5,7 +5,7 @@ import logging
 import datetime
 import celery
 from celery.decorators import task
-from celery.signals import task_postrun, task_prerun, task_failure
+from celery.signals import task_postrun, task_prerun, task_failure, worker_process_init
 from celery import group, chain, chord
 # from celery.app import default_app as celery_app
 
@@ -28,13 +28,21 @@ class SqlAlchemyTask(celery.Task):
     # def after_return(self, status, retval, task_id, args, kwargs, einfo):
     #     db.session.remove()
 
+@worker_process_init.connect
+def create_worker_connection(*args, **kwargs):
+    """Initialize database connection.
+      
+      This has to be done after the worker processes have been started otherwise
+      the connection will fail.
+      
+    """
+    db.session = db.create_scoped_session()
 
 
-@task_prerun.connect()
-def task_starting_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, **kwds):    
-    # start with a new db session
+@task_postrun.connect()
+def task_postrun_handler(*args, **kwargs):    
+    # close db session
     db.session.remove()
-
 
 @task_failure.connect
 def task_failure_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds):
