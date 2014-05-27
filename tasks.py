@@ -57,8 +57,8 @@ def task_failure_handler(sender=None, task_id=None, task=None, args=None, kwargs
 
 def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name):
 
-    logger.info(u"{:20}: in provider_method_wrapper with {tiid} {provider_name} {method_name} with {aliases}".format(
-       "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=input_aliases_dict))
+    # logger.info(u"{:20}: in provider_method_wrapper with {tiid} {provider_name} {method_name} with {aliases}".format(
+    #    "wrapper", tiid=tiid, provider_name=provider.provider_name, method_name=method_name, aliases=input_aliases_dict))
 
     provider_name = provider.provider_name
     worker_name = provider_name+"_worker"
@@ -170,13 +170,13 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
     try:
         provider = ProviderFactory.get_provider(provider_name)
 
-        logger.info(u"in provider_run for {provider}".format(
-           provider=provider.provider_name))
+        # logger.info(u"in provider_run for {provider}".format(
+        #    provider=provider.provider_name))
 
         response = provider_method_wrapper(tiid, aliases_dict, provider, method_name)
 
     except celery.exceptions.SoftTimeLimitExceeded:
-        logger.info(u"TIMEOUT in provider_run for {provider}".format(
+        logger.warning(u"TIMEOUT in provider_run for {provider}".format(
            provider=provider.provider_name))
         raise ProviderTimeout("celery timeout on {provider_name}".format(
             provider_name=provider_name))

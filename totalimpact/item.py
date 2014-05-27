@@ -642,8 +642,8 @@ def add_metric_to_item_object(full_metric_name, metrics_method_response, item_ob
 
 
 def add_aliases_to_item_object(aliases_dict, item_obj):
-    logger.debug(u"in add_aliases_to_item_object for {tiid}".format(
-        tiid=item_obj.tiid))        
+    # logger.debug(u"in add_aliases_to_item_object for {tiid}".format(
+    #     tiid=item_obj.tiid))        
 
     alias_objects = create_alias_objects(aliases_dict)
 
@@ -663,13 +663,13 @@ def add_aliases_to_item_object(aliases_dict, item_obj):
 
 def add_biblio(tiid, biblio_name, biblio_value, provider_name="user_provided", collected_date=datetime.datetime.utcnow()):
 
-    logger.debug(u"in add_biblio for {tiid} {biblio_name}".format(
-        tiid=tiid, biblio_name=biblio_name))
+    # logger.debug(u"in add_biblio for {tiid} {biblio_name}".format(
+    #     tiid=tiid, biblio_name=biblio_name))
 
     biblio_object = Biblio.query.filter_by(tiid=tiid, provider=provider_name, biblio_name=biblio_name).first()
     if biblio_object:
-        logger.debug(u"found a previous row in add_biblio for {tiid} {biblio_name}, so removing it".format(
-            tiid=tiid, biblio_name=biblio_name))
+        # logger.debug(u"found a previous row in add_biblio for {tiid} {biblio_name}, so removing it".format(
+        #     tiid=tiid, biblio_name=biblio_name))
         biblio_object.biblio_value = biblio_value
         biblio_object.collected_date = collected_date
     else:
@@ -688,13 +688,13 @@ def add_biblio(tiid, biblio_name, biblio_value, provider_name="user_provided", c
             tiid=tiid, 
             message=e.message)) 
 
-    logger.debug(u"finished saving add_biblio for {tiid} {biblio_name}".format(
-        tiid=tiid, biblio_name=biblio_name))
+    # logger.debug(u"finished saving add_biblio for {tiid} {biblio_name}".format(
+    #     tiid=tiid, biblio_name=biblio_name))
 
     item_obj = Item.from_tiid(tiid)
 
-    logger.debug(u"got object for add_biblio for {tiid} {biblio_name}".format(
-        tiid=tiid, biblio_name=biblio_name))
+    # logger.debug(u"got object for add_biblio for {tiid} {biblio_name}".format(
+    #     tiid=tiid, biblio_name=biblio_name))
 
     return item_obj
 
@@ -704,10 +704,10 @@ def add_biblio_to_item_object(new_biblio_dict, item_doc, provider_name):
     tiid = item_doc["_id"]
     item_obj = Item.from_tiid(tiid)
 
-    logger.debug(u"in add_biblio_to_item_object for {tiid} {provider_name}, /biblio_print {new_biblio_dict}".format(
-        tiid=tiid, 
-        provider_name=provider_name,
-        new_biblio_dict=new_biblio_dict))        
+    # logger.debug(u"in add_biblio_to_item_object for {tiid} {provider_name}, /biblio_print {new_biblio_dict}".format(
+    #     tiid=tiid, 
+    #     provider_name=provider_name,
+    #     new_biblio_dict=new_biblio_dict))        
 
     new_biblio_objects = create_biblio_objects([new_biblio_dict], provider=provider_name)
     for new_biblio_obj in new_biblio_objects:
@@ -1026,7 +1026,7 @@ def update_status(tiid, myredis):
 
    
 def create_item(namespace, nid, myredis, mydao):
-    logger.debug(u"In create_item with alias" + str((namespace, nid)))
+    # logger.debug(u"In create_item with alias" + str((namespace, nid)))
     item_doc = make()
     namespace = clean_id(namespace)
     nid = clean_id(nid)
@@ -1035,17 +1035,17 @@ def create_item(namespace, nid, myredis, mydao):
 
     item_obj = create_objects_from_item_doc(item_doc)
 
-    logger.info(u"saved new collection '{tiid}'".format(
-            tiid=item_doc["_id"]))
+    # logger.info(u"saved new collection '{tiid}'".format(
+    #         tiid=item_doc["_id"]))
 
-    logger.debug(json.dumps(item_doc, sort_keys=True, indent=4))
+    # logger.debug(json.dumps(item_doc, sort_keys=True, indent=4))
 
     start_item_update([{"tiid":item_doc["_id"], "aliases_dict":item_doc["aliases"]}], "low", myredis)
 
-    logger.info(u"Created new item '{tiid}' with alias '{alias}'".format(
-        tiid=item_doc["_id"],
-        alias=str((namespace, nid))
-    ))
+    # logger.info(u"Created new item '{tiid}' with alias '{alias}'".format(
+    #     tiid=item_doc["_id"],
+    #     alias=str((namespace, nid))
+    # ))
 
     return item_doc["_id"]
 
@@ -1065,9 +1065,9 @@ def get_tiids_from_aliases(aliases):
             alias_obj = Alias.query.filter_by(namespace=ns, nid=nid).first()
             try:
                 tiid = alias_obj.tiid
-                logger.debug(u"Found a tiid for {nid} in get_tiid_by_alias: {tiid}".format(
-                    nid=nid, 
-                    tiid=tiid))
+                # logger.debug(u"Found a tiid for {nid} in get_tiid_by_alias: {tiid}".format(
+                #     nid=nid, 
+                #     tiid=tiid))
             except AttributeError:
                 pass
         aliases_tiid_mapping[alias_key] = tiid
@@ -1096,11 +1096,9 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider=
     clean_aliases = [canonical_alias_tuple((ns, nid)) for (ns, nid) in aliases]  
     dicts_to_update = []  
 
-    logger.debug(u"in create_tiids_from_aliases, starting alias loop")
-
     for alias_tuple in clean_aliases:
-        logger.debug(u"in create_tiids_from_aliases, with alias_tuple {alias_tuple}".format(
-            alias_tuple=alias_tuple))
+        # logger.debug(u"in create_tiids_from_aliases, with alias_tuple {alias_tuple}".format(
+        #     alias_tuple=alias_tuple))
         item_obj = add_alias_to_new_item(alias_tuple, provider)
         tiid = item_obj.tiid
         db.session.add(item_obj)
@@ -1110,7 +1108,6 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider=
         tiid_alias_mapping[tiid] = alias_tuple
         dicts_to_update += [{"tiid":tiid, "aliases_dict": alias_dict_from_tuples([alias_tuple])}]
 
-    logger.debug(u"in create_tiids_from_aliases, starting commit")
     try:
         db.session.commit()
     except (IntegrityError, FlushError) as e:
@@ -1120,10 +1117,8 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider=
             message=e.message)) 
 
     # has to be after commits to database
-    logger.debug(u"in create_tiids_from_aliases, starting start_item_update")
     start_item_update(dicts_to_update, "high", myredis)
 
-    logger.debug(u"in create_tiids_from_aliases, finished")
     return tiid_alias_mapping
 
 
@@ -1162,9 +1157,6 @@ def get_tiid_by_biblio(biblio_dict):
     return tiid
 
 def get_tiid_by_alias(ns, nid, mydao=None):
-    logger.debug(u"In get_tiid_by_alias with {ns}, {nid}".format(
-        ns=ns, nid=nid))
-
     tiid = None
     if (ns=="biblio"):
         tiid = get_tiid_by_biblio(nid)
@@ -1174,8 +1166,8 @@ def get_tiid_by_alias(ns, nid, mydao=None):
         alias_obj = Alias.query.filter_by(namespace=ns, nid=nid).first()
         try:
             tiid = alias_obj.tiid
-            logger.debug(u"Found a tiid for {nid} in get_tiid_by_alias: {tiid}".format(
-                nid=nid, tiid=tiid))
+            # logger.debug(u"Found a tiid for {nid} in get_tiid_by_alias: {tiid}".format(
+            #     nid=nid, tiid=tiid))
         except AttributeError:
             pass
 
@@ -1248,8 +1240,8 @@ def aliases_not_in_existing_tiids(retrieved_aliases, existing_tiids):
 
     aliases_from_all_items = []
     for item in existing_items:
-        logger.debug(u"getting alias_tuples_for_deduplication for tiid={tiid}".format(
-             tiid=item.tiid))
+        # logger.debug(u"getting alias_tuples_for_deduplication for tiid={tiid}".format(
+        #      tiid=item.tiid))
         aliases_from_all_items += alias_tuples_for_deduplication(item)
 
     for alias_tuple in retrieved_aliases:

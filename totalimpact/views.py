@@ -238,8 +238,8 @@ def importer_post(provider_name):
 
     new_aliases = item_module.aliases_not_in_existing_tiids(retrieved_aliases, existing_tiids)
     tiids_aliases_map = item_module.create_tiids_from_aliases(new_aliases, analytics_credentials, myredis, provider_name)
-    logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
-        tiids_aliases_map=tiids_aliases_map))
+    # logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
+    #     tiids_aliases_map=tiids_aliases_map))
 
     products_dict = format_into_products_dict(tiids_aliases_map)
 
@@ -278,7 +278,7 @@ returns a collection object and the items
 @app.route('/v1/collection/<cid>', methods=['GET'])
 @app.route('/v1/collection/<cid>.<format>', methods=['GET'])
 def collection_get(cid='', format="json", include_history=False):
-    logger.info(u"in collection_get".format(cid=cid))
+    # logger.info(u"in collection_get".format(cid=cid))
 
     if (request.args.get("include_items") in ["0", "false", "False"]):
         coll = collection.get_collection_doc(cid)
@@ -450,7 +450,7 @@ def products_refresh_post_inline(tiids_string):
 # refreshes items from tiids list in body of POST
 @app.route('/v1/products/refresh', methods=['POST'])
 def products_refresh_post():
-    logger.debug(u"in products_refresh_post with tiids")
+    # logger.debug(u"in products_refresh_post with tiids")
     tiids = request.json["tiids"]
     try:
         analytics_credentials = request.json["analytics_credentials"]
@@ -470,7 +470,7 @@ def products_refresh_post():
 # sends back duplicate groups from tiids list in body of POST
 @app.route('/v1/products/duplicates', methods=['POST'])
 def products_duplicates_post():
-    logger.debug(u"in products_duplicates_post with tiids")
+    # logger.debug(u"in products_duplicates_post with tiids")
     tiids = request.json["tiids"]
     duplicates_list = item_module.build_duplicates_list(tiids)
     resp = make_response(json.dumps({"duplicates_list": duplicates_list}, sort_keys=True, indent=4), 200)   
@@ -518,7 +518,7 @@ def products_post(format="json"):
         return response
     elif "tiids" in request.json:
         # overloading post for get because tiids string gets long
-        logger.debug(u"in products_post with tiids, so getting products to return")
+        # logger.debug(u"in products_post with tiids, so getting products to return")
         tiids = request.json["tiids"]
         tiids_string = ",".join(tiids)
         try:
@@ -642,7 +642,7 @@ def product_biblio_modify(tiid):
 # for internal use only
 @app.route('/test/collection/<action_type>', methods=['GET'])
 def tests_interactions(action_type=''):
-    logger.info(u"getting test/collection/" + action_type)
+    # logger.info(u"getting test/collection/" + action_type)
 
     report = myredis.hgetall("test.collection." + action_type)
     report["url"] = "http://{root}/collection/{collection_id}".format(
