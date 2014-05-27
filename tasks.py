@@ -28,21 +28,12 @@ class SqlAlchemyTask(celery.Task):
     # def after_return(self, status, retval, task_id, args, kwargs, einfo):
     #     db.session.remove()
 
-@worker_process_init.connect
-def create_worker_connection(*args, **kwargs):
-    """Initialize database connection.
-      
-      This has to be done after the worker processes have been started otherwise
-      the connection will fail.
-      
-    """
-    db.session = db.create_scoped_session()
 
 
 @task_postrun.connect()
 def task_postrun_handler(*args, **kwargs):    
-    # close db session
     db.session.remove()
+
 
 @task_failure.connect
 def task_failure_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds):

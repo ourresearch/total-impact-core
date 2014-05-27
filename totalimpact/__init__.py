@@ -8,6 +8,7 @@ from flask import Flask
 from flask.ext.compress import Compress
 from flask_sqlalchemy import SQLAlchemy
 from flask_debugtoolbar import DebugToolbarExtension
+from multiprocessing.util import register_after_fork
 
 # set up logging
 # see http://wiki.pylonshq.com/display/pylonscookbook/Alternative+logging+configuration
@@ -31,11 +32,12 @@ app.config["COMPRESS_DEBUG"] = os.getenv("COMPRESS_DEBUG", "False")=="True"
 
 # database stuff
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
-app.config["SQLALCHEMY_POOL_SIZE"] = 50
-# app.config["SQLALCHEMY_ECHO"] = True
-# app.config["SQLALCHEMY_RECORD_QUERIES"] = True
+app.config["SQLALCHEMY_POOL_SIZE"] = 20
 
 db = SQLAlchemy(app)
+
+# see https://github.com/celery/celery/issues/1564
+register_after_fork(db.engine, engine.dispose)
 
 # from http://docs.sqlalchemy.org/en/latest/core/pooling.html
 # This recipe will ensure that a new Connection will succeed even if connections in the pool 
@@ -72,28 +74,28 @@ if (os.getenv("FLASK_DEBUG", False) == "True"):
 # segment.io logging
 analytics.init(os.getenv("SEGMENTIO_PYTHON_KEY"))
 analytics.identify("CORE", {
-				       'internal': True,
-				       'name': 'IMPACTSTORY CORE'})
+                       'internal': True,
+                       'name': 'IMPACTSTORY CORE'})
 
 
 
 
 # set up views and database, if necessary
 try:
-	from totalimpact import views
+    from totalimpact import views
 except exc.ProgrammingError:
-	logger.info("SQLAlchemy database tables not found, so creating them")
-	db.session.rollback()
-	db.create_all()
-	from totalimpact import views
+    logger.info("SQLAlchemy database tables not found, so creating them")
+    db.session.rollback()
+    db.create_all()
+    from totalimpact import views
 
 try:
-	from totalimpact import extra_schema 
+    from totalimpact import extra_schema 
 except exc.ProgrammingError:
-	logger.info("SQLAlchemy database tables not found, so creating them")
-	db.session.rollback()
-	db.create_all()
-	from totalimpact import extra_schema 
+    logger.info("SQLAlchemy database tables not found, so creating them")
+    db.session.rollback()
+    db.create_all()
+    from totalimpact import extra_schema 
 
 
 
