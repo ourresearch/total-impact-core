@@ -37,7 +37,7 @@ app.config["SQLALCHEMY_POOL_SIZE"] = 20
 db = SQLAlchemy(app)
 
 # see https://github.com/celery/celery/issues/1564
-register_after_fork(db.engine, engine.dispose)
+register_after_fork(db.engine, db.engine.dispose)
 
 # from http://docs.sqlalchemy.org/en/latest/core/pooling.html
 # This recipe will ensure that a new Connection will succeed even if connections in the pool 
