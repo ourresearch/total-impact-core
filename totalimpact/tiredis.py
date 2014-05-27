@@ -34,7 +34,7 @@ def delete_hash_key(self, key, hash_key):
 
 
 
-def set_task_id(self, tiid, task_id, expire=60*2, pipe=None):
+def set_task_id(self, tiid, task_id, expire=60*10, pipe=None):
     if not pipe:
         pipe = self
 
@@ -52,7 +52,7 @@ def get_task_id(self, tiid, pipe=None):
     return self.get_value(key, pipe)
 
 
-def set_tiid_task_ids(self, tiid_task_ids, expire=60*2):
+def set_tiid_task_ids(self, tiid_task_ids, expire=60*10):
     pipe = self.pipeline()    
 
     for (tiid, task_id) in tiid_task_ids.iteritems():
