@@ -997,8 +997,9 @@ def update_status_from_task_id(task_id, tiid=None):
                 update_status = "WAITING" # tasks's task not done yet
                 pass
     if not update_status.startswith("SUCCESS"):
-        logger.debug(u"update_status: task_id={task_id}, update_status={update_status}, tiid={tiid}".format(
-            task_id=task_id, update_status=update_status, tiid=tiid))
+        # logger.debug(u"update_status: task_id={task_id}, update_status={update_status}, tiid={tiid}".format(
+        #     task_id=task_id, update_status=update_status, tiid=tiid))
+        pass
     return update_status
 
 def update_status(tiid, myredis):
