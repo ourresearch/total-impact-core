@@ -177,10 +177,9 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
             response = provider_method_wrapper(tiid, aliases_dict, provider, method_name)
 
     except timeout.Timeout:
-        logger.warning(u"TIMEOUT in provider_run for {provider} after {timeout_seconds} seconds".format(
-           provider=provider.provider_name, timeout_seconds=timeout_seconds))
-        raise ProviderTimeout("celery timeout on {provider_name}".format(
-            provider_name=provider_name))
+        logger.warning(u"TIMEOUT in provider_run for {provider} {method_name} {tiid} after {timeout_seconds} seconds".format(
+           provider=provider.provider_name, method_name=method_name, tiid=tiid, timeout_seconds=timeout_seconds))
+        raise ProviderTimeout
 
     return response
 
