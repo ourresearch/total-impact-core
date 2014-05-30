@@ -155,6 +155,8 @@ def chain_dummy(first_arg, **kwargs):
 
     return response
 
+def get_ratelimit_token(provider_name):
+    return (1, None)
 
 @task(base=SqlAlchemyTask)
 def provider_run(aliases_dict, tiid, method_name, provider_name):
@@ -167,7 +169,7 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
             # logger.info(u"in provider_run for {provider}".format(
             #    provider=provider.provider_name))
 
-            (token, estimated_time) = get_ratelimit_token():
+            (token, estimated_time) = get_ratelimit_token(provider_name)
             if not token:
                  provider_run.retry(args=[aliases_dict, tiid, method_name, provider_name],
                         countdown=estimated_time)
