@@ -9,6 +9,7 @@ from flask.ext.compress import Compress
 from flask_sqlalchemy import SQLAlchemy
 from flask_debugtoolbar import DebugToolbarExtension
 from multiprocessing.util import register_after_fork
+from eventlet import hubs
 
 # set up logging
 # see http://wiki.pylonshq.com/display/pylonscookbook/Alternative+logging+configuration
@@ -78,7 +79,7 @@ analytics.identify("CORE", {
                        'name': 'IMPACTSTORY CORE'})
 
 
-
+hubs.hub_blocking_detection(True, resolution=10)
 
 # set up views and database, if necessary
 try:
