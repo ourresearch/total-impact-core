@@ -8,6 +8,7 @@ from celery.decorators import task
 from celery.signals import task_postrun, task_prerun, task_failure, worker_process_init
 from celery import group, chain, chord
 # from celery.app import default_app as celery_app
+from eventlet import timeout
 
 from totalimpact import item as item_module
 from totalimpact import db
@@ -158,17 +159,24 @@ def chain_dummy(first_arg, **kwargs):
 @task(base=SqlAlchemyTask)
 def provider_run(aliases_dict, tiid, method_name, provider_name):
 
+    timeout_seconds = 10
     try:
-        provider = ProviderFactory.get_provider(provider_name)
+        with timeout.Timeout(timeout_seconds):
+            provider = ProviderFactory.get_provider(provider_name)
 
-        # logger.info(u"in provider_run for {provider}".format(
-        #    provider=provider.provider_name))
+            # logger.info(u"in provider_run for {provider}".format(
+            #    provider=provider.provider_name))
 
-        response = provider_method_wrapper(tiid, aliases_dict, provider, method_name)
+            (token, estimated_time) = get_ratelimit_token():
+            if not token:
+                 provider_run.retry(args=[aliases_dict, tiid, method_name, provider_name],
+                        countdown=estimated_time)
 
-    except celery.exceptions.SoftTimeLimitExceeded:
-        logger.warning(u"TIMEOUT in provider_run for {provider}".format(
-           provider=provider.provider_name))
+            response = provider_method_wrapper(tiid, aliases_dict, provider, method_name)
+
+    except Timeout:
+        logger.warning(u"TIMEOUT in provider_run for {provider} after {timeout_seconds} seconds".format(
+           provider=provider.provider_name, timeout_seconds=timeout_seconds))
         raise ProviderTimeout("celery timeout on {provider_name}".format(
             provider_name=provider_name))
 
