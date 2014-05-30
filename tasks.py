@@ -146,7 +146,7 @@ def sniffer(item_aliases, provider_config=default_settings.PROVIDERS):
 
 
 
-@task(base=SqlAlchemyTask, time_limit=10)
+@task(base=SqlAlchemyTask)
 def chain_dummy(first_arg, **kwargs):
     try:
         response = first_arg[0]
@@ -159,22 +159,22 @@ def chain_dummy(first_arg, **kwargs):
 @task(base=SqlAlchemyTask)
 def provider_run(aliases_dict, tiid, method_name, provider_name):
 
-    timeout_seconds = 40
+    provider = ProviderFactory.get_provider(provider_name)
+
+    # logger.info(u"in provider_run for {provider}".format(
+    #    provider=provider.provider_name))
+
+    (success, estimated_wait_seconds) = rate.acquire(provider_name, False)
+    # add up to random 2 seconds to spread it out
+    estimated_wait_seconds += random.random() * 2
+    if not success:
+         provider_run.retry(args=[aliases_dict, tiid, method_name, provider_name],
+                countdown=estimated_wait_seconds, 
+                max_retries=100)
+
+    timeout_seconds = 120
     try:
         with timeout.Timeout(timeout_seconds):
-            provider = ProviderFactory.get_provider(provider_name)
-
-            # logger.info(u"in provider_run for {provider}".format(
-            #    provider=provider.provider_name))
-
-            (success, estimated_wait_seconds) = rate.acquire(provider_name, False)
-            # add up to random 2 seconds to spread it out
-            estimated_wait_seconds += random.random() * 2
-            if not success:
-                 provider_run.retry(args=[aliases_dict, tiid, method_name, provider_name],
-                        countdown=estimated_wait_seconds, 
-                        max_retries=100)
-
             response = provider_method_wrapper(tiid, aliases_dict, provider, method_name)
 
     except timeout.Timeout:
@@ -189,7 +189,7 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
 
 
 
-@task(base=SqlAlchemyTask, time_limit=60)
+@task(base=SqlAlchemyTask)
 def refresh_tiid(tiid, aliases_dict):
     pipeline = sniffer(aliases_dict)
     chain_list = []
