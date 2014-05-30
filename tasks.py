@@ -40,7 +40,7 @@ def task_postrun_handler(*args, **kwargs):
 def task_failure_handler(sender=None, task_id=None, args=None, kwargs=None, exception=None, traceback=None, einfo=None, **kwds):
     try:
         logger.error(u"Celery task FAILED on task_id={task_id}, {exception}, {traceback}, {einfo}, {args}".format(
-            task_id=task_id, args=args, exception=exception, traceback=traceback, einfo=einfo))
+            task_id=task_id, args=args, exception=exception, einfo=einfo))
     except KeyError:
         pass
 
@@ -161,7 +161,7 @@ def get_ratelimit_token(provider_name):
 @task(base=SqlAlchemyTask)
 def provider_run(aliases_dict, tiid, method_name, provider_name):
 
-    timeout_seconds = 20
+    timeout_seconds = 40
     try:
         with timeout.Timeout(timeout_seconds):
             provider = ProviderFactory.get_provider(provider_name)
@@ -179,7 +179,7 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
     except timeout.Timeout:
         msg = u"TIMEOUT in provider_run for {provider} {method_name} {tiid} after {timeout_seconds} seconds".format(
            provider=provider.provider_name, method_name=method_name, tiid=tiid, timeout_seconds=timeout_seconds)
-        logger.warning(msg)
+        # logger.warning(msg)  # message is written elsewhere
         raise ProviderTimeout(msg)
 
     return response
