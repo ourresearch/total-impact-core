@@ -1007,13 +1007,10 @@ def update_status_from_task_id(task_id, tiid=None):
         else:
             task_result = AsyncResult(task_id)
             try:
-                if task_result.ready():
-                    update_status = task_result.state
-                else:
-                    update_status = task_result.state
+                update_status = u"{state}: {task_id}".format(
+                    state=task_result.state, task_id=task_id)
             except AttributeError:
                 update_status = "WAITING" # tasks's task not done yet
-                pass
     if not update_status.startswith("SUCCESS"):
         # logger.debug(u"update_status: task_id={task_id}, update_status={update_status}, tiid={tiid}".format(
         #     task_id=task_id, update_status=update_status, tiid=tiid))
