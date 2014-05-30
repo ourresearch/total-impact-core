@@ -40,6 +40,10 @@ db = SQLAlchemy(app)
 # see https://github.com/celery/celery/issues/1564
 register_after_fork(db.engine, db.engine.dispose)
 
+# see http://unethicalblogger.com/2010/08/28/unclog-the-tubes-blocking-detection-in-eventlet.html
+if os.getenv("CELERY_EVENTLET_HUB_BLOCKING_DETECTION", "False")=="True":
+    hubs.debug.hub_blocking_detection(True, resolution=10)
+
 # from http://docs.sqlalchemy.org/en/latest/core/pooling.html
 # This recipe will ensure that a new Connection will succeed even if connections in the pool 
 # have gone stale, provided that the database server is actually running. 
@@ -79,7 +83,6 @@ analytics.identify("CORE", {
                        'name': 'IMPACTSTORY CORE'})
 
 
-hubs.hub_blocking_detection(True, resolution=10)
 
 # set up views and database, if necessary
 try:
