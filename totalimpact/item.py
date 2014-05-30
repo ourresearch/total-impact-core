@@ -1011,6 +1011,8 @@ def update_status_from_task_id(task_id, tiid=None):
                     state=task_result.state, task_id=task_id)
             except AttributeError:
                 update_status = "WAITING" # tasks's task not done yet
+    if update_status.starts_with("FAILURE"):
+        update_status = "SUCCESS: update finished, though last update result was " + update_status
     if not update_status.startswith("SUCCESS"):
         # logger.debug(u"update_status: task_id={task_id}, update_status={update_status}, tiid={tiid}".format(
         #     task_id=task_id, update_status=update_status, tiid=tiid))

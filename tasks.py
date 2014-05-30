@@ -96,11 +96,7 @@ def add_to_database_if_nonzero(
     if new_content:
         # don't need item with metrics for this purpose, so don't bother getting metrics from db
 
-        try:
-            item_obj = item_module.Item.query.get(tiid)
-        except:
-            db.session.remove()
-            item_obj = item_module.Item.query.get(tiid)
+        item_obj = item_module.Item.query.get(tiid)
 
         if item_obj:
             if method_name=="aliases":
