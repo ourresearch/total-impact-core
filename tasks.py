@@ -37,10 +37,10 @@ def task_postrun_handler(*args, **kwargs):
 
 
 @task_failure.connect
-def task_failure_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds):
+def task_failure_handler(sender=None, task_id=None, args=None, kwargs=None, exception=None, traceback=None, einfo=None, **kwds):
     try:
-        logger.error(u"Celery task FAILED on task_id={task_id}, {args}".format(
-            task_id=task_id, args=args))
+        logger.error(u"Celery task FAILED on task_id={task_id}, {args}, {exception}, {traceback}, {einfo}".format(
+            task_id=task_id, args=args, exception=exception, traceback=traceback, einfo=einfo))
     except KeyError:
         pass
 
@@ -208,6 +208,11 @@ def refresh_tiid(tiid, aliases_dict):
                 method_name=method_name, provider_name=provider_name)))
 
     workflow = chain(chain_list)
+
+    # see http://stackoverflow.com/questions/18872854/getting-task-id-inside-a-celery-task
+    # workflow_tasks_task.task_id, 
+    logger.info(u"before apply_async for tiid {tiid}, refresh_tiids id {task_id}".format(
+        tiid=tiid, task_id=refresh_tiid.request.id))
 
     workflow_tasks_task = workflow.apply_async()
 
