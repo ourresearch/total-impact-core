@@ -215,15 +215,19 @@ def refresh_tiid(tiid, aliases_dict):
     logger.info(u"before apply_async for tiid {tiid}, refresh_tiids id {task_id}".format(
         tiid=tiid, task_id=refresh_tiid.request.id))
 
-    workflow_tasks_task = workflow.apply_async()
+    workflow_apply_async = workflow.apply_async()
+    workflow_tasks = workflow.tasks
+    all_ids = [task.id for task in workflow_tasks]
+    workflow_trackable_task = workflow_tasks[-1]  # see http://blog.cesarcd.com/2014/04/tracking-status-of-celery-chain.html
+    workflow_trackable_id = workflow_trackable_task.id
 
     # see http://stackoverflow.com/questions/18872854/getting-task-id-inside-a-celery-task
     # workflow_tasks_task.task_id, 
-    logger.info(u"setting task id for tiid {tiid}, refresh_tiids id {task_id}, workflow_id {workflow_id}".format(
-        tiid=tiid, task_id=refresh_tiid.request.id, workflow_id=workflow_tasks_task.task_id))
-    myredis.set_task_id(tiid, workflow_tasks_task.task_id)
+    logger.info(u"all tasks for task id for tiid {tiid}, refresh_tiids id {task_id}, workflow_trackable_id {workflow_trackable_id}, all_ids={all_ids}".format(
+        tiid=tiid, task_id=refresh_tiid.request.id, workflow_trackable_id=workflow_trackable_id, all_ids=all_ids))
+    myredis.set_task_id(tiid, workflow_trackable_id)
 
-    return workflow_tasks_task
+    return workflow_trackable_task
 
 
 def put_on_celery_queue(tiid, aliases_dict, priority="high"):
