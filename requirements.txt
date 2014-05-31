@@ -17,6 +17,7 @@ celery==3.1.11
 certifi==0.0.8
 chardet==1.0.1
 distribute==0.6.10
+dnspython==1.11.1
 eventlet==0.14.0
 gunicorn==0.14.3
 iso8601==0.1.4

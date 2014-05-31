@@ -5,7 +5,7 @@ from kombu import Exchange, Queue
 
 sys.path.append('.')
 
-redis_url = os.environ.get('REDIS_URL', "redis://localhost:6379/")
+redis_url = os.environ.get('REDIS_URL', "redis://127.0.0.1:6379/")
 if not redis_url.endswith("/"):
     redis_url += "/"
 
@@ -40,6 +40,7 @@ CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 CELERY_ENABLE_UTC=True
 CELERY_TASK_RESULT_EXPIRES = 60*60  # 1 hour
 CELERYD_MAX_TASKS_PER_CHILD = 1000
+
 CELERYD_FORCE_EXECV = True
 CELERY_TRACK_STARTED = True
 
