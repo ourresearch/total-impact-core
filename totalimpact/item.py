@@ -1029,6 +1029,7 @@ def update_status(tiid, myredis):
     done_updating = all([(status.startswith("SUCCESS") or status.startswith("FAILURE")) for status in statuses.values()])
     has_failures = any([status.startswith("FAILURE") for status in statuses.values()])
     has_pending = any([status.startswith("PENDING") for status in statuses.values()])
+    has_started = any([status.startswith("STARTED") for status in statuses.values()])
 
     update_status = "unknown"
     if done_updating:
@@ -1037,6 +1038,8 @@ def update_status(tiid, myredis):
             update_status += " (with failures) "
     elif has_pending:
         update_status = u"PENDING"
+    elif has_started:
+        update_status = u"STARTED"
 
     update_status += u"; task_ids: {statuses}".format(
         statuses = statuses)

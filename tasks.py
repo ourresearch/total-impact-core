@@ -35,16 +35,6 @@ class SqlAlchemyTask(celery.Task):
     # def after_return(self, status, retval, task_id, args, kwargs, einfo):
     #     db.session.remove()
 
-# from http://stackoverflow.com/a/10074280/596939
-def update_sent_state(sender=None, task_id=None, **kwargs):
-    # the task may not exist if sent using `send_task` which
-    # sends tasks by name, so fall back to the default result backend
-    # if that is the case.
-    task = celery_app.tasks.get(sender)
-    backend = task.backend if task else celery_app.backend
-    backend.store_result(task_id, None, "SENT")
-task_sent.connect(update_sent_state)
-
 
 @task_postrun.connect()
 def task_postrun_handler(*args, **kwargs):    
