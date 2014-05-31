@@ -994,34 +994,60 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
             raise LookupError
             
         item["update_status"] = update_status(tiid, myredis)
-        something_currently_updating = something_currently_updating or (item["update_status"] != "SUCCESS")
-
         items.append(item)
+
+    something_currently_updating = not collection.is_all_done(tiids, myredis)
     return (items, something_currently_updating)
 
-def update_status_from_task_id(task_id, tiid=None):
-    update_status = "SUCCESS: no recent update"
-    if task_id:
-        if task_id.lower() == "start":
-            update_status = "start_queueing"
-        else:
-            task_result = AsyncResult(task_id)
-            try:
-                update_status = u"{state}: {task_id}".format(
-                    state=task_result.state, task_id=task_id)
-            except AttributeError:
-                update_status = "WAITING" # tasks's task not done yet
-    if update_status.startswith("FAILURE"):
-        update_status = "SUCCESS: update finished, though last update result was " + update_status
-    if not update_status.startswith("SUCCESS"):
-        # logger.debug(u"update_status: task_id={task_id}, update_status={update_status}, tiid={tiid}".format(
-        #     task_id=task_id, update_status=update_status, tiid=tiid))
-        pass
-    return update_status
 
 def update_status(tiid, myredis):
-    task_id = myredis.get_task_id(tiid)
-    return update_status_from_task_id(task_id, tiid)
+    task_ids = myredis.get_provider_task_ids(tiid)
+
+    if not task_ids:
+        return "SUCCESS: no recent update"
+
+    statuses = {}
+
+    if "STARTED" in task_ids:
+        if (len(task_ids) > 1):
+            task_ids.remove("STARTED")
+        else:
+            return "started_queueing"
+
+    for task_id in task_ids:
+        task_result = AsyncResult(task_id)
+        try:
+            state = task_result.state
+        except AttributeError:
+            state = "unknown_state" 
+        
+        statuses[task_id] = state
+
+        logger.debug(u"update_status: tiid={tiid}, statuses={statuses}".format(
+            tiid=tiid, statuses=statuses))
+
+    done_updating = all([(status.startswith("SUCCESS") or status.startswith("FAILURE")) for status in statuses.values()])
+    has_failures = any([status.startswith("FAILURE") for status in statuses.values()])
+    has_pending = any([status.startswith("PENDING") for status in statuses.values()])
+
+    update_status = "unknown"
+    if done_updating:
+        update_status = "SUCCESS: update finished"
+        if has_failures:
+            update_status += " (with failures) "
+    elif has_pending:
+        update_status = u"PENDING"
+
+    update_status += u"; task_ids: {statuses}".format(
+        statuses = statuses)
+
+
+    # if not update_status.startswith("SUCCESS"):
+    #     # logger.debug(u"update_status: task_id={task_id}, update_status={update_status}, tiid={tiid}".format(
+    #     #     task_id=task_id, update_status=update_status, tiid=tiid))
+    #     pass
+
+    return update_status
 
    
 def create_item(namespace, nid, myredis, mydao):
@@ -1178,10 +1204,12 @@ def get_tiid_by_alias(ns, nid, mydao=None):
 def start_item_update(dicts_to_add, priority, myredis):
     # logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
     #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
-    myredis.set_tiid_task_ids(dict((d["tiid"], "START") for d in dicts_to_add))
+
     for d in dicts_to_add:
         # this import here to avoid circular dependancies
         from tasks import put_on_celery_queue
+        myredis.clear_provider_task_ids(d["tiid"])
+        myredis.set_provider_task_ids(d["tiid"], ["STARTED"])  # set this right away
         task_id = put_on_celery_queue(d["tiid"], d["aliases_dict"], priority)
     
 

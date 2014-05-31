@@ -8,7 +8,9 @@ import celery
 from celery.decorators import task
 from celery.signals import task_postrun, task_prerun, task_failure, worker_process_init
 from celery import group, chain, chord
-# from celery.app import default_app as celery_app
+from celery import current_app as celery_app
+from celery.signals import task_sent
+from celery.utils import uuid
 from eventlet import timeout
 
 from totalimpact import item as item_module
@@ -33,6 +35,15 @@ class SqlAlchemyTask(celery.Task):
     # def after_return(self, status, retval, task_id, args, kwargs, einfo):
     #     db.session.remove()
 
+# from http://stackoverflow.com/a/10074280/596939
+def update_sent_state(sender=None, task_id=None, **kwargs):
+    # the task may not exist if sent using `send_task` which
+    # sends tasks by name, so fall back to the default result backend
+    # if that is the case.
+    task = celery_app.tasks.get(sender)
+    backend = task.backend if task else celery_app.backend
+    backend.store_result(task_id, None, "SENT")
+task_sent.connect(update_sent_state)
 
 
 @task_postrun.connect()
@@ -193,16 +204,20 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
 def refresh_tiid(tiid, aliases_dict):
     pipeline = sniffer(aliases_dict)
     chain_list = []
+    task_ids = []
     for step_config in pipeline:
         group_list = []
         for (method_name, provider_name) in step_config:
             if not chain_list:
                 # pass the alias dict in to the first one in the whole chain
-                group_list.append(provider_run.si(aliases_dict, tiid, method_name, provider_name).set())
-                # group_list.append(provider_run.si(aliases_dict, tiid, method_name, provider_name).set(queue="provider."+provider_name))
+                new_task = provider_run.si(aliases_dict, tiid, method_name, provider_name)
             else:
-                group_list.append(provider_run.s(tiid, method_name, provider_name).set())
-                # group_list.append(provider_run.s(tiid, method_name, provider_name).set(queue="provider."+"provider_name"))
+                new_task = provider_run.s(tiid, method_name, provider_name)
+            uuid_bit = uuid().split("-")[0]
+            new_task_id = "task-{tiid}-{method_name}-{provider_name}-{uuid}".format(
+                tiid=tiid, method_name=method_name, provider_name=provider_name, uuid=uuid_bit)
+            group_list.append(new_task.set(task_id=new_task_id))
+            task_ids.append(new_task_id)
         if group_list:
             chain_list.append(group(group_list))
             chain_list.append(chain_dummy.s(dummy="DUMMY_{method_name}_{provider_name}".format(
@@ -217,15 +232,15 @@ def refresh_tiid(tiid, aliases_dict):
 
     workflow_apply_async = workflow.apply_async()
     workflow_tasks = workflow.tasks
-    all_ids = [task.id for task in workflow_tasks]
     workflow_trackable_task = workflow_tasks[-1]  # see http://blog.cesarcd.com/2014/04/tracking-status-of-celery-chain.html
     workflow_trackable_id = workflow_trackable_task.id
 
     # see http://stackoverflow.com/questions/18872854/getting-task-id-inside-a-celery-task
     # workflow_tasks_task.task_id, 
-    logger.info(u"all tasks for task id for tiid {tiid}, refresh_tiids id {task_id}, workflow_trackable_id {workflow_trackable_id}, all_ids={all_ids}".format(
-        tiid=tiid, task_id=refresh_tiid.request.id, workflow_trackable_id=workflow_trackable_id, all_ids=all_ids))
-    myredis.set_task_id(tiid, workflow_trackable_id)
+    logger.error(u"all tasks for task id for tiid {tiid}, refresh_tiids id {task_id}, workflow_trackable_id {workflow_trackable_id}".format(
+        tiid=tiid, task_id=refresh_tiid.request.id, workflow_trackable_id=workflow_trackable_id))
+
+    myredis.set_provider_task_ids(tiid, task_ids)
 
     return workflow_trackable_task
 

@@ -16,6 +16,8 @@ def set_hash_value(self, key, hash_key, value, expire, pipe=None):
     json_value = json.dumps(value)
     pipe.hset(key, hash_key, json_value)
     pipe.expire(key, expire)
+    if pipe==self:
+        pipe.execute()
 
 def get_hash_value(self, key, hash_key):
     try:
@@ -33,41 +35,27 @@ def delete_hash_key(self, key, hash_key):
     return self.hdel(key, hash_key)
 
 
-
-def set_task_id(self, tiid, task_id, expire=60*10, pipe=None):
-    if not pipe:
-        pipe = self
-
-    key = "tiid_task_id:{tiid}".format(
+def clear_provider_task_ids(self, tiid):
+    key = "provider_tiid_task_id:{tiid}".format(
         tiid=tiid)
-    pipe.set_value(key, task_id, expire, pipe=pipe)    
+    self.delete(key)
 
 
-def get_task_id(self, tiid, pipe=None):
-    if not pipe:
-        pipe = self
-
-    key = "tiid_task_id:{tiid}".format(
-        tiid=tiid)
-    return self.get_value(key, pipe)
-
-
-def set_tiid_task_ids(self, tiid_task_ids, expire=60*10):
+def set_provider_task_ids(self, tiid, task_ids, expire=60*10):
     pipe = self.pipeline()    
-
-    for (tiid, task_id) in tiid_task_ids.iteritems():
-        self.set_task_id(tiid, task_id, expire, pipe=pipe)
+    key = "provider_tiid_task_id:{tiid}".format(
+        tiid=tiid)
+    for task_id in task_ids:
+        pipe.sadd(key, task_id)
+        pipe.expire(key, expire)
     pipe.execute()    
 
-def get_tiid_task_ids(self, tiids):
-    pipe = self.pipeline()    
-    tiid_task_ids = {}
 
-    for tiid in tiids:
-        tiid_task_ids[tiid] = self.get_task_id(tiid, pipe)
-    pipe.execute()  
-
-    return tiid_task_ids
+def get_provider_task_ids(self, tiid):
+    key = "provider_tiid_task_id:{tiid}".format(
+        tiid=tiid)
+    task_ids = list(self.smembers(key))
+    return task_ids
 
 
 def set_value(self, key, value, expire, pipe=None):
@@ -78,15 +66,18 @@ def set_value(self, key, value, expire, pipe=None):
     pipe.set(key, json_value)
     pipe.expire(key, expire)
 
+
 def get_value(self, key, pipe=None):
     if not pipe:
         pipe = self
 
+    value = None
     try:
         json_value = pipe.get(key)
         value = json.loads(json_value)
     except TypeError:
-        value = None
+        pass
+            
     return value
 
 
@@ -154,9 +145,7 @@ redis.Redis.set_reference_histogram_dict = set_reference_histogram_dict
 redis.Redis.get_reference_histogram_dict = get_reference_histogram_dict
 redis.Redis.set_reference_lookup_dict = set_reference_lookup_dict
 redis.Redis.get_reference_lookup_dict = get_reference_lookup_dict
-redis.Redis.set_tiid_task_ids = set_tiid_task_ids
-redis.Redis.get_tiid_task_ids = get_tiid_task_ids
-redis.Redis.get_task_id = get_task_id
-redis.Redis.set_task_id = set_task_id
-
+redis.Redis.set_provider_task_ids = set_provider_task_ids
+redis.Redis.get_provider_task_ids = get_provider_task_ids
+redis.Redis.clear_provider_task_ids = clear_provider_task_ids
 
