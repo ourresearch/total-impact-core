@@ -157,7 +157,7 @@ def chain_dummy(first_arg, **kwargs):
     return response
 
 
-@task(base=SqlAlchemyTask, priority=0)
+@task(base=SqlAlchemyTask)
 def provider_run(aliases_dict, tiid, method_name, provider_name):
 
     provider = ProviderFactory.get_provider(provider_name)
@@ -200,9 +200,9 @@ def refresh_tiid(tiid, aliases_dict):
         for (method_name, provider_name) in step_config:
             if not chain_list:
                 # pass the alias dict in to the first one in the whole chain
-                new_task = provider_run.si(aliases_dict, tiid, method_name, provider_name)
+                new_task = provider_run.si(aliases_dict, tiid, method_name, provider_name).set(priority=9) #don't start new ones till done
             else:
-                new_task = provider_run.s(tiid, method_name, provider_name)
+                new_task = provider_run.s(tiid, method_name, provider_name).set(priority=0)
             uuid_bit = uuid().split("-")[0]
             new_task_id = "task-{tiid}-{method_name}-{provider_name}-{uuid}".format(
                 tiid=tiid, method_name=method_name, provider_name=provider_name, uuid=uuid_bit)
@@ -220,7 +220,7 @@ def refresh_tiid(tiid, aliases_dict):
     logger.info(u"before apply_async for tiid {tiid}, refresh_tiids id {task_id}".format(
         tiid=tiid, task_id=refresh_tiid.request.id))
 
-    workflow_apply_async = workflow.apply_async(priority=0)
+    workflow_apply_async = workflow.apply_async()  
     workflow_tasks = workflow.tasks
     workflow_trackable_task = workflow_tasks[-1]  # see http://blog.cesarcd.com/2014/04/tracking-status-of-celery-chain.html
     workflow_trackable_id = workflow_trackable_task.id
