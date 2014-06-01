@@ -21,8 +21,6 @@ BROKER_TRANSPORT_OPTIONS = {'fanout_patterns': True}
 CELERY_DEFAULT_QUEUE = 'core_main'
 CELERY_QUEUES = [
     Queue('core_main', routing_key='core_main'),
-    Queue('refresh_tiid', routing_key='refresh_tiid'),
-    Queue('provider_run', routing_key='provider_run'),
 ]
 
 BROKER_TRANSPORT_OPTIONS = {
@@ -31,10 +29,6 @@ BROKER_TRANSPORT_OPTIONS = {
 
 CELERY_CREATE_MISSING_QUEUES = True
 
-CELERY_ROUTES = {
-    'tasks.refresh_tiid': {'queue': 'refresh_tiid'},
-    'tasks.provider_run': {'queue': 'provider_run'},
-}
 
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 CELERY_ENABLE_UTC=True
