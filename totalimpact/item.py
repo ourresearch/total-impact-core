@@ -1212,7 +1212,7 @@ def start_item_update(dicts_to_add, priority, myredis):
         # this import here to avoid circular dependancies
         from tasks import put_on_celery_queue
         myredis.clear_provider_task_ids(d["tiid"])
-        myredis.set_provider_task_ids(d["tiid"], ["STARTED"])  # set this right away
+        # myredis.set_provider_task_ids(d["tiid"], ["STARTED"])  # set this right away
         task_id = put_on_celery_queue(d["tiid"], d["aliases_dict"], priority)
     
 
