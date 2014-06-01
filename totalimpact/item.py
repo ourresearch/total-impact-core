@@ -1210,11 +1210,14 @@ def start_item_update(dicts_to_add, priority, myredis):
     # logger.debug(u"In start_item_update with {tiid}, priority {priority} /biblio_print {aliases_dict}".format(
     #     tiid=tiid, priority=priority, aliases_dict=aliases_dict))
 
+    # do all of this first and quickly
+    for d in dicts_to_add:
+        myredis.clear_provider_task_ids(d["tiid"])
+        myredis.set_provider_task_ids(d["tiid"], ["STARTED"])  # set this right away
+    
     for d in dicts_to_add:
         # this import here to avoid circular dependancies
         from tasks import put_on_celery_queue
-        myredis.clear_provider_task_ids(d["tiid"])
-        # myredis.set_provider_task_ids(d["tiid"], ["STARTED"])  # set this right away
         task_id = put_on_celery_queue(d["tiid"], d["aliases_dict"], priority)
     
 
