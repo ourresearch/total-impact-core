@@ -147,7 +147,7 @@ def sniffer(item_aliases, provider_config=default_settings.PROVIDERS):
 
 
 
-@task(base=SqlAlchemyTask)
+@task(base=SqlAlchemyTask, priority=0)
 def chain_dummy(first_arg, **kwargs):
     try:
         response = first_arg[0]
@@ -157,7 +157,7 @@ def chain_dummy(first_arg, **kwargs):
     return response
 
 
-@task(base=SqlAlchemyTask)
+@task(base=SqlAlchemyTask, priority=0)
 def provider_run(aliases_dict, tiid, method_name, provider_name):
 
     provider = ProviderFactory.get_provider(provider_name)
@@ -220,7 +220,7 @@ def refresh_tiid(tiid, aliases_dict):
     logger.info(u"before apply_async for tiid {tiid}, refresh_tiids id {task_id}".format(
         tiid=tiid, task_id=refresh_tiid.request.id))
 
-    workflow_apply_async = workflow.apply_async()
+    workflow_apply_async = workflow.apply_async(priority=0)
     workflow_tasks = workflow.tasks
     workflow_trackable_task = workflow_tasks[-1]  # see http://blog.cesarcd.com/2014/04/tracking-status-of-celery-chain.html
     workflow_trackable_id = workflow_trackable_task.id
