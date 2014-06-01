@@ -24,7 +24,7 @@ CELERY_QUEUES = [
 ]
 
 BROKER_TRANSPORT_OPTIONS = {
-    'priority_steps': [0,9],
+    'priority_steps': [0, 3, 7, 9],
 }
 
 CELERY_CREATE_MISSING_QUEUES = True

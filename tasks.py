@@ -200,7 +200,7 @@ def refresh_tiid(tiid, aliases_dict):
         for (method_name, provider_name) in step_config:
             if not chain_list:
                 # pass the alias dict in to the first one in the whole chain
-                new_task = provider_run.si(aliases_dict, tiid, method_name, provider_name).set(priority=9) #don't start new ones till done
+                new_task = provider_run.si(aliases_dict, tiid, method_name, provider_name).set(priority=3) #don't start new ones till done
             else:
                 new_task = provider_run.s(tiid, method_name, provider_name).set(priority=0)
             uuid_bit = uuid().split("-")[0]
@@ -241,7 +241,7 @@ def put_on_celery_queue(tiid, aliases_dict, priority="high"):
 
     #see http://stackoverflow.com/questions/15239880/task-priority-in-celery-with-redis
     if "priority"=="high":
-        priority = 0
+        priority = 7
     else:
         priority = 9
 
