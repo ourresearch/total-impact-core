@@ -227,8 +227,8 @@ def refresh_tiid(tiid, aliases_dict):
 
     # see http://stackoverflow.com/questions/18872854/getting-task-id-inside-a-celery-task
     # workflow_tasks_task.task_id, 
-    logger.error(u"all tasks for task id for tiid {tiid}, refresh_tiids id {task_id}, workflow_trackable_id {workflow_trackable_id}".format(
-        tiid=tiid, task_id=refresh_tiid.request.id, workflow_trackable_id=workflow_trackable_id))
+    logger.info(u"task id for tiid {tiid}, refresh_tiids id {task_id}, workflow_trackable_id {workflow_trackable_id} task_ids={task_ids}".format(
+        tiid=tiid, task_id=refresh_tiid.request.id, workflow_trackable_id=workflow_trackable_id, task_ids=task_ids))
 
     myredis.set_provider_task_ids(tiid, task_ids)
 
