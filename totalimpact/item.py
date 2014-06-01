@@ -1032,10 +1032,12 @@ def update_status(tiid, myredis):
     has_started = any([status.startswith("STARTED") for status in statuses.values()])
 
     update_status = "unknown"
-    if done_updating:
-        update_status = "SUCCESS: update finished"
-        if has_failures:
-            update_status += " (with failures) "
+    if done_updating and not has_failures:
+        update_status = u"SUCCESS: update finished"
+    elif done_updating and has_failures:
+        udpate_status = u"SUCCESS with FAILURES"
+    elif has_failures:
+        update_status = u"FAILURE (and not all providers ran)"
     elif has_pending:
         update_status = u"PENDING"
     elif has_started:
