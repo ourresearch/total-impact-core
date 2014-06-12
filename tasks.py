@@ -15,14 +15,15 @@ from eventlet import timeout
 
 from totalimpact import item as item_module
 from totalimpact import db
+from totalimpact import REDIS_MAIN_DATABASE_NUMBER
 from totalimpact import tiredis, default_settings
 from totalimpact.providers.provider import ProviderFactory, ProviderError, ProviderTimeout
 import rate_limit
 
 logger = logging.getLogger("core.tasks")
-myredis = tiredis.from_url(os.getenv("REDIS_URL"))
+myredis = tiredis.from_url(os.getenv("REDIS_URL"), db=REDIS_MAIN_DATABASE_NUMBER)
 
-rate = rate_limit.RateLimiter(redis_url=os.getenv("REDIS_URL"))
+rate = rate_limit.RateLimiter(redis_url=os.getenv("REDIS_URL"), redis_db=REDIS_MAIN_DATABASE_NUMBER)
 rate.add_condition({'requests':25, 'seconds':1})
 
 

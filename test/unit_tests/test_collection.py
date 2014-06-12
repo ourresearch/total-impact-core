@@ -2,6 +2,8 @@ from totalimpact import collection, tiredis
 from totalimpact import item as item_module
 from totalimpact import db, app
 from collections import OrderedDict
+from totalimpact import REDIS_UNITTEST_DATABASE_NUMBER
+
 import os, json
 
 from nose.tools import raises, assert_equals, assert_true, nottest
@@ -21,7 +23,7 @@ class TestCollection():
         self.d = None
 
         # do the same thing for the redis db, set up the test redis database.  We're using DB Number 8
-        self.r = tiredis.from_url("redis://localhost:6379", db=8)
+        self.r = tiredis.from_url("redis://localhost:6379", db=REDIS_UNITTEST_DATABASE_NUMBER)
         self.r.flushdb()
 
         self.db = setup_postgres_for_unittests(db, app)

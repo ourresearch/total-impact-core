@@ -8,6 +8,8 @@ from nose.tools import raises, assert_items_equal, assert_equals, assert_greater
 from test.utils import slow
 from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
 
+from totalimpact import REDIS_UNITTEST_DATABASE_NUMBER
+
 
 class TestUpdater():
     def setUp(self):
@@ -15,7 +17,7 @@ class TestUpdater():
         self.db = setup_postgres_for_unittests(db, app)
 
         # do the same thing for the redis db, set up the test redis database.  We're using DB Number 8
-        self.r = tiredis.from_url("redis://localhost:6379", db=8)
+        self.r = tiredis.from_url("redis://localhost:6379", db=REDIS_UNITTEST_DATABASE_NUMBER)
         self.r.flushdb()
         now = datetime.datetime.utcnow()
         self.before = now - datetime.timedelta(days=2)

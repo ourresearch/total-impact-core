@@ -65,7 +65,7 @@ class RateLimiter(object):
         """
 
         if redis_url:
-            self.redis = redis.Redis.from_url(redis_url)
+            self.redis = redis.Redis.from_url(redis_url, db=redis_db)
         else:
             self.redis = redis.Redis(host=redis_host, port=redis_port, db=redis_db, password=redis_password)
         self.log = logging.getLogger('RateLimiter')

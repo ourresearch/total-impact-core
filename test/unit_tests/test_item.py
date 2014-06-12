@@ -7,6 +7,8 @@ from totalimpact import db, app
 from totalimpact import item as item_module
 from totalimpact.item import Item, Metric, Biblio, Alias
 from totalimpact.providers import bibtex, github
+from totalimpact import REDIS_UNITTEST_DATABASE_NUMBER
+
 from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests
 
 
@@ -99,7 +101,7 @@ class TestItem():
                     }}}
 
         # setup a clean new redis test database.  We're putting unittest redis at DB Number 8.
-        self.r = tiredis.from_url("redis://localhost:6379", db=8)
+        self.r = tiredis.from_url("redis://localhost:6379", db=REDIS_UNITTEST_DATABASE_NUMBER)
         self.r.flushdb()
 
         self.db = setup_postgres_for_unittests(db, app)

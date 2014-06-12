@@ -4,13 +4,14 @@ from time import sleep
 from werkzeug.security import generate_password_hash
 from totalimpact import models, tiredis
 from totalimpact.providers import bibtex, github
+from totalimpact import REDIS_UNITTEST_DATABASE_NUMBER
 
 
 class TestMemberItems():
 
     def setUp(self):
         # setup a clean new redis database at our unittest redis DB location: Number 8
-        self.r = tiredis.from_url("redis://localhost:6379", db=8)
+        self.r = tiredis.from_url("redis://localhost:6379", db=REDIS_UNITTEST_DATABASE_NUMBER)
         self.r.flushdb()
 
         bibtex.Bibtex.paginate = lambda self, x: {"pages": [1,2,3,4], "number_entries":10}

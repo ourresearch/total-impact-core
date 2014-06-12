@@ -641,7 +641,7 @@ class Provider(object):
             cache = cache_module.Cache(self.max_cache_duration)
             cached_response = get_page_from_cache(url, headers, allow_redirects, cache)
             if cached_response:
-                self.logger.info(u"{provider_name} CACHE HIT on {url}".format(
+                self.logger.debug(u"{provider_name} CACHE HIT on {url}".format(
                     provider_name=self.provider_name, url=url))
                 return cached_response
             

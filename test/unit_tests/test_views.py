@@ -6,6 +6,7 @@ from nose.tools import assert_equals, nottest, assert_greater, assert_items_equa
 
 from totalimpact import app, db, views, tiredis, api_user, collection, item as item_module
 from totalimpact.providers.dryad import Dryad
+from totalimpact import REDIS_UNITTEST_DATABASE_NUMBER
 
 from test.utils import setup_postgres_for_unittests, teardown_postgres_for_unittests, http
 

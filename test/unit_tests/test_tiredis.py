@@ -3,6 +3,7 @@ import redis
 import json
 
 from totalimpact import tiredis
+from totalimpact import REDIS_UNITTEST_DATABASE_NUMBER
 
 SAMPLE_COLLECTION = {
     "_id": "kn5auf",
@@ -15,7 +16,7 @@ class TestTiRedis():
 
     def setUp(self):
         # we're putting unittests for redis in their own db (number 8) so they can be deleted with abandon
-        self.r = tiredis.from_url("redis://localhost:6379", db=8)
+        self.r = tiredis.from_url("redis://localhost:6379", db=REDIS_UNITTEST_DATABASE_NUMBER)
         self.r.flushdb()
 
     def test_from_url(self):

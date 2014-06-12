@@ -48,9 +48,8 @@ class Cache(object):
     def set_cache_entry(self, key, data):
         """ Store a cache entry """
 
-        #memcached will only store things up to 1MB as per http://sendapatch.se/projects/pylibmc/misc.html
-        MAX_MEMCACHED_VALUE_SIZE = 1000*1000
-        if sys.getsizeof(data["text"]) > MAX_MEMCACHED_VALUE_SIZE:
+        MAX_SIZE = 1000*1000
+        if sys.getsizeof(data["text"]) > MAX_SIZE:
             logger.debug(u"Not caching because payload is too large")
             return None
 

@@ -15,6 +15,7 @@ from totalimpact.providers import provider as provider_module
 from totalimpact.providers.provider import ProviderFactory, ProviderItemNotFoundError, ProviderError, ProviderServerError, ProviderTimeout
 from totalimpact import unicode_helpers
 from totalimpact import default_settings
+from totalimpact import REDIS_MAIN_DATABASE_NUMBER
 import logging
 
 
@@ -22,7 +23,7 @@ logger = logging.getLogger("ti.views")
 logger.setLevel(logging.DEBUG)
 
 mydao = None
-myredis = tiredis.from_url(os.getenv("REDIS_URL"), db=0)  # main app is on DB 0
+myredis = tiredis.from_url(os.getenv("REDIS_URL"), db=REDIS_MAIN_DATABASE_NUMBER)  # main app is on DB 0
 
 logger.debug(u"Building reference sets")
 myrefsets = None
