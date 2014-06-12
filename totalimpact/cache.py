@@ -23,14 +23,14 @@ class Cache(object):
         return hash_key
 
     def _get_memcached_client(self):
-        servers = [os.environ.get('MEMCACHIER_SERVERS')]
-        username=os.environ.get('MEMCACHIER_USERNAME')
-        password=os.environ.get('MEMCACHIER_PASSWORD')
-        if "localhost" in servers:
+        servers = os.environ.get('MEMCACHIER_SERVERS')
+        username = os.environ.get('MEMCACHIER_USERNAME')
+        password = os.environ.get('MEMCACHIER_PASSWORD')
+        if ("localhost" in servers) or ("127.0.0.1" in servers):
             username = None
             password = None
         mc = pylibmc.Client(
-            servers=servers, 
+            servers=[servers], 
             username=username,
             password=password,
             binary=True)
@@ -45,7 +45,7 @@ class Cache(object):
         mc = self._get_memcached_client()        
         mc.flush_all()
 
-    @Retry(3, pylibmc.Error, 0.1)
+    # @Retry(3, pylibmc.Error, 0.1)
     def get_cache_entry(self, key):
         """ Get an entry from the cache, returns None if not found """
         mc = self._get_memcached_client()
@@ -53,7 +53,7 @@ class Cache(object):
         response = mc.get(hash_key)
         return response
 
-    @Retry(3, pylibmc.Error, 0.1)
+    # @Retry(3, pylibmc.Error, 0.1)
     def set_cache_entry(self, key, data):
         """ Store a cache entry """
 
@@ -68,6 +68,7 @@ class Cache(object):
         try:
             set_response = mc.set(hash_key, data, time=self.max_cache_age)
             if not set_response:
+                logger.warning("Unable to store into Memcached. Make sure memcached server is running.")
                 raise CacheException("Unable to store into Memcached. Make sure memcached server is running.")
         except PicklingError:
             # This happens when trying to cache a thread.lock object, for example.  Just don't cache.

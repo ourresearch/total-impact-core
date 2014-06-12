@@ -631,7 +631,7 @@ class Provider(object):
     # Core methods
     # These should be consistent for all providers
     
-    def http_get(self, url, headers={}, timeout=20, cache_enabled=True, allow_redirects=False):
+    def http_get(self, url, headers={}, timeout=120, cache_enabled=True, allow_redirects=False):
         """ Returns a requests.models.Response object or raises exception
             on failure. Will cache requests to the same URL. """
 
@@ -643,6 +643,8 @@ class Provider(object):
             cache = cache_module.Cache(self.max_cache_duration)
             cached_response = get_page_from_cache(url, headers, allow_redirects, cache)
             if cached_response:
+                self.logger.info(u"{provider_name} CACHE HIT on {url}".format(
+                    provider_name=self.provider_name, url=url))
                 return cached_response
             
         try:
