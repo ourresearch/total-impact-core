@@ -27,9 +27,10 @@ BROKER_TRANSPORT_OPTIONS = {
     'priority_steps': [0, 3, 7, 9],
 }
 
-CELERY_CREATE_MISSING_QUEUES = True
-
+# added because https://github.com/celery/celery/issues/896
 BROKER_POOL_LIMIT = None
+
+CELERY_CREATE_MISSING_QUEUES = True
 
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 CELERY_ENABLE_UTC=True

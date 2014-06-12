@@ -1,15 +1,17 @@
 import os
 import sys
-import pylibmc
 import hashlib
 import logging
 import json
 from cPickle import PicklingError
+import redis
 
-from totalimpact.utils import Retry
+from totalimpact import REDIS_CACHE_DATABASE_NUMBER
 
 # set up logging
 logger = logging.getLogger("ti.cache")
+
+cache_client = redis.from_url(os.getenv("REDIS_URL"), REDIS_CACHE_DATABASE_NUMBER)
 
 class CacheException(Exception):
     pass
@@ -22,38 +24,27 @@ class Cache(object):
         hash_key = hashlib.md5(json_key.encode("utf-8")).hexdigest()
         return hash_key
 
-    def _get_memcached_client(self):
-        servers = os.environ.get('MEMCACHIER_SERVERS')
-        username = os.environ.get('MEMCACHIER_USERNAME')
-        password = os.environ.get('MEMCACHIER_PASSWORD')
-        if ("localhost" in servers) or ("127.0.0.1" in servers):
-            username = None
-            password = None
-        mc = pylibmc.Client(
-            servers=[servers], 
-            username=username,
-            password=password,
-            binary=True)
-        return mc
+    def _get_client(self):
+        return cache_client
  
     def __init__(self, max_cache_age=60*60):  #one hour
         self.max_cache_age = max_cache_age
-
+        self.flush_cache()
 
     def flush_cache(self):
         #empties the cache
-        mc = self._get_memcached_client()        
-        mc.flush_all()
+        mc = self._get_client()        
+        # mc.flushdb()
 
-    # @Retry(3, pylibmc.Error, 0.1)
     def get_cache_entry(self, key):
         """ Get an entry from the cache, returns None if not found """
-        mc = self._get_memcached_client()
+        mc = self._get_client()
         hash_key = self._build_hash_key(key)
         response = mc.get(hash_key)
+        if response:
+            response = json.loads(response)
         return response
 
-    # @Retry(3, pylibmc.Error, 0.1)
     def set_cache_entry(self, key, data):
         """ Store a cache entry """
 
@@ -63,16 +54,13 @@ class Cache(object):
             logger.debug(u"Not caching because payload is too large")
             return None
 
-        mc = self._get_memcached_client()
+        mc = self._get_client()
         hash_key = self._build_hash_key(key)
-        try:
-            set_response = mc.set(hash_key, data, time=self.max_cache_age)
-            if not set_response:
-                logger.warning("Unable to store into Memcached. Make sure memcached server is running.")
-                raise CacheException("Unable to store into Memcached. Make sure memcached server is running.")
-        except PicklingError:
-            # This happens when trying to cache a thread.lock object, for example.  Just don't cache.
-            logger.debug(u"In set_cache_entry but got PicklingError")
-            return None
+        set_response = mc.set(hash_key, json.dumps(data))
+        mc.expire(key, self.max_cache_age)
+
+        if not set_response:
+            logger.warning("Unable to store into Redis. Make sure redis server is running.")
+            raise CacheException("Unable to store into Redis. Make sure redis server is running.")
         return set_response
   

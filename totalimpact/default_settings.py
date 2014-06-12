@@ -6,7 +6,6 @@
 USER_AGENT = "ImpactStory/0.4.0" # User-Agent string to use on HTTP requests
 VERSION = "cristhian" # version
 PROXY = "" # used with  providers-test-proxy.py script in the extras directory
-CACHE_ENABLED = True # Memcache server enabled
 
 # List of desired providers and their configuration files
 # Alias methods will be called in the order of this list

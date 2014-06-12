@@ -37,7 +37,7 @@ def get_page_from_cache(url, headers, allow_redirects, cache):
     cache_data = cache.get_cache_entry(cache_key)
     # use it if it was a 200, otherwise go get it again
     if cache_data and (cache_data['status_code'] == 200):
-        logger.debug(u"returning from cache: %s" %(url))
+        # logger.debug(u"returning from cache: %s" %(url))
         return CachedResponse(cache_data)
     return None
 
@@ -604,7 +604,7 @@ class Provider(object):
     # ideally would aggregate all tweets from all urls.  
     # the problem is this requires multiple drill-down links, which is troubling for UI at the moment
     # for now, look up all the alias urls and use metrics for url that is most tweeted
-    def get_relevant_alias_with_most_metrics(self, metric_name, aliases, provider_url_template=None, cache_enabled=None):
+    def get_relevant_alias_with_most_metrics(self, metric_name, aliases, provider_url_template=None, cache_enabled=True):
         url_with_biggest_so_far = None
         biggest_so_far = 0
         url_aliases = []
@@ -637,9 +637,7 @@ class Provider(object):
 
         headers["User-Agent"] = app.config["USER_AGENT"]
 
-        # use the cache if the config parameter is set and the arg allows it
-        use_cache = app.config["CACHE_ENABLED"] and cache_enabled
-        if use_cache:
+        if cache_enabled:
             cache = cache_module.Cache(self.max_cache_duration)
             cached_response = get_page_from_cache(url, headers, allow_redirects, cache)
             if cached_response:
@@ -660,7 +658,7 @@ class Provider(object):
             r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=allow_redirects, verify=False)
             if r and not r.encoding:
                 r.encoding = "utf-8"     
-            if r and use_cache:
+            if r and cache_enabled:
                 store_page_in_cache(url, headers, allow_redirects, r, cache)
 
         except (requests.exceptions.Timeout, socket.timeout) as e:
@@ -687,14 +685,13 @@ class Provider(object):
         headers["User-Agent"] = app.config["USER_AGENT"]
 
         # use the cache if the config parameter is set and the arg allows it
-        use_cache = app.config["CACHE_ENABLED"] and cache_enabled
-        if use_cache:
+        if cache_enabled:
             cache = cache_module.Cache(self.max_cache_duration)
 
         responses = {}
         for url in urls:
             responses[url] = None
-            if use_cache:
+            if cache_enabled:
                 cached_response = get_page_from_cache(url, headers, allow_redirects, cache)
                 if cached_response:
                     responses[url] = cached_response
@@ -709,7 +706,7 @@ class Provider(object):
 
         if fresh_responses:
             fresh_responses_dict = dict(zip(uncached_urls, fresh_responses))
-            if use_cache:
+            if cache_enabled:
                 for url in fresh_responses_dict:
                     r = fresh_responses_dict[url]
                     if r and not r.encoding:

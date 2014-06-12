@@ -32,7 +32,6 @@ pybtex==0.16
 pylibmc==1.2.2
 pyparsing==1.5.0
 python-dateutil==1.5
-python-memcached==1.48
 pytz==2014.3
 redis==2.9.1
 requests==2.2.0
