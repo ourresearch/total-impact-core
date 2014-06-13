@@ -231,7 +231,7 @@ class ProviderFactory(object):
 class Provider(object):
 
     def __init__(self, 
-            max_cache_duration=60*60,  # one hour 
+            max_cache_duration=60*15,  # 15 minutes
             max_retries=0, 
             tool_email="mytotalimpact@gmail.com"): 
         # FIXME change email to team@impactstory.org after registering it with crossref
