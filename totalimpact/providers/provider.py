@@ -637,10 +637,6 @@ class Provider(object):
 
         headers["User-Agent"] = app.config["USER_AGENT"]
 
-        # TURN OFF CACHE FOR NOW
-        cache_enabled = False
-
-
         if cache_enabled:
             cache = cache_module.Cache(self.max_cache_duration)
             cached_response = get_page_from_cache(url, headers, allow_redirects, cache)
