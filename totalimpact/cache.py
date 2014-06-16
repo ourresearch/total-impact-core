@@ -12,7 +12,7 @@ from totalimpact import REDIS_CACHE_DATABASE_NUMBER
 logger = logging.getLogger("ti.cache")
 
 cache_client = redis.from_url(os.getenv("REDIS_URL"), REDIS_CACHE_DATABASE_NUMBER)
-cache_client.config_set('maxmemory', int(os.getenv("REDIS_CACHE_MAX_MB"), 100)*1000*1000)  #100mb
+cache_client.config_set('maxmemory', int(os.getenv("REDIS_CACHE_MAX_MB", 100)*1000*1000))  #100mb
 cache_client.config_set('maxmemory-policy', "allkeys-lru")
 
 class CacheException(Exception):
