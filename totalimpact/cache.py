@@ -51,7 +51,7 @@ class Cache(object):
     def set_cache_entry(self, key, data):
         """ Store a cache entry """
 
-        if sys.getsizeof(data["text"]) > MAX_PAYLOAD_SIZE:
+        if sys.getsizeof(data["text"]) > MAX_PAYLOAD_SIZE_BYTES:
             logger.debug(u"Not caching because payload is too large")
             return None
 
