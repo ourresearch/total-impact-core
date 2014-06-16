@@ -12,8 +12,9 @@ from totalimpact import REDIS_CACHE_DATABASE_NUMBER
 logger = logging.getLogger("ti.cache")
 
 cache_client = redis.from_url(os.getenv("REDIS_URL"), REDIS_CACHE_DATABASE_NUMBER)
-cache_client.config_set('maxmemory', int(os.getenv("REDIS_CACHE_MAX_MB", 100)*1000*1000))  #100mb
-cache_client.config_set('maxmemory-policy', "allkeys-lru")
+
+MAX_PAYLOAD_SIZE_BYTES = 1000*1000 # 1mb
+MAX_CACHE_SIZE_BYTES = 100*1000*1000 #100mb
 
 class CacheException(Exception):
     pass
@@ -50,12 +51,16 @@ class Cache(object):
     def set_cache_entry(self, key, data):
         """ Store a cache entry """
 
-        MAX_SIZE = 1000*1000
-        if sys.getsizeof(data["text"]) > MAX_SIZE:
+        if sys.getsizeof(data["text"]) > MAX_PAYLOAD_SIZE:
             logger.debug(u"Not caching because payload is too large")
             return None
 
         mc = self._get_client()
+
+        if mc.info()["used_memory"] >= MAX_CACHE_SIZE_BYTES:
+            logger.debug(u"Not caching because redis cache is too full")
+            return None
+
         hash_key = self._build_hash_key(key)
         set_response = mc.set(hash_key, json.dumps(data))
         mc.expire(key, self.max_cache_age)
