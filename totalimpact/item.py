@@ -1023,8 +1023,8 @@ def update_status(tiid, myredis):
         
         statuses[task_id] = state
 
-        # logger.debug(u"update_status: tiid={tiid}, statuses={statuses}".format(
-        #     tiid=tiid, statuses=statuses))
+    logger.debug(u"update_status statuses: tiid={tiid}, statuses={statuses}".format(
+        tiid=tiid, statuses=statuses))
 
     done_updating = all([(status.startswith("SUCCESS") or status.startswith("FAILURE")) for status in statuses.values()])
     has_failures = any([status.startswith("FAILURE") for status in statuses.values()])
@@ -1037,7 +1037,7 @@ def update_status(tiid, myredis):
     elif done_updating and has_failures:
         udpate_status = u"SUCCESS with FAILURES"
     elif has_failures:
-        update_status = u"FAILURE (and not all providers ran)"
+        update_status = u"SUCCESS with FAILURES (and not all providers ran)"
     elif has_pending:
         update_status = u"PENDING"
     elif has_started:
