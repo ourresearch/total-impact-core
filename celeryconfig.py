@@ -18,14 +18,11 @@ REDIS_CONNECT_RETRY = True
 BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True}
 BROKER_TRANSPORT_OPTIONS = {'fanout_patterns': True}
 
-CELERY_DEFAULT_QUEUE = 'core_main'
+CELERY_DEFAULT_QUEUE = 'core_high'
 CELERY_QUEUES = [
-    Queue('core_main', routing_key='core_main'),
+    Queue('core_high', routing_key='core_high'),
+    Queue('core_low', routing_key='core_low'),
 ]
-
-BROKER_TRANSPORT_OPTIONS = {
-    'priority_steps': [0, 3, 7, 9],
-}
 
 # added because https://github.com/celery/celery/issues/896
 BROKER_POOL_LIMIT = None

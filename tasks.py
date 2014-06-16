@@ -192,7 +192,7 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
 
 
 @task(base=SqlAlchemyTask)
-def refresh_tiid(tiid, aliases_dict):
+def refresh_tiid(tiid, aliases_dict, task_priority):
     pipeline = sniffer(aliases_dict)
     chain_list = []
     task_ids = []
@@ -201,9 +201,9 @@ def refresh_tiid(tiid, aliases_dict):
         for (method_name, provider_name) in step_config:
             if not chain_list:
                 # pass the alias dict in to the first one in the whole chain
-                new_task = provider_run.si(aliases_dict, tiid, method_name, provider_name).set(priority=3) #don't start new ones till done
+                new_task = provider_run.si(aliases_dict, tiid, method_name, provider_name).set(priority=3, queue="core_"+task_priority) #don't start new ones till done
             else:
-                new_task = provider_run.s(tiid, method_name, provider_name).set(priority=0)
+                new_task = provider_run.s(tiid, method_name, provider_name).set(priority=0, queue="core_"+task_priority)
             uuid_bit = uuid().split("-")[0]
             new_task_id = "task-{tiid}-{method_name}-{provider_name}-{uuid}".format(
                 tiid=tiid, method_name=method_name, provider_name=provider_name, uuid=uuid_bit)
@@ -211,8 +211,9 @@ def refresh_tiid(tiid, aliases_dict):
             task_ids.append(new_task_id)
         if group_list:
             chain_list.append(group(group_list))
-            chain_list.append(chain_dummy.s(dummy="DUMMY_{method_name}_{provider_name}".format(
-                method_name=method_name, provider_name=provider_name)))
+            dummy_name = "DUMMY_{method_name}_{provider_name}".format(
+                method_name=method_name, provider_name=provider_name)
+            chain_list.append(chain_dummy.s(dummy=dummy_name).set(queue="core_"+task_priority))
 
     workflow = chain(chain_list)
 
@@ -221,7 +222,7 @@ def refresh_tiid(tiid, aliases_dict):
     logger.info(u"before apply_async for tiid {tiid}, refresh_tiids id {task_id}".format(
         tiid=tiid, task_id=refresh_tiid.request.id))
 
-    workflow_apply_async = workflow.apply_async()  
+    workflow_apply_async = workflow.apply_async(queue="core_"+task_priority)  
     workflow_tasks = workflow.tasks
     workflow_trackable_task = workflow_tasks[-1]  # see http://blog.cesarcd.com/2014/04/tracking-status-of-celery-chain.html
     workflow_trackable_id = workflow_trackable_task.id
@@ -236,17 +237,18 @@ def refresh_tiid(tiid, aliases_dict):
     return workflow_trackable_task
 
 
-def put_on_celery_queue(tiid, aliases_dict, priority="high"):
+def put_on_celery_queue(tiid, aliases_dict, task_priority="high"):
     logger.info(u"put_on_celery_queue {tiid}".format(
         tiid=tiid))
 
     #see http://stackoverflow.com/questions/15239880/task-priority-in-celery-with-redis
-    if "priority"=="high":
-        priority = 7
+    if task_priority == "high":
+        priority_number = 6
     else:
-        priority = 9
+        priority_number = 9
 
-    refresh_tiid_task = refresh_tiid.apply_async(args=(tiid, aliases_dict), priority=priority)
+    refresh_tiid_task = refresh_tiid.apply_async(args=(tiid, aliases_dict, task_priority), 
+                                                priority=priority_number, queue="core_"+task_priority)
 
     return refresh_tiid_task
 
