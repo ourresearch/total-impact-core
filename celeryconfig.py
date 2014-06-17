@@ -9,8 +9,9 @@ redis_url = os.environ.get('REDIS_URL', "redis://127.0.0.1:6379/")
 if not redis_url.endswith("/"):
     redis_url += "/"
 
-BROKER_URL = redis_url + "1"
-CELERY_RESULT_BACKEND = redis_url + "1"
+
+BROKER_URL = redis_url + "1"  # REDIS_CELERY_TASKS_DATABASE_NUMBER = 1
+CELERY_RESULT_BACKEND = redis_url + "2"  # REDIS_CELERY_RESULTS_DATABASE_NUMBER = 2
 REDIS_CONNECT_RETRY = True
 
 

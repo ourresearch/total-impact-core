@@ -39,10 +39,13 @@ db = SQLAlchemy(app)
 # see https://github.com/celery/celery/issues/1564
 register_after_fork(db.engine, db.engine.dispose)
 
+
 REDIS_MAIN_DATABASE_NUMBER = 0
-REDIS_CELERY_DATABASE_NUMBER = 1
-REDIS_CACHE_DATABASE_NUMBER = 2
+REDIS_CELERY_TASKS_DATABASE_NUMBER = 1
+REDIS_CELERY_RESULTS_DATABASE_NUMBER = 2
+REDIS_CACHE_DATABASE_NUMBER = 7
 REDIS_UNITTEST_DATABASE_NUMBER = 8
+
 
 
 # from http://docs.sqlalchemy.org/en/latest/core/pooling.html
