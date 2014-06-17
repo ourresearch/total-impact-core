@@ -33,7 +33,9 @@ CELERY_CREATE_MISSING_QUEUES = True
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 CELERY_ENABLE_UTC=True
 CELERY_TASK_RESULT_EXPIRES = 60*60  # 1 hour
-CELERYD_MAX_TASKS_PER_CHILD = 1000
+
+# remove this, might fix deadlocks as per https://github.com/celery/celery/issues/970
+# CELERYD_MAX_TASKS_PER_CHILD = 1000
 
 CELERYD_FORCE_EXECV = True
 CELERY_TRACK_STARTED = True
