@@ -168,13 +168,15 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
 
     (success, estimated_wait_seconds) = rate.acquire(provider_name, False)
     # add up to random 2 seconds to spread it out
-    estimated_wait_seconds += random.random() * 2
+    estimated_wait_seconds += random.random() * 3
     if not success:
-         provider_run.retry(args=[aliases_dict, tiid, method_name, provider_name],
+        logger.warning(u"RATE LIMIT HIT in provider_run for {provider} {method_name} {tiid}, retrying".format(
+           provider=provider.provider_name, method_name=method_name, tiid=tiid))
+        provider_run.retry(args=[aliases_dict, tiid, method_name, provider_name],
                 countdown=estimated_wait_seconds, 
-                max_retries=100)
+                max_retries=10)
 
-    timeout_seconds = 120
+    timeout_seconds = 30
     try:
         with timeout.Timeout(timeout_seconds):
             response = provider_method_wrapper(tiid, aliases_dict, provider, method_name)
