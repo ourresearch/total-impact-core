@@ -22,7 +22,7 @@ BROKER_TRANSPORT_OPTIONS = {'fanout_patterns': True}
 CELERY_DEFAULT_QUEUE = 'core_high'
 CELERY_QUEUES = [
     Queue('core_high', routing_key='core_high'),
-    Queue('core_low', routing_key='core_low'),
+    Queue('core_low', routing_key='core_low')
 ]
 
 # added because https://github.com/celery/celery/issues/896
@@ -31,14 +31,16 @@ BROKER_POOL_LIMIT = None
 CELERY_CREATE_MISSING_QUEUES = True
 
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
-CELERY_ENABLE_UTC=True
+CELERY_ENABLE_UTC = True
 CELERY_TASK_RESULT_EXPIRES = 60*60  # 1 hour
+
+CELERY_ACKS_LATE = True
 
 # remove this, might fix deadlocks as per https://github.com/celery/celery/issues/970
 # CELERYD_MAX_TASKS_PER_CHILD = 1000
 
 CELERYD_FORCE_EXECV = True
-# CELERY_TRACK_STARTED = True
+CELERY_TRACK_STARTED = True
 
 # List of modules to import when celery starts.
 CELERY_IMPORTS = ("tasks",)
