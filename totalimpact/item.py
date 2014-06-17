@@ -1035,7 +1035,7 @@ def update_status(tiid, myredis):
     if done_updating and not has_failures:
         update_status = u"SUCCESS: update finished"
     elif done_updating and has_failures:
-        udpate_status = u"SUCCESS with FAILURES"
+        update_status = u"SUCCESS with FAILURES"
     elif has_failures:
         update_status = u"SUCCESS with FAILURES (and not all providers ran)"
     elif has_pending:
