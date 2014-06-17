@@ -3,10 +3,10 @@
 
 for ((i=1; i<=$CELERY_MULTI_WORKERS; i++))
 do
-  COMMAND="celery worker --pool=$CELERY_POOL -n core-$DYNO:${i} -Q core_high --loglevel=$CELERY_LOGLEVEL --config=celeryconfig --events --concurrency=$CELERY_CONCURRENCY" 
+  COMMAND="celery worker --pool=$CELERY_POOL -n core-$DYNO:${i} -Q core_high --loglevel=$CELERY_LOGLEVEL --config=celeryconfig --events --concurrency=$CELERY_CONCURRENCY -Ofair" 
   echo $COMMAND
   $COMMAND&
-  COMMAND="celery worker --pool=$CELERY_POOL -n core-$DYNO:${i} -Q core_low --loglevel=$CELERY_LOGLEVEL --config=celeryconfig --events --concurrency=$CELERY_CONCURRENCY" 
+  COMMAND="celery worker --pool=$CELERY_POOL -n core-$DYNO:${i} -Q core_low --loglevel=$CELERY_LOGLEVEL --config=celeryconfig --events --concurrency=$CELERY_CONCURRENCY -Ofair" 
   echo $COMMAND
   $COMMAND&
 done
