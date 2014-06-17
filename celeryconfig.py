@@ -38,11 +38,11 @@ CELERY_TASK_RESULT_EXPIRES = 60*60  # 1 hour
 # CELERYD_MAX_TASKS_PER_CHILD = 1000
 
 CELERYD_FORCE_EXECV = True
-CELERY_TRACK_STARTED = True
+# CELERY_TRACK_STARTED = True
 
 # List of modules to import when celery starts.
 CELERY_IMPORTS = ("tasks",)
 
 CELERY_ANNOTATIONS = {
-    'celery.chord_unlock': {'soft_time_limit': 60*60*8},  # 8 hours
+    'celery.chord_unlock': {'soft_time_limit': 60}  # 1 minute
 }
