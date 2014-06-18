@@ -28,7 +28,7 @@ CELERY_QUEUES = [
 ]
 
 # added because https://github.com/celery/celery/issues/896
-BROKER_POOL_LIMIT = None
+BROKER_POOL_LIMIT = 100
 
 CELERY_CREATE_MISSING_QUEUES = True
 
