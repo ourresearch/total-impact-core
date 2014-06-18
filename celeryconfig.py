@@ -16,8 +16,10 @@ REDIS_CONNECT_RETRY = True
 
 
 # these options will be defaults in future as per http://celery.readthedocs.org/en/latest/getting-started/brokers/redis.html
-BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True}
-BROKER_TRANSPORT_OPTIONS = {'fanout_patterns': True}
+BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True, 
+                            'fanout_patterns': True, 
+                            'visibility_timeout': 60  # one minute
+                            }
 
 CELERY_DEFAULT_QUEUE = 'core_high'
 CELERY_QUEUES = [
@@ -37,10 +39,13 @@ CELERY_TASK_RESULT_EXPIRES = 60*60  # 1 hour
 CELERY_ACKS_LATE = True
 
 # remove this, might fix deadlocks as per https://github.com/celery/celery/issues/970
-# CELERYD_MAX_TASKS_PER_CHILD = 1000
+# CELERYD_MAX_TASKS_PER_CHILD = 100
 
 CELERYD_FORCE_EXECV = True
 CELERY_TRACK_STARTED = True
+
+# https://groups.google.com/forum/#!topic/celery-users/Y_ifty2l6Fc
+CELERYD_PREFETCH_MULTIPLIER=1
 
 # List of modules to import when celery starts.
 CELERY_IMPORTS = ("tasks",)
@@ -48,3 +53,4 @@ CELERY_IMPORTS = ("tasks",)
 CELERY_ANNOTATIONS = {
     'celery.chord_unlock': {'soft_time_limit': 60}  # 1 minute
 }
+
