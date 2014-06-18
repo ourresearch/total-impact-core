@@ -13,7 +13,7 @@ Werkzeug==0.8.3
 analytics-python==0.4.2
 birdy==0.1
 arrow==0.4.2
-celery==3.1.12
+celery==3.1.11
 certifi==0.0.8
 chardet==1.0.1
 distribute==0.6.10
@@ -21,7 +21,7 @@ dnspython==1.11.1
 eventlet==0.14.0
 gunicorn==0.14.3
 iso8601==0.1.4
-kombu==3.0.19 
+kombu==3.0.16 
 lxml==2.3.4
 newrelic==1.9.0.21
 nose==1.1.2
