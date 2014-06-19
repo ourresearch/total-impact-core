@@ -19,7 +19,7 @@ REDIS_CONNECT_RETRY = True
 BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True, 
                             'fanout_patterns': True, 
                             'visibility_timeout': 60,  # one minute
-                            'max_connections': 20  # max redis connections for tasks. see https://github.com/celery/celery/issues/1350
+                            'max_connections': 100  # max redis connections for tasks. see https://github.com/celery/celery/issues/1350
                             }
 
 
