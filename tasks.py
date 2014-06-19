@@ -166,7 +166,7 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
     # logger.info(u"in provider_run for {provider}".format(
     #    provider=provider.provider_name))
 
-    (success, estimated_wait_seconds) = rate.acquire(provider_name, False)
+    (success, estimated_wait_seconds) = rate.acquire(provider_name, block=False)
     # add up to random 2 seconds to spread it out
     estimated_wait_seconds += random.random() * 3
     if not success:

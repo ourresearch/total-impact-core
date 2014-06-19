@@ -152,9 +152,12 @@ class RateLimiter(object):
         key = ':'.join((self.namespace, key, 'block'))
         self.log.warn('block key (%s) for %ds', key, seconds)
         with self.redis.pipeline() as pipe:
-            pipe.set(key, '1')
-            pipe.expire(key, seconds)
-            pipe.execute()
+            try:
+                pipe.set(key, '1')
+                pipe.expire(key, seconds)
+                pipe.execute()
+            except redis.exceptions.LockError:
+                self.log.exception("lock error setting key in block")
 
         return seconds
 
@@ -195,46 +198,48 @@ class RateLimiter(object):
         block_key = ':'.join((self.namespace, key, 'block'))
         lock_key = ':'.join((self.namespace, key, 'lock'))
 
-        with self.redis.lock(lock_key, timeout=10):
+        try:
+            with self.redis.lock(lock_key, timeout=10):
+                with self.redis.pipeline() as pipe:
+                    for requests, _ in self.conditions:
+                        pipe.lindex(log_key, requests-1) # subtract 1 as 0 indexed
 
-            with self.redis.pipeline() as pipe:
-                for requests, _ in self.conditions:
-                    pipe.lindex(log_key, requests-1) # subtract 1 as 0 indexed
+                    # check manual block keys
+                    pipe.ttl(block_key)
+                    pipe.get(block_key)
+                    boundry_timestamps = pipe.execute()
 
-                # check manual block keys
-                pipe.ttl(block_key)
-                pipe.get(block_key)
-                boundry_timestamps = pipe.execute()
+                blocked = boundry_timestamps.pop()
+                block_ttl = boundry_timestamps.pop()
 
-            blocked = boundry_timestamps.pop()
-            block_ttl = boundry_timestamps.pop()
+                if blocked is not None:
+                    # block_ttl is None for last second of a keys life. set min of 0.5
+                    if block_ttl is None:
+                        block_ttl = 0.5
+                    self.log.warn('(%s) hit manual block. %ss remaining', key, block_ttl)
+                    return False, block_ttl
 
-            if blocked is not None:
-                # block_ttl is None for last second of a keys life. set min of 0.5
-                if block_ttl is None:
-                    block_ttl = 0.5
-                self.log.warn('(%s) hit manual block. %ss remaining', key, block_ttl)
-                return False, block_ttl
+                timestamp = time.time()
 
-            timestamp = time.time()
+                for boundry_timestamp, (requests, seconds) in izip(boundry_timestamps, self.conditions):
+                    # if we dont yet have n number of requests boundry_timestamp will be None and this condition wont be limiting
+                    if boundry_timestamp is not None:
+                        boundry_timestamp = float(boundry_timestamp)
+                        if boundry_timestamp + seconds > timestamp:
+                            self.log.warn('(%s) hit limit (%s/%s) time to allow %.1fs',
+                                    key, requests, seconds, boundry_timestamp + seconds - timestamp)
+                            return False, boundry_timestamp + seconds - timestamp
 
-            for boundry_timestamp, (requests, seconds) in izip(boundry_timestamps, self.conditions):
-                # if we dont yet have n number of requests boundry_timestamp will be None and this condition wont be limiting
-                if boundry_timestamp is not None:
-                    boundry_timestamp = float(boundry_timestamp)
-                    if boundry_timestamp + seconds > timestamp:
-                        self.log.warn('(%s) hit limit (%s/%s) time to allow %.1fs',
-                                key, requests, seconds, boundry_timestamp + seconds - timestamp)
-                        return False, boundry_timestamp + seconds - timestamp
-
-            # record our success
-            with self.redis.pipeline() as pipe:
-                pipe.lpush(log_key, timestamp)
-                max_requests, _ = self.conditions[-1]
-                pipe.ltrim(log_key, 0, max_requests-1) # 0 indexed so subtract 1
-                # if we never use this key again, let it fall out of the DB after max seconds has past
-                pipe.expire(log_key, self.list_ttl)
-                pipe.execute()
+                # record our success
+                with self.redis.pipeline() as pipe:
+                        pipe.lpush(log_key, timestamp)
+                        max_requests, _ = self.conditions[-1]
+                        pipe.ltrim(log_key, 0, max_requests-1) # 0 indexed so subtract 1
+                        # if we never use this key again, let it fall out of the DB after max seconds has past
+                        pipe.expire(log_key, self.list_ttl)
+                        pipe.execute()
+        except redis.exceptions.LockError:
+            self.log.exception("lock error in _make_ping")
 
         return True, 0.0
 
