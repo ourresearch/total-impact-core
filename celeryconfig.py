@@ -15,11 +15,13 @@ CELERY_RESULT_BACKEND = redis_url + "2"  # REDIS_CELERY_RESULTS_DATABASE_NUMBER 
 REDIS_CONNECT_RETRY = True
 
 
-# these options will be defaults in future as per http://celery.readthedocs.org/en/latest/getting-started/brokers/redis.html
+# fanout options will be defaults in future as per http://celery.readthedocs.org/en/latest/getting-started/brokers/redis.html
 BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True, 
                             'fanout_patterns': True, 
-                            'visibility_timeout': 60  # one minute
+                            'visibility_timeout': 60,  # one minute
+                            'max_connections': 20  # max redis connections for tasks. see https://github.com/celery/celery/issues/1350
                             }
+
 
 CELERY_DEFAULT_QUEUE = 'core_high'
 CELERY_QUEUES = [
