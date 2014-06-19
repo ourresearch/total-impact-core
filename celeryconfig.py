@@ -34,7 +34,7 @@ CELERY_CREATE_MISSING_QUEUES = True
 
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 CELERY_ENABLE_UTC = True
-CELERY_TASK_RESULT_EXPIRES = 60*60  # 1 hour
+CELERY_TASK_RESULT_EXPIRES = 60*60*3  # 3 hours
 
 CELERY_ACKS_LATE = True
 
@@ -51,6 +51,6 @@ CELERYD_PREFETCH_MULTIPLIER=1
 CELERY_IMPORTS = ("tasks",)
 
 CELERY_ANNOTATIONS = {
-    'celery.chord_unlock': {'soft_time_limit': 60}  # 1 minute
+    'celery.chord_unlock': {'soft_time_limit': 60*2}  # 2 minutes
 }
 
