@@ -211,6 +211,13 @@ def format_into_products_dict(tiids_aliases_map):
 
 @app.route("/v1/importer/<provider_name>", methods=['POST'])
 def importer_post(provider_name):
+    # need to do these ugly deletes because import products not in dict.  fix in future!
+    try:
+        profile_id = request.json["profile_id"]
+        del request.json["profile_id"]
+    except KeyError:
+        abort(405, "missing profile_id")
+
     try:
         analytics_credentials = request.json["analytics_credentials"]
         del request.json["analytics_credentials"]
@@ -238,7 +245,7 @@ def importer_post(provider_name):
         abort(500, "internal error from provider")
 
     new_aliases = item_module.aliases_not_in_existing_tiids(retrieved_aliases, existing_tiids)
-    tiids_aliases_map = item_module.create_tiids_from_aliases(new_aliases, analytics_credentials, myredis, provider_name)
+    tiids_aliases_map = item_module.create_tiids_from_aliases(profile_id, new_aliases, analytics_credentials, myredis, provider_name)
     # logger.debug(u"in provider_importer_get with {tiids_aliases_map}".format(
     #     tiids_aliases_map=tiids_aliases_map))
 
@@ -511,13 +518,7 @@ def delete_collection(cid=None):
 @app.route('/v1/products', methods=['POST'])
 @app.route('/v1/products.<format>', methods=['POST'])
 def products_post(format="json"):
-    if "aliases" in request.json:
-        analytics_credentials = {}
-        tiids_aliases_map = item_module.create_tiids_from_aliases(request.json["aliases"], analytics_credentials, myredis)
-        products_dict = format_into_products_dict(tiids_aliases_map)
-        response = make_response(json.dumps({"products": products_dict}, sort_keys=True, indent=4), 200)
-        return response
-    elif "tiids" in request.json:
+    if "tiids" in request.json:
         # overloading post for get because tiids string gets long
         # logger.debug(u"in products_post with tiids, so getting products to return")
         tiids = request.json["tiids"]

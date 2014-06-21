@@ -293,6 +293,7 @@ class Item(db.Model):
     created = db.Column(db.DateTime())
     last_modified = db.Column(db.DateTime())
     last_update_run = db.Column(db.DateTime())
+    profile_id = db.Column(db.Integer)
     aliases = db.relationship('Alias', lazy='subquery', cascade="all, delete-orphan",
         backref=db.backref("item", lazy="subquery"))
     biblios = db.relationship('Biblio', lazy='subquery', cascade="all, delete-orphan",
@@ -1124,7 +1125,7 @@ def add_alias_to_new_item(alias_tuple, provider=None):
     return item_obj  
 
 
-def create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider=None):
+def create_tiids_from_aliases(profile_id, aliases, analytics_credentials, myredis, provider=None):
     tiid_alias_mapping = {}
     clean_aliases = [canonical_alias_tuple((ns, nid)) for (ns, nid) in aliases]  
     dicts_to_update = []  
@@ -1134,6 +1135,7 @@ def create_tiids_from_aliases(aliases, analytics_credentials, myredis, provider=
         #     alias_tuple=alias_tuple))
         item_obj = add_alias_to_new_item(alias_tuple, provider)
         tiid = item_obj.tiid
+        item_obj.profile_id = profile_id
         db.session.add(item_obj)
         # logger.debug(u"in create_tiids_from_aliases, made item {item_obj}".format(
         #     item_obj=item_obj))
