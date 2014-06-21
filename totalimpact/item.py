@@ -68,12 +68,6 @@ def create_metric_objects(old_style_snap_dict):
             snap_object = Snap(**new_style_snap_dict)
             new_snap_objects += [snap_object]    
 
-            metric_object = Metric.query.get((tiid, provider, interaction))
-            if not metric_object:
-                metric_object = Metric(tiid=tiid, provider=provider, interaction=interaction)    
-            metric_object.most_recent_snap_id = snap_object.snap_id
-            db.session.add(metric_object)            
-
     return new_snap_objects
 
 
@@ -137,19 +131,6 @@ def create_new_item_object_from_item_doc(item_doc, skip_if_exists=False, commit=
 
     return new_item_object
 
-
-class Metric(db.Model):
-    __tablename__ = 'product_metric'
-    tiid = db.Column(db.Integer, db.ForeignKey('item.tiid'), primary_key=True)
-    provider = db.Column(db.Text, primary_key=True)
-    interaction = db.Column(db.Text, primary_key=True)
-    most_recent_snap_id = db.Column(db.Text)
-
-    def __repr__(self):
-        return '<Metric {tiid} {provider}:{interaction}>'.format(
-            provider=self.provider, 
-            interaction=self.interaction, 
-            tiid=self.tiid)
 
 
 
@@ -649,12 +630,6 @@ def add_metric_to_item_object(full_metric_name, metrics_method_response, item_ob
     }    
     snap_object = Snap(**new_style_metric_dict)
     db.session.add(snap_object)
-
-    metric_object = Metric.query.get((tiid, provider, interaction))
-    if not metric_object:
-        metric_object = Metric(tiid=tiid, provider=provider, interaction=interaction)    
-    metric_object.most_recent_snap_id = snap_object.snap_id
-    db.session.add(metric_object)
 
     try:
         db.session.commit()
