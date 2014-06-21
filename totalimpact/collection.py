@@ -376,16 +376,16 @@ def get_most_recent_metrics(tiids, most_recent_metric_date=None):
         most_recent_metric_date = datetime.datetime.utcnow().isoformat()
 
     tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
-    metric_objects = item_module.Metric.query.from_statement("""
+    metric_objects = item_module.Snap.query.from_statement("""
         WITH max_collect AS 
-            (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
-                FROM metric
+            (SELECT tiid, provider, interaction, max(last_collected_date) AS last_collected_date
+                FROM snap
                 WHERE tiid in ({tiid_string})
-                AND collected_date <= '{most_recent_metric_date}'::date + 1               
-                GROUP BY tiid, provider, metric_name
+                AND last_collected_date <= '{most_recent_metric_date}'::date + 1               
+                GROUP BY tiid, provider, interaction
                 ORDER by tiid, provider)
-            SELECT max_collect.*, m.raw_value, m.drilldown_url
-                FROM metric m
+            SELECT max_collect.*, m.raw_value, m.drilldown_url, m.snap_id
+                FROM snap m
                 NATURAL JOIN max_collect""".format(
                     tiid_string=tiid_string, most_recent_metric_date=most_recent_metric_date)).all()
 
@@ -407,16 +407,16 @@ def get_previous_metrics(tiids, most_recent_diff_metric_date=None):
         most_recent_diff_metric_date = (datetime.datetime.utcnow() - datetime.timedelta(days=7)).isoformat()
 
     tiid_string = ",".join(["'"+tiid+"'" for tiid in tiids])    
-    metric_objects = item_module.Metric.query.from_statement("""
+    metric_objects = item_module.Snap.query.from_statement("""
         WITH max_collect AS 
-            (SELECT tiid, provider, metric_name, max(collected_date) AS collected_date
-                FROM metric
+            (SELECT tiid, provider, interaction, max(last_collected_date) AS last_collected_date
+                FROM snap
                 WHERE tiid in ({tiid_string})
-                AND collected_date <= '{most_recent_diff_metric_date}'::date
-                GROUP BY tiid, provider, metric_name
+                AND last_collected_date <= '{most_recent_diff_metric_date}'::date
+                GROUP BY tiid, provider, interaction
                 ORDER by tiid, provider)
-        SELECT max_collect.*, m.raw_value, m.drilldown_url
-            FROM metric m
+        SELECT max_collect.*, m.raw_value, m.drilldown_url, m.snap_id
+            FROM snap m
             NATURAL JOIN max_collect""".format(
                 tiid_string=tiid_string, most_recent_diff_metric_date=most_recent_diff_metric_date)).all()
 

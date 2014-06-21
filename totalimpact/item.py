@@ -50,25 +50,31 @@ def delete_item(tiid):
             message=e.message))   
 
 
-def create_metric_objects(old_style_metric_dict):
-    new_metric_objects = []
+def create_metric_objects(old_style_snap_dict):
+    new_snap_objects = []
 
-    for full_metric_name in old_style_metric_dict:
-        (provider, metric_name) = full_metric_name.split(":")
-        metric_details = old_style_metric_dict[full_metric_name]
-        new_style_metric_dict = {
-            "metric_name": metric_name, 
+    for full_metric_name in old_style_snap_dict:
+        (provider, interaction) = full_metric_name.split(":")
+        snap_details = old_style_snap_dict[full_metric_name]
+        new_style_snap_dict = {
+            "interaction": interaction, 
             "provider": provider, 
-            "drilldown_url": metric_details["provenance_url"]
+            "drilldown_url": snap_details["provenance_url"]
         }
 
-        for collected_date in metric_details["values"]["raw_history"]:
-            new_style_metric_dict["collected_date"] = collected_date
-            new_style_metric_dict["raw_value"] = metric_details["values"]["raw_history"][collected_date]
-            metric_object = Metric(**new_style_metric_dict)
-            new_metric_objects += [metric_object]    
+        for collected_date in snap_details["values"]["raw_history"]:
+            new_style_snap_dict["last_collected_date"] = collected_date
+            new_style_snap_dict["raw_value"] = metric_details["values"]["raw_history"][collected_date]
+            snap_object = Snap(**new_style_snap_dict)
+            new_snap_objects += [snap_object]    
 
-    return new_metric_objects
+            metric_object = Metric.query.get((tiid, provider, interaction))
+            if not metric_object:
+                metric_object = Metric(tiid=tiid, provider=provider, interaction=interaction)    
+            metric_object.most_recent_snap_id = snap_object.snap_id
+            db.session.add(metric_object)            
+
+    return new_snap_objects
 
 
 def create_biblio_objects(list_of_old_style_biblio_dicts, provider=None, collected_date=datetime.datetime.utcnow()):
@@ -99,10 +105,10 @@ def create_alias_objects(old_style_alias_dict, collected_date=datetime.datetime.
     return new_alias_objects
 
 
-def create_objects_from_item_doc(item_doc, skip_if_exists=False, commit=True):
+def create_new_item_object_from_item_doc(item_doc, skip_if_exists=False, commit=True):
     tiid = item_doc["_id"]
 
-    # logger.debug(u"in create_objects_from_item_doc for {tiid}".format(
+    # logger.debug(u"in create_new_item_object_from_item_doc for {tiid}".format(
     #     tiid=item_doc["_id"]))        
 
     new_item_object = Item.from_tiid(item_doc["_id"])
@@ -116,24 +122,12 @@ def create_objects_from_item_doc(item_doc, skip_if_exists=False, commit=True):
     new_alias_objects = create_alias_objects(alias_dict, item_doc["last_modified"])
     new_item_object.aliases = new_alias_objects
 
-    # biblio within aliases, skip just the biblio section
-    if "biblio" in alias_dict:
-        new_biblio_objects = create_biblio_objects(alias_dict["biblio"], provider=None, collected_date=item_doc["last_modified"]) 
-        new_item_object.biblios = new_biblio_objects
-
-    new_metric_objects = None
-    if "metrics" in item_doc:
-        new_metric_objects = create_metric_objects(item_doc["metrics"]) 
-        for metric in new_metric_objects:
-            metric.tiid = item_doc["_id"]
-            db.session.add(metric)
-
     if commit:
         try:
             db.session.commit()
         except (IntegrityError, FlushError) as e:
             db.session.rollback()
-            logger.warning(u"Fails Integrity check in create_objects_from_item_doc for {tiid}, rolling back.  Message: {message}".format(
+            logger.warning(u"Fails Integrity check in create_new_item_object_from_item_doc for {tiid}, rolling back.  Message: {message}".format(
                 tiid=tiid, 
                 message=e.message))   
 
@@ -144,36 +138,64 @@ def create_objects_from_item_doc(item_doc, skip_if_exists=False, commit=True):
     return new_item_object
 
 
-
 class Metric(db.Model):
-    tiid = db.Column(db.Text, db.ForeignKey('item.tiid'), primary_key=True, index=True)
+    __tablename__ = 'product_metric'
+    tiid = db.Column(db.Integer, db.ForeignKey('item.tiid'), primary_key=True)
     provider = db.Column(db.Text, primary_key=True)
-    metric_name = db.Column(db.Text, primary_key=True)
-    collected_date = db.Column(db.DateTime(), primary_key=True)
+    interaction = db.Column(db.Text, primary_key=True)
+    most_recent_snap_id = db.Column(db.Text)
+
+    def __repr__(self):
+        return '<Metric {tiid} {provider}:{interaction}>'.format(
+            provider=self.provider, 
+            interaction=self.interaction, 
+            tiid=self.tiid)
+
+
+
+class Snap(db.Model):
+    snap_id = db.Column(db.Text, primary_key=True)
+    tiid = db.Column(db.Text, db.ForeignKey('item.tiid'))
+    provider = db.Column(db.Text)
+    interaction = db.Column(db.Text)
+    last_collected_date = db.Column(db.DateTime())
     raw_value = db.Column(json_sqlalchemy.JSONAlchemy(db.Text))
     drilldown_url = db.Column(db.Text)
+    first_collected_date = db.Column(db.DateTime())
+    number_times_collected = db.Column(db.Integer)
     query_type = None
 
     def __init__(self, **kwargs):
-        if "collected_date" in kwargs:
-            self.collected_date = kwargs["collected_date"]
-        else:
-            self.collected_date = datetime.datetime.utcnow()
+        if not "last_collected_date" in kwargs:
+            self.last_collected_date = datetime.datetime.utcnow()
+        if not "first_collected_date" in kwargs:
+            self.first_collected_date = datetime.datetime.utcnow()
+        if not "snap_id" in kwargs:
+            self.snap_id = shortuuid.uuid()
         if "query_type" in kwargs:
             self.query_type = kwargs["query_type"]
-        super(Metric, self).__init__(**kwargs)
+        super(Snap, self).__init__(**kwargs)
+
+    #remove after migration complete
+    @property
+    def metric_name(self):
+        return self.interaction
+
+    @property
+    def collected_date(self):
+        return self.last_collected_date
 
     @property
     def fully_qualified_name(self):
-        return "{provider}:{metric_name}".format(
-            provider=self.provider, metric_name=self.metric_name)
+        return "{provider}:{interaction}".format(
+            provider=self.provider, interaction=self.interaction)
 
     def __repr__(self):
-        return '<Metric {tiid} {provider}:{metric_name}={raw_value} on {collected_date} via {query_type}>'.format(
+        return '<Snap {tiid} {provider}:{interaction}={raw_value} on {last_collected_date} via {query_type}>'.format(
             provider=self.provider, 
-            metric_name=self.metric_name, 
+            interaction=self.interaction, 
             raw_value=self.raw_value, 
-            collected_date=self.collected_date, 
+            last_collected_date=self.last_collected_date, 
             query_type=self.query_type,
             tiid=self.tiid)
 
@@ -294,9 +316,9 @@ class Item(db.Model):
         backref=db.backref("item", lazy="subquery"))
     biblios = db.relationship('Biblio', lazy='subquery', cascade="all, delete-orphan",
         backref=db.backref("item", lazy="subquery"))
-    metrics = db.relationship('Metric', lazy='noload', cascade="all, delete-orphan",
+    metrics = db.relationship('Snap', lazy='noload', cascade="all, delete-orphan",
         backref=db.backref("item", lazy="noload"))
-    metrics_query = db.relationship('Metric', lazy='dynamic')
+    metrics_query = db.relationship('Snap', lazy='dynamic')
 
     def __init__(self, **kwargs):
         # logger.debug(u"new Item {kwargs}".format(
@@ -615,17 +637,23 @@ def add_metric_to_item_object(full_metric_name, metrics_method_response, item_ob
     tiid = item_obj.tiid
 
     (metric_value, provenance_url) = metrics_method_response
-    (provider, metric_name) = full_metric_name.split(":")
+    (provider, interaction) = full_metric_name.split(":")
 
     new_style_metric_dict = {
         "tiid": tiid,
-        "metric_name": metric_name, 
+        "interaction": interaction, 
         "provider": provider, 
         "raw_value": as_int_or_float_if_possible(metric_value),
         "drilldown_url": provenance_url,
-        "collected_date": datetime.datetime.utcnow()
+        "last_collected_date": datetime.datetime.utcnow()
     }    
-    metric_object = Metric(**new_style_metric_dict)
+    snap_object = Snap(**new_style_metric_dict)
+    db.session.add(snap_object)
+
+    metric_object = Metric.query.get((tiid, provider, interaction))
+    if not metric_object:
+        metric_object = Metric(tiid=tiid, provider=provider, interaction=interaction)    
+    metric_object.most_recent_snap_id = snap_object.snap_id
     db.session.add(metric_object)
 
     try:
@@ -1063,7 +1091,7 @@ def create_item(namespace, nid, myredis, mydao):
     item_doc["aliases"][namespace] = [nid]
     item_doc["aliases"] = canonical_aliases(item_doc["aliases"])
 
-    item_obj = create_objects_from_item_doc(item_doc)
+    item_obj = create_new_item_object_from_item_doc(item_doc)
 
     # logger.info(u"saved new collection '{tiid}'".format(
     #         tiid=item_doc["_id"]))

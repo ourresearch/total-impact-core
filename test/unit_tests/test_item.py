@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash
 from totalimpact import models, tiredis
 from totalimpact import db, app
 from totalimpact import item as item_module
-from totalimpact.item import Item, Metric, Biblio, Alias
+from totalimpact.item import Item, Snap, Biblio, Alias
 from totalimpact.providers import bibtex, github
 from totalimpact import REDIS_UNITTEST_DATABASE_NUMBER
 
