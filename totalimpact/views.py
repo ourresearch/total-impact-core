@@ -28,11 +28,11 @@ myredis = tiredis.from_url(os.getenv("REDIS_URL"), db=REDIS_MAIN_DATABASE_NUMBER
 # logger.debug(u"Building reference sets")
 myrefsets = None
 myrefsets_histograms = None
-# try:
-#     (myrefsets, myrefsets_histograms) = collection.build_all_reference_lookups(myredis, mydao)
-#     logger.debug(u"Reference sets dict has %i keys" %len(myrefsets.keys()))
-# except (LookupError, AttributeError), e:
-#     logger.error(u"Exception %s: Unable to load reference sets" % (e.__repr__()))
+try:
+    (myrefsets, myrefsets_histograms) = collection.build_all_reference_lookups(myredis, mydao)
+    logger.debug(u"Reference sets dict has %i keys" %len(myrefsets.keys()))
+except (LookupError, AttributeError), e:
+    logger.error(u"Exception %s: Unable to load reference sets" % (e.__repr__()))
 
 def set_db(url, db):
     """useful for unit testing, where you want to use a local database
