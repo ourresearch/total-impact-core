@@ -108,6 +108,11 @@ class Slideshare(Provider):
 
         biblio_dict = provider._extract_from_xml(page, dict_of_keylists)
         biblio_dict["repository"] = "Slideshare"
+        try:
+            biblio_dict["year"] = biblio_dict["created"][0:4]
+        except KeyError:
+            pass
+        
         return biblio_dict    
        
     def _extract_aliases(self, page, id=None):
