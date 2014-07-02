@@ -8,7 +8,7 @@ import redis
 import analytics
 import requests
 
-from totalimpact import app, tiredis, collection, incoming_email
+from totalimpact import app, tiredis, collection, incoming_email, db
 from totalimpact import item as item_module
 from totalimpact.models import MemberItems, NotAuthenticatedError
 from totalimpact.providers import provider as provider_module
@@ -159,8 +159,8 @@ def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=N
     if not item:
         abort_custom(404, "item does not exist")
 
-    item["update_status"] = item_module.update_status(tiid, myredis)
-    if item["update_status"] != "SUCCESS":
+    item["update_status"] = item_module.update_status(tiid, myredis)["short"]
+    if not item["update_status"].startswith("SUCCESS"):
         response_code = 210 # not complete yet
     else:
         response_code = 200
@@ -423,11 +423,15 @@ def refresh_from_tiids(tiids, analytics_credentials, priority, myredis):
     for item_obj in item_objects:
         try:
             tiid = item_obj.tiid
+            item_obj.last_refresh_started = datetime.datetime.utcnow()
+            db.session.add(item_obj)
             alias_dict = item_module.alias_dict_from_tuples(item_obj.alias_tuples)       
             dicts_to_refresh += [{"tiid":tiid, "aliases_dict": alias_dict}]
         except AttributeError:
             logger.debug(u"couldn't find tiid {tiid} so not refreshing its metrics".format(
                 tiid=tiid))
+
+    db.session.commit()
 
     item_module.start_item_update(dicts_to_refresh, priority, myredis)
     return tiids

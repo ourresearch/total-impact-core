@@ -294,6 +294,11 @@ class Item(db.Model):
     last_modified = db.Column(db.DateTime())
     last_update_run = db.Column(db.DateTime())
     profile_id = db.Column(db.Integer)
+    last_refresh_started = db.Column(db.DateTime())  #ALTER TABLE item ADD last_refresh_started timestamp
+    last_refresh_finished = db.Column(db.DateTime()) #ALTER TABLE item ADD last_refresh_finished timestamp
+    last_refresh_status = db.Column(db.Text) #ALTER TABLE item ADD last_refresh_status text
+    last_refresh_failure_message = db.Column(json_sqlalchemy.JSONAlchemy(db.Text)) #ALTER TABLE item ADD last_refresh_failure_message text
+
     aliases = db.relationship('Alias', lazy='subquery', cascade="all, delete-orphan",
         backref=db.backref("item", lazy="subquery"))
     biblios = db.relationship('Biblio', lazy='subquery', cascade="all, delete-orphan",
@@ -597,7 +602,7 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
     # ditch metrics we don't have static_meta for:
 
     item["metrics"] = {k:v for k, v in metrics.iteritems() if "static_meta" in v}
-    item["update_status"] = update_status(item["_id"], myredis)
+    item["update_status"] = update_status(item["_id"], myredis)["long"]
 
     return item
 
@@ -997,7 +1002,7 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
                     tiid=tiid))
             raise LookupError
             
-        item["update_status"] = update_status(tiid, myredis)
+        item["update_status"] = update_status(tiid, myredis)["long"]
         items.append(item)
 
     something_currently_updating = not collection.is_all_done(tiids, myredis)
@@ -1008,7 +1013,8 @@ def update_status(tiid, myredis):
     task_ids = myredis.get_provider_task_ids(tiid)
 
     if not task_ids:
-        return "SUCCESS: no recent update"
+        status = "SUCCESS: no recent update"
+        return {"short": status, "long": status}
 
     statuses = {}
 
@@ -1016,7 +1022,8 @@ def update_status(tiid, myredis):
         if (len(task_ids) > 1):
             task_ids.remove("STARTED")
         else:
-            return "started_queueing"
+            status = "started_queueing"
+            return {"short": status, "long": status}
 
     for task_id in task_ids:
         task_result = AsyncResult(task_id)
@@ -1035,20 +1042,20 @@ def update_status(tiid, myredis):
     has_pending = any([status.startswith("PENDING") for status in statuses.values()])
     has_started = any([status.startswith("STARTED") for status in statuses.values()])
 
-    update_status = "unknown"
+    update_status_short = "unknown"
     if done_updating and not has_failures:
-        update_status = u"SUCCESS: update finished"
+        update_status_short = u"SUCCESS: update finished"
     elif done_updating and has_failures:
-        update_status = u"SUCCESS with FAILURES"
+        update_status_short = u"SUCCESS with FAILURES"
     elif has_failures:
-        update_status = u"SUCCESS with FAILURES (and not all providers ran)"
+        update_status_short = u"SUCCESS with FAILURES (and not all providers ran)"
     elif has_pending:
-        update_status = u"PENDING"
+        update_status_short = u"PENDING"
     elif has_started:
-        update_status = u"STARTED"
+        update_status_short = u"STARTED"
 
-    update_status += u"; task_ids: {statuses}".format(
-        statuses = statuses)
+    update_status_long = u"{update_status_short}; task_ids: {statuses}".format(
+        update_status_short=update_status_short, statuses=statuses)
 
 
     # if not update_status.startswith("SUCCESS"):
@@ -1056,32 +1063,9 @@ def update_status(tiid, myredis):
     #     #     task_id=task_id, update_status=update_status, tiid=tiid))
     #     pass
 
-    return update_status
+    return {"short": update_status_short, "long": update_status_long}
 
-   
-def create_item(namespace, nid, myredis, mydao):
-    # logger.debug(u"In create_item with alias" + str((namespace, nid)))
-    item_doc = make()
-    namespace = clean_id(namespace)
-    nid = clean_id(nid)
-    item_doc["aliases"][namespace] = [nid]
-    item_doc["aliases"] = canonical_aliases(item_doc["aliases"])
 
-    item_obj = create_new_item_object_from_item_doc(item_doc)
-
-    # logger.info(u"saved new collection '{tiid}'".format(
-    #         tiid=item_doc["_id"]))
-
-    # logger.debug(json.dumps(item_doc, sort_keys=True, indent=4))
-
-    start_item_update([{"tiid":item_doc["_id"], "aliases_dict":item_doc["aliases"]}], "low", myredis)
-
-    # logger.info(u"Created new item '{tiid}' with alias '{alias}'".format(
-    #     tiid=item_doc["_id"],
-    #     alias=str((namespace, nid))
-    # ))
-
-    return item_doc["_id"]
 
 
 def get_tiids_from_aliases(aliases):
@@ -1136,6 +1120,8 @@ def create_tiids_from_aliases(profile_id, aliases, analytics_credentials, myredi
         item_obj = add_alias_to_new_item(alias_tuple, provider)
         tiid = item_obj.tiid
         item_obj.profile_id = profile_id
+        item_obj.last_refresh_started = datetime.datetime.utcnow()
+
         db.session.add(item_obj)
         # logger.debug(u"in create_tiids_from_aliases, made item {item_obj}".format(
         #     item_obj=item_obj))
@@ -1209,6 +1195,7 @@ def get_tiid_by_alias(ns, nid, mydao=None):
     if not tiid:
         logger.debug(u"no match for tiid for {nid}!".format(nid=nid))
     return tiid
+
 
 
 def start_item_update(dicts_to_add, priority, myredis):

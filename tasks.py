@@ -28,14 +28,6 @@ rate.add_condition({'requests':25, 'seconds':1})
 
 
 
-class SqlAlchemyTask(celery.Task):
-    """An abstract Celery Task that ensures that the connection the the
-    database is closed on task completion"""
-    abstract = True
-
-    # def after_return(self, status, retval, task_id, args, kwargs, einfo):
-    #     db.session.remove()
-
 
 @task_postrun.connect()
 def task_postrun_handler(*args, **kwargs):    
@@ -148,7 +140,7 @@ def sniffer(item_aliases, provider_config=default_settings.PROVIDERS):
 
 
 
-@task(base=SqlAlchemyTask, priority=0)
+@task(priority=0)
 def chain_dummy(first_arg, **kwargs):
     try:
         response = first_arg[0]
@@ -158,7 +150,7 @@ def chain_dummy(first_arg, **kwargs):
     return response
 
 
-@task(base=SqlAlchemyTask)
+@task()
 def provider_run(aliases_dict, tiid, method_name, provider_name):
 
     provider = ProviderFactory.get_provider(provider_name)
@@ -191,10 +183,29 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
 
 
 
+@task(priority=0)
+def store_product_update_status(tiid, task_ids):
+    logger.info(u"here in store_product_update_status with {tiid}".format(
+        tiid=tiid))
+
+    item_obj = item_module.Item.query.get(tiid)
+
+    if item_obj:
+        item_obj.last_refresh_finished = datetime.datetime.utcnow()
+        update_status = item_module.update_status(tiid, myredis)
+        item_obj.last_refresh_status = update_status["short"]
+        if update_status["short"].startswith(u"SUCCESS"):
+            item_obj.last_refresh_failure_message = None # clear whatever was there before
+        else:
+            item_obj.last_refresh_failure_message = update_status["long"]
+
+        db.session.add(item_obj)
+        db.session.commit()
 
 
-@task(base=SqlAlchemyTask)
-def refresh_tiid(tiid, aliases_dict, task_priority):
+
+@task()
+def refresh_tiid(tiid, aliases_dict, task_priority):    
     pipeline = sniffer(aliases_dict)
     chain_list = []
     task_ids = []
@@ -216,6 +227,12 @@ def refresh_tiid(tiid, aliases_dict, task_priority):
             dummy_name = "DUMMY_{method_name}_{provider_name}".format(
                 method_name=method_name, provider_name=provider_name)
             chain_list.append(chain_dummy.s(dummy=dummy_name).set(queue="core_"+task_priority))
+
+    new_task = store_product_update_status.si(tiid, task_ids).set(priority=0, queue="core_"+task_priority)
+    uuid_bit = uuid().split("-")[0]
+    new_task_id = "task-{tiid}-DONE-{uuid}".format(
+        tiid=tiid, uuid=uuid_bit)
+    chain_list.append(new_task.set(task_id=new_task_id))
 
     workflow = chain(chain_list)
 
