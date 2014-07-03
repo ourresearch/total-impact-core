@@ -289,11 +289,11 @@ def add_metrics_data(metric_name, metrics_method_response, item_doc, timestamp=N
 
 
 class Item(db.Model):
+    profile_id = db.Column(db.Integer)
     tiid = db.Column(db.Text, primary_key=True)
     created = db.Column(db.DateTime())
     last_modified = db.Column(db.DateTime())
     last_update_run = db.Column(db.DateTime())
-    profile_id = db.Column(db.Integer)
     last_refresh_started = db.Column(db.DateTime())  #ALTER TABLE item ADD last_refresh_started timestamp
     last_refresh_finished = db.Column(db.DateTime()) #ALTER TABLE item ADD last_refresh_finished timestamp
     last_refresh_status = db.Column(db.Text) #ALTER TABLE item ADD last_refresh_status text
@@ -1026,7 +1026,7 @@ def refresh_status(tiid, myredis):
     task_ids = myredis.get_provider_task_ids(tiid)
 
     if not task_ids:
-        status = "SUCCESS: no recent update"
+        status = "SUCCESS: no recent refresh"
         return {"short": status, "long": status}
 
     statuses = {}
@@ -1057,7 +1057,7 @@ def refresh_status(tiid, myredis):
 
     status_short = "unknown"
     if done_updating and not has_failures:
-        status_short = u"SUCCESS: update finished"
+        status_short = u"SUCCESS: refresh finished"
     elif done_updating and has_failures:
         status_short = u"SUCCESS with FAILURES"
     elif has_failures:
