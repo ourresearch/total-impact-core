@@ -27,6 +27,25 @@ rate = rate_limit.RateLimiter(redis_url=os.getenv("REDIS_URL"), redis_db=REDIS_M
 rate.add_condition({'requests':25, 'seconds':1})
 
 
+# from https://github.com/celery/celery/issues/1671#issuecomment-47247074
+# pending this being fixed in useful celery version
+"""
+Monkey patch for celery.chord.type property
+"""
+def _type(self):
+    if self._type:
+        return self._type
+    if self._app:
+        app = self._app
+    else:
+        try:
+            app = self.tasks[0].type.app
+        except (IndexError, AttributeError):
+            app = self.body.type.app
+    return app.tasks['celery.chord']
+from celery import canvas
+canvas.chord.type = property(_type)
+#### end monkeypatch
 
 
 @task_postrun.connect()
