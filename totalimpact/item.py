@@ -395,10 +395,10 @@ class Item(db.Model):
         self.last_refresh_failure_message = None
 
     def set_last_refresh_finished(self, myredis):
-        update_status = update_status(self.tiid, myredis)
-        if not update_status["short"].startswith(u"SUCCESS"):
-            self.last_refresh_failure_message = update_status["long"]
-        self.last_refresh_status = update_status["short"]
+        redis_update_status = update_status(self.tiid, myredis)
+        if not redis_update_status["short"].startswith(u"SUCCESS"):
+            self.last_refresh_failure_message = redis_update_status["long"]
+        self.last_refresh_status = redis_update_status["short"]
         self.last_refresh_finished = datetime.datetime.utcnow()
 
     @classmethod
