@@ -395,10 +395,10 @@ class Item(db.Model):
         self.last_refresh_failure_message = None
 
     def set_last_refresh_finished(self, myredis):
-        redis_update_status = update_status(self.tiid, myredis)
-        if not redis_update_status["short"].startswith(u"SUCCESS"):
-            self.last_refresh_failure_message = redis_update_status["long"]
-        self.last_refresh_status = redis_update_status["short"]
+        redis_refresh_status = refresh_status(self.tiid, myredis)
+        if not redis_refresh_status["short"].startswith(u"SUCCESS"):
+            self.last_refresh_failure_message = redis_refresh_status["long"]
+        self.last_refresh_status = redis_refresh_status["short"]
         self.last_refresh_finished = datetime.datetime.utcnow()
 
     @classmethod
@@ -615,7 +615,7 @@ def build_item_for_client(item_metrics_dict, myrefsets, myredis):
     # ditch metrics we don't have static_meta for:
 
     item["metrics"] = {k:v for k, v in metrics.iteritems() if "static_meta" in v}
-    item["update_status"] = update_status(item["_id"], myredis)["long"]
+    item["refresh_status"] = refresh_status(item["_id"], myredis)["long"]
 
     return item
 
@@ -1015,14 +1015,14 @@ def retrieve_items(tiids, myrefsets, myredis, mydao):
                     tiid=tiid))
             raise LookupError
             
-        item["update_status"] = update_status(tiid, myredis)["long"]
+        item["refresh_status"] = refresh_status(tiid, myredis)["long"]
         items.append(item)
 
     something_currently_updating = not collection.is_all_done(tiids, myredis)
     return (items, something_currently_updating)
 
 
-def update_status(tiid, myredis):
+def refresh_status(tiid, myredis):
     task_ids = myredis.get_provider_task_ids(tiid)
 
     if not task_ids:
@@ -1047,7 +1047,7 @@ def update_status(tiid, myredis):
         
         statuses[task_id] = state
 
-    # logger.debug(u"update_status statuses: tiid={tiid}, statuses={statuses}".format(
+    # logger.debug(u"refresh_status statuses: tiid={tiid}, statuses={statuses}".format(
     #     tiid=tiid, statuses=statuses))
 
     done_updating = all([(status.startswith("SUCCESS") or status.startswith("FAILURE")) for status in statuses.values()])
@@ -1055,28 +1055,28 @@ def update_status(tiid, myredis):
     has_pending = any([status.startswith("PENDING") for status in statuses.values()])
     has_started = any([status.startswith("STARTED") for status in statuses.values()])
 
-    update_status_short = "unknown"
+    status_short = "unknown"
     if done_updating and not has_failures:
-        update_status_short = u"SUCCESS: update finished"
+        status_short = u"SUCCESS: update finished"
     elif done_updating and has_failures:
-        update_status_short = u"SUCCESS with FAILURES"
+        status_short = u"SUCCESS with FAILURES"
     elif has_failures:
-        update_status_short = u"SUCCESS with FAILURES (and not all providers ran)"
+        status_short = u"SUCCESS with FAILURES (and not all providers ran)"
     elif has_pending:
-        update_status_short = u"PENDING"
+        status_short = u"PENDING"
     elif has_started:
-        update_status_short = u"STARTED"
+        status_short = u"STARTED"
 
-    update_status_long = u"{update_status_short}; task_ids: {statuses}".format(
-        update_status_short=update_status_short, statuses=statuses)
+    status_long = u"{status_short}; task_ids: {statuses}".format(
+        status_short=status_short, statuses=statuses)
 
 
-    # if not update_status.startswith("SUCCESS"):
-    #     # logger.debug(u"update_status: task_id={task_id}, update_status={update_status}, tiid={tiid}".format(
-    #     #     task_id=task_id, update_status=update_status, tiid=tiid))
+    # if not refresh_status.startswith("SUCCESS"):
+    #     # logger.debug(u"refresh_status: task_id={task_id}, refresh_status={refresh_status}, tiid={tiid}".format(
+    #     #     task_id=task_id, refresh_status=refresh_status, tiid=tiid))
     #     pass
 
-    return {"short": update_status_short, "long": update_status_long}
+    return {"short": status_short, "long": status_long}
 
 
 

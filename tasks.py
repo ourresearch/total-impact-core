@@ -184,8 +184,8 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
 
 
 @task(priority=0)
-def store_product_update_status(tiid, task_ids):
-    logger.info(u"here in store_product_update_status with {tiid}".format(
+def store_product_refresh_status(tiid, task_ids):
+    logger.info(u"here in store_product_refresh_status with {tiid}".format(
         tiid=tiid))
 
     item_obj = item_module.Item.query.get(tiid)
@@ -224,7 +224,7 @@ def refresh_tiid(tiid, aliases_dict, task_priority):
     # do this before we kick off the tasks to make sure they are there before tasks finish
     myredis.set_provider_task_ids(tiid, task_ids)
 
-    new_task = store_product_update_status.si(tiid, task_ids).set(priority=0, queue="core_"+task_priority)
+    new_task = store_product_refresh_status.si(tiid, task_ids).set(priority=0, queue="core_"+task_priority)
     uuid_bit = uuid().split("-")[0]
     new_task_id = "task-{tiid}-DONE-{uuid}".format(
         tiid=tiid, uuid=uuid_bit)

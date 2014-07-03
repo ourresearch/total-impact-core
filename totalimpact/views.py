@@ -159,8 +159,8 @@ def get_item_from_tiid(tiid, format=None, include_history=False, callback_name=N
     if not item:
         abort_custom(404, "item does not exist")
 
-    item["update_status"] = item_module.update_status(tiid, myredis)["short"]
-    if not item["update_status"].startswith("SUCCESS"):
+    item["refresh_status"] = item_module.refresh_status(tiid, myredis)["short"]
+    if not item["refresh_status"].startswith("SUCCESS"):
         response_code = 210 # not complete yet
     else:
         response_code = 200

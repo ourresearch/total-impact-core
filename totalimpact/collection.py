@@ -345,8 +345,8 @@ def get_collection_doc(cid):
 
 
 def is_all_done(tiids, myredis):
-    statuses = [item_module.update_status(tiid, myredis) for tiid in tiids]
-    all_done = all([update_status["short"].startswith(u"SUCCESS") for status in statuses])
+    statuses = [item_module.refresh_status(tiid, myredis) for tiid in tiids]
+    all_done = all([refresh_status["short"].startswith(u"SUCCESS") for status in statuses])
     return all_done
 
 
