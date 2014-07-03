@@ -388,6 +388,19 @@ class Item(db.Model):
     def has_free_fulltext_url(self):
         return any([biblio.biblio_name=='free_fulltext_url' for biblio in self.biblios])
 
+    def set_last_refresh_start(self):
+        self.last_refresh_started = datetime.datetime.utcnow()
+        self.last_refresh_finished = None
+        self.last_refresh_status = u"STARTED"
+        self.last_refresh_failure_message = None
+
+    def set_last_refresh_finished(self, myredis):
+        update_status = update_status(self.tiid, myredis)
+        if not update_status["short"].startswith(u"SUCCESS"):
+            self.last_refresh_failure_message = update_status["long"]
+        self.last_refresh_status = update_status["short"]
+        self.last_refresh_finished = datetime.datetime.utcnow()
+
     @classmethod
     def create_from_old_doc(cls, doc):
         # logger.debug(u"in create_from_old_doc for {tiid}".format(
@@ -1120,7 +1133,7 @@ def create_tiids_from_aliases(profile_id, aliases, analytics_credentials, myredi
         item_obj = add_alias_to_new_item(alias_tuple, provider)
         tiid = item_obj.tiid
         item_obj.profile_id = profile_id
-        item_obj.last_refresh_started = datetime.datetime.utcnow()
+        item_obj.set_last_refresh_start()
 
         db.session.add(item_obj)
         # logger.debug(u"in create_tiids_from_aliases, made item {item_obj}".format(

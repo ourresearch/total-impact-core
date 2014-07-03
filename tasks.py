@@ -191,14 +191,7 @@ def store_product_update_status(tiid, task_ids):
     item_obj = item_module.Item.query.get(tiid)
 
     if item_obj:
-        item_obj.last_refresh_finished = datetime.datetime.utcnow()
-        update_status = item_module.update_status(tiid, myredis)
-        item_obj.last_refresh_status = update_status["short"]
-        if update_status["short"].startswith(u"SUCCESS"):
-            item_obj.last_refresh_failure_message = None # clear whatever was there before
-        else:
-            item_obj.last_refresh_failure_message = update_status["long"]
-
+        item_obj.set_last_refresh_finished(myredis)
         db.session.add(item_obj)
         db.session.commit()
 
@@ -228,6 +221,9 @@ def refresh_tiid(tiid, aliases_dict, task_priority):
                 method_name=method_name, provider_name=provider_name)
             chain_list.append(chain_dummy.s(dummy=dummy_name).set(queue="core_"+task_priority))
 
+    # do this before we kick off the tasks to make sure they are there before tasks finish
+    myredis.set_provider_task_ids(tiid, task_ids)
+
     new_task = store_product_update_status.si(tiid, task_ids).set(priority=0, queue="core_"+task_priority)
     uuid_bit = uuid().split("-")[0]
     new_task_id = "task-{tiid}-DONE-{uuid}".format(
@@ -250,8 +246,6 @@ def refresh_tiid(tiid, aliases_dict, task_priority):
     # workflow_tasks_task.task_id, 
     logger.info(u"task id for tiid {tiid}, refresh_tiids id {task_id}, workflow_trackable_id {workflow_trackable_id} task_ids={task_ids}".format(
         tiid=tiid, task_id=refresh_tiid.request.id, workflow_trackable_id=workflow_trackable_id, task_ids=task_ids))
-
-    myredis.set_provider_task_ids(tiid, task_ids)
 
     return workflow_trackable_task
 

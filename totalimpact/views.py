@@ -423,7 +423,7 @@ def refresh_from_tiids(tiids, analytics_credentials, priority, myredis):
     for item_obj in item_objects:
         try:
             tiid = item_obj.tiid
-            item_obj.last_refresh_started = datetime.datetime.utcnow()
+            item_obj.set_last_refresh_start()
             db.session.add(item_obj)
             alias_dict = item_module.alias_dict_from_tuples(item_obj.alias_tuples)       
             dicts_to_refresh += [{"tiid":tiid, "aliases_dict": alias_dict}]
