@@ -63,7 +63,7 @@ class Cache(object):
 
         hash_key = self._build_hash_key(key)
         set_response = mc.set(hash_key, json.dumps(data))
-        mc.expire(key, self.max_cache_age)
+        mc.expire(hash_key, self.max_cache_age)
 
         if not set_response:
             logger.warning("Unable to store into Redis. Make sure redis server is running.")
