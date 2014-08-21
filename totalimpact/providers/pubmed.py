@@ -107,6 +107,7 @@ class Pubmed(Provider):
                                 "month": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Month"],
                                 "day": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleDate", "Day"],
                                 "title": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleTitle"],
+                                "abstract": ["PubmedArticleSet", "MedlineCitation", "Article", "Abstract", "AbstractText"],
                                 "issn": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "ISSN"],
                                 "journal": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "Title"],
                                 }
@@ -115,6 +116,7 @@ class Pubmed(Provider):
                                 "month": ["PubmedArticleSet", "MedlineCitation", "Article", "PubDate", "Month"],
                                 "day": ["PubmedArticleSet", "MedlineCitation", "Article", "PubDate", "Day"],
                                 "title": ["PubmedArticleSet", "MedlineCitation", "Article", "ArticleTitle"],
+                                "abstract": ["PubmedArticleSet", "MedlineCitation", "Article", "Abstract", "AbstractText"],
                                 "issn": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "ISSN"],
                                 "journal": ["PubmedArticleSet", "MedlineCitation", "Article", "Journal", "Title"],
                                 }            
