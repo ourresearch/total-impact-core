@@ -129,7 +129,8 @@ class Pubmed(Provider):
 
         mesh_list = provider._find_all_in_xml(page, "DescriptorName")
         try:
-            biblio_dict["keywords"] = "; ".join([mesh_term.firstChild.data for mesh_term in mesh_list])
+            if mesh_list:
+                biblio_dict["keywords"] = "; ".join([mesh_term.firstChild.data for mesh_term in mesh_list])
         except (AttributeError, TypeError):
             pass
 
