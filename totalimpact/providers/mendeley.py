@@ -428,7 +428,7 @@ class Mendeley(Provider):
         if "issn" in biblio_dict:
             biblio_dict["issn"] = biblio_dict["issn"].replace("-", "")
         if "keywords" in biblio_dict:
-            biblio_dict["keywords"] = ",".join(biblio_dict["keywords"])
+            biblio_dict["keywords"] = "; ".join(biblio_dict["keywords"])
 
 
         dict_of_keylists = {

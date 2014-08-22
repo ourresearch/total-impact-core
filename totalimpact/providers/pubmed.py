@@ -127,6 +127,12 @@ class Pubmed(Provider):
         except (AttributeError, TypeError):
             pass
 
+        mesh_list = provider._find_all_in_xml(page, "DescriptorName")
+        try:
+            biblio_dict["keywords"] = "; ".join([mesh_term.firstChild.data for mesh_term in mesh_list])
+        except (AttributeError, TypeError):
+            pass
+
         try:
             biblio_dict["issn"] = biblio_dict["issn"].replace("-", "")
         except (AttributeError, KeyError):
