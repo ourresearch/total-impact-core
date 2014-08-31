@@ -298,6 +298,7 @@ class Item(db.Model):
     last_refresh_finished = db.Column(db.DateTime()) #ALTER TABLE item ADD last_refresh_finished timestamp
     last_refresh_status = db.Column(db.Text) #ALTER TABLE item ADD last_refresh_status text
     last_refresh_failure_message = db.Column(json_sqlalchemy.JSONAlchemy(db.Text)) #ALTER TABLE item ADD last_refresh_failure_message text
+    embed_markup = db.Column(db.Text)
 
     aliases = db.relationship('Alias', lazy='subquery', cascade="all, delete-orphan",
         backref=db.backref("item", lazy="subquery"))

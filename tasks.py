@@ -5,6 +5,7 @@ import logging
 import datetime
 import random
 import celery
+import requests
 from celery.decorators import task
 from celery.signals import task_postrun, task_prerun, task_failure, worker_process_init
 from celery import group, chain, chord
@@ -203,16 +204,28 @@ def provider_run(aliases_dict, tiid, method_name, provider_name):
 
 
 @task(priority=0)
-def store_product_refresh_status(tiid, task_ids):
-    logger.info(u"here in store_product_refresh_status with {tiid}".format(
+def after_refresh_complete(tiid, task_ids):
+    logger.info(u"here in after_refresh_complete with {tiid}".format(
         tiid=tiid))
 
     item_obj = item_module.Item.query.get(tiid)
 
     if item_obj:
-        item_obj.set_last_refresh_finished(myredis)
-        db.session.add(item_obj)
-        db.session.commit()
+        url = u"http://{webapp_root}/product/{tiid}/embed-markup".format(
+            webapp_root=os.getenv("WEBAPP_ROOT"), tiid=tiid)
+        r = requests.get(url)
+        if r.status_code==200:
+            response = r.json()
+            item_obj.embed_markup = response["html"]
+
+            item_obj.set_last_refresh_finished(myredis)
+
+            db.session.add(item_obj)
+            db.session.commit()
+        else:
+            logger.warning(u"error in after_refresh_complete, returned status={status}".format(
+                status=r.status_code))        
+
 
 
 
@@ -243,7 +256,7 @@ def refresh_tiid(tiid, aliases_dict, task_priority):
     # do this before we kick off the tasks to make sure they are there before tasks finish
     myredis.set_provider_task_ids(tiid, task_ids)
 
-    new_task = store_product_refresh_status.si(tiid, task_ids).set(priority=0, queue="core_"+task_priority)
+    new_task = after_refresh_complete.si(tiid, task_ids).set(priority=0, queue="core_"+task_priority)
     uuid_bit = uuid().split("-")[0]
     new_task_id = "task-{tiid}-DONE-{uuid}".format(
         tiid=tiid, uuid=uuid_bit)
@@ -257,6 +270,7 @@ def refresh_tiid(tiid, aliases_dict, task_priority):
         tiid=tiid, task_id=refresh_tiid.request.id))
 
     workflow_apply_async = workflow.apply_async(queue="core_"+task_priority)  
+
     workflow_tasks = workflow.tasks
     workflow_trackable_task = workflow_tasks[-1]  # see http://blog.cesarcd.com/2014/04/tracking-status-of-celery-chain.html
     workflow_trackable_id = workflow_trackable_task.id
