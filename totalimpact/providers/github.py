@@ -90,6 +90,7 @@ class Github(Provider):
             biblio_dict["year"] = biblio_dict["create_date"][0:4]
         except KeyError:
             pass
+        biblio_dict["repository"] = "GitHub"
 
         return biblio_dict    
        
