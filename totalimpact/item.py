@@ -866,7 +866,7 @@ def decide_genre(alias_dict):
                 host = "twitter_tweet"
             else:
                 genre = "twitter"
-                host = "twitter_account"
+                host = "twitter"
         elif "youtube.com" in joined_url_string:
             genre = "video"
             host = "youtube"

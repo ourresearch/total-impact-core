@@ -140,7 +140,7 @@ class Topsy(Provider):
                 return entry["url"]
             elif entry["url_expansions"] and ("topsy_expanded_url" in entry["url_expansions"][0].lower()):
                 return entry["url_expansions"][0]["topsy_expanded_url"]
-        elif query_type=="twitter_account":
+        elif query_type=="twitter":
             if "/{query}/".format(query=query.lower()) in entry["url"].lower():
                 return entry["url"]
             else:
@@ -157,7 +157,7 @@ class Topsy(Provider):
 
         if query_type == "site":
             query = re.sub("http(s?)://", "", query.lower())
-        elif query_type in ["twitter_account", "tweets_about"]:
+        elif query_type in ["twitter", "tweets_about"]:
             query = query.replace("@", "")
 
         template_url = self.top_tweeted_url_templates[query_type]

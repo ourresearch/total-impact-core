@@ -20,6 +20,7 @@ PROVIDERS = [
     ("figshare", {}),            
     ("github", {}),
     ("slideshare", {}),
+    ("twitter", {}),
     ("vimeo", {}),
     ("youtube", {}),
 

@@ -7,9 +7,9 @@ import os
 import collections
 from nose.tools import assert_equals, assert_items_equal, raises, nottest
 
-class TestTwitter_account(ProviderTestCase):
+class TestTwitter(ProviderTestCase):
 
-    provider_name = "twitter_account"
+    provider_name = "twitter"
 
     testitem_members = "jasonpriem"
     testitem_aliases = ("url", "http://twitter.com/jasonpriem")
@@ -47,14 +47,14 @@ class TestTwitter_account(ProviderTestCase):
 
 
     def test_provenance_url(self):
-        provenance_url = self.provider.provenance_url("twitter_account:lists", [self.testitem_aliases])
+        provenance_url = self.provider.provenance_url("twitter:lists", [self.testitem_aliases])
         assert_equals(provenance_url, 'https://twitter.com/jasonpriem/memberships')
 
     @http
     def test_metrics(self):
         metrics_dict = self.provider.metrics([self.testitem_metrics])
         print metrics_dict
-        expected = {'twitter_account:lists': (215, 'https://twitter.com/jasonpriem/memberships'), 'twitter_account:followers': (3069, 'https://twitter.com/jasonpriem/followers')}
+        expected = {'twitter:lists': (215, 'https://twitter.com/jasonpriem/memberships'), 'twitter:followers': (3069, 'https://twitter.com/jasonpriem/followers')}
         for key in expected:
             assert metrics_dict[key][0] >= expected[key][0], [key, metrics_dict[key], expected[key]]
             assert metrics_dict[key][1] == expected[key][1], [key, metrics_dict[key], expected[key]]

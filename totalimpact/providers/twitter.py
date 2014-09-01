@@ -6,9 +6,9 @@ from totalimpact.providers import topsy
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 
 import logging
-logger = logging.getLogger('ti.providers.twitter_account')
+logger = logging.getLogger('ti.providers.twitter')
 
-class Twitter_Account(Provider):  
+class Twitter(Provider):  
 
     example_id = ("url", "http://twitter.com/jasonpriem")
 
@@ -16,8 +16,8 @@ class Twitter_Account(Provider):
     descr = "Social networking and microblogging service."
     member_items_url_template = "http://twitter.com/%s"
     provenance_url_templates = {
-        "twitter_account:followers": "https://twitter.com/%s/followers",
-        "twitter_account:lists": "https://twitter.com/%s/memberships"
+        "twitter:followers": "https://twitter.com/%s/followers",
+        "twitter:lists": "https://twitter.com/%s/memberships"
         }
 
     static_meta_dict = {
@@ -38,7 +38,7 @@ class Twitter_Account(Provider):
     }     
 
     def __init__(self):
-        super(Twitter_Account, self).__init__()
+        super(Twitter, self).__init__()
         self.client = AppClient(os.getenv("TWITTER_CONSUMER_KEY"), 
                             os.getenv("TWITTER_CONSUMER_SECRET"),
                             os.getenv("TWITTER_ACCESS_TOKEN"))
@@ -74,20 +74,15 @@ class Twitter_Account(Provider):
         return match[0]
 
 
-    # def member_items(self, 
-    #         query_string, 
-    #         provider_url_template=None, 
-    #         cache_enabled=True):
+    def member_items(self, 
+            query_string, 
+            provider_url_template=None, 
+            cache_enabled=True):
 
-    #     twitter_username = query_string.replace("@", "")
-    #     url = self._get_templated_url(self.member_items_url_template, twitter_username, "members")
-    #     members = [("url", url)]
-
-    #     # import top tweets
-    #     for tweet_url in topsy.Topsy().top_tweeted_urls(twitter_username, "twitter_account", number_to_return=10):
-    #         members += [("url", tweet_url)] 
-
-    #     return(members)
+        twitter_username = query_string.replace("@", "")
+        url = self._get_templated_url(self.member_items_url_template, twitter_username, "members")
+        members = [("url", url)]
+        return(members)
 
 
     def get_account_data(self, aliases):
@@ -144,8 +139,8 @@ class Twitter_Account(Provider):
             return {}
 
         dict_of_keylists = {
-            'twitter_account:followers' : ['followers_count'],
-            'twitter_account:lists' : ['listed_count']
+            'twitter:followers' : ['followers_count'],
+            'twitter:lists' : ['listed_count']
         }
 
         metrics_dict = {}
