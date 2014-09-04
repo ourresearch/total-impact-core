@@ -93,9 +93,12 @@ class Twitter(Provider):
         try:
             screen_name = self.screen_name(nid)
             r = self.client.api.users.show.get(screen_name=screen_name)
-        except (IndexError, TwitterApiError):
+        except IndexError:
+            logger.warning(u"%20s got IndexError in get_account_data" % (self.provider_name))                
             return None
-
+        except TwitterApiError:    
+            logger.warning(u"%20s got TwitterApiError in get_account_data" % (self.provider_name))                
+            return None
         return r.data
 
 
