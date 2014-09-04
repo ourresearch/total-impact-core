@@ -3,7 +3,7 @@ import os, re
 
 from totalimpact.providers import provider
 from totalimpact.providers import topsy
-from totalimpact.providers.provider import Provider, ProviderContentMalformedError
+from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderRateLimitError
 
 import logging
 logger = logging.getLogger('ti.providers.twitter')
@@ -97,8 +97,9 @@ class Twitter(Provider):
             logger.warning(u"%20s got IndexError in get_account_data" % (self.provider_name))                
             return None
         except TwitterApiError:    
-            logger.warning(u"%20s got TwitterApiError in get_account_data" % (self.provider_name))                
-            return None
+            logger.exception(u"{provider_name} got TwitterApiError in get_account_data".format(
+                provider_name=self.provider_name))
+            raise ProviderRateLimitError()
         return r.data
 
 

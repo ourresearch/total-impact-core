@@ -81,10 +81,16 @@ def provider_method_wrapper(tiid, input_aliases_dict, provider, method_name):
 
     try:
         method_response = method(input_alias_tuples)
-    except ProviderError:
+    except ProviderError, e:
         method_response = None
-        logger.info(u"{:20}: **ProviderError {tiid} {method_name} {provider_name} ".format(
-            worker_name, tiid=tiid, provider_name=provider_name.upper(), method_name=method_name.upper()))
+
+        logger.info(u"{:20}: **ProviderError {tiid} {method_name} {provider_name}, Exception type {exception_type} {exception_arguments}".format(
+            worker_name, 
+            tiid=tiid, 
+            provider_name=provider_name.upper(), 
+            method_name=method_name.upper(), 
+            exception_type=type(e).__name__, 
+            exception_arguments=e.args))
 
     logger.info(u"{:20}: /biblio_print, RETURNED {tiid} {method_name} {provider_name} : {method_response}".format(
         worker_name, tiid=tiid, method_name=method_name.upper(), 
