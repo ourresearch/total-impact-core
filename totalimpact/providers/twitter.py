@@ -17,7 +17,8 @@ class Twitter(Provider):
     member_items_url_template = "http://twitter.com/%s"
     provenance_url_templates = {
         "twitter:followers": "https://twitter.com/%s/followers",
-        "twitter:lists": "https://twitter.com/%s/memberships"
+        "twitter:lists": "https://twitter.com/%s/memberships",
+        "twitter:number_tweets": "https://twitter.com/%s"
         }
 
     static_meta_dict = {
@@ -34,7 +35,14 @@ class Twitter(Provider):
             "provider_url": "http://twitter.com",
             "description": "The number of people who have included this Twitter account in a Twitter list",
             "icon": "https://twitter.com/favicon.ico"
-            }
+            },
+        "number_tweets": {
+            "display_name": "number of tweets",
+            "provider": "Twitter",
+            "provider_url": "http://twitter.com",
+            "description": "The number of tweets from this Twitter account",
+            "icon": "https://twitter.com/favicon.ico"
+            }            
     }     
 
     def __init__(self):
@@ -144,7 +152,8 @@ class Twitter(Provider):
 
         dict_of_keylists = {
             'twitter:followers' : ['followers_count'],
-            'twitter:lists' : ['listed_count']
+            'twitter:lists' : ['listed_count'],
+            'twitter:number_tweets' : ['statuses_count']
         }
 
         metrics_dict = {}
