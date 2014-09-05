@@ -60,7 +60,7 @@ class Slideshare(Provider):
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
-        relevant = ((namespace=="url")and ("slideshare.net" in nid))
+        relevant = ((namespace=="url") and re.match(".+slideshare.net/.+/.+", nid))
         return(relevant)
 
     #override because need to break up id
@@ -86,7 +86,7 @@ class Slideshare(Provider):
                 raise ProviderContentMalformedError
         return True
 
-    def _extract_members(self, page, query_string): 
+    def _extract_members(self, page, account_name):
         try:
             doc = minidom.parseString(page.strip().encode('utf-8'))
         except ExpatError:
@@ -95,7 +95,14 @@ class Slideshare(Provider):
         self._sanity_check_page(page)
 
         urls = doc.getElementsByTagName("URL")
+
         members = [("url", url.firstChild.data) for url in list(set(urls))]
+
+        # also add the slideshare account
+        slideshare_account_url = u"https://www.slideshare.net/{account_name}".format(
+            account_name=account_name)
+        members += [("url", slideshare_account_url)]
+
         return(members)
 
     def _extract_biblio(self, page, id=None):
