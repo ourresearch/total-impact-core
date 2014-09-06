@@ -2,7 +2,6 @@ from birdy.twitter import AppClient, TwitterApiError
 import os, re
 
 from totalimpact.providers import provider
-from totalimpact.providers import topsy
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderRateLimitError
 
 import logging
