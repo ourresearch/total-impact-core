@@ -74,9 +74,12 @@ class Linkedin(Provider):
         except requests.exceptions.Timeout:
             return None        
         soup = BeautifulSoup(r.text)
-        bio = soup.find("p", {'class': "description"}).get_text() #because class is reserved
-        if bio:
+        try:
+            bio = soup.find("p", {'class': "description"}).get_text() #because class is reserved
             biblio_dict["bio"] = bio
+        except AttributeError:
+            logger.warning("AttributeError in linkedin")
+            logger.warning(r.text)
 
         return biblio_dict
   
