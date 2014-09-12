@@ -17,6 +17,7 @@ class Github(Provider):
     aliases_url_template = "https://api.github.com/repos/%s/%s?client_id=" + os.environ["GITHUB_CLIENT_ID"] + "&client_secret=" + os.environ["GITHUB_CLIENT_SECRET"]
     metrics_url_template = "https://api.github.com/repos/%s/%s?client_id=" + os.environ["GITHUB_CLIENT_ID"] + "&client_secret=" + os.environ["GITHUB_CLIENT_SECRET"]
     repo_url_template = "https://github.com/%s/%s"
+    user_url_template = "https://github.com/%s"
 
     provenance_url_templates = {
         "github:stars" : "https://github.com/%s/%s/stargazers",
@@ -45,12 +46,8 @@ class Github(Provider):
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
-        if (("url" == namespace) and ("github.com/" in nid)):
-            return True
-        elif (namespace == "github"):  # deprecate github namespace after /v1
-            return True
-        else:
-            return False
+        relevant = ((namespace=="url") and re.match(".+github.com/.+/.+", nid))
+        return(relevant)
 
     #override because need to break up id
     def _get_templated_url(self, template, nid, method=None):
@@ -72,6 +69,9 @@ class Github(Provider):
         data = provider._load_json(page)
         hits = [hit["name"] for hit in data]
         members += [("url", self.repo_url_template %(account_name, hit)) for hit in list(set(hits))]
+
+        # add account member as well
+        members += [("url", self.user_url_template %(account_name))]
 
         return(members)
 
