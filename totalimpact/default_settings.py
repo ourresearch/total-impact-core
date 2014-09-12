@@ -19,6 +19,7 @@ PROVIDERS = [
     ("dryad", {}),            
     ("figshare", {}),            
     ("github", {}),
+    ("github_account", {}),
     ("linkedin", {}),
     ("slideshare", {}),
     ("slideshare_account", {}),
