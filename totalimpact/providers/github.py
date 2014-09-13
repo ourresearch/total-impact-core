@@ -46,12 +46,8 @@ class Github(Provider):
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
-        if (("url" == namespace) and ("github.com/" in nid)):
-            return True
-        elif (namespace == "github"):  # deprecate github namespace after /v1
-            return True
-        else:
-            return False
+        relevant = ((namespace=="url") and re.match(".+github.com/.+/.+", nid))
+        return(relevant)
 
     #override because need to break up id
     def _get_templated_url(self, template, nid, method=None):

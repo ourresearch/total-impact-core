@@ -14,8 +14,8 @@ class Altmetric_Com(Provider):
     url = "http://www.altmetric.com"
     descr = "We make article level metrics easy."
     aliases_url_template = 'http://api.altmetric.com/v1/fetch/%s?key=' + os.environ["ALTMETRIC_COM_KEY"]
-    metrics_url_template_tweets = 'http://api.altmetric.com/v1/fetch/id/%s?key=' + os.environ["ALTMETRIC_COM_KEY"]
-    metrics_url_other_metrics = 'http://api.altmetric.com/v1/citations/1y?key=' + os.environ["ALTMETRIC_COM_KEY"]
+    metrics_url_template_via_fetch = 'http://api.altmetric.com/v1/fetch/id/%s?key=' + os.environ["ALTMETRIC_COM_KEY"]
+    metrics_url_template_via_citations = 'http://api.altmetric.com/v1/citations/1y?key=' + os.environ["ALTMETRIC_COM_KEY"]
     provenance_url_template = 'http://www.altmetric.com/details.php?citation_id=%s&src=impactstory.org'
 
     static_meta_dict =  {
@@ -129,15 +129,22 @@ class Altmetric_Com(Provider):
         return aliases_list
 
 
-    def _extract_metrics_twitter(self, page, status_code=200, id=None):
+    def _extract_metrics_via_fetch(self, page, status_code=200, id=None):
         dict_of_keylists = {
-            'altmetric_com:tweets' : ['counts', 'twitter', 'posts_count']
+            'altmetric_com:tweets' : ['counts', 'twitter', 'posts_count'],
+            'altmetric_com:unique_tweeters' : ['counts', 'twitter', 'unique_users_count'],
+            'altmetric_com:tweeter_names' : ['counts', 'twitter', 'unique_users'],
+            'altmetric_com:news' : ['counts', 'news', 'posts_count'],
+            'altmetric_com:unique_news' : ['counts', 'news', 'unique_users_count'],
+            'altmetric_com:news_names' : ['counts', 'news', 'unique_users'],
+            'altmetric_com:demographics' : ['demographics'],
+            'altmetric_com:posts' : ['posts'],
         }
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)
         return metrics_dict
 
 
-    def _extract_metrics_other_metrics(self, data, status_code=200, id=None):
+    def _extract_metrics_for_via_citation_call(self, data, status_code=200, id=None):
         dict_of_keylists = {
             'altmetric_com:gplus_posts' : ['cited_by_gplus_count'],
             'altmetric_com:facebook_posts' : ['cited_by_fbwalls_count'],
@@ -148,7 +155,7 @@ class Altmetric_Com(Provider):
         return metrics_dict
 
 
-    def get_metrics_for_other_metrics(self, 
+    def get_metrics_for_via_citation_call(self, 
             id, 
             provider_url_template=None, 
             cache_enabled=True):
@@ -158,14 +165,14 @@ class Altmetric_Com(Provider):
         headers = {u'content-type': u'application/x-www-form-urlencoded',
                     u'accept': u'application/json'}
 
-        r = requests.post(self.metrics_url_other_metrics, 
+        r = requests.post(self.metrics_url_template_via_citations, 
                         data="citation_ids="+id, 
                         headers=headers)
 
         # extract the metrics
         try:
             data = r.json() 
-            metrics_dict = self._extract_metrics_other_metrics(data)
+            metrics_dict = self._extract_metrics_for_via_citation_call(data)
         except socket.timeout, e:  # can apparently be thrown here
             self.logger.info(u"%s Provider timed out *after* GET in socket" %(self.provider_name))        
             raise ProviderTimeout("Provider timed out *after* GET in socket", e)        
@@ -190,11 +197,11 @@ class Altmetric_Com(Provider):
             return {}
 
         metrics = {}
-        new_metrics = self.get_metrics_for_id(id, self.metrics_url_template_tweets, cache_enabled, 
-                extract_metrics_method=self._extract_metrics_twitter)
+        new_metrics = self.get_metrics_for_id(id, self.metrics_url_template_via_fetch, cache_enabled, 
+                extract_metrics_method=self._extract_metrics_via_fetch)
         if new_metrics:
             metrics.update(new_metrics)
-        new_metrics = self.get_metrics_for_other_metrics(id)
+        new_metrics = self.get_metrics_for_via_citation_call(id)
         if new_metrics:
             metrics.update(new_metrics)
 

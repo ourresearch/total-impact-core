@@ -5,11 +5,13 @@ from test.utils import http
 
 import os
 import collections
+import pprint
 from nose.tools import assert_equals, assert_items_equal, raises, nottest
 
 datadir = os.path.join(os.path.split(__file__)[0], "../../../extras/sample_provider_pages/altmetric_com")
 SAMPLE_EXTRACT_ALIASES_PAGE = os.path.join(datadir, "aliases")
 SAMPLE_EXTRACT_METRICS_PAGE = os.path.join(datadir, "metrics")
+SAMPLE_EXTRACT_METRICS_PAGE_EXTENDED = os.path.join(datadir, "sample.json")
 
 TEST_ID = "10.1101/gr.161315.113"
 
@@ -34,12 +36,24 @@ class TestAltmetric_Com(ProviderTestCase):
         expected = [('altmetric_com', '1870595')]
         assert_equals(aliases_list, expected)
 
-    def test_extract_metrics_success_twitter(self):
-        f = open(SAMPLE_EXTRACT_METRICS_PAGE, "r")
+    def test_extract_metrics_success_via_fetch(self):
+        f = open(SAMPLE_EXTRACT_METRICS_PAGE_EXTENDED, "r")
         good_page = f.read()
-        metrics_dict = self.provider._extract_metrics_twitter(good_page)
-        expected = {'altmetric_com:tweets': 55}
-        assert_equals(metrics_dict, expected)
+        metrics_dict = self.provider._extract_metrics_via_fetch(good_page)
+        pprint.pprint(metrics_dict.keys())
+        expected_keys = ['altmetric_com:tweeter_names',
+                'altmetric_com:demographics',
+                'altmetric_com:news',
+                'altmetric_com:news_names',
+                'altmetric_com:tweets',
+                'altmetric_com:unique_tweeters',
+                'altmetric_com:unique_news',
+                'altmetric_com:posts']
+        assert_items_equal(expected_keys, metrics_dict.keys())
+        assert_equals(metrics_dict["altmetric_com:news"], 33)
+        assert_equals(metrics_dict["altmetric_com:unique_news"], 22)
+        assert_equals(metrics_dict["altmetric_com:tweets"], 2235)
+        assert_equals(metrics_dict["altmetric_com:tweeter_names"][0:3], ['busterzdad', 'ggsimpsonrna', 'johnnosta'])
 
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("tweets", 
