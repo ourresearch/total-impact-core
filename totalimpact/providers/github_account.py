@@ -93,10 +93,10 @@ class Github_Account(Provider):
             raise ProviderContentMalformedError
 
         dict_of_keylists = {
-            'github:followers' : ['followers'],
-            'github:number_repos' : ['public_repos'],
-            'github:number_gists' : ['public_gists'],
-            'github:joined_date' : ['created_at']
+            'github_account:followers' : ['followers'],
+            'github_account:number_repos' : ['public_repos'],
+            'github_account:number_gists' : ['public_gists'],
+            'github_account:joined_date' : ['created_at']
         }
 
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)
@@ -119,19 +119,19 @@ class Github_Account(Provider):
             orgs_list = [org_link.get("aria-label") for org_link in org_links]
             if orgs_list:
                 orgs = ", ".join(orgs_list)
-                metrics_dict.update({"organizations": orgs})
+                metrics_dict.update({"github_account:organizations": orgs})
 
         contrib_match = soup.find("div", attrs={"class", "contrib-details"})
         if contrib_match:
             num_contribs_match_div = contrib_match.find("div", attrs={"class", "contrib-day"})
             num_contribs_match_span = num_contribs_match_div.find("span", attrs={"class", "num"})
             num_contributions_match = re.search("(\d+)", repr(num_contribs_match_span))
-            metrics_dict.update({"number_contributions": int(num_contributions_match.group(1))})
+            metrics_dict.update({"github_account:number_contributions": int(num_contributions_match.group(1))})
 
             longest_streak_match_div = contrib_match.find("div", attrs={"class", "contrib-streak"})
             longest_streak_match_span = longest_streak_match_div.find("span", attrs={"class", "num"})
             longest_streak_match = re.search("(\d+)", repr(longest_streak_match_span))
-            metrics_dict.update({"longest_streak_days": int(longest_streak_match.group(1))})
+            metrics_dict.update({"github_account:longest_streak_days": int(longest_streak_match.group(1))})
 
         return metrics_dict
 
@@ -147,8 +147,8 @@ class Github_Account(Provider):
             raise ProviderContentMalformedError
 
         dict_of_keylists = {
-            'github:active_repos' : ['repositories'],
-            'github:languages' : ["usage", 'languages']
+            'github_account:active_repos' : ['repositories'],
+            'github_account:languages' : ["usage", 'languages']
         }
 
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)
