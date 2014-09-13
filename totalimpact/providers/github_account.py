@@ -76,7 +76,7 @@ class Github_Account(Provider):
         id = self.get_best_id(aliases)
                    
         biblio_dict = {}
-        biblio_dict["repository"] = "GithHub"
+        biblio_dict["repository"] = "GitHub"
         biblio_dict["is_account"] = True
         biblio_dict["genre"] = "account"
         biblio_dict["account"] = id
