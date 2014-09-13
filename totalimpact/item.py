@@ -862,8 +862,12 @@ def decide_genre(alias_dict):
                 host = "slideshare_account"
                 genre = "account"
         elif "github.com" in joined_url_string:
-            genre = "software"
-            host = "github"
+            if re.match(".+github.com/.+/.+", joined_url_string):
+                host = "github"
+                genre = "software"
+            else:
+                host = "github_account"
+                genre = "account"
         elif "twitter.com" in joined_url_string:
             genre = "account"
             host = "twitter"

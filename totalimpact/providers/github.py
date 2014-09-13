@@ -17,6 +17,7 @@ class Github(Provider):
     aliases_url_template = "https://api.github.com/repos/%s/%s?client_id=" + os.environ["GITHUB_CLIENT_ID"] + "&client_secret=" + os.environ["GITHUB_CLIENT_SECRET"]
     metrics_url_template = "https://api.github.com/repos/%s/%s?client_id=" + os.environ["GITHUB_CLIENT_ID"] + "&client_secret=" + os.environ["GITHUB_CLIENT_SECRET"]
     repo_url_template = "https://github.com/%s/%s"
+    account_url_template = "https://github.com/%s"
 
     provenance_url_templates = {
         "github:stars" : "https://github.com/%s/%s/stargazers",
@@ -70,8 +71,11 @@ class Github(Provider):
         members = []
         # add repositories from account
         data = provider._load_json(page)
-        hits = [hit["name"] for hit in data]
-        members += [("url", self.repo_url_template %(account_name, hit)) for hit in list(set(hits))]
+        repos = [repo["name"] for repo in data]
+        members += [("url", self.repo_url_template %(account_name, repo)) for repo in list(set(repos))]
+
+        # also add account product!
+        members += [("url", self.account_url_template %(account_name))]
 
         return(members)
 
