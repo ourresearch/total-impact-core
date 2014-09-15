@@ -133,14 +133,33 @@ class Altmetric_Com(Provider):
         dict_of_keylists = {
             'altmetric_com:tweets' : ['counts', 'twitter', 'posts_count'],
             'altmetric_com:unique_tweeters' : ['counts', 'twitter', 'unique_users_count'],
-            'altmetric_com:tweeter_names' : ['counts', 'twitter', 'unique_users'],
             'altmetric_com:news' : ['counts', 'news', 'posts_count'],
             'altmetric_com:unique_news' : ['counts', 'news', 'unique_users_count'],
             'altmetric_com:news_names' : ['counts', 'news', 'unique_users'],
             'altmetric_com:demographics' : ['demographics'],
-            'altmetric_com:posts' : ['posts'],
+            'altmetric_com:posts' : ['posts']
         }
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)
+
+        if metrics_dict['altmetric_com:posts'] and "twitter" in metrics_dict['altmetric_com:posts']:
+            twitter_posts = metrics_dict['altmetric_com:posts']["twitter"]
+            impressions = 0
+            tweeter_followers = []
+            for post in twitter_posts:
+                # print post["author"]
+                twitter_handle = post["author"]["id_on_source"]
+                try:
+                    followers = post["author"]["followers"]
+                    tweeter_followers.append([twitter_handle, followers])
+                except KeyError:
+                    pass
+            impressions = sum([followers for (handle, followers) in tweeter_followers])
+            if tweeter_followers:
+                metrics_dict['altmetric_com:tweeter_followers'] = tweeter_followers
+            if impressions:
+                metrics_dict['altmetric_com:impressions'] = impressions
+            del metrics_dict['altmetric_com:posts']
+
         return metrics_dict
 
 

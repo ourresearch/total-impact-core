@@ -40,20 +40,14 @@ class TestAltmetric_Com(ProviderTestCase):
         f = open(SAMPLE_EXTRACT_METRICS_PAGE_EXTENDED, "r")
         good_page = f.read()
         metrics_dict = self.provider._extract_metrics_via_fetch(good_page)
-        pprint.pprint(metrics_dict.keys())
-        expected_keys = ['altmetric_com:tweeter_names',
-                'altmetric_com:demographics',
-                'altmetric_com:news',
-                'altmetric_com:news_names',
-                'altmetric_com:tweets',
-                'altmetric_com:unique_tweeters',
-                'altmetric_com:unique_news',
-                'altmetric_com:posts']
+        print metrics_dict.keys()
+        expected_keys = ['altmetric_com:news', 'altmetric_com:news_names', 'altmetric_com:impressions', 'altmetric_com:demographics', 'altmetric_com:tweeter_followers', 'altmetric_com:tweets', 'altmetric_com:unique_tweeters', 'altmetric_com:unique_news']
         assert_items_equal(expected_keys, metrics_dict.keys())
         assert_equals(metrics_dict["altmetric_com:news"], 33)
         assert_equals(metrics_dict["altmetric_com:unique_news"], 22)
         assert_equals(metrics_dict["altmetric_com:tweets"], 2235)
-        assert_equals(metrics_dict["altmetric_com:tweeter_names"][0:3], ['busterzdad', 'ggsimpsonrna', 'johnnosta'])
+        assert_equals(metrics_dict["altmetric_com:tweeter_followers"][0:3], [['busterzdad', 16], ['ggsimpsonrna', 129], ['JohnNosta', 17738]])
+        assert_equals(metrics_dict["altmetric_com:impressions"], 5966059)
 
     def test_provenance_url(self):
         provenance_url = self.provider.provenance_url("tweets", 
