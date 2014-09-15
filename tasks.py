@@ -228,7 +228,7 @@ def after_refresh_complete(tiid, task_ids):
                 logger.warning(u"error in getting embed-markup, returned status={status}".format(
                     status=r.status_code))        
         except requests.ConnectionError:
-            logger.warning(u"connectionerror getting embed-markup, skipping")
+            logger.warning(u"connection error getting embed-markup, skipping")
 
         item_obj.set_last_refresh_finished(myredis)
 
