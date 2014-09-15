@@ -49,7 +49,7 @@ class TestGithub_Account(ProviderTestCase):
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'genre': 'account', 'account': 'https://github.com/egonw', 'is_account': True, 'repository': 'GithHub'}
+        expected = {'genre': 'account', 'account': 'https://github.com/egonw', 'is_account': True, 'repository': 'GitHub'}
         assert_items_equal(biblio_dict.keys(), expected.keys())
 
     def test_provider_biblio_400(self):

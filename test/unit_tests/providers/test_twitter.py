@@ -71,7 +71,7 @@ class TestTwitter(ProviderTestCase):
     def test_biblio(self):
         biblio_dict = self.provider.biblio([self.testitem_biblio])
         print biblio_dict
-        expected = {'account': u'@jasonpriem', 'description': u'Info Science PhD student, ImpactStory co-founder. I care hard about #OA, #altmetrics, and bringing scholarly communication into the age of the web.', 'repository': 'Twitter', 'title': u'@jasonpriem', 'created_at': u'Mon Jun 16 19:19:43 +0000 2008', 'is_account': True, 'authors': u'Jason Priem'}
+        expected = {'account': u'@jasonpriem', 'description': u'Info Science PhD student, ImpactStory co-founder. I care hard about #OA, #altmetrics, and bringing scholarly communication into the age of the web.', 'repository': 'Twitter', 'title': u'@jasonpriem', 'url': u'http://twitter.com/jasonpriem', 'created_at': u'Mon Jun 16 19:19:43 +0000 2008', 'is_account': True, 'authors': u'Jason Priem', 'genre': 'account'}
         assert_items_equal(biblio_dict.keys(), expected.keys())
         for key in expected.keys():
             assert_equals(biblio_dict[key], expected[key])

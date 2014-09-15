@@ -1,8 +1,10 @@
-from birdy.twitter import AppClient, TwitterApiError
 import os, re
 
 from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderRateLimitError
+from totalimpact.providers.twitter_paging import TwitterPager
+from birdy.twitter import AppClient
+from birdy.twitter import TwitterApiError, TwitterRateLimitError, TwitterClientError
 
 import logging
 logger = logging.getLogger('ti.providers.twitter')
@@ -50,10 +52,6 @@ class Twitter(Provider):
                             os.getenv("TWITTER_CONSUMER_SECRET"),
                             os.getenv("TWITTER_ACCESS_TOKEN"))
 
-    # overriding default because overriding member_items method
-    # @property
-    # def provides_members(self):
-    #     return True
 
     @property
     def provides_biblio(self):
@@ -91,24 +89,39 @@ class Twitter(Provider):
         members = [("url", url)]
         return(members)
 
-
-    def get_account_data(self, aliases):
+    
+    def get_account_data(self, aliases, number_tweets=20, max_pages=1):
         nid = self.get_best_id(aliases)
         if not nid:
             return None
 
-        try:
-            screen_name = self.screen_name(nid)
-            r = self.client.api.users.show.get(screen_name=screen_name)
-        except IndexError:
-            logger.warning(u"%20s got IndexError in get_account_data" % (self.provider_name))                
-            return None
-        except TwitterApiError:    
-            logger.exception(u"{provider_name} got TwitterApiError in get_account_data".format(
-                provider_name=self.provider_name))
-            raise ProviderRateLimitError()
-        return r.data
+        response_list = []
+        def save_to_list(r):
+            if r.data:
+                response_list.extend(r.data)
 
+        pager = TwitterPager(os.getenv("TWITTER_CONSUMER_KEY"), 
+                        os.getenv("TWITTER_CONSUMER_SECRET"),
+                        os.getenv("TWITTER_ACCESS_TOKEN"), 
+                        default_max_pages=max_pages)
+
+        try:
+            r = pager.paginated_search(
+                page_handler=save_to_list,
+                screen_name=self.screen_name(nid), 
+                count=number_tweets, 
+                contributor_details=True, 
+                include_rts=True,
+                exclude_replies=False,
+                trim_user=False
+                )
+        except TwitterApiError:
+            logger.error("TwitterApiError error, skipping")
+            return None
+        except TwitterClientError:
+            logger.error("TwitterClientError error, skipping")
+            return None
+        return response_list   
 
 
     def biblio(self, 
@@ -119,22 +132,24 @@ class Twitter(Provider):
         biblio_dict = {}
         biblio_dict["repository"] = "Twitter"
 
-        data = self.get_account_data(aliases)
-        if not data:
+        data_list = self.get_account_data(aliases, number_tweets=1)
+        if not data_list:
             return biblio_dict
 
-        biblio_dict["title"] = u"@{screen_name}".format(
-            screen_name=data["screen_name"])
+        data = data_list[0]["user"]
+
+        twitter_username = data["screen_name"]
+        twitter_username_with_at = u"@{twitter_username}".format(
+            twitter_username=twitter_username)
+        biblio_dict["title"] = twitter_username_with_at
         biblio_dict["authors"] = data["name"]
         biblio_dict["description"] = data["description"]
         biblio_dict["created_at"] = data["created_at"]
-        twitter_username = data["screen_name"].replace("@", "")
         biblio_dict["url"] = u"http://twitter.com/{twitter_username}".format(
-            twitter_username=data["screen_name"].replace("@", ""))
+            twitter_username=twitter_username)
 
         biblio_dict["is_account"] = True  # special key to tell webapp to render as genre heading
-        biblio_dict["account"] = u"@{screen_name}".format(
-            screen_name=data["screen_name"])
+        biblio_dict["account"] = twitter_username_with_at
         biblio_dict["genre"] = "account"
 
         return biblio_dict
@@ -146,9 +161,10 @@ class Twitter(Provider):
             provider_url_template=None,
             cache_enabled=True):
 
-        data = self.get_account_data(aliases)
-        if not data:
+        data_list = self.get_account_data(aliases, number_tweets=1)
+        if not data_list:
             return {}
+        data = data_list[0]["user"]
 
         dict_of_keylists = {
             'twitter:followers' : ['followers_count'],
@@ -179,4 +195,7 @@ class Twitter(Provider):
         provenance_url = self._get_templated_url(self.provenance_url_templates[metric_name], screen_name, "provenance")
         return provenance_url
 
+
+
+     
 
