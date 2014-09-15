@@ -175,7 +175,7 @@ class Github_Account(Provider):
             provider_url_template = self.metrics_url_template
 
         extract_templates = {
-            "https://api.github.com/users/%s": self._extract_metrics_from_api_users,
+            self.metrics_url_template: self._extract_metrics_from_api_users,
             "https://github.com/%s" : self._extract_metrics_from_github_webpage,
             "https://osrc.dfm.io/%s.json": self._extract_metrics_from_open_source_report_card
         }
