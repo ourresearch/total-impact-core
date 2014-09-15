@@ -217,20 +217,23 @@ def after_refresh_complete(tiid, task_ids):
     item_obj = item_module.Item.query.get(tiid)
 
     if item_obj:
-        url = u"http://{webapp_root}/product/{tiid}/embed-markup".format(
-            webapp_root=os.getenv("WEBAPP_ROOT"), tiid=tiid)
-        r = requests.get(url)
-        if r.status_code==200:
-            response = r.json()
-            item_obj.embed_markup = response["html"]
+        try:
+            url = u"http://{webapp_root}/product/{tiid}/embed-markup".format(
+                webapp_root=os.getenv("WEBAPP_ROOT"), tiid=tiid)
+            r = requests.get(url)
+            if r.status_code==200:
+                response = r.json()
+                item_obj.embed_markup = response["html"]
+            else:
+                logger.warning(u"error in getting embed-markup, returned status={status}".format(
+                    status=r.status_code))        
+        except requests.ConnectionError:
+            logger.warning(u"connectionerror getting embed-markup, skipping")
 
-            item_obj.set_last_refresh_finished(myredis)
+        item_obj.set_last_refresh_finished(myredis)
 
-            db.session.add(item_obj)
-            db.session.commit()
-        else:
-            logger.warning(u"error in after_refresh_complete, returned status={status}".format(
-                status=r.status_code))        
+        db.session.add(item_obj)
+        db.session.commit()
 
 
 
