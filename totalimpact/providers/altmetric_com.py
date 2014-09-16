@@ -43,10 +43,24 @@ class Altmetric_Com(Provider):
         "blog_posts": {
             "display_name": "blog posts",
             "provider": "Altmetric.com",
-            "provider_url": "http://plus.google.com",
+            "provider_url": "",
             "description": "Number of blog posts mentioning the product",
             "icon": "http://impactstory.org/static/img/blogs-icon.png",
-        }                           
+        },
+        "news": {
+            "display_name": "News outlets",
+            "provider": "Altmetric.com",
+            "provider_url": "",
+            "description": "Number of mainstream media news mentions of the product",
+            "icon": "",
+        },
+        "impressions": {
+            "display_name": "Twitter impressions",
+            "provider": "Altmetric.com",
+            "provider_url": "http://twitter.com",
+            "description": "Number of times a tweet about the product has appeared in someone's twitter stream",
+            "icon": "https://twitter.com/favicon.ico",
+        }                                                   
     }
     
 
