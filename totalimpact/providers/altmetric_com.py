@@ -155,24 +155,27 @@ class Altmetric_Com(Provider):
         }
         metrics_dict = provider._extract_from_json(page, dict_of_keylists)
 
-        if metrics_dict['altmetric_com:posts'] and "twitter" in metrics_dict['altmetric_com:posts']:
-            twitter_posts = metrics_dict['altmetric_com:posts']["twitter"]
-            impressions = 0
-            tweeter_followers = []
-            for post in twitter_posts:
-                # print post["author"]
-                twitter_handle = post["author"]["id_on_source"]
-                try:
-                    followers = post["author"]["followers"]
-                    tweeter_followers.append([twitter_handle, followers])
-                except KeyError:
-                    pass
-            impressions = sum([followers for (handle, followers) in tweeter_followers])
-            if tweeter_followers:
-                metrics_dict['altmetric_com:tweeter_followers'] = tweeter_followers
-            if impressions:
-                metrics_dict['altmetric_com:impressions'] = impressions
-            del metrics_dict['altmetric_com:posts']
+        try:
+            if metrics_dict['altmetric_com:posts'] and "twitter" in metrics_dict['altmetric_com:posts']:
+                twitter_posts = metrics_dict['altmetric_com:posts']["twitter"]
+                impressions = 0
+                tweeter_followers = []
+                for post in twitter_posts:
+                    # print post["author"]
+                    twitter_handle = post["author"]["id_on_source"]
+                    try:
+                        followers = post["author"]["followers"]
+                        tweeter_followers.append([twitter_handle, followers])
+                    except KeyError:
+                        pass
+                impressions = sum([followers for (handle, followers) in tweeter_followers])
+                if tweeter_followers:
+                    metrics_dict['altmetric_com:tweeter_followers'] = tweeter_followers
+                if impressions:
+                    metrics_dict['altmetric_com:impressions'] = impressions
+                del metrics_dict['altmetric_com:posts']
+        except KeyError:
+            pass  # no posts
 
         return metrics_dict
 
