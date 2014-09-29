@@ -173,7 +173,6 @@ class Altmetric_Com(Provider):
                     metrics_dict['altmetric_com:tweeter_followers'] = tweeter_followers
                 if impressions:
                     metrics_dict['altmetric_com:impressions'] = impressions
-                del metrics_dict['altmetric_com:posts']
         except KeyError:
             pass  # no posts
 
