@@ -243,6 +243,9 @@ class Crossref(Provider):
                     if url.startswith("http://dx.doi.org/"):
                         doi = url.replace("http://dx.doi.org/", "")
                         new_aliases += [("doi", doi)]
+                    elif url.startswith("http://doi.org/"):
+                        doi = url.replace("http://doi.org/", "")
+                        new_aliases += [("doi", doi)]
 
         if not doi:
             if "biblio" in aliases_dict:
