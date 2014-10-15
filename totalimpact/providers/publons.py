@@ -94,6 +94,7 @@ class Publons(Provider):
         }
         biblio_dict = provider._extract_from_json(page, dict_of_keylists)
         biblio_dict["genre"] = "peer review"
+        biblio_dict["title"] = "Review of " + biblio_dict["title"]
 
         if "source_provider" in biblio_dict and biblio_dict["source_provider"]:
             biblio_dict["repository"] = biblio_dict["source_provider"]
