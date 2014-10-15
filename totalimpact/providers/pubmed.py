@@ -2,7 +2,7 @@ from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError
 from totalimpact.unicode_helpers import remove_nonprinting_characters
 
-import simplejson, urllib, os, itertools, datetime, re
+import json, urllib, os, itertools, datetime, re
 from StringIO import StringIO
 from lxml import etree
 
@@ -32,6 +32,7 @@ class Pubmed(Provider):
     metrics_f1000_url_template = elink_url
 
     aliases_from_doi_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?term=%s&email=team@total-impact.org&tool=total-impact" 
+    aliases_doi_from_pmid_url_template = "http://www.pmid2doi.org/rest/json/doi/%s"
     aliases_from_pmid_url_template = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml&email=team@total-impact.org&tool=total-impact" 
 
     aliases_pubmed_url_template = "http://www.ncbi.nlm.nih.gov/pubmed/%s"
@@ -293,6 +294,13 @@ class Pubmed(Provider):
                         new_aliases += [("biblio", biblio)]
                 # also, add link to paper on pubmed
                 new_aliases += [("url", self.aliases_pubmed_url_template %nid)] 
+                if not "doi" in [namespace for (namespace, temp_nid) in new_aliases]:
+                    aliases_doi_from_pmid_url = self.aliases_doi_from_pmid_url_template %nid
+                    response = self.http_get(aliases_doi_from_pmid_url, cache_enabled=cache_enabled)
+                    if response.status_code==200:
+                        print response.text
+                        doi = json.loads(response.text)["doi"]
+                        new_aliases += [("doi", doi)]
 
         # get uniques for things that are unhashable
         new_aliases_unique = [k for k,v in itertools.groupby(sorted(new_aliases))]

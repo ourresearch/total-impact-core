@@ -131,6 +131,13 @@ class TestPubmed(ProviderTestCase):
         assert_equals(aliases, expected)
 
     @http
+    def test_aliases_from_pmid_when_pubmed_misses_doi(self):
+        aliases = self.provider.aliases([("pmid", "18189011")])
+        print aliases
+        expected = ('doi', u'10.3758/CABN.7.4.380')
+        assert expected in aliases
+
+    @http
     def test_aliases_from_pmid_different_date_format(self):
         aliases = self.provider.aliases([("pmid", "11457506")])
         print aliases
