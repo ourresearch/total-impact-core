@@ -880,6 +880,9 @@ def decide_genre(alias_dict):
         elif "vimeo.com" in joined_url_string:
             genre = "video"
             host = "vimeo"
+        elif "publons.com" in joined_url_string:
+            genre = "peer review"
+            host = "publons"
         else:
             genre = "webpage"
 

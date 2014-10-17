@@ -1,0 +1,53 @@
+{
+   "_id":{
+      "url":"https://publons.com/r/182/",
+      "api":"https://publons.com/api/v1/review/182/",
+      "id":182
+   },
+   "title":"Data reuse and the open data citation advantage",
+   "doi":"10.7287/peerj.175v0.1/reviews/2",
+   "review_type":"Pre Publication",
+   "review_content_type":"Text",
+   "endorsement_count":0,
+   "datetime_reviewed":"2013-04-28",
+   "content":{
+      "text":"Basic reporting  I am not qualified to comprehensively review the methods and statistical analysis but my reading raised the following:&amp;lt;br&amp;gt; &amp;lt;br&amp;gt; In the \u2018Primary analysis\u2019 section, is a table mislabelled or missing? The authors state:&amp;lt;br&amp;gt; \u201cWe used a subset of the 124 attributes from (Piwowar, 2011d) previously shown or suspected to correlate with citation rate (Table 1).\u201d&amp;lt;br&amp;gt; I expected to see the list of attributes but Table one is headed: \u201cProportion of sample published in most common journals\u201d&amp;lt;br&amp;gt; If so, this needs to be resolved before publication. I am also interested in the evidence on which the correlates are based. The authors mention the open access citation advantage a few times in their paper, for example. Have they assumed that open access papers receive more citations in the present analysis? The open access citation benefit is much debated. Furthermore, my understanding of the cited paper by Craig et al 2007 is that it documents decreasing evidence of a citation benefit for open access articles. I am not aware of a systematic review of the impact of open access on citations, but a bibliography of studies, which the authors may find relevant, is here http://opcit.eprints.org/oacitation-biblio.html  Experimental design  See above.  Validity of the findings  The results of this paper are welcome evidence of the benefits to individual researchers for sharing their research data. They should and will likely be used to develop further support and policy development for data sharing and will be much discussed on social media. However, I feel the authors should tone down the positivity of the language used to describe the citation increase in their conclusions (\u201crobust\u201d; a \u201cboost\u201d, etc), given the citation benefit is just 9%.&amp;lt;br&amp;gt; &amp;lt;br&amp;gt; I wondered if the authors could comment on if and how much their results could be generalised to other areas of research. Also, where should the research community\u2019s priorities be for establishing citation or other benefits to individuals from sharing their research? Which fields? Which benefits? We know, for example, that clinical trialists are willing to share their data but practical issues and fears over inappropriate reanalysis are more important barriers to sharing \u2013than lack of individual incentives/citations (Rathi et al. http://dx.doi.org/10.1136/bmj.e7570).  Comments for the author  I assume the opening quote is not intended to add colour to paper but to provide the opening part of the introduction. As such, I found the author quoting themselves at this length from a 6 year old study was not the best way to open a paper.  Throughout the manuscript the authors refer to \u201copen data\u201d meaning, I assume in this context, data which are freely accessible on the web. However, there is growing recognition that \u201copen\u201d data means data which are available under legal terms \u2013 a license or waiver \u2013 which permit sharing and reuse with the minimum of barriers. Open data is about more than just accessibility. \u201cOpen\u201d data must be free to \u201cdownload, copy, analyse, re-process, pass them to software or use them for any other purpose without financial, legal, or technical barriers other than those inseparable from gaining access to the internet itself\u201d [http://pantonprinciples.org/] . To my knowledge the authors are aware of the appropriate use of \u201copen\u201d in open data and open access and I recommend they use an alternate term to \u201copen data\u201d in the present manuscript to avoid engendering confusion about the term \u201copen data\u201d.  I\u2019m not convinced the account of the authors\u2019 problems in obtaining access to Scopus should be included in the current manuscript. It seems tangential to thrust of the manuscript and its analysis and would be more appropriate for a blog (I believe some of this was described on Piwowar\u2019s blog) or commentary, and would make the manuscript more focused. Also, elsewhere in the paper the authors note that Scopus now has an API for programmatic access. The authors have previously written about the problems faced by researchers in gaining access to the literature for research \u2013 text mining, citation analysis \u2013 elsewhere.  I noticed a few typos (this is not an exhaustive list) e.g. \u201cThe lack of conventions and tool support for data Attribution\u201d; \u201cWhich types of data reuse are facilitates by robust data standards and which types are unaffected?\u201d  I am aware one of the authors has previously discussed publicly the present study\u2019s data and preliminary results (http://researchremix.wordpress.com/2012/07/16/many-datasets-are-reused-not-just-an-elite-few/). Open science should not preclude papers being published, and the fact the authors discussed the data from this study before submission of their paper should have no influence on the paper\u2019s acceptance or rejection. However, best practice regarding potentially duplicate or overlapping publications would be to state in the paper and cite the previous publications, including blogs, posters etc, in the submitted manuscript.  Recommendation to PeerJ staff regarding competing interests statements from authors. Please include these in the review version of the manuscript. "
+   },
+   "author":{
+      "_id":{
+         "url":"https://publons.com/author/13201/",
+         "api":"https://publons.com/api/v1/author/13201/",
+         "id":13201
+      },
+      "first_name":"Iain",
+      "last_name":"Hrynaszkiewicz",
+      "datetime_last_updated":"2014-10-14T19:16:22.605"
+   },
+   "article":{
+      "_id":{
+         "url":"https://publons.com/p/3386/",
+         "api":"https://publons.com/api/v1/article/3386/",
+         "id":3386
+      },
+      "title":"Data reuse and the open data citation advantage",
+      "details":{
+         "journal":"PeerJ",
+         "volume":"1",
+         "page":"e175",
+         "doi":"10.7717/peerj.175"
+      },
+      "datetime_last_updated":"2014-07-17T00:42:40.655",
+      "publons_score":null
+   },
+   "datetime_last_updated":"2014-10-08T05:59:30.891",
+   "stats":{
+      "endorsements":0,
+      "merit":5,
+      "comments":0,
+      "views":13
+   },
+   "source":{
+      "url":"https://peerj.com/articles/175v0.1/reviews/2/",
+      "provider":"PeerJ"
+   }
+}

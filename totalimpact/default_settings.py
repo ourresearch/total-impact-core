@@ -20,7 +20,7 @@ PROVIDERS = [
     ("figshare", {}),            
     ("github", {}),
     ("github_account", {}),
-    ("linkedin", {}),
+    ("publons", {}),
     ("slideshare", {}),
     ("slideshare_account", {}),
     ("twitter", {}),
