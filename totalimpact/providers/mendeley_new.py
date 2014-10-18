@@ -63,9 +63,7 @@ class Mendeley_New(Provider):
 
     def is_relevant_alias(self, alias):
         (namespace, nid) = alias
-        # right now restricted to doi because we check the title lookup matches doi
-        ## to keep precision high.  Later could experiment with opening this up.
-        relevant = (namespace=="doi")
+        relevant = (namespace in ["doi", "pmid", "arxiv"])
         return(relevant)
 
 
@@ -143,7 +141,7 @@ class Mendeley_New(Provider):
             metrics_and_drilldown["mendeley_new:countries"] = (doc.reader_count_by_country, drilldown_url)
         except KeyError:
             pass
-            
+
         return metrics_and_drilldown
 
 
