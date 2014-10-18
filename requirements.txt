@@ -24,6 +24,7 @@ gunicorn==0.14.3
 iso8601==0.1.4
 kombu==3.0.16 
 lxml==2.3.4
+mendeley==0.1.2
 newrelic==1.9.0.21
 nose==1.1.2
 oauthlib==0.6.3
