@@ -134,6 +134,7 @@ def import_products(provider_name, import_input):
 
 
 def is_issn_in_doaj(issn):
+    issn = issn.replace("-", "")
     raw_sql = text("""SELECT issn from doaj_issn_lookup where issn=:issn""")
     result = db.session.execute(raw_sql, params={
          "issn": issn
@@ -313,6 +314,22 @@ class Provider(object):
         else:
             nid = None
         return(nid)
+
+    def get_best_url(self, aliases):
+        filtered = self.relevant_aliases(aliases)
+        if filtered:
+            from totalimpact import item
+            aliases_dict = item.alias_dict_from_tuples(aliases)
+
+            if "doi" in aliases_dict:
+                return u"http://doi.org/" + aliases_dict["doi"][0]
+            if "pmid" in aliases_dict:
+                return u"http://www.ncbi.nlm.nih.gov/pubmed/" + aliases_dict["pmid"][0]
+            if "pmc" in aliases_dict:
+                return u"http://www.ncbi.nlm.nih.gov/pmc/articles/" + aliases_dict["pmc"][0]
+            if "url" in aliases_dict:
+                return aliases_dict["url"][0]
+        return None
 
     @property
     def provides_members(self):

@@ -36,7 +36,6 @@ PROVIDERS = [
     ("altmetric_com", {}),    
     ("citeulike", {}),   
     ("delicious", {}),   
-    ("mendeley_new", {}),
     ("plosalm", {}),
     ("plossearch", {}),
     ("scopus", {}),
