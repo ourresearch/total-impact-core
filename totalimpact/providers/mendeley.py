@@ -13,6 +13,7 @@ from urllib import urlencode
 from urlparse import parse_qs, urlsplit, urlunsplit
 
 # need to get system mendeley library
+from mendeley.exception import MendeleyException
 import mendeley as mendeley_lib
 
 import logging
@@ -99,7 +100,7 @@ class Mendeley(Provider):
             nid = aliases_dict[namespace][0]
             kwargs = {namespace:nid, "view":'stats'}
             doc = self.session.catalog.by_identifier(**kwargs)
-        except (KeyError, mendeley_lib.MendeleyException):
+        except (KeyError, MendeleyException):
             doc = None
         return doc
 
@@ -119,7 +120,7 @@ class Mendeley(Provider):
                     logger.debug(u"Mendeley: titles don't match so not using this match /biblio_print %s and %s" %(
                         biblio_title, mendeley_title))
                     doc = None
-        except (KeyError, mendeley_lib.MendeleyException):
+        except (KeyError, MendeleyException):
             doc = None
         return doc
 
