@@ -4,7 +4,7 @@ from totalimpact.providers import provider
 from totalimpact.providers.provider import Provider, ProviderContentMalformedError, ProviderAuthenticationError
 from totalimpact import tiredis
 from totalimpact.utils import Retry
-from totalimpact.providers.countries_info import countries_info
+from totalimpact.providers.countries_info import country_iso_by_name
 
 import simplejson, urllib, os, string, itertools
 import requests
@@ -19,9 +19,6 @@ import mendeley as mendeley_lib
 
 import logging
 logger = logging.getLogger('ti.providers.mendeley')
-
-country_iso_by_name = dict((country["name"]["common"], country["cca2"]) for country in countries_info)
-country_iso_by_name.update(dict((country["name"]["official"], country["cca2"]) for country in countries_info))
 
 class Mendeley(Provider):  
 
@@ -170,14 +167,16 @@ class Mendeley(Provider):
 
                 by_country_iso = {}
                 by_country_names = doc.reader_count_by_country
-                for country_name, country_breakdown in by_country_names.iteritems():
-                    if country_name in country_iso_by_name:
-                        iso = country_iso_by_name[country_name]
-                        by_country_iso[iso] = country_breakdown
-                    else:
-                        logger.error(u"Can't find country {country} in lookup".format(
-                            country=country_name))
-                metrics_and_drilldown["mendeley:countries"] = (by_country_iso, drilldown_url)
+                if by_country_names:
+                    for country_name, country_breakdown in by_country_names.iteritems():
+                        if country_name in country_iso_by_name:
+                            iso = country_iso_by_name[country_name]
+                            by_country_iso[iso] = country_breakdown
+                        else:
+                            logger.error(u"Can't find country {country} in lookup".format(
+                                country=country_name))
+                    if by_country_iso:
+                        metrics_and_drilldown["mendeley:countries"] = (by_country_iso, drilldown_url)
 
             except KeyError:
                 pass
